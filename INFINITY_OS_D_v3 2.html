@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · Interface D · 对话模式</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080a10;--bg2:#0c0f18;--bg3:#111520;
+  --card:#161c28;--card2:#1c2334;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#e2e8f5;--text2:#7a8ba0;--text3:#3d4e66;
+  --amber:#f5a623;--amber2:#ffd07a;--amber-dim:rgba(245,166,35,0.1);
+  --teal:#3ecfb8;--teal-dim:rgba(62,207,184,0.1);
+  --red:#ff4d6d;--red-dim:rgba(255,77,109,0.1);
+  --green:#3ddc84;--green-dim:rgba(61,220,132,0.1);
+  --user-bubble:#1a2540;--ai-bubble:#111520;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;display:flex;flex-direction:column}
+
+/* ── TOPBAR ── */
+.topbar{
+  height:52px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;z-index:10;
+}
+.logo-sym{
+  width:28px;height:28px;border-radius:7px;flex-shrink:0;
+  background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000;
+  box-shadow:0 0 12px rgba(245,166,35,0.3);
+}
+.topbar-flex{flex:1}
+.topbar-center{display:flex;align-items:center;gap:8px;cursor:pointer}
+.agent-avatar{
+  width:28px;height:28px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:14px;background:var(--card2);border:1px solid var(--border2);
+  flex-shrink:0;
+}
+.agent-info-top{}
+.agent-name-top{font-size:13px;font-weight:600;line-height:1.2}
+.agent-tag-top{font-size:10px;color:var(--text3)}
+.agent-switch{font-size:11px;color:var(--text3);opacity:0.6}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.clock-sm{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+.ver-sm{font-size:10px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:2px 7px;border-radius:5px;font-family:'Space Mono',monospace}
+
+/* ── AGENT PICKER ── */
+.agent-picker{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  z-index:100;display:none;flex-direction:column;
+  justify-content:flex-end;backdrop-filter:blur(4px);
+}
+.agent-picker.show{display:flex}
+.picker-sheet{
+  background:var(--bg2);border-top:1px solid var(--border2);
+  border-radius:18px 18px 0 0;max-height:72vh;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.picker-hdr{
+  padding:14px 16px 10px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.picker-title{font-size:13px;font-weight:700}
+.picker-close{
+  width:28px;height:28px;border-radius:7px;background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:var(--text2);
+}
+.picker-body{overflow-y:auto;padding:10px 12px 20px}
+.picker-sec-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.09em;text-transform:uppercase;padding:8px 4px 6px}
+.picker-row{
+  display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;
+  cursor:pointer;transition:all 0.15s;margin-bottom:2px;
+}
+.picker-row:hover,.picker-row:active{background:rgba(255,255,255,0.04)}
+.picker-row.selected{background:var(--amber-dim);border:1px solid rgba(245,166,35,0.2)}
+.picker-emoji{
+  width:36px;height:36px;border-radius:9px;background:var(--card);
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  border:1px solid var(--border);flex-shrink:0;
+}
+.picker-info{flex:1;min-width:0}
+.picker-name{font-size:13px;font-weight:500;margin-bottom:2px}
+.picker-sub{font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.picker-score{
+  font-family:'Syne',sans-serif;font-size:16px;font-weight:800;flex-shrink:0;
+}
+.picker-ms{font-size:9px;color:var(--text3);text-align:right}
+
+/* ── CHAT AREA ── */
+.chat-area{
+  flex:1;overflow-y:auto;padding:12px 16px;
+  display:flex;flex-direction:column;gap:14px;
+}
+.chat-area::-webkit-scrollbar{width:3px}
+.chat-area::-webkit-scrollbar-track{background:transparent}
+.chat-area::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+
+/* Welcome state */
+.welcome{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:24px 16px;gap:14px;
+}
+.welcome-icon{
+  width:64px;height:64px;border-radius:16px;
+  background:linear-gradient(135deg,rgba(245,166,35,0.15),rgba(62,207,184,0.08));
+  border:1px solid rgba(245,166,35,0.25);
+  display:flex;align-items:center;justify-content:center;font-size:28px;
+  margin-bottom:4px;
+}
+.welcome-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px}
+.welcome-sub{font-size:12px;color:var(--text3);line-height:1.6;max-width:280px}
+.welcome-presets{width:100%;max-width:340px;display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.wp-btn{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:9px 14px;font-size:12px;color:var(--text2);text-align:left;cursor:pointer;
+  display:flex;align-items:center;gap:8px;transition:all 0.15s;
+  font-family:'Noto Sans SC',sans-serif;
+}
+.wp-btn:hover{border-color:var(--amber);color:var(--text);background:var(--amber-dim)}
+.wp-icon{font-size:13px;flex-shrink:0}
+
+/* Messages */
+.msg{display:flex;flex-direction:column;gap:4px;animation:msgIn 0.2s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.msg-user{align-items:flex-end}
+.msg-ai{align-items:flex-start}
+
+.bubble{
+  max-width:84%;border-radius:14px;padding:10px 13px;
+  font-size:13px;line-height:1.65;
+}
+.bubble-user{
+  background:var(--user-bubble);border:1px solid var(--border2);
+  border-bottom-right-radius:4px;color:var(--text);
+}
+.bubble-ai{
+  background:var(--ai-bubble);border:1px solid var(--border);
+  border-bottom-left-radius:4px;color:var(--text2);
+}
+.msg-meta{font-size:10px;color:var(--text3);padding:0 4px;display:flex;align-items:center;gap:5px}
+.msg-avatar{font-size:12px}
+
+/* Typing indicator */
+.typing-dots{display:flex;gap:4px;align-items:center;padding:2px 0}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:dotPulse 1.3s infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes dotPulse{0%,80%,100%{opacity:.2;transform:scale(.75)}40%{opacity:1;transform:scale(1)}}
+
+/* Preset chips (inside chat) */
+.chips-row{display:flex;gap:6px;flex-wrap:wrap;padding:0 2px}
+.chip-d{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:5px 11px;font-size:11px;color:var(--text2);cursor:pointer;
+  transition:all 0.15s;font-family:'Noto Sans SC',sans-serif;
+}
+.chip-d:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+
+/* Agent info card */
+.agent-card-msg{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:12px 14px;max-width:84%;
+}
+.acm-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.acm-emoji{font-size:18px}
+.acm-name{font-size:13px;font-weight:600}
+.acm-tag{font-size:10px;color:var(--amber)}
+.acm-kpis{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px}
+.acm-kpi{background:var(--bg3);border-radius:7px;padding:6px 8px;border:1px solid var(--border)}
+.acm-kpi-l{font-size:9px;color:var(--text3);margin-bottom:2px}
+.acm-kpi-v{font-size:12px;font-weight:600}
+.acm-kpi-v.good{color:var(--green)}.acm-kpi-v.warn{color:var(--amber)}.acm-kpi-v.bad{color:var(--red)}
+.acm-gaps{font-size:11px;color:var(--text3);line-height:1.5}
+.acm-gaps span{color:var(--red)}
+
+/* ── INPUT AREA ── */
+.input-area{
+  padding:10px 14px 16px;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;
+}
+.input-row{
+  display:flex;gap:8px;background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:6px 8px 6px 14px;align-items:flex-end;
+  transition:border-color 0.2s;
+}
+.input-row:focus-within{border-color:rgba(245,166,35,0.3)}
+.chat-input{
+  flex:1;background:transparent;border:none;outline:none;
+  font-size:13px;color:var(--text);font-family:'Noto Sans SC',sans-serif;
+  resize:none;max-height:100px;min-height:22px;line-height:1.5;padding-top:2px;
+}
+.chat-input::placeholder{color:var(--text3)}
+.send-btn{
+  width:36px;height:36px;border-radius:10px;background:var(--amber);border:none;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:16px;transition:all 0.15s;flex-shrink:0;
+}
+.send-btn:hover{background:var(--amber2);transform:scale(1.05)}
+.send-btn:disabled{background:var(--card2);cursor:not-allowed;transform:none}
+.input-hint{display:flex;align-items:center;justify-content:space-between;margin-top:6px;padding:0 4px}
+.input-hint-l{font-size:10px;color:var(--text3)}
+.input-hint-r{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+
+/* Brain mode button */
+.brain-mode-btn{
+  background:linear-gradient(135deg,var(--amber-dim),var(--teal-dim));
+  border:1px solid rgba(245,166,35,0.25);border-radius:10px;
+  padding:8px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;
+  margin-bottom:8px;transition:all 0.2s;
+}
+.brain-mode-btn:hover{border-color:rgba(245,166,35,0.45)}
+.bmb-icon{font-size:14px}
+.bmb-text{font-size:11px;color:var(--text2)}
+.bmb-text strong{color:var(--amber)}
+
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-sym">∞</div>
+  <div class="topbar-flex"></div>
+  <div class="topbar-center" onclick="showPicker()">
+    <div class="agent-avatar" id="topAgentAvatar">🧠</div>
+    <div class="agent-info-top">
+      <div class="agent-name-top" id="topAgentName">战略大脑</div>
+      <div class="agent-tag-top" id="topAgentTag">INFINITY OS · 完整知识库</div>
+    </div>
+    <div class="agent-switch">▾</div>
+  </div>
+  <div class="topbar-flex"></div>
+  <div class="topbar-right">
+    <div class="clock-sm" id="clock">--:--:--</div>
+    <div class="ver-sm">D · v3</div>
+  </div>
+</div>
+
+<!-- AGENT PICKER -->
+<div class="agent-picker" id="agentPicker" onclick="pickerBg(event)">
+  <div class="picker-sheet">
+    <div class="picker-hdr">
+      <div class="picker-title">切换 Agent</div>
+      <div class="picker-close" onclick="hidePicker()">✕</div>
+    </div>
+    <div class="picker-body" id="pickerBody"></div>
+  </div>
+</div>
+
+<!-- CHAT AREA -->
+<div class="chat-area" id="chatArea">
+  <div class="welcome" id="welcome">
+    <div class="welcome-icon">🧠</div>
+    <div class="welcome-title">INFINITY OS</div>
+    <div class="welcome-sub">欣和SH · 纵横AI中台 · 问任何经营问题，或选择具体Agent对话</div>
+    <div class="welcome-presets" id="welcomePresets"></div>
+  </div>
+</div>
+
+<!-- INPUT AREA -->
+<div class="input-area">
+  <div class="brain-mode-btn" id="brainModeBtn" onclick="switchToBrain()">
+    <div class="bmb-icon">🧠</div>
+    <div class="bmb-text">当前：<strong id="currentAgentLabel">战略大脑</strong> · 点击左上角切换Agent</div>
+  </div>
+  <div class="input-row">
+    <textarea class="chat-input" id="chatInput" placeholder="问问题，或切换到具体Agent…" rows="1"
+      onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+  </div>
+  <div class="input-hint">
+    <div class="input-hint-l">Enter 发送 · Shift+Enter 换行</div>
+    <div class="input-hint-r" id="charCount">0</div>
+  </div>
+</div>
+
+<script>
+// ── Clock ──
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')+':'+n.getSeconds().toString().padStart(2,'0');
+}
+tick();setInterval(tick,1000);
+
+// ── Data ──
+const BRAIN_AGENT={
+  name:'战略大脑',emoji:'🧠',tag:'INFINITY OS · 完整知识库',score:null,cat:'brain',
+  presets:['INFINITY OS与勤策相比，超越了哪8项？','库存心跳v2.0的三层水位怎么设计的？','六月鲜战略北极星：200M瓶/4B RMB路径','纵横框架98个交叉点是怎么形成的？','货架识别路线A的技术逻辑和实施路径','蝴蝶效应A/B/C三类失真模式详解'],
+  chatIntro:'你好！我是INFINITY OS战略大脑，精通纵横框架、心跳公式v2.0、24个Agent体系和勤策对比分析。你可以问我任何关于欣和SH经营战略的问题。',
+  systemPrompt:'你是欣和SH INFINITY OS战略大脑。精通：纵横框架（7渠道×IPO0-13=98交叉点）、库存心跳v2.0（心跳单元a·三层水位·六级拜访）、24个Agent体系、勤策替代路线A（货架识别千问VL）、六月鲜战略北极星（200M瓶/4B RMB）、五品牌矩阵。用中文清晰结构化回答，不超过300字。',
+  kpis:null,gaps:null
+};
+
+const AGENTS=[
+  {name:'AIO总指挥',emoji:'⚡',tag:'Commander',score:65,ms:3,cat:'commander',
+   desc:'全链调度：差距检测→任务派发→积分结算完整闭环，协调所有子Agent',
+   presets:['今天哪些门店差距最大？','给我一份AIO日报','美顾和DSR积分排名'],
+   chatIntro:'你好，我是AIO总指挥Agent。问我任何关于全链调度的问题。',
+   kpis:[{l:'差距检测',v:'实时',s:'good'},{l:'任务派发',v:'自动',s:'good'},{l:'真实数据',v:'待接入',s:'bad'},{l:'Agent协商',v:'待建',s:'bad'}],
+   gaps:['接入ERP/CRM真实数据','与蝴蝶效应Agent动态联动','自主决策权限升级'],
+   systemPrompt:'你是欣和SH INFINITY OS的「AIO总指挥」Agent（Commander）。职责：全链调度，差距检测→任务派发→积分结算完整闭环，协调所有子Agent。用中文简洁回答，不超过200字。'},
+  {name:'生产供应',emoji:'🏭',tag:'IPO0-1',score:60,ms:3,cat:'lianheng',
+   desc:'工厂产能·发货库存水位·生产计划达成率，预警上游断供风险',
+   presets:['工厂今天产能怎么样？','发货库存水位正常吗？','有没有断供风险？'],
+   chatIntro:'你好，我是生产供应Agent，负责IPO0-1节点的工厂与物流。',
+   kpis:[{l:'IPO0产能',v:'96%',s:'good'},{l:'IPO1库存',v:'89%',s:'good'},{l:'MES系统对接',v:'待建',s:'bad'},{l:'自动调产',v:'待建',s:'bad'}],
+   gaps:['工厂MES系统API对接','生产计划自动调整建议'],
+   systemPrompt:'你是欣和SH INFINITY OS的「生产供应」Agent（IPO0-1）。职责：工厂产能监控，发货库存水位管理，生产计划达成率，预警上游断供风险。用中文简洁回答，不超过200字。'},
+  {name:'经销商全链',emoji:'🤝',tag:'IPO2-4',score:70,ms:3,cat:'lianheng',
+   desc:'进货/库存/出货全链·心跳单元a·水位2a满仓→1a预警·健康评分·P1/P2路径并存',
+   presets:['今天哪些经销商库存低于1a？','P1和P2渠道健康对比','哪些经销商需要立即联系？'],
+   chatIntro:'你好，我是经销商全链Agent，负责IPO2-4节点。',
+   kpis:[{l:'心跳公式',v:'✅已建',s:'good'},{l:'健康评分',v:'S/A/B/C/D',s:'good'},{l:'ERP对接',v:'待接入',s:'bad'},{l:'自动预警推送',v:'待配置',s:'bad'}],
+   gaps:['ERP系统实时数据接入','经销商App自动接单','补货预警企微自动推送'],
+   systemPrompt:'你是欣和SH INFINITY OS的「经销商全链」Agent（IPO2-4）。职责：进货/库存/出货全链管理，心跳单元a监控，水位预警，健康评分。用中文简洁回答，不超过200字。'},
+  {name:'零售门店',emoji:'🏪',tag:'IPO8-10',score:68,ms:3,cat:'lianheng',
+   desc:'六级门店标准·S+/S/A重要门店T≤7天·水位3a满仓→2a补货预警·铺货率/陈列/动销',
+   presets:['今天S+门店库存水位怎么样？','铺货率最低的10家门店？','哪些门店需要紧急补货？'],
+   chatIntro:'你好，我是零售门店Agent，负责IPO8-10节点。',
+   kpis:[{l:'六级分类',v:'✅已建',s:'good'},{l:'货架=领地',v:'概念锁定',s:'good'},{l:'POS实时数据',v:'待接入',s:'bad'},{l:'动销自动计算',v:'待建',s:'bad'}],
+   gaps:['POS/收银系统实时数据接入','货架识别集成（需A21完成）','S+门店3次/周拜访路线优化'],
+   systemPrompt:'你是欣和SH INFINITY OS的「零售门店」Agent（IPO8-10）。职责：六级门店管理，货架库存监控，铺货率/陈列/动销三统治力。用中文简洁回答，不超过200字。'},
+  {name:'蝴蝶效应',emoji:'🦋',tag:'全链预警',score:62,ms:3,cat:'system',
+   desc:'IPO0-13跨节点连锁传导·提前2-3节点拦截·A/B/C三类失真模式·差值监控四层库存水位',
+   presets:['今天有哪些蝴蝶效应风险？','哪些节点存在压货失真（模式A）？','差值监控四层水位现在健康吗？'],
+   chatIntro:'你好，我是蝴蝶效应Agent，负责全链预警和失真检测。',
+   kpis:[{l:'传导计算',v:'✅',s:'good'},{l:'红色预警',v:'2条',s:'warn'},{l:'实时数据',v:'待接入',s:'bad'},{l:'企微推送',v:'待配置',s:'bad'}],
+   gaps:['实时数据流接入实现差值自动计算','失真模式ABC自动触发企微推送','自动推送至企业微信'],
+   systemPrompt:'你是欣和SH INFINITY OS的「蝴蝶效应」Agent（全链预警失真检测）。职责：IPO0-13跨节点连锁传导监测，提前2-3节点拦截，三种失真模式（A压货/B促销扰动/C窜货）自动标记。用中文简洁回答，不超过200字。'},
+  {name:'无菜单推单',emoji:'🍣',tag:'Omakase',score:63,ms:3,cat:'system',
+   desc:'A模型自动计算经销商补货量·SKU组合·直接推单·不需要人猜',
+   presets:['今天哪些经销商需要推单？','推单量怎么计算的？','SKU组合建议是什么？'],
+   chatIntro:'你好，我是无菜单推单Agent，你不用猜，我直接给你答案。',
+   kpis:[{l:'推单算法',v:'✅',s:'good'},{l:'SKU分配',v:'✅',s:'good'},{l:'经销商接单',v:'待建',s:'bad'},{l:'效果验证',v:'待建',s:'bad'}],
+   gaps:['经销商系统API自动接单','推单后效果自动验证'],
+   systemPrompt:'你是欣和SH INFINITY OS的「无菜单推单」Agent（Omakase）。职责：A模型自动计算经销商补货量、SKU组合，直接推单，不需要人猜。用中文简洁回答，不超过200字。'},
+  {name:'A值校准',emoji:'🎯',tag:'心跳地基维护',score:68,ms:3,cat:'system',
+   desc:'三重验证校准心跳单元a·日销率r=a÷T·双路径P1/P2分别校准·排除断货假信号/促销扰动',
+   presets:['哪些门店r·日销率需要上调？','a值下降是真实需求还是断货假信号？','P1与P2路径的a值差异多大？'],
+   chatIntro:'你好，我是A值校准Agent，心跳公式的基础维护系统。',
+   kpis:[{l:'校准算法',v:'✅',s:'good'},{l:'失真检测',v:'3模式',s:'good'},{l:'真实数据',v:'待接入',s:'bad'},{l:'季节模型',v:'待建',s:'bad'}],
+   gaps:['真实销售数据接入后首次完整r校准','季节性a值模型','P1/P2路径a值分离校准机制'],
+   systemPrompt:'你是欣和SH INFINITY OS的「A值校准」Agent（心跳地基维护）。职责：三重验证校准心跳单元a，日销率r=a÷T，双路径P1/P2分别校准，排除断货假信号/促销扰动。用中文简洁回答，不超过200字。'},
+  {name:'Uber激励',emoji:'🚗',tag:'CB+AIQL+货架扫描',score:58,ms:3,cat:'system',
+   desc:'自动派单+AI评价+CB粘性计算+AIQL追踪·1万美顾·货架AI识别·已有原型',
+   presets:['今天美顾应该做什么任务？','货架AI识别精度达标了吗？','CB分最低的门店是哪些？'],
+   chatIntro:'你好，我是Uber激励Agent，美顾任务调度中心。',
+   kpis:[{l:'CB公式',v:'✅',s:'good'},{l:'AIQL追踪',v:'✅',s:'good'},{l:'货架AI识别',v:'原型✅',s:'warn'},{l:'SFA整合',v:'待对接',s:'bad'}],
+   gaps:['货架识别API接入SFA App（原型已验证）','美顾微信小程序开发','即时到账支付接口'],
+   systemPrompt:'你是欣和SH INFINITY OS的「Uber激励」Agent（CB+AIQL+货架扫描）。职责：自动派单，AI评价，CB粘性计算，AIQL追踪，1万美顾管理，货架AI识别。用中文简洁回答，不超过200字。'},
+  {name:'货架识别',emoji:'📷',tag:'勤策替代·路线A',score:45,ms:2,cat:'shelf',
+   desc:'自训专属模型路线A·勤策为过渡工具兼免费标注员·训练数据管道已就绪·目标差异率≤3%',
+   presets:['训练数据现在积累了多少张？','自训模型和勤策精度差距多大？','什么时候可以替代勤策？'],
+   chatIntro:'你好，我是货架识别Agent，千问VL路线A集成进行中。',
+   kpis:[{l:'勤策精度',v:'<3%',s:'good'},{l:'千问精度',v:'76-88%',s:'warn'},{l:'训练数据',v:'管道已建',s:'warn'},{l:'自训模型',v:'待启动',s:'bad'}],
+   gaps:['SFA训练数据管道Java代码上线（2.5天）','积累1000张标注数据启动首轮训练','自训模型差异率目标<10%（第一阶段）'],
+   systemPrompt:'你是欣和SH INFINITY OS的「货架识别」Agent（勤策替代路线A）。职责：自训专属模型，千问VL集成，训练数据管道管理，目标差异率≤3%替代勤策。用中文简洁回答，不超过200字。'},
+  {name:'库存上报',emoji:'📦',tag:'缺口·最紧急',score:20,ms:1,cat:'shelf',
+   desc:'对应勤策库存上报模块·业务员拍照+填写货架量和仓库量·数据直接接入心跳公式a值计算·当前完全缺失',
+   presets:['库存上报页面什么时候能开发完？','货架量和仓库量怎么录入最简便？','近效期商品有多少？'],
+   chatIntro:'⚠️ 我是库存上报Agent，当前是最紧急缺口，完全未开发。',
+   kpis:[{l:'心跳算法',v:'✅已有',s:'good'},{l:'SFA页面',v:'待开发',s:'bad'},{l:'数据采集',v:'待开发',s:'bad'},{l:'水位计算',v:'待联通',s:'bad'}],
+   gaps:['SFA新增库存上报页面（货架量+仓库量）','对接心跳公式实时计算3a/2a/1a水位','近效期预警功能（调味品保质期管理）'],
+   systemPrompt:'你是欣和SH INFINITY OS的「库存上报」Agent（缺口·待开发）。职责：对应勤策库存上报模块，业务员拍照+填写货架量和仓库量，数据接入心跳公式a值计算。当前完全缺失，需要优先开发。用中文简洁回答，不超过200字。'},
+  {name:'价签识别',emoji:'🏷️',tag:'缺口·待开发',score:15,ms:1,cat:'shelf',
+   desc:'对应勤策价签识别模块·拍竞品价签自动读取价格·实时监控价格异常·对二批商乱价预警极重要',
+   presets:['竞品现在的零售价是多少？','有没有门店低于底价¥17在卖？','价格异常门店分布在哪些区域？'],
+   chatIntro:'⚠️ 我是价签识别Agent，当前是缺口，完全未开发，竞品价格监控依赖人工。',
+   kpis:[{l:'千问OCR',v:'可调用',s:'good'},{l:'价签识别',v:'待开发',s:'bad'},{l:'竞品价格库',v:'待建',s:'bad'},{l:'乱价预警',v:'待建',s:'bad'}],
+   gaps:['基于千问VL开发价签识别prompt','建立竞品价格基准数据库','与二批商Agent联动乱价预警'],
+   systemPrompt:'你是欣和SH INFINITY OS的「价签识别」Agent（缺口·待开发）。职责：拍竞品价签自动读取价格，实时监控价格异常，对二批商乱价预警。当前完全缺失。用中文简洁回答，不超过200字。'},
+  {name:'PRISM精准选点',emoji:'◈',tag:'消费者端',score:60,ms:3,cat:'consumer',
+   desc:'宏观+二三手数据定位高价值小区·Stage Gate共创推进·带动IPO11-13',
+   presets:['分析上海哪些小区值得做共创活动','成都高价值小区排名','PRISM活动如何带动IPO11?'],
+   chatIntro:'你好，我是PRISM精准选点Agent，帮你找到最值得投入的社区。',
+   kpis:[{l:'选点算法',v:'✅',s:'good'},{l:'Stage Gate',v:'✅',s:'good'},{l:'房产API',v:'待建',s:'bad'},{l:'效果回收',v:'待建',s:'bad'}],
+   gaps:['贝壳/安居客房价API接入','共创活动效果自动回收'],
+   systemPrompt:'你是欣和SH INFINITY OS的「PRISM精准选点」Agent（消费者端）。职责：宏观+二三手数据定位高价值小区，Stage Gate共创推进，带动IPO11-13。用中文简洁回答，不超过200字。'},
+  {name:'品牌AI顾问',emoji:'💎',tag:'AIQL·场景定义',score:55,ms:3,cat:'brand',
+   desc:'品牌战略+AIQL追踪+消费场景定义·五品牌矩阵·六月鲜=高端首选',
+   presets:['六月鲜和味达美定位有无冲突？','各品牌AIQL得分对比？','哪个品牌需要加大投入？'],
+   chatIntro:'你好，我是品牌AI顾问Agent，五品牌矩阵战略守护者。',
+   kpis:[{l:'品牌定位',v:'5品牌锁定',s:'good'},{l:'AIQL模型',v:'✅已建',s:'good'},{l:'品牌健康度',v:'待测量',s:'bad'},{l:'消费者认知',v:'待调研',s:'bad'}],
+   gaps:['品牌健康度追踪系统','消费者品牌认知调研数据','品牌间价格战风险预警'],
+   systemPrompt:'你是欣和SH INFINITY OS的「品牌AI顾问」Agent（AIQL·场景定义）。职责：五品牌矩阵管理，AIQL追踪，消费场景定义。六月鲜=高端首选，味达美=大众首选，禾然=有机首选。用中文简洁回答，不超过200字。'}
+];
+
+const catLabels={commander:'总指挥',lianheng:'连横',system:'系统Agent',shelf:'货架识别',consumer:'消费者',brand:'品牌'};
+
+let currentAgent=BRAIN_AGENT;
+let isLoading=false;
+
+// ── Picker ──
+function buildPicker(){
+  const body=document.getElementById('pickerBody');
+  // Brain first
+  const brainRow=document.createElement('div');
+  brainRow.className='picker-row'+(currentAgent===BRAIN_AGENT?' selected':'');
+  brainRow.innerHTML=`<div class="picker-emoji">🧠</div>
+    <div class="picker-info"><div class="picker-name">战略大脑</div><div class="picker-sub">INFINITY OS · 完整知识库 · 问任何经营问题</div></div>`;
+  brainRow.onclick=()=>{selectAgent(BRAIN_AGENT);hidePicker()};
+  body.appendChild(brainRow);
+  // By category
+  const cats={};
+  AGENTS.forEach(a=>{if(!cats[a.cat]) cats[a.cat]=[];cats[a.cat].push(a)});
+  Object.keys(cats).forEach(cat=>{
+    const lbl=document.createElement('div');lbl.className='picker-sec-label';lbl.textContent=catLabels[cat]||cat;
+    body.appendChild(lbl);
+    cats[cat].forEach(a=>{
+      const sc=a.score>=65?'var(--green)':a.score>=45?'var(--amber)':'var(--red)';
+      const row=document.createElement('div');
+      row.className='picker-row'+(currentAgent===a?' selected':'');
+      row.id='pr-'+a.name;
+      row.innerHTML=`<div class="picker-emoji">${a.emoji}</div>
+        <div class="picker-info"><div class="picker-name">${a.name}</div><div class="picker-sub">${a.tag} · ${a.desc.substring(0,36)}…</div></div>
+        <div><div class="picker-score" style="color:${sc}">${a.score}</div><div class="picker-ms">M${a.ms}/5</div></div>`;
+      row.onclick=()=>{selectAgent(a);hidePicker()};
+      body.appendChild(row);
+    });
+  });
+}
+
+function selectAgent(a){
+  currentAgent=a;
+  document.getElementById('topAgentAvatar').textContent=a.emoji;
+  document.getElementById('topAgentName').textContent=a.name;
+  document.getElementById('topAgentTag').textContent=a.tag;
+  document.getElementById('currentAgentLabel').textContent=a.name;
+  document.getElementById('chatInput').placeholder='问 '+a.name+'…';
+  // Reset chat
+  clearAndShowWelcome(a);
+}
+
+function showPicker(){document.getElementById('agentPicker').classList.add('show')}
+function hidePicker(){document.getElementById('agentPicker').classList.remove('show')}
+function pickerBg(e){if(e.target===document.getElementById('agentPicker'))hidePicker()}
+
+function switchToBrain(){selectAgent(BRAIN_AGENT)}
+
+// ── Welcome ──
+function clearAndShowWelcome(a){
+  const area=document.getElementById('chatArea');
+  area.innerHTML=`<div class="welcome" id="welcome">
+    <div class="welcome-icon">${a.emoji}</div>
+    <div class="welcome-title">${a.name}</div>
+    <div class="welcome-sub">${a.tag}</div>
+    <div class="welcome-presets" id="welcomePresets"></div>
+  </div>`;
+  buildWelcomePresets(a);
+}
+
+function buildWelcomePresets(a){
+  const el=document.getElementById('welcomePresets');
+  if(!el)return;
+  // Agent info card for non-brain
+  if(a!==BRAIN_AGENT&&a.kpis){
+    const card=document.createElement('div');card.className='agent-card-msg';
+    let kpiHtml='<div class="acm-kpis">';
+    a.kpis.forEach(k=>{kpiHtml+=`<div class="acm-kpi"><div class="acm-kpi-l">${k.l}</div><div class="acm-kpi-v ${k.s}">${k.v}</div></div>`;});
+    kpiHtml+='</div>';
+    card.innerHTML=`<div class="acm-top"><div class="acm-emoji">${a.emoji}</div><div><div class="acm-name">${a.name}</div><div class="acm-tag">${a.tag}</div></div></div>
+      ${kpiHtml}
+      <div class="acm-gaps">⚠️ 缺口：<span>${a.gaps?.slice(0,2).join('、')}</span></div>`;
+    el.appendChild(card);
+  }
+  a.presets.forEach(p=>{
+    const btn=document.createElement('div');btn.className='wp-btn';
+    btn.innerHTML=`<div class="wp-icon">›</div>${p}`;
+    btn.onclick=()=>{sendPreset(p)};
+    el.appendChild(btn);
+  });
+}
+
+// ── Chat ──
+function handleKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}
+}
+
+function autoResize(ta){
+  ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,100)+'px';
+  document.getElementById('charCount').textContent=ta.value.length;
+}
+
+function sendPreset(q){
+  document.getElementById('chatInput').value=q;
+  sendMessage();
+}
+
+async function sendMessage(){
+  const input=document.getElementById('chatInput');
+  const q=input.value.trim();
+  if(!q||isLoading)return;
+  input.value='';input.style.height='auto';
+  document.getElementById('charCount').textContent='0';
+
+  // Remove welcome
+  const welcome=document.getElementById('welcome');
+  if(welcome)welcome.remove();
+
+  // Add user msg
+  addMsg('user',q);
+
+  // Add AI loading
+  const loadId='load-'+Date.now();
+  addLoadingMsg(loadId);
+  isLoading=true;
+
+  const sys=currentAgent===BRAIN_AGENT?BRAIN_AGENT.systemPrompt:currentAgent.systemPrompt;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})});
+    const d=await r.json();
+    const txt=d.content?.map(c=>c.text||'').join('')||'暂时无法获取回答，请稍后重试。';
+    replaceLoading(loadId,txt);
+  }catch(e){
+    replaceLoading(loadId,'⚠️ 连接失败：'+e.message);
+  }
+  isLoading=false;
+}
+
+function addMsg(role,text){
+  const area=document.getElementById('chatArea');
+  const div=document.createElement('div');
+  div.className='msg msg-'+(role==='user'?'user':'ai');
+  if(role==='user'){
+    div.innerHTML=`<div class="bubble bubble-user">${escHtml(text)}</div>
+      <div class="msg-meta">你</div>`;
+  }else{
+    div.innerHTML=`<div class="msg-meta"><span class="msg-avatar">${currentAgent.emoji}</span>${currentAgent.name}</div>
+      <div class="bubble bubble-ai"><div style="white-space:pre-wrap">${escHtml(text)}</div></div>`;
+  }
+  area.appendChild(div);
+  area.scrollTop=area.scrollHeight;
+}
+
+function addLoadingMsg(id){
+  const area=document.getElementById('chatArea');
+  const div=document.createElement('div');div.className='msg msg-ai';div.id=id;
+  div.innerHTML=`<div class="msg-meta"><span class="msg-avatar">${currentAgent.emoji}</span>${currentAgent.name}</div>
+    <div class="bubble bubble-ai"><div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+  area.appendChild(div);
+  area.scrollTop=area.scrollHeight;
+}
+
+function replaceLoading(id,text){
+  const div=document.getElementById(id);
+  if(!div)return;
+  div.innerHTML=`<div class="msg-meta"><span class="msg-avatar">${currentAgent.emoji}</span>${currentAgent.name}</div>
+    <div class="bubble bubble-ai"><div style="white-space:pre-wrap">${escHtml(text)}</div></div>`;
+  const area=document.getElementById('chatArea');
+  area.scrollTop=area.scrollHeight;
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// ── Init ──
+buildPicker();
+buildWelcomePresets(BRAIN_AGENT);
+</script>
+</body>
+</html>
