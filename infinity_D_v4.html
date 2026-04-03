@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>infinity無界♾️1-v4 · 界面D · 极简对话</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080d;--bg2:#0c0e16;--bg3:#111420;
+  --card:#151820;--card2:#1c2030;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#e0e6f5;--text2:#8a97b0;--text3:#414d62;
+  --amber:#f5a623;--amber2:#ffca6a;--amber-dim:rgba(245,166,35,0.12);
+  --teal:#4ecdc4;--red:#ff5f5f;--green:#4ade80;--purple:#a78bfa;
+  --user-bubble:#1e2435;--ai-bubble:#141820;
+  --msg-border:rgba(255,255,255,0.05);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;display:flex;flex-direction:column}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:240px;
+  background:var(--bg2);border-right:1px solid var(--border);
+  z-index:200;transform:translateX(-100%);transition:transform 0.25s ease;
+  display:flex;flex-direction:column;
+}
+.sidebar.open{transform:translateX(0)}
+.sidebar-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.sidebar-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.sidebar-close{
+  width:26px;height:26px;border-radius:7px;background:var(--bg3);border:none;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text2);
+}
+.sidebar-section{padding:10px 12px 6px;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase}
+.agent-btn{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;
+  border-radius:9px;margin:0 6px 2px;transition:all 0.15s;
+}
+.agent-btn:hover{background:rgba(255,255,255,0.04)}
+.agent-btn.active{background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.15)}
+.agent-btn-icon{font-size:15px;flex-shrink:0;width:20px;text-align:center}
+.agent-btn-info{flex:1;min-width:0}
+.agent-btn-name{font-size:11px;font-weight:600;line-height:1.2}
+.agent-btn-score{font-family:'Space Mono',monospace;font-size:10px}
+.sidebar-scroll{flex:1;overflow-y:auto;padding-bottom:12px}
+.sidebar-scroll::-webkit-scrollbar{width:2px}
+.sidebar-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:2px}
+
+/* ── TOPBAR ── */
+.topbar{
+  display:flex;align-items:center;height:52px;
+  background:rgba(7,8,13,0.95);border-bottom:1px solid var(--border);
+  padding:0 14px;gap:10px;flex-shrink:0;z-index:100;
+  backdrop-filter:blur(12px);
+}
+.menu-btn{
+  width:34px;height:34px;border-radius:10px;background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;
+  transition:all 0.15s;flex-shrink:0;
+}
+.menu-btn:hover{border-color:var(--amber)}
+.current-agent{
+  flex:1;display:flex;align-items:center;gap:10px;cursor:pointer;
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:7px 12px;transition:all 0.15s;min-width:0;
+}
+.current-agent:hover{border-color:var(--border2)}
+.ca-emoji{font-size:18px;flex-shrink:0}
+.ca-info{flex:1;min-width:0}
+.ca-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ca-tag{font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ca-score{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;flex-shrink:0}
+.ca-chevron{font-size:10px;color:var(--text3);flex-shrink:0}
+.clock{font-family:'Space Mono',monospace;font-size:11px;color:var(--text3);flex-shrink:0}
+
+/* ── CHAT AREA ── */
+.chat-area{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.chat-area::-webkit-scrollbar{width:3px}
+.chat-area::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:2px}
+
+.welcome-card{
+  margin:auto;max-width:400px;text-align:center;padding:32px 20px;
+}
+.welcome-agent-emoji{font-size:52px;margin-bottom:12px;display:block}
+.welcome-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px}
+.welcome-tag{font-size:12px;color:var(--amber);margin-bottom:12px}
+.welcome-desc{font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px}
+.welcome-kpis{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;text-align:left}
+.welcome-kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px}
+.welcome-kpi-lbl{font-size:9px;color:var(--text3);margin-bottom:2px;text-transform:uppercase;letter-spacing:0.06em}
+.welcome-kpi-val{font-size:12px;font-weight:700}
+.welcome-kpi-val.good{color:var(--green)}.welcome-kpi-val.warn{color:var(--amber)}.welcome-kpi-val.bad{color:var(--red)}
+.quick-q-title{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px}
+.quick-qs{display:flex;flex-direction:column;gap:6px}
+.quick-q-btn{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:9px 14px;font-size:12px;color:var(--text2);text-align:left;cursor:pointer;
+  transition:all 0.14s;font-family:'Noto Sans SC',sans-serif;
+  display:flex;align-items:center;gap:8px;
+}
+.quick-q-btn:hover{border-color:var(--amber);color:var(--text);background:var(--amber-dim)}
+
+/* Messages */
+.msg{display:flex;gap:10px;padding:6px 0;max-width:100%;animation:msgIn 0.18s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+.msg-user{flex-direction:row-reverse}
+.msg-bubble{
+  border-radius:14px;padding:11px 14px;font-size:13px;line-height:1.7;
+  max-width:calc(100% - 40px);border:1px solid var(--msg-border);
+}
+.msg-user .msg-bubble{
+  background:var(--user-bubble);border-color:rgba(255,255,255,0.08);color:var(--text);
+  border-radius:14px 4px 14px 14px;
+}
+.msg-ai .msg-bubble{
+  background:var(--ai-bubble);border-color:rgba(255,255,255,0.06);color:var(--text2);
+  border-radius:4px 14px 14px 14px;
+}
+.msg-avatar{
+  width:30px;height:30px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:15px;margin-top:4px;
+  border:1px solid var(--border);
+}
+.msg-user .msg-avatar{background:rgba(245,166,35,0.1);border-color:rgba(245,166,35,0.2)}
+.msg-ai .msg-avatar{background:var(--card);border-color:var(--border)}
+.thinking-msg{color:var(--text3);display:flex;gap:4px;align-items:center;padding:4px 0}
+.td{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:td 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* ── INPUT BAR ── */
+.input-bar{
+  padding:10px 14px;background:rgba(7,8,13,0.95);backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);flex-shrink:0;
+}
+.input-row{display:flex;gap:8px;align-items:flex-end}
+.input-box{
+  flex:1;background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:11px 14px;font-size:13px;color:var(--text);outline:none;
+  font-family:'Noto Sans SC',sans-serif;resize:none;max-height:120px;
+  transition:border-color 0.15s;
+}
+.input-box:focus{border-color:rgba(245,166,35,0.4)}
+.input-box::placeholder{color:var(--text3)}
+.send-btn{
+  width:42px;height:42px;border-radius:12px;background:var(--amber);border:none;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:18px;font-weight:700;color:#000;transition:all 0.15s;flex-shrink:0;
+}
+.send-btn:hover{background:var(--amber2);transform:scale(1.05)}
+.send-btn:disabled{background:var(--bg3);cursor:default;transform:none}
+.input-hints{display:flex;gap:6px;margin-top:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.input-hints::-webkit-scrollbar{display:none}
+.hint-chip{
+  background:var(--bg3);border:1px solid var(--border);border-radius:14px;
+  padding:4px 10px;font-size:10px;color:var(--text3);white-space:nowrap;cursor:pointer;
+  transition:all 0.12s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif;
+}
+.hint-chip:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+
+/* Overlay backdrop */
+.backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:150}
+.backdrop.show{display:block}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- BACKDROP -->
+<div class="backdrop" id="backdrop" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-hdr">
+    <div class="sidebar-title">無界♾️ · Agent 切换</div>
+    <button class="sidebar-close" onclick="closeSidebar()">✕</button>
+  </div>
+  <div class="sidebar-scroll" id="sidebarScroll"></div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="menu-btn" onclick="openSidebar()">☰</div>
+  <div class="current-agent" id="currentAgentBar" onclick="openSidebar()">
+    <div class="ca-emoji" id="caEmoji">🧠</div>
+    <div class="ca-info">
+      <div class="ca-name" id="caName">AI 战略大脑</div>
+      <div class="ca-tag" id="caTag">INFINITY OS · 完整知识库</div>
+    </div>
+    <div class="ca-score" id="caScore" style="color:var(--amber)">—</div>
+    <div class="ca-chevron">⌄</div>
+  </div>
+  <div class="clock" id="clock"></div>
+</div>
+
+<!-- CHAT AREA -->
+<div class="chat-area" id="chatArea">
+  <!-- welcome card injected by JS -->
+</div>
+
+<!-- INPUT BAR -->
+<div class="input-bar">
+  <div class="input-row">
+    <textarea class="input-box" id="inputBox" placeholder="问问题，切换Agent…" rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+  </div>
+  <div class="input-hints" id="inputHints"></div>
+</div>
+
+<script>
+// Clock
+function updateClock(){const n=new Date();document.getElementById('clock').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');}
+updateClock();setInterval(updateClock,1000);
+
+// Data
+const BRAIN={
+  name:'AI战略大脑',emoji:'🧠',tag:'INFINITY OS · 完整知识库',score:null,
+  desc:'基于完整知识库的战略大脑·纵横框架·心跳公式·QC对比·六月鲜北极星·五品牌矩阵',
+  kpis:[],
+  gaps:[],
+  presets:['INFINITY OS与QC相比，超越了哪8项？还有哪7项缺口最紧急？','库存心跳系统v2.0的心跳单元a和三层水位是怎么定义的？','六月鲜的战略北极星是什么？200M瓶和4B RMB的路径怎么走？','纵横框架的98个理论交叉点是怎么形成的？'],
+  systemPrompt:'你是欣和SH infinity無界♾️1-v4战略大脑。精通：纵横框架（7渠道×IPO0-13=98交叉点）、库存心跳v2.0（心跳单元a·三层水位·六级拜访）、24个Agent体系、QC替代路线A（货架识别千问VL）、六月鲜战略北极星（200M瓶/4B RMB）、五品牌矩阵。用中文回答，清晰结构化，不超过300字。'
+};
+
+const AGENTS_LIST=[
+  {name:'AIO总指挥',emoji:'⚡',tag:'Commander',score:65,cat:'总指挥',desc:'全链调度：差距检测→任务派发→积分结算完整闭环，协调所有子Agent',kpis:[{l:'差距检测',v:'实时',s:'good'},{l:'任务派发',v:'自动',s:'good'},{l:'真实数据',v:'待接入',s:'bad'},{l:'Agent协商',v:'待建',s:'bad'}],gaps:['接入ERP/CRM真实数据','与蝴蝶效应Agent动态联动','自主决策权限升级'],presets:['今天哪些门店差距最大？','给我一份AIO日报','美顾和DSR积分排名']},
+  {name:'生产供应',emoji:'🏭',tag:'IPO0-1',score:60,cat:'连横',desc:'工厂产能·发货库存水位·生产计划达成率，预警上游断供风险',kpis:[{l:'产能',v:'96%',s:'good'},{l:'库存',v:'89%',s:'good'},{l:'MES对接',v:'待建',s:'bad'},{l:'自动调产',v:'待建',s:'bad'}],gaps:['工厂MES系统API对接','生产计划自动调整建议'],presets:['工厂今天产能怎么样？','发货库存水位正常吗？','有没有断供风险？']},
+  {name:'经销商全链',emoji:'🤝',tag:'IPO2-4',score:70,cat:'连横',desc:'进货/库存/出货全链·心跳单元a·水位2a满仓→1a预警·P1/P2路径并存',kpis:[{l:'心跳公式',v:'✅已建',s:'good'},{l:'健康评分',v:'S-D',s:'good'},{l:'ERP对接',v:'待接入',s:'bad'},{l:'自动预警',v:'待配置',s:'bad'}],gaps:['ERP系统实时数据接入','经销商App自动接单','补货预警企微推送'],presets:['今天哪些经销商库存低于1a？','P1和P2渠道健康对比','哪些经销商需要立即联系？']},
+  {name:'二批商',emoji:'🚚',tag:'IPO5-7·P2',score:65,cat:'连横',desc:'P2路径专属·餐饮渠道为主·库存严控1:1·价格管控底价¥17',kpis:[{l:'价格底线',v:'¥17',s:'warn'},{l:'窜货检测',v:'规则已建',s:'good'},{l:'库存实时',v:'待接入',s:'bad'},{l:'乱价预警',v:'待联通',s:'bad'}],gaps:['二批商进销存数据接入','价签识别联动乱价预警','B端餐饮CRM打通'],presets:['有没有二批商库存超1a压货？','底价以下乱价门店？','P2餐饮渠道本周动销？']},
+  {name:'零售门店',emoji:'🏪',tag:'IPO8-10',score:68,cat:'连横',desc:'六级门店周期·货架=领地·水位3a满仓→2a补货预警',kpis:[{l:'六级分类',v:'✅已建',s:'good'},{l:'货架=领地',v:'概念锁定',s:'good'},{l:'POS实时',v:'待接入',s:'bad'},{l:'动销计算',v:'待建',s:'bad'}],gaps:['POS实时数据接入','货架识别集成','S+门店路线优化'],presets:['今天S+门店库存水位？','铺货率最低10家门店？','哪些门店需要紧急补货？']},
+  {name:'消费者深度',emoji:'👥',tag:'IPO11-13',score:62,cat:'连横',desc:'购买/家中库存/购买周期·渗透率·复购率·流失预警',kpis:[{l:'渗透率模型',v:'✅已建',s:'good'},{l:'复购预测',v:'框架就绪',s:'warn'},{l:'消费者数据',v:'待接入',s:'bad'},{l:'流失预警',v:'待建',s:'bad'}],gaps:['微信/会员数据接入','复购率模型校准','家庭渗透率城市分级'],presets:['六月鲜家庭渗透率？','高价值用户复购周期','流失风险最高用户群？']},
+  {name:'餐饮渠道',emoji:'🍜',tag:'B端IPO8b-11b',score:55,cat:'连横',desc:'餐厅分级·菜单绑定率·厨师关系·大客户锁定',kpis:[{l:'餐厅分级',v:'已建模',s:'good'},{l:'菜单绑定率',v:'待测量',s:'warn'},{l:'厨师AIQL',v:'待建',s:'bad'},{l:'大客户CRM',v:'待建',s:'bad'}],gaps:['B端餐饮客户数据库建立','菜单绑定率跟踪','厨师AIQL评分'],presets:['绑定菜单餐厅占比？','重点大客户本月进货？','哪些餐厅有流失风险？']},
+  {name:'蝴蝶效应',emoji:'🦋',tag:'全链失真检测',score:62,cat:'系统',desc:'IPO0-13跨节点·A压货/B促销/C窜货三类失真·提前2-3节点拦截',kpis:[{l:'传导计算',v:'✅',s:'good'},{l:'红色预警',v:'2条',s:'warn'},{l:'实时数据',v:'待接入',s:'bad'},{l:'企微推送',v:'待配置',s:'bad'}],gaps:['实时数据流接入','失真模式ABC自动触发企微推送'],presets:['今天蝴蝶效应风险？','哪些节点存在压货失真？','四层水位现在健康吗？']},
+  {name:'无菜单推单',emoji:'🍣',tag:'Omakase',score:63,cat:'系统',desc:'A模型自动计算经销商补货量·SKU组合·直接推单',kpis:[{l:'推单算法',v:'✅',s:'good'},{l:'SKU分配',v:'✅',s:'good'},{l:'经销商接单',v:'待建',s:'bad'},{l:'效果验证',v:'待建',s:'bad'}],gaps:['经销商系统API自动接单','推单后效果自动验证'],presets:['哪些经销商需要推单？','推单量怎么计算？','SKU组合建议？']},
+  {name:'A值校准',emoji:'🎯',tag:'心跳地基维护',score:68,cat:'系统',desc:'三重验证校准心跳单元a·r=a÷T·双路径P1/P2分别校准',kpis:[{l:'校准算法',v:'✅',s:'good'},{l:'失真检测',v:'3模式',s:'good'},{l:'真实数据',v:'待接入',s:'bad'},{l:'季节模型',v:'待建',s:'bad'}],gaps:['真实销售数据接入后首次r校准','季节性a值模型'],presets:['哪些门店r需要上调？','a值下降是真实需求还是断货？','P1与P2路径a值差异？']},
+  {name:'Uber激励',emoji:'🚗',tag:'CB+AIQL+货架扫描',score:58,cat:'系统',desc:'自动派单+CB粘性计算+AIQL追踪·1万美顾·货架AI识别',kpis:[{l:'CB公式',v:'✅',s:'good'},{l:'AIQL追踪',v:'✅',s:'good'},{l:'货架AI识别',v:'原型✅',s:'warn'},{l:'SFA整合',v:'待对接',s:'bad'}],gaps:['货架识别API接入SFA App','美顾微信小程序','即时到账支付'],presets:['今天美顾做什么任务？','货架AI识别精度达标了吗？','CB分最低门店？']},
+  {name:'货架识别',emoji:'📷',tag:'QC替代·路线A',score:45,cat:'货架识别',desc:'自训专属模型路线A·QC为过渡工具兼免费标注员·目标≤3%替代QC',kpis:[{l:'QC精度',v:'<3%',s:'good'},{l:'千问精度',v:'76-88%',s:'warn'},{l:'训练数据',v:'管道已建',s:'warn'},{l:'自训模型',v:'待启动',s:'bad'}],gaps:['SFA训练数据管道上线','积累1000张标注数据','自训模型<10%差异率'],presets:['训练数据积累了多少张？','自训模型和QC精度差距？','什么时候替代QC？']},
+  {name:'库存上报',emoji:'📦',tag:'缺口·待开发',score:20,cat:'货架识别',desc:'对应QC库存上报模块·当前完全缺失·最紧急开发项',kpis:[{l:'心跳算法',v:'✅已有',s:'good'},{l:'SFA页面',v:'待开发',s:'bad'},{l:'数据采集',v:'待开发',s:'bad'},{l:'水位计算',v:'待联通',s:'bad'}],gaps:['SFA新增库存上报页面','对接心跳公式实时计算水位','近效期预警'],presets:['库存上报页面什么时候开发？','货架量和仓库量怎么录入？','近效期商品有多少？']},
+  {name:'价签识别',emoji:'🏷️',tag:'缺口·待开发',score:15,cat:'货架识别',desc:'对应QC价签识别模块·当前完全缺失·对乱价预警极重要',kpis:[{l:'千问OCR',v:'可调用',s:'good'},{l:'价签识别',v:'待开发',s:'bad'},{l:'竞品价格库',v:'待建',s:'bad'},{l:'乱价预警',v:'待建',s:'bad'}],gaps:['基于千问VL开发价签识别prompt','建立竞品价格基准数据库','与二批商Agent联动'],presets:['竞品现在零售价多少？','有没有门店低于底价¥17？','价格异常门店分布？']},
+  {name:'PRISM精准选点',emoji:'◈',tag:'消费者端',score:60,cat:'消费者',desc:'宏观+二三手数据定位高价值小区·Stage Gate共创推进',kpis:[{l:'选点算法',v:'✅',s:'good'},{l:'Stage Gate',v:'✅',s:'good'},{l:'房产API',v:'待建',s:'bad'},{l:'效果回收',v:'待建',s:'bad'}],gaps:['贝壳/安居客房价API接入','共创活动效果自动回收'],presets:['上海哪些小区值得做共创？','成都高价值小区排名','PRISM如何带动IPO11?']},
+  {name:'小红书种草棒',emoji:'📕',tag:'合纵棒1',score:45,cat:'合纵',desc:'合纵7棒第1棒·社区共创产生拉力需求·KOC激活·爆文矩阵',kpis:[{l:'内容策划',v:'框架就绪',s:'warn'},{l:'KOC匹配',v:'待建',s:'bad'},{l:'爆文监测',v:'待接入',s:'bad'},{l:'转化归因',v:'待建',s:'bad'}],gaps:['小红书数据API接入','KOC评分系统','内容效果与销售转化归因'],presets:['六月鲜小红书爆文选题？','哪类KOC转化率最高？','本月种草内容计划？']},
+  {name:'抖音爆发棒',emoji:'🎵',tag:'合纵棒2',score:38,cat:'合纵',desc:'合纵7棒第2棒·短视频矩阵·达人匹配·直播带货',kpis:[{l:'脚本模板',v:'已建',s:'good'},{l:'达人评分',v:'待建',s:'bad'},{l:'投放ROI',v:'待测量',s:'bad'},{l:'抖音数据',v:'待接入',s:'bad'}],gaps:['抖音数据API接入','达人匹配ROI预估','直播话术智能生成'],presets:['本月抖音投放策略？','达人合作优先级？','直播最佳时间窗口？']},
+  {name:'电商转化棒',emoji:'🛒',tag:'合纵棒3',score:40,cat:'合纵',desc:'合纵7棒第3棒·天猫/京东/拼多多·搜索排名优化',kpis:[{l:'SKU矩阵',v:'已建',s:'good'},{l:'搜索优化',v:'待建',s:'bad'},{l:'大促节奏',v:'手动',s:'warn'},{l:'电商数据',v:'待接入',s:'bad'}],gaps:['电商平台数据API接入','搜索排名自动优化','大促节点智能预备'],presets:['天猫六月鲜搜索排名？','大促备货建议？','哪个SKU转化率最高？']},
+  {name:'O2O即时棒',emoji:'⚡',tag:'合纵棒4',score:32,cat:'合纵',desc:'合纵7棒第4棒·美团/饿了么/京东到家·30分钟配送圈',kpis:[{l:'平台覆盖',v:'3个',s:'warn'},{l:'前置仓',v:'待规划',s:'bad'},{l:'实时订单',v:'待接入',s:'bad'},{l:'配送时效',v:'待测量',s:'bad'}],gaps:['O2O平台数据统一接入','前置仓库存联动心跳','即时需求预测模型'],presets:['美团上六月鲜销量？','即时零售覆盖门店数量？','哪些区域O2O潜力最大？']},
+  {name:'仓储会员棒',emoji:'🏬',tag:'合纵棒5',score:35,cat:'合纵',desc:'合纵7棒第5棒·山姆/Costco/麦德龙·大包装SKU',kpis:[{l:'大包装SKU',v:'已上架',s:'good'},{l:'会员渗透',v:'待测量',s:'bad'},{l:'会员数据',v:'待接入',s:'bad'},{l:'复购率',v:'待测量',s:'bad'}],gaps:['会员仓储平台数据API','大包装SKU定价优化','高价值会员画像'],presets:['山姆渠道六月鲜销售趋势？','会员客群和普通渠道区别？','大包装SKU补货建议？']},
+  {name:'大卖场棒',emoji:'🏢',tag:'合纵棒6',score:33,cat:'合纵',desc:'合纵7棒第6棒·沃尔玛/家乐福/大润发·堆头/端架/黄金位',kpis:[{l:'KA覆盖',v:'主要已覆盖',s:'warn'},{l:'堆头管理',v:'手动',s:'warn'},{l:'POS数据',v:'待接入',s:'bad'},{l:'账期管控',v:'手动',s:'bad'}],gaps:['大卖场POS数据接入','堆头端架AI管理','KA账期自动预警'],presets:['重点KA门店本月销售？','黄金位陈列占比？','哪些大卖场需要跟进？']},
+  {name:'社区超市棒',emoji:'🏘️',tag:'合纵棒7',score:30,cat:'合纵',desc:'合纵7棒第7棒·社区生鲜超市·邻里中心·高频消费场景',kpis:[{l:'门店覆盖',v:'统计中',s:'warn'},{l:'下沉城市',v:'规划中',s:'warn'},{l:'社区数据',v:'待建',s:'bad'},{l:'高频复购',v:'待测量',s:'bad'}],gaps:['社区超市门店数据库建立','下沉市场渠道策略','社区场景专属SKU规划'],presets:['社区渠道覆盖多少门店？','下沉市场渗透率？','社区超市补货频次建议？']},
+  {name:'品牌AI顾问',emoji:'💎',tag:'AIQL·场景定义',score:55,cat:'品牌',desc:'品牌战略+AIQL追踪·六月鲜=高端首选·五品牌矩阵',kpis:[{l:'品牌定位',v:'5品牌锁定',s:'good'},{l:'AIQL模型',v:'✅已建',s:'good'},{l:'品牌健康度',v:'待测量',s:'bad'},{l:'消费者认知',v:'待调研',s:'bad'}],gaps:['品牌健康度追踪系统','消费者品牌认知调研','品牌间价格战风险预警'],presets:['六月鲜和味达美定位冲突？','各品牌AIQL得分对比？','哪个品牌需要加大投入？']},
+  {name:'鲜生顾问',emoji:'🌿',tag:'高端场景',score:47,cat:'品牌',desc:'六月鲜高端场景渗透·烹饪配对建议·厨师KOL',kpis:[{l:'场景数据库',v:'建设中',s:'warn'},{l:'厨师KOL',v:'待建',s:'bad'},{l:'高端渠道',v:'部分覆盖',s:'warn'},{l:'内容工具',v:'待开发',s:'bad'}],gaps:['高端场景内容生成工具','厨师/美食KOL合作网络','米其林餐厅渠道打通'],presets:['六月鲜适合哪些高端场景？','厨师KOL合作怎么切入？','高端场景定价支撑力？']}
+];
+
+// Build sidebar
+const cats={};
+AGENTS_LIST.forEach(a=>{if(!cats[a.cat])cats[a.cat]=[];cats[a.cat].push(a)});
+const scroll=document.getElementById('sidebarScroll');
+
+// Brain first
+const brainBtn=document.createElement('div');
+brainBtn.className='agent-btn';brainBtn.id='btn-brain';
+brainBtn.innerHTML=`<div class="agent-btn-icon">🧠</div><div class="agent-btn-info"><div class="agent-btn-name">AI战略大脑</div><div class="agent-btn-score" style="color:var(--amber)">全局</div></div>`;
+brainBtn.onclick=()=>switchAgent(null);
+scroll.appendChild(brainBtn);
+
+Object.entries(cats).forEach(([cat,agents])=>{
+  const sec=document.createElement('div');sec.className='sidebar-section';sec.textContent=cat;scroll.appendChild(sec);
+  agents.forEach(a=>{
+    const sc=a.score>=65?'var(--green)':a.score>=45?'var(--amber)':'var(--red)';
+    const btn=document.createElement('div');btn.className='agent-btn';btn.id='btn-'+a.name.replace(/\s/g,'_');
+    btn.innerHTML=`<div class="agent-btn-icon">${a.emoji}</div><div class="agent-btn-info"><div class="agent-btn-name">${a.name}</div><div class="agent-btn-score" style="color:${sc}">${a.score}</div></div>`;
+    btn.onclick=()=>switchAgent(a);
+    scroll.appendChild(btn);
+  });
+});
+
+// Sidebar open/close
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('backdrop').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('backdrop').classList.remove('show')}
+
+// State
+let currentAgent=null;// null = brain
+let history=[];
+let isThinking=false;
+
+function switchAgent(agent){
+  currentAgent=agent;
+  history=[];
+  closeSidebar();
+
+  // Update topbar
+  const a=agent||BRAIN;
+  document.getElementById('caEmoji').textContent=a.emoji;
+  document.getElementById('caName').textContent=a.name||a.name;
+  document.getElementById('caTag').textContent=a.tag;
+  const sc=a.score?(a.score>=65?'var(--green)':a.score>=45?'var(--amber)':'var(--red)'):'var(--amber)';
+  document.getElementById('caScore').style.color=sc;
+  document.getElementById('caScore').textContent=a.score||'—';
+
+  // Update sidebar active
+  document.querySelectorAll('.agent-btn').forEach(b=>b.classList.remove('active'));
+  const btnId=agent?'btn-'+agent.name.replace(/\s/g,'_'):'btn-brain';
+  const b=document.getElementById(btnId);if(b)b.classList.add('active');
+
+  // Reset chat
+  const area=document.getElementById('chatArea');
+  area.innerHTML='';
+  showWelcome(agent||BRAIN);
+  updateHints(a);
+}
+
+function showWelcome(a){
+  const area=document.getElementById('chatArea');
+  const div=document.createElement('div');
+  div.className='welcome-card';
+
+  let kpiHtml='';
+  if(a.kpis&&a.kpis.length>0){
+    kpiHtml='<div class="welcome-kpis">';
+    a.kpis.forEach(k=>kpiHtml+=`<div class="welcome-kpi"><div class="welcome-kpi-lbl">${k.l}</div><div class="welcome-kpi-val ${k.s}">${k.v}</div></div>`);
+    kpiHtml+='</div>';
+  }
+
+  let presetsHtml='';
+  if(a.presets&&a.presets.length>0){
+    presetsHtml=`<div class="quick-q-title">快捷提问</div><div class="quick-qs">`;
+    a.presets.forEach(p=>presetsHtml+=`<button class="quick-q-btn" onclick="fillAndSend('${p.replace(/'/g,"\\'")}')">→ ${p}</button>`);
+    presetsHtml+='</div>';
+  }
+
+  div.innerHTML=`
+    <span class="welcome-agent-emoji">${a.emoji}</span>
+    <div class="welcome-name">${a.name}</div>
+    <div class="welcome-tag">${a.tag}</div>
+    <div class="welcome-desc">${a.desc}</div>
+    ${kpiHtml}
+    ${presetsHtml}`;
+  area.appendChild(div);
+}
+
+function updateHints(a){
+  const el=document.getElementById('inputHints');
+  el.innerHTML='';
+  (a.presets||[]).slice(0,4).forEach(p=>{
+    const chip=document.createElement('div');
+    chip.className='hint-chip';chip.textContent=p;
+    chip.onclick=()=>fillAndSend(p);
+    el.appendChild(chip);
+  });
+}
+
+function fillAndSend(text){
+  document.getElementById('inputBox').value=text;
+  sendMessage();
+}
+
+function addMsg(role,text){
+  const area=document.getElementById('chatArea');
+  const welcomeCard=area.querySelector('.welcome-card');
+  if(welcomeCard) welcomeCard.remove();
+
+  const div=document.createElement('div');
+  div.className=`msg msg-${role}`;
+  const avatar=role==='user'?'你':((currentAgent||BRAIN).emoji);
+  div.innerHTML=`
+    <div class="msg-avatar">${avatar}</div>
+    <div class="msg-bubble">${typeof text==='string'?text.replace(/\n/g,'<br>'):'<div class="thinking-msg"><div class="td"></div><div class="td"></div><div class="td"></div></div>'}</div>`;
+  area.appendChild(div);
+  area.scrollTop=area.scrollHeight;
+  return div;
+}
+
+async function sendMessage(){
+  if(isThinking)return;
+  const input=document.getElementById('inputBox');
+  const q=input.value.trim();if(!q)return;
+  input.value='';autoResize(input);
+
+  addMsg('user',q);
+  history.push({role:'user',content:q});
+
+  const thinkingDiv=addMsg('ai',null);
+  isThinking=true;
+  document.getElementById('sendBtn').disabled=true;
+
+  const a=currentAgent||BRAIN;
+  const sys=a.systemPrompt||`你是欣和SH infinity無界♾️1-v4中的「${a.name}」Agent（${a.tag}）。职责：${a.desc}。指标：${(a.kpis||[]).map(k=>k.l+'='+k.v).join('·')}。缺口：${(a.gaps||[]).join('、')}。用中文简洁回答，不超过200字，直接给出要点。`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:history.slice(-10)})
+    });
+    const d=await r.json();
+    const txt=d.content?.map(c=>c.text||'').join('')||'暂时无法获取回答。';
+    const bubble=thinkingDiv.querySelector('.msg-bubble');
+    bubble.innerHTML=txt.replace(/\n/g,'<br>');
+    history.push({role:'assistant',content:txt});
+  }catch(e){
+    thinkingDiv.querySelector('.msg-bubble').innerHTML=`<span style="color:var(--red);font-size:11px">⚠️ ${e.message}</span>`;
+  }
+  isThinking=false;
+  document.getElementById('sendBtn').disabled=false;
+  document.getElementById('chatArea').scrollTop=document.getElementById('chatArea').scrollHeight;
+}
+
+function handleKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}
+}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px'}
+
+// Init
+switchAgent(null);
+document.getElementById('btn-brain').classList.add('active');
+</script>
+</body>
+</html>
