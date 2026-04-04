@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>库存上报 · 心跳系统</title>
+<style>
+:root{
+  --bg:#07080d;--bg2:#0c0e18;--bg3:#111420;
+  --card:#141820;--card2:#1a2232;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e2e8f4;--text2:#7a8599;--text3:#3e4a60;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.1);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --orange:#f97316;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif}
+body{overflow-x:hidden}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(7,8,13,0.95);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  height:52px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;
+}
+.tb-logo{display:flex;align-items:center;gap:8px}
+.tb-sym{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#ff7c38);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#000}
+.tb-title{font-size:15px;font-weight:700}
+.tb-title span{color:var(--amber)}
+.tb-step{font-size:11px;color:var(--text3);background:var(--card);border:1px solid var(--border);padding:3px 10px;border-radius:10px}
+
+/* ── MAIN ── */
+.main{padding:16px 16px 120px;display:flex;flex-direction:column;gap:12px}
+
+/* ── SECTION CARD ── */
+.sec{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.sec-hdr{
+  padding:13px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.sec-num{width:22px;height:22px;border-radius:6px;background:var(--amber);color:#000;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec-title{font-size:13px;font-weight:700;flex:1}
+.sec-badge{font-size:10px;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,166,35,0.15);padding:2px 8px;border-radius:8px}
+.sec-body{padding:14px 16px}
+
+/* ── STORE SELECTOR ── */
+.store-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.store-opt{
+  border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;
+  transition:all 0.15s;text-align:center;
+}
+.store-opt:active{transform:scale(0.97)}
+.store-opt.selected{border-color:var(--amber);background:var(--amber-dim)}
+.so-grade{font-size:18px;font-weight:800;margin-bottom:2px}
+.so-label{font-size:10px;color:var(--text3);line-height:1.3}
+.so-T{font-size:9px;color:var(--text3);margin-top:3px}
+
+.store-name-input{
+  width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
+  padding:11px 14px;font-size:14px;color:var(--text);outline:none;
+  font-family:'PingFang SC',sans-serif;
+}
+.store-name-input:focus{border-color:var(--amber)}
+.store-name-input::placeholder{color:var(--text3)}
+.input-label{font-size:11px;color:var(--text3);margin-bottom:6px;margin-top:12px}
+
+/* ── SKU SELECT ── */
+.sku-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;margin-bottom:12px}
+.sku-scroll::-webkit-scrollbar{display:none}
+.sku-chip{
+  flex-shrink:0;border:1px solid var(--border);border-radius:20px;
+  padding:6px 14px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;
+  transition:all 0.15s;background:var(--bg3);
+}
+.sku-chip.selected{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+
+/* ── NUMBER INPUT ── */
+.num-block{margin-bottom:14px}
+.num-row{display:flex;align-items:center;gap:10px}
+.num-btn{
+  width:44px;height:44px;border-radius:10px;border:1px solid var(--border2);
+  background:var(--card2);display:flex;align-items:center;justify-content:center;
+  font-size:20px;cursor:pointer;flex-shrink:0;user-select:none;
+  transition:all 0.12s;color:var(--text2);
+}
+.num-btn:active{background:var(--amber);color:#000;transform:scale(0.94)}
+.num-input{
+  flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
+  padding:10px 0;font-size:24px;font-weight:700;color:var(--text);
+  text-align:center;outline:none;font-family:'PingFang SC',sans-serif;
+  -moz-appearance:textfield;
+}
+.num-input::-webkit-outer-spin-button,.num-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.num-input:focus{border-color:var(--amber)}
+.num-unit{font-size:12px;color:var(--text3);text-align:center;margin-top:5px}
+
+/* Case conversion */
+.case-row{display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 12px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)}
+.case-label{font-size:11px;color:var(--text3);flex:1}
+.case-val{font-size:12px;font-weight:700;color:var(--amber)}
+.case-per{display:flex;align-items:center;gap:6px}
+.case-per-label{font-size:10px;color:var(--text3)}
+.case-per-select{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text);outline:none}
+
+/* ── WATER LEVEL DISPLAY ── */
+.water-panel{
+  border-radius:14px;padding:16px;
+  border:2px solid var(--border);
+  transition:all 0.3s;
+  position:relative;overflow:hidden;
+}
+.water-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;transition:background 0.3s}
+.water-panel.status-safe{border-color:rgba(74,222,128,0.3);background:var(--green-dim)}
+.water-panel.status-safe::before{background:var(--green)}
+.water-panel.status-warn{border-color:rgba(245,166,35,0.4);background:var(--amber-dim)}
+.water-panel.status-warn::before{background:var(--amber)}
+.water-panel.status-danger{border-color:rgba(255,95,95,0.4);background:var(--red-dim)}
+.water-panel.status-danger::before{background:var(--red)}
+.water-panel.status-empty{border-color:var(--border);background:var(--bg3)}
+
+.water-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.water-label{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text3)}
+.water-status-badge{font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px}
+.badge-safe{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,0.2)}
+.badge-warn{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.2)}
+.badge-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,0.2)}
+.badge-empty{background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+
+.water-main{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.water-val{font-size:48px;font-weight:800;line-height:1;font-family:'PingFang SC',sans-serif}
+.water-unit{font-size:16px;color:var(--text3)}
+.water-sub{font-size:12px;color:var(--text3);margin-bottom:14px}
+
+/* 三格水位可视化 */
+.water-bars{display:flex;gap:4px;margin-bottom:12px}
+.wb{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden;transition:all 0.3s}
+.wb-fill{height:100%;border-radius:4px;transition:all 0.4s ease}
+.wb-label{font-size:9px;color:var(--text3);text-align:center;margin-top:4px;display:flex;flex-direction:column;gap:2px}
+
+.water-formula{
+  background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 12px;
+  font-size:11px;color:var(--text3);line-height:1.8;font-family:'Courier New',monospace;
+}
+.formula-highlight{color:var(--amber);font-weight:700}
+
+/* ── PHOTO ── */
+.photo-area{
+  border:2px dashed var(--border2);border-radius:12px;
+  padding:24px 16px;text-align:center;cursor:pointer;
+  transition:all 0.2s;position:relative;overflow:hidden;
+}
+.photo-area:active{border-color:var(--amber);background:var(--amber-dim)}
+.photo-icon{font-size:32px;margin-bottom:8px}
+.photo-label{font-size:13px;color:var(--text2);margin-bottom:4px}
+.photo-sub{font-size:11px;color:var(--text3)}
+#photoInput{display:none}
+.photo-preview{display:none;position:relative}
+.photo-preview img{width:100%;border-radius:10px;object-fit:cover;max-height:200px}
+.photo-redo{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer}
+
+/* ── NOTE ── */
+.note-input{
+  width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
+  padding:11px 14px;font-size:13px;color:var(--text);outline:none;resize:none;height:80px;
+  font-family:'PingFang SC',sans-serif;
+}
+.note-input:focus{border-color:var(--amber)}
+.note-input::placeholder{color:var(--text3)}
+
+/* Distortion flags */
+.flag-row{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.flag-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);cursor:pointer;transition:all 0.15s}
+.flag-item.selected{border-color:var(--red);background:var(--red-dim)}
+.flag-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px}
+.flag-item.selected .flag-check{background:var(--red);border-color:var(--red);color:#fff}
+.flag-text{font-size:12px;flex:1}
+.flag-badge{font-size:9px;padding:2px 6px;border-radius:6px;font-weight:700}
+.fb-a{background:rgba(255,95,95,0.15);color:var(--red)}
+.fb-b{background:rgba(245,166,35,0.15);color:var(--amber)}
+.fb-c{background:rgba(96,165,250,0.15);color:#60a5fa}
+
+/* ── SUBMIT BAR ── */
+.submit-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(7,8,13,0.97);backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);padding:12px 16px;
+}
+.submit-preview{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sp-item{flex:1;text-align:center}
+.sp-val{font-size:16px;font-weight:800}
+.sp-lbl{font-size:9px;color:var(--text3);margin-top:1px}
+.sp-div{width:1px;height:30px;background:var(--border)}
+.submit-btn{
+  width:100%;height:50px;border-radius:13px;border:none;
+  font-size:16px;font-weight:700;cursor:pointer;
+  transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;
+  font-family:'PingFang SC',sans-serif;
+}
+.submit-btn.ready{background:linear-gradient(135deg,var(--amber),var(--amber2));color:#000;box-shadow:0 4px 20px rgba(245,166,35,0.3)}
+.submit-btn.ready:active{transform:scale(0.98)}
+.submit-btn.disabled{background:var(--card2);color:var(--text3);cursor:not-allowed}
+
+/* ── SUCCESS SCREEN ── */
+.success-screen{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:var(--bg);flex-direction:column;align-items:center;justify-content:center;
+  padding:32px;text-align:center;
+}
+.success-screen.show{display:flex}
+.success-icon{font-size:64px;margin-bottom:16px;animation:pop 0.4s ease}
+@keyframes pop{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+.success-title{font-size:22px;font-weight:800;margin-bottom:6px}
+.success-sub{font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:24px}
+.success-data{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:16px;width:100%;max-width:320px;margin-bottom:24px;text-align:left;
+}
+.sd-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.sd-row:last-child{border:none}
+.sd-label{color:var(--text3)}
+.sd-val{font-weight:700}
+.next-btn{
+  background:var(--card2);border:1px solid var(--border2);border-radius:12px;
+  padding:13px 32px;font-size:14px;font-weight:700;cursor:pointer;color:var(--text);
+  font-family:'PingFang SC',sans-serif;transition:all 0.15s;
+}
+.next-btn:active{background:var(--card);transform:scale(0.97)}
+
+/* Utils */
+.divider{height:1px;background:var(--border);margin:12px 0}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-logo">
+    <div class="tb-sym">∞</div>
+    <div class="tb-title">库存<span>上报</span></div>
+  </div>
+  <div class="tb-step" id="stepLabel">第1步 / 共3步</div>
+</div>
+
+<div class="main">
+
+  <!-- ① 门店信息 -->
+  <div class="sec">
+    <div class="sec-hdr">
+      <div class="sec-num">1</div>
+      <div class="sec-title">门店信息</div>
+    </div>
+    <div class="sec-body">
+      <div class="input-label">门店名称</div>
+      <input class="store-name-input" id="storeName" placeholder="输入门店名称…" oninput="calcWater()" />
+
+      <div class="input-label" style="margin-top:14px">门店等级 <span style="color:var(--text3);font-size:10px">（决定周期T和补货频次）</span></div>
+      <div class="store-grid">
+        <div class="store-opt selected" id="grade-S+" onclick="selectGrade('S+')">
+          <div class="so-grade" style="color:var(--green)">S+</div>
+          <div class="so-label">重点旗舰门店</div>
+          <div class="so-T">T = 7天 · 拜访3次/周</div>
+        </div>
+        <div class="store-opt" id="grade-S" onclick="selectGrade('S')">
+          <div class="so-grade" style="color:var(--green)">S</div>
+          <div class="so-label">重点门店</div>
+          <div class="so-T">T = 7天 · 拜访2次/周</div>
+        </div>
+        <div class="store-opt" id="grade-A" onclick="selectGrade('A')">
+          <div class="so-grade" style="color:var(--amber)">A</div>
+          <div class="so-label">重要门店</div>
+          <div class="so-T">T = 7天 · 拜访1次/周</div>
+        </div>
+        <div class="store-opt" id="grade-B" onclick="selectGrade('B')">
+          <div class="so-grade" style="color:var(--amber)">B</div>
+          <div class="so-label">标准门店</div>
+          <div class="so-T">T = 14天</div>
+        </div>
+        <div class="store-opt" id="grade-C" onclick="selectGrade('C')">
+          <div class="so-grade" style="color:var(--text2)">C</div>
+          <div class="so-label">普通门店</div>
+          <div class="so-T">T = 21天</div>
+        </div>
+        <div class="store-opt" id="grade-D" onclick="selectGrade('D')">
+          <div class="so-grade" style="color:var(--text3)">D</div>
+          <div class="so-label">基础门店</div>
+          <div class="so-T">T = 30天</div>
+        </div>
+      </div>
+
+      <div class="input-label">SKU品项</div>
+      <div class="sku-scroll">
+        <div class="sku-chip selected" onclick="selectSKU(this,'六月鲜极鲜500ml')">六月鲜极鲜500ml</div>
+        <div class="sku-chip" onclick="selectSKU(this,'六月鲜280ml')">六月鲜280ml</div>
+        <div class="sku-chip" onclick="selectSKU(this,'味达美500ml')">味达美500ml</div>
+        <div class="sku-chip" onclick="selectSKU(this,'禾然有机500ml')">禾然有机500ml</div>
+        <div class="sku-chip" onclick="selectSKU(this,'葱伴侣200ml')">葱伴侣200ml</div>
+        <div class="sku-chip" onclick="selectSKU(this,'小康500ml')">小康500ml</div>
+      </div>
+
+      <div class="input-label">本门店日销量 a 值（瓶/天）</div>
+      <div class="num-block">
+        <div class="num-row">
+          <div class="num-btn" onclick="adjustA(-1)">−</div>
+          <input class="num-input" id="aVal" type="number" value="5" min="1" oninput="calcWater()" />
+          <div class="num-btn" onclick="adjustA(1)">+</div>
+        </div>
+        <div class="num-unit">瓶/天 · 不确定可先用历史销量估算</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 库存录入 -->
+  <div class="sec">
+    <div class="sec-hdr">
+      <div class="sec-num">2</div>
+      <div class="sec-title">库存录入</div>
+      <div class="sec-badge">货架优先</div>
+    </div>
+    <div class="sec-body">
+
+      <!-- 货架量 -->
+      <div class="input-label">📦 货架库存（瓶）<span style="color:var(--amber);font-size:10px">· 品牌领地·优先统计</span></div>
+      <div class="num-block">
+        <div class="num-row">
+          <div class="num-btn" onclick="adjustShelf(-5)">−5</div>
+          <input class="num-input" id="shelfQty" type="number" value="0" min="0" oninput="calcWater()" />
+          <div class="num-btn" onclick="adjustShelf(5)">+5</div>
+        </div>
+        <div class="num-unit">货架上摆放的瓶数</div>
+      </div>
+
+      <!-- 仓库量 -->
+      <div class="input-label" style="margin-top:4px">🏪 仓库库存（箱）<span style="color:var(--text3);font-size:10px">· 后备库存</span></div>
+      <div class="num-block">
+        <div class="num-row">
+          <div class="num-btn" onclick="adjustWarehouse(-1)">−</div>
+          <input class="num-input" id="warehouseQty" type="number" value="0" min="0" oninput="calcWater()" />
+          <div class="num-btn" onclick="adjustWarehouse(1)">+</div>
+        </div>
+        <div class="num-unit">仓库中整箱数量</div>
+      </div>
+      <div class="case-row">
+        <div class="case-label">每箱换算</div>
+        <div class="case-per">
+          <div class="case-per-label">1箱 =</div>
+          <select class="case-per-select" id="perCase" onchange="calcWater()">
+            <option value="6">6瓶</option>
+            <option value="12" selected>12瓶</option>
+            <option value="24">24瓶</option>
+            <option value="6">6瓶（大规格）</option>
+          </select>
+        </div>
+        <div class="case-val" id="warehouseBottles">= 0瓶</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 心跳水位实时计算 -->
+  <div class="sec">
+    <div class="sec-hdr">
+      <div class="sec-num">3</div>
+      <div class="sec-title">心跳水位实时诊断</div>
+    </div>
+    <div class="sec-body">
+
+      <div class="water-panel status-empty" id="waterPanel">
+        <div class="water-top">
+          <div class="water-label">当前库存水位</div>
+          <div class="water-status-badge badge-empty" id="waterBadge">等待录入</div>
+        </div>
+        <div class="water-main">
+          <div class="water-val" id="waterVal" style="color:var(--text3)">—</div>
+          <div class="water-unit" id="waterUnitLabel">a</div>
+        </div>
+        <div class="water-sub" id="waterSub">请先填写库存数量</div>
+
+        <!-- 三格水位条 -->
+        <div style="margin-bottom:8px">
+          <div class="water-bars">
+            <div class="wb"><div class="wb-fill" id="wb1" style="width:0%;background:var(--red)"></div></div>
+            <div class="wb"><div class="wb-fill" id="wb2" style="width:0%;background:var(--amber)"></div></div>
+            <div class="wb"><div class="wb-fill" id="wb3" style="width:0%;background:var(--green)"></div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3)">
+            <span>危险 &lt;1a</span><span>预警 1-2a</span><span>安全 &gt;2a</span>
+          </div>
+        </div>
+
+        <div class="water-formula" id="waterFormula">
+          录入数据后显示计算过程
+        </div>
+      </div>
+
+      <!-- 补货建议 -->
+      <div id="replenishBox" style="display:none;margin-top:10px;padding:12px 14px;border-radius:12px;border:1px solid;background:var(--amber-dim);border-color:rgba(245,166,35,0.25)">
+        <div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:5px">💡 补货建议</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.6" id="replenishText"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ 拍照记录 -->
+  <div class="sec">
+    <div class="sec-hdr">
+      <div class="sec-num">4</div>
+      <div class="sec-title">拍照记录</div>
+      <div class="sec-badge">货架+仓库</div>
+    </div>
+    <div class="sec-body">
+      <div class="photo-area" onclick="document.getElementById('photoInput').click()" id="photoArea">
+        <div class="photo-icon">📷</div>
+        <div class="photo-label">拍摄货架照片</div>
+        <div class="photo-sub">点击拍照 或 从相册选择</div>
+      </div>
+      <div class="photo-preview" id="photoPreview">
+        <img id="photoImg" src="" alt="货架照片"/>
+        <button class="photo-redo" onclick="redoPhoto()">重拍</button>
+      </div>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(this)"/>
+    </div>
+  </div>
+
+  <!-- ⑤ 失真标记 -->
+  <div class="sec">
+    <div class="sec-hdr">
+      <div class="sec-num">5</div>
+      <div class="sec-title">异常标记</div>
+      <div class="sec-badge">可选</div>
+    </div>
+    <div class="sec-body">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">发现异常情况时勾选，触发蝴蝶效应预警</div>
+      <div class="flag-row">
+        <div class="flag-item" id="flag-a" onclick="toggleFlag('a')">
+          <div class="flag-check" id="fc-a"></div>
+          <div class="flag-text">库存明显偏高，怀疑压货</div>
+          <div class="flag-badge fb-a">A类失真</div>
+        </div>
+        <div class="flag-item" id="flag-b" onclick="toggleFlag('b')">
+          <div class="flag-check" id="fc-b"></div>
+          <div class="flag-text">促销期间数据，非正常销售</div>
+          <div class="flag-badge fb-b">B类失真</div>
+        </div>
+        <div class="flag-item" id="flag-c" onclick="toggleFlag('c')">
+          <div class="flag-check" id="fc-c"></div>
+          <div class="flag-text">发现低价/窜货商品</div>
+          <div class="flag-badge fb-c">C类失真</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="input-label">备注（可选）</div>
+      <textarea class="note-input" id="noteText" placeholder="其他异常情况、陈列问题、竞品动态…"></textarea>
+    </div>
+  </div>
+
+</div>
+
+<!-- SUBMIT BAR -->
+<div class="submit-bar">
+  <div class="submit-preview">
+    <div class="sp-item">
+      <div class="sp-val" id="sp-shelf" style="color:var(--amber)">—</div>
+      <div class="sp-lbl">货架(瓶)</div>
+    </div>
+    <div class="sp-div"></div>
+    <div class="sp-item">
+      <div class="sp-val" id="sp-warehouse" style="color:var(--teal)">—</div>
+      <div class="sp-lbl">仓库(瓶)</div>
+    </div>
+    <div class="sp-div"></div>
+    <div class="sp-item">
+      <div class="sp-val" id="sp-total" style="color:var(--text2)">—</div>
+      <div class="sp-lbl">合计(瓶)</div>
+    </div>
+    <div class="sp-div"></div>
+    <div class="sp-item">
+      <div class="sp-val" id="sp-water" style="color:var(--text3)">—</div>
+      <div class="sp-lbl">水位</div>
+    </div>
+  </div>
+  <button class="submit-btn disabled" id="submitBtn" onclick="submitReport()">
+    请先填写门店名称和库存
+  </button>
+</div>
+
+<!-- SUCCESS SCREEN -->
+<div class="success-screen" id="successScreen">
+  <div class="success-icon">✅</div>
+  <div class="success-title">上报成功</div>
+  <div class="success-sub" id="successSub">数据已进入心跳系统<br>A值校准将自动更新</div>
+  <div class="success-data" id="successData"></div>
+  <button class="next-btn" onclick="resetForm()">继续上报下一家 →</button>
+</div>
+
+<script>
+// ── State ──
+let selectedGrade='S+';
+let selectedSKU='六月鲜极鲜500ml';
+let flags={a:false,b:false,c:false};
+const T_MAP={'S+':7,'S':7,'A':7,'B':14,'C':21,'D':30};
+
+function selectGrade(g){
+  selectedGrade=g;
+  document.querySelectorAll('.store-opt').forEach(el=>el.classList.remove('selected'));
+  document.getElementById('grade-'+g).classList.add('selected');
+  calcWater();
+}
+
+function selectSKU(el,sku){
+  selectedSKU=sku;
+  document.querySelectorAll('.sku-chip').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function adjustA(delta){
+  const el=document.getElementById('aVal');
+  el.value=Math.max(1,parseInt(el.value||1)+delta);
+  calcWater();
+}
+function adjustShelf(delta){
+  const el=document.getElementById('shelfQty');
+  el.value=Math.max(0,parseInt(el.value||0)+delta);
+  calcWater();
+}
+function adjustWarehouse(delta){
+  const el=document.getElementById('warehouseQty');
+  el.value=Math.max(0,parseInt(el.value||0)+delta);
+  calcWater();
+}
+
+function toggleFlag(f){
+  flags[f]=!flags[f];
+  const item=document.getElementById('flag-'+f);
+  const check=document.getElementById('fc-'+f);
+  if(flags[f]){item.classList.add('selected');check.textContent='✓'}
+  else{item.classList.remove('selected');check.textContent=''}
+}
+
+// ── Core: Heartbeat formula calc ──
+function calcWater(){
+  const shelf=parseInt(document.getElementById('shelfQty').value)||0;
+  const warehouse=parseInt(document.getElementById('warehouseQty').value)||0;
+  const perCase=parseInt(document.getElementById('perCase').value)||12;
+  const aVal=parseFloat(document.getElementById('aVal').value)||1;
+  const T=T_MAP[selectedGrade]||7;
+  const storeName=document.getElementById('storeName').value.trim();
+
+  const warehouseBottles=warehouse*perCase;
+  document.getElementById('warehouseBottles').textContent=`= ${warehouseBottles}瓶`;
+
+  const total=shelf+warehouseBottles;
+  const a=aVal*T; // a = r * T = 日销量 × 周期T
+  const waterLevel=a>0?total/a:0;
+
+  // update preview bar
+  document.getElementById('sp-shelf').textContent=shelf||'—';
+  document.getElementById('sp-warehouse').textContent=warehouseBottles||'—';
+  document.getElementById('sp-total').textContent=total||'—';
+
+  const panel=document.getElementById('waterPanel');
+  const badge=document.getElementById('waterBadge');
+  const val=document.getElementById('waterVal');
+  const sub=document.getElementById('waterSub');
+  const formula=document.getElementById('waterFormula');
+  const spWater=document.getElementById('sp-water');
+  const repBox=document.getElementById('replenishBox');
+  const repText=document.getElementById('replenishText');
+
+  if(total===0){
+    panel.className='water-panel status-empty';
+    badge.className='water-status-badge badge-empty';badge.textContent='等待录入';
+    val.style.color='var(--text3)';val.textContent='—';
+    sub.textContent='请填写货架和仓库数量';
+    formula.textContent='录入数据后显示计算过程';
+    spWater.style.color='var(--text3)';spWater.textContent='—';
+    setWaterBars(0);repBox.style.display='none';
+    updateSubmitBtn(storeName,false);return;
+  }
+
+  // 水位状态
+  let status,badgeText,badgeCls,color,advice;
+  if(waterLevel>=3){
+    status='status-safe';badgeText='✅ 安全水位';badgeCls='badge-safe';color='var(--green)';
+    advice=`库存充足，下次拜访正常跟进。货架${shelf}瓶约${(shelf/aVal).toFixed(1)}天消耗。`;
+  } else if(waterLevel>=2){
+    status='status-safe';badgeText='🟡 接近预警';badgeCls='badge-safe';color='var(--green)';
+    advice=`库存良好但注意观察，${Math.ceil((total-a*2)/aVal)}天后将触及预警线。`;
+  } else if(waterLevel>=1){
+    status='status-warn';badgeText='⚠️ 预警水位';badgeCls='badge-warn';color='var(--amber)';
+    const needBottles=Math.ceil(a*3-total);
+    advice=`已触发补货预警！建议立即补货 ${needBottles}瓶（${Math.ceil(needBottles/perCase)}箱），补至3a满仓水位。`;
+  } else {
+    status='status-danger';badgeText='🔴 危险缺货';badgeCls='badge-danger';color='var(--red)';
+    const needBottles=Math.ceil(a*3-total);
+    advice=`严重缺货！总库存不足1a，货架领地已失守。紧急补货 ${needBottles}瓶（约${Math.ceil(needBottles/perCase)}箱）。`;
+  }
+
+  panel.className=`water-panel ${status}`;
+  badge.className=`water-status-badge ${badgeCls}`;badge.textContent=badgeText;
+  val.style.color=color;val.textContent=waterLevel.toFixed(2);
+  sub.textContent=`总库存 ${total}瓶 ÷ a值(${a}瓶) = ${waterLevel.toFixed(2)}a`;
+  spWater.style.color=color;spWater.textContent=waterLevel.toFixed(1)+'a';
+
+  // 水位条动画
+  setWaterBars(waterLevel);
+
+  // 公式展示
+  formula.innerHTML=
+    `r = <span class="formula-highlight">${aVal}瓶/天</span> （日销率）\n`+
+    `T = <span class="formula-highlight">${T}天</span> （${selectedGrade}级周期）\n`+
+    `a = r×T = ${aVal}×${T} = <span class="formula-highlight">${a}瓶</span> （心跳单元）\n`+
+    `货架 <span class="formula-highlight">${shelf}瓶</span> + 仓库 <span class="formula-highlight">${warehouseBottles}瓶</span> = 总计 <span class="formula-highlight">${total}瓶</span>\n`+
+    `水位 = ${total} ÷ ${a} = <span class="formula-highlight">${waterLevel.toFixed(2)}a</span>\n`+
+    `3a满仓线 = <span class="formula-highlight">${a*3}瓶</span>  |  2a预警线 = <span class="formula-highlight">${a*2}瓶</span>`;
+
+  // 补货建议
+  repBox.style.display='block';
+  repBox.style.borderColor=waterLevel>=2?'rgba(74,222,128,0.2)':waterLevel>=1?'rgba(245,166,35,0.25)':'rgba(255,95,95,0.25)';
+  repBox.style.background=waterLevel>=2?'rgba(74,222,128,0.05)':waterLevel>=1?'rgba(245,166,35,0.06)':'rgba(255,95,95,0.06)';
+  document.querySelector('#replenishBox div:first-child').style.color=waterLevel>=2?'var(--green)':waterLevel>=1?'var(--amber)':'var(--red)';
+  repText.textContent=advice;
+
+  updateSubmitBtn(storeName,true);
+}
+
+function setWaterBars(level){
+  // 三格分别代表：0-1a / 1-2a / 2-3a
+  const pct1=Math.min(100,Math.max(0,(Math.min(level,1)/1)*100));
+  const pct2=Math.min(100,Math.max(0,((Math.min(level,2)-1)/1)*100));
+  const pct3=Math.min(100,Math.max(0,((Math.min(level,3)-2)/1)*100));
+  document.getElementById('wb1').style.cssText=`width:${pct1}%;background:${level<1?'var(--red)':'var(--green)'}`;
+  document.getElementById('wb2').style.cssText=`width:${pct2}%;background:${level<2?'var(--amber)':'var(--green)'}`;
+  document.getElementById('wb3').style.cssText=`width:${pct3}%;background:var(--green)`;
+}
+
+function updateSubmitBtn(storeName,hasData){
+  const btn=document.getElementById('submitBtn');
+  if(storeName&&hasData){
+    btn.className='submit-btn ready';
+    btn.textContent='✓ 提交上报';
+  } else if(!storeName){
+    btn.className='submit-btn disabled';
+    btn.textContent='请先填写门店名称';
+  } else {
+    btn.className='submit-btn disabled';
+    btn.textContent='请先填写库存数量';
+  }
+}
+
+// ── Photo ──
+function handlePhoto(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    document.getElementById('photoImg').src=e.target.result;
+    document.getElementById('photoArea').style.display='none';
+    document.getElementById('photoPreview').style.display='block';
+  };
+  reader.readAsDataURL(file);
+}
+function redoPhoto(){
+  document.getElementById('photoArea').style.display='block';
+  document.getElementById('photoPreview').style.display='none';
+  document.getElementById('photoInput').value='';
+}
+
+// ── Submit ──
+function submitReport(){
+  const storeName=document.getElementById('storeName').value.trim();
+  const shelf=parseInt(document.getElementById('shelfQty').value)||0;
+  const warehouse=parseInt(document.getElementById('warehouseQty').value)||0;
+  const perCase=parseInt(document.getElementById('perCase').value)||12;
+  const aVal=parseFloat(document.getElementById('aVal').value)||1;
+  const T=T_MAP[selectedGrade]||7;
+  if(!storeName||shelf+warehouse*perCase===0)return;
+
+  const a=aVal*T;
+  const total=shelf+warehouse*perCase;
+  const waterLevel=total/a;
+  const now=new Date();
+  const timeStr=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  const dateStr=(now.getMonth()+1)+'/'+now.getDate();
+
+  let statusText=waterLevel>=2?'安全':waterLevel>=1?'预警':'危险缺货';
+  let activeFlags=Object.entries(flags).filter(([_,v])=>v).map(([k])=>({a:'A类压货',b:'B类促销',c:'C类窜货'}[k]));
+
+  // Build success data
+  const successData=document.getElementById('successData');
+  successData.innerHTML=`
+    <div class="sd-row"><span class="sd-label">门店</span><span class="sd-val">${storeName}</span></div>
+    <div class="sd-row"><span class="sd-label">等级</span><span class="sd-val">${selectedGrade}级 · T=${T}天</span></div>
+    <div class="sd-row"><span class="sd-label">SKU</span><span class="sd-val">${selectedSKU}</span></div>
+    <div class="sd-row"><span class="sd-label">货架库存</span><span class="sd-val">${shelf}瓶</span></div>
+    <div class="sd-row"><span class="sd-label">仓库库存</span><span class="sd-val">${warehouse}箱 = ${warehouse*perCase}瓶</span></div>
+    <div class="sd-row"><span class="sd-label">合计</span><span class="sd-val">${total}瓶</span></div>
+    <div class="sd-row"><span class="sd-label">心跳单元a</span><span class="sd-val">${a}瓶</span></div>
+    <div class="sd-row"><span class="sd-label">水位</span><span class="sd-val" style="color:${waterLevel>=2?'var(--green)':waterLevel>=1?'var(--amber)':'var(--red)'}">${waterLevel.toFixed(2)}a · ${statusText}</span></div>
+    ${activeFlags.length?`<div class="sd-row"><span class="sd-label">异常标记</span><span class="sd-val" style="color:var(--red)">${activeFlags.join('·')}</span></div>`:''}
+    <div class="sd-row"><span class="sd-label">上报时间</span><span class="sd-val">${dateStr} ${timeStr}</span></div>
+  `;
+
+  document.getElementById('successSub').textContent=
+    waterLevel>=2?'数据已进入心跳系统，A值校准将自动更新':
+    waterLevel>=1?'⚠️ 预警已触发，补货建议已推送经销商':
+    '🔴 缺货预警已触发！蝴蝶效应Agent已收到信号';
+
+  document.getElementById('successScreen').classList.add('show');
+}
+
+function resetForm(){
+  document.getElementById('successScreen').classList.remove('show');
+  document.getElementById('storeName').value='';
+  document.getElementById('shelfQty').value='0';
+  document.getElementById('warehouseQty').value='0';
+  document.getElementById('noteText').value='';
+  flags={a:false,b:false,c:false};
+  ['a','b','c'].forEach(f=>{document.getElementById('flag-'+f).classList.remove('selected');document.getElementById('fc-'+f).textContent=''});
+  redoPhoto();
+  calcWater();
+  window.scrollTo(0,0);
+}
+
+// Init
+calcWater();
+</script>
+</body>
+</html>
