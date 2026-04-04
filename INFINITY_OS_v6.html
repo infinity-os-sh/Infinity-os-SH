@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS v6 · 欣和SH</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08080e;
+  --bg2: #0c0e18;
+  --bg3: #10131e;
+  --card: #131620;
+  --card2: #181c28;
+  --border: rgba(255,255,255,0.055);
+  --border2: rgba(255,255,255,0.11);
+  --text: #e6eaf5;
+  --text2: #8892a8;
+  --text3: #444d63;
+  --amber: #f5a623;
+  --amber2: #ffc85e;
+  --amber-dim: rgba(245,166,35,0.09);
+  --amber-glow: rgba(245,166,35,0.18);
+  --teal: #4ecdc4;
+  --teal-dim: rgba(78,205,196,0.09);
+  --red: #ff5f5f;
+  --red-dim: rgba(255,95,95,0.09);
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.09);
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+  /* Brand colors */
+  --lyx: #d4a853;      /* 六月鲜 gold */
+  --lyx2: #f0c96a;
+  --lyx-dim: rgba(212,168,83,0.1);
+  --lyx-glow: rgba(212,168,83,0.2);
+  --wdm: #5b8fd4;      /* 味达美 blue */
+  --wdm-dim: rgba(91,143,212,0.1);
+  --hr: #5cb87a;       /* 禾然 green */
+  --hr-dim: rgba(92,184,122,0.1);
+  --cbl: #c97d3a;      /* 葱伴侣 orange */
+  --cbl-dim: rgba(201,125,58,0.1);
+  --xk: #888;          /* 小康 grey */
+  --xk-dim: rgba(136,136,136,0.1);
+  --cy: #c45c8a;       /* 餐饮 rose */
+  --cy-dim: rgba(196,92,138,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── VIEW TOGGLE ── */
+.view-toggle{
+  display:flex;gap:2px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:3px;
+}
+.vt-btn{
+  padding:5px 12px;border-radius:7px;font-size:11px;font-weight:600;
+  cursor:pointer;transition:all 0.2s;color:var(--text3);white-space:nowrap;
+  letter-spacing:0.03em;
+}
+.vt-btn.active{background:var(--amber);color:#000;font-weight:700}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,8,14,0.94);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;height:52px;gap:10px;
+}
+.logo-row{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.logo-sym{
+  width:28px;height:28px;border-radius:7px;
+  background:linear-gradient(135deg,#f5a623,#e8801a);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000;
+  box-shadow:0 2px 10px rgba(245,166,35,0.35);flex-shrink:0;
+}
+.logo-text{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.04em;line-height:1}
+.logo-ver{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:1px}
+
+.topbar-center{flex:1;display:flex;justify-content:center}
+.breadcrumb{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3);overflow:hidden}
+.bc-sep{opacity:0.4}
+.bc-link{cursor:pointer;transition:color 0.15s;white-space:nowrap}
+.bc-link:hover{color:var(--text2)}
+.bc-cur{color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.topbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.clock{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);display:none}
+@media(min-width:400px){.clock{display:block}}
+.back-btn{
+  width:30px;height:30px;border-radius:8px;background:var(--card2);
+  border:1px solid var(--border2);display:none;align-items:center;justify-content:center;
+  cursor:pointer;font-size:14px;color:var(--text2);transition:all 0.15s;flex-shrink:0;
+}
+.back-btn.show{display:flex}
+.back-btn:hover{background:var(--card);color:var(--text)}
+
+/* ── SCREENS ── */
+.screen{display:none}
+.screen.active{display:block;animation:fadeUp 0.2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── HOME ── */
+.home-hero{padding:20px 16px 12px;text-align:center}
+.home-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;line-height:1.1;margin-bottom:4px}
+.home-title .accent{color:var(--amber)}
+.home-sub{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace}
+
+/* Ops view stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 16px 14px}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center}
+.stat-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1}
+.stat-lbl{font-size:9px;color:var(--text3);margin-top:2px;line-height:1.3}
+.ca{color:var(--amber)}.ct{color:var(--teal)}.cg{color:var(--green)}.cr{color:var(--red)}
+
+/* Cat grid */
+.cat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:0 16px 12px}
+@media(min-width:600px){.cat-grid{grid-template-columns:repeat(3,1fr)}}
+.cat-card{
+  border-radius:14px;padding:16px 14px 12px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+  position:relative;overflow:hidden;min-height:120px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  border:1px solid rgba(255,255,255,0.05);
+}
+.cat-card:active{transform:scale(0.97)}
+.cat-card::after{content:'›';position:absolute;bottom:12px;right:12px;font-size:16px;opacity:0.25}
+.cat-icon{font-size:22px;margin-bottom:6px;display:block}
+.cat-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:2px}
+.cat-sub{font-size:9px;opacity:0.55;line-height:1.4;margin-bottom:6px}
+.cat-score{font-family:'Syne',sans-serif;font-size:20px;font-weight:800}
+.cat-score-lbl{font-size:9px;opacity:0.45;margin-left:2px}
+.gc-a{background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)}
+.gc-b{background:linear-gradient(135deg,#0d1b2a,#1b2838,#162032)}
+.gc-c{background:linear-gradient(135deg,#1a0a2e,#2d1b4e,#1f1235)}
+.gc-d{background:linear-gradient(135deg,#1a120a,#2d1f0e,#1a1505)}
+.gc-e{background:linear-gradient(135deg,#0a1a12,#0e2818,#061a10)}
+.gc-f{background:linear-gradient(135deg,#1a0a0a,#2d1010,#1a0808)}
+.gc-g{background:linear-gradient(135deg,#0a1020,#111928,#0a1520)}
+
+/* Brain banner */
+.home-sec{padding:0 16px 12px}
+.sec-lbl{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px}
+.brain-banner{
+  background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(78,205,196,0.04));
+  border:1px solid rgba(245,166,35,0.15);border-radius:13px;
+  padding:14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color 0.2s;
+}
+.brain-banner:hover{border-color:rgba(245,166,35,0.3)}
+.bb-icon{font-size:24px;flex-shrink:0}
+.bb-title{font-size:13px;font-weight:700;margin-bottom:2px}
+.bb-sub{font-size:10px;color:var(--text3);line-height:1.4}
+.bb-cta{font-size:10px;color:var(--amber);margin-top:4px}
+
+/* ── BRAND HOME ── */
+.brand-home-hero{
+  padding:20px 16px 16px;
+  background:linear-gradient(180deg,rgba(212,168,83,0.04) 0%,transparent 100%);
+  border-bottom:1px solid var(--border);margin-bottom:14px;
+}
+.bh-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:3px}
+.bh-title span{color:var(--amber)}
+.bh-sub{font-size:11px;color:var(--text3)}
+.bh-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px}
+.bh-stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
+.bh-sv{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--amber)}
+.bh-sl{font-size:9px;color:var(--text3);margin-top:2px}
+
+/* SubCo cards */
+.subco-grid{padding:0 16px;display:flex;flex-direction:column;gap:8px}
+.subco-card{
+  border-radius:14px;padding:16px;cursor:pointer;
+  transition:all 0.2s;position:relative;overflow:hidden;
+  border:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;gap:14px;
+}
+.subco-card:active{transform:scale(0.98)}
+.subco-badge{
+  width:52px;height:52px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;
+}
+.subco-info{flex:1;min-width:0}
+.subco-name{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:1px}
+.subco-eng{font-size:10px;opacity:0.5;margin-bottom:5px;font-family:'Space Mono',monospace;letter-spacing:0.05em}
+.subco-desc{font-size:11px;color:var(--text2);line-height:1.4}
+.subco-right{flex-shrink:0;text-align:right}
+.subco-status{font-size:10px;padding:3px 8px;border-radius:8px;font-weight:600;margin-bottom:4px;display:inline-block}
+.status-live{background:rgba(74,222,128,0.12);color:var(--green);border:1px solid rgba(74,222,128,0.2)}
+.status-build{background:rgba(255,255,255,0.05);color:var(--text3);border:1px solid var(--border)}
+.subco-arrow{font-size:18px;color:var(--text3);margin-top:4px}
+
+/* Specific brand colors */
+.sc-lyx{background:linear-gradient(135deg,rgba(212,168,83,0.08),rgba(212,168,83,0.03));border-color:rgba(212,168,83,0.15)}
+.sc-wdm{background:linear-gradient(135deg,rgba(91,143,212,0.08),rgba(91,143,212,0.03));border-color:rgba(91,143,212,0.1)}
+.sc-hr{background:linear-gradient(135deg,rgba(92,184,122,0.08),rgba(92,184,122,0.03));border-color:rgba(92,184,122,0.1)}
+.sc-cbl{background:linear-gradient(135deg,rgba(201,125,58,0.08),rgba(201,125,58,0.03));border-color:rgba(201,125,58,0.1)}
+.sc-xk{background:linear-gradient(135deg,rgba(136,136,136,0.06),rgba(136,136,136,0.02));border-color:rgba(136,136,136,0.1)}
+.sc-cy{background:linear-gradient(135deg,rgba(196,92,138,0.08),rgba(196,92,138,0.03));border-color:rgba(196,92,138,0.1)}
+
+/* ── 六月鲜 SUBCO SCREEN ── */
+.lyx-screen{padding:0 0 40px}
+
+/* Brand header */
+.lyx-header{
+  padding:20px 16px 18px;
+  background:linear-gradient(160deg,rgba(212,168,83,0.1) 0%,rgba(212,168,83,0.03) 60%,transparent 100%);
+  border-bottom:1px solid rgba(212,168,83,0.12);
+  position:relative;overflow:hidden;
+}
+.lyx-header::before{
+  content:'六月鲜';position:absolute;right:-10px;top:-10px;
+  font-family:'DM Serif Display',serif;font-size:90px;font-weight:400;
+  color:rgba(212,168,83,0.04);line-height:1;pointer-events:none;letter-spacing:-2px;
+}
+.lyx-brand-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.lyx-logo{
+  width:48px;height:48px;border-radius:12px;
+  background:linear-gradient(135deg,#d4a853,#f0c96a);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Serif Display',serif;font-size:20px;color:#000;
+  box-shadow:0 4px 16px rgba(212,168,83,0.3);
+}
+.lyx-brand-name{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--lyx)}
+.lyx-brand-sub{font-size:11px;color:var(--text3);margin-top:2px;font-family:'Space Mono',monospace}
+.lyx-tag{
+  display:inline-block;background:rgba(212,168,83,0.12);
+  border:1px solid rgba(212,168,83,0.25);color:var(--lyx);
+  font-size:10px;font-weight:700;padding:3px 9px;border-radius:8px;margin-bottom:10px;
+}
+.lyx-mission{font-size:12px;color:var(--text2);line-height:1.6}
+
+/* North Star */
+.ns-card{
+  margin:14px 16px 0;background:var(--card);border:1px solid rgba(212,168,83,0.15);
+  border-radius:14px;padding:14px;position:relative;overflow:hidden;
+}
+.ns-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--lyx),var(--lyx2),transparent)}
+.ns-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ns-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.ns-targets{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+.ns-target{background:var(--bg3);border-radius:10px;padding:10px 12px}
+.ns-tv{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--lyx);line-height:1}
+.ns-tl{font-size:10px;color:var(--text3);margin-top:2px}
+.ns-tc{font-size:11px;color:var(--text2);margin-top:4px}
+.ns-progress{height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;margin-top:6px}
+.ns-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--lyx),var(--lyx2))}
+.ns-pct{font-size:10px;color:var(--lyx);margin-top:3px;font-family:'Space Mono',monospace}
+
+/* Tab navigation */
+.tab-nav{
+  display:flex;gap:0;padding:0 16px;margin:14px 0 0;
+  border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;
+}
+.tab-nav::-webkit-scrollbar{display:none}
+.tab-btn{
+  padding:10px 14px;font-size:12px;font-weight:600;color:var(--text3);
+  cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;
+  transition:all 0.2s;margin-bottom:-1px;
+}
+.tab-btn.active{color:var(--lyx);border-color:var(--lyx)}
+
+.tab-panel{display:none;padding:14px 16px}
+.tab-panel.active{display:block;animation:fadeUp 0.18s ease}
+
+/* P&L Section */
+.pl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.pl-box{border-radius:11px;padding:12px;border:1px solid var(--border)}
+.pl-label{font-size:10px;color:var(--text3);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.pl-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1}
+.pl-sub{font-size:10px;color:var(--text3);margin-top:3px}
+.pl-trend{font-size:10px;margin-top:4px}
+.pl-trend.up{color:var(--green)}.pl-trend.dn{color:var(--red)}.pl-trend.flat{color:var(--text3)}
+.pl-bg-rev{background:rgba(212,168,83,0.06);border-color:rgba(212,168,83,0.15)}
+.pl-bg-gp{background:rgba(74,222,128,0.05);border-color:rgba(74,222,128,0.12)}
+.pl-bg-bi{background:rgba(96,165,250,0.05);border-color:rgba(96,165,250,0.12)}
+.pl-bg-eb{background:rgba(167,139,252,0.05);border-color:rgba(167,139,252,0.12)}
+
+.pl-waterfall{background:var(--bg3);border-radius:11px;padding:12px;border:1px solid var(--border);margin-bottom:10px}
+.wf-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11px}
+.wf-label{width:80px;color:var(--text3);flex-shrink:0}
+.wf-bar-wrap{flex:1;height:18px;border-radius:4px;background:rgba(255,255,255,0.04);overflow:hidden;position:relative}
+.wf-bar{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:10px;font-weight:600;color:#000;transition:width 0.6s ease}
+.wf-val{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);width:50px;text-align:right;flex-shrink:0}
+
+/* Brand assets */
+.asset-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.asset-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;transition:all 0.2s}
+.asset-card:hover{border-color:rgba(212,168,83,0.2);background:var(--card)}
+.asset-icon{font-size:20px;margin-bottom:6px}
+.asset-name{font-size:12px;font-weight:700;margin-bottom:4px}
+.asset-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--lyx);line-height:1}
+.asset-unit{font-size:10px;color:var(--text3);margin-left:2px}
+.asset-sub{font-size:10px;color:var(--text3);margin-top:3px}
+.asset-bar{height:3px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-top:7px}
+.asset-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--lyx),var(--lyx2))}
+
+/* Channel structure */
+.channel-list{display:flex;flex-direction:column;gap:6px}
+.ch-row{display:flex;align-items:center;gap:8px;font-size:12px}
+.ch-label{width:72px;color:var(--text3);flex-shrink:0;font-size:11px}
+.ch-bar-wrap{flex:1;height:20px;border-radius:5px;background:rgba(255,255,255,0.04);overflow:hidden}
+.ch-bar{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:7px;font-size:10px;font-weight:700}
+.ch-pct{font-size:10px;color:var(--text2);width:32px;text-align:right;flex-shrink:0;font-family:'Space Mono',monospace}
+
+/* Agent cluster */
+.cluster-grid{display:flex;flex-direction:column;gap:6px}
+.cl-item{
+  background:var(--card);border:1px solid var(--border);border-radius:11px;
+  padding:11px 13px;display:flex;align-items:center;gap:10px;
+  cursor:pointer;transition:all 0.15s;
+}
+.cl-item:hover{border-color:rgba(212,168,83,0.2);transform:translateX(2px)}
+.cl-emoji{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.cl-info{flex:1;min-width:0}
+.cl-name{font-size:13px;font-weight:600;margin-bottom:1px}
+.cl-role{font-size:10px;color:var(--text3)}
+.cl-score{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;flex-shrink:0}
+
+/* Financial alerts */
+.alert-list{display:flex;flex-direction:column;gap:6px}
+.alert-item{border-radius:11px;padding:11px 13px;border-left:3px solid;display:flex;gap:10px;align-items:flex-start}
+.alert-item.warn{background:rgba(245,166,35,0.05);border-color:var(--amber)}
+.alert-item.risk{background:rgba(255,95,95,0.05);border-color:var(--red)}
+.alert-item.ok{background:rgba(74,222,128,0.05);border-color:var(--green)}
+.alert-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.alert-body{flex:1}
+.alert-title{font-size:12px;font-weight:700;margin-bottom:2px}
+.alert-desc{font-size:11px;color:var(--text2);line-height:1.5}
+.alert-amt{font-family:'Space Mono',monospace;font-size:10px;margin-top:4px;font-weight:700}
+.alert-amt.warn{color:var(--amber)}.alert-amt.risk{color:var(--red)}.alert-amt.ok{color:var(--green)}
+
+/* AI Chat */
+.chat-wrap{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.chat-head{padding:11px 13px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.chat-head-badge{font-size:11px;color:var(--lyx);font-weight:600}
+.chat-chips{display:flex;gap:5px;padding:9px 11px;overflow-x:auto;scrollbar-width:none}
+.chat-chips::-webkit-scrollbar{display:none}
+.chip{
+  background:var(--bg3);border:1px solid var(--border);border-radius:18px;
+  padding:5px 10px;font-size:10px;color:var(--text2);white-space:nowrap;
+  cursor:pointer;transition:all 0.15s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif;
+}
+.chip:hover{border-color:var(--lyx);color:var(--lyx);background:var(--lyx-dim)}
+.chat-bubble{margin:0 11px 9px;background:var(--bg3);border-radius:10px;padding:9px 11px;font-size:12px;color:var(--text2);line-height:1.65;border:1px solid var(--border)}
+.chat-resp{display:none;margin:0 11px 9px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.chat-resp.show{display:block}
+.chat-q-echo{font-size:10px;color:var(--text3);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.thinking{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--lyx);animation:td 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.chat-row{display:flex;gap:6px;padding:7px 11px 11px}
+.chat-in{
+  flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;
+  padding:8px 11px;font-size:12px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif;
+}
+.chat-in:focus{border-color:var(--lyx)}
+.chat-in::placeholder{color:var(--text3)}
+.chat-go{
+  width:36px;height:36px;border-radius:9px;background:var(--lyx);border:none;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;
+  transition:all 0.15s;flex-shrink:0;color:#000;font-weight:700;
+}
+.chat-go:hover{background:var(--lyx2);transform:scale(1.05)}
+
+/* Section card */
+.sec-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:13px 14px;margin-bottom:0}
+.sec-hdr{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sec-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Coming soon */
+.coming-soon{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 20px;text-align:center;
+}
+.cs-icon{font-size:36px;margin-bottom:10px;opacity:0.5}
+.cs-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text3);margin-bottom:6px}
+.cs-sub{font-size:12px;color:var(--text3);line-height:1.6}
+
+/* ── EXISTING SCREENS ── */
+.cat-screen-hdr{padding:14px 16px 8px;display:flex;align-items:center;gap:10px}
+.cat-big-icon{font-size:26px}
+.cat-hdr-name{font-family:'Syne',sans-serif;font-size:19px;font-weight:700}
+.cat-hdr-sub{font-size:11px;color:var(--text3)}
+.agent-list{padding:0 16px;display:flex;flex-direction:column;gap:5px}
+.agent-row{
+  background:var(--card);border:1px solid var(--border);border-radius:11px;
+  padding:11px 13px;display:flex;align-items:center;gap:11px;
+  cursor:pointer;transition:all 0.16s;
+}
+.agent-row:hover,.agent-row:active{background:var(--card2);border-color:var(--border2);transform:translateX(2px)}
+.agent-emoji{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.agent-info{flex:1;min-width:0}
+.agent-name{font-size:13px;font-weight:600;margin-bottom:1px}
+.agent-tag{font-size:10px;color:var(--amber);margin-bottom:2px}
+.agent-desc{font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-score-col{flex-shrink:0;text-align:right}
+.agent-score{font-family:'Syne',sans-serif;font-size:19px;font-weight:800}
+.agent-ms{font-size:10px;color:var(--text3);margin-top:1px}
+.score-bar{width:36px;height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;margin-top:3px;margin-left:auto}
+.score-fill{height:100%;border-radius:2px}
+
+/* detail */
+.detail-wrap{padding:12px 16px 40px;display:flex;flex-direction:column;gap:10px}
+.detail-hero{border-radius:15px;padding:16px;position:relative;overflow:hidden;background:linear-gradient(135deg,#141820,#1a2030);border:1px solid var(--border2)}
+.detail-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),transparent)}
+.detail-score-big{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:var(--amber);line-height:1}
+.detail-score-lbl{font-size:10px;color:var(--text3)}
+.detail-emoji{font-size:30px;margin-bottom:6px;display:block}
+.detail-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:3px}
+.detail-sub{font-size:11px;color:var(--amber);margin-bottom:7px}
+.detail-desc{font-size:11px;color:var(--text2);line-height:1.65}
+.detail-progress{height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-top:11px}
+.detail-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--amber),var(--amber2))}
+.milestone-row{display:flex;gap:3px;margin-bottom:7px}
+.ms-step{flex:1;border-radius:7px;padding:6px 3px;text-align:center;font-size:9px;font-weight:600;line-height:1.2;border:1px solid rgba(255,255,255,0.05);color:var(--text3);background:rgba(255,255,255,0.02)}
+.ms-step.done{background:rgba(255,255,255,0.05);color:var(--text2);border-color:rgba(255,255,255,0.08)}
+.ms-step.done::before{content:'✓ ';color:var(--green)}
+.ms-step.current{border-color:var(--amber);color:var(--amber);background:rgba(245,166,35,0.08)}
+.ms-step.current-red{border-color:var(--red);color:var(--red);background:rgba(255,95,95,0.08)}
+.ms-step.current-teal{border-color:var(--teal);color:var(--teal);background:rgba(78,205,196,0.08)}
+.ms-step.current-purple{border-color:var(--purple);color:var(--purple);background:rgba(167,139,250,0.08)}
+.ms-hint{font-size:11px;color:var(--amber)}
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+.kpi-box{background:var(--bg3);border-radius:9px;padding:9px 11px;border:1px solid var(--border)}
+.kpi-box.good-bg{background:rgba(74,222,128,0.04);border-color:rgba(74,222,128,0.1)}
+.kpi-box.bad-bg{background:rgba(255,95,95,0.04);border-color:rgba(255,95,95,0.1)}
+.kpi-label{font-size:10px;color:var(--text3);margin-bottom:3px}
+.kpi-val{font-size:14px;font-weight:700;line-height:1.2}
+.kpi-val.good{color:var(--green)}.kpi-val.warn{color:var(--amber)}.kpi-val.bad{color:var(--red)}
+.gap-list{display:flex;flex-direction:column;gap:7px}
+.gap-title{font-size:12px;font-weight:700;color:var(--red);margin-bottom:7px}
+.gap-item{display:flex;align-items:flex-start;gap:7px;font-size:11px;color:var(--text2);line-height:1.5}
+.gap-dot{width:5px;height:5px;border-radius:50%;border:1.5px solid var(--red);flex-shrink:0;margin-top:4px}
+.chat-section{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.chat-hdr{padding:11px 13px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;gap:7px}
+.chat-agent-name{color:var(--amber);font-size:11px}
+.chat-presets{display:flex;gap:5px;padding:9px 11px;overflow-x:auto;scrollbar-width:none}
+.chat-presets::-webkit-scrollbar{display:none}
+.preset-chip{background:var(--bg3);border:1px solid var(--border);border-radius:18px;padding:4px 10px;font-size:10px;color:var(--text2);white-space:nowrap;cursor:pointer;transition:all 0.13s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.preset-chip:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+.chat-bubble{margin:0 11px 9px;background:var(--bg3);border-radius:10px;padding:9px 11px;font-size:11px;color:var(--text2);line-height:1.65;border:1px solid var(--border)}
+.chat-response{display:none;margin:0 11px 9px;background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--text2);line-height:1.7}
+.chat-response.show{display:block}
+.chat-q-echo{font-size:10px;color:var(--text3);margin-bottom:5px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.chat-input-row{display:flex;gap:5px;padding:7px 11px 11px}
+.chat-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:11px;color:var(--text);font-family:'Noto Sans SC',sans-serif;outline:none}
+.chat-input:focus{border-color:var(--amber)}
+.chat-input::placeholder{color:var(--text3)}
+.chat-send{width:36px;height:36px;border-radius:9px;background:var(--amber);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all 0.13s;flex-shrink:0}
+.chat-send:hover{background:var(--amber2);transform:scale(1.05)}
+
+/* Brain */
+.brain-screen{padding:16px}
+.brain-hdr{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(78,205,196,0.03));border:1px solid rgba(245,166,35,0.15);border-radius:15px;padding:18px;text-align:center;margin-bottom:13px}
+.brain-icon{font-size:36px;margin-bottom:7px}
+.brain-title{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;margin-bottom:3px}
+.brain-sub{font-size:11px;color:var(--text3)}
+.brain-input-row{display:flex;gap:7px;margin-bottom:13px}
+.brain-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:11px 13px;font-size:12px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif}
+.brain-input:focus{border-color:var(--amber)}
+.brain-input::placeholder{color:var(--text3)}
+.brain-send{width:44px;height:44px;border-radius:11px;background:var(--amber);border:none;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:all 0.2s;flex-shrink:0}
+.brain-send:hover{background:var(--amber2)}
+.brain-response{display:none;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px;margin-bottom:13px;font-size:12px;color:var(--text2);line-height:1.7}
+.brain-response.show{display:block}
+.brain-q-echo{font-size:10px;color:var(--text3);margin-bottom:7px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.qq-grid{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.qq-btn{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px 13px;font-size:11px;color:var(--text2);text-align:left;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all 0.13s;font-family:'Noto Sans SC',sans-serif}
+.qq-btn:hover{border-color:var(--amber);color:var(--text);background:var(--amber-dim)}
+.qq-em{font-size:13px;flex-shrink:0}
+.kb-card{background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:7px}
+.kb-hdr{padding:11px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background 0.13s}
+.kb-hdr:hover{background:rgba(255,255,255,0.02)}
+.kb-hdr-l{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600}
+.kb-arrow{color:var(--text3);font-size:11px;transition:transform 0.18s}
+.kb-card.open .kb-arrow{transform:rotate(180deg)}
+.kb-body{display:none;padding:0 13px 13px;border-top:1px solid var(--border)}
+.kb-card.open .kb-body{display:block}
+.kb-text{font-size:11px;color:var(--text2);line-height:1.7;padding-top:11px}
+.kb-tbl{width:100%;border-collapse:collapse;margin-top:9px;font-size:10px}
+.kb-tbl th{background:rgba(255,255,255,0.04);color:var(--text3);padding:5px 7px;text-align:left;border-bottom:1px solid var(--border);font-weight:600}
+.kb-tbl td{padding:6px 7px;border-bottom:1px solid rgba(255,255,255,0.025);color:var(--text2)}
+.kb-tbl tr:last-child td{border:none}
+.win{color:var(--green);font-weight:600}.gap-t{color:var(--red);font-weight:600}.par{color:var(--amber);font-weight:600}
+
+.pb{padding-bottom:24px}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-row">
+    <div class="logo-sym">∞</div>
+    <div>
+      <div class="logo-text">INFINITY OS</div>
+      <div class="logo-ver">v6 · 欣和SH</div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <div class="breadcrumb" id="breadcrumb"></div>
+  </div>
+  <div class="topbar-right">
+    <div class="clock" id="clock"></div>
+    <div class="back-btn" id="backBtn" onclick="goBack()">←</div>
+  </div>
+</div>
+
+<!-- ══ HOME ══ -->
+<div class="screen active" id="screen-home">
+  <div class="home-hero">
+    <div class="home-title">INFINITY <span class="accent">OS</span></div>
+    <div class="home-sub" style="margin-bottom:14px">欣和SH · v6 · 双轨视图 · 品牌SubCo架构</div>
+    <div class="view-toggle" style="display:inline-flex">
+      <div class="vt-btn active" id="vt-ops" onclick="switchView('ops')">⚙ 经营视图</div>
+      <div class="vt-btn" id="vt-brand" onclick="switchView('brand')">◈ 品牌视图</div>
+    </div>
+  </div>
+
+  <!-- OPS VIEW -->
+  <div id="view-ops">
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val ca">24</div><div class="stat-lbl">AGENT总数</div></div>
+      <div class="stat-box"><div class="stat-val ct">50<span style="font-size:11px">/100</span></div><div class="stat-lbl">平均成熟度</div></div>
+      <div class="stat-box"><div class="stat-val cg">8项</div><div class="stat-lbl">已超越勤策</div></div>
+      <div class="stat-box"><div class="stat-val cr">7项</div><div class="stat-lbl">缺口待开发</div></div>
+    </div>
+    <div class="cat-grid">
+      <div class="cat-card gc-a" onclick="showCat('commander')"><span class="cat-icon">⚡</span><div><div class="cat-name">总指挥</div><div class="cat-sub">1个Agent · 全链调度</div><div><span class="cat-score ca">65</span><span class="cat-score-lbl">分</span></div></div></div>
+      <div class="cat-card gc-b" onclick="showCat('lianheng')"><span class="cat-icon">🔗</span><div><div class="cat-name">连横</div><div class="cat-sub">6个Agent · IPO0-13</div><div><span class="cat-score ca">63</span><span class="cat-score-lbl">分</span></div></div></div>
+      <div class="cat-card gc-c" onclick="showCat('system')"><span class="cat-icon">⚙️</span><div><div class="cat-name">系统Agent</div><div class="cat-sub">4个Agent · 蝴蝶·推单·激励</div><div><span class="cat-score ca">63</span><span class="cat-score-lbl">分</span></div></div></div>
+      <div class="cat-card gc-d" onclick="showCat('shelf')"><span class="cat-icon">📷</span><div><div class="cat-name">货架识别</div><div class="cat-sub">3个Agent · 路线A</div><div><span class="cat-score cr">27</span><span class="cat-score-lbl">分</span></div></div></div>
+      <div class="cat-card gc-e" onclick="showCat('consumer')"><span class="cat-icon">◈</span><div><div class="cat-name">消费者</div><div class="cat-sub">1个Agent · PRISM</div><div><span class="cat-score ca">60</span><span class="cat-score-lbl">分</span></div></div></div>
+      <div class="cat-card gc-f" onclick="showCat('hezong')"><span class="cat-icon">📡</span><div><div class="cat-name">合纵7棒</div><div class="cat-sub">7个Agent · 渠道接力</div><div><span class="cat-score cr">37</span><span class="cat-score-lbl">分</span></div></div></div>
+      <div class="cat-card gc-g" onclick="showCat('brand')"><span class="cat-icon">🎭</span><div><div class="cat-name">品牌</div><div class="cat-sub">2个Agent · AIQL·鲜生</div><div><span class="cat-score ca">51</span><span class="cat-score-lbl">分</span></div></div></div>
+    </div>
+    <div class="home-sec">
+      <div class="brain-banner" onclick="showScreen('brain')">
+        <div class="bb-icon">🧠</div>
+        <div><div class="bb-title">AI 战略大脑</div><div class="bb-sub">基于INFINITY OS完整知识库·心跳公式+纵横体系</div><div class="bb-cta">点击进入对话 →</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BRAND VIEW -->
+  <div id="view-brand" style="display:none">
+    <div class="brand-home-hero">
+      <div class="bh-title">品牌 <span>SubCo</span> 视图</div>
+      <div class="bh-sub">6个子公司 · 独立经营管理 · 各自积累品牌资产</div>
+      <div class="bh-stats">
+        <div class="bh-stat"><div class="bh-sv">6</div><div class="bh-sl">品牌SubCo</div></div>
+        <div class="bh-stat"><div class="bh-sv" style="color:var(--green)">1</div><div class="bh-sl">已上线MVP</div></div>
+        <div class="bh-stat"><div class="bh-sv" style="color:var(--text3)">5</div><div class="bh-sl">建设中</div></div>
+      </div>
+    </div>
+    <div class="subco-grid">
+      <!-- 六月鲜 LIVE -->
+      <div class="subco-card sc-lyx" onclick="showLYX()">
+        <div class="subco-badge" style="background:rgba(212,168,83,0.15);color:var(--lyx);font-family:'DM Serif Display',serif">鲜</div>
+        <div class="subco-info">
+          <div class="subco-name" style="color:var(--lyx)">六月鲜</div>
+          <div class="subco-eng">LIU YUE XIAN · PREMIUM</div>
+          <div class="subco-desc">高端增长引擎 · 战略北极星 · 4B RMB目标</div>
+        </div>
+        <div class="subco-right">
+          <div class="subco-status status-live">● MVP上线</div>
+          <div class="subco-arrow" style="color:var(--lyx)">›</div>
+        </div>
+      </div>
+      <!-- 味达美 -->
+      <div class="subco-card sc-wdm" onclick="showComingSoon('味达美','规模现金奶牛 · 中端主力品牌')">
+        <div class="subco-badge" style="background:rgba(91,143,212,0.15);color:var(--wdm)">美</div>
+        <div class="subco-info">
+          <div class="subco-name" style="color:var(--wdm)">味达美</div>
+          <div class="subco-eng">WEI DA MEI · MASS</div>
+          <div class="subco-desc">规模现金奶牛 · 集团利润地基</div>
+        </div>
+        <div class="subco-right">
+          <div class="subco-status status-build">建设中</div>
+          <div class="subco-arrow">›</div>
+        </div>
+      </div>
+      <!-- 禾然 -->
+      <div class="subco-card sc-hr" onclick="showComingSoon('禾然','有机战略赌注 · 培育期品牌')">
+        <div class="subco-badge" style="background:rgba(92,184,122,0.15);color:var(--hr)">然</div>
+        <div class="subco-info">
+          <div class="subco-name" style="color:var(--hr)">禾然</div>
+          <div class="subco-eng">HE RAN · ORGANIC</div>
+          <div class="subco-desc">有机战略赌注 · 允许亏损·3年里程碑</div>
+        </div>
+        <div class="subco-right">
+          <div class="subco-status status-build">建设中</div>
+          <div class="subco-arrow">›</div>
+        </div>
+      </div>
+      <!-- 葱伴侣 -->
+      <div class="subco-card sc-cbl" onclick="showComingSoon('葱伴侣','场景利基防御 · 高复购壁垒')">
+        <div class="subco-badge" style="background:rgba(201,125,58,0.15);color:var(--cbl)">葱</div>
+        <div class="subco-info">
+          <div class="subco-name" style="color:var(--cbl)">葱伴侣</div>
+          <div class="subco-eng">CONG BAN LV · NICHE</div>
+          <div class="subco-desc">场景垄断 · 利基防御壁垒</div>
+        </div>
+        <div class="subco-right">
+          <div class="subco-status status-build">建设中</div>
+          <div class="subco-arrow">›</div>
+        </div>
+      </div>
+      <!-- 小康 -->
+      <div class="subco-card sc-xk" onclick="showComingSoon('小康','战略拦截工具 · 护城河成本')">
+        <div class="subco-badge" style="background:rgba(136,136,136,0.12);color:var(--xk)">康</div>
+        <div class="subco-info">
+          <div class="subco-name" style="color:var(--xk)">小康</div>
+          <div class="subco-eng">XIAO KANG · DEFENSIVE</div>
+          <div class="subco-desc">竞争拦截工具 · 非盈利中心</div>
+        </div>
+        <div class="subco-right">
+          <div class="subco-status status-build">建设中</div>
+          <div class="subco-arrow">›</div>
+        </div>
+      </div>
+      <!-- 餐饮渠道 -->
+      <div class="subco-card sc-cy" onclick="showComingSoon('餐饮渠道','B端渠道子公司 · 战略资产模式')">
+        <div class="subco-badge" style="background:rgba(196,92,138,0.15);color:var(--cy)">饮</div>
+        <div class="subco-info">
+          <div class="subco-name" style="color:var(--cy)">餐饮渠道</div>
+          <div class="subco-eng">FOOD SERVICE · B2B</div>
+          <div class="subco-desc">渠道子公司 · 战略资产·集团持有</div>
+        </div>
+        <div class="subco-right">
+          <div class="subco-status status-build">建设中</div>
+          <div class="subco-arrow">›</div>
+        </div>
+      </div>
+    </div>
+    <div class="pb"></div>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══ 六月鲜 SUBCO ══ -->
+<div class="screen" id="screen-lyx">
+  <div class="lyx-screen">
+    <!-- Header -->
+    <div class="lyx-header">
+      <div class="lyx-brand-row">
+        <div class="lyx-logo">鲜</div>
+        <div>
+          <div class="lyx-brand-name">六月鲜</div>
+          <div class="lyx-brand-sub">LIU YUE XIAN · PREMIUM SOY SAUCE</div>
+        </div>
+      </div>
+      <div class="lyx-tag">⭐ 战略北极星品牌 · 高端增长引擎</div>
+      <div class="lyx-mission">使命：成为中国高端调味品第一品牌，让每一个中国家庭的厨房里都有六月鲜。以品牌溢价×规模双轮驱动，实现持续盈利增长。</div>
+    </div>
+
+    <!-- North Star -->
+    <div class="ns-card">
+      <div class="ns-label">战略北极星 · 2027目标</div>
+      <div class="ns-targets">
+        <div class="ns-target">
+          <div class="ns-tv">4B</div>
+          <div class="ns-tl">目标年收入（RMB）</div>
+          <div class="ns-tc">当前进度 ~18%</div>
+          <div class="ns-progress"><div class="ns-fill" style="width:18%"></div></div>
+          <div class="ns-pct">▲ 18% → 100%</div>
+        </div>
+        <div class="ns-target">
+          <div class="ns-tv">200M</div>
+          <div class="ns-tl">目标年出货瓶数</div>
+          <div class="ns-tc">当前进度 ~22%</div>
+          <div class="ns-progress"><div class="ns-fill" style="width:22%"></div></div>
+          <div class="ns-pct">▲ 22% → 100%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-nav" id="lyxTabs">
+      <div class="tab-btn active" onclick="switchTab('pl')">P&L</div>
+      <div class="tab-btn" onclick="switchTab('assets')">品牌资产</div>
+      <div class="tab-btn" onclick="switchTab('channel')">渠道结构</div>
+      <div class="tab-btn" onclick="switchTab('agents')">Agent集群</div>
+      <div class="tab-btn" onclick="switchTab('alerts')">财务预警</div>
+      <div class="tab-btn" onclick="switchTab('chat')">CFO对话</div>
+    </div>
+
+    <!-- P&L Tab -->
+    <div class="tab-panel active" id="tab-pl">
+      <div class="pl-grid">
+        <div class="pl-box pl-bg-rev">
+          <div class="pl-label">💰 品牌营收</div>
+          <div class="pl-val" style="color:var(--lyx)">¥720M</div>
+          <div class="pl-sub">年化预估</div>
+          <div class="pl-trend up">↑ +23% YoY</div>
+        </div>
+        <div class="pl-box pl-bg-gp">
+          <div class="pl-label">📊 毛利</div>
+          <div class="pl-val" style="color:var(--green)">¥324M</div>
+          <div class="pl-sub">毛利率 45%</div>
+          <div class="pl-trend up">↑ +2.3pp YoY</div>
+        </div>
+        <div class="pl-box pl-bg-bi">
+          <div class="pl-label">📣 品牌投入</div>
+          <div class="pl-val" style="color:var(--blue)">¥72M</div>
+          <div class="pl-sub">费销比 10%</div>
+          <div class="pl-trend flat">→ 持平 YoY</div>
+        </div>
+        <div class="pl-box pl-bg-eb">
+          <div class="pl-label">✦ EBITDA</div>
+          <div class="pl-val" style="color:var(--purple)">¥108M</div>
+          <div class="pl-sub">EBITDA率 15%</div>
+          <div class="pl-trend up">↑ +18% YoY</div>
+        </div>
+      </div>
+
+      <div class="sec-card">
+        <div class="sec-hdr">利润瀑布图</div>
+        <div class="pl-waterfall">
+          <div class="wf-row">
+            <div class="wf-label">品牌营收</div>
+            <div class="wf-bar-wrap"><div class="wf-bar" style="width:100%;background:linear-gradient(90deg,var(--lyx),var(--lyx2))">¥720M</div></div>
+            <div class="wf-val">720M</div>
+          </div>
+          <div class="wf-row">
+            <div class="wf-label">- 生产成本</div>
+            <div class="wf-bar-wrap"><div class="wf-bar" style="width:55%;background:rgba(255,95,95,0.5)">¥396M</div></div>
+            <div class="wf-val" style="color:var(--red)">-396M</div>
+          </div>
+          <div class="wf-row">
+            <div class="wf-label">= 毛利</div>
+            <div class="wf-bar-wrap"><div class="wf-bar" style="width:45%;background:linear-gradient(90deg,var(--green),rgba(74,222,128,0.6))">¥324M</div></div>
+            <div class="wf-val" style="color:var(--green)">324M</div>
+          </div>
+          <div class="wf-row">
+            <div class="wf-label">- 渠道费用</div>
+            <div class="wf-bar-wrap"><div class="wf-bar" style="width:13%;background:rgba(255,95,95,0.4)">¥94M</div></div>
+            <div class="wf-val" style="color:var(--red)">-94M</div>
+          </div>
+          <div class="wf-row">
+            <div class="wf-label">- 品牌投入</div>
+            <div class="wf-bar-wrap"><div class="wf-bar" style="width:10%;background:rgba(96,165,250,0.4)">¥72M</div></div>
+            <div class="wf-val" style="color:var(--blue)">-72M</div>
+          </div>
+          <div class="wf-row">
+            <div class="wf-label">- 中台分摊</div>
+            <div class="wf-bar-wrap"><div class="wf-bar" style="width:7%;background:rgba(167,139,250,0.4)">¥50M</div></div>
+            <div class="wf-val" style="color:var(--purple)">-50M</div>
+          </div>
+          <div class="wf-row" style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px">
+            <div class="wf-label" style="font-weight:700;color:var(--text)">= EBITDA</div>
+            <div class="wf-bar-wrap"><div class="wf-bar" style="width:15%;background:linear-gradient(90deg,var(--purple),rgba(167,139,250,0.6))">¥108M</div></div>
+            <div class="wf-val" style="color:var(--purple);font-weight:700">108M</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);line-height:1.6">⚠ 注：当前为模型预估值，待接入ERP真实数据后自动更新。中台费用由母公司全额承担（v6架构决策），此处为参考展示。</div>
+      </div>
+    </div>
+
+    <!-- BRAND ASSETS Tab -->
+    <div class="tab-panel" id="tab-assets">
+      <div style="margin-bottom:10px;font-size:11px;color:var(--text3);line-height:1.6">品牌资产严格归属六月鲜SubCo，不与其他品牌共用。消费者资产不得被其他品牌促销活动消耗。</div>
+      <div class="asset-grid">
+        <div class="asset-card">
+          <div class="asset-icon">👥</div>
+          <div class="asset-name">消费者资产</div>
+          <div><span class="asset-val">—</span><span class="asset-unit">待接入</span></div>
+          <div class="asset-sub">会员数据·复购记录·CLV</div>
+          <div class="asset-bar"><div class="asset-fill" style="width:15%"></div></div>
+          <div style="font-size:9px;color:var(--red);margin-top:4px">⚠ 微信数据待授权接入</div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-icon">📝</div>
+          <div class="asset-name">内容资产</div>
+          <div><span class="asset-val">—</span><span class="asset-unit">建设中</span></div>
+          <div class="asset-sub">小红书爆文库·抖音素材·KOC网络</div>
+          <div class="asset-bar"><div class="asset-fill" style="width:25%"></div></div>
+          <div style="font-size:9px;color:var(--amber);margin-top:4px">🔨 内容数据库建立中</div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-icon">🏪</div>
+          <div class="asset-name">渠道资产</div>
+          <div><span class="asset-val">337</span><span class="asset-unit">城市</span></div>
+          <div class="asset-sub">货架领地·经销商评分·排面数据</div>
+          <div class="asset-bar"><div class="asset-fill" style="width:40%"></div></div>
+          <div style="font-size:9px;color:var(--amber);margin-top:4px">🔨 货架识别集成中</div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-icon">💎</div>
+          <div class="asset-name">品牌认知资产</div>
+          <div><span class="asset-val">—</span><span class="asset-unit">待调研</span></div>
+          <div class="asset-sub">AIQL得分·溢价指数·品牌健康度</div>
+          <div class="asset-bar"><div class="asset-fill" style="width:20%"></div></div>
+          <div style="font-size:9px;color:var(--red);margin-top:4px">⚠ 消费者认知调研待启动</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:12px;background:var(--bg3);border-radius:11px;border:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:700;margin-bottom:6px;color:var(--lyx)">品牌资产边界规则</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.7">
+          ① 六月鲜消费者数据 → 仅六月鲜SubCo可读写<br>
+          ② 六月鲜KOC网络 → 可向集团收取渠道服务费后跨品牌使用<br>
+          ③ 货架领地数据 → 按渠道切割原则，高端渠道归六月鲜专属<br>
+          ④ AIQL品牌溢价 → 严格归属，体现六月鲜独立P&L价值
+        </div>
+      </div>
+    </div>
+
+    <!-- CHANNEL Tab -->
+    <div class="tab-panel" id="tab-channel">
+      <div style="margin-bottom:10px;font-size:11px;color:var(--text3)">渠道切割原则：六月鲜专注高端渠道，不与味达美共用同一货架。</div>
+      <div class="sec-card" style="margin-bottom:10px">
+        <div class="sec-hdr">渠道分配（六月鲜专属）</div>
+        <div class="channel-list" style="margin-top:4px">
+          <div class="ch-row">
+            <div class="ch-label">山姆/KA</div>
+            <div class="ch-bar-wrap"><div class="ch-bar" style="width:35%;background:linear-gradient(90deg,var(--lyx),var(--lyx2));color:#000">高端主战场</div></div>
+            <div class="ch-pct">35%</div>
+          </div>
+          <div class="ch-row">
+            <div class="ch-label">电商天猫</div>
+            <div class="ch-bar-wrap"><div class="ch-bar" style="width:28%;background:rgba(96,165,250,0.5);">品牌旗舰</div></div>
+            <div class="ch-pct">28%</div>
+          </div>
+          <div class="ch-row">
+            <div class="ch-label">O2O即时</div>
+            <div class="ch-bar-wrap"><div class="ch-bar" style="width:18%;background:rgba(78,205,196,0.5);">高端场景</div></div>
+            <div class="ch-pct">18%</div>
+          </div>
+          <div class="ch-row">
+            <div class="ch-label">高端餐饮</div>
+            <div class="ch-bar-wrap"><div class="ch-bar" style="width:12%;background:rgba(196,92,138,0.5);">B端锁定</div></div>
+            <div class="ch-pct">12%</div>
+          </div>
+          <div class="ch-row">
+            <div class="ch-label">其他</div>
+            <div class="ch-bar-wrap"><div class="ch-bar" style="width:7%;background:rgba(255,255,255,0.15);"></div></div>
+            <div class="ch-pct">7%</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px;background:rgba(212,168,83,0.05);border:1px solid rgba(212,168,83,0.15);border-radius:11px">
+        <div style="font-size:11px;font-weight:700;color:var(--lyx);margin-bottom:4px">渠道切割原则（已确认）</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.7">六月鲜 → 山姆·KA·高端O2O·精品电商<br>味达美 → 流通批发·社区超市·大众电商<br>两个品牌不在同一货架出现，经销商分工清晰</div>
+      </div>
+    </div>
+
+    <!-- AGENTS Tab -->
+    <div class="tab-panel" id="tab-agents">
+      <div style="margin-bottom:10px;font-size:11px;color:var(--text3)">服务六月鲜SubCo的Agent集群 · 共享基础设施·品牌专属配置</div>
+      <div class="cluster-grid">
+        <div class="cl-item" onclick="navToAgent('品牌AI顾问')">
+          <div class="cl-emoji" style="background:rgba(212,168,83,0.15)">💎</div>
+          <div class="cl-info"><div class="cl-name">品牌AI顾问</div><div class="cl-role">AIQL追踪 · 品牌溢价管理 · 5品牌定位</div></div>
+          <div class="cl-score" style="color:var(--amber)">55</div>
+        </div>
+        <div class="cl-item" onclick="navToAgent('经销商全链')">
+          <div class="cl-emoji" style="background:rgba(245,166,35,0.15)">🤝</div>
+          <div class="cl-info"><div class="cl-name">经销商全链</div><div class="cl-role">六月鲜专属经销商 · 心跳水位 · P1路径</div></div>
+          <div class="cl-score" style="color:var(--green)">70</div>
+        </div>
+        <div class="cl-item" onclick="navToAgent('小红书种草棒')">
+          <div class="cl-emoji" style="background:rgba(255,95,95,0.15)">📕</div>
+          <div class="cl-info"><div class="cl-name">小红书种草棒</div><div class="cl-role">高端场景种草 · 拉力需求起点</div></div>
+          <div class="cl-score" style="color:var(--amber)">45</div>
+        </div>
+        <div class="cl-item" onclick="navToAgent('PRISM精准选点')">
+          <div class="cl-emoji" style="background:rgba(167,139,252,0.15)">◈</div>
+          <div class="cl-info"><div class="cl-name">PRISM精准选点</div><div class="cl-role">高价值小区定位 · CLV计算</div></div>
+          <div class="cl-score" style="color:var(--amber)">60</div>
+        </div>
+        <div class="cl-item" onclick="navToAgent('零售门店')">
+          <div class="cl-emoji" style="background:rgba(167,139,252,0.15)">🏪</div>
+          <div class="cl-info"><div class="cl-name">零售门店</div><div class="cl-role">高端门店六级管理 · 货架=品牌领地</div></div>
+          <div class="cl-score" style="color:var(--green)">68</div>
+        </div>
+        <div class="cl-item" onclick="navToAgent('鲜生顾问')">
+          <div class="cl-emoji" style="background:rgba(74,222,128,0.15)">🌿</div>
+          <div class="cl-info"><div class="cl-name">鲜生顾问</div><div class="cl-role">高端烹饪场景 · 厨师KOL · 米其林</div></div>
+          <div class="cl-score" style="color:var(--amber)">47</div>
+        </div>
+        <div class="cl-item" onclick="navToAgent('蝴蝶效应')">
+          <div class="cl-emoji" style="background:rgba(255,95,95,0.15)">🦋</div>
+          <div class="cl-info"><div class="cl-name">蝴蝶效应</div><div class="cl-role">六月鲜全链失真检测 · 品牌溢价保护</div></div>
+          <div class="cl-score" style="color:var(--amber)">62</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:10px 12px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);font-size:11px;color:var(--text3);line-height:1.6">
+        💡 Agent集群共享INFINITY OS基础设施，但配置专属于六月鲜SubCo。其他品牌复制此结构时，Agent参数独立设置。
+      </div>
+    </div>
+
+    <!-- ALERTS Tab -->
+    <div class="tab-panel" id="tab-alerts">
+      <div style="margin-bottom:10px;font-size:11px;color:var(--text3)">财务预警 = 运营异常的货币化表达 · 让业务警报变成老板听得懂的语言</div>
+      <div class="alert-list">
+        <div class="alert-item risk">
+          <div class="alert-icon">🔴</div>
+          <div class="alert-body">
+            <div class="alert-title">库存水位低于2a预警 · 上海KA渠道</div>
+            <div class="alert-desc">上海区3家S+门店库存低于2a警戒线，动销未停，面临断货风险</div>
+            <div class="alert-amt risk">⚠ 潜在毛利损失：¥34万/周（如发生断货）</div>
+          </div>
+        </div>
+        <div class="alert-item warn">
+          <div class="alert-icon">🟡</div>
+          <div class="alert-body">
+            <div class="alert-title">C类失真检测 · 疑似窜货 · 成都区</div>
+            <div class="alert-desc">蝴蝶效应Agent检测到成都二批商出现低于底价¥17的成交记录，疑似灰市流入</div>
+            <div class="alert-amt warn">⚠ 品牌溢价侵蚀：¥18万（已流入市场低价货）</div>
+          </div>
+        </div>
+        <div class="alert-item warn">
+          <div class="alert-icon">🟡</div>
+          <div class="alert-body">
+            <div class="alert-title">经销商回款账期风险 · 北京区</div>
+            <div class="alert-desc">北京区2家经销商账期超出月结标准7天，共计¥89万应收款逾期</div>
+            <div class="alert-amt warn">⚠ 逾期应收：¥89万 · 建议立即跟进</div>
+          </div>
+        </div>
+        <div class="alert-item ok">
+          <div class="alert-icon">🟢</div>
+          <div class="alert-body">
+            <div class="alert-title">山姆渠道本月毛利达成优秀</div>
+            <div class="alert-desc">山姆渠道六月鲜本月毛利率达51%，超预期目标45%，高端定价策略有效</div>
+            <div class="alert-amt ok">✅ 超额毛利：+¥12万 · 高于目标6pp</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:10px 12px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);font-size:10px;color:var(--text3);line-height:1.6">
+        注：当前预警为模型演示数据。接入ERP+POS真实数据后，预警将实时自动触发并推送企业微信。
+      </div>
+    </div>
+
+    <!-- CHAT Tab -->
+    <div class="tab-panel" id="tab-chat">
+      <div class="chat-wrap">
+        <div class="chat-head">六月鲜 CFO 对话 · <span class="chat-head-badge">💎 品牌财务智脑</span></div>
+        <div class="chat-chips">
+          <div class="chip" onclick="sendLYXChat('六月鲜本月P&L摘要是什么？')">本月P&L摘要</div>
+          <div class="chip" onclick="sendLYXChat('当前最大的财务风险是什么？')">最大财务风险</div>
+          <div class="chip" onclick="sendLYXChat('山姆渠道ROI vs 电商渠道ROI对比')">渠道ROI对比</div>
+          <div class="chip" onclick="sendLYXChat('六月鲜战略北极星4B RMB，按现在增速什么时候能到？')">北极星达成预测</div>
+          <div class="chip" onclick="sendLYXChat('品牌溢价指数现在健康吗？有没有被味达美或竞品侵蚀？')">溢价指数健康度</div>
+          <div class="chip" onclick="sendLYXChat('如果把品牌投入从10%提到15%，EBITDA会怎样变化？')">品牌投入敏感性</div>
+        </div>
+        <div class="chat-bubble">你好，我是六月鲜SubCo的财务智脑。我整合了六月鲜的P&L数据、品牌资产状况、渠道ROI和战略北极星进度。问我任何关于六月鲜经营财务的问题。</div>
+        <div class="chat-resp" id="lyxChatResp">
+          <div class="chat-q-echo" id="lyxChatQ"></div>
+          <div id="lyxChatA"></div>
+        </div>
+        <div class="chat-row">
+          <input class="chat-in" id="lyxChatInput" placeholder="问六月鲜CFO任何问题…" onkeydown="if(event.key==='Enter')sendLYXChat(this.value)"/>
+          <button class="chat-go" onclick="sendLYXChat(document.getElementById('lyxChatInput').value)">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COMING SOON ══ -->
+<div class="screen" id="screen-coming">
+  <div class="coming-soon">
+    <div class="cs-icon" id="csIcon">🏗</div>
+    <div class="cs-title" id="csTitle">建设中</div>
+    <div class="cs-sub" id="csSub">此SubCo正在建设中<br>六月鲜MVP验证完成后<br>将复制此结构至其他品牌</div>
+    <div style="margin-top:20px;padding:14px 18px;background:var(--card);border:1px solid var(--border);border-radius:12px;text-align:left;max-width:280px">
+      <div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:6px">复制路径</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.8">
+        ① 六月鲜MVP → 验证财务框架<br>
+        ② 味达美 → 复制+现金奶牛参数<br>
+        ③ 禾然 → 复制+亏损容忍模型<br>
+        ④ 葱伴侣 → 复制+场景垄断参数<br>
+        ⑤ 小康 → 复制+拦截工具参数<br>
+        ⑥ 餐饮渠道 → 渠道子公司特殊版
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CATEGORY SCREEN ══ -->
+<div class="screen" id="screen-cat">
+  <div class="cat-screen-hdr">
+    <div class="cat-big-icon" id="catIcon"></div>
+    <div><div class="cat-hdr-name" id="catName"></div><div class="cat-hdr-sub" id="catSub"></div></div>
+  </div>
+  <div class="agent-list" id="agentList"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══ AGENT DETAIL ══ -->
+<div class="screen" id="screen-detail">
+  <div class="detail-wrap" id="detailWrap"></div>
+</div>
+
+<!-- ══ BRAIN ══ -->
+<div class="screen" id="screen-brain">
+  <div class="brain-screen">
+    <div class="brain-hdr">
+      <div class="brain-icon">🧠</div>
+      <div class="brain-title">AI 战略大脑</div>
+      <div class="brain-sub">INFINITY OS · 完整知识库 · 问任何经营问题</div>
+    </div>
+    <div class="brain-input-row">
+      <input class="brain-input" id="brainInput" placeholder="问战略大脑任何问题…"/>
+      <button class="brain-send" onclick="sendBrain()">→</button>
+    </div>
+    <div class="brain-response" id="brainResp">
+      <div class="brain-q-echo" id="brainQ"></div>
+      <div id="brainA"></div>
+    </div>
+    <div class="sec-lbl" style="padding:0 0 8px">快捷提问</div>
+    <div class="qq-grid">
+      <button class="qq-btn" onclick="askBrain('品牌子公司架构下，六月鲜和味达美的货架冲突如何用渠道切割解决？')"><span class="qq-em">⚔️</span>渠道切割：六月鲜vs味达美分工</button>
+      <button class="qq-btn" onclick="askBrain('INFINITY OS v6的双轨视图架构逻辑是什么？经营视图和品牌视图分别给谁用？')"><span class="qq-em">🔀</span>双轨视图：经营视图vs品牌视图</button>
+      <button class="qq-btn" onclick="askBrain('六月鲜战略北极星4B RMB，按现在的渠道结构和毛利率，路径合理吗？')"><span class="qq-em">⭐</span>六月鲜北极星路径验证</button>
+      <button class="qq-btn" onclick="askBrain('禾然和小康的战略补贴逻辑：比例上限+条件触发的设计依据是什么？')"><span class="qq-em">💊</span>禾然/小康补贴上限设计</button>
+      <button class="qq-btn" onclick="askBrain('库存心跳单元a如何货币化？从箱数预警变成¥金额预警的计算方法')"><span class="qq-em">💓</span>心跳单元a的货币化方法</button>
+    </div>
+    <div class="kb-card" id="kb1">
+      <div class="kb-hdr" onclick="toggleKB('kb1')">
+        <div class="kb-hdr-l">🏢 v6品牌SubCo架构</div>
+        <div class="kb-arrow">▼</div>
+      </div>
+      <div class="kb-body">
+        <div class="kb-text">
+          <strong>INFINITY OS = 一个平台，六个SubCo独立空间</strong><br><br>
+          六月鲜（高端增长引擎）· 味达美（规模现金奶牛）· 禾然（有机战略赌注）· 葱伴侣（利基防御壁垒）· 小康（竞争拦截工具）· 餐饮渠道（渠道子公司·战略资产模式）<br><br>
+          <strong>三大决策（已确认）：</strong><br>
+          Q1渠道切割：六月鲜专注高端渠道，根本消除与味达美的货架冲突<br>
+          Q2补贴上限：集团净利12%比例上限 + 各品牌条件触发里程碑<br>
+          Q3中台费用：母公司全额承担，品牌P&L保持干净可信
+        </div>
+      </div>
+    </div>
+    <div class="kb-card" id="kb2">
+      <div class="kb-hdr" onclick="toggleKB('kb2')">
+        <div class="kb-hdr-l">💰 财务Agent体系</div>
+        <div class="kb-arrow">▼</div>
+      </div>
+      <div class="kb-body">
+        <div class="kb-text">
+          <strong>财务三穿透：</strong><br>
+          ① 心跳单元a → 货币化：a×净价×毛利率=¥毛利贡献<br>
+          ② 货架=品牌领地=财务资产：排面数×日销率r×毛利=年化毛利贡献<br>
+          ③ 蝴蝶效应失真=财务失真：A类压货=虚增收入·B类促销=折损毛利·C类窜货=溢价侵蚀<br><br>
+          <strong>六月鲜SubCo P&L结构：</strong><br>
+          营收¥720M → 毛利¥324M(45%) → EBITDA¥108M(15%)<br>
+          品牌投入费销比10% · 中台费用母公司承担
+        </div>
+      </div>
+    </div>
+    <div class="pb"></div>
+  </div>
+</div>
+
+<script>
+// ── Clock ──
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.getHours().toString().padStart(2,'0')+':'+
+    n.getMinutes().toString().padStart(2,'0')+':'+
+    n.getSeconds().toString().padStart(2,'0');
+}
+updateClock();setInterval(updateClock,1000);
+
+// ── View Toggle ──
+let currentView='ops';
+function switchView(v){
+  currentView=v;
+  document.getElementById('view-ops').style.display=v==='ops'?'block':'none';
+  document.getElementById('view-brand').style.display=v==='brand'?'block':'none';
+  document.getElementById('vt-ops').classList.toggle('active',v==='ops');
+  document.getElementById('vt-brand').classList.toggle('active',v==='brand');
+}
+
+// ── Nav Stack ──
+const navStack=[];
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.getElementById('backBtn').className='back-btn'+(navStack.length>0?' show':'');
+  updateBreadcrumb(id);
+  window.scrollTo(0,0);
+}
+function goBack(){
+  if(!navStack.length){showScreen('home');return}
+  const p=navStack.pop();
+  if(p.type==='home'){showScreen('home');return}
+  if(p.type==='cat'){showCat(p.id,true);return}
+  if(p.type==='lyx'){showLYX(true);return}
+  if(p.type==='brand'){showScreen('home');switchView('brand');return}
+  showScreen('home');
+}
+function updateBreadcrumb(id){
+  const bc=document.getElementById('breadcrumb');
+  const home=`<span class="bc-link" onclick="pushHome()">首页</span>`;
+  const sep=`<span class="bc-sep">›</span>`;
+  if(id==='home'){bc.innerHTML='';return}
+  if(id==='brain'){bc.innerHTML=home+sep+`<span class="bc-cur">战略大脑</span>`;return}
+  if(id==='lyx'){
+    bc.innerHTML=home+sep+`<span class="bc-link" onclick="backToBrandView()">品牌视图</span>`+sep+`<span class="bc-cur" style="color:var(--lyx)">六月鲜</span>`;return;
+  }
+  if(id==='coming'){bc.innerHTML=home+sep+`<span class="bc-link" onclick="backToBrandView()">品牌视图</span>`+sep+`<span class="bc-cur">${document.getElementById('csTitle').textContent}</span>`;return}
+  if(id==='cat'){bc.innerHTML=home+sep+`<span class="bc-cur">${document.getElementById('catName').textContent}</span>`;return}
+  if(id==='detail'){/* set by showAgentDetail */}
+}
+function pushHome(){navStack.length=0;showScreen('home')}
+function backToBrandView(){navStack.length=0;showScreen('home');switchView('brand')}
+
+// ── SubCo navigation ──
+function showLYX(isBack=false){
+  if(!isBack) navStack.push({type:'brand'});
+  showScreen('lyx');
+  updateBreadcrumb('lyx');
+}
+function showComingSoon(name,desc){
+  navStack.push({type:'brand'});
+  document.getElementById('csTitle').textContent=name+' SubCo';
+  document.getElementById('csSub').innerHTML=`<strong style="color:var(--text2)">${desc}</strong><br><br>六月鲜MVP验证完成后<br>将复制此结构至 ${name}`;
+  showScreen('coming');
+  updateBreadcrumb('coming');
+}
+
+// ── Tab switching ──
+function switchTab(id){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    const ids=['pl','assets','channel','agents','alerts','chat'];
+    b.classList.toggle('active',ids[i]===id);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+// ── Data ──
+const CATS={
+  commander:{icon:'⚡',name:'总指挥',sub:'1个Agent · 全链调度总中枢',agents:['AIO总指挥']},
+  lianheng:{icon:'🔗',name:'连横',sub:'6个Agent · IPO0-13端到端闭环',agents:['生产供应','经销商全链','二批商','零售门店','消费者深度','餐饮渠道']},
+  system:{icon:'⚙️',name:'系统Agent',sub:'4个Agent · 蝴蝶效应·推单·校准·激励',agents:['蝴蝶效应','无菜单推单','A值校准','Uber激励']},
+  shelf:{icon:'📷',name:'货架识别',sub:'3个Agent · 自训模型·勤策替代路线A',agents:['货架识别','库存上报','价签识别']},
+  consumer:{icon:'◈',name:'消费者',sub:'1个Agent · PRISM精准选点',agents:['PRISM精准选点']},
+  hezong:{icon:'📡',name:'合纵7棒',sub:'7个Agent · 7棒渠道接力体系',agents:['小红书种草棒','抖音爆发棒','电商转化棒','O2O即时棒','仓储会员棒','大卖场棒','社区超市棒']},
+  brand:{icon:'🎭',name:'品牌',sub:'2个Agent · AIQL·场景·鲜生顾问',agents:['品牌AI顾问','鲜生顾问']}
+};
+
+const AGENTS={
+  'AIO总指挥':{emoji:'⚡',emojiColor:'rgba(59,130,246,0.2)',tag:'Commander',score:65,milestone:3,desc:'全链调度：差距检测→任务派发→积分结算完整闭环，协调所有子Agent',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'差距检测',v:'实时',s:'good',bg:'good-bg'},{l:'任务派发',v:'自动',s:'good',bg:'good-bg'},{l:'真实数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'Agent协商',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['接入ERP/CRM真实数据','与蝴蝶效应Agent动态联动','自主决策权限升级'],presets:['今天哪些门店差距最大？','给我一份AIO日报','美顾和DSR积分排名'],chatIntro:'你好，我是AIO总指挥Agent。'},
+  '生产供应':{emoji:'🏭',emojiColor:'rgba(74,222,128,0.15)',tag:'IPO0-1',score:60,milestone:3,desc:'工厂产能·发货库存水位·生产计划达成率，预警上游断供风险',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'IPO0产能',v:'96%',s:'good',bg:'good-bg'},{l:'IPO1库存',v:'89%',s:'good',bg:'good-bg'},{l:'MES系统对接',v:'待建',s:'bad',bg:'bad-bg'},{l:'自动调产',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['工厂MES系统API对接','生产计划自动调整建议'],presets:['工厂今天产能怎么样？','发货库存水位正常吗？'],chatIntro:'你好，我是生产供应Agent。'},
+  '经销商全链':{emoji:'🤝',emojiColor:'rgba(245,166,35,0.15)',tag:'IPO2-4',score:70,milestone:3,desc:'进货/库存/出货全链·心跳单元a·P1/P2路径并存',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'心跳公式',v:'✅已建',s:'good',bg:'good-bg'},{l:'健康评分',v:'S/A/B/C/D',s:'good',bg:'good-bg'},{l:'ERP对接',v:'待接入',s:'bad',bg:'bad-bg'},{l:'自动预警',v:'待配置',s:'bad',bg:'bad-bg'}],gaps:['ERP系统实时数据接入','补货预警企微自动推送'],presets:['哪些经销商库存低于1a？','P1和P2渠道健康对比'],chatIntro:'你好，我是经销商全链Agent。'},
+  '二批商':{emoji:'🚚',emojiColor:'rgba(96,165,250,0.15)',tag:'IPO5-7·P2路径',score:65,milestone:3,desc:'P2路径专属·餐饮渠道为主·库存严控1:1·价格管控底价¥17',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'价格底线监控',v:'¥17',s:'warn',bg:''},{l:'窜货检测',v:'规则已建',s:'good',bg:'good-bg'},{l:'二批库存实时',v:'待接入',s:'bad',bg:'bad-bg'},{l:'乱价自动预警',v:'待联通',s:'bad',bg:'bad-bg'}],gaps:['二批商端进销存数据接入','B端餐饮客户CRM打通'],presets:['有没有二批商库存超1a压货？','底价以下有哪些乱价门店？'],chatIntro:'你好，我是二批商Agent。'},
+  '零售门店':{emoji:'🏪',emojiColor:'rgba(167,139,252,0.15)',tag:'IPO8-10',score:68,milestone:3,desc:'六级门店周期标准·货架=品牌领地·水位3a满仓→2a补货预警',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'六级分类',v:'✅已建',s:'good',bg:'good-bg'},{l:'货架=领地',v:'概念锁定',s:'good',bg:'good-bg'},{l:'POS实时数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'动销自动计算',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['POS/收银系统实时数据接入','货架识别集成'],presets:['S+门店库存水位怎么样？','铺货率最低的10家门店？'],chatIntro:'你好，我是零售门店Agent。'},
+  '消费者深度':{emoji:'👥',emojiColor:'rgba(78,205,196,0.15)',tag:'IPO11-13',score:62,milestone:3,desc:'购买/家中库存/购买周期·渗透率·复购率·流失预警',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'渗透率模型',v:'✅已建',s:'good',bg:'good-bg'},{l:'复购预测',v:'框架就绪',s:'warn',bg:''},{l:'消费者数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'流失预警',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['微信/会员消费者数据授权接入','复购率模型真实数据校准'],presets:['六月鲜当前家庭渗透率多少？','流失风险最高的用户群？'],chatIntro:'你好，我是消费者深度Agent。'},
+  '餐饮渠道':{emoji:'🍜',emojiColor:'rgba(245,166,35,0.12)',tag:'B端IPO8b-11b',score:55,milestone:2,desc:'餐厅分级·菜单绑定率·厨师关系·大客户锁定',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'餐厅分级',v:'已建模',s:'good',bg:'good-bg'},{l:'菜单绑定率',v:'待测量',s:'warn',bg:''},{l:'厨师AIQL',v:'待建',s:'bad',bg:'bad-bg'},{l:'大客户CRM',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['B端餐饮客户数据库建立','厨师关系AIQL评分模型'],presets:['绑定菜单的餐厅占比多少？','重点大客户本月进货情况？'],chatIntro:'你好，我是餐饮渠道Agent。'},
+  '蝴蝶效应':{emoji:'🦋',emojiColor:'rgba(255,95,95,0.15)',tag:'全链预警失真检测',score:62,milestone:3,desc:'IPO0-13跨节点连锁传导·三种失真模式（A压货/B促销扰动/C窜货）',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current-red',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'传导计算',v:'✅',s:'good',bg:'good-bg'},{l:'红色预警',v:'2条',s:'warn',bg:''},{l:'实时数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'企微推送',v:'待配置',s:'bad',bg:'bad-bg'}],gaps:['实时数据流接入','失真模式ABC自动触发企业微信推送'],presets:['今天有哪些蝴蝶效应风险？','哪些节点存在压货失真（模式A）？'],chatIntro:'你好，我是蝴蝶效应Agent。'},
+  '无菜单推单':{emoji:'🍣',emojiColor:'rgba(245,166,35,0.15)',tag:'Omakase',score:63,milestone:3,desc:'A模型自动计算经销商补货量·SKU组合·直接推单',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'推单算法',v:'✅',s:'good',bg:'good-bg'},{l:'SKU分配',v:'✅',s:'good',bg:'good-bg'},{l:'经销商接单',v:'待建',s:'bad',bg:'bad-bg'},{l:'效果验证',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['经销商系统API自动接单','推单后效果自动验证'],presets:['今天哪些经销商需要推单？','推单量怎么计算的？'],chatIntro:'你好，我是无菜单推单Agent。'},
+  'A值校准':{emoji:'🎯',emojiColor:'rgba(74,222,128,0.15)',tag:'心跳地基维护',score:68,milestone:3,desc:'三重验证校准心跳单元a·日销率r=a÷T·双路径P1/P2分别校准',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current-teal',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'校准算法',v:'✅',s:'good',bg:'good-bg'},{l:'失真检测',v:'3模式',s:'good',bg:'good-bg'},{l:'真实数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'季节模型',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['真实销售数据接入后首次完整r校准','季节性a值模型'],presets:['哪些门店r·日销率需要上调？','a值下降是真实需求还是断货假信号？'],chatIntro:'你好，我是A值校准Agent。'},
+  'Uber激励':{emoji:'🚗',emojiColor:'rgba(245,166,35,0.18)',tag:'CB+AIQL+货架扫描',score:58,milestone:3,desc:'自动派单+AI评价+CB粘性计算+AIQL追踪·货架AI识别',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'CB公式',v:'✅',s:'good',bg:'good-bg'},{l:'AIQL追踪',v:'✅',s:'good',bg:'good-bg'},{l:'货架AI识别',v:'原型✅',s:'warn',bg:''},{l:'SFA整合',v:'待对接',s:'bad',bg:'bad-bg'}],gaps:['货架识别API接入SFA App','美顾微信小程序开发'],presets:['今天美顾应该做什么任务？','CB分最低的门店是哪些？'],chatIntro:'你好，我是Uber激励Agent。'},
+  '货架识别':{emoji:'📷',emojiColor:'rgba(245,166,35,0.18)',tag:'勤策替代·路线A',score:45,milestone:2,desc:'自训专属模型路线A·目标差异率≤3%替代勤策',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'勤策精度',v:'<3%',s:'good',bg:'good-bg'},{l:'千问精度',v:'76-88%',s:'warn',bg:''},{l:'训练数据',v:'管道已建',s:'warn',bg:''},{l:'自训模型',v:'待启动',s:'bad',bg:'bad-bg'}],gaps:['SFA训练数据管道Java代码上线','积累1000张标注数据启动首轮训练'],presets:['训练数据现在积累了多少张？','什么时候可以替代勤策？'],chatIntro:'你好，我是货架识别Agent。'},
+  '库存上报':{emoji:'📦',emojiColor:'rgba(255,95,95,0.15)',tag:'缺口·待开发',score:20,milestone:1,desc:'对应勤策库存上报模块·当前完全缺失',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:0,msStyle:'current-red',hint:'当前阶段：概念 → 下一步：框架',kpis:[{l:'心跳算法',v:'✅已有',s:'good',bg:'good-bg'},{l:'SFA页面',v:'待开发',s:'bad',bg:'bad-bg'},{l:'数据采集',v:'待开发',s:'bad',bg:'bad-bg'},{l:'水位计算',v:'待联通',s:'bad',bg:'bad-bg'}],gaps:['SFA新增库存上报页面','对接心跳公式实时计算水位'],presets:['库存上报页面什么时候能开发完？'],chatIntro:'你好，我是库存上报Agent。'},
+  '价签识别':{emoji:'🏷️',emojiColor:'rgba(255,95,95,0.15)',tag:'缺口·待开发',score:15,milestone:1,desc:'对应勤策价签识别模块·当前完全缺失',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:0,msStyle:'current-red',hint:'当前阶段：概念 → 下一步：框架',kpis:[{l:'千问OCR',v:'可调用',s:'good',bg:'good-bg'},{l:'价签识别',v:'待开发',s:'bad',bg:'bad-bg'},{l:'竞品价格库',v:'待建',s:'bad',bg:'bad-bg'},{l:'乱价预警',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['基于千问VL开发价签识别prompt','建立竞品价格基准数据库'],presets:['竞品现在的零售价是多少？','有没有门店低于底价¥17在卖？'],chatIntro:'你好，我是价签识别Agent。'},
+  'PRISM精准选点':{emoji:'◈',emojiColor:'rgba(167,139,252,0.15)',tag:'消费者端',score:60,milestone:3,desc:'宏观+二三手数据定位高价值小区·Stage Gate共创推进',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current-purple',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'选点算法',v:'✅',s:'good',bg:'good-bg'},{l:'Stage Gate',v:'✅',s:'good',bg:'good-bg'},{l:'房产API',v:'待建',s:'bad',bg:'bad-bg'},{l:'效果回收',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['贝壳/安居客房价API接入','共创活动效果自动回收'],presets:['分析上海哪些小区值得做共创活动','PRISM活动如何带动IPO11?'],chatIntro:'你好，我是PRISM精准选点Agent。'},
+  '小红书种草棒':{emoji:'📕',emojiColor:'rgba(255,95,95,0.15)',tag:'合纵棒1·需求拉力起点',score:45,milestone:2,desc:'合纵7棒第1棒·社区共创产生拉力需求·KOC激活·爆文矩阵',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'内容策划',v:'框架就绪',s:'warn',bg:''},{l:'KOC匹配',v:'待建',s:'bad',bg:'bad-bg'},{l:'爆文监测',v:'待接入',s:'bad',bg:'bad-bg'},{l:'种草→转化归因',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['小红书数据API接入','KOC/KOL评分系统建立'],presets:['六月鲜小红书爆文选题方向？','哪类KOC转化率最高？'],chatIntro:'你好，我是小红书种草棒Agent。'},
+  '抖音爆发棒':{emoji:'🎵',emojiColor:'rgba(74,222,128,0.12)',tag:'合纵棒2·流量爆发',score:38,milestone:2,desc:'合纵7棒第2棒·短视频矩阵·达人匹配·直播带货',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'脚本模板',v:'已建',s:'good',bg:'good-bg'},{l:'达人评分',v:'待建',s:'bad',bg:'bad-bg'},{l:'投放ROI',v:'待测量',s:'bad',bg:'bad-bg'},{l:'抖音数据',v:'待接入',s:'bad',bg:'bad-bg'}],gaps:['抖音数据API接入','达人匹配与ROI预估系统'],presets:['本月抖音投放策略？','达人合作优先级排序？'],chatIntro:'你好，我是抖音爆发棒Agent。'},
+  '电商转化棒':{emoji:'🛒',emojiColor:'rgba(245,166,35,0.12)',tag:'合纵棒3·线上转化',score:40,milestone:2,desc:'合纵7棒第3棒·天猫/京东/拼多多·搜索排名',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'SKU矩阵',v:'已建',s:'good',bg:'good-bg'},{l:'搜索优化',v:'待建',s:'bad',bg:'bad-bg'},{l:'大促节奏',v:'手动',s:'warn',bg:''},{l:'电商数据',v:'待接入',s:'bad',bg:'bad-bg'}],gaps:['电商平台数据API接入','搜索排名自动优化'],presets:['天猫六月鲜搜索排名如何？','大促备货建议？'],chatIntro:'你好，我是电商转化棒Agent。'},
+  'O2O即时棒':{emoji:'⚡',emojiColor:'rgba(78,205,196,0.12)',tag:'合纵棒4·即时零售',score:32,milestone:2,desc:'合纵7棒第4棒·美团/饿了么/京东到家',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'平台覆盖',v:'3个',s:'warn',bg:''},{l:'前置仓',v:'待规划',s:'bad',bg:'bad-bg'},{l:'实时订单',v:'待接入',s:'bad',bg:'bad-bg'},{l:'配送时效',v:'待测量',s:'bad',bg:'bad-bg'}],gaps:['O2O平台数据统一接入','前置仓库存联动心跳系统'],presets:['美团上六月鲜销量如何？','哪些区域O2O潜力最大？'],chatIntro:'你好，我是O2O即时棒Agent。'},
+  '仓储会员棒':{emoji:'🏬',emojiColor:'rgba(96,165,250,0.12)',tag:'合纵棒5·会员仓储',score:35,milestone:2,desc:'合纵7棒第5棒·山姆/Costco/麦德龙·大包装SKU',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'会员渗透',v:'待测量',s:'bad',bg:'bad-bg'},{l:'大包装SKU',v:'已上架',s:'good',bg:'good-bg'},{l:'会员数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'复购率',v:'待测量',s:'bad',bg:'bad-bg'}],gaps:['会员仓储平台数据API','高价值会员用户画像'],presets:['山姆渠道六月鲜销售趋势？','大包装SKU补货建议？'],chatIntro:'你好，我是仓储会员棒Agent。'},
+  '大卖场棒':{emoji:'🏢',emojiColor:'rgba(167,139,252,0.12)',tag:'合纵棒6·大卖场',score:33,milestone:2,desc:'合纵7棒第6棒·沃尔玛/家乐福/大润发·堆头/端架',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'KA覆盖',v:'主要已覆盖',s:'warn',bg:''},{l:'堆头管理',v:'手动',s:'warn',bg:''},{l:'POS数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'账期管控',v:'手动',s:'bad',bg:'bad-bg'}],gaps:['大卖场POS数据接入','KA账期自动预警'],presets:['重点KA门店本月销售情况？','哪些大卖场需要跟进？'],chatIntro:'你好，我是大卖场棒Agent。'},
+  '社区超市棒':{emoji:'🏘️',emojiColor:'rgba(74,222,128,0.12)',tag:'合纵棒7·社区下沉',score:30,milestone:1,desc:'合纵7棒第7棒·社区生鲜超市·下沉市场触点',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:0,msStyle:'current',hint:'当前阶段：概念 → 下一步：框架',kpis:[{l:'门店覆盖数',v:'统计中',s:'warn',bg:''},{l:'下沉城市',v:'规划中',s:'warn',bg:''},{l:'社区数据',v:'待建',s:'bad',bg:'bad-bg'},{l:'高频复购',v:'待测量',s:'bad',bg:'bad-bg'}],gaps:['社区超市门店数据库建立','下沉市场渠道策略制定'],presets:['社区渠道当前覆盖多少门店？'],chatIntro:'你好，我是社区超市棒Agent。'},
+  '品牌AI顾问':{emoji:'💎',emojiColor:'rgba(245,166,35,0.15)',tag:'AIQL·场景定义',score:55,milestone:3,desc:'品牌战略+AIQL追踪+消费场景定义·五品牌独立P&L支撑',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'品牌定位',v:'5品牌锁定',s:'good',bg:'good-bg'},{l:'AIQL模型',v:'✅已建',s:'good',bg:'good-bg'},{l:'品牌健康度',v:'待测量',s:'bad',bg:'bad-bg'},{l:'SubCo P&L',v:'六月鲜MVP',s:'warn',bg:''}],gaps:['品牌健康度追踪系统','消费者品牌认知调研','五品牌P&L独立核算'],presets:['六月鲜和味达美定位有无冲突？','各品牌AIQL得分对比？'],chatIntro:'你好，我是品牌AI顾问Agent。'},
+  '鲜生顾问':{emoji:'🌿',emojiColor:'rgba(74,222,128,0.15)',tag:'高端场景·鲜食配对',score:47,milestone:2,desc:'六月鲜高端场景渗透·烹饪配对建议·鲜食内容营销',ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current-teal',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'场景数据库',v:'建设中',s:'warn',bg:''},{l:'厨师KOL',v:'待建',s:'bad',bg:'bad-bg'},{l:'高端渠道',v:'部分覆盖',s:'warn',bg:''},{l:'内容工具',v:'待开发',s:'bad',bg:'bad-bg'}],gaps:['高端场景内容生成工具','厨师/美食KOL合作网络'],presets:['六月鲜适合哪些高端烹饪场景？','高端场景能撑住溢价定价吗？'],chatIntro:'你好，我是鲜生顾问Agent。'}
+};
+
+let currentCatId='';
+
+function showCat(catId,isBack=false){
+  if(!isBack) navStack.push({type:'home'});
+  currentCatId=catId;
+  const cat=CATS[catId];
+  document.getElementById('catIcon').textContent=cat.icon;
+  document.getElementById('catName').textContent=cat.name;
+  document.getElementById('catSub').textContent=cat.sub;
+  const list=document.getElementById('agentList');
+  list.innerHTML='';
+  cat.agents.forEach(name=>{
+    const a=AGENTS[name];if(!a)return;
+    const sc=a.score>=65?'var(--green)':a.score>=45?'var(--amber)':'var(--red)';
+    const row=document.createElement('div');
+    row.className='agent-row';
+    row.innerHTML=`
+      <div class="agent-emoji" style="background:${a.emojiColor}">${a.emoji}</div>
+      <div class="agent-info">
+        <div class="agent-name">${name}</div>
+        <div class="agent-tag">${a.tag}</div>
+        <div class="agent-desc">${a.desc}</div>
+      </div>
+      <div class="agent-score-col">
+        <div class="agent-score" style="color:${sc}">${a.score}</div>
+        <div class="agent-ms">M${a.milestone}/5</div>
+        <div class="score-bar"><div class="score-fill" style="width:${a.score}%;background:${sc}"></div></div>
+      </div>`;
+    row.onclick=()=>showAgentDetail(name);
+    list.appendChild(row);
+  });
+  showScreen('cat');
+  document.getElementById('breadcrumb').innerHTML=
+    `<span class="bc-link" onclick="pushHome()">首页</span><span class="bc-sep">›</span><span class="bc-cur">${cat.name}</span>`;
+}
+
+function navToAgent(name){
+  // from lyx screen, navigate to agent detail
+  navStack.push({type:'lyx'});
+  showAgentDetail(name,true);
+}
+
+function showAgentDetail(name,isBack=false){
+  if(!isBack) navStack.push({type:'cat',id:currentCatId});
+  const a=AGENTS[name];if(!a)return;
+  const sc=a.score>=65?'var(--green)':a.score>=45?'var(--amber)':'var(--red)';
+  let msHtml='<div class="milestone-row">';
+  a.ms.forEach((m,i)=>{
+    let cls='ms-step';
+    if(i<a.msCur)cls+=' done';
+    else if(i===a.msCur)cls+=` ${a.msStyle}`;
+    msHtml+=`<div class="${cls}">${m}</div>`;
+  });
+  msHtml+=`</div><div class="ms-hint">${a.hint}</div>`;
+  let kpiHtml='<div class="kpi-grid">';
+  a.kpis.forEach(k=>kpiHtml+=`<div class="kpi-box ${k.bg||''}"><div class="kpi-label">${k.l}</div><div class="kpi-val ${k.s}">${k.v}</div></div>`);
+  kpiHtml+='</div>';
+  let gapsHtml=`<div class="gap-title">距离完整体还差（${a.gaps.length}项）</div><div class="gap-list">`;
+  a.gaps.forEach(g=>gapsHtml+=`<div class="gap-item"><div class="gap-dot"></div><span>${g}</span></div>`);
+  gapsHtml+='</div>';
+  let presetsHtml='<div class="chat-presets">';
+  a.presets.forEach(p=>presetsHtml+=`<div class="preset-chip" onclick="sendAgentChat('${p.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}',this)">${p}</div>`);
+  presetsHtml+='</div>';
+  const k=name.replace(/\s/g,'_');
+  document.getElementById('detailWrap').innerHTML=`
+    <div class="detail-hero">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+        <div><span class="detail-emoji">${a.emoji}</span><div class="detail-name">${name}</div><div class="detail-sub">${a.tag}</div></div>
+        <div style="text-align:right"><div class="detail-score-big" style="color:${sc}">${a.score}</div><div class="detail-score-lbl">成熟度评分</div></div>
+      </div>
+      <div class="detail-desc">${a.desc}</div>
+      <div class="detail-progress"><div class="detail-progress-fill" style="width:${a.score}%"></div></div>
+    </div>
+    <div class="sec-card"><div class="sec-hdr">里程碑进度 · M${a.milestone}/5</div>${msHtml}</div>
+    <div class="sec-card"><div class="sec-hdr">关键指标</div>${kpiHtml}</div>
+    <div class="sec-card"><div class="sec-hdr">缺口</div>${gapsHtml}</div>
+    <div class="chat-section">
+      <div class="chat-hdr">AI对话 · <span class="chat-agent-name">${a.emoji} ${name}</span></div>
+      ${presetsHtml}
+      <div class="chat-bubble" id="cb-${k}">${a.chatIntro}</div>
+      <div class="chat-response" id="cr-${k}"><div class="chat-q-echo" id="cq-${k}"></div><div id="ca-${k}"></div></div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="ci-${k}" placeholder="问${name}…" onkeydown="if(event.key==='Enter')sendAgentChat(this.value,'${name.replace(/'/g,"\\'")}',null,this)"/>
+        <button class="chat-send" onclick="sendAgentChat(document.getElementById('ci-${k}').value,'${name.replace(/'/g,"\\'")}',null,document.getElementById('ci-${k}'))">↑</button>
+      </div>
+    </div>`;
+  showScreen('detail');
+  const cat=CATS[currentCatId];
+  document.getElementById('breadcrumb').innerHTML=
+    `<span class="bc-link" onclick="pushHome()">首页</span><span class="bc-sep">›</span>`+
+    (cat?`<span class="bc-link" onclick="navStack.push({type:'home'});showCat('${currentCatId}')">${cat.name}</span><span class="bc-sep">›</span>`:'')+
+    `<span class="bc-cur">${name}</span>`;
+}
+
+// ── 六月鲜 CFO Chat ──
+async function sendLYXChat(q){
+  if(!q||!q.trim())return;
+  const input=document.getElementById('lyxChatInput');
+  const resp=document.getElementById('lyxChatResp');
+  const qEl=document.getElementById('lyxChatQ');
+  const aEl=document.getElementById('lyxChatA');
+  resp.classList.add('show');
+  qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  if(input)input.value='';
+  const sys=`你是六月鲜SubCo的CFO财务智脑，精通以下数据：
+品牌定位：高端酱油·中国高端调味品第一品牌战略目标
+P&L：年化营收¥720M·毛利率45%(¥324M)·品牌投入费销比10%(¥72M)·EBITDA率15%(¥108M)
+战略北极星：4B RMB年收入·200M瓶年出货·当前完成率~18-22%
+渠道结构（切割原则）：山姆/KA 35%·电商 28%·O2O 18%·高端餐饮 12%·其他 7%
+品牌资产：消费者资产(待接入)·内容资产(建设中)·渠道领地337城市·认知资产(待调研)
+财务预警：上海KA库存低于2a预警·成都C类窜货¥18万·北京账期逾期¥89万·山姆渠道毛利率51%超预期
+决策原则：渠道切割(高端渠道归六月鲜专属)·中台费用母公司承担·品牌资产不与其他品牌共用
+心跳系统：a=完整周转周期销量·日销率r=a÷T·三层水位：零售3a满→2a预警
+用中文回答，结构清晰，不超过250字，给出具体数字和行动建议。`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})
+    });
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'暂时无法获取回答。'}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`}
+}
+
+// ── Agent Chat ──
+async function sendAgentChat(q,agentName,chipEl,inputEl){
+  if(!q||!q.trim())return;
+  const k=agentName.replace(/\s/g,'_');
+  const resp=document.getElementById('cr-'+k);
+  const qEl=document.getElementById('cq-'+k);
+  const aEl=document.getElementById('ca-'+k);
+  if(!resp)return;
+  resp.classList.add('show');
+  qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  if(inputEl&&inputEl.tagName==='INPUT')inputEl.value='';
+  const a=AGENTS[agentName];
+  const sys=`你是欣和SH INFINITY OS中的「${agentName}」Agent（${a?.tag||''}）。
+职责：${a?.desc||''}
+关键指标：${a?.kpis?.map(k=>k.l+'='+k.v).join('·')||''}
+当前缺口：${a?.gaps?.join('、')||''}
+v6新增：每个Agent回答时需包含财务影响（¥金额）和行动建议。用中文简洁回答，不超过200字。`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})
+    });
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'暂时无法获取回答。'}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`}
+}
+
+// ── Brain Chat ──
+async function sendBrain(){
+  const input=document.getElementById('brainInput');
+  const q=input.value.trim();if(!q)return;
+  await askBrain(q);input.value='';
+}
+async function askBrain(q){
+  document.getElementById('brainInput').value=q;
+  const resp=document.getElementById('brainResp');
+  const qEl=document.getElementById('brainQ');
+  const aEl=document.getElementById('brainA');
+  resp.classList.add('show');
+  qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  const sys=`你是欣和SH INFINITY OS v6战略大脑。精通：
+- v6双轨视图架构（经营视图/品牌视图）
+- 品牌SubCo体系：六月鲜(高端增长引擎)·味达美(现金奶牛)·禾然(有机赌注)·葱伴侣(利基防御)·小康(竞争拦截)·餐饮渠道(渠道子公司)
+- 三大决策：渠道切割·比例+条件补贴上限·母公司承担中台费用
+- 财务三穿透：a货币化·货架=财务资产·失真=财务失真
+- 库存心跳v2.0·纵横框架·24个Agent体系·六月鲜北极星(4B RMB/200M瓶)
+用中文回答，清晰结构化，不超过300字。`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})
+    });
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'无法获取回答。'}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red)">⚠️ ${e.message}</div>`}
+  document.getElementById('brainInput').value='';
+}
+
+document.getElementById('brainInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendBrain()});
+function toggleKB(id){document.getElementById(id).classList.toggle('open')}
+
+// init
+showScreen('home');
+</script>
+</body>
+</html>
