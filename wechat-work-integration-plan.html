@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>企业微信接入方案 · 上海试点</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
+:root{
+  --ink:#1a1a2e;--ink2:#2d3561;--ink3:#4a5080;
+  --paper:#fafaf8;--paper2:#f0f0ec;--paper3:#e8e8e2;
+  --amber:#c8860a;--amber-light:#f5a623;--amber-dim:rgba(200,134,10,0.08);
+  --red:#c0392b;--green:#1a6b3c;--blue:#1a3a6b;
+  --wx:#07c160;--wx-dim:rgba(7,193,96,0.08);
+  --border:#d8d8d0;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:'Noto Sans SC',sans-serif;font-size:15px;line-height:1.8}
+
+.doc-header{background:var(--ink);color:#fff;padding:50px 60px 40px;position:relative;overflow:hidden}
+.doc-header::after{content:'企微';position:absolute;right:60px;top:50%;transform:translateY(-50%);font-size:120px;font-weight:900;color:rgba(255,255,255,0.03)}
+.doc-tag{display:inline-block;border:1px solid rgba(7,193,96,0.5);color:#07c160;font-size:11px;letter-spacing:0.12em;padding:3px 12px;border-radius:3px;margin-bottom:16px;font-family:'Space Mono',monospace}
+.doc-title{font-size:32px;font-weight:700;margin-bottom:8px}
+.doc-sub{font-size:15px;color:rgba(255,255,255,0.5);margin-bottom:28px}
+.doc-meta{display:flex;gap:28px;flex-wrap:wrap}
+.meta-i{font-size:11px;color:rgba(255,255,255,0.35);font-family:'Space Mono',monospace}
+.meta-i strong{color:rgba(255,255,255,0.65);display:block;font-size:12px;margin-bottom:1px}
+
+.body{max-width:860px;margin:0 auto;padding:50px 40px 80px}
+
+.sec{margin-bottom:52px}
+.sec-num{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:0.15em;margin-bottom:6px}
+.sec-title{font-size:24px;font-weight:700;margin-bottom:6px;padding-bottom:12px;border-bottom:2px solid var(--ink)}
+.sec-lead{font-size:15px;color:var(--ink3);margin-bottom:24px;line-height:1.7}
+
+/* FLOW */
+.flow-wrap{background:var(--ink);border-radius:12px;padding:28px;margin:20px 0}
+.flow-title{font-size:10px;letter-spacing:0.15em;color:rgba(255,255,255,0.3);margin-bottom:20px;font-family:'Space Mono',monospace}
+.flow-steps{display:flex;flex-direction:column;gap:0}
+.flow-step{display:flex;align-items:flex-start;gap:16px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.06)}
+.flow-step:last-child{border:none;padding-bottom:0}
+.fs-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;margin-top:2px}
+.fs-body{}
+.fs-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:3px}
+.fs-desc{font-size:12px;color:rgba(255,255,255,0.45);line-height:1.6}
+.fs-arrow{display:flex;justify-content:center;padding:4px 0;color:rgba(255,255,255,0.15);font-size:14px}
+
+/* STEP CARDS */
+.step-cards{display:flex;flex-direction:column;gap:12px;margin:20px 0}
+.step-card{border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.sc-hdr{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--paper2)}
+.sc-num{width:32px;height:32px;border-radius:8px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.sc-title{font-weight:700;font-size:15px;flex:1}
+.sc-time{font-size:11px;color:var(--ink3);background:var(--paper3);padding:2px 10px;border-radius:10px;font-family:'Space Mono',monospace}
+.sc-body{padding:16px 18px}
+.sc-body p{font-size:13px;color:var(--ink2);line-height:1.7;margin-bottom:10px}
+.sc-body p:last-child{margin-bottom:0}
+
+/* CODE BLOCK */
+.code{background:var(--ink);color:#e8e8f0;border-radius:8px;padding:16px 20px;font-family:'Space Mono',monospace;font-size:12px;line-height:1.9;margin:12px 0;overflow-x:auto}
+.code .c-title{font-size:9px;letter-spacing:0.12em;color:rgba(255,255,255,0.25);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.code .hl{color:var(--amber-light);font-weight:700}
+.code .gr{color:#4ade80}
+.code .dim{color:rgba(255,255,255,0.3)}
+.code .re{color:#ff6b6b}
+
+/* TABLE */
+.t-wrap{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:16px 0}
+.doc-table{width:100%;border-collapse:collapse;font-size:13px}
+.doc-table th{background:var(--ink);color:#fff;padding:10px 14px;text-align:left;font-size:11px;letter-spacing:0.04em}
+.doc-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--ink2)}
+.doc-table tr:last-child td{border:none}
+.doc-table tr:hover td{background:var(--paper2)}
+.td-hl{font-weight:700;color:var(--ink)}
+.td-wx{color:var(--wx);font-weight:700}
+.td-amber{color:var(--amber);font-weight:700}
+.td-green{color:var(--green);font-weight:700}
+.td-red{color:var(--red);font-weight:700}
+
+/* CALLOUT */
+.callout{border-left:4px solid var(--amber);background:var(--amber-dim);padding:16px 20px;border-radius:0 8px 8px 0;margin:16px 0}
+.callout-title{font-weight:700;color:var(--amber);font-size:12px;margin-bottom:5px;letter-spacing:0.04em}
+.callout p{font-size:13px;color:var(--ink2);line-height:1.7}
+.callout-wx{border-left-color:var(--wx);background:var(--wx-dim)}
+.callout-wx .callout-title{color:var(--wx)}
+.callout-green{border-left-color:var(--green);background:rgba(26,107,60,0.05)}
+.callout-green .callout-title{color:var(--green)}
+
+/* ROBOT MSG */
+.robot-msg{background:var(--ink);border-radius:12px;padding:20px 22px;margin:16px 0;position:relative}
+.robot-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.robot-avatar{width:36px;height:36px;border-radius:8px;background:var(--wx);display:flex;align-items:center;justify-content:center;font-size:18px}
+.robot-name{font-size:12px;color:rgba(255,255,255,0.5)}
+.robot-time{font-size:10px;color:rgba(255,255,255,0.25);font-family:'Space Mono',monospace;margin-left:auto}
+.robot-bubble{background:#fff;border-radius:0 10px 10px 10px;padding:14px 16px;font-size:13px;color:#1a1a2e;line-height:1.7}
+.rb-title{font-weight:700;font-size:14px;margin-bottom:8px}
+.rb-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f0f0ec;font-size:12px}
+.rb-row:last-of-type{border:none}
+.rb-label{color:#6b7080}
+.rb-val{font-weight:600}
+.rb-action{margin-top:10px;padding-top:10px;border-top:1px solid #f0f0ec;font-size:12px;color:#07c160;font-weight:700}
+
+/* CHECKLIST */
+.checklist{display:flex;flex-direction:column;gap:8px;margin:16px 0}
+.cl-item{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border:1px solid var(--border);border-radius:8px;background:var(--paper2)}
+.cl-check{width:22px;height:22px;border-radius:5px;border:2px solid var(--border);flex-shrink:0;margin-top:1px}
+.cl-body{}
+.cl-title{font-weight:600;font-size:13px;margin-bottom:2px}
+.cl-desc{font-size:12px;color:var(--ink3)}
+.cl-tag{font-size:10px;padding:1px 8px;border-radius:8px;margin-left:6px;font-family:'Space Mono',monospace}
+.tag-now{background:rgba(192,57,43,0.1);color:var(--red)}
+.tag-week{background:rgba(200,134,10,0.1);color:var(--amber)}
+.tag-month{background:rgba(26,107,60,0.1);color:var(--green)}
+
+.doc-footer{background:var(--ink);color:rgba(255,255,255,0.35);padding:24px 60px;display:flex;align-items:center;justify-content:space-between;font-size:11px;font-family:'Space Mono',monospace;flex-wrap:wrap;gap:8px}
+.footer-logo{color:var(--wx);font-size:16px;font-weight:700}
+
+.print-btn{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;border:none;border-radius:50px;padding:10px 18px;font-size:13px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:all 0.2s;font-family:'Noto Sans SC',sans-serif;display:flex;align-items:center;gap:6px;z-index:200}
+.print-btn:hover{background:var(--wx);transform:translateY(-2px)}
+@media print{.print-btn{display:none}}
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="doc-tag">WECHAT WORK · INTEGRATION PLAN · v1.0</div>
+  <div class="doc-title">企业微信接入方案</div>
+  <div class="doc-sub">库存上报 · 数据看板 · 销速预警 · 上海试点完整落地</div>
+  <div class="doc-meta">
+    <div class="meta-i"><strong>平台</strong>企业微信</div>
+    <div class="meta-i"><strong>试点城市</strong>上海</div>
+    <div class="meta-i"><strong>预计上线</strong>准备好后随时启动</div>
+    <div class="meta-i"><strong>开发工作量</strong>约3天</div>
+  </div>
+</div>
+
+<div class="body">
+
+<!-- S1: 整体架构 -->
+<div class="sec" id="s1">
+  <div class="sec-num">SECTION 01</div>
+  <div class="sec-title">整体数据流向</div>
+  <div class="sec-lead">业务员在企微完成全部操作，数据自动汇总，预警自动推送，管理层实时看板。全程无需额外App。</div>
+
+  <div class="flow-wrap">
+    <div class="flow-title">DATA FLOW · 数据流向</div>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="fs-icon" style="background:rgba(7,193,96,0.15)">📱</div>
+        <div class="fs-body">
+          <div class="fs-name">业务员打开企业微信</div>
+          <div class="fs-desc">工作台 → 库存上报 → 自动识别门店和SKU（企微登录态自动获取身份）</div>
+        </div>
+      </div>
+      <div class="fs-arrow">↓</div>
+      <div class="flow-step">
+        <div class="fs-icon" style="background:rgba(245,166,35,0.15)">✏️</div>
+        <div class="fs-body">
+          <div class="fs-name">填写两个数字 + 拍照</div>
+          <div class="fs-desc">货架几瓶 + 仓库几箱 + 货架照片。30秒完成。其余信息全部自动带入。</div>
+        </div>
+      </div>
+      <div class="fs-arrow">↓</div>
+      <div class="flow-step">
+        <div class="fs-icon" style="background:rgba(96,165,250,0.15)">☁️</div>
+        <div class="fs-body">
+          <div class="fs-name">数据提交到企微表格</div>
+          <div class="fs-desc">实际销速r自动计算，达成率自动对比，数据实时进入企微多维表格。</div>
+        </div>
+      </div>
+      <div class="fs-arrow">↓</div>
+      <div class="flow-step">
+        <div class="fs-icon" style="background:rgba(255,95,95,0.15)">🤖</div>
+        <div class="fs-body">
+          <div class="fs-name">预警机器人自动推送</div>
+          <div class="fs-desc">达成率 &lt; 60% → 自动推送预警给区域经理。超额完成 &gt; 110% → 自动表扬推送。</div>
+        </div>
+      </div>
+      <div class="fs-arrow">↓</div>
+      <div class="flow-step">
+        <div class="fs-icon" style="background:rgba(167,139,250,0.15)">📊</div>
+        <div class="fs-body">
+          <div class="fs-name">管理层实时看板</div>
+          <div class="fs-desc">企微表格实时汇总：每家门店、每个SKU的实际r vs 目标r，全上海一张表。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S2: 准备工作 -->
+<div class="sec" id="s2">
+  <div class="sec-num">SECTION 02</div>
+  <div class="sec-title">启动前需要准备的三样东西</div>
+  <div class="sec-lead">这三样东西准备好，发给开发团队，他们就可以开始接入。</div>
+
+  <div class="step-cards">
+    <div class="step-card">
+      <div class="sc-hdr">
+        <div class="sc-num">1</div>
+        <div class="sc-title">企微管理后台的三个参数</div>
+        <div class="sc-time">你来拿</div>
+      </div>
+      <div class="sc-body">
+        <p>登录 <strong>work.weixin.qq.com</strong> → 管理后台</p>
+        <p>进入：<strong>应用管理 → 自建应用 → 创建应用</strong><br>
+        应用名称：库存上报<br>
+        上传图标，选择可见范围（上海业务员）</p>
+        <p>创建后拿到三个参数：</p>
+        <div class="code">
+          <div class="c-title">CREDENTIALS · 需要的三个参数</div>
+          企业ID（corpid）    <span class="dim">← 我的企业 → 企业信息</span>
+          <br>应用ID（agentid）  <span class="dim">← 创建应用后自动生成</span>
+          <br>应用Secret        <span class="dim">← 创建应用后自动生成，只显示一次，请保存</span>
+        </div>
+        <p>把这三个参数交给开发团队，他们用来配置企微登录和数据提交。</p>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="sc-hdr">
+        <div class="sc-num">2</div>
+        <div class="sc-title">企微多维表格</div>
+        <div class="sc-time">你来建</div>
+      </div>
+      <div class="sc-body">
+        <p>在企业微信里新建一个<strong>多维表格</strong>，按以下列名设置：</p>
+        <div class="t-wrap">
+          <table class="doc-table">
+            <thead><tr><th>列名</th><th>类型</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td class="td-hl">上报时间</td><td>日期时间</td><td>自动填入</td></tr>
+              <tr><td class="td-hl">业务员姓名</td><td>文本</td><td>企微登录自动带入</td></tr>
+              <tr><td class="td-hl">门店名称</td><td>文本</td><td>SFA门店库自动带入</td></tr>
+              <tr><td class="td-hl">门店等级</td><td>单选</td><td>S+/S/A/B/C/D</td></tr>
+              <tr><td class="td-hl">SKU</td><td>单选</td><td>自动带入</td></tr>
+              <tr><td class="td-hl">货架库存（瓶）</td><td>数字</td><td>业务员填写</td></tr>
+              <tr><td class="td-hl">仓库库存（瓶）</td><td>数字</td><td>自动换算</td></tr>
+              <tr><td class="td-hl">合计库存（瓶）</td><td>数字</td><td>自动计算</td></tr>
+              <tr><td class="td-hl">实际销速r</td><td>数字</td><td>系统自动算</td></tr>
+              <tr><td class="td-hl">目标销速r</td><td>数字</td><td>树根项目数据</td></tr>
+              <tr><td class="td-hl">达成率</td><td>数字</td><td>自动计算%</td></tr>
+              <tr><td class="td-hl">可卖天数</td><td>数字</td><td>自动计算</td></tr>
+              <tr><td class="td-hl">销速状态</td><td>单选</td><td>超标/正常/偏低/严重不足</td></tr>
+              <tr><td class="td-hl">异常标记</td><td>多选</td><td>压货/促销/窜货</td></tr>
+              <tr><td class="td-hl">照片</td><td>附件</td><td>货架照片</td></tr>
+              <tr><td class="td-hl">备注</td><td>文本</td><td>业务员填写</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>建好后，把表格链接发给开发团队，他们配置API写入权限。</p>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="sc-hdr">
+        <div class="sc-num">3</div>
+        <div class="sc-title">预警机器人群</div>
+        <div class="sc-time">你来建</div>
+      </div>
+      <div class="sc-body">
+        <p>在企业微信新建一个群：<strong>上海库存销速预警</strong></p>
+        <p>成员：上海区域经理 + 相关负责人</p>
+        <p>在群里添加一个<strong>群机器人</strong>，复制Webhook地址发给开发团队。</p>
+        <p>开发团队配置好后，以下情况自动推送消息到这个群：</p>
+        <div class="code">
+          <div class="c-title">TRIGGER CONDITIONS · 触发条件</div>
+          <span class="re">达成率 &lt; 60%</span>  → 🔴 严重预警推送
+          <br><span class="hl">达成率 60-90%</span> → ⚠️ 偏低预警推送
+          <br><span class="gr">达成率 &gt; 110%</span> → 🚀 超额完成推送
+          <br><span class="dim">可卖天数 &lt; 3天</span> → ⚡ 紧急补货提醒
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S3: 开发团队任务 -->
+<div class="sec" id="s3">
+  <div class="sec-num">SECTION 03</div>
+  <div class="sec-title">开发团队任务清单</div>
+  <div class="sec-lead">把这一页直接发给开发团队。代码框架已经写好，他们只需要接入企微。</div>
+
+  <div class="t-wrap">
+    <table class="doc-table">
+      <thead><tr><th>#</th><th>任务</th><th>说明</th><th>工作量</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="td-hl">1</td>
+          <td class="td-hl">企微JS-SDK接入</td>
+          <td>在H5页面引入企微JSSDK，实现自动获取用户身份（userid/姓名）</td>
+          <td class="td-amber">0.5天</td>
+        </tr>
+        <tr>
+          <td class="td-hl">2</td>
+          <td class="td-hl">自动带入门店信息</td>
+          <td>根据userid查SFA门店库，自动带入今日拜访门店、等级、SKU、目标r</td>
+          <td class="td-amber">0.5天</td>
+        </tr>
+        <tr>
+          <td class="td-hl">3</td>
+          <td class="td-hl">企微表格API写入</td>
+          <td>提交按钮触发，数据写入企微多维表格（照片上传到企微文件）</td>
+          <td class="td-amber">1天</td>
+        </tr>
+        <tr>
+          <td class="td-hl">4</td>
+          <td class="td-hl">机器人预警配置</td>
+          <td>达成率&lt;60%、可卖天数&lt;3天触发Webhook，推送消息到预警群</td>
+          <td class="td-amber">0.5天</td>
+        </tr>
+        <tr>
+          <td class="td-hl">5</td>
+          <td class="td-hl">企微工作台上线</td>
+          <td>H5页面作为自建应用发布到工作台，设置可见范围（上海业务员）</td>
+          <td class="td-amber">0.5天</td>
+        </tr>
+        <tr style="background:var(--paper2)">
+          <td colspan="3" style="font-weight:700;color:var(--ink)">合计</td>
+          <td class="td-red" style="font-weight:800;font-size:15px">约3天</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-wx">
+    <div class="callout-title">已经准备好的代码</div>
+    <p>H5前端：inventory-v3.html（已在GitHub，已包含计算逻辑）<br>
+    Android原生：InventoryReportActivity.java（已交付）<br>
+    iOS原生：InventoryReportViewController.swift（已交付）<br>
+    HeartbeatCalculator：Android/iOS双版本（已交付）<br><br>
+    开发团队只需要做企微接入部分，前端逻辑不需要重写。</p>
+  </div>
+
+  <div class="code">
+    <div class="c-title">KEY API ENDPOINTS · 关键接口</div>
+    <span class="dim"># 1. 获取企微用户身份</span>
+    <br>GET https://api.weixin.qq.com/sns/jscode2session
+    <br>    ?corpid=<span class="hl">YOUR_CORPID</span>&agentid=<span class="hl">YOUR_AGENTID</span>&js_code=CODE
+    <br>
+    <br><span class="dim"># 2. 写入企微表格</span>
+    <br>POST https://qyapi.weixin.qq.com/cgi-bin/wedoc/spreadsheet/append_rows
+    <br>    Authorization: Bearer <span class="hl">ACCESS_TOKEN</span>
+    <br>    Body: { sheet_id, rows: [{ 上报时间, 业务员, 门店, 实际r, 达成率... }] }
+    <br>
+    <br><span class="dim"># 3. 推送预警消息</span>
+    <br>POST <span class="hl">WEBHOOK_URL</span>
+    <br>    Body: { msgtype: "markdown", markdown: { content: "预警内容" } }
+  </div>
+</div>
+
+<!-- S4: 机器人消息样式 -->
+<div class="sec" id="s4">
+  <div class="sec-num">SECTION 04</div>
+  <div class="sec-title">预警机器人消息样式</div>
+  <div class="sec-lead">以下是业务员提交后，机器人自动发到预警群的消息格式。</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+    <div>
+      <div style="font-size:12px;color:var(--ink3);margin-bottom:8px">⚠️ 销速偏低预警</div>
+      <div class="robot-msg">
+        <div class="robot-hdr">
+          <div class="robot-avatar">🤖</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff">销速预警助手</div>
+            <div class="robot-name">企业微信机器人</div>
+          </div>
+          <div class="robot-time">10:32</div>
+        </div>
+        <div class="robot-bubble">
+          <div class="rb-title">⚠️ 销速偏低预警</div>
+          <div class="rb-row"><span class="rb-label">门店</span><span class="rb-val">家乐福古北店</span></div>
+          <div class="rb-row"><span class="rb-label">SKU</span><span class="rb-val">六月鲜极鲜500ml</span></div>
+          <div class="rb-row"><span class="rb-label">实际销速</span><span class="rb-val" style="color:#c0392b">5.1瓶/天</span></div>
+          <div class="rb-row"><span class="rb-label">目标销速</span><span class="rb-val">9.3瓶/天</span></div>
+          <div class="rb-row"><span class="rb-label">达成率</span><span class="rb-val" style="color:#c0392b">55%</span></div>
+          <div class="rb-row"><span class="rb-label">库存可卖</span><span class="rb-val">8天</span></div>
+          <div class="rb-row"><span class="rb-label">上报人</span><span class="rb-val">张明</span></div>
+          <div class="rb-action">→ 建议今日跟进，检查陈列和竞品动态</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div style="font-size:12px;color:var(--ink3);margin-bottom:8px">🚀 销速超标通知</div>
+      <div class="robot-msg">
+        <div class="robot-hdr">
+          <div class="robot-avatar">🤖</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff">销速预警助手</div>
+            <div class="robot-name">企业微信机器人</div>
+          </div>
+          <div class="robot-time">11:05</div>
+        </div>
+        <div class="robot-bubble">
+          <div class="rb-title">🚀 销速超标，势头很好！</div>
+          <div class="rb-row"><span class="rb-label">门店</span><span class="rb-val">Costco闵行店</span></div>
+          <div class="rb-row"><span class="rb-label">SKU</span><span class="rb-val">六月鲜极鲜500ml</span></div>
+          <div class="rb-row"><span class="rb-label">实际销速</span><span class="rb-val" style="color:#1a6b3c">15.2瓶/天</span></div>
+          <div class="rb-row"><span class="rb-label">目标销速</span><span class="rb-val">13.3瓶/天</span></div>
+          <div class="rb-row"><span class="rb-label">达成率</span><span class="rb-val" style="color:#1a6b3c">114%</span></div>
+          <div class="rb-row"><span class="rb-label">库存可卖</span><span class="rb-val" style="color:#c0392b">4天</span></div>
+          <div class="rb-row"><span class="rb-label">上报人</span><span class="rb-val">李红</span></div>
+          <div class="rb-action" style="color:#1a6b3c">→ 注意备货，库存仅剩4天，建议提前补货</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- S5: 启动清单 -->
+<div class="sec" id="s5">
+  <div class="sec-num">SECTION 05</div>
+  <div class="sec-title">启动清单</div>
+  <div class="sec-lead">按顺序完成，全部打勾后上海试点正式开工。</div>
+
+  <div class="checklist">
+    <div class="cl-item">
+      <div class="cl-check"></div>
+      <div class="cl-body">
+        <div class="cl-title">登录企微管理后台，创建「库存上报」自建应用 <span class="cl-tag tag-now">你来做</span></div>
+        <div class="cl-desc">拿到 corpid + agentid + secret，交给开发团队</div>
+      </div>
+    </div>
+    <div class="cl-item">
+      <div class="cl-check"></div>
+      <div class="cl-body">
+        <div class="cl-title">在企微新建多维表格，按列名清单设置好 <span class="cl-tag tag-now">你来做</span></div>
+        <div class="cl-desc">16列，见第02节清单，建好后把表格链接发给开发团队</div>
+      </div>
+    </div>
+    <div class="cl-item">
+      <div class="cl-check"></div>
+      <div class="cl-body">
+        <div class="cl-title">新建「上海库存销速预警」群，添加群机器人 <span class="cl-tag tag-now">你来做</span></div>
+        <div class="cl-desc">成员：上海区域经理 + 相关负责人，复制Webhook地址给开发团队</div>
+      </div>
+    </div>
+    <div class="cl-item">
+      <div class="cl-check"></div>
+      <div class="cl-body">
+        <div class="cl-title">确认上海门店清单（S+/S级）和各SKU目标r <span class="cl-tag tag-week">本周内</span></div>
+        <div class="cl-desc">从树根项目或现有系统导出，校准7个基准数据</div>
+      </div>
+    </div>
+    <div class="cl-item">
+      <div class="cl-check"></div>
+      <div class="cl-body">
+        <div class="cl-title">开发团队完成企微接入（约3天）<span class="cl-tag tag-week">本周内</span></div>
+        <div class="cl-desc">企微登录 + 表格写入 + 机器人预警 + 工作台发布</div>
+      </div>
+    </div>
+    <div class="cl-item">
+      <div class="cl-check"></div>
+      <div class="cl-body">
+        <div class="cl-title">选定3～5名上海试点业务员，内部培训 <span class="cl-tag tag-week">本周内</span></div>
+        <div class="cl-desc">覆盖浦东/长宁/闵行不同区域，各负责S+/S门店为主的业务员</div>
+      </div>
+    </div>
+    <div class="cl-item">
+      <div class="cl-check"></div>
+      <div class="cl-body">
+        <div class="cl-title">正式上线，上海试点开工 <span class="cl-tag tag-month">第一个月</span></div>
+        <div class="cl-desc">业务员每次拜访上报，系统自动计算实际r，月底出第一份信息差报告</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-green">
+    <div class="callout-title">第一个月结束，你会拿到什么</div>
+    <p>上海 S+/S 门店，每家门店每个SKU的实际销速r vs 目标销速r。<br>
+    这是欣和SH第一次在门店层级拥有比竞争对手更细粒度的信息。<br>
+    <strong>这就是赢的起点。</strong></p>
+  </div>
+</div>
+
+</div>
+
+<div class="doc-footer">
+  <div class="footer-logo">企业微信 · 接入方案</div>
+  <div>欣和SH · INFINITY OS · 上海试点 · v1.0</div>
+  <div>准备好后随时启动</div>
+</div>
+
+<button class="print-btn" onclick="window.print()">🖨️ 打印 / 保存PDF</button>
+
+</body>
+</html>
