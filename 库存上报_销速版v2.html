@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>库存上报 · 销速系统</title>
+<style>
+:root{
+  --bg:#07080d;--bg2:#0c0e18;--bg3:#111420;
+  --card:#141820;--card2:#1a2232;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e2e8f4;--text2:#7a8599;--text3:#3e4a60;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.1);
+  --teal:#4ecdc4;--red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif}
+body{overflow-x:hidden}
+
+/* TOPBAR */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(7,8,13,0.96);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  height:52px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;
+}
+.tb-logo{display:flex;align-items:center;gap:8px}
+.tb-sym{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#ff7c38);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#000}
+.tb-title{font-size:15px;font-weight:700}
+.tb-title span{color:var(--amber)}
+.tb-badge{font-size:10px;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,166,35,0.2);padding:3px 10px;border-radius:10px}
+
+/* MAIN */
+.main{padding:14px 16px 130px;display:flex;flex-direction:column;gap:10px}
+
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.card-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.card-num{width:22px;height:22px;border-radius:6px;background:var(--amber);color:#000;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-title{font-size:13px;font-weight:700;flex:1}
+.card-tag{font-size:10px;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,166,35,0.15);padding:2px 8px;border-radius:8px}
+.card-body{padding:14px 16px}
+
+/* INPUT */
+.lbl{font-size:11px;color:var(--text3);margin-bottom:6px;margin-top:12px}
+.lbl:first-child{margin-top:0}
+.field{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;font-size:14px;color:var(--text);outline:none;font-family:'PingFang SC',sans-serif}
+.field:focus{border-color:var(--amber)}
+.field::placeholder{color:var(--text3)}
+
+/* STORE GRADE */
+.grade-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:4px}
+.grade-opt{border:1px solid var(--border);border-radius:10px;padding:8px 6px;cursor:pointer;text-align:center;transition:all 0.15s}
+.grade-opt.sel{border-color:var(--amber);background:var(--amber-dim)}
+.grade-opt:active{transform:scale(0.97)}
+.go-grade{font-size:16px;font-weight:800;margin-bottom:1px}
+.go-sub{font-size:9px;color:var(--text3);line-height:1.3}
+
+/* SKU */
+.sku-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.sku-row::-webkit-scrollbar{display:none}
+.sku-chip{flex-shrink:0;border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap;background:var(--bg3);transition:all 0.15s}
+.sku-chip.sel{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+
+/* NUMBER STEPPER */
+.stepper{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.step-btn{width:44px;height:44px;border-radius:10px;border:1px solid var(--border2);background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;color:var(--text2);user-select:none;transition:all 0.12s}
+.step-btn:active{background:var(--amber);color:#000;transform:scale(0.94)}
+.step-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:10px 0;font-size:24px;font-weight:700;color:var(--text);text-align:center;outline:none;-moz-appearance:textfield}
+.step-input::-webkit-outer-spin-button,.step-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.step-input:focus{border-color:var(--amber)}
+.step-unit{font-size:11px;color:var(--text3);text-align:center;margin-top:4px}
+
+/* DATE PICKER */
+.date-field{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;font-size:14px;color:var(--text);outline:none;-webkit-appearance:none}
+.date-field:focus{border-color:var(--amber)}
+
+/* 销速面板 - 核心 */
+.velocity-panel{border-radius:14px;padding:16px;border:2px solid var(--border);transition:all 0.3s;position:relative;overflow:hidden}
+.velocity-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;transition:background 0.3s}
+.vp-fast{border-color:rgba(74,222,128,0.3);background:var(--green-dim)}.vp-fast::before{background:var(--green)}
+.vp-normal{border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.05)}.vp-normal::before{background:var(--blue)}
+.vp-slow{border-color:rgba(245,166,35,0.4);background:var(--amber-dim)}.vp-slow::before{background:var(--amber)}
+.vp-empty{border-color:var(--border);background:var(--bg3)}
+
+.vp-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.vp-label{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase}
+.vp-badge{font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px}
+.vb-fast{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,0.2)}
+.vb-normal{background:rgba(96,165,250,0.1);color:var(--blue);border:1px solid rgba(96,165,250,0.2)}
+.vb-slow{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.2)}
+.vb-empty{background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+
+/* 销速大数字 */
+.vp-main{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.vp-val{font-size:48px;font-weight:800;line-height:1;font-family:'PingFang SC',sans-serif}
+.vp-unit{font-size:14px;color:var(--text3)}
+.vp-sub{font-size:12px;color:var(--text3);margin-bottom:12px}
+
+/* 达成率进度条 */
+.achieve-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.achieve-bar-wrap{flex:1;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden}
+.achieve-bar{height:100%;border-radius:4px;transition:width 0.4s ease}
+.achieve-pct{font-family:'PingFang SC',sans-serif;font-size:14px;font-weight:800;flex-shrink:0;width:48px;text-align:right}
+
+/* 三格库存状态 */
+.stock-bars{display:flex;gap:4px;margin-bottom:6px}
+.sb{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden}
+.sb-fill{height:100%;border-radius:3px;transition:width 0.4s ease}
+
+/* 计算过程 */
+.calc-box{background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--text3);line-height:1.9;font-family:'Courier New',monospace}
+.ch{color:var(--amber);font-weight:700}
+
+/* 补货建议 */
+.advice-box{margin-top:8px;padding:12px 14px;border-radius:12px;border:1px solid;font-size:13px;line-height:1.6}
+
+/* 年级标签 */
+.grade-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px}
+.gt-1{background:rgba(255,95,95,0.15);color:var(--red);border:1px solid rgba(255,95,95,0.2)}
+.gt-2{background:rgba(245,166,35,0.15);color:var(--amber);border:1px solid rgba(245,166,35,0.2)}
+.gt-3{background:rgba(96,165,250,0.12);color:var(--blue);border:1px solid rgba(96,165,250,0.2)}
+.gt-4{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,0.15)}
+
+/* 照片 */
+.photo-area{border:2px dashed var(--border2);border-radius:12px;padding:20px 16px;text-align:center;cursor:pointer;transition:all 0.2s}
+.photo-area:active{border-color:var(--amber);background:var(--amber-dim)}
+.photo-preview{display:none;position:relative}
+.photo-preview img{width:100%;border-radius:10px;object-fit:cover;max-height:180px}
+.photo-redo{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer}
+
+/* 异常标记 */
+.flag-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);cursor:pointer;transition:all 0.15s;margin-bottom:6px}
+.flag-item.sel{border-color:var(--red);background:var(--red-dim)}
+.flag-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px}
+.flag-item.sel .flag-check{background:var(--red);border-color:var(--red);color:#fff}
+.flag-badge{font-size:9px;padding:2px 6px;border-radius:6px;font-weight:700}
+.fb-a{background:rgba(255,95,95,0.15);color:var(--red)}
+.fb-b{background:rgba(245,166,35,0.15);color:var(--amber)}
+.fb-c{background:rgba(96,165,250,0.15);color:var(--blue)}
+
+/* SUBMIT BAR */
+.submit-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(7,8,13,0.97);backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);padding:10px 16px 20px;
+}
+.sb-preview{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.sbp-item{flex:1;text-align:center}
+.sbp-val{font-size:15px;font-weight:800}
+.sbp-lbl{font-size:9px;color:var(--text3);margin-top:1px}
+.sbp-div{width:1px;height:28px;background:var(--border)}
+.submit-btn{width:100%;height:50px;border-radius:13px;border:none;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'PingFang SC',sans-serif}
+.submit-btn.ready{background:linear-gradient(135deg,var(--amber),var(--amber2));color:#000;box-shadow:0 4px 20px rgba(245,166,35,0.3)}
+.submit-btn.ready:active{transform:scale(0.98)}
+.submit-btn.disabled{background:var(--card2);color:var(--text3);cursor:not-allowed}
+
+/* SUCCESS */
+.success-screen{display:none;position:fixed;inset:0;z-index:200;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center}
+.success-screen.show{display:flex}
+.success-icon{font-size:60px;margin-bottom:14px;animation:pop 0.4s ease}
+@keyframes pop{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+.success-title{font-size:22px;font-weight:800;margin-bottom:6px}
+.success-sub{font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:20px}
+.success-data{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;width:100%;max-width:320px;margin-bottom:20px;text-align:left}
+.sd-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.sd-row:last-child{border:none}
+.sd-label{color:var(--text3)}
+.sd-val{font-weight:700}
+.next-btn{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:12px 32px;font-size:14px;font-weight:700;cursor:pointer;color:var(--text);font-family:'PingFang SC',sans-serif;transition:all 0.15s}
+.next-btn:active{transform:scale(0.97)}
+
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-logo">
+    <div class="tb-sym">∞</div>
+    <div class="tb-title">库存<span>上报</span></div>
+  </div>
+  <div class="tb-badge">销速系统 v2.0</div>
+</div>
+
+<div class="main">
+
+  <!-- ① 门店信息 -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-num">1</div>
+      <div class="card-title">门店信息</div>
+    </div>
+    <div class="card-body">
+      <div class="lbl">门店名称</div>
+      <input class="field" id="storeName" placeholder="输入门店名称…" oninput="calc()"/>
+
+      <div class="lbl" style="margin-top:14px">门店等级</div>
+      <div class="grade-grid">
+        <div class="grade-opt sel" id="go-S+" onclick="selGrade('S+')">
+          <div class="go-grade" style="color:var(--green)">S+</div>
+          <div class="go-sub">T=7天·3次/周</div>
+        </div>
+        <div class="grade-opt" id="go-S" onclick="selGrade('S')">
+          <div class="go-grade" style="color:var(--green)">S</div>
+          <div class="go-sub">T=7天·2次/周</div>
+        </div>
+        <div class="grade-opt" id="go-A" onclick="selGrade('A')">
+          <div class="go-grade" style="color:var(--amber)">A</div>
+          <div class="go-sub">T=7天·1次/周</div>
+        </div>
+        <div class="grade-opt" id="go-B" onclick="selGrade('B')">
+          <div class="go-grade" style="color:var(--amber)">B</div>
+          <div class="go-sub">T=14天</div>
+        </div>
+        <div class="grade-opt" id="go-C" onclick="selGrade('C')">
+          <div class="go-grade" style="color:var(--text2)">C</div>
+          <div class="go-sub">T=21天</div>
+        </div>
+        <div class="grade-opt" id="go-D" onclick="selGrade('D')">
+          <div class="go-grade" style="color:var(--text3)">D</div>
+          <div class="go-sub">T=30天</div>
+        </div>
+      </div>
+
+      <div class="lbl">SKU品项</div>
+      <div class="sku-row" id="skuRow"></div>
+    </div>
+  </div>
+
+  <!-- ② 库存录入（极简：两个数字）-->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-num">2</div>
+      <div class="card-title">现在还有多少货</div>
+      <div class="card-tag">两个数字</div>
+    </div>
+    <div class="card-body">
+      <div class="lbl">📦 货架（瓶）</div>
+      <div class="stepper">
+        <div class="step-btn" onclick="adj('shelf',-5)">−5</div>
+        <input class="step-input" id="shelf" type="number" value="0" min="0" oninput="calc()"/>
+        <div class="step-btn" onclick="adj('shelf',5)">+5</div>
+      </div>
+      <div class="step-unit">货架上摆放的瓶数</div>
+
+      <div class="lbl" style="margin-top:12px">🏪 仓库（箱）</div>
+      <div class="stepper">
+        <div class="step-btn" onclick="adj('warehouse',-1)">−</div>
+        <input class="step-input" id="warehouse" type="number" value="0" min="0" oninput="calc()"/>
+        <div class="step-btn" onclick="adj('warehouse',1)">+</div>
+      </div>
+      <div class="step-unit">
+        仓库整箱数 · 1箱 =
+        <select id="perCase" onchange="calc()" style="background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:2px 6px;font-size:11px;color:var(--text);outline:none">
+          <option value="6">6瓶</option>
+          <option value="12" selected>12瓶</option>
+          <option value="24">24瓶</option>
+        </select>
+        · 合计 <span id="totalBottles" style="color:var(--amber);font-weight:700">0瓶</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 上次补货时间 -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-num">3</div>
+      <div class="card-title">上次补货是什么时候</div>
+      <div class="card-tag">算销速用</div>
+    </div>
+    <div class="card-body">
+      <div class="lbl">上次补货日期</div>
+      <input class="field date-field" id="lastReplenish" type="date" onchange="calc()"/>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px" id="daysSince">选择日期后自动计算间隔天数</div>
+
+      <div class="lbl" style="margin-top:12px">上次补货数量（瓶）</div>
+      <div class="stepper">
+        <div class="step-btn" onclick="adj('lastQty',-10)">−10</div>
+        <input class="step-input" id="lastQty" type="number" value="0" min="0" oninput="calc()"/>
+        <div class="step-btn" onclick="adj('lastQty',10)">+10</div>
+      </div>
+      <div class="step-unit">上次补了多少瓶（用来算消耗）</div>
+    </div>
+  </div>
+
+  <!-- ④ 销速诊断（核心） -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-num">4</div>
+      <div class="card-title">销速诊断</div>
+    </div>
+    <div class="card-body">
+      <div class="velocity-panel vp-empty" id="vpanel">
+        <div class="vp-top">
+          <div class="vp-label">实际销速</div>
+          <div class="vp-badge vb-empty" id="vbadge">等待录入</div>
+        </div>
+
+        <!-- 销速大数字 -->
+        <div class="vp-main">
+          <div class="vp-val" id="vval" style="color:var(--text3)">—</div>
+          <div class="vp-unit">瓶/天</div>
+        </div>
+        <div class="vp-sub" id="vsub">填写库存和上次补货时间后自动计算</div>
+
+        <!-- 达成率 -->
+        <div class="achieve-row" id="achieveRow" style="display:none">
+          <div style="font-size:11px;color:var(--text3);flex-shrink:0">目标达成</div>
+          <div class="achieve-bar-wrap">
+            <div class="achieve-bar" id="achieveBar" style="width:0%"></div>
+          </div>
+          <div class="achieve-pct" id="achievePct">0%</div>
+        </div>
+
+        <!-- 库存三格 -->
+        <div class="stock-bars" id="stockBars" style="display:none">
+          <div class="sb"><div class="sb-fill" id="sb1"></div></div>
+          <div class="sb"><div class="sb-fill" id="sb2"></div></div>
+          <div class="sb"><div class="sb-fill" id="sb3"></div></div>
+        </div>
+        <div id="stockBarLabel" style="display:none;display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-bottom:10px">
+          <span>不够卖</span><span>刚好</span><span>充足</span>
+        </div>
+
+        <!-- 计算过程 -->
+        <div class="calc-box" id="calcBox">填写数据后显示计算过程</div>
+      </div>
+
+      <!-- 建议 -->
+      <div class="advice-box" id="adviceBox" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- ⑤ 拍照 -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-num">5</div>
+      <div class="card-title">拍照记录</div>
+      <div class="card-tag">货架现状</div>
+    </div>
+    <div class="card-body">
+      <div class="photo-area" onclick="document.getElementById('photoInput').click()" id="photoArea">
+        <div style="font-size:28px;margin-bottom:6px">📷</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:3px">拍摄货架照片</div>
+        <div style="font-size:11px;color:var(--text3)">点击拍照或从相册选择</div>
+      </div>
+      <div class="photo-preview" id="photoPreview">
+        <img id="photoImg" src="" alt="货架照片"/>
+        <button class="photo-redo" onclick="redoPhoto()">重拍</button>
+      </div>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(this)" style="display:none"/>
+    </div>
+  </div>
+
+  <!-- ⑥ 异常标记 -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-num">6</div>
+      <div class="card-title">发现异常</div>
+      <div class="card-tag">可选</div>
+    </div>
+    <div class="card-body">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">勾选后系统自动预警</div>
+      <div class="flag-item" id="fi-a" onclick="togFlag('a')">
+        <div class="flag-check" id="fc-a"></div>
+        <div style="font-size:12px;flex:1">库存明显偏高，怀疑压货</div>
+        <div class="flag-badge fb-a">压货</div>
+      </div>
+      <div class="flag-item" id="fi-b" onclick="togFlag('b')">
+        <div class="flag-check" id="fc-b"></div>
+        <div style="font-size:12px;flex:1">促销期间，数据不代表正常销速</div>
+        <div class="flag-badge fb-b">促销</div>
+      </div>
+      <div class="flag-item" id="fi-c" onclick="togFlag('c')">
+        <div class="flag-check" id="fc-c"></div>
+        <div style="font-size:12px;flex:1">发现低价或竞品冲货</div>
+        <div class="flag-badge fb-c">异常</div>
+      </div>
+      <div class="lbl" style="margin-top:10px">备注</div>
+      <textarea class="field" id="note" placeholder="陈列位置、竞品动态、门店反馈…" style="height:70px;resize:none"></textarea>
+    </div>
+  </div>
+
+</div>
+
+<!-- SUBMIT BAR -->
+<div class="submit-bar">
+  <div class="sb-preview">
+    <div class="sbp-item">
+      <div class="sbp-val" id="sbp-r" style="color:var(--amber)">—</div>
+      <div class="sbp-lbl">实际销速</div>
+    </div>
+    <div class="sbp-div"></div>
+    <div class="sbp-item">
+      <div class="sbp-val" id="sbp-target" style="color:var(--text2)">—</div>
+      <div class="sbp-lbl">目标销速</div>
+    </div>
+    <div class="sbp-div"></div>
+    <div class="sbp-item">
+      <div class="sbp-val" id="sbp-pct" style="color:var(--text3)">—</div>
+      <div class="sbp-lbl">达成率</div>
+    </div>
+    <div class="sbp-div"></div>
+    <div class="sbp-item">
+      <div class="sbp-val" id="sbp-stock" style="color:var(--text3)">—</div>
+      <div class="sbp-lbl">库存天数</div>
+    </div>
+  </div>
+  <button class="submit-btn disabled" id="submitBtn" onclick="submit()">请先填写门店名称和库存</button>
+</div>
+
+<!-- SUCCESS -->
+<div class="success-screen" id="successScreen">
+  <div class="success-icon">✅</div>
+  <div class="success-title" id="successTitle">上报成功</div>
+  <div class="success-sub" id="successSub"></div>
+  <div class="success-data" id="successData"></div>
+  <button class="next-btn" onclick="reset()">继续上报下一家 →</button>
+</div>
+
+<script>
+// ── 配置 ──
+const CONFIG = {
+  // SKU列表 + 目标销速（瓶/天）+ 年级 + 系数
+  // TODO: 从服务器获取，这里是上海试点假设数据
+  skus: [
+    {id:'s1', name:'六月鲜极鲜500ml', targetR:8.0, grade:4, coef:0.7},
+    {id:'s2', name:'六月鲜极鲜280ml', targetR:3.0, grade:4, coef:0.7},
+    {id:'s3', name:'禾然有机500ml',   targetR:1.5, grade:2, coef:1.5},
+    {id:'s4', name:'味达美金标500ml', targetR:5.0, grade:4, coef:0.7},
+    {id:'s5', name:'葱伴侣200ml',     targetR:2.0, grade:3, coef:1.0},
+    {id:'s6', name:'小康500ml',       targetR:4.0, grade:4, coef:0.7},
+  ],
+  T_MAP: {'S+':7,'S':7,'A':7,'B':14,'C':21,'D':30},
+  gradeLabel: ['','一年级','二年级','三年级','四年级'],
+  gradeCoef:  [0, 2.0,    1.5,    1.0,    0.7],
+  gradeColor: ['','gt-1','gt-2','gt-3','gt-4'],
+};
+
+// ── State ──
+let grade = 'S+';
+let skuId = 's1';
+let flags = {a:false,b:false,c:false};
+let lastResult = null;
+
+// ── 初始化SKU ──
+(function initSKU(){
+  const row = document.getElementById('skuRow');
+  CONFIG.skus.forEach(s => {
+    const chip = document.createElement('div');
+    chip.className = 'sku-chip' + (s.id === skuId ? ' sel' : '');
+    chip.id = 'sku-' + s.id;
+    const gradeTag = `<span class="grade-tag ${CONFIG.gradeColor[s.grade]}">${CONFIG.gradeLabel[s.grade]}</span>`;
+    chip.innerHTML = s.name + ' ' + gradeTag;
+    chip.onclick = () => {
+      skuId = s.id;
+      document.querySelectorAll('.sku-chip').forEach(c => c.classList.remove('sel'));
+      chip.classList.add('sel');
+      calc();
+    };
+    row.appendChild(chip);
+  });
+  // 设置今天日期为默认
+  const today = new Date();
+  const d7 = new Date(today - 7*24*60*60*1000);
+  document.getElementById('lastReplenish').value = d7.toISOString().split('T')[0];
+  document.getElementById('lastReplenish').max = today.toISOString().split('T')[0];
+})();
+
+// ── 门店等级 ──
+function selGrade(g) {
+  grade = g;
+  document.querySelectorAll('.grade-opt').forEach(el => el.classList.remove('sel'));
+  document.getElementById('go-' + g).classList.add('sel');
+  calc();
+}
+
+// ── 加减 ──
+function adj(id, delta) {
+  const el = document.getElementById(id);
+  el.value = Math.max(0, (parseInt(el.value) || 0) + delta);
+  calc();
+}
+
+// ── 异常标记 ──
+function togFlag(f) {
+  flags[f] = !flags[f];
+  const item = document.getElementById('fi-' + f);
+  const check = document.getElementById('fc-' + f);
+  if (flags[f]) { item.classList.add('sel'); check.textContent = '✓'; }
+  else { item.classList.remove('sel'); check.textContent = ''; }
+}
+
+// ── 核心计算 ──
+function calc() {
+  const shelf = parseInt(document.getElementById('shelf').value) || 0;
+  const warehouse = parseInt(document.getElementById('warehouse').value) || 0;
+  const perCase = parseInt(document.getElementById('perCase').value) || 12;
+  const lastReplenish = document.getElementById('lastReplenish').value;
+  const lastQty = parseInt(document.getElementById('lastQty').value) || 0;
+  const storeName = document.getElementById('storeName').value.trim();
+
+  const total = shelf + warehouse * perCase;
+  document.getElementById('totalBottles').textContent = total + '瓶';
+
+  // 计算间隔天数
+  let days = 0;
+  if (lastReplenish) {
+    const diff = new Date() - new Date(lastReplenish);
+    days = Math.max(1, Math.floor(diff / (1000 * 60 * 60 * 24)));
+    document.getElementById('daysSince').textContent = `距上次补货 ${days} 天`;
+  }
+
+  // 获取当前SKU
+  const sku = CONFIG.skus.find(s => s.id === skuId);
+  const T = CONFIG.T_MAP[grade] || 7;
+
+  // 底部预览
+  document.getElementById('sbp-target').textContent = sku ? sku.targetR.toFixed(1)+'瓶/天' : '—';
+
+  if (total === 0) {
+    showEmpty();
+    updateSubmitBtn(storeName, false);
+    return;
+  }
+
+  // 实际销速计算
+  // 方法：如果有上次补货数据，用消耗量算
+  // 消耗量 = 上次库存量 - 当前库存量 = lastQty - total（简化：假设上次补货后库存=lastQty）
+  let actualR = 0;
+  let rSource = '';
+
+  if (days > 0 && lastQty > 0) {
+    // 有完整数据：用实际消耗算
+    const consumed = lastQty - total;
+    if (consumed > 0) {
+      actualR = consumed / days;
+      rSource = `实际消耗${consumed}瓶 ÷ ${days}天`;
+    } else if (consumed <= 0) {
+      // 补货了，库存反而多了，用库存量估算
+      actualR = total / T;
+      rSource = `当前库存${total}瓶 ÷ T(${T}天) 估算`;
+    }
+  } else if (days > 0 && total > 0) {
+    // 没有上次补货量：用当前库存÷剩余天数估算
+    actualR = total / T;
+    rSource = `当前库存${total}瓶 ÷ T(${T}天) 估算`;
+  }
+
+  if (actualR <= 0) actualR = total / T;
+
+  // 库存够卖天数
+  const daysLeft = actualR > 0 ? total / actualR : 0;
+
+  // 对比目标
+  const targetR = sku ? sku.targetR : 5;
+  const achievement = targetR > 0 ? (actualR / targetR) * 100 : 0;
+
+  // 判断状态
+  let status, badgeText, badgeCls, color, advice, adviceBg, adviceBorder;
+
+  if (achievement >= 110) {
+    status = 'vp-fast'; badgeText = '🚀 销速超标'; badgeCls = 'vb-fast'; color = 'var(--green)';
+    advice = `销速超出目标${(achievement-100).toFixed(0)}%，卖得比预期快！库存还够${daysLeft.toFixed(0)}天，建议提前安排补货，不要断货。`;
+    adviceBg = 'rgba(74,222,128,0.06)'; adviceBorder = 'rgba(74,222,128,0.2)';
+  } else if (achievement >= 90) {
+    status = 'vp-normal'; badgeText = '✅ 销速正常'; badgeCls = 'vb-normal'; color = 'var(--blue)';
+    advice = `销速达标，库存还够${daysLeft.toFixed(0)}天，正常跟进即可。`;
+    adviceBg = 'rgba(96,165,250,0.06)'; adviceBorder = 'rgba(96,165,250,0.2)';
+  } else if (achievement >= 60) {
+    status = 'vp-slow'; badgeText = '⚠️ 销速偏低'; badgeCls = 'vb-slow'; color = 'var(--amber)';
+    advice = `销速低于目标${(100-achievement).toFixed(0)}%，需要关注。检查：陈列位置是否醒目？竞品是否在做促销？`;
+    adviceBg = 'rgba(245,166,35,0.06)'; adviceBorder = 'rgba(245,166,35,0.25)';
+  } else {
+    status = 'vp-slow'; badgeText = '🔴 销速严重不足'; badgeCls = 'vb-slow'; color = 'var(--red)';
+    advice = `销速严重低于目标，只完成${achievement.toFixed(0)}%。需要立即分析原因，上报区域经理。`;
+    adviceBg = 'rgba(255,95,95,0.06)'; adviceBorder = 'rgba(255,95,95,0.25)';
+  }
+
+  // 更新面板
+  const panel = document.getElementById('vpanel');
+  panel.className = 'velocity-panel ' + status;
+  const badge = document.getElementById('vbadge');
+  badge.className = 'vp-badge ' + badgeCls;
+  badge.textContent = badgeText;
+  const vval = document.getElementById('vval');
+  vval.style.color = color;
+  vval.textContent = actualR.toFixed(1);
+  document.getElementById('vsub').textContent = `目标 ${targetR}瓶/天 · 库存够卖 ${daysLeft.toFixed(0)}天`;
+
+  // 达成率条
+  const ar = document.getElementById('achieveRow');
+  ar.style.display = 'flex';
+  const bar = document.getElementById('achieveBar');
+  const pct = Math.min(100, achievement);
+  bar.style.width = pct + '%';
+  bar.style.background = achievement >= 90 ? 'var(--green)' : achievement >= 60 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('achievePct').textContent = achievement.toFixed(0) + '%';
+  document.getElementById('achievePct').style.color = color;
+
+  // 库存三格
+  document.getElementById('stockBars').style.display = 'flex';
+  document.getElementById('stockBarLabel').style.display = 'flex';
+  const a = targetR * T; // 一个周期的量
+  const wl = a > 0 ? total / a : 0;
+  const p1 = Math.min(100, Math.max(0, Math.min(wl,1)*100));
+  const p2 = Math.min(100, Math.max(0, (Math.min(wl,2)-1)*100));
+  const p3 = Math.min(100, Math.max(0, (Math.min(wl,3)-2)*100));
+  document.getElementById('sb1').style.cssText = `width:${p1}%;background:${wl<1?'var(--red)':'var(--green)'}`;
+  document.getElementById('sb2').style.cssText = `width:${p2}%;background:${wl<2?'var(--amber)':'var(--green)'}`;
+  document.getElementById('sb3').style.cssText = `width:${p3}%;background:var(--green)`;
+
+  // 计算过程
+  document.getElementById('calcBox').innerHTML =
+    `上次补货：<span class="ch">${lastReplenish||'未知'}</span> · 间隔 <span class="ch">${days}天</span>\n` +
+    (lastQty > 0 ? `上次补货量：<span class="ch">${lastQty}瓶</span> · 期间消耗 <span class="ch">${Math.max(0,lastQty-total)}瓶</span>\n` : '') +
+    `当前库存：货架<span class="ch">${shelf}瓶</span> + 仓库<span class="ch">${warehouse*perCase}瓶</span> = <span class="ch">${total}瓶</span>\n` +
+    `实际销速 r = ${rSource} = <span class="ch">${actualR.toFixed(1)}瓶/天</span>\n` +
+    `目标销速 = <span class="ch">${targetR}瓶/天</span> · 达成率 = <span class="ch">${achievement.toFixed(0)}%</span>\n` +
+    `库存还够卖：<span class="ch">${daysLeft.toFixed(0)}天</span>`;
+
+  // 建议
+  const ab = document.getElementById('adviceBox');
+  ab.style.display = 'block';
+  ab.style.background = adviceBg;
+  ab.style.borderColor = adviceBorder;
+  ab.style.color = 'var(--text2)';
+  ab.innerHTML = `<span style="font-weight:700;color:${color}">💡 建议 </span>${advice}`;
+
+  // 底部预览
+  document.getElementById('sbp-r').textContent = actualR.toFixed(1)+'瓶/天';
+  document.getElementById('sbp-r').style.color = color;
+  document.getElementById('sbp-pct').textContent = achievement.toFixed(0)+'%';
+  document.getElementById('sbp-pct').style.color = color;
+  document.getElementById('sbp-stock').textContent = daysLeft.toFixed(0)+'天';
+
+  // 保存结果
+  lastResult = {actualR, targetR, achievement, daysLeft, total, days, wl, color, badgeText, sku, grade};
+
+  updateSubmitBtn(storeName, true);
+}
+
+function showEmpty() {
+  const panel = document.getElementById('vpanel');
+  panel.className = 'velocity-panel vp-empty';
+  document.getElementById('vbadge').className = 'vp-badge vb-empty';
+  document.getElementById('vbadge').textContent = '等待录入';
+  document.getElementById('vval').style.color = 'var(--text3)';
+  document.getElementById('vval').textContent = '—';
+  document.getElementById('vsub').textContent = '填写库存和上次补货时间后自动计算';
+  document.getElementById('achieveRow').style.display = 'none';
+  document.getElementById('stockBars').style.display = 'none';
+  document.getElementById('calcBox').textContent = '填写数据后显示计算过程';
+  document.getElementById('adviceBox').style.display = 'none';
+  document.getElementById('sbp-r').textContent = '—';
+  document.getElementById('sbp-pct').textContent = '—';
+  document.getElementById('sbp-stock').textContent = '—';
+  lastResult = null;
+}
+
+function updateSubmitBtn(name, hasData) {
+  const btn = document.getElementById('submitBtn');
+  if (name && hasData) {
+    btn.className = 'submit-btn ready';
+    btn.textContent = '✓ 提交上报';
+  } else if (!name) {
+    btn.className = 'submit-btn disabled';
+    btn.textContent = '请先填写门店名称';
+  } else {
+    btn.className = 'submit-btn disabled';
+    btn.textContent = '请先填写库存数量';
+  }
+}
+
+// ── 照片 ──
+function handlePhoto(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('photoImg').src = e.target.result;
+    document.getElementById('photoArea').style.display = 'none';
+    document.getElementById('photoPreview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+function redoPhoto() {
+  document.getElementById('photoArea').style.display = 'block';
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoInput').value = '';
+}
+
+// ── 提交 ──
+function submit() {
+  const name = document.getElementById('storeName').value.trim();
+  if (!name || !lastResult) return;
+  const r = lastResult;
+  const now = new Date();
+  const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  const dateStr = (now.getMonth()+1) + '/' + now.getDate();
+  const activeFlags = Object.entries(flags).filter(([_,v])=>v).map(([k])=>({a:'压货',b:'促销',c:'异常'}[k]));
+  const sku = r.sku;
+
+  document.getElementById('successTitle').textContent = r.achievement >= 90 ? '上报成功 ✅' : r.achievement >= 60 ? '上报成功 ⚠️' : '上报成功 🔴';
+  document.getElementById('successSub').textContent =
+    r.achievement >= 110 ? '销速超标！已通知区域经理，请提前备货' :
+    r.achievement >= 90  ? '销速正常，数据已进入销速系统' :
+    r.achievement >= 60  ? '销速偏低，系统已标记，请关注' :
+    '销速严重不足，已触发预警，区域经理将联系你';
+
+  document.getElementById('successData').innerHTML = `
+    <div class="sd-row"><span class="sd-label">门店</span><span class="sd-val">${name}</span></div>
+    <div class="sd-row"><span class="sd-label">等级</span><span class="sd-val">${grade}级</span></div>
+    <div class="sd-row"><span class="sd-label">SKU</span><span class="sd-val">${sku?.name||''}</span></div>
+    <div class="sd-row"><span class="sd-label">实际销速</span><span class="sd-val" style="color:${r.color}">${r.actualR.toFixed(1)}瓶/天</span></div>
+    <div class="sd-row"><span class="sd-label">目标销速</span><span class="sd-val">${r.targetR}瓶/天</span></div>
+    <div class="sd-row"><span class="sd-label">达成率</span><span class="sd-val" style="color:${r.color}">${r.achievement.toFixed(0)}%</span></div>
+    <div class="sd-row"><span class="sd-label">库存天数</span><span class="sd-val">${r.daysLeft.toFixed(0)}天</span></div>
+    ${activeFlags.length ? `<div class="sd-row"><span class="sd-label">异常</span><span class="sd-val" style="color:var(--red)">${activeFlags.join('·')}</span></div>` : ''}
+    <div class="sd-row"><span class="sd-label">上报时间</span><span class="sd-val">${dateStr} ${timeStr}</span></div>
+  `;
+
+  // TODO: 提交到服务器
+  // fetch('/api/inventory/report', { method:'POST', body: JSON.stringify({...}) })
+
+  document.getElementById('successScreen').classList.add('show');
+}
+
+function reset() {
+  document.getElementById('successScreen').classList.remove('show');
+  document.getElementById('storeName').value = '';
+  document.getElementById('shelf').value = '0';
+  document.getElementById('warehouse').value = '0';
+  document.getElementById('lastQty').value = '0';
+  document.getElementById('note').value = '';
+  flags = {a:false,b:false,c:false};
+  ['a','b','c'].forEach(f => {
+    document.getElementById('fi-'+f).classList.remove('sel');
+    document.getElementById('fc-'+f).textContent = '';
+  });
+  redoPhoto();
+  showEmpty();
+  updateSubmitBtn('', false);
+  window.scrollTo(0,0);
+}
+
+// 初始化
+calc();
+</script>
+</body>
+</html>
