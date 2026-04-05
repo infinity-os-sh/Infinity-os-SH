@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>库存上报</title>
+<style>
+:root{
+  --bg:#07080d;--bg2:#0c0e18;--bg3:#111420;
+  --card:#141820;--card2:#1a2232;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e2e8f4;--text2:#7a8599;--text3:#3e4a60;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.1);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif}
+
+/* TOPBAR */
+.topbar{
+  height:52px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;border-bottom:1px solid var(--border);
+  background:rgba(7,8,13,0.97);position:sticky;top:0;z-index:100;
+}
+.tb-left{display:flex;align-items:center;gap:8px}
+.tb-sym{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#ff7c38);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#000}
+.tb-name{font-size:15px;font-weight:700}
+.tb-name span{color:var(--amber)}
+.tb-time{font-family:'Courier New',monospace;font-size:11px;color:var(--text3)}
+
+/* STORE BANNER - 自动识别的门店信息 */
+.store-banner{
+  margin:14px 16px 0;
+  background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(78,205,196,0.03));
+  border:1px solid rgba(245,166,35,0.2);border-radius:14px;
+  padding:14px 16px;position:relative;overflow:hidden;
+}
+.store-banner::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),transparent)}
+.sb-auto{font-size:9px;font-weight:700;color:var(--amber);letter-spacing:0.1em;margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.sb-auto-dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.sb-store-name{font-size:20px;font-weight:800;margin-bottom:4px}
+.sb-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sb-tag{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600}
+.tag-grade{background:rgba(74,222,128,0.12);color:var(--green);border:1px solid rgba(74,222,128,0.2)}
+.tag-sku{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.2)}
+.tag-target{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(96,165,250,0.2)}
+.tag-days{background:rgba(255,255,255,0.05);color:var(--text3);border:1px solid var(--border)}
+.sb-change{font-size:10px;color:var(--text3);margin-top:8px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+
+/* SKU SWITCHER */
+.sku-switcher{
+  margin:10px 16px 0;
+  display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;
+}
+.sku-switcher::-webkit-scrollbar{display:none}
+.sku-opt{
+  flex-shrink:0;border:1px solid var(--border);border-radius:20px;
+  padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;
+  background:var(--bg3);transition:all 0.15s;white-space:nowrap;
+}
+.sku-opt.active{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+
+/* MAIN INPUT AREA */
+.input-area{padding:14px 16px 0;display:flex;flex-direction:column;gap:10px}
+
+.input-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 16px}
+.ic-label{font-size:13px;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.ic-label-main{font-size:16px;font-weight:700;color:var(--text)}
+
+/* 大号数字输入 */
+.big-stepper{display:flex;align-items:center;gap:10px}
+.bs-btn{
+  width:68px;height:72px;border-radius:16px;border:1px solid var(--border2);
+  background:var(--card2);display:flex;align-items:center;justify-content:center;
+  font-size:28px;cursor:pointer;flex-shrink:0;color:var(--text2);
+  user-select:none;transition:all 0.12s;
+}
+.bs-btn:active{background:var(--amber);color:#000;border-color:var(--amber);transform:scale(0.94)}
+.bs-display{
+  flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:14px;
+  text-align:center;padding:14px 0;cursor:pointer;transition:border-color 0.15s;
+}
+.bs-display:focus-within{border-color:var(--amber)}
+.bs-num{font-size:44px;font-weight:800;line-height:1;color:var(--text);display:block}
+.bs-input{
+  position:absolute;opacity:0;width:1px;height:1px;
+}
+.bs-unit{font-size:12px;color:var(--text3);margin-top:5px}
+
+/* 快捷输入按钮 */
+.quick-btns{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.qb{
+  flex:1;min-width:44px;padding:11px 4px;border-radius:11px;border:1px solid var(--border);
+  background:var(--bg3);font-size:14px;color:var(--text2);cursor:pointer;
+  text-align:center;transition:all 0.12s;font-weight:600;
+}
+.qb:active{background:var(--amber-dim);border-color:var(--amber);color:var(--amber)}
+
+/* 换算提示 */
+.convert-hint{
+  margin-top:8px;padding:8px 12px;background:var(--bg3);border-radius:8px;
+  border:1px solid var(--border);font-size:11px;color:var(--text3);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.convert-val{color:var(--amber);font-weight:700;font-size:12px}
+
+/* 销速结果卡 */
+.result-card{
+  margin:10px 16px 0;border-radius:16px;padding:16px;
+  border:2px solid var(--border);transition:all 0.3s;position:relative;overflow:hidden;
+}
+.result-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;transition:background 0.3s;border-radius:3px 3px 0 0}
+.rc-fast{border-color:rgba(74,222,128,0.3);background:var(--green-dim)}.rc-fast::before{background:var(--green)}
+.rc-normal{border-color:rgba(96,165,250,0.3);background:var(--blue-dim)}.rc-normal::before{background:var(--blue)}
+.rc-slow{border-color:rgba(245,166,35,0.4);background:var(--amber-dim)}.rc-slow::before{background:var(--amber)}
+.rc-danger{border-color:rgba(255,95,95,0.4);background:var(--red-dim)}.rc-danger::before{background:var(--red)}
+.rc-empty{border-color:var(--border);background:var(--bg3)}
+
+.rc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.rc-status{font-size:16px;font-weight:800}
+.rc-badge{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600}
+
+/* 达成率 */
+.rc-achieve{margin-bottom:14px}
+.rc-achieve-row{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.rc-achieve-lbl{font-size:11px;color:var(--text3);flex-shrink:0;width:60px}
+.rc-bar-wrap{flex:1;height:10px;background:rgba(255,255,255,0.06);border-radius:5px;overflow:hidden}
+.rc-bar{height:100%;border-radius:5px;transition:width 0.5s ease}
+.rc-pct{font-size:16px;font-weight:800;flex-shrink:0;width:44px;text-align:right}
+.rc-sub{font-size:11px;color:var(--text3)}
+
+/* 建议 */
+.rc-advice{
+  padding:10px 12px;border-radius:10px;
+  font-size:12px;line-height:1.7;color:var(--text2);
+  background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  margin-top:10px;
+}
+.rc-advice-icon{font-size:13px;margin-right:4px}
+
+/* 库存天数 */
+.rc-days{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--text3);margin-top:8px;
+}
+.rc-days-val{font-size:14px;font-weight:700}
+
+/* 拍照区 */
+.photo-card{
+  margin:10px 16px 0;background:var(--card);
+  border:1px solid var(--border);border-radius:16px;overflow:hidden;
+}
+.photo-btn{
+  width:100%;padding:20px;display:flex;align-items:center;gap:12px;cursor:pointer;
+  background:none;border:none;text-align:left;transition:background 0.15s;
+}
+.photo-btn:active{background:rgba(255,255,255,0.03)}
+.photo-icon-wrap{
+  width:44px;height:44px;border-radius:12px;background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;
+  border:1px solid var(--border2);
+}
+.photo-label{font-size:14px;font-weight:600;margin-bottom:2px}
+.photo-sub{font-size:11px;color:var(--text3)}
+.photo-preview-wrap{position:relative;display:none}
+.photo-preview-wrap img{width:100%;max-height:180px;object-fit:cover}
+.photo-redo-btn{
+  position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);
+  color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:11px;cursor:pointer;
+}
+
+/* 提交按钮 */
+.submit-wrap{
+  margin:14px 16px 120px;
+}
+.submit-main{
+  width:100%;height:56px;border-radius:16px;border:none;
+  font-size:17px;font-weight:700;cursor:pointer;transition:all 0.2s;
+  font-family:'PingFang SC',sans-serif;
+}
+.submit-main.ready{
+  background:linear-gradient(135deg,var(--amber),var(--amber2));
+  color:#000;box-shadow:0 6px 24px rgba(245,166,35,0.35);
+}
+.submit-main.ready:active{transform:scale(0.98)}
+.submit-main.disabled{background:var(--card2);color:var(--text3);cursor:not-allowed}
+
+/* 底部摘要条 */
+.bottom-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(7,8,13,0.98);backdrop-filter:blur(16px);
+  border-top:1px solid var(--border2);padding:14px 16px 32px;
+}
+.bb-nums{display:flex;align-items:center;gap:0;margin-bottom:12px;
+  background:var(--card);border-radius:12px;padding:12px 0;border:1px solid var(--border)}
+.bb-item{flex:1;text-align:center}
+.bb-val{font-size:18px;font-weight:800}
+.bb-lbl{font-size:10px;color:var(--text3);margin-top:3px}
+.bb-div{width:1px;height:36px;background:var(--border);flex-shrink:0}
+.bb-submit{
+  width:100%;height:58px;border-radius:16px;border:none;
+  font-size:18px;font-weight:700;cursor:pointer;
+  font-family:'PingFang SC',sans-serif;transition:all 0.2s;
+}
+.bb-submit.ready{background:linear-gradient(135deg,var(--amber),var(--amber2));color:#000;box-shadow:0 4px 20px rgba(245,166,35,0.3)}
+.bb-submit.ready:active{transform:scale(0.98)}
+.bb-submit.disabled{background:var(--card2);color:var(--text3);cursor:not-allowed}
+
+/* 成功页 */
+.success{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:var(--bg);flex-direction:column;align-items:center;justify-content:center;
+  padding:32px;text-align:center;
+}
+.success.show{display:flex}
+.success-em{font-size:64px;margin-bottom:14px;animation:pop 0.4s ease}
+@keyframes pop{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:1}}
+.success-h{font-size:22px;font-weight:800;margin-bottom:6px}
+.success-s{font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:20px}
+.success-box{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:16px;width:100%;max-width:320px;margin-bottom:20px;text-align:left;
+}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.sr:last-child{border:none}
+.sr-l{color:var(--text3)}
+.sr-r{font-weight:700}
+.next-btn{
+  background:var(--card2);border:1px solid var(--border2);border-radius:12px;
+  padding:13px 32px;font-size:14px;font-weight:700;cursor:pointer;color:var(--text);
+  font-family:'PingFang SC',sans-serif;
+}
+.next-btn:active{transform:scale(0.97)}
+
+/* 数字键盘遮罩 */
+.numpad-overlay{
+  display:none;position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);
+  flex-direction:column;justify-content:flex-end;
+}
+.numpad-overlay.show{display:flex}
+.numpad{
+  background:var(--bg2);border-top:1px solid var(--border2);
+  border-radius:20px 20px 0 0;padding:16px;
+}
+.numpad-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.numpad-title{font-size:14px;font-weight:700;color:var(--amber)}
+.numpad-val{font-size:32px;font-weight:800;text-align:center;padding:10px;
+  background:var(--bg3);border-radius:12px;margin-bottom:12px;min-height:60px;
+  display:flex;align-items:center;justify-content:center}
+.numpad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.np-btn{
+  height:70px;border-radius:14px;border:1px solid var(--border);
+  background:var(--card);font-size:26px;font-weight:600;color:var(--text);
+  cursor:pointer;transition:all 0.12s;display:flex;align-items:center;justify-content:center;
+}
+.np-btn:active{background:var(--amber-dim);border-color:var(--amber);color:var(--amber);transform:scale(0.96)}
+.np-btn.np-del{font-size:18px;color:var(--text2)}
+.np-btn.np-ok{background:var(--amber);color:#000;border-color:var(--amber);font-size:16px}
+.np-btn.np-ok:active{background:var(--amber2)}
+
+::-webkit-scrollbar{width:0;height:0}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-sym">∞</div>
+    <div class="tb-name">库存<span>上报</span></div>
+  </div>
+  <div class="tb-time" id="clock">--:--</div>
+</div>
+
+<!-- 门店信息（自动识别） -->
+<div class="store-banner">
+  <div class="sb-auto">
+    <div class="sb-auto-dot"></div>
+    自动识别
+  </div>
+  <div class="sb-store-name" id="storeName">家乐福古北店</div>
+  <div class="sb-meta">
+    <span class="sb-tag tag-grade" id="storeGrade">S+ · T=7天</span>
+    <span class="sb-tag tag-sku" id="currentSku">六月鲜极鲜500ml</span>
+    <span class="sb-tag tag-target" id="targetTag">目标 9.3瓶/天</span>
+    <span class="sb-tag tag-days" id="lastReplenishTag">上次补货 5天前</span>
+  </div>
+  <div class="sb-change" onclick="showStoreSelector()">不是这家门店？点击切换</div>
+</div>
+
+<!-- SKU切换 -->
+<div class="sku-switcher" id="skuSwitcher"></div>
+
+<!-- 输入区 -->
+<div class="input-area" style="padding-bottom:220px">
+
+  <!-- 货架 -->
+  <div class="input-card">
+    <div class="ic-label">
+      <span>📦</span>
+      <span class="ic-label-main">货架还有多少瓶？</span>
+    </div>
+    <div class="big-stepper">
+      <div class="bs-btn" onclick="adj('shelf',-1)">−</div>
+      <div class="bs-display" onclick="openNumpad('shelf','货架库存（瓶）')">
+        <span class="bs-num" id="shelfDisplay">0</span>
+        <div class="bs-unit">瓶</div>
+      </div>
+      <div class="bs-btn" onclick="adj('shelf',1)">+</div>
+    </div>
+    <div class="quick-btns">
+      <div class="qb" onclick="setVal('shelf',6)">6</div>
+      <div class="qb" onclick="setVal('shelf',12)">12</div>
+      <div class="qb" onclick="setVal('shelf',18)">18</div>
+      <div class="qb" onclick="setVal('shelf',24)">24</div>
+      <div class="qb" onclick="setVal('shelf',36)">36</div>
+      <div class="qb" onclick="setVal('shelf',48)">48</div>
+    </div>
+  </div>
+
+  <!-- 仓库 -->
+  <div class="input-card">
+    <div class="ic-label">
+      <span>🏪</span>
+      <span class="ic-label-main">仓库还有多少箱？</span>
+    </div>
+    <div class="big-stepper">
+      <div class="bs-btn" onclick="adj('warehouse',-1)">−</div>
+      <div class="bs-display" onclick="openNumpad('warehouse','仓库库存（箱）')">
+        <span class="bs-num" id="warehouseDisplay">0</span>
+        <div class="bs-unit">箱</div>
+      </div>
+      <div class="bs-btn" onclick="adj('warehouse',1)">+</div>
+    </div>
+    <div class="quick-btns">
+      <div class="qb" onclick="setVal('warehouse',1)">1箱</div>
+      <div class="qb" onclick="setVal('warehouse',2)">2箱</div>
+      <div class="qb" onclick="setVal('warehouse',3)">3箱</div>
+      <div class="qb" onclick="setVal('warehouse',5)">5箱</div>
+      <div class="qb" onclick="setVal('warehouse',10)">10箱</div>
+    </div>
+    <div class="convert-hint">
+      <span id="convertHint" class="convert-val">0箱 = 0瓶 · 合计 0瓶</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- 销速诊断结果 -->
+<div class="result-card rc-empty" id="resultCard">
+  <div class="rc-top">
+    <div class="rc-status" id="rcStatus" style="color:var(--text3)">填写库存后自动计算</div>
+    <div class="rc-badge" id="rcBadge" style="background:var(--bg3);color:var(--text3)">等待</div>
+  </div>
+  <div class="rc-achieve" id="rcAchieve" style="display:none">
+    <div class="rc-achieve-row">
+      <div class="rc-achieve-lbl">目标达成</div>
+      <div class="rc-bar-wrap"><div class="rc-bar" id="rcBar" style="width:0%"></div></div>
+      <div class="rc-pct" id="rcPct">0%</div>
+    </div>
+    <div class="rc-sub" id="rcSub"></div>
+  </div>
+  <div class="rc-days" id="rcDays" style="display:none">
+    <span>📅 库存还够卖</span>
+    <span class="rc-days-val" id="rcDaysVal"></span>
+    <span style="font-size:12px;color:var(--text3)">天</span>
+  </div>
+  <div class="rc-advice" id="rcAdvice" style="display:none"></div>
+</div>
+
+<input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(this)" style="display:none"/>
+
+<!-- 底部栏 -->
+<div class="bottom-bar">
+  <div class="bb-nums">
+    <div class="bb-item">
+      <div class="bb-val" id="bb-r" style="color:var(--text3)">—</div>
+      <div class="bb-lbl">实际销速</div>
+    </div>
+    <div class="bb-div"></div>
+    <div class="bb-item">
+      <div class="bb-val" id="bb-target" style="color:var(--text2)">—</div>
+      <div class="bb-lbl">目标销速</div>
+    </div>
+    <div class="bb-div"></div>
+    <div class="bb-item">
+      <div class="bb-val" id="bb-pct" style="color:var(--text3)">—</div>
+      <div class="bb-lbl">达成率</div>
+    </div>
+    <div class="bb-div"></div>
+    <div class="bb-item">
+      <div class="bb-val" id="bb-days" style="color:var(--text3)">—</div>
+      <div class="bb-lbl">可卖天数</div>
+    </div>
+  </div>
+
+  <!-- 拍照行：始终可见 -->
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+    <button onclick="document.getElementById('photoInput').click()"
+      style="flex:1;height:52px;border-radius:14px;border:1px solid var(--border2);
+             background:var(--card2);color:var(--text2);font-size:15px;font-weight:600;
+             cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+             font-family:'PingFang SC',sans-serif;transition:all 0.15s"
+      id="photoBtn">
+      <span style="font-size:20px">📷</span> 拍货架照片
+    </button>
+    <div id="photoThumb" style="display:none;width:52px;height:52px;border-radius:12px;overflow:hidden;flex-shrink:0;border:2px solid var(--amber);position:relative;cursor:pointer" onclick="redoPhoto()">
+      <img id="photoImg" src="" style="width:100%;height:100%;object-fit:cover"/>
+      <div style="position:absolute;bottom:2px;right:2px;font-size:9px;background:rgba(0,0,0,0.75);color:#fff;border-radius:3px;padding:1px 4px">重拍</div>
+    </div>
+  </div>
+
+  <button class="bb-submit disabled" id="submitBtn" onclick="doSubmit()">请先填写库存</button>
+</div>
+
+<!-- 成功页 -->
+<div class="success" id="successScreen">
+  <div class="success-em" id="successEm">✅</div>
+  <div class="success-h" id="successH">上报成功</div>
+  <div class="success-s" id="successS"></div>
+  <div class="success-box" id="successBox"></div>
+  <button class="next-btn" onclick="resetForm()">继续上报下一家 →</button>
+</div>
+
+<!-- 数字键盘 -->
+<div class="numpad-overlay" id="numpadOverlay" onclick="closeNumpad(event)">
+  <div class="numpad">
+    <div class="numpad-hdr">
+      <div class="numpad-title" id="numpadTitle">输入数量</div>
+      <div style="font-size:11px;color:var(--text3)" onclick="closeNumpadDirect()">取消</div>
+    </div>
+    <div class="numpad-val" id="numpadVal">0</div>
+    <div class="numpad-grid">
+      <div class="np-btn" onclick="npInput('1')">1</div>
+      <div class="np-btn" onclick="npInput('2')">2</div>
+      <div class="np-btn" onclick="npInput('3')">3</div>
+      <div class="np-btn" onclick="npInput('4')">4</div>
+      <div class="np-btn" onclick="npInput('5')">5</div>
+      <div class="np-btn" onclick="npInput('6')">6</div>
+      <div class="np-btn" onclick="npInput('7')">7</div>
+      <div class="np-btn" onclick="npInput('8')">8</div>
+      <div class="np-btn" onclick="npInput('9')">9</div>
+      <div class="np-btn np-del" onclick="npDel()">⌫</div>
+      <div class="np-btn" onclick="npInput('0')">0</div>
+      <div class="np-btn np-ok" onclick="npConfirm()">确定</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// 模拟数据（TODO: 从SFA系统自动注入）
+// 真实场景：SFA App通过URL参数传入
+// 例：库存上报.html?storeId=001&userId=U123&token=xxx
+// ══════════════════════════════════════════════
+const STORE = {
+  id: '001',
+  name: '家乐福古北店',
+  grade: 'S+',
+  district: '长宁',
+  lastReplenishDays: 5,   // 距上次补货天数（系统自动计算）
+  lastReplenishQty: 120,  // 上次补货量（系统记录）
+};
+
+const SKUS = [
+  {id:'s1', name:'六月鲜极鲜500ml', targetR:9.3, perCase:12, grade:4, coef:0.7},
+  {id:'s2', name:'六月鲜极鲜280ml', targetR:3.5, perCase:12, grade:4, coef:0.7},
+  {id:'s3', name:'禾然有机500ml',   targetR:1.5, perCase:12, grade:2, coef:1.5},
+  {id:'s4', name:'味达美金标500ml', targetR:5.0, perCase:12, grade:4, coef:0.7},
+];
+
+// ── State ──
+let shelf = 0;
+let warehouse = 0;
+let currentSkuId = 's1';
+let numpadTarget = '';
+let numpadStr = '0';
+let lastResult = null;
+
+// ── 初始化 ──
+(function init(){
+  // 时钟
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // 门店信息
+  document.getElementById('storeName').textContent = STORE.name;
+  document.getElementById('storeGrade').textContent = STORE.grade + ' · T=7天';
+  document.getElementById('lastReplenishTag').textContent = `上次补货 ${STORE.lastReplenishDays}天前`;
+
+  // SKU切换
+  const switcher = document.getElementById('skuSwitcher');
+  SKUS.forEach(s => {
+    const chip = document.createElement('div');
+    chip.className = 'sku-opt' + (s.id === currentSkuId ? ' active' : '');
+    chip.id = 'sku-' + s.id;
+    chip.textContent = s.name;
+    chip.onclick = () => selectSKU(s.id);
+    switcher.appendChild(chip);
+  });
+
+  updateSkuUI();
+  calc();
+})();
+
+function updateClock(){
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    n.getHours().toString().padStart(2,'0') + ':' +
+    n.getMinutes().toString().padStart(2,'0');
+}
+
+function selectSKU(id){
+  currentSkuId = id;
+  document.querySelectorAll('.sku-opt').forEach(c => c.classList.remove('active'));
+  document.getElementById('sku-' + id).classList.add('active');
+  updateSkuUI();
+  calc();
+}
+
+function updateSkuUI(){
+  const sku = SKUS.find(s => s.id === currentSkuId);
+  document.getElementById('currentSku').textContent = sku.name;
+  document.getElementById('targetTag').textContent = `目标 ${sku.targetR}瓶/天`;
+}
+
+// ── 数值调整 ──
+function adj(field, delta){
+  if(field === 'shelf') shelf = Math.max(0, shelf + delta);
+  else warehouse = Math.max(0, warehouse + delta);
+  updateDisplay();
+  calc();
+}
+
+function setVal(field, val){
+  if(field === 'shelf') shelf = val;
+  else warehouse = val;
+  updateDisplay();
+  calc();
+}
+
+function updateDisplay(){
+  document.getElementById('shelfDisplay').textContent = shelf;
+  document.getElementById('warehouseDisplay').textContent = warehouse;
+  const sku = SKUS.find(s => s.id === currentSkuId);
+  const wBottles = warehouse * sku.perCase;
+  const total = shelf + wBottles;
+  document.getElementById('convertHint').textContent =
+    `${warehouse}箱 = ${wBottles}瓶 · 合计 ${total}瓶`;
+}
+
+// ── 核心计算 ──
+function calc(){
+  const sku = SKUS.find(s => s.id === currentSkuId);
+  const T = 7; // S+/S/A = 7天，TODO: 从门店等级自动取
+  const perCase = sku.perCase;
+  const total = shelf + warehouse * perCase;
+  const targetR = sku.targetR;
+  const days = STORE.lastReplenishDays;
+  const lastQty = STORE.lastReplenishQty;
+
+  const card = document.getElementById('resultCard');
+
+  if(total === 0){
+    card.className = 'result-card rc-empty';
+    document.getElementById('rcStatus').textContent = '填写库存后自动计算';
+    document.getElementById('rcStatus').style.color = 'var(--text3)';
+    document.getElementById('rcBadge').textContent = '等待';
+    document.getElementById('rcBadge').style.cssText = 'background:var(--bg3);color:var(--text3)';
+    document.getElementById('rcAchieve').style.display = 'none';
+    document.getElementById('rcDays').style.display = 'none';
+    document.getElementById('rcAdvice').style.display = 'none';
+    updateBottomBar(null, targetR);
+    updateSubmitBtn(false);
+    return;
+  }
+
+  // 算实际销速
+  let actualR;
+  if(days > 0 && lastQty > 0){
+    const consumed = lastQty - total;
+    actualR = consumed > 0 ? consumed / days : total / T;
+  } else {
+    actualR = total / T;
+  }
+  if(actualR <= 0) actualR = total / T;
+
+  const daysLeft = actualR > 0 ? total / actualR : 0;
+  const achievement = (actualR / targetR) * 100;
+  const a = targetR * T; // 一周期标准量
+
+  // 判断状态
+  let cls, statusText, badgeText, badgeBg, badgeColor, color, advice;
+
+  if(achievement >= 110){
+    cls='rc-fast'; color='var(--green)';
+    statusText='🚀 卖得比目标快';
+    badgeText='超额完成'; badgeBg='rgba(74,222,128,0.12)'; badgeColor='var(--green)';
+    advice=`销速超标${(achievement-100).toFixed(0)}%，势头很好！库存还够 ${daysLeft.toFixed(0)} 天，建议提前安排补货避免断货。`;
+  } else if(achievement >= 90){
+    cls='rc-normal'; color='var(--blue)';
+    statusText='✅ 销速正常';
+    badgeText='达标'; badgeBg='rgba(96,165,250,0.12)'; badgeColor='var(--blue)';
+    advice=`销速达标，库存还够 ${daysLeft.toFixed(0)} 天，正常跟进即可。`;
+  } else if(achievement >= 60){
+    cls='rc-slow'; color='var(--amber)';
+    statusText='⚠️ 销速偏低';
+    badgeText='需关注'; badgeBg='rgba(245,166,35,0.12)'; badgeColor='var(--amber)';
+    advice=`销速低于目标${(100-achievement).toFixed(0)}%，检查：陈列位置是否醒目？竞品是否在做促销？`;
+  } else {
+    cls='rc-danger'; color='var(--red)';
+    statusText='🔴 销速严重不足';
+    badgeText='需预警'; badgeBg='rgba(255,95,95,0.12)'; badgeColor='var(--red)';
+    advice=`销速只完成目标的 ${achievement.toFixed(0)}%，需要立即上报区域经理分析原因。`;
+  }
+
+  card.className = 'result-card ' + cls;
+  document.getElementById('rcStatus').textContent = statusText;
+  document.getElementById('rcStatus').style.color = color;
+  document.getElementById('rcBadge').textContent = badgeText;
+  document.getElementById('rcBadge').style.cssText = `background:${badgeBg};color:${badgeColor};font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600`;
+
+  // 达成率
+  document.getElementById('rcAchieve').style.display = 'block';
+  const bar = document.getElementById('rcBar');
+  bar.style.width = Math.min(100, achievement) + '%';
+  bar.style.background = achievement >= 90 ? 'var(--green)' : achievement >= 60 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('rcPct').textContent = achievement.toFixed(0) + '%';
+  document.getElementById('rcPct').style.color = color;
+  document.getElementById('rcSub').textContent =
+    `实际 ${actualR.toFixed(1)}瓶/天 vs 目标 ${targetR}瓶/天`;
+
+  // 库存天数
+  document.getElementById('rcDays').style.display = 'flex';
+  document.getElementById('rcDaysVal').textContent = daysLeft.toFixed(0);
+  document.getElementById('rcDaysVal').style.color = daysLeft < T ? 'var(--amber)' : 'var(--green)';
+
+  // 建议
+  document.getElementById('rcAdvice').style.display = 'block';
+  document.getElementById('rcAdvice').textContent = advice;
+
+  lastResult = {actualR, targetR, achievement, daysLeft, total, color, statusText, sku, cls};
+  updateBottomBar(lastResult, targetR);
+  updateSubmitBtn(true);
+}
+
+function updateBottomBar(r, targetR){
+  if(!r){
+    document.getElementById('bb-r').textContent = '—';
+    document.getElementById('bb-r').style.color = 'var(--text3)';
+    document.getElementById('bb-target').textContent = targetR + '瓶/天';
+    document.getElementById('bb-pct').textContent = '—';
+    document.getElementById('bb-pct').style.color = 'var(--text3)';
+    document.getElementById('bb-days').textContent = '—';
+    document.getElementById('bb-days').style.color = 'var(--text3)';
+  } else {
+    document.getElementById('bb-r').textContent = r.actualR.toFixed(1) + '瓶/天';
+    document.getElementById('bb-r').style.color = r.color;
+    document.getElementById('bb-target').textContent = r.targetR + '瓶/天';
+    document.getElementById('bb-pct').textContent = r.achievement.toFixed(0) + '%';
+    document.getElementById('bb-pct').style.color = r.color;
+    document.getElementById('bb-days').textContent = r.daysLeft.toFixed(0) + '天';
+    document.getElementById('bb-days').style.color =
+      r.daysLeft < 7 ? 'var(--amber)' : 'var(--green)';
+  }
+}
+
+function updateSubmitBtn(ready){
+  const btn = document.getElementById('submitBtn');
+  btn.className = 'bb-submit ' + (ready ? 'ready' : 'disabled');
+  btn.textContent = ready ? '✓ 提交上报' : '请先填写库存';
+}
+
+// ── 照片 ──
+function handlePhoto(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('photoImg').src = e.target.result;
+    document.getElementById('photoBtn').innerHTML = '<span style="font-size:16px">✅</span> 已拍照';
+    document.getElementById('photoBtn').style.borderColor = 'rgba(74,222,128,0.3)';
+    document.getElementById('photoBtn').style.color = 'var(--green)';
+    document.getElementById('photoThumb').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+function redoPhoto(){
+  document.getElementById('photoInput').value = '';
+  document.getElementById('photoImg').src = '';
+  document.getElementById('photoBtn').innerHTML = '<span style="font-size:16px">📷</span> 拍货架照片';
+  document.getElementById('photoBtn').style.borderColor = '';
+  document.getElementById('photoBtn').style.color = '';
+  document.getElementById('photoThumb').style.display = 'none';
+}
+
+// ── 提交 ──
+function doSubmit(){
+  if(!lastResult) return;
+  const r = lastResult;
+  const now = new Date();
+  const ts = (now.getMonth()+1)+'/'+now.getDate()+' '+
+    now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+
+  const em = r.achievement >= 110 ? '🚀' : r.achievement >= 90 ? '✅' : r.achievement >= 60 ? '⚠️' : '🔴';
+  document.getElementById('successEm').textContent = em;
+  document.getElementById('successH').textContent = '上报成功';
+  document.getElementById('successS').textContent =
+    r.achievement >= 90 ? '数据已进入销速系统，继续保持！' :
+    r.achievement >= 60 ? '销速偏低已标记，区域经理会跟进' :
+    '严重预警已触发，区域经理将联系你';
+
+  document.getElementById('successBox').innerHTML = `
+    <div class="sr"><span class="sr-l">门店</span><span class="sr-r">${STORE.name}</span></div>
+    <div class="sr"><span class="sr-l">SKU</span><span class="sr-r">${r.sku.name}</span></div>
+    <div class="sr"><span class="sr-l">货架</span><span class="sr-r">${shelf}瓶</span></div>
+    <div class="sr"><span class="sr-l">仓库</span><span class="sr-r">${warehouse}箱 = ${warehouse*r.sku.perCase}瓶</span></div>
+    <div class="sr"><span class="sr-l">合计</span><span class="sr-r">${r.total}瓶</span></div>
+    <div class="sr"><span class="sr-l">实际销速</span><span class="sr-r" style="color:${r.color}">${r.actualR.toFixed(1)}瓶/天</span></div>
+    <div class="sr"><span class="sr-l">目标达成</span><span class="sr-r" style="color:${r.color}">${r.achievement.toFixed(0)}%</span></div>
+    <div class="sr"><span class="sr-l">可卖天数</span><span class="sr-r">${r.daysLeft.toFixed(0)}天</span></div>
+    <div class="sr"><span class="sr-l">上报时间</span><span class="sr-r">${ts}</span></div>
+  `;
+
+  // TODO: 提交到服务器
+  // fetch('/api/v1/inventory/report', {
+  //   method: 'POST',
+  //   headers: {'Content-Type':'application/json'},
+  //   body: JSON.stringify({
+  //     storeId: STORE.id,
+  //     skuId: currentSkuId,
+  //     shelfQty: shelf,
+  //     warehouseQty: warehouse,
+  //     actualR: r.actualR,
+  //     achievement: r.achievement,
+  //     reportTime: new Date().toISOString()
+  //   })
+  // });
+
+  document.getElementById('successScreen').classList.add('show');
+}
+
+function resetForm(){
+  shelf = 0; warehouse = 0;
+  updateDisplay();
+  calc();
+  redoPhoto();
+  document.getElementById('successScreen').classList.remove('show');
+  window.scrollTo(0,0);
+}
+
+// ── 数字键盘 ──
+function openNumpad(field, title){
+  numpadTarget = field;
+  numpadStr = String(field === 'shelf' ? shelf : warehouse);
+  document.getElementById('numpadTitle').textContent = title;
+  document.getElementById('numpadVal').textContent = numpadStr;
+  document.getElementById('numpadOverlay').classList.add('show');
+}
+function closeNumpad(e){
+  if(e.target === document.getElementById('numpadOverlay')) closeNumpadDirect();
+}
+function closeNumpadDirect(){
+  document.getElementById('numpadOverlay').classList.remove('show');
+}
+function npInput(d){
+  if(numpadStr === '0') numpadStr = d;
+  else numpadStr += d;
+  if(parseInt(numpadStr) > 9999) numpadStr = '9999';
+  document.getElementById('numpadVal').textContent = numpadStr;
+}
+function npDel(){
+  numpadStr = numpadStr.length > 1 ? numpadStr.slice(0,-1) : '0';
+  document.getElementById('numpadVal').textContent = numpadStr;
+}
+function npConfirm(){
+  const val = parseInt(numpadStr) || 0;
+  if(numpadTarget === 'shelf') shelf = val;
+  else warehouse = val;
+  updateDisplay();
+  calc();
+  closeNumpadDirect();
+}
+
+function showStoreSelector(){
+  // TODO: 打开门店搜索
+  alert('TODO: 接入SFA门店库，GPS自动定位');
+}
+</script>
+</body>
+</html>
