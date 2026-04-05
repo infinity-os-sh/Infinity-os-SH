@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS v7 · 欣和SH</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08080e;--bg2:#0c0e18;--bg3:#10131e;
+  --card:#131620;--card2:#181c28;
+  --border:rgba(255,255,255,0.055);--border2:rgba(255,255,255,0.11);
+  --text:#e6eaf5;--text2:#8892a8;--text3:#444d63;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.09);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.09);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.09);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.09);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.09);
+  --purple:#a78bfa;
+  --lyx:#d4a853;--lyx2:#f0c96a;--lyx-dim:rgba(212,168,83,0.1);
+  --wdm:#5b8fd4;--wdm-dim:rgba(91,143,212,0.1);
+  --hr:#5cb87a;--hr-dim:rgba(92,184,122,0.1);
+  --cbl:#c97d3a;--cbl-dim:rgba(201,125,58,0.1);
+  --xk:#888;--xk-dim:rgba(136,136,136,0.1);
+  --cy:#c45c8a;--cy-dim:rgba(196,92,138,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── TOPBAR ── */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(8,8,14,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:52px;gap:10px}
+.logo-row{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.logo-sym{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#e8801a);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000;box-shadow:0 2px 10px rgba(245,166,35,0.35);flex-shrink:0}
+.logo-text{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.04em;line-height:1}
+.logo-ver{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:1px}
+.topbar-center{flex:1;display:flex;justify-content:center}
+.breadcrumb{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3);overflow:hidden}
+.bc-sep{opacity:0.4}.bc-link{cursor:pointer;transition:color 0.15s;white-space:nowrap}.bc-link:hover{color:var(--text2)}.bc-cur{color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.clock{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+.back-btn{width:30px;height:30px;border-radius:8px;background:var(--card2);border:1px solid var(--border2);display:none;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text2);transition:all 0.15s;flex-shrink:0}
+.back-btn.show{display:flex}
+.back-btn:hover{background:var(--card);color:var(--text)}
+
+/* ── SCREENS ── */
+.screen{display:none}.screen.active{display:block;animation:fadeUp 0.2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── VIEW TOGGLE ── */
+.view-toggle{display:flex;gap:2px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:3px}
+.vt-btn{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;color:var(--text3);white-space:nowrap;letter-spacing:0.03em}
+.vt-btn.active{background:var(--amber);color:#000;font-weight:700}
+
+/* ── HOME ── */
+.home-hero{padding:20px 16px 12px;text-align:center}
+.home-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;line-height:1.1;margin-bottom:4px}
+.home-title .accent{color:var(--amber)}
+.home-sub{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace}
+
+/* 今日销速指挥台 */
+.cmd-today{margin:12px 16px 0;background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(78,205,196,0.03));border:1px solid rgba(245,166,35,0.2);border-radius:14px;padding:14px;position:relative;overflow:hidden}
+.cmd-today::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),var(--teal),transparent)}
+.cmd-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cmd-title{display:flex;align-items:center;gap:7px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.cmd-pulse{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.cmd-date{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+.cmd-signals{display:grid;grid-template-columns:repeat(3,1fr) 2fr;gap:8px}
+.csig{border-radius:10px;padding:10px;border:1px solid;cursor:pointer;transition:transform 0.15s}
+.csig:hover{transform:translateY(-2px)}
+.csig:active{transform:scale(0.97)}
+.csig.urgent{border-color:rgba(255,95,95,0.25);background:var(--red-dim)}
+.csig.warn{border-color:rgba(245,166,35,0.25);background:var(--amber-dim)}
+.csig.info{border-color:rgba(78,205,196,0.2);background:var(--teal-dim)}
+.csig.act{border-color:rgba(245,166,35,0.3);background:rgba(245,166,35,0.06);display:flex;align-items:center;gap:10px}
+.csig-dot{width:5px;height:5px;border-radius:50%;margin-bottom:5px}
+.csig.urgent .csig-dot{background:var(--red)}.csig.warn .csig-dot{background:var(--amber)}.csig.info .csig-dot{background:var(--teal)}
+.csig-lbl{font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:2px}
+.csig.urgent .csig-lbl{color:var(--red)}.csig.warn .csig-lbl{color:var(--amber)}.csig.info .csig-lbl{color:var(--teal)}
+.csig-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1;margin-bottom:2px}
+.csig.urgent .csig-val{color:var(--red)}.csig.warn .csig-val{color:var(--amber)}.csig.info .csig-val{color:var(--teal)}
+.csig-desc{font-size:9px;color:var(--text3);line-height:1.4}
+.csig-act-icon{font-size:18px;flex-shrink:0}
+.csig-act-body{flex:1}
+.csig-act-lbl{font-size:9px;font-weight:700;color:var(--amber);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:2px}
+.csig-act-desc{font-size:10px;color:var(--text2);line-height:1.5}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 16px 14px}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center}
+.stat-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1}
+.stat-lbl{font-size:9px;color:var(--text3);margin-top:2px;line-height:1.3}
+.ca{color:var(--amber)}.ct{color:var(--teal)}.cg{color:var(--green)}.cr{color:var(--red)}
+
+.cat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:0 16px 12px}
+@media(min-width:600px){.cat-grid{grid-template-columns:repeat(3,1fr)}}
+.cat-card{border-radius:14px;padding:16px 14px 12px;cursor:pointer;transition:transform 0.2s;position:relative;overflow:hidden;min-height:120px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid rgba(255,255,255,0.05)}
+.cat-card:active{transform:scale(0.97)}
+.cat-card::after{content:'›';position:absolute;bottom:12px;right:12px;font-size:16px;opacity:0.25}
+.cat-icon{font-size:22px;margin-bottom:6px;display:block}
+.cat-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:2px}
+.cat-sub{font-size:9px;opacity:0.55;line-height:1.4;margin-bottom:6px}
+.cat-score{font-family:'Syne',sans-serif;font-size:20px;font-weight:800}
+.cat-score-lbl{font-size:9px;opacity:0.45;margin-left:2px}
+.gc-a{background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)}.gc-b{background:linear-gradient(135deg,#0d1b2a,#1b2838,#162032)}.gc-c{background:linear-gradient(135deg,#1a0a2e,#2d1b4e,#1f1235)}.gc-d{background:linear-gradient(135deg,#1a120a,#2d1f0e,#1a1505)}.gc-e{background:linear-gradient(135deg,#0a1a12,#0e2818,#061a10)}.gc-f{background:linear-gradient(135deg,#1a0a0a,#2d1010,#1a0808)}.gc-g{background:linear-gradient(135deg,#0a1020,#111928,#0a1520)}
+
+.home-sec{padding:0 16px 12px}
+.sec-lbl{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px}
+.brain-banner{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(78,205,196,0.04));border:1px solid rgba(245,166,35,0.15);border-radius:13px;padding:14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color 0.2s}
+.brain-banner:hover{border-color:rgba(245,166,35,0.3)}
+.bb-icon{font-size:24px;flex-shrink:0}.bb-title{font-size:13px;font-weight:700;margin-bottom:2px}.bb-sub{font-size:10px;color:var(--text3);line-height:1.4}.bb-cta{font-size:10px;color:var(--amber);margin-top:4px}
+
+/* ── 销速系统 SCREEN ── */
+.velocity-screen{padding:0 16px 40px}
+.vs-header{background:linear-gradient(135deg,rgba(245,166,35,0.07),transparent);border:1px solid rgba(245,166,35,0.15);border-radius:14px;padding:16px;margin-bottom:14px;position:relative;overflow:hidden}
+.vs-header::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),var(--teal),transparent)}
+.vs-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px}
+.vs-sub{font-size:11px;color:var(--text3);margin-bottom:14px}
+
+/* 传导链可视化 */
+.chain-viz{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px}
+.chain-title{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.chain-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.chain-nodes{display:flex;align-items:center;overflow-x:auto;gap:0;scrollbar-width:none;padding-bottom:4px}
+.chain-nodes::-webkit-scrollbar{display:none}
+.chain-node{flex-shrink:0;text-align:center;padding:0 4px}
+.cn-box{border-radius:10px;padding:8px 10px;border:1px solid;min-width:72px;cursor:pointer;transition:all 0.2s}
+.cn-box:hover{transform:translateY(-2px)}
+.cn-level{font-size:9px;font-weight:700;letter-spacing:0.06em;margin-bottom:3px;text-transform:uppercase}
+.cn-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;line-height:1;margin-bottom:2px}
+.cn-label{font-size:9px;color:var(--text3);line-height:1.3}
+.cn-r{font-size:9px;font-family:'Space Mono',monospace;margin-top:3px}
+.chain-arrow{font-size:14px;color:var(--text3);opacity:0.4;flex-shrink:0;padding:0 2px}
+
+.cn-consumer{border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.07)}.cn-consumer .cn-level{color:var(--purple)}.cn-consumer .cn-val{color:var(--purple)}
+.cn-store{border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.07)}.cn-store .cn-level{color:var(--blue)}.cn-store .cn-val{color:var(--blue)}
+.cn-dist2{border-color:rgba(78,205,196,0.3);background:rgba(78,205,196,0.07)}.cn-dist2 .cn-level{color:var(--teal)}.cn-dist2 .cn-val{color:var(--teal)}
+.cn-dist1{border-color:rgba(245,166,35,0.3);background:rgba(245,166,35,0.08)}.cn-dist1 .cn-level{color:var(--amber)}.cn-dist1 .cn-val{color:var(--amber)}
+.cn-company{border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.07)}.cn-company .cn-level{color:var(--green)}.cn-company .cn-val{color:var(--green)}
+
+/* 三个r对比 */
+.r-compare{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px}
+.r-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.r-box{border-radius:10px;padding:12px;border:1px solid;text-align:center}
+.r-type{font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px}
+.r-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1;margin-bottom:3px}
+.r-unit{font-size:10px;color:var(--text3)}
+.r-desc{font-size:10px;color:var(--text3);margin-top:4px;line-height:1.4}
+.r-market{border-color:rgba(167,139,250,0.25);background:rgba(167,139,250,0.06)}.r-market .r-type{color:var(--purple)}.r-market .r-val{color:var(--purple)}
+.r-target{border-color:rgba(96,165,250,0.25);background:rgba(96,165,250,0.06)}.r-target .r-type{color:var(--blue)}.r-target .r-val{color:var(--blue)}
+.r-actual{border-color:rgba(74,222,128,0.25);background:rgba(74,222,128,0.06)}.r-actual .r-type{color:var(--green)}.r-actual .r-val{color:var(--green)}
+.r-gap{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;padding:10px;background:var(--bg3);border-radius:9px;border:1px solid var(--border)}
+.r-gap-label{font-size:11px;color:var(--text3)}
+.r-gap-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--amber)}
+
+/* ── 年级系统 ── */
+.grade-screen{padding:0 16px 40px}
+.grade-hero{background:linear-gradient(135deg,rgba(245,166,35,0.06),transparent);border:1px solid rgba(245,166,35,0.15);border-radius:14px;padding:16px;margin-bottom:14px}
+.grade-cards{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.grade-card{border-radius:12px;overflow:hidden;border:1px solid}
+.gc-hdr{padding:12px 14px;display:flex;align-items:center;gap:12px}
+.gc-badge{width:44px;height:44px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.gc-badge-num{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;line-height:1}
+.gc-badge-lbl{font-size:8px;margin-top:1px;opacity:0.8}
+.gc-info{flex:1}
+.gc-name{font-weight:700;font-size:14px;margin-bottom:2px}
+.gc-consumer-desc{font-size:10px;color:var(--text3)}
+.gc-body{padding:10px 14px;border-top:1px solid}
+.gc-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gcm{text-align:center;padding:8px;border-radius:8px;background:rgba(255,255,255,0.03)}
+.gcm-label{font-size:9px;color:var(--text3);margin-bottom:3px}
+.gcm-val{font-size:14px;font-weight:800;font-family:'Syne',sans-serif}
+.gc-bar-wrap{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:8px}
+.gc-bar-fill{height:100%;border-radius:2px}
+.gc-1{border-color:rgba(255,95,95,0.25)}.gc-1 .gc-hdr{background:rgba(255,95,95,0.06)}.gc-1 .gc-body{border-color:rgba(255,95,95,0.12);background:rgba(255,95,95,0.03)}
+.gc-2{border-color:rgba(245,166,35,0.25)}.gc-2 .gc-hdr{background:rgba(245,166,35,0.06)}.gc-2 .gc-body{border-color:rgba(245,166,35,0.12);background:rgba(245,166,35,0.03)}
+.gc-3{border-color:rgba(96,165,250,0.25)}.gc-3 .gc-hdr{background:rgba(96,165,250,0.06)}.gc-3 .gc-body{border-color:rgba(96,165,250,0.12);background:rgba(96,165,250,0.03)}
+.gc-4{border-color:rgba(74,222,128,0.25)}.gc-4 .gc-hdr{background:rgba(74,222,128,0.06)}.gc-4 .gc-body{border-color:rgba(74,222,128,0.12);background:rgba(74,222,128,0.03)}
+
+/* ── 一本账 ── */
+.account-screen{padding:0 16px 40px}
+.account-hero{background:linear-gradient(135deg,rgba(245,166,35,0.07),transparent);border:1px solid rgba(245,166,35,0.18);border-radius:14px;padding:16px;margin-bottom:14px}
+.formula-box{background:var(--bg2);border-radius:12px;padding:14px;border:1px solid var(--border);font-family:'Space Mono',monospace;font-size:12px;line-height:2;margin-bottom:14px}
+.fb-title{font-size:9px;letter-spacing:0.12em;color:var(--text3);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);text-transform:uppercase}
+.fhl{color:var(--amber);font-weight:700}
+.fdim{color:var(--text3)}
+.fgr{color:var(--green)}
+
+.salesperson-cards{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.sp-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.sp-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.sp-avatar{width:36px;height:36px;border-radius:9px;background:var(--amber-dim);border:1px solid rgba(245,166,35,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sp-info{flex:1}
+.sp-name{font-weight:700;font-size:13px;margin-bottom:1px}
+.sp-region{font-size:10px;color:var(--text3)}
+.sp-target{text-align:right}
+.sp-target-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--amber)}
+.sp-target-lbl{font-size:9px;color:var(--text3)}
+.sp-body{padding:12px 14px}
+.sp-sku-list{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.sp-sku-row{display:flex;align-items:center;gap:8px;font-size:11px}
+.sp-sku-name{flex:1;color:var(--text2)}
+.sp-sku-grade{font-size:9px;padding:1px 6px;border-radius:6px;font-weight:700;flex-shrink:0}
+.sg-1{background:rgba(255,95,95,0.12);color:var(--red)}.sg-2{background:rgba(245,166,35,0.1);color:var(--amber)}.sg-3{background:rgba(96,165,250,0.1);color:var(--blue)}.sg-4{background:rgba(74,222,128,0.08);color:var(--green)}
+.sp-sku-coef{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);flex-shrink:0;width:28px;text-align:right}
+.sp-sku-weighted{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;flex-shrink:0;width:60px;text-align:right}
+.sp-achieve-row{display:flex;align-items:center;gap:8px}
+.sp-achieve-lbl{font-size:10px;color:var(--text3);flex-shrink:0}
+.sp-achieve-bar{flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+.sp-achieve-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--amber2))}
+.sp-achieve-pct{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;flex-shrink:0}
+
+/* ── 上海试点 ── */
+.pilot-screen{padding:0 16px 40px}
+.pilot-header{background:linear-gradient(135deg,rgba(74,222,128,0.06),rgba(96,165,250,0.04));border:1px solid rgba(74,222,128,0.2);border-radius:14px;padding:16px;margin-bottom:14px;position:relative;overflow:hidden}
+.pilot-header::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--green),var(--blue),transparent)}
+.pilot-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:3px}
+.pilot-sub{font-size:11px;color:var(--text3);margin-bottom:14px}
+.pilot-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ps-box{background:var(--bg3);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--border)}
+.ps-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1;margin-bottom:2px}
+.ps-lbl{font-size:9px;color:var(--text3)}
+
+/* 门店销速列表 */
+.store-velocity-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.sv-row{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:11px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all 0.15s}
+.sv-row:hover{border-color:var(--border2);transform:translateX(2px)}
+.sv-grade{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+.sv-info{flex:1;min-width:0}
+.sv-name{font-size:12px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sv-sku{font-size:10px;color:var(--text3)}
+.sv-metrics{flex-shrink:0;text-align:right}
+.sv-r{font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
+.sv-achievement{font-size:10px;margin-top:1px}
+.sv-bar{width:60px;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:3px;margin-left:auto}
+.sv-bar-fill{height:100%;border-radius:2px}
+.sv-status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* 费用率面板 */
+.cost-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px}
+.cost-rows{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.cost-row{display:flex;align-items:center;gap:8px}
+.cost-label{width:56px;font-size:10px;color:var(--text3);flex-shrink:0}
+.cost-bar-wrap{flex:1;height:22px;border-radius:6px;background:rgba(255,255,255,0.04);overflow:hidden;position:relative}
+.cost-bar{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700}
+.cost-range{font-size:10px;color:var(--text3);width:68px;text-align:right;flex-shrink:0;font-family:'Space Mono',monospace}
+
+/* ── BRAND HOME ── */
+.brand-home-hero{padding:20px 16px 16px;background:linear-gradient(180deg,rgba(212,168,83,0.04) 0%,transparent 100%);border-bottom:1px solid var(--border);margin-bottom:14px}
+.bh-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:3px}
+.bh-title span{color:var(--amber)}.bh-sub{font-size:11px;color:var(--text3)}
+.bh-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px}
+.bh-stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
+.bh-sv{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--amber)}.bh-sl{font-size:9px;color:var(--text3);margin-top:2px}
+
+.subco-grid{padding:0 16px;display:flex;flex-direction:column;gap:8px}
+.subco-card{border-radius:14px;padding:16px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:14px}
+.subco-card:active{transform:scale(0.98)}
+.subco-badge{width:52px;height:52px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:18px}
+.subco-info{flex:1;min-width:0}
+.subco-name{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:1px}
+.subco-eng{font-size:10px;opacity:0.5;margin-bottom:5px;font-family:'Space Mono',monospace;letter-spacing:0.05em}
+.subco-desc{font-size:11px;color:var(--text2);line-height:1.4}
+.subco-right{flex-shrink:0;text-align:right}
+.subco-status{font-size:10px;padding:3px 8px;border-radius:8px;font-weight:600;margin-bottom:4px;display:inline-block}
+.status-live{background:rgba(74,222,128,0.12);color:var(--green);border:1px solid rgba(74,222,128,0.2)}
+.status-build{background:rgba(255,255,255,0.05);color:var(--text3);border:1px solid var(--border)}
+.subco-arrow{font-size:18px;color:var(--text3);margin-top:4px}
+.sc-lyx{background:linear-gradient(135deg,rgba(212,168,83,0.08),rgba(212,168,83,0.03));border-color:rgba(212,168,83,0.15)}
+.sc-wdm{background:linear-gradient(135deg,rgba(91,143,212,0.08),rgba(91,143,212,0.03));border-color:rgba(91,143,212,0.1)}
+.sc-hr{background:linear-gradient(135deg,rgba(92,184,122,0.08),rgba(92,184,122,0.03));border-color:rgba(92,184,122,0.1)}
+.sc-cbl{background:linear-gradient(135deg,rgba(201,125,58,0.08),rgba(201,125,58,0.03));border-color:rgba(201,125,58,0.1)}
+.sc-xk{background:linear-gradient(135deg,rgba(136,136,136,0.06),rgba(136,136,136,0.02));border-color:rgba(136,136,136,0.1)}
+.sc-cy{background:linear-gradient(135deg,rgba(196,92,138,0.08),rgba(196,92,138,0.03));border-color:rgba(196,92,138,0.1)}
+
+/* ── 六月鲜 SubCo ── */
+.lyx-screen{padding:0 0 40px}
+.lyx-header{padding:20px 16px 18px;background:linear-gradient(160deg,rgba(212,168,83,0.1) 0%,rgba(212,168,83,0.03) 60%,transparent 100%);border-bottom:1px solid rgba(212,168,83,0.12);position:relative;overflow:hidden}
+.lyx-header::before{content:'六月鲜';position:absolute;right:-10px;top:-10px;font-family:'DM Serif Display',serif;font-size:90px;color:rgba(212,168,83,0.04);line-height:1;pointer-events:none}
+.lyx-brand-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.lyx-logo{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#d4a853,#f0c96a);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:20px;color:#000;box-shadow:0 4px 16px rgba(212,168,83,0.3)}
+.lyx-brand-name{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--lyx)}
+.lyx-brand-sub{font-size:11px;color:var(--text3);margin-top:2px;font-family:'Space Mono',monospace}
+.lyx-tag{display:inline-block;background:rgba(212,168,83,0.12);border:1px solid rgba(212,168,83,0.25);color:var(--lyx);font-size:10px;font-weight:700;padding:3px 9px;border-radius:8px;margin-bottom:10px}
+.lyx-mission{font-size:12px;color:var(--text2);line-height:1.6}
+.ns-card{margin:14px 16px 0;background:var(--card);border:1px solid rgba(212,168,83,0.15);border-radius:14px;padding:14px;position:relative;overflow:hidden}
+.ns-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--lyx),var(--lyx2),transparent)}
+.ns-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ns-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.ns-targets{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+.ns-target{background:var(--bg3);border-radius:10px;padding:10px 12px}
+.ns-tv{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--lyx);line-height:1}
+.ns-tl{font-size:10px;color:var(--text3);margin-top:2px}
+.ns-tc{font-size:11px;color:var(--text2);margin-top:4px}
+.ns-progress{height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;margin-top:6px}
+.ns-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--lyx),var(--lyx2))}
+.ns-pct{font-size:10px;color:var(--lyx);margin-top:3px;font-family:'Space Mono',monospace}
+.tab-nav{display:flex;gap:0;padding:0 16px;margin:14px 0 0;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.tab-nav::-webkit-scrollbar{display:none}
+.tab-btn{padding:10px 14px;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;margin-bottom:-1px}
+.tab-btn.active{color:var(--lyx);border-color:var(--lyx)}
+.tab-panel{display:none;padding:14px 16px}.tab-panel.active{display:block;animation:fadeUp 0.18s ease}
+.pl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.pl-box{border-radius:11px;padding:12px;border:1px solid}
+.pl-label{font-size:10px;color:var(--text3);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.pl-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1}
+.pl-sub{font-size:10px;color:var(--text3);margin-top:3px}
+.pl-trend{font-size:10px;margin-top:4px}
+.pl-trend.up{color:var(--green)}.pl-trend.dn{color:var(--red)}.pl-trend.flat{color:var(--text3)}
+.pl-bg-rev{background:rgba(212,168,83,0.06);border-color:rgba(212,168,83,0.15)}
+.pl-bg-gp{background:rgba(74,222,128,0.05);border-color:rgba(74,222,128,0.12)}
+.pl-bg-bi{background:rgba(96,165,250,0.05);border-color:rgba(96,165,250,0.12)}
+.pl-bg-eb{background:rgba(167,139,252,0.05);border-color:rgba(167,139,252,0.12)}
+.pl-waterfall{background:var(--bg3);border-radius:11px;padding:12px;border:1px solid var(--border);margin-bottom:10px}
+.wf-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11px}
+.wf-label{width:80px;color:var(--text3);flex-shrink:0}
+.wf-bar-wrap{flex:1;height:18px;border-radius:4px;background:rgba(255,255,255,0.04);overflow:hidden}
+.wf-bar{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:10px;font-weight:600;color:#000}
+.wf-val{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);width:50px;text-align:right;flex-shrink:0}
+.sec-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:13px 14px;margin-bottom:0}
+.sec-hdr{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sec-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
+.asset-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.asset-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;transition:all 0.2s}
+.asset-card:hover{border-color:rgba(212,168,83,0.2);background:var(--card)}
+.asset-icon{font-size:20px;margin-bottom:6px}.asset-name{font-size:12px;font-weight:700;margin-bottom:4px}
+.asset-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--lyx);line-height:1}
+.asset-unit{font-size:10px;color:var(--text3);margin-left:2px}
+.asset-sub{font-size:10px;color:var(--text3);margin-top:3px}
+.asset-bar{height:3px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-top:7px}
+.asset-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--lyx),var(--lyx2))}
+.channel-list{display:flex;flex-direction:column;gap:6px}
+.ch-row{display:flex;align-items:center;gap:8px;font-size:12px}
+.ch-label{width:72px;color:var(--text3);flex-shrink:0;font-size:11px}
+.ch-bar-wrap{flex:1;height:20px;border-radius:5px;background:rgba(255,255,255,0.04);overflow:hidden}
+.ch-bar{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:7px;font-size:10px;font-weight:700}
+.ch-pct{font-size:10px;color:var(--text2);width:32px;text-align:right;flex-shrink:0;font-family:'Space Mono',monospace}
+.cluster-grid{display:flex;flex-direction:column;gap:6px}
+.cl-item{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:11px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all 0.15s}
+.cl-item:hover{border-color:rgba(212,168,83,0.2);transform:translateX(2px)}
+.cl-emoji{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.cl-info{flex:1;min-width:0}.cl-name{font-size:13px;font-weight:600;margin-bottom:1px}.cl-role{font-size:10px;color:var(--text3)}
+.cl-score{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;flex-shrink:0}
+.alert-list{display:flex;flex-direction:column;gap:6px}
+.alert-item{border-radius:11px;padding:11px 13px;border-left:3px solid;display:flex;gap:10px;align-items:flex-start}
+.alert-item.warn{background:rgba(245,166,35,0.05);border-color:var(--amber)}.alert-item.risk{background:rgba(255,95,95,0.05);border-color:var(--red)}.alert-item.ok{background:rgba(74,222,128,0.05);border-color:var(--green)}
+.alert-icon{font-size:14px;flex-shrink:0;margin-top:1px}.alert-body{flex:1}
+.alert-title{font-size:12px;font-weight:700;margin-bottom:2px}.alert-desc{font-size:11px;color:var(--text2);line-height:1.5}
+.alert-amt{font-family:'Space Mono',monospace;font-size:10px;margin-top:4px;font-weight:700}
+.alert-amt.warn{color:var(--amber)}.alert-amt.risk{color:var(--red)}.alert-amt.ok{color:var(--green)}
+
+/* AI Chat */
+.chat-wrap{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.chat-head{padding:11px 13px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.chat-head-badge{font-size:11px;color:var(--lyx);font-weight:600}
+.chat-chips{display:flex;gap:5px;padding:9px 11px;overflow-x:auto;scrollbar-width:none;flex-wrap:wrap}
+.chat-chips::-webkit-scrollbar{display:none}
+.chip{background:var(--bg3);border:1px solid var(--border);border-radius:18px;padding:5px 10px;font-size:10px;color:var(--text2);white-space:nowrap;cursor:pointer;transition:all 0.15s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.chip:hover{border-color:var(--lyx);color:var(--lyx);background:var(--lyx-dim)}
+.chat-bubble{margin:0 11px 9px;background:var(--bg3);border-radius:10px;padding:9px 11px;font-size:12px;color:var(--text2);line-height:1.65;border:1px solid var(--border)}
+.chat-resp{display:none;margin:0 11px 9px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.chat-resp.show{display:block}
+.chat-q-echo{font-size:10px;color:var(--text3);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.thinking{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--lyx);animation:td 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.chat-row{display:flex;gap:6px;padding:7px 11px 11px}
+.chat-in{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:12px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif}
+.chat-in:focus{border-color:var(--lyx)}.chat-in::placeholder{color:var(--text3)}
+.chat-go{width:36px;height:36px;border-radius:9px;background:var(--lyx);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all 0.15s;flex-shrink:0;color:#000;font-weight:700}
+.chat-go:hover{background:var(--lyx2);transform:scale(1.05)}
+
+/* AGENT SCREENS */
+.cat-screen-hdr{padding:14px 16px 8px;display:flex;align-items:center;gap:10px}
+.cat-big-icon{font-size:26px}.cat-hdr-name{font-family:'Syne',sans-serif;font-size:19px;font-weight:700}.cat-hdr-sub{font-size:11px;color:var(--text3)}
+.agent-list{padding:0 16px;display:flex;flex-direction:column;gap:5px}
+.agent-row{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:all 0.16s}
+.agent-row:hover{background:var(--card2);border-color:var(--border2);transform:translateX(2px)}
+.agent-emoji{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.agent-info{flex:1;min-width:0}.agent-name{font-size:13px;font-weight:600;margin-bottom:1px}.agent-tag{font-size:10px;color:var(--amber);margin-bottom:2px}.agent-desc{font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-score-col{flex-shrink:0;text-align:right}.agent-score{font-family:'Syne',sans-serif;font-size:19px;font-weight:800}.agent-ms{font-size:10px;color:var(--text3);margin-top:1px}
+.score-bar{width:36px;height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;margin-top:3px;margin-left:auto}.score-fill{height:100%;border-radius:2px}
+.detail-wrap{padding:12px 16px 40px;display:flex;flex-direction:column;gap:10px}
+.detail-hero{border-radius:15px;padding:16px;position:relative;overflow:hidden;background:linear-gradient(135deg,#141820,#1a2030);border:1px solid var(--border2)}
+.detail-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),transparent)}
+.detail-score-big{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:var(--amber);line-height:1}.detail-score-lbl{font-size:10px;color:var(--text3)}
+.detail-emoji{font-size:30px;margin-bottom:6px;display:block}.detail-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:3px}.detail-sub{font-size:11px;color:var(--amber);margin-bottom:7px}.detail-desc{font-size:11px;color:var(--text2);line-height:1.65}
+.detail-progress{height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-top:11px}.detail-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--amber),var(--amber2))}
+.milestone-row{display:flex;gap:3px;margin-bottom:7px}
+.ms-step{flex:1;border-radius:7px;padding:6px 3px;text-align:center;font-size:9px;font-weight:600;line-height:1.2;border:1px solid rgba(255,255,255,0.05);color:var(--text3);background:rgba(255,255,255,0.02)}
+.ms-step.done{background:rgba(255,255,255,0.05);color:var(--text2);border-color:rgba(255,255,255,0.08)}.ms-step.done::before{content:'✓ ';color:var(--green)}
+.ms-step.current{border-color:var(--amber);color:var(--amber);background:rgba(245,166,35,0.08)}.ms-step.current-red{border-color:var(--red);color:var(--red);background:rgba(255,95,95,0.08)}.ms-step.current-teal{border-color:var(--teal);color:var(--teal);background:rgba(78,205,196,0.08)}.ms-step.current-purple{border-color:var(--purple);color:var(--purple);background:rgba(167,139,250,0.08)}
+.ms-hint{font-size:11px;color:var(--amber)}
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+.kpi-box{background:var(--bg3);border-radius:9px;padding:9px 11px;border:1px solid var(--border)}.kpi-box.good-bg{background:rgba(74,222,128,0.04);border-color:rgba(74,222,128,0.1)}.kpi-box.bad-bg{background:rgba(255,95,95,0.04);border-color:rgba(255,95,95,0.1)}
+.kpi-label{font-size:10px;color:var(--text3);margin-bottom:3px}.kpi-val{font-size:14px;font-weight:700;line-height:1.2}.kpi-val.good{color:var(--green)}.kpi-val.warn{color:var(--amber)}.kpi-val.bad{color:var(--red)}
+.gap-list{display:flex;flex-direction:column;gap:7px}.gap-title{font-size:12px;font-weight:700;color:var(--red);margin-bottom:7px}
+.gap-item{display:flex;align-items:flex-start;gap:7px;font-size:11px;color:var(--text2);line-height:1.5}.gap-dot{width:5px;height:5px;border-radius:50%;border:1.5px solid var(--red);flex-shrink:0;margin-top:4px}
+.chat-section{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.chat-hdr{padding:11px 13px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;gap:7px}
+.chat-agent-name{color:var(--amber);font-size:11px}
+.chat-presets{display:flex;gap:5px;padding:9px 11px;overflow-x:auto;scrollbar-width:none;flex-wrap:wrap}
+.chat-presets::-webkit-scrollbar{display:none}
+.preset-chip{background:var(--bg3);border:1px solid var(--border);border-radius:18px;padding:4px 10px;font-size:10px;color:var(--text2);white-space:nowrap;cursor:pointer;transition:all 0.13s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.preset-chip:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+.chat-bubble-agent{margin:0 11px 9px;background:var(--bg3);border-radius:10px;padding:9px 11px;font-size:11px;color:var(--text2);line-height:1.65;border:1px solid var(--border)}
+.chat-response-agent{display:none;margin:0 11px 9px;background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--text2);line-height:1.7}
+.chat-response-agent.show{display:block}
+.chat-q-echo-a{font-size:10px;color:var(--text3);margin-bottom:5px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.chat-input-row{display:flex;gap:5px;padding:7px 11px 11px}
+.chat-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:11px;color:var(--text);font-family:'Noto Sans SC',sans-serif;outline:none}
+.chat-input:focus{border-color:var(--amber)}.chat-input::placeholder{color:var(--text3)}
+.chat-send{width:36px;height:36px;border-radius:9px;background:var(--amber);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all 0.13s;flex-shrink:0}
+.chat-send:hover{background:var(--amber2);transform:scale(1.05)}
+
+/* Brain */
+.brain-screen{padding:16px}
+.brain-hdr{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(78,205,196,0.03));border:1px solid rgba(245,166,35,0.15);border-radius:15px;padding:18px;text-align:center;margin-bottom:13px}
+.brain-icon{font-size:36px;margin-bottom:7px}.brain-title{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;margin-bottom:3px}.brain-sub{font-size:11px;color:var(--text3)}
+.brain-input-row{display:flex;gap:7px;margin-bottom:13px}
+.brain-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:11px 13px;font-size:12px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif}
+.brain-input:focus{border-color:var(--amber)}.brain-input::placeholder{color:var(--text3)}
+.brain-send{width:44px;height:44px;border-radius:11px;background:var(--amber);border:none;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:all 0.2s;flex-shrink:0}
+.brain-send:hover{background:var(--amber2)}
+.brain-response{display:none;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px;margin-bottom:13px;font-size:12px;color:var(--text2);line-height:1.7}
+.brain-response.show{display:block}
+.brain-q-echo{font-size:10px;color:var(--text3);margin-bottom:7px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.qq-grid{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.qq-btn{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px 13px;font-size:11px;color:var(--text2);text-align:left;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all 0.13s;font-family:'Noto Sans SC',sans-serif}
+.qq-btn:hover{border-color:var(--amber);color:var(--text);background:var(--amber-dim)}.qq-em{font-size:13px;flex-shrink:0}
+.kb-card{background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:7px}
+.kb-hdr{padding:11px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background 0.13s}.kb-hdr:hover{background:rgba(255,255,255,0.02)}
+.kb-hdr-l{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600}
+.kb-arrow{color:var(--text3);font-size:11px;transition:transform 0.18s}.kb-card.open .kb-arrow{transform:rotate(180deg)}
+.kb-body{display:none;padding:0 13px 13px;border-top:1px solid var(--border)}.kb-card.open .kb-body{display:block}
+.kb-text{font-size:11px;color:var(--text2);line-height:1.7;padding-top:11px}
+.kb-tbl{width:100%;border-collapse:collapse;margin-top:9px;font-size:10px}
+.kb-tbl th{background:rgba(255,255,255,0.04);color:var(--text3);padding:5px 7px;text-align:left;border-bottom:1px solid var(--border);font-weight:600}
+.kb-tbl td{padding:6px 7px;border-bottom:1px solid rgba(255,255,255,0.025);color:var(--text2)}.kb-tbl tr:last-child td{border:none}
+.win{color:var(--green);font-weight:600}.gap-t{color:var(--red);font-weight:600}.par{color:var(--amber);font-weight:600}
+
+/* Coming soon */
+.coming-soon{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center}
+.cs-icon{font-size:36px;margin-bottom:10px;opacity:0.5}.cs-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text3);margin-bottom:6px}.cs-sub{font-size:12px;color:var(--text3);line-height:1.6}
+
+.pb{padding-bottom:24px}
+::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-row">
+    <div class="logo-sym">∞</div>
+    <div>
+      <div class="logo-text">INFINITY OS</div>
+      <div class="logo-ver">v7 · 欣和SH · 销速系统</div>
+    </div>
+  </div>
+  <div class="topbar-center"><div class="breadcrumb" id="breadcrumb"></div></div>
+  <div class="topbar-right">
+    <div class="clock" id="clock"></div>
+    <div class="back-btn" id="backBtn" onclick="goBack()">←</div>
+  </div>
+</div>
+
+<!-- ══ HOME ══ -->
+<div class="screen active" id="screen-home">
+  <div class="home-hero">
+    <div class="home-title">INFINITY <span class="accent">OS</span></div>
+    <div class="home-sub" style="margin-bottom:14px">欣和SH · v7 · 销速系统 · 品牌SubCo · 一本账</div>
+    <div class="view-toggle" style="display:inline-flex">
+      <div class="vt-btn active" id="vt-ops" onclick="switchView('ops')">⚙ 经营视图</div>
+      <div class="vt-btn" id="vt-brand" onclick="switchView('brand')">◈ 品牌视图</div>
+    </div>
+  </div>
+
+  <!-- OPS VIEW -->
+  <div id="view-ops">
+    <!-- 今日销速指挥台 -->
+    <div class="cmd-today">
+      <div class="cmd-hdr">
+        <div class="cmd-title"><div class="cmd-pulse"></div>今日销速指挥台</div>
+        <div class="cmd-date" id="cmdDate"></div>
+      </div>
+      <div class="cmd-signals">
+        <div class="csig urgent" onclick="showScreen('pilot')">
+          <div class="csig-dot"></div>
+          <div class="csig-lbl">库存上报</div>
+          <div class="csig-val">20</div>
+          <div class="csig-desc">最紧急缺口<br>无数据来源</div>
+        </div>
+        <div class="csig warn" onclick="showScreen('velocity')">
+          <div class="csig-dot"></div>
+          <div class="csig-lbl">蝴蝶预警</div>
+          <div class="csig-val">2条</div>
+          <div class="csig-desc">红色预警<br>待实时接入</div>
+        </div>
+        <div class="csig info" onclick="showScreen('pilot')">
+          <div class="csig-dot"></div>
+          <div class="csig-lbl">上海试点</div>
+          <div class="csig-val">S+</div>
+          <div class="csig-desc">280家门店<br>待激活</div>
+        </div>
+        <div class="csig act" onclick="showScreen('account')">
+          <div class="csig-act-icon">⚡</div>
+          <div class="csig-act-body">
+            <div class="csig-act-lbl">一本账 · 今日</div>
+            <div class="csig-act-desc">SFA库存上报 → 销速数据 → 激励自动结算</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val ca">24</div><div class="stat-lbl">AGENT总数</div></div>
+      <div class="stat-box"><div class="stat-val ct">50<span style="font-size:11px">/100</span></div><div class="stat-lbl">平均成熟度</div></div>
+      <div class="stat-box"><div class="stat-val cg">8项</div><div class="stat-lbl">已超越QC</div></div>
+      <div class="stat-box"><div class="stat-val cr">7项</div><div class="stat-lbl">缺口待开发</div></div>
+    </div>
+
+    <!-- 快捷入口 -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 12px">
+      <div style="background:linear-gradient(135deg,rgba(245,166,35,0.1),rgba(245,166,35,0.04));border:1px solid rgba(245,166,35,0.2);border-radius:12px;padding:12px;cursor:pointer;text-align:center" onclick="showScreen('velocity')">
+        <div style="font-size:20px;margin-bottom:4px">📊</div>
+        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--amber)">销速系统</div>
+        <div style="font-size:9px;color:var(--text3);margin-top:2px">r·传导链·三个r</div>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(74,222,128,0.08),rgba(74,222,128,0.03));border:1px solid rgba(74,222,128,0.15);border-radius:12px;padding:12px;cursor:pointer;text-align:center" onclick="showScreen('grades')">
+        <div style="font-size:20px;margin-bottom:4px">🎓</div>
+        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--green)">年级系统</div>
+        <div style="font-size:9px;color:var(--text3);margin-top:2px">一/二/三/四年级</div>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(96,165,250,0.08),rgba(96,165,250,0.03));border:1px solid rgba(96,165,250,0.15);border-radius:12px;padding:12px;cursor:pointer;text-align:center" onclick="showScreen('account')">
+        <div style="font-size:20px;margin-bottom:4px">📒</div>
+        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--blue)">一本账</div>
+        <div style="font-size:9px;color:var(--text3);margin-top:2px">激励公式·达成率</div>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(78,205,196,0.08),rgba(78,205,196,0.03));border:1px solid rgba(78,205,196,0.15);border-radius:12px;padding:12px;cursor:pointer;text-align:center" onclick="showScreen('pilot')">
+        <div style="font-size:20px;margin-bottom:4px">🗺️</div>
+        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--teal)">上海试点</div>
+        <div style="font-size:9px;color:var(--text3);margin-top:2px">S+/S门店·实际r</div>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(167,139,250,0.08),rgba(167,139,250,0.03));border:1px solid rgba(167,139,250,0.15);border-radius:12px;padding:12px;cursor:pointer;text-align:center" onclick="showCat('shelf')">
+        <div style="font-size:20px;margin-bottom:4px">📷</div>
+        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--purple)">货架识别</div>
+        <div style="font-size:9px;color:var(--text3);margin-top:2px">路线A·训练数据</div>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(255,95,95,0.08),rgba(255,95,95,0.03));border:1px solid rgba(255,95,95,0.15);border-radius:12px;padding:12px;cursor:pointer;text-align:center" onclick="showCat('system')">
+        <div style="font-size:20px;margin-bottom:4px">🦋</div>
+        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--red)">蝴蝶效应</div>
+        <div style="font-size:9px;color:var(--text3);margin-top:2px">A/B/C失真检测</div>
+      </div>
+    </div>
+
+    <div class="cat-grid">
+      <div class="cat-card gc-a" onclick="showCat('commander')"><span class="cat-icon">⚡</span><div><div class="cat-name">总指挥</div><div class="cat-sub">1个Agent · 全链调度</div><div><span class="cat-score ca">65</span><span class="cat-score-lbl">分</span></div></div></div>
+      <div class="cat-card gc-b" onclick="showCat('lianheng')"><span class="cat-icon">🔗</span><div><div class="cat-name">连横</div><div class="cat-sub">6个Agent · IPO0-13</div><div><span class="cat-score ca">63</span><span class="cat-score-lbl">分</span></div></div></div>
+      <div class="cat-card gc-c" onclick="showCat('system')"><span class="cat-icon">⚙️</span><div><div class="cat-name">系统Agent</div><div class="cat-sub">4个Agent · 蝴蝶·推单</div><div><span class="cat-score ca">63</span><span class="cat-score-lbl">分</span></div></div></div>
+      <div class="cat-card gc-d" onclick="showCat('shelf')"><span class="cat-icon">📷</span><div><div class="cat-name">货架识别</div><div class="cat-sub">3个Agent · 路线A</div><div><span class="cat-score cr">27</span><span class="cat-score-lbl">分</span></div></div></div>
+      <div class="cat-card gc-e" onclick="showCat('consumer')"><span class="cat-icon">◈</span><div><div class="cat-name">消费者</div><div class="cat-sub">1个Agent · PRISM</div><div><span class="cat-score ca">60</span><span class="cat-score-lbl">分</span></div></div></div>
+      <div class="cat-card gc-f" onclick="showCat('hezong')"><span class="cat-icon">📡</span><div><div class="cat-name">合纵7棒</div><div class="cat-sub">7个Agent · 渠道接力</div><div><span class="cat-score cr">37</span><span class="cat-score-lbl">分</span></div></div></div>
+      <div class="cat-card gc-g" onclick="showCat('brand')"><span class="cat-icon">🎭</span><div><div class="cat-name">品牌</div><div class="cat-sub">2个Agent · AIQL·鲜生</div><div><span class="cat-score ca">51</span><span class="cat-score-lbl">分</span></div></div></div>
+    </div>
+    <div class="home-sec">
+      <div class="brain-banner" onclick="showScreen('brain')">
+        <div class="bb-icon">🧠</div>
+        <div><div class="bb-title">AI 战略大脑</div><div class="bb-sub">销速系统+年级+一本账+品牌SubCo+纵横框架</div><div class="bb-cta">点击进入对话 →</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BRAND VIEW -->
+  <div id="view-brand" style="display:none">
+    <div class="brand-home-hero">
+      <div class="bh-title">品牌 <span>SubCo</span> 视图</div>
+      <div class="bh-sub">6个子公司 · 独立经营管理 · 各自积累品牌资产</div>
+      <div class="bh-stats">
+        <div class="bh-stat"><div class="bh-sv">6</div><div class="bh-sl">品牌SubCo</div></div>
+        <div class="bh-stat"><div class="bh-sv" style="color:var(--green)">1</div><div class="bh-sl">已上线MVP</div></div>
+        <div class="bh-stat"><div class="bh-sv" style="color:var(--text3)">5</div><div class="bh-sl">建设中</div></div>
+      </div>
+    </div>
+    <div class="subco-grid">
+      <div class="subco-card sc-lyx" onclick="showLYX()">
+        <div class="subco-badge" style="background:rgba(212,168,83,0.15);color:var(--lyx)">鲜</div>
+        <div class="subco-info"><div class="subco-name" style="color:var(--lyx)">六月鲜</div><div class="subco-eng">LIU YUE XIAN · PREMIUM</div><div class="subco-desc">高端增长引擎 · 战略北极星 · 4B RMB目标</div></div>
+        <div class="subco-right"><div class="subco-status status-live">● MVP上线</div><div class="subco-arrow" style="color:var(--lyx)">›</div></div>
+      </div>
+      <div class="subco-card sc-wdm" onclick="showComingSoon('味达美','规模现金奶牛 · 集团利润地基')">
+        <div class="subco-badge" style="background:rgba(91,143,212,0.15);color:var(--wdm)">美</div>
+        <div class="subco-info"><div class="subco-name" style="color:var(--wdm)">味达美</div><div class="subco-eng">WEI DA MEI · MASS</div><div class="subco-desc">规模现金奶牛 · 集团利润地基</div></div>
+        <div class="subco-right"><div class="subco-status status-build">建设中</div><div class="subco-arrow">›</div></div>
+      </div>
+      <div class="subco-card sc-hr" onclick="showComingSoon('禾然','有机战略赌注 · 允许亏损3年里程碑')">
+        <div class="subco-badge" style="background:rgba(92,184,122,0.15);color:var(--hr)">然</div>
+        <div class="subco-info"><div class="subco-name" style="color:var(--hr)">禾然</div><div class="subco-eng">HE RAN · ORGANIC</div><div class="subco-desc">有机战略赌注 · 允许亏损·3年里程碑</div></div>
+        <div class="subco-right"><div class="subco-status status-build">建设中</div><div class="subco-arrow">›</div></div>
+      </div>
+      <div class="subco-card sc-cbl" onclick="showComingSoon('葱伴侣','场景垄断 · 利基防御壁垒')">
+        <div class="subco-badge" style="background:rgba(201,125,58,0.15);color:var(--cbl)">葱</div>
+        <div class="subco-info"><div class="subco-name" style="color:var(--cbl)">葱伴侣</div><div class="subco-eng">CONG BAN LV · NICHE</div><div class="subco-desc">场景垄断 · 利基防御壁垒</div></div>
+        <div class="subco-right"><div class="subco-status status-build">建设中</div><div class="subco-arrow">›</div></div>
+      </div>
+      <div class="subco-card sc-xk" onclick="showComingSoon('小康','竞争拦截工具 · 非盈利中心')">
+        <div class="subco-badge" style="background:rgba(136,136,136,0.12);color:var(--xk)">康</div>
+        <div class="subco-info"><div class="subco-name" style="color:var(--xk)">小康</div><div class="subco-eng">XIAO KANG · DEFENSIVE</div><div class="subco-desc">竞争拦截工具 · 非盈利中心</div></div>
+        <div class="subco-right"><div class="subco-status status-build">建设中</div><div class="subco-arrow">›</div></div>
+      </div>
+      <div class="subco-card sc-cy" onclick="showComingSoon('餐饮渠道','渠道子公司 · 战略资产模式')">
+        <div class="subco-badge" style="background:rgba(196,92,138,0.15);color:var(--cy)">饮</div>
+        <div class="subco-info"><div class="subco-name" style="color:var(--cy)">餐饮渠道</div><div class="subco-eng">FOOD SERVICE · B2B</div><div class="subco-desc">渠道子公司 · 战略资产·集团持有</div></div>
+        <div class="subco-right"><div class="subco-status status-build">建设中</div><div class="subco-arrow">›</div></div>
+      </div>
+    </div>
+    <div class="pb"></div>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══ 销速系统 ══ -->
+<div class="screen" id="screen-velocity">
+  <div class="velocity-screen">
+    <div class="vs-header">
+      <div class="vs-title">📊 销速系统</div>
+      <div class="vs-sub">r = 日销率（瓶/天）· 心跳频率 · 系统测量的核心对象</div>
+      <div style="background:var(--bg2);border-radius:10px;padding:12px;font-family:'Space Mono',monospace;font-size:11px;line-height:2;border:1px solid var(--border)">
+        <span style="color:var(--amber);font-weight:700">r</span> = 日销率（瓶/天）<span style="color:var(--text3)"> ← 心跳频率，Pull的核心</span><br>
+        <span style="color:var(--amber);font-weight:700">T</span> = 周期天数<span style="color:var(--text3)"> ← S+/S/A=7天 · B=14天 · C=21天 · D=30天</span><br>
+        <span style="color:var(--amber);font-weight:700">a</span> = r × T<span style="color:var(--text3)"> ← 心跳单元，一个周期的销售量</span><br>
+        <span style="color:var(--green);font-weight:700">实际r</span> = （上次库存 − 当前库存）÷ 间隔天数<br>
+        <span style="color:var(--green);font-weight:700">达成率</span> = 实际r ÷ 目标r × 100%
+      </div>
+    </div>
+
+    <!-- 传导链可视化 -->
+    <div class="chain-viz">
+      <div class="chain-title">四层传导链 · Pull驱动</div>
+      <div class="chain-nodes">
+        <div class="chain-node">
+          <div class="cn-box cn-consumer">
+            <div class="cn-level">消费者</div>
+            <div class="cn-val">a₀</div>
+            <div class="cn-label">真实消耗<br>Pull起点</div>
+            <div class="cn-r" style="color:var(--purple)">r₀</div>
+          </div>
+        </div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-node">
+          <div class="cn-box cn-store">
+            <div class="cn-level">零售门店</div>
+            <div class="cn-val">a₁</div>
+            <div class="cn-label">= Σa₀<br>3A→2A预警</div>
+            <div class="cn-r" style="color:var(--blue)">r₁</div>
+          </div>
+        </div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-node">
+          <div class="cn-box cn-dist2">
+            <div class="cn-level">二批商</div>
+            <div class="cn-val">a₂</div>
+            <div class="cn-label">= Σa₁<br>1A即时补</div>
+            <div class="cn-r" style="color:var(--teal)">r₂</div>
+          </div>
+        </div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-node">
+          <div class="cn-box cn-dist1">
+            <div class="cn-level">经销商</div>
+            <div class="cn-val">a₃</div>
+            <div class="cn-label">= Σa₂<br>2A→1A预警</div>
+            <div class="cn-r" style="color:var(--amber)">r₃</div>
+          </div>
+        </div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-node">
+          <div class="cn-box cn-company">
+            <div class="cn-level">公司IPO</div>
+            <div class="cn-val">A</div>
+            <div class="cn-label">= Σa₃<br>全国汇总</div>
+            <div class="cn-r" style="color:var(--green)">R</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:10px;background:var(--bg2);border-radius:8px;font-size:11px;color:var(--text3);line-height:1.6">
+        ⚠️ 任意一层被人为干预（压货/促销/窜货），上游全部误判。三类失真：<span style="color:var(--red)">A类压货</span> · <span style="color:var(--amber)">B类促销扰动</span> · <span style="color:var(--blue)">C类窜货</span>
+      </div>
+    </div>
+
+    <!-- 三个r对比 -->
+    <div class="r-compare">
+      <div class="sec-hdr">三个 r 的对比</div>
+      <div class="r-grid">
+        <div class="r-box r-market">
+          <div class="r-type">r_市场</div>
+          <div class="r-val">9.3</div>
+          <div class="r-unit">瓶/天</div>
+          <div class="r-desc">市场容量×目标份额推算<br>战略层设定</div>
+        </div>
+        <div class="r-box r-target">
+          <div class="r-type">r_预期</div>
+          <div class="r-val">8.0</div>
+          <div class="r-unit">瓶/天</div>
+          <div class="r-desc">树根项目目标<br>门店+SKU层级</div>
+        </div>
+        <div class="r-box r-actual">
+          <div class="r-type">r_实际</div>
+          <div class="r-val">待采</div>
+          <div class="r-unit">集</div>
+          <div class="r-desc">库存上报两次对比<br>自动计算</div>
+        </div>
+      </div>
+      <div class="r-gap">
+        <div class="r-gap-label">🎯 信息差 =</div>
+        <div class="r-gap-val">实际r vs 目标r</div>
+        <div class="r-gap-label">= 比竞争对手多知道的部分</div>
+      </div>
+    </div>
+
+    <!-- 水位系统 -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+      <div class="sec-hdr">三层水位节律</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:var(--bg3);border-radius:9px;padding:10px 12px;border:1px solid rgba(74,222,128,0.15)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <div style="font-size:12px;font-weight:700;color:var(--green)">零售门店</div>
+            <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">IPO8-10</div>
+          </div>
+          <div style="font-size:11px;color:var(--text2)">进货满仓 <span style="color:var(--green);font-weight:700">3a</span> → 消耗1a → 预警 <span style="color:var(--amber);font-weight:700">2a</span> → 补货 → 回到3a</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:9px;padding:10px 12px;border:1px solid rgba(245,166,35,0.15)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <div style="font-size:12px;font-weight:700;color:var(--amber)">经销商</div>
+            <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">IPO2-4</div>
+          </div>
+          <div style="font-size:11px;color:var(--text2)">进货满仓 <span style="color:var(--amber);font-weight:700">2a</span> → 消耗1a → 预警 <span style="color:var(--red);font-weight:700">1a</span> → 补货 → 回到2a</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:9px;padding:10px 12px;border:1px solid rgba(255,95,95,0.15)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <div style="font-size:12px;font-weight:700;color:var(--red)">二批商</div>
+            <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">IPO5-7 · P2</div>
+          </div>
+          <div style="font-size:11px;color:var(--text2)">严格满仓 <span style="color:var(--red);font-weight:700">1a</span> → 消耗→触0即补 · 超1a触发压货预警</div>
+        </div>
+      </div>
+    </div>
+    <div class="pb"></div>
+  </div>
+</div>
+
+<!-- ══ 年级系统 ══ -->
+<div class="screen" id="screen-grades">
+  <div class="grade-screen">
+    <div class="grade-hero">
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px">🎓 产品年级系统</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px">同一SKU在不同区域年级可以不同 · 年级 = 产品与该区域消费者关系的阶段</div>
+      <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--text2);line-height:1.7;border:1px solid var(--border)">
+        年级定义三件事：<strong style="color:var(--text)">①消费者认知阶段</strong> · <strong style="color:var(--text)">②业务员工作难度（激励系数）</strong> · <strong style="color:var(--text)">③公司应投入多少费用支持</strong>
+      </div>
+    </div>
+
+    <div class="grade-cards">
+      <!-- 一年级 -->
+      <div class="grade-card gc-1">
+        <div class="gc-hdr">
+          <div class="gc-badge" style="background:rgba(255,95,95,0.15)">
+            <div class="gc-badge-num" style="color:var(--red)">一</div>
+            <div class="gc-badge-lbl" style="color:var(--red)">年级</div>
+          </div>
+          <div class="gc-info">
+            <div class="gc-name" style="color:var(--red)">进入区域 0～1年</div>
+            <div class="gc-consumer-desc">消费者还不认识 · 业务员要花力气建认知 · 难度最高</div>
+          </div>
+        </div>
+        <div class="gc-body">
+          <div class="gc-metrics">
+            <div class="gcm"><div class="gcm-label">激励系数</div><div class="gcm-val" style="color:var(--red)">× 2.0</div></div>
+            <div class="gcm"><div class="gcm-label">费用投入率</div><div class="gcm-val" style="color:var(--red)">45~80%</div></div>
+            <div class="gcm"><div class="gcm-label">业务难度</div><div class="gcm-val" style="color:var(--red)">最高</div></div>
+          </div>
+          <div class="gc-bar-wrap"><div class="gc-bar-fill" style="width:100%;background:var(--red)"></div></div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px">上海示例：禾然有机500ml（约2-3年）· 推一瓶顶四年级2.86瓶激励</div>
+        </div>
+      </div>
+      <!-- 二年级 -->
+      <div class="grade-card gc-2">
+        <div class="gc-hdr">
+          <div class="gc-badge" style="background:rgba(245,166,35,0.12)">
+            <div class="gc-badge-num" style="color:var(--amber)">二</div>
+            <div class="gc-badge-lbl" style="color:var(--amber)">年级</div>
+          </div>
+          <div class="gc-info">
+            <div class="gc-name" style="color:var(--amber)">进入区域 1～2年</div>
+            <div class="gc-consumer-desc">消费者开始熟悉 · r 在上升 · 难度中高</div>
+          </div>
+        </div>
+        <div class="gc-body">
+          <div class="gc-metrics">
+            <div class="gcm"><div class="gcm-label">激励系数</div><div class="gcm-val" style="color:var(--amber)">× 1.5</div></div>
+            <div class="gcm"><div class="gcm-label">费用投入率</div><div class="gcm-val" style="color:var(--amber)">35~45%</div></div>
+            <div class="gcm"><div class="gcm-label">业务难度</div><div class="gcm-val" style="color:var(--amber)">中高</div></div>
+          </div>
+          <div class="gc-bar-wrap"><div class="gc-bar-fill" style="width:75%;background:var(--amber)"></div></div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px">费用上限由毛利率决定（天花板）· 下限由竞争强度决定</div>
+        </div>
+      </div>
+      <!-- 三年级 -->
+      <div class="grade-card gc-3">
+        <div class="gc-hdr">
+          <div class="gc-badge" style="background:rgba(96,165,250,0.1)">
+            <div class="gc-badge-num" style="color:var(--blue)">三</div>
+            <div class="gc-badge-lbl" style="color:var(--blue)">年级</div>
+          </div>
+          <div class="gc-info">
+            <div class="gc-name" style="color:var(--blue)">进入区域 2～3年</div>
+            <div class="gc-consumer-desc">消费者已经认可 · r 稳定 · 难度中等</div>
+          </div>
+        </div>
+        <div class="gc-body">
+          <div class="gc-metrics">
+            <div class="gcm"><div class="gcm-label">激励系数</div><div class="gcm-val" style="color:var(--blue)">× 1.0</div></div>
+            <div class="gcm"><div class="gcm-label">费用投入率</div><div class="gcm-val" style="color:var(--blue)">25~35%</div></div>
+            <div class="gcm"><div class="gcm-label">业务难度</div><div class="gcm-val" style="color:var(--blue)">中等</div></div>
+          </div>
+          <div class="gc-bar-wrap"><div class="gc-bar-fill" style="width:50%;background:var(--blue)"></div></div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px">基准系数 · 战略优先级和竞争强度决定在25-35%区间的位置</div>
+        </div>
+      </div>
+      <!-- 四年级 -->
+      <div class="grade-card gc-4">
+        <div class="gc-hdr">
+          <div class="gc-badge" style="background:rgba(74,222,128,0.1)">
+            <div class="gc-badge-num" style="color:var(--green)">四</div>
+            <div class="gc-badge-lbl" style="color:var(--green)">年级</div>
+          </div>
+          <div class="gc-info">
+            <div class="gc-name" style="color:var(--green)">进入区域 3年以上</div>
+            <div class="gc-consumer-desc">成熟产品 · r 可预测 · 难度低</div>
+          </div>
+        </div>
+        <div class="gc-body">
+          <div class="gc-metrics">
+            <div class="gcm"><div class="gcm-label">激励系数</div><div class="gcm-val" style="color:var(--green)">× 0.7</div></div>
+            <div class="gcm"><div class="gcm-label">费用投入率</div><div class="gcm-val" style="color:var(--green)">15~25%</div></div>
+            <div class="gcm"><div class="gcm-label">业务难度</div><div class="gcm-val" style="color:var(--green)">低</div></div>
+          </div>
+          <div class="gc-bar-wrap"><div class="gc-bar-fill" style="width:25%;background:var(--green)"></div></div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px">上海：六月鲜极鲜500ml · 味达美金标500ml（4年级）· 利润贡献支撑新品投入</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 费用率全链定义 -->
+    <div class="cost-panel">
+      <div class="sec-hdr">全链费用率 · IPO1-13全部计入</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">费用率 = 全链总费用 ÷ 目标销售额</div>
+      <div class="cost-rows">
+        <div class="cost-row">
+          <div class="cost-label" style="color:var(--red)">一年级</div>
+          <div class="cost-bar-wrap"><div class="cost-bar" style="width:80%;background:linear-gradient(90deg,rgba(255,95,95,0.6),rgba(255,95,95,0.3));color:var(--text2)">投资期·播种·建立认知</div></div>
+          <div class="cost-range" style="color:var(--red)">45~80%</div>
+        </div>
+        <div class="cost-row">
+          <div class="cost-label" style="color:var(--amber)">二年级</div>
+          <div class="cost-bar-wrap"><div class="cost-bar" style="width:45%;background:linear-gradient(90deg,rgba(245,166,35,0.5),rgba(245,166,35,0.25));color:var(--text2)">成长期·费用开始收回</div></div>
+          <div class="cost-range" style="color:var(--amber)">35~45%</div>
+        </div>
+        <div class="cost-row">
+          <div class="cost-label" style="color:var(--blue)">三年级</div>
+          <div class="cost-bar-wrap"><div class="cost-bar" style="width:35%;background:linear-gradient(90deg,rgba(96,165,250,0.5),rgba(96,165,250,0.25));color:var(--text2)">成熟期·维持增长</div></div>
+          <div class="cost-range" style="color:var(--blue)">25~35%</div>
+        </div>
+        <div class="cost-row">
+          <div class="cost-label" style="color:var(--green)">四年级</div>
+          <div class="cost-bar-wrap"><div class="cost-bar" style="width:20%;background:linear-gradient(90deg,rgba(74,222,128,0.5),rgba(74,222,128,0.25));color:var(--text2)">收益期·养新品</div></div>
+          <div class="cost-range" style="color:var(--green)">15~25%</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:10px;background:var(--bg3);border-radius:8px;font-size:11px;color:var(--text3);line-height:1.7;border:1px solid var(--border)">
+        全链费用包括：<span style="color:var(--text2)">IPO1物流 · IPO2经销商激励 · IPO3二批商激励 · IPO4-7渠道费用 · IPO8-10门店费用 · IPO11-12消费者活动 · IPO13业务员激励 · 市场内容费用</span><br>
+        四个决定因素（有主次）：<span style="color:var(--text)">①毛利率（硬天花板）→ ②竞争强度（决定下限）→ ③战略优先级（决定意愿）→ ④试点数据（动态校准）</span>
+      </div>
+    </div>
+    <div class="pb"></div>
+  </div>
+</div>
+
+<!-- ══ 一本账 ══ -->
+<div class="screen" id="screen-account">
+  <div class="account-screen">
+    <div class="account-hero">
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px">📒 业务员一本账</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px">公司利益与业务员利益第一次真正对齐 · 产品越难推，激励越高</div>
+    </div>
+
+    <div class="formula-box">
+      <div class="fb-title">ONE ACCOUNT FORMULA · 一本账公式</div>
+      月度激励 = <span class="fhl">Σ</span>（每家门店 × 每个SKU）<br>
+      <span class="fdim">  达成率</span> = <span class="fgr">实际r</span> ÷ <span class="fgr">目标r</span><br>
+      <span class="fdim">  ×</span> 目标销量（目标r × T × 天数）<br>
+      <span class="fdim">  ×</span> <span class="fhl">年级系数</span><span class="fdim">（一=2.0 · 二=1.5 · 三=1.0 · 四=0.7）</span><br>
+      <span class="fdim">  ×</span> 激励基数（公司统一设定）
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;padding:0">业务员样本 · 上海试点</div>
+    <div class="salesperson-cards">
+      <!-- 业务员A -->
+      <div class="sp-card">
+        <div class="sp-hdr">
+          <div class="sp-avatar">👤</div>
+          <div class="sp-info">
+            <div class="sp-name">业务员A · 浦东区域</div>
+            <div class="sp-region">8家S+ · 20家S · 30家A = 58家门店</div>
+          </div>
+          <div class="sp-target">
+            <div class="sp-target-val">6,578</div>
+            <div class="sp-target-lbl">月度加权目标</div>
+          </div>
+        </div>
+        <div class="sp-body">
+          <div class="sp-sku-list">
+            <div class="sp-sku-row">
+              <div class="sp-sku-name">六月鲜极鲜500ml</div>
+              <div class="sp-sku-grade sg-4">四年级</div>
+              <div class="sp-sku-coef">×0.7</div>
+              <div class="sp-sku-weighted" style="color:var(--green)">5,348</div>
+            </div>
+            <div class="sp-sku-row">
+              <div class="sp-sku-name">禾然有机500ml</div>
+              <div class="sp-sku-grade sg-2">二年级</div>
+              <div class="sp-sku-coef">×1.5</div>
+              <div class="sp-sku-weighted" style="color:var(--amber)">1,905</div>
+            </div>
+            <div class="sp-sku-row" style="border-top:1px solid var(--border);padding-top:5px;margin-top:2px">
+              <div class="sp-sku-name" style="font-weight:700;color:var(--text)">月度合计</div>
+              <div class="sp-sku-grade" style="background:transparent"></div>
+              <div class="sp-sku-coef"></div>
+              <div class="sp-sku-weighted" style="color:var(--amber);font-size:15px">7,253</div>
+            </div>
+          </div>
+          <div class="sp-achieve-row">
+            <div class="sp-achieve-lbl">本月达成</div>
+            <div class="sp-achieve-bar"><div class="sp-achieve-fill" style="width:72%"></div></div>
+            <div class="sp-achieve-pct" style="color:var(--amber)">72%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 业务员B -->
+      <div class="sp-card">
+        <div class="sp-hdr">
+          <div class="sp-avatar">👤</div>
+          <div class="sp-info">
+            <div class="sp-name">业务员B · 长宁/静安区域</div>
+            <div class="sp-region">5家S+ · 15家S · 25家A = 45家门店</div>
+          </div>
+          <div class="sp-target">
+            <div class="sp-target-val">5,500</div>
+            <div class="sp-target-lbl">月度加权目标</div>
+          </div>
+        </div>
+        <div class="sp-body">
+          <div class="sp-sku-list">
+            <div class="sp-sku-row">
+              <div class="sp-sku-name">六月鲜极鲜500ml</div>
+              <div class="sp-sku-grade sg-4">四年级</div>
+              <div class="sp-sku-coef">×0.7</div>
+              <div class="sp-sku-weighted" style="color:var(--green)">3,850</div>
+            </div>
+            <div class="sp-sku-row">
+              <div class="sp-sku-name">禾然有机500ml</div>
+              <div class="sp-sku-grade sg-2">二年级</div>
+              <div class="sp-sku-coef">×1.5</div>
+              <div class="sp-sku-weighted" style="color:var(--amber)">1,200</div>
+            </div>
+          </div>
+          <div class="sp-achieve-row">
+            <div class="sp-achieve-lbl">本月达成</div>
+            <div class="sp-achieve-bar"><div class="sp-achieve-fill" style="width:95%;background:linear-gradient(90deg,var(--green),rgba(74,222,128,0.6))"></div></div>
+            <div class="sp-achieve-pct" style="color:var(--green)">95%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:rgba(245,166,35,0.05);border:1px solid rgba(245,166,35,0.2);border-radius:12px;padding:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:8px">💡 公司利益与业务员利益对齐的逻辑</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.8">
+        推<span style="color:var(--red);font-weight:700">禾然有机（一年级）</span>很难卖 → 系数2.0 → 卖1瓶顶四年级2.86瓶激励<br>
+        推<span style="color:var(--green);font-weight:700">六月鲜极鲜（四年级）</span>相对容易 → 系数0.7 → 激励基数低<br>
+        业务员自然在「容易但低激励」和「难但高激励」之间找最优策略<br>
+        <span style="color:var(--text)">这个最优策略恰好和公司战略方向一致。</span>
+      </div>
+    </div>
+    <div class="pb"></div>
+  </div>
+</div>
+
+<!-- ══ 上海试点 ══ -->
+<div class="screen" id="screen-pilot">
+  <div class="pilot-screen">
+    <div class="pilot-header">
+      <div class="pilot-title">🗺️ 上海试点</div>
+      <div class="pilot-sub">二八原则 · S+/S门店先跑 · 信息差就是赢的来源</div>
+      <div class="pilot-stats">
+        <div class="ps-box"><div class="ps-val" style="color:var(--green)">80</div><div class="ps-lbl">S+门店</div></div>
+        <div class="ps-box"><div class="ps-val" style="color:var(--blue)">200</div><div class="ps-lbl">S门店</div></div>
+        <div class="ps-box"><div class="ps-val" style="color:var(--amber)">15%</div><div class="ps-lbl">目标市场份额</div></div>
+      </div>
+    </div>
+
+    <!-- 上海SKU年级表 -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+      <div class="sec-hdr">上海SKU年级 · 目标销速</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:grid;grid-template-columns:1fr 60px 50px 70px 60px;gap:6px;font-size:9px;color:var(--text3);font-weight:700;letter-spacing:0.06em;padding:0 4px">
+          <div>SKU</div><div style="text-align:center">年级</div><div style="text-align:center">系数</div><div style="text-align:center">目标r</div><div style="text-align:center">费用率</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 60px 50px 70px 60px;gap:6px;background:var(--bg3);border-radius:8px;padding:9px 4px;border:1px solid rgba(74,222,128,0.15);align-items:center">
+          <div style="font-size:11px;font-weight:600">六月鲜极鲜500ml</div>
+          <div style="text-align:center"><span class="sp-sku-grade sg-4">四年级</span></div>
+          <div style="text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--green)">0.7</div>
+          <div style="text-align:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--green)">9.3<span style="font-size:9px;color:var(--text3)">瓶/天</span></div>
+          <div style="text-align:center;font-size:10px;color:var(--green)">15~25%</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 60px 50px 70px 60px;gap:6px;background:var(--bg3);border-radius:8px;padding:9px 4px;border:1px solid rgba(74,222,128,0.1);align-items:center">
+          <div style="font-size:11px;font-weight:600">六月鲜极鲜280ml</div>
+          <div style="text-align:center"><span class="sp-sku-grade sg-4">四年级</span></div>
+          <div style="text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--green)">0.7</div>
+          <div style="text-align:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--green)">3.5<span style="font-size:9px;color:var(--text3)">瓶/天</span></div>
+          <div style="text-align:center;font-size:10px;color:var(--green)">15~25%</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 60px 50px 70px 60px;gap:6px;background:var(--bg3);border-radius:8px;padding:9px 4px;border:1px solid rgba(245,166,35,0.15);align-items:center">
+          <div style="font-size:11px;font-weight:600">禾然有机500ml</div>
+          <div style="text-align:center"><span class="sp-sku-grade sg-2">二年级</span></div>
+          <div style="text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--amber)">1.5</div>
+          <div style="text-align:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--amber)">1.5<span style="font-size:9px;color:var(--text3)">瓶/天</span></div>
+          <div style="text-align:center;font-size:10px;color:var(--amber)">35~45%</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 60px 50px 70px 60px;gap:6px;background:var(--bg3);border-radius:8px;padding:9px 4px;border:1px solid rgba(74,222,128,0.1);align-items:center">
+          <div style="font-size:11px;font-weight:600">味达美金标500ml</div>
+          <div style="text-align:center"><span class="sp-sku-grade sg-4">四年级</span></div>
+          <div style="text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--green)">0.7</div>
+          <div style="text-align:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--green)">5.0<span style="font-size:9px;color:var(--text3)">瓶/天</span></div>
+          <div style="text-align:center;font-size:10px;color:var(--green)">15~25%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 模拟门店销速 -->
+    <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px">S+门店销速状态（模拟数据）</div>
+    <div class="store-velocity-list">
+      <div class="sv-row">
+        <div class="sv-status-dot" style="background:var(--green)"></div>
+        <div class="sv-grade" style="background:rgba(74,222,128,0.12);color:var(--green)">S+</div>
+        <div class="sv-info"><div class="sv-name">家乐福古北店</div><div class="sv-sku">六月鲜极鲜500ml · 长宁</div></div>
+        <div class="sv-metrics">
+          <div class="sv-r" style="color:var(--green)">10.2</div>
+          <div class="sv-achievement" style="color:var(--green)">达成 110% 🚀</div>
+          <div class="sv-bar"><div class="sv-bar-fill" style="width:100%;background:var(--green)"></div></div>
+        </div>
+      </div>
+      <div class="sv-row">
+        <div class="sv-status-dot" style="background:var(--amber)"></div>
+        <div class="sv-grade" style="background:rgba(245,166,35,0.12);color:var(--amber)">S+</div>
+        <div class="sv-info"><div class="sv-name">沃尔玛曲阳店</div><div class="sv-sku">六月鲜极鲜500ml · 虹口</div></div>
+        <div class="sv-metrics">
+          <div class="sv-r" style="color:var(--amber)">6.8</div>
+          <div class="sv-achievement" style="color:var(--amber)">达成 78% ⚠️</div>
+          <div class="sv-bar"><div class="sv-bar-fill" style="width:78%;background:var(--amber)"></div></div>
+        </div>
+      </div>
+      <div class="sv-row">
+        <div class="sv-status-dot" style="background:var(--red)"></div>
+        <div class="sv-grade" style="background:rgba(255,95,95,0.12);color:var(--red)">S+</div>
+        <div class="sv-info"><div class="sv-name">大润发联洋店</div><div class="sv-sku">六月鲜极鲜500ml · 浦东</div></div>
+        <div class="sv-metrics">
+          <div class="sv-r" style="color:var(--red)">4.5</div>
+          <div class="sv-achievement" style="color:var(--red)">达成 45% 🔴</div>
+          <div class="sv-bar"><div class="sv-bar-fill" style="width:45%;background:var(--red)"></div></div>
+        </div>
+      </div>
+      <div class="sv-row">
+        <div class="sv-status-dot" style="background:var(--green)"></div>
+        <div class="sv-grade" style="background:rgba(74,222,128,0.12);color:var(--green)">S+</div>
+        <div class="sv-info"><div class="sv-name">Costco闵行店</div><div class="sv-sku">六月鲜极鲜500ml · 闵行</div></div>
+        <div class="sv-metrics">
+          <div class="sv-r" style="color:var(--green)">15.2</div>
+          <div class="sv-achievement" style="color:var(--green)">达成 114% 🚀</div>
+          <div class="sv-bar"><div class="sv-bar-fill" style="width:100%;background:var(--green)"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.18);border-radius:12px;padding:14px;margin-top:4px">
+      <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:6px">🎯 试点成功标准</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.8">
+        一个月后，上海S+/S 280家门店，每家门店每个SKU的实际r已知<br>
+        <span style="color:var(--text)">实际r vs 目标r = 信息差 = 比竞争对手多知道的部分 = 赢</span>
+      </div>
+    </div>
+
+    <!-- 库存上报入口 -->
+    <div style="margin-top:12px;background:var(--card);border:1px solid rgba(245,166,35,0.2);border-radius:12px;padding:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:8px">⚡ 数据入口：库存上报</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:10px">
+        业务员每次拜访 → 填货架几瓶+仓库几箱 → 系统自动算实际r → 对比目标r → 达成率实时显示
+      </div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;background:var(--bg3);border-radius:9px;padding:10px;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:20px;margin-bottom:4px">📱</div>
+          <div style="font-size:11px;font-weight:700;color:var(--amber)">H5版本</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">已上线GitHub Pages</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:2px">inventory-v3.html</div>
+        </div>
+        <div style="flex:1;background:var(--bg3);border-radius:9px;padding:10px;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:20px;margin-bottom:4px">⚙️</div>
+          <div style="font-size:11px;font-weight:700;color:var(--blue)">SFA集成</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">开发团队接入</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:2px">Android+iOS代码已交</div>
+        </div>
+        <div style="flex:1;background:var(--bg3);border-radius:9px;padding:10px;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:20px;margin-bottom:4px">📊</div>
+          <div style="font-size:11px;font-weight:700;color:var(--green)">数据看板</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">企微表格/自建</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:2px">两条线同时进行</div>
+        </div>
+      </div>
+    </div>
+    <div class="pb"></div>
+  </div>
+</div>
+
+<!-- ══ 六月鲜 SubCo ══ -->
+<div class="screen" id="screen-lyx">
+  <div class="lyx-screen">
+    <div class="lyx-header">
+      <div class="lyx-brand-row">
+        <div class="lyx-logo">鲜</div>
+        <div><div class="lyx-brand-name">六月鲜</div><div class="lyx-brand-sub">LIU YUE XIAN · PREMIUM SOY SAUCE</div></div>
+      </div>
+      <div class="lyx-tag">⭐ 战略北极星品牌 · 高端增长引擎</div>
+      <div class="lyx-mission">使命：成为中国高端调味品第一品牌。品牌溢价×规模双轮驱动，实现持续盈利增长。上海试点率先验证，复制全国。</div>
+    </div>
+    <div class="ns-card">
+      <div class="ns-label">战略北极星 · 2027目标</div>
+      <div class="ns-targets">
+        <div class="ns-target"><div class="ns-tv">4B</div><div class="ns-tl">目标年收入（RMB）</div><div class="ns-tc">当前进度 ~18%</div><div class="ns-progress"><div class="ns-fill" style="width:18%"></div></div><div class="ns-pct">▲ 18% → 100%</div></div>
+        <div class="ns-target"><div class="ns-tv">200M</div><div class="ns-tl">目标年出货瓶数</div><div class="ns-tc">当前进度 ~22%</div><div class="ns-progress"><div class="ns-fill" style="width:22%"></div></div><div class="ns-pct">▲ 22% → 100%</div></div>
+      </div>
+    </div>
+    <div class="tab-nav" id="lyxTabs">
+      <div class="tab-btn active" onclick="switchTab('pl')">P&L</div>
+      <div class="tab-btn" onclick="switchTab('assets')">品牌资产</div>
+      <div class="tab-btn" onclick="switchTab('channel')">渠道结构</div>
+      <div class="tab-btn" onclick="switchTab('agents')">Agent集群</div>
+      <div class="tab-btn" onclick="switchTab('alerts')">财务预警</div>
+      <div class="tab-btn" onclick="switchTab('chat')">CFO对话</div>
+    </div>
+    <div class="tab-panel active" id="tab-pl">
+      <div class="pl-grid">
+        <div class="pl-box pl-bg-rev"><div class="pl-label">💰 品牌营收</div><div class="pl-val" style="color:var(--lyx)">¥720M</div><div class="pl-sub">年化预估</div><div class="pl-trend up">↑ +23% YoY</div></div>
+        <div class="pl-box pl-bg-gp"><div class="pl-label">📊 毛利</div><div class="pl-val" style="color:var(--green)">¥324M</div><div class="pl-sub">毛利率 45%</div><div class="pl-trend up">↑ +2.3pp YoY</div></div>
+        <div class="pl-box pl-bg-bi"><div class="pl-label">📣 品牌投入</div><div class="pl-val" style="color:var(--blue)">¥72M</div><div class="pl-sub">费销比 10%</div><div class="pl-trend flat">→ 持平 YoY</div></div>
+        <div class="pl-box pl-bg-eb"><div class="pl-label">✦ EBITDA</div><div class="pl-val" style="color:var(--purple)">¥108M</div><div class="pl-sub">EBITDA率 15%</div><div class="pl-trend up">↑ +18% YoY</div></div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-hdr">利润瀑布图</div>
+        <div class="pl-waterfall">
+          <div class="wf-row"><div class="wf-label">品牌营收</div><div class="wf-bar-wrap"><div class="wf-bar" style="width:100%;background:linear-gradient(90deg,var(--lyx),var(--lyx2))">¥720M</div></div><div class="wf-val">720M</div></div>
+          <div class="wf-row"><div class="wf-label">- 生产成本</div><div class="wf-bar-wrap"><div class="wf-bar" style="width:55%;background:rgba(255,95,95,0.5)">¥396M</div></div><div class="wf-val" style="color:var(--red)">-396M</div></div>
+          <div class="wf-row"><div class="wf-label">= 毛利</div><div class="wf-bar-wrap"><div class="wf-bar" style="width:45%;background:linear-gradient(90deg,var(--green),rgba(74,222,128,0.6))">¥324M</div></div><div class="wf-val" style="color:var(--green)">324M</div></div>
+          <div class="wf-row"><div class="wf-label">- 渠道费用</div><div class="wf-bar-wrap"><div class="wf-bar" style="width:13%;background:rgba(255,95,95,0.4)">¥94M</div></div><div class="wf-val" style="color:var(--red)">-94M</div></div>
+          <div class="wf-row"><div class="wf-label">- 品牌投入</div><div class="wf-bar-wrap"><div class="wf-bar" style="width:10%;background:rgba(96,165,250,0.4)">¥72M</div></div><div class="wf-val" style="color:var(--blue)">-72M</div></div>
+          <div class="wf-row"><div class="wf-label">- 中台分摊</div><div class="wf-bar-wrap"><div class="wf-bar" style="width:7%;background:rgba(167,139,250,0.4)">¥50M</div></div><div class="wf-val" style="color:var(--purple)">-50M</div></div>
+          <div class="wf-row" style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px"><div class="wf-label" style="font-weight:700;color:var(--text)">= EBITDA</div><div class="wf-bar-wrap"><div class="wf-bar" style="width:15%;background:linear-gradient(90deg,var(--purple),rgba(167,139,250,0.6))">¥108M</div></div><div class="wf-val" style="color:var(--purple);font-weight:700">108M</div></div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);line-height:1.6">⚠ 当前为模型预估值，待接入ERP真实数据后自动更新。中台费用由母公司全额承担。</div>
+      </div>
+    </div>
+    <div class="tab-panel" id="tab-assets">
+      <div style="margin-bottom:10px;font-size:11px;color:var(--text3);line-height:1.6">品牌资产严格归属六月鲜SubCo，不与其他品牌共用。消费者资产不得被其他品牌促销活动消耗。</div>
+      <div class="asset-grid">
+        <div class="asset-card"><div class="asset-icon">👥</div><div class="asset-name">消费者资产</div><div><span class="asset-val">—</span><span class="asset-unit">待接入</span></div><div class="asset-sub">会员数据·复购记录·CLV</div><div class="asset-bar"><div class="asset-fill" style="width:15%"></div></div><div style="font-size:9px;color:var(--red);margin-top:4px">⚠ 微信数据待授权接入</div></div>
+        <div class="asset-card"><div class="asset-icon">📝</div><div class="asset-name">内容资产</div><div><span class="asset-val">—</span><span class="asset-unit">建设中</span></div><div class="asset-sub">小红书爆文库·抖音素材·KOC网络</div><div class="asset-bar"><div class="asset-fill" style="width:25%"></div></div><div style="font-size:9px;color:var(--amber);margin-top:4px">🔨 内容数据库建立中</div></div>
+        <div class="asset-card"><div class="asset-icon">🏪</div><div class="asset-name">渠道资产</div><div><span class="asset-val">337</span><span class="asset-unit">城市</span></div><div class="asset-sub">货架领地·经销商评分·排面数据</div><div class="asset-bar"><div class="asset-fill" style="width:40%"></div></div><div style="font-size:9px;color:var(--amber);margin-top:4px">🔨 货架识别集成中</div></div>
+        <div class="asset-card"><div class="asset-icon">💎</div><div class="asset-name">品牌认知资产</div><div><span class="asset-val">—</span><span class="asset-unit">待调研</span></div><div class="asset-sub">AIQL得分·溢价指数·品牌健康度</div><div class="asset-bar"><div class="asset-fill" style="width:20%"></div></div><div style="font-size:9px;color:var(--red);margin-top:4px">⚠ 消费者认知调研待启动</div></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="tab-channel">
+      <div style="margin-bottom:10px;font-size:11px;color:var(--text3)">渠道切割原则：六月鲜专注高端渠道，不与味达美共用同一货架。</div>
+      <div class="sec-card" style="margin-bottom:10px">
+        <div class="sec-hdr">渠道分配（六月鲜专属）</div>
+        <div class="channel-list" style="margin-top:4px">
+          <div class="ch-row"><div class="ch-label">山姆/KA</div><div class="ch-bar-wrap"><div class="ch-bar" style="width:35%;background:linear-gradient(90deg,var(--lyx),var(--lyx2));color:#000">高端主战场</div></div><div class="ch-pct">35%</div></div>
+          <div class="ch-row"><div class="ch-label">电商天猫</div><div class="ch-bar-wrap"><div class="ch-bar" style="width:28%;background:rgba(96,165,250,0.5)">品牌旗舰</div></div><div class="ch-pct">28%</div></div>
+          <div class="ch-row"><div class="ch-label">O2O即时</div><div class="ch-bar-wrap"><div class="ch-bar" style="width:18%;background:rgba(78,205,196,0.5)">高端场景</div></div><div class="ch-pct">18%</div></div>
+          <div class="ch-row"><div class="ch-label">高端餐饮</div><div class="ch-bar-wrap"><div class="ch-bar" style="width:12%;background:rgba(196,92,138,0.5)">B端锁定</div></div><div class="ch-pct">12%</div></div>
+          <div class="ch-row"><div class="ch-label">其他</div><div class="ch-bar-wrap"><div class="ch-bar" style="width:7%;background:rgba(255,255,255,0.15)"></div></div><div class="ch-pct">7%</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-panel" id="tab-agents">
+      <div style="margin-bottom:10px;font-size:11px;color:var(--text3)">服务六月鲜SubCo的Agent集群 · 共享基础设施·品牌专属配置</div>
+      <div class="cluster-grid">
+        <div class="cl-item" onclick="navToAgent('品牌AI顾问')"><div class="cl-emoji" style="background:rgba(212,168,83,0.15)">💎</div><div class="cl-info"><div class="cl-name">品牌AI顾问</div><div class="cl-role">AIQL追踪 · 品牌溢价管理</div></div><div class="cl-score" style="color:var(--amber)">55</div></div>
+        <div class="cl-item" onclick="navToAgent('经销商全链')"><div class="cl-emoji" style="background:rgba(245,166,35,0.15)">🤝</div><div class="cl-info"><div class="cl-name">经销商全链</div><div class="cl-role">六月鲜专属经销商 · 销速监控</div></div><div class="cl-score" style="color:var(--green)">70</div></div>
+        <div class="cl-item" onclick="navToAgent('小红书种草棒')"><div class="cl-emoji" style="background:rgba(255,95,95,0.15)">📕</div><div class="cl-info"><div class="cl-name">小红书种草棒</div><div class="cl-role">高端场景种草 · 拉力需求起点</div></div><div class="cl-score" style="color:var(--amber)">45</div></div>
+        <div class="cl-item" onclick="navToAgent('PRISM精准选点')"><div class="cl-emoji" style="background:rgba(167,139,252,0.15)">◈</div><div class="cl-info"><div class="cl-name">PRISM精准选点</div><div class="cl-role">高价值小区定位 · CLV计算</div></div><div class="cl-score" style="color:var(--amber)">60</div></div>
+        <div class="cl-item" onclick="navToAgent('零售门店')"><div class="cl-emoji" style="background:rgba(167,139,252,0.15)">🏪</div><div class="cl-info"><div class="cl-name">零售门店</div><div class="cl-role">高端门店六级管理 · 货架=品牌领地</div></div><div class="cl-score" style="color:var(--green)">68</div></div>
+        <div class="cl-item" onclick="navToAgent('蝴蝶效应')"><div class="cl-emoji" style="background:rgba(255,95,95,0.15)">🦋</div><div class="cl-info"><div class="cl-name">蝴蝶效应</div><div class="cl-role">六月鲜全链失真检测 · 品牌溢价保护</div></div><div class="cl-score" style="color:var(--amber)">62</div></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="tab-alerts">
+      <div style="margin-bottom:10px;font-size:11px;color:var(--text3)">财务预警 = 运营异常的货币化表达</div>
+      <div class="alert-list">
+        <div class="alert-item risk"><div class="alert-icon">🔴</div><div class="alert-body"><div class="alert-title">销速低于目标60% · 上海大润发浦东</div><div class="alert-desc">实际r仅4.5瓶/天，目标r 10.0，达成率45%，已触发严重预警</div><div class="alert-amt risk">⚠ 潜在毛利损失：¥34万/周（如持续）</div></div></div>
+        <div class="alert-item warn"><div class="alert-icon">🟡</div><div class="alert-body"><div class="alert-title">C类失真检测 · 疑似窜货 · 成都区</div><div class="alert-desc">蝴蝶效应Agent检测到成都二批商出现低于底价¥17的成交记录</div><div class="alert-amt warn">⚠ 品牌溢价侵蚀：¥18万（已流入低价货）</div></div></div>
+        <div class="alert-item ok"><div class="alert-icon">🟢</div><div class="alert-body"><div class="alert-title">Costco闵行销速超标114%</div><div class="alert-desc">实际r 15.2瓶/天，超目标14%，库存仅剩4天，建议紧急备货</div><div class="alert-amt ok">✅ 超额毛利：+¥8万 · 注意补货避免断货</div></div></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="tab-chat">
+      <div class="chat-wrap">
+        <div class="chat-head">六月鲜 CFO 对话 · <span class="chat-head-badge">💎 品牌财务智脑</span></div>
+        <div class="chat-chips">
+          <div class="chip" onclick="sendLYXChat('六月鲜本月P&L摘要，以及上海试点的销速达成情况？')">本月P&L+销速</div>
+          <div class="chip" onclick="sendLYXChat('上海试点中，禾然有机（二年级）的费用率是否在35-45%范围内？效果如何？')">禾然费用率分析</div>
+          <div class="chip" onclick="sendLYXChat('六月鲜战略北极星4B RMB，按现在增速什么时候能到？')">北极星达成预测</div>
+          <div class="chip" onclick="sendLYXChat('山姆渠道ROI vs 电商渠道ROI对比，哪个更值得加大投入？')">渠道ROI对比</div>
+          <div class="chip" onclick="sendLYXChat('如果把一年级产品（禾然）的激励系数从1.5提到2.0，对业务员行为和销量有什么影响？')">激励系数敏感性</div>
+        </div>
+        <div class="chat-bubble">你好，我是六月鲜SubCo的财务智脑。我整合了P&L数据、销速系统（r/a/T）、年级激励、渠道ROI和战略北极星进度。问我任何问题。</div>
+        <div class="chat-resp" id="lyxChatResp"><div class="chat-q-echo" id="lyxChatQ"></div><div id="lyxChatA"></div></div>
+        <div class="chat-row">
+          <input class="chat-in" id="lyxChatInput" placeholder="问六月鲜CFO任何问题…" onkeydown="if(event.key==='Enter')sendLYXChat(this.value)"/>
+          <button class="chat-go" onclick="sendLYXChat(document.getElementById('lyxChatInput').value)">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COMING SOON ══ -->
+<div class="screen" id="screen-coming">
+  <div class="coming-soon">
+    <div class="cs-icon">🏗</div>
+    <div class="cs-title" id="csTitle">建设中</div>
+    <div class="cs-sub" id="csSub">此SubCo正在建设中</div>
+    <div style="margin-top:20px;padding:14px 18px;background:var(--card);border:1px solid var(--border);border-radius:12px;text-align:left;max-width:280px">
+      <div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:6px">复制路径</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.8">① 六月鲜MVP → 验证销速框架<br>② 味达美 → 复制+现金奶牛参数<br>③ 禾然 → 复制+一年级高费用率模型<br>④ 葱伴侣 → 复制+场景垄断参数<br>⑤ 小康 → 复制+拦截工具参数<br>⑥ 餐饮渠道 → 渠道子公司特殊版</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AGENT CATEGORY ══ -->
+<div class="screen" id="screen-cat">
+  <div class="cat-screen-hdr">
+    <div class="cat-big-icon" id="catIcon"></div>
+    <div><div class="cat-hdr-name" id="catName"></div><div class="cat-hdr-sub" id="catSub"></div></div>
+  </div>
+  <div class="agent-list" id="agentList"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══ AGENT DETAIL ══ -->
+<div class="screen" id="screen-detail">
+  <div class="detail-wrap" id="detailWrap"></div>
+</div>
+
+<!-- ══ BRAIN ══ -->
+<div class="screen" id="screen-brain">
+  <div class="brain-screen">
+    <div class="brain-hdr">
+      <div class="brain-icon">🧠</div>
+      <div class="brain-title">AI 战略大脑</div>
+      <div class="brain-sub">INFINITY OS v7 · 销速系统+年级+一本账+品牌SubCo+纵横框架</div>
+    </div>
+    <div class="brain-input-row">
+      <input class="brain-input" id="brainInput" placeholder="问战略大脑任何问题…"/>
+      <button class="brain-send" onclick="sendBrain()">→</button>
+    </div>
+    <div class="brain-response" id="brainResp"><div class="brain-q-echo" id="brainQ"></div><div id="brainA"></div></div>
+    <div class="sec-lbl" style="padding:0 0 8px">快捷提问</div>
+    <div class="qq-grid">
+      <button class="qq-btn" onclick="askBrain('销速系统中三个r（r_市场/r_预期/r_实际）的关系是什么？信息差怎么形成？')"><span class="qq-em">📊</span>三个r的关系与信息差逻辑</button>
+      <button class="qq-btn" onclick="askBrain('年级系统和费用率的四个决定因素，哪个是硬约束，哪个是软约束？')"><span class="qq-em">🎓</span>年级系统·费用率四个决定因素</button>
+      <button class="qq-btn" onclick="askBrain('一本账公式中，业务员如何在高系数难产品和低系数易产品之间找最优策略？')"><span class="qq-em">📒</span>一本账·业务员最优策略</button>
+      <button class="qq-btn" onclick="askBrain('传导链a₀→a₁→a₂→a₃→A，任意一层被干预会发生什么？三类失真怎么检测？')"><span class="qq-em">🔗</span>传导链失真检测机制</button>
+      <button class="qq-btn" onclick="askBrain('上海试点第一个月结束后应该拿到什么数据？怎么判断成功？')"><span class="qq-em">🗺️</span>上海试点成功标准与数据要求</button>
+    </div>
+    <div class="kb-card" id="kb1">
+      <div class="kb-hdr" onclick="toggleKB('kb1')"><div class="kb-hdr-l">📊 v7销速系统核心定义</div><div class="kb-arrow">▼</div></div>
+      <div class="kb-body"><div class="kb-text">
+        <strong>r = 日销率（瓶/天）= 心跳频率</strong><br>不是输入，是输出。系统通过两次库存上报自动计算。<br><br>
+        <strong>三个r：</strong><br>r_市场 = 市场容量×目标份额推算（战略层）<br>r_预期 = 树根项目目标，门店+SKU层级（执行层）<br>r_实际 = 库存两次对比自动算（现实反馈）<br><br>
+        <strong>传导链：a₀→a₁→a₂→a₃→A</strong><br>每个SKU独立计算，Pull驱动。任意一层失真，上游全部误判。
+      </div></div>
+    </div>
+    <div class="kb-card" id="kb2">
+      <div class="kb-hdr" onclick="toggleKB('kb2')"><div class="kb-hdr-l">🏢 v7品牌SubCo架构</div><div class="kb-arrow">▼</div></div>
+      <div class="kb-body"><div class="kb-text">
+        <strong>六个SubCo：</strong>六月鲜（高端增长引擎）· 味达美（现金奶牛）· 禾然（有机赌注）· 葱伴侣（利基防御）· 小康（竞争拦截）· 餐饮渠道（渠道子公司）<br><br>
+        <strong>三大决策：</strong>渠道切割·补贴上限·中台母公司承担<br><br>
+        <strong>财务三穿透：</strong>a货币化·货架=财务资产·失真=财务失真
+      </div></div>
+    </div>
+    <div class="pb"></div>
+  </div>
+</div>
+
+<script>
+// ── Clock ──
+function updateClock(){const n=new Date();document.getElementById('clock').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')+':'+n.getSeconds().toString().padStart(2,'0')}
+updateClock();setInterval(updateClock,1000);
+(function(){const n=new Date();const w=['日','一','二','三','四','五','六'];document.getElementById('cmdDate').textContent=(n.getMonth()+1)+'/'+n.getDate()+' 周'+w[n.getDay()]})();
+
+// ── View Toggle ──
+function switchView(v){
+  document.getElementById('view-ops').style.display=v==='ops'?'block':'none';
+  document.getElementById('view-brand').style.display=v==='brand'?'block':'none';
+  document.getElementById('vt-ops').classList.toggle('active',v==='ops');
+  document.getElementById('vt-brand').classList.toggle('active',v==='brand');
+}
+
+// ── Nav Stack ──
+const navStack=[];
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.getElementById('backBtn').className='back-btn'+(navStack.length>0?' show':'');
+  updateBC(id);window.scrollTo(0,0);
+}
+function goBack(){
+  if(!navStack.length){showScreen('home');return}
+  const p=navStack.pop();
+  if(p.type==='home'){showScreen('home');return}
+  if(p.type==='cat'){showCat(p.id,true);return}
+  if(p.type==='lyx'){showLYX(true);return}
+  if(p.type==='brand'){showScreen('home');switchView('brand');return}
+  showScreen('home');
+}
+function updateBC(id){
+  const bc=document.getElementById('breadcrumb');
+  const home=`<span class="bc-link" onclick="pushHome()">首页</span>`;
+  const sep=`<span class="bc-sep">›</span>`;
+  const labels={velocity:'销速系统',grades:'年级系统',account:'一本账',pilot:'上海试点',brain:'战略大脑'};
+  if(id==='home'){bc.innerHTML='';return}
+  if(labels[id]){bc.innerHTML=home+sep+`<span class="bc-cur">${labels[id]}</span>`;return}
+  if(id==='lyx'){bc.innerHTML=home+sep+`<span class="bc-link" onclick="backToBrand()">品牌视图</span>`+sep+`<span class="bc-cur" style="color:var(--lyx)">六月鲜</span>`;return}
+  if(id==='coming'){bc.innerHTML=home+sep+`<span class="bc-link" onclick="backToBrand()">品牌视图</span>`+sep+`<span class="bc-cur">${document.getElementById('csTitle').textContent}</span>`;return}
+  if(id==='cat'){bc.innerHTML=home+sep+`<span class="bc-cur">${document.getElementById('catName').textContent}</span>`;return}
+}
+function pushHome(){navStack.length=0;showScreen('home')}
+function backToBrand(){navStack.length=0;showScreen('home');switchView('brand')}
+function showLYX(isBack=false){if(!isBack)navStack.push({type:'brand'});showScreen('lyx');updateBC('lyx')}
+function showComingSoon(name,desc){
+  navStack.push({type:'brand'});
+  document.getElementById('csTitle').textContent=name+' SubCo';
+  document.getElementById('csSub').innerHTML=`<strong style="color:var(--text2)">${desc}</strong><br><br>六月鲜MVP验证完成后复制至${name}`;
+  showScreen('coming');updateBC('coming');
+}
+
+// ── Tab ──
+function switchTab(id){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{const ids=['pl','assets','channel','agents','alerts','chat'];b.classList.toggle('active',ids[i]===id)});
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+// ── Agent Data ──
+const CATS={
+  commander:{icon:'⚡',name:'总指挥',sub:'1个Agent · 全链调度总中枢',agents:['AIO总指挥']},
+  lianheng:{icon:'🔗',name:'连横',sub:'6个Agent · IPO0-13端到端闭环',agents:['生产供应','经销商全链','二批商','零售门店','消费者深度','餐饮渠道']},
+  system:{icon:'⚙️',name:'系统Agent',sub:'4个Agent · 蝴蝶效应·推单·校准·激励',agents:['蝴蝶效应','无菜单推单','A值校准','Uber激励']},
+  shelf:{icon:'📷',name:'货架识别',sub:'3个Agent · 自训模型·QC替代路线A',agents:['货架识别','库存上报','价签识别']},
+  consumer:{icon:'◈',name:'消费者',sub:'1个Agent · PRISM精准选点',agents:['PRISM精准选点']},
+  hezong:{icon:'📡',name:'合纵7棒',sub:'7个Agent · 7棒渠道接力体系',agents:['小红书种草棒','抖音爆发棒','电商转化棒','O2O即时棒','仓储会员棒','大卖场棒','社区超市棒']},
+  brand:{icon:'🎭',name:'品牌',sub:'2个Agent · AIQL·场景·鲜生顾问',agents:['品牌AI顾问','鲜生顾问']}
+};
+const AGENTS={
+  'AIO总指挥':{emoji:'⚡',ec:'rgba(59,130,246,0.2)',tag:'Commander',score:65,ms:3,desc:'全链调度：差距检测→任务派发→积分结算，协调所有子Agent',steps:['概念','框架','AI对话','真实数据','完整体'],cur:2,sty:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'差距检测',v:'实时',s:'good',bg:'good-bg'},{l:'任务派发',v:'自动',s:'good',bg:'good-bg'},{l:'真实数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'Agent协商',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['接入ERP/CRM真实数据','与蝴蝶效应Agent动态联动'],presets:['今天哪些门店销速最低？','给我一份AIO日报'],intro:'你好，我是AIO总指挥Agent。'},
+  '生产供应':{emoji:'🏭',ec:'rgba(74,222,128,0.15)',tag:'IPO0-1',score:60,ms:3,desc:'工厂产能·发货库存·生产计划达成率，预警上游断供风险',steps:['概念','框架','AI对话','真实数据','完整体'],cur:2,sty:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'IPO0产能',v:'96%',s:'good',bg:'good-bg'},{l:'IPO1库存',v:'89%',s:'good',bg:'good-bg'},{l:'MES系统对接',v:'待建',s:'bad',bg:'bad-bg'},{l:'自动调产',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['工厂MES系统API对接','生产计划自动调整建议'],presets:['工厂今天产能怎么样？','有没有断供风险？'],intro:'你好，我是生产供应Agent。'},
+  '经销商全链':{emoji:'🤝',ec:'rgba(245,166,35,0.15)',tag:'IPO2-4',score:70,ms:3,desc:'进货/库存/出货全链·销速监控·P1/P2路径·健康评分S/A/B/C/D',steps:['概念','框架','AI对话','真实数据','完整体'],cur:2,sty:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'销速监控',v:'框架就绪',s:'good',bg:'good-bg'},{l:'健康评分',v:'S/A/B/C/D',s:'good',bg:'good-bg'},{l:'ERP对接',v:'待接入',s:'bad',bg:'bad-bg'},{l:'自动预警',v:'待配置',s:'bad',bg:'bad-bg'}],gaps:['ERP系统实时数据接入','补货预警企微自动推送'],presets:['哪些经销商库存低于1a？','P1和P2渠道销速对比'],intro:'你好，我是经销商全链Agent。'},
+  '二批商':{emoji:'🚚',ec:'rgba(96,165,250,0.15)',tag:'IPO5-7·P2路径',score:65,ms:3,desc:'P2路径专属·餐饮渠道·库存严控1a·价格管控底价¥17',steps:['概念','框架','AI对话','真实数据','完整体'],cur:2,sty:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'价格底线',v:'¥17',s:'warn',bg:''},{l:'窜货检测',v:'规则已建',s:'good',bg:'good-bg'},{l:'二批库存',v:'待接入',s:'bad',bg:'bad-bg'},{l:'乱价预警',v:'待联通',s:'bad',bg:'bad-bg'}],gaps:['二批商端进销存数据接入','B端餐饮客户CRM打通'],presets:['有没有二批商库存超1a压货？','底价以下有哪些乱价门店？'],intro:'你好，我是二批商Agent。'},
+  '零售门店':{emoji:'🏪',ec:'rgba(167,139,252,0.15)',tag:'IPO8-10',score:68,ms:3,desc:'六级门店·货架=品牌领地·销速监控·3a满→2a预警',steps:['概念','框架','AI对话','真实数据','完整体'],cur:2,sty:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'六级分类',v:'✅已建',s:'good',bg:'good-bg'},{l:'货架=领地',v:'概念锁定',s:'good',bg:'good-bg'},{l:'POS实时数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'销速自动算',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['POS系统实时数据接入','S+门店销速达成率看板'],presets:['S+门店今天销速达成率？','销速最低的10家门店？'],intro:'你好，我是零售门店Agent。'},
+  '消费者深度':{emoji:'👥',ec:'rgba(78,205,196,0.15)',tag:'IPO11-13',score:62,ms:3,desc:'a₀消费者真实消耗·渗透率·复购率·流失预警',steps:['概念','框架','AI对话','真实数据','完整体'],cur:2,sty:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'渗透率模型',v:'✅已建',s:'good',bg:'good-bg'},{l:'a₀追踪',v:'框架就绪',s:'warn',bg:''},{l:'消费者数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'流失预警',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['微信/会员消费者数据授权接入','a₀层真实消耗数据收集'],presets:['六月鲜当前家庭渗透率多少？','流失风险最高的用户群？'],intro:'你好，我是消费者深度Agent。'},
+  '餐饮渠道':{emoji:'🍜',ec:'rgba(245,166,35,0.12)',tag:'B端IPO8b-11b',score:55,ms:2,desc:'餐厅分级·菜单绑定率·厨师关系·大客户锁定',steps:['概念','框架','AI对话','真实数据','完整体'],cur:1,sty:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'餐厅分级',v:'已建模',s:'good',bg:'good-bg'},{l:'菜单绑定率',v:'待测量',s:'warn',bg:''},{l:'厨师AIQL',v:'待建',s:'bad',bg:'bad-bg'},{l:'大客户CRM',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['B端餐饮客户数据库建立','厨师关系AIQL评分模型'],presets:['绑定菜单的餐厅占比多少？','哪些餐厅有流失风险？'],intro:'你好，我是餐饮渠道Agent。'},
+  '蝴蝶效应':{emoji:'🦋',ec:'rgba(255,95,95,0.15)',tag:'全链预警失真检测',score:62,ms:3,desc:'IPO0-13跨节点传导·三种失真模式（A压货/B促销/C窜货）·销速异常预警',steps:['概念','框架','AI对话','真实数据','完整体'],cur:2,sty:'current-red',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'传导计算',v:'✅',s:'good',bg:'good-bg'},{l:'红色预警',v:'2条',s:'warn',bg:''},{l:'实时数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'企微推送',v:'待配置',s:'bad',bg:'bad-bg'}],gaps:['实时数据流接入','失真模式ABC自动触发企微推送'],presets:['今天有哪些蝴蝶效应风险？','哪些节点存在压货失真（A类）？'],intro:'你好，我是蝴蝶效应Agent。'},
+  '无菜单推单':{emoji:'🍣',ec:'rgba(245,166,35,0.15)',tag:'Omakase',score:63,ms:3,desc:'根据销速r自动计算经销商补货量·SKU组合·直接推单',steps:['概念','框架','AI对话','真实数据','完整体'],cur:2,sty:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'推单算法',v:'✅',s:'good',bg:'good-bg'},{l:'SKU分配',v:'✅',s:'good',bg:'good-bg'},{l:'经销商接单',v:'待建',s:'bad',bg:'bad-bg'},{l:'效果验证',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['经销商系统API自动接单','推单后销速验证'],presets:['今天哪些经销商需要推单？','推单量怎么计算的？'],intro:'你好，我是无菜单推单Agent。'},
+  'A值校准':{emoji:'🎯',ec:'rgba(74,222,128,0.15)',tag:'销速地基维护',score:68,ms:3,desc:'三重验证校准r和a·双路径P1/P2分别校准·每周自动运行',steps:['概念','框架','AI对话','真实数据','完整体'],cur:2,sty:'current-teal',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'校准算法',v:'✅',s:'good',bg:'good-bg'},{l:'失真检测',v:'3模式',s:'good',bg:'good-bg'},{l:'真实数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'季节模型',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['真实销售数据接入后首次完整r校准','季节性r波动模型'],presets:['哪些门店r需要上调？','r下降是真实需求还是断货假信号？'],intro:'你好，我是A值校准Agent（v7更名：销速校准Agent）。'},
+  'Uber激励':{emoji:'🚗',ec:'rgba(245,166,35,0.18)',tag:'CB+AIQL+年级激励',score:58,ms:3,desc:'自动派单+AI评价+CB粘性+AIQL追踪+年级系数激励计算',steps:['概念','框架','AI对话','真实数据','完整体'],cur:2,sty:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'CB公式',v:'✅',s:'good',bg:'good-bg'},{l:'年级系数',v:'✅已接入',s:'good',bg:'good-bg'},{l:'货架AI识别',v:'原型✅',s:'warn',bg:''},{l:'SFA整合',v:'待对接',s:'bad',bg:'bad-bg'}],gaps:['货架识别API接入SFA App','一本账实时结算接口'],presets:['今天业务员应该做什么任务？','达成率最高的业务员是谁？'],intro:'你好，我是Uber激励Agent。v7新增年级系数激励计算。'},
+  '货架识别':{emoji:'📷',ec:'rgba(245,166,35,0.18)',tag:'QC替代·路线A',score:45,ms:2,desc:'自训专属模型路线A·目标差异率≤3%·训练数据=销速数据来源之一',steps:['概念','框架','AI对话','真实数据','完整体'],cur:1,sty:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'QC精度',v:'<3%',s:'good',bg:'good-bg'},{l:'千问精度',v:'76-88%',s:'warn',bg:''},{l:'训练数据',v:'管道已建',s:'warn',bg:''},{l:'自训模型',v:'待启动',s:'bad',bg:'bad-bg'}],gaps:['SFA训练数据管道Java代码上线','积累1000张标注数据启动首轮训练'],presets:['训练数据现在积累了多少张？','什么时候可以替代QC？'],intro:'你好，我是货架识别Agent。'},
+  '库存上报':{emoji:'📦',ec:'rgba(255,95,95,0.15)',tag:'缺口·待开发·数据入口',score:20,ms:1,desc:'销速系统的数据入口·业务员填货架+仓库→系统算实际r→对比目标r',steps:['概念','框架','AI对话','真实数据','完整体'],cur:0,sty:'current-red',hint:'当前阶段：概念 → 下一步：框架（H5已完成）',kpis:[{l:'H5工具',v:'✅已上线',s:'good',bg:'good-bg'},{l:'SFA集成',v:'代码已交',s:'warn',bg:''},{l:'数据存储',v:'待接入',s:'bad',bg:'bad-bg'},{l:'实际r计算',v:'待联通',s:'bad',bg:'bad-bg'}],gaps:['SFA WebView集成上线','提交数据接企微/自建数据库','实际r与目标r自动对比看板'],presets:['inventory-v3现在怎么用？','数据存储方案用企微还是自建？'],intro:'你好，我是库存上报Agent。v7是销速系统的数据入口，H5工具已上线。'},
+  '价签识别':{emoji:'🏷️',ec:'rgba(255,95,95,0.15)',tag:'缺口·待开发',score:15,ms:1,desc:'拍竞品价签自动读取价格·监控底价¥17·对二批商乱价预警',steps:['概念','框架','AI对话','真实数据','完整体'],cur:0,sty:'current-red',hint:'当前阶段：概念 → 下一步：框架',kpis:[{l:'千问OCR',v:'可调用',s:'good',bg:'good-bg'},{l:'价签识别',v:'待开发',s:'bad',bg:'bad-bg'},{l:'竞品价格库',v:'待建',s:'bad',bg:'bad-bg'},{l:'乱价预警',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['基于千问VL开发价签识别prompt','建立竞品价格基准数据库'],presets:['有没有门店低于底价¥17在卖？','价格异常门店分布在哪些区域？'],intro:'你好，我是价签识别Agent。'},
+  'PRISM精准选点':{emoji:'◈',ec:'rgba(167,139,252,0.15)',tag:'消费者端·a₀层',score:60,ms:3,desc:'宏观+二三手数据定位高价值小区·Stage Gate共创·带动a₀增长',steps:['概念','框架','AI对话','真实数据','完整体'],cur:2,sty:'current-purple',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'选点算法',v:'✅',s:'good',bg:'good-bg'},{l:'Stage Gate',v:'✅',s:'good',bg:'good-bg'},{l:'房产API',v:'待建',s:'bad',bg:'bad-bg'},{l:'a₀数据',v:'待接入',s:'bad',bg:'bad-bg'}],gaps:['贝壳/安居客房价API接入','a₀消费者数据与选点效果关联'],presets:['上海哪些小区值得做共创活动？','PRISM选点如何带动a₀增长？'],intro:'你好，我是PRISM精准选点Agent。v7新增a₀层数据关联。'},
+  '小红书种草棒':{emoji:'📕',ec:'rgba(255,95,95,0.15)',tag:'合纵棒1·r₀需求拉力起点',score:45,ms:2,desc:'合纵7棒第1棒·社区共创产生a₀拉力需求·KOC激活·爆文矩阵',steps:['概念','框架','AI对话','真实数据','完整体'],cur:1,sty:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'内容策划',v:'框架就绪',s:'warn',bg:''},{l:'KOC匹配',v:'待建',s:'bad',bg:'bad-bg'},{l:'爆文监测',v:'待接入',s:'bad',bg:'bad-bg'},{l:'a₀归因',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['小红书数据API接入','内容与a₀销速的归因模型'],presets:['六月鲜小红书爆文选题方向？','种草内容如何带动a₀增长？'],intro:'你好，我是小红书种草棒Agent。'},
+  '抖音爆发棒':{emoji:'🎵',ec:'rgba(74,222,128,0.12)',tag:'合纵棒2·流量爆发',score:38,ms:2,desc:'合纵7棒第2棒·短视频矩阵·达人匹配·直播带货',steps:['概念','框架','AI对话','真实数据','完整体'],cur:1,sty:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'脚本模板',v:'已建',s:'good',bg:'good-bg'},{l:'达人评分',v:'待建',s:'bad',bg:'bad-bg'},{l:'投放ROI',v:'待测量',s:'bad',bg:'bad-bg'},{l:'抖音数据',v:'待接入',s:'bad',bg:'bad-bg'}],gaps:['抖音数据API接入','达人匹配与ROI预估系统'],presets:['本月抖音投放策略？','达人合作优先级排序？'],intro:'你好，我是抖音爆发棒Agent。'},
+  '电商转化棒':{emoji:'🛒',ec:'rgba(245,166,35,0.12)',tag:'合纵棒3·线上转化',score:40,ms:2,desc:'合纵7棒第3棒·天猫/京东/拼多多·搜索排名',steps:['概念','框架','AI对话','真实数据','完整体'],cur:1,sty:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'SKU矩阵',v:'已建',s:'good',bg:'good-bg'},{l:'搜索优化',v:'待建',s:'bad',bg:'bad-bg'},{l:'大促节奏',v:'手动',s:'warn',bg:''},{l:'电商数据',v:'待接入',s:'bad',bg:'bad-bg'}],gaps:['电商平台数据API接入','大促节点智能预备策略'],presets:['天猫六月鲜搜索排名如何？','大促备货建议？'],intro:'你好，我是电商转化棒Agent。'},
+  'O2O即时棒':{emoji:'⚡',ec:'rgba(78,205,196,0.12)',tag:'合纵棒4·即时零售',score:32,ms:2,desc:'合纵7棒第4棒·美团/饿了么/京东到家·30分钟配送圈',steps:['概念','框架','AI对话','真实数据','完整体'],cur:1,sty:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'平台覆盖',v:'3个',s:'warn',bg:''},{l:'前置仓',v:'待规划',s:'bad',bg:'bad-bg'},{l:'实时订单',v:'待接入',s:'bad',bg:'bad-bg'},{l:'销速跟踪',v:'待建',s:'bad',bg:'bad-bg'}],gaps:['O2O平台数据统一接入','前置仓与销速系统联动'],presets:['美团上六月鲜销量如何？','哪些区域O2O潜力最大？'],intro:'你好，我是O2O即时棒Agent。'},
+  '仓储会员棒':{emoji:'🏬',ec:'rgba(96,165,250,0.12)',tag:'合纵棒5·会员仓储',score:35,ms:2,desc:'合纵7棒第5棒·山姆/Costco/麦德龙·大包装SKU·高复购场景',steps:['概念','框架','AI对话','真实数据','完整体'],cur:1,sty:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'会员渗透',v:'待测量',s:'bad',bg:'bad-bg'},{l:'大包装SKU',v:'已上架',s:'good',bg:'good-bg'},{l:'会员数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'复购率',v:'待测量',s:'bad',bg:'bad-bg'}],gaps:['会员仓储平台数据API','高价值会员a₀数据与PRISM联动'],presets:['山姆渠道六月鲜销售趋势？','大包装SKU补货建议？'],intro:'你好，我是仓储会员棒Agent。'},
+  '大卖场棒':{emoji:'🏢',ec:'rgba(167,139,252,0.12)',tag:'合纵棒6·大卖场',score:33,ms:2,desc:'合纵7棒第6棒·沃尔玛/家乐福/大润发·堆头/端架/黄金位',steps:['概念','框架','AI对话','真实数据','完整体'],cur:1,sty:'current',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'KA覆盖',v:'主要已覆盖',s:'warn',bg:''},{l:'堆头管理',v:'手动',s:'warn',bg:''},{l:'POS数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'账期管控',v:'手动',s:'bad',bg:'bad-bg'}],gaps:['大卖场POS数据接入','KA账期自动预警'],presets:['重点KA门店本月销售情况？','黄金位陈列占比多少？'],intro:'你好，我是大卖场棒Agent。'},
+  '社区超市棒':{emoji:'🏘️',ec:'rgba(74,222,128,0.12)',tag:'合纵棒7·社区下沉',score:30,ms:1,desc:'合纵7棒第7棒·社区生鲜超市·邻里中心·下沉市场',steps:['概念','框架','AI对话','真实数据','完整体'],cur:0,sty:'current',hint:'当前阶段：概念 → 下一步：框架',kpis:[{l:'门店覆盖数',v:'统计中',s:'warn',bg:''},{l:'下沉城市',v:'规划中',s:'warn',bg:''},{l:'社区数据',v:'待建',s:'bad',bg:'bad-bg'},{l:'高频复购',v:'待测量',s:'bad',bg:'bad-bg'}],gaps:['社区超市门店数据库建立','下沉市场渠道策略制定'],presets:['社区渠道当前覆盖多少门店？'],intro:'你好，我是社区超市棒Agent。'},
+  '品牌AI顾问':{emoji:'💎',ec:'rgba(245,166,35,0.15)',tag:'AIQL·场景定义·SubCo管理',score:55,ms:3,desc:'品牌战略+AIQL追踪+六SubCo财务监控+消费场景定义',steps:['概念','框架','AI对话','真实数据','完整体'],cur:2,sty:'current',hint:'当前阶段：AI对话 → 下一步：真实数据',kpis:[{l:'品牌定位',v:'5品牌锁定',s:'good',bg:'good-bg'},{l:'SubCo P&L',v:'六月鲜MVP',s:'warn',bg:''},{l:'品牌健康度',v:'待测量',s:'bad',bg:'bad-bg'},{l:'年级系数',v:'✅已接入',s:'good',bg:'good-bg'}],gaps:['品牌健康度追踪系统','五品牌P&L独立核算'],presets:['六月鲜和味达美定位有无冲突？','各品牌年级系数对比？'],intro:'你好，我是品牌AI顾问Agent。v7新增年级系数管理。'},
+  '鲜生顾问':{emoji:'🌿',ec:'rgba(74,222,128,0.15)',tag:'高端场景·鲜食配对',score:47,ms:2,desc:'六月鲜高端场景渗透·烹饪配对·厨师KOL·米其林',steps:['概念','框架','AI对话','真实数据','完整体'],cur:1,sty:'current-teal',hint:'当前阶段：框架 → 下一步：AI对话',kpis:[{l:'场景数据库',v:'建设中',s:'warn',bg:''},{l:'厨师KOL',v:'待建',s:'bad',bg:'bad-bg'},{l:'高端渠道',v:'部分覆盖',s:'warn',bg:''},{l:'内容工具',v:'待开发',s:'bad',bg:'bad-bg'}],gaps:['高端场景内容生成工具','厨师/美食KOL合作网络'],presets:['六月鲜适合哪些高端烹饪场景？','高端场景能撑住溢价定价吗？'],intro:'你好，我是鲜生顾问Agent。'}
+};
+
+let currentCatId='';
+
+function showCat(catId,isBack=false){
+  if(!isBack)navStack.push({type:'home'});
+  currentCatId=catId;
+  const cat=CATS[catId];
+  document.getElementById('catIcon').textContent=cat.icon;
+  document.getElementById('catName').textContent=cat.name;
+  document.getElementById('catSub').textContent=cat.sub;
+  const list=document.getElementById('agentList');list.innerHTML='';
+  cat.agents.forEach(name=>{
+    const a=AGENTS[name];if(!a)return;
+    const sc=a.score>=65?'var(--green)':a.score>=45?'var(--amber)':'var(--red)';
+    const row=document.createElement('div');row.className='agent-row';
+    row.innerHTML=`<div class="agent-emoji" style="background:${a.ec}">${a.emoji}</div><div class="agent-info"><div class="agent-name">${name}</div><div class="agent-tag">${a.tag}</div><div class="agent-desc">${a.desc}</div></div><div class="agent-score-col"><div class="agent-score" style="color:${sc}">${a.score}</div><div class="agent-ms">M${a.ms}/5</div><div class="score-bar"><div class="score-fill" style="width:${a.score}%;background:${sc}"></div></div></div>`;
+    row.onclick=()=>showAgentDetail(name);
+    list.appendChild(row);
+  });
+  showScreen('cat');
+  document.getElementById('breadcrumb').innerHTML=`<span class="bc-link" onclick="pushHome()">首页</span><span class="bc-sep">›</span><span class="bc-cur">${cat.name}</span>`;
+}
+
+function navToAgent(name){navStack.push({type:'lyx'});showAgentDetail(name,true)}
+
+function showAgentDetail(name,isBack=false){
+  if(!isBack)navStack.push({type:'cat',id:currentCatId});
+  const a=AGENTS[name];if(!a)return;
+  const sc=a.score>=65?'var(--green)':a.score>=45?'var(--amber)':'var(--red)';
+  let msH='<div class="milestone-row">';
+  a.steps.forEach((m,i)=>{let c='ms-step';if(i<a.cur)c+=' done';else if(i===a.cur)c+=` ${a.sty}`;msH+=`<div class="${c}">${m}</div>`});
+  msH+=`</div><div class="ms-hint">${a.hint}</div>`;
+  let kH='<div class="kpi-grid">';
+  a.kpis.forEach(k=>kH+=`<div class="kpi-box ${k.bg||''}"><div class="kpi-label">${k.l}</div><div class="kpi-val ${k.s}">${k.v}</div></div>`);
+  kH+='</div>';
+  let gH=`<div class="gap-title">距离完整体还差（${a.gaps.length}项）</div><div class="gap-list">`;
+  a.gaps.forEach(g=>gH+=`<div class="gap-item"><div class="gap-dot"></div><span>${g}</span></div>`);
+  gH+='</div>';
+  let pH='<div class="chat-presets">';
+  a.presets.forEach(p=>pH+=`<div class="preset-chip" onclick="sendAgentChat('${p.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}',this)">${p}</div>`);
+  pH+='</div>';
+  const k=name.replace(/\s/g,'_');
+  document.getElementById('detailWrap').innerHTML=`
+    <div class="detail-hero">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+        <div><span class="detail-emoji">${a.emoji}</span><div class="detail-name">${name}</div><div class="detail-sub">${a.tag}</div></div>
+        <div style="text-align:right"><div class="detail-score-big" style="color:${sc}">${a.score}</div><div class="detail-score-lbl">成熟度评分</div></div>
+      </div>
+      <div class="detail-desc">${a.desc}</div>
+      <div class="detail-progress"><div class="detail-progress-fill" style="width:${a.score}%"></div></div>
+    </div>
+    <div class="sec-card"><div class="sec-hdr">里程碑进度 · M${a.ms}/5</div>${msH}</div>
+    <div class="sec-card"><div class="sec-hdr">关键指标</div>${kH}</div>
+    <div class="sec-card"><div class="sec-hdr">缺口</div>${gH}</div>
+    <div class="chat-section">
+      <div class="chat-hdr">AI对话 · <span class="chat-agent-name">${a.emoji} ${name}</span></div>
+      ${pH}
+      <div class="chat-bubble-agent" id="cb-${k}">${a.intro}</div>
+      <div class="chat-response-agent" id="cr-${k}"><div class="chat-q-echo-a" id="cq-${k}"></div><div id="ca-${k}"></div></div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="ci-${k}" placeholder="问${name}…" onkeydown="if(event.key==='Enter')sendAgentChat(this.value,'${name.replace(/'/g,"\\'")}',null,this)"/>
+        <button class="chat-send" onclick="sendAgentChat(document.getElementById('ci-${k}').value,'${name.replace(/'/g,"\\'")}',null,document.getElementById('ci-${k}'))">↑</button>
+      </div>
+    </div>`;
+  showScreen('detail');
+  const cat=CATS[currentCatId];
+  document.getElementById('breadcrumb').innerHTML=`<span class="bc-link" onclick="pushHome()">首页</span><span class="bc-sep">›</span>`+(cat?`<span class="bc-link" onclick="navStack.push({type:'home'});showCat('${currentCatId}')">${cat.name}</span><span class="bc-sep">›</span>`:'')+`<span class="bc-cur">${name}</span>`;
+}
+
+// ── Agent Chat ──
+async function sendAgentChat(q,agentName,chipEl,inputEl){
+  if(!q||!q.trim())return;
+  const k=agentName.replace(/\s/g,'_');
+  const resp=document.getElementById('cr-'+k),qEl=document.getElementById('cq-'+k),aEl=document.getElementById('ca-'+k);
+  if(!resp)return;
+  resp.classList.add('show');qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  if(inputEl?.tagName==='INPUT')inputEl.value='';
+  const a=AGENTS[agentName];
+  const sys=`你是欣和SH INFINITY OS v7中的「${agentName}」Agent（${a?.tag||''}）。
+职责：${a?.desc||''}。关键指标：${a?.kpis?.map(k=>k.l+'='+k.v).join('·')||''}。当前缺口：${a?.gaps?.join('、')||''}。
+v7核心框架：销速系统（r=日销率，a=r×T，实际r=两次库存对比自动算），年级系统（一年级系数2.0·二年级1.5·三年级1.0·四年级0.7），一本账（达成率×年级系数×激励基数），传导链（a₀→a₁→a₂→a₃→A）。
+用中文简洁回答，不超过200字，包含财务影响和行动建议。`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})});
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'暂时无法获取回答。'}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red);font-size:10px">⚠️ ${e.message}</div>`}
+}
+
+// ── LYX CFO Chat ──
+async function sendLYXChat(q){
+  if(!q||!q.trim())return;
+  const input=document.getElementById('lyxChatInput');
+  const resp=document.getElementById('lyxChatResp'),qEl=document.getElementById('lyxChatQ'),aEl=document.getElementById('lyxChatA');
+  resp.classList.add('show');qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  if(input)input.value='';
+  const sys=`你是六月鲜SubCo的CFO财务智脑（INFINITY OS v7）。精通：
+P&L：年化营收¥720M·毛利率45%·品牌投入费销比10%·EBITDA率15%
+战略北极星：4B RMB/200M瓶·当前完成率18-22%·上海试点先跑
+销速系统：r_市场=9.3瓶/天(S+)·r_预期=8.0·r_实际=待采集。信息差=实际r vs目标r
+年级系统：六月鲜极鲜=四年级(系数0.7,费用率15-25%)·禾然有机=二年级(系数1.5,费用率35-45%)
+一本账：月度激励=Σ(达成率×目标销量×年级系数×激励基数)
+渠道切割：六月鲜专注高端(山姆35%·电商28%·O2O18%·高端餐饮12%)
+财务预警：上海大润发浦东r达成率仅45%·成都窜货¥18万·Costco闵行超标114%
+用中文回答，清晰结构，不超过250字，给出具体数字和行动建议。`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})});
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'暂时无法获取回答。'}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`}
+}
+
+// ── Brain Chat ──
+async function sendBrain(){const q=document.getElementById('brainInput').value.trim();if(!q)return;await askBrain(q)}
+async function askBrain(q){
+  document.getElementById('brainInput').value=q;
+  const resp=document.getElementById('brainResp'),qEl=document.getElementById('brainQ'),aEl=document.getElementById('brainA');
+  resp.classList.add('show');qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  const sys=`你是欣和SH INFINITY OS v7战略大脑。精通所有v7新定义：
+销速系统：r=日销率（非输入是输出）·三个r（r_市场/r_预期/r_实际）·传导链a₀→a₁→a₂→a₃→A·三类失真（A压货/B促销/C窜货）·三层水位（零售3a/经销商2a/二批1a）
+年级系统：一年级(0-1年,系数2.0,费用率45-80%)·二年级(1-2年,系数1.5,35-45%)·三年级(2-3年,系数1.0,25-35%)·四年级(3年+,系数0.7,15-25%)·同SKU不同区域年级可不同·费用率四个决定因素：毛利率(硬天花板)·竞争强度(下限)·战略优先级(意愿)·试点数据(动态校准)
+一本账：月度激励=Σ(达成率×目标销量×年级系数×激励基数)·公司利益与业务员利益对齐
+品牌SubCo：六个SubCo独立P&L·六月鲜北极星4B/200M·渠道切割·中台母公司承担·品牌资产不共用
+上海试点：S+/S门店280家·信息差=实际r vs目标r·两条线数据存储（企微+自建）
+用中文回答，清晰结构化，不超过300字。`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})});
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'无法获取回答。'}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red)">⚠️ ${e.message}</div>`}
+  document.getElementById('brainInput').value='';
+}
+document.getElementById('brainInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendBrain()});
+function toggleKB(id){document.getElementById(id).classList.toggle('open')}
+
+showScreen('home');
+</script>
+</body>
+</html>
