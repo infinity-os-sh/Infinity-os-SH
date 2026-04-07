@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>库存上报 v4</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080d;--bg2:#0c0e18;--bg3:#111420;
+  --card:#141820;--card2:#1a2232;--card3:#1f2840;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#e2e8f4;--text2:#7a8599;--text3:#3e4a60;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.1);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --purple:#a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);
+  font-family:'Noto Sans SC',sans-serif;overflow:hidden}
+
+/* ── LAYOUT ── */
+.app{display:flex;flex-direction:column;height:100vh;max-width:430px;margin:0 auto;
+  box-shadow:0 0 60px rgba(0,0,0,0.8)}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+::-webkit-scrollbar{display:none}
+
+/* ── TOPBAR ── */
+.topbar{
+  height:52px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;border-bottom:1px solid var(--border);
+  background:rgba(7,8,13,0.98);flex-shrink:0;position:relative;z-index:50;
+}
+.tb-left{display:flex;align-items:center;gap:8px}
+.tb-sym{width:26px;height:26px;border-radius:7px;
+  background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:11px;color:#000;
+  box-shadow:0 2px 10px rgba(245,166,35,0.3)}
+.tb-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.tb-title span{color:var(--amber)}
+.tb-right{display:flex;align-items:center;gap:8px}
+.tb-clock{font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)}
+.tb-back{
+  display:none;align-items:center;gap:4px;
+  background:var(--card2);border:1px solid var(--border);border-radius:20px;
+  padding:5px 10px;font-size:11px;color:var(--text2);cursor:pointer;
+}
+.tb-back.show{display:flex}
+
+/* ── SCREENS ── */
+.screen{display:none;animation:fadeUp 0.2s ease}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ SCREEN 1: STORE ══ */
+.store-hero{
+  padding:16px;
+  background:linear-gradient(160deg,rgba(245,166,35,0.07) 0%,rgba(9,9,15,0) 100%);
+  border-bottom:1px solid var(--border);
+}
+.sh-auto{font-size:9px;font-weight:700;color:var(--amber);letter-spacing:0.1em;
+  margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.sh-dot{width:5px;height:5px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 6px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.sh-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px}
+.sh-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.sh-tag{font-size:10px;padding:3px 9px;border-radius:8px;font-weight:600;border:1px solid}
+.tag-grade{background:rgba(74,222,128,0.1);color:var(--green);border-color:rgba(74,222,128,0.2)}
+.tag-type{background:var(--amber-dim);color:var(--amber);border-color:rgba(245,166,35,0.2)}
+.sh-progress{display:flex;align-items:center;gap:10px;margin-top:10px}
+.sh-prog-bar{flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+.sh-prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--amber2));
+  transition:width 0.4s ease}
+.sh-prog-txt{font-family:'Space Mono',monospace;font-size:11px;color:var(--text3);flex-shrink:0}
+
+/* Position list */
+.pos-section{padding:14px 16px}
+.sec-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.1em;
+  text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.pos-list{display:flex;flex-direction:column;gap:8px}
+.pos-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:14px 16px;cursor:pointer;transition:all 0.18s;position:relative;overflow:hidden;
+  display:flex;align-items:center;gap:12px;
+}
+.pos-card:active{transform:scale(0.98)}
+.pos-card.done{border-color:rgba(74,222,128,0.25);background:rgba(74,222,128,0.03)}
+.pos-card.active-now{border-color:rgba(245,166,35,0.35);background:rgba(245,166,35,0.04)}
+.pos-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;
+  background:var(--border2)}
+.pos-card.done::before{background:var(--green)}
+.pos-card.active-now::before{background:var(--amber)}
+
+.pos-icon{font-size:24px;flex-shrink:0;width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border)}
+.pos-info{flex:1;min-width:0}
+.pos-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.pos-meta{font-size:11px;color:var(--text3)}
+.pos-status{flex-shrink:0;text-align:right}
+.pos-badge{font-size:10px;padding:3px 8px;border-radius:8px;font-weight:600}
+.badge-done{background:rgba(74,222,128,0.12);color:var(--green)}
+.badge-todo{background:rgba(245,166,35,0.1);color:var(--amber)}
+.badge-skip{background:rgba(255,255,255,0.05);color:var(--text3)}
+.pos-arrow{font-size:14px;color:var(--text3);margin-left:6px}
+
+/* Add position */
+.add-pos-btn{
+  border:1.5px dashed var(--border2);border-radius:14px;
+  padding:14px;display:flex;align-items:center;justify-content:center;gap:8px;
+  cursor:pointer;transition:all 0.18s;margin-top:8px;
+  font-size:13px;color:var(--text3);
+}
+.add-pos-btn:active{background:var(--card);border-color:var(--amber);color:var(--amber)}
+
+/* Summary strip */
+.summary-strip{
+  margin:0 16px 12px;
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  display:grid;grid-template-columns:repeat(4,1fr);
+}
+.ss-item{padding:10px 6px;text-align:center}
+.ss-item+.ss-item{border-left:1px solid var(--border)}
+.ss-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;line-height:1}
+.ss-lbl{font-size:9px;color:var(--text3);margin-top:3px}
+
+/* Submit btn */
+.submit-wrap{padding:12px 16px 32px}
+.btn-main{
+  width:100%;height:56px;border-radius:16px;border:none;cursor:pointer;
+  font-size:17px;font-weight:700;font-family:'Noto Sans SC',sans-serif;
+  transition:all 0.2s;
+}
+.btn-main.ready{background:linear-gradient(135deg,var(--amber),var(--amber2));
+  color:#000;box-shadow:0 6px 24px rgba(245,166,35,0.35)}
+.btn-main.ready:active{transform:scale(0.98)}
+.btn-main.disabled{background:var(--card2);color:var(--text3);cursor:not-allowed}
+
+/* ══ SCREEN 2: POSITION DETAIL ══ */
+.pos-detail-hero{
+  padding:16px;border-bottom:1px solid var(--border);
+  background:linear-gradient(160deg,rgba(245,166,35,0.06) 0%,transparent 100%);
+}
+.pdh-loc{font-size:11px;color:var(--text3);margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.pdh-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px}
+.pdh-inst{font-size:12px;color:var(--text2);line-height:1.5}
+
+/* Photo zone */
+.photo-zone{margin:14px 16px 0;position:relative}
+.photo-btn{
+  width:100%;border-radius:14px;border:2px dashed var(--border2);
+  background:var(--bg3);padding:20px 16px;
+  display:flex;align-items:center;gap:12px;cursor:pointer;
+  transition:all 0.18s;position:relative;overflow:hidden;
+}
+.photo-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.photo-btn.has-photo{border-style:solid;border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.03)}
+.photo-btn:active{border-color:var(--amber)}
+.pb-icon{font-size:28px;flex-shrink:0}
+.pb-text{}
+.pb-label{font-size:14px;font-weight:700;margin-bottom:2px}
+.pb-sub{font-size:11px;color:var(--text3);line-height:1.4}
+.pb-thumb{
+  width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;
+  border:2px solid rgba(74,222,128,0.3);display:none;margin-left:auto;
+}
+.pb-thumb.show{display:block}
+.photo-tip{
+  margin-top:8px;padding:8px 12px;background:rgba(245,166,35,0.06);
+  border:1px solid rgba(245,166,35,0.15);border-radius:10px;
+  font-size:11px;color:var(--text2);line-height:1.6;
+}
+.photo-tip strong{color:var(--amber)}
+
+/* SKU input cards */
+.sku-section{padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.sku-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  overflow:hidden;transition:border-color 0.2s;
+}
+.sku-card.filled{border-color:rgba(245,166,35,0.2)}
+.sku-card-top{
+  padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;
+}
+.skc-color{width:4px;height:36px;border-radius:2px;flex-shrink:0}
+.skc-info{flex:1}
+.skc-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.skc-target{font-size:10px;color:var(--text3)}
+.skc-inputs{display:flex;gap:8px;flex-shrink:0}
+
+/* Inline stepper */
+.inline-stepper{
+  display:flex;align-items:center;gap:0;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:10px;overflow:hidden;
+}
+.is-btn{
+  width:36px;height:44px;display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:var(--text2);cursor:pointer;transition:all 0.12s;
+  user-select:none;background:transparent;border:none;
+}
+.is-btn:active{background:var(--amber-dim);color:var(--amber)}
+.is-val{
+  min-width:44px;height:44px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:pointer;
+  border-left:1px solid var(--border);border-right:1px solid var(--border);
+}
+.is-num{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1}
+.is-unit{font-size:9px;color:var(--text3);margin-top:1px}
+.is-lbl{font-size:10px;color:var(--text3);text-align:center;margin-bottom:3px}
+
+/* Water level mini */
+.sku-water{
+  padding:8px 14px;border-top:1px solid var(--border);
+  display:none;align-items:center;gap:10px;
+}
+.sku-water.show{display:flex}
+.sw-bar{flex:1;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden}
+.sw-fill{height:100%;border-radius:3px;transition:width 0.4s,background 0.3s}
+.sw-txt{font-size:11px;font-family:'Space Mono',monospace;flex-shrink:0;white-space:nowrap}
+.sw-level{font-size:11px;font-weight:700;flex-shrink:0}
+
+/* Done btn for position */
+.pos-done-wrap{padding:12px 16px 32px}
+.btn-pos-done{
+  width:100%;height:52px;border-radius:14px;border:none;cursor:pointer;
+  font-size:16px;font-weight:700;font-family:'Noto Sans SC',sans-serif;
+  background:linear-gradient(135deg,var(--amber),var(--amber2));
+  color:#000;box-shadow:0 4px 16px rgba(245,166,35,0.3);transition:all 0.2s;
+}
+.btn-pos-done:active{transform:scale(0.98)}
+
+/* ══ SCREEN 3: SUMMARY ══ */
+.summary-hero{
+  padding:20px 16px 16px;
+  background:linear-gradient(160deg,rgba(74,222,128,0.06) 0%,transparent 100%);
+  border-bottom:1px solid var(--border);
+}
+.sum-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px}
+.sum-sub{font-size:12px;color:var(--text3);font-family:'Space Mono',monospace}
+
+.sku-summary-list{padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.sku-sum-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:14px;position:relative;overflow:hidden;
+}
+.sku-sum-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.ssc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.ssc-name{font-size:14px;font-weight:700;margin-bottom:3px}
+.ssc-breakdown{font-size:10px;color:var(--text3);line-height:1.6}
+.ssc-score{text-align:right}
+.ssc-level{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1}
+.ssc-label{font-size:10px;margin-top:2px}
+
+/* Alert cards */
+.alert-section{padding:0 16px 12px}
+.alert-card{
+  border-radius:12px;padding:12px 14px;margin-bottom:8px;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.alert-card.critical{background:var(--red-dim);border:1px solid rgba(255,95,95,0.2)}
+.alert-card.warn{background:var(--amber-dim);border:1px solid rgba(245,166,35,0.2)}
+.alert-card.good{background:var(--green-dim);border:1px solid rgba(74,222,128,0.2)}
+.alert-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.alert-text{font-size:12px;line-height:1.6}
+.alert-text strong{display:block;margin-bottom:2px}
+
+/* Agent sync */
+.agent-sync{
+  margin:0 16px 12px;
+  background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(78,205,196,0.04));
+  border:1px solid rgba(245,166,35,0.15);border-radius:14px;padding:14px;
+}
+.as-title{font-size:11px;font-weight:700;color:var(--amber);margin-bottom:10px;
+  display:flex;align-items:center;gap:6px}
+.as-rows{display:flex;flex-direction:column;gap:5px}
+.as-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text2)}
+.as-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* ══ NUMPAD OVERLAY ══ */
+.numpad-overlay{
+  display:none;position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);
+  flex-direction:column;justify-content:flex-end;
+  max-width:430px;left:50%;transform:translateX(-50%);
+}
+.numpad-overlay.show{display:flex;animation:slideUp 0.2s ease}
+@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.numpad{
+  background:var(--bg2);border-top:1px solid var(--border2);
+  border-radius:20px 20px 0 0;padding:16px;
+}
+.np-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.np-title{font-size:13px;font-weight:700;color:var(--amber)}
+.np-cancel{font-size:11px;color:var(--text3);cursor:pointer;padding:4px 8px}
+.np-display{
+  font-family:'Syne',sans-serif;font-size:36px;font-weight:800;text-align:center;
+  padding:12px;background:var(--bg3);border-radius:12px;margin-bottom:12px;
+  min-height:68px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border2);
+}
+.np-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.np-btn{
+  height:68px;border-radius:14px;border:1px solid var(--border);
+  background:var(--card);font-size:26px;font-weight:600;color:var(--text);
+  cursor:pointer;transition:all 0.1s;display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;
+}
+.np-btn:active{background:var(--amber-dim);border-color:var(--amber);color:var(--amber);transform:scale(0.95)}
+.np-del{font-size:18px;color:var(--text2)}
+.np-ok{background:var(--amber);color:#000;border-color:var(--amber);font-size:16px;font-family:'Noto Sans SC',sans-serif}
+.np-ok:active{background:var(--amber2)!important;color:#000!important}
+
+/* ══ ADD POSITION MODAL ══ */
+.modal-overlay{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);
+  align-items:flex-end;justify-content:center;
+  max-width:430px;left:50%;transform:translateX(-50%);
+}
+.modal-overlay.show{display:flex;animation:fadeIn 0.2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-sheet{
+  background:var(--bg2);border:1px solid var(--border);border-radius:20px 20px 0 0;
+  padding:20px 16px 36px;width:100%;
+}
+.ms-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:16px;text-align:center}
+.ms-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
+.ms-opt{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:14px 12px;cursor:pointer;transition:all 0.15s;text-align:center;
+}
+.ms-opt:active{border-color:var(--amber);background:var(--amber-dim)}
+.ms-opt-icon{font-size:24px;margin-bottom:6px}
+.ms-opt-name{font-size:12px;font-weight:700}
+.ms-opt-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.ms-cancel{
+  width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);
+  background:transparent;color:var(--text2);font-size:13px;cursor:pointer;
+  font-family:'Noto Sans SC',sans-serif;
+}
+
+/* ══ SUCCESS SCREEN ══ */
+.success-screen{
+  display:none;position:fixed;inset:0;z-index:400;
+  background:var(--bg);flex-direction:column;align-items:center;justify-content:center;
+  padding:32px;text-align:center;
+  max-width:430px;left:50%;transform:translateX(-50%);
+}
+.success-screen.show{display:flex;animation:fadeIn 0.3s ease}
+.suc-em{font-size:72px;margin-bottom:16px;animation:pop 0.4s ease}
+@keyframes pop{from{transform:scale(0.2);opacity:0}to{transform:scale(1);opacity:1}}
+.suc-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:6px}
+.suc-sub{font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:24px}
+.suc-stats{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:16px;width:100%;margin-bottom:24px;
+}
+.suc-row{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.suc-row:last-child{border:none}
+.suc-key{color:var(--text3)}
+.suc-val{font-weight:700}
+.suc-next{
+  width:100%;padding:14px;border-radius:14px;border:1px solid var(--border2);
+  background:var(--card2);color:var(--text);font-size:14px;font-weight:700;
+  cursor:pointer;font-family:'Noto Sans SC',sans-serif;
+}
+.suc-next:active{background:var(--card)}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--card2);border:1px solid var(--border2);border-radius:20px;
+  padding:10px 18px;font-size:12px;display:none;white-space:nowrap;z-index:500;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);max-width:430px;
+}
+.toast.show{display:flex;align-items:center;gap:6px;animation:toastIn 0.2s ease}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+.pb24{padding-bottom:24px}
+.c-amber{color:var(--amber)}.c-green{color:var(--green)}.c-red{color:var(--red)}.c-blue{color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-sym">∞</div>
+    <div class="tb-title">库存上报 <span>v4</span></div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-clock" id="clock">--:--</div>
+    <div class="tb-back" id="backBtn" onclick="goBack()">← 返回</div>
+  </div>
+</div>
+
+<!-- SCROLL AREA -->
+<div class="scroll" id="mainScroll">
+
+<!-- ══ SCREEN 1: STORE OVERVIEW ══ -->
+<div class="screen active" id="screen-store">
+
+  <div class="store-hero">
+    <div class="sh-auto"><div class="sh-dot"></div>自动识别门店</div>
+    <div class="sh-name" id="storeName">家乐福古北店</div>
+    <div class="sh-tags">
+      <span class="sh-tag tag-grade" id="storeGrade">S+ · T=7天</span>
+      <span class="sh-tag tag-type" id="storeType">大卖场 · 5个陈列位</span>
+    </div>
+    <div class="sh-progress">
+      <div class="sh-prog-bar"><div class="sh-prog-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="sh-prog-txt" id="progressTxt">0/5 位置</div>
+    </div>
+  </div>
+
+  <div class="pos-section">
+    <div class="sec-label">本店陈列位置</div>
+    <div class="pos-list" id="posList"></div>
+    <div class="add-pos-btn" onclick="openAddModal()">
+      <span style="font-size:16px">＋</span>
+      <span>今天发现新的异位陈列？</span>
+    </div>
+  </div>
+
+  <div class="summary-strip" id="summaryStrip" style="display:none">
+    <div class="ss-item"><div class="ss-val c-amber" id="ss-sku">4</div><div class="ss-lbl">SKU总数</div></div>
+    <div class="ss-item"><div class="ss-val" id="ss-total" style="color:var(--text2)">—</div><div class="ss-lbl">总库存瓶</div></div>
+    <div class="ss-item"><div class="ss-val" id="ss-warn" style="color:var(--amber)">—</div><div class="ss-lbl">水位预警</div></div>
+    <div class="ss-item"><div class="ss-val" id="ss-danger" style="color:var(--red)">—</div><div class="ss-lbl">危险</div></div>
+  </div>
+
+  <div class="submit-wrap">
+    <button class="btn-main disabled" id="submitBtn" onclick="goSummary()">盘点全部位置后提交</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN 2: POSITION DETAIL ══ -->
+<div class="screen" id="screen-pos">
+  <div class="pos-detail-hero">
+    <div class="pdh-loc" id="posLoc">📍 家乐福古北店</div>
+    <div class="pdh-name" id="posName">主货架</div>
+    <div class="pdh-inst" id="posInst">先拍照·再填数字 · 一张照片覆盖该位置所有六月鲜产品</div>
+  </div>
+
+  <!-- Photo Zone -->
+  <div class="photo-zone">
+    <div class="photo-btn" id="photoBtnEl">
+      <input type="file" accept="image/*" capture="environment" id="photoInput" onchange="handlePhoto(event)" />
+      <div class="pb-icon" id="pbIcon">📷</div>
+      <div class="pb-text">
+        <div class="pb-label" id="pbLabel">拍摄此位置照片</div>
+        <div class="pb-sub" id="pbSub">对准货架·包含所有六月鲜产品</div>
+      </div>
+      <img class="pb-thumb" id="pbThumb" />
+    </div>
+    <div class="photo-tip" id="photoTip">
+      <strong>📐 拍摄建议：</strong>站立正面·距离1.5米·横向涵盖所有排面·包含左右各一竞品位置
+    </div>
+  </div>
+
+  <!-- SKU inputs -->
+  <div class="sku-section" id="skuSection"></div>
+
+  <div class="pos-done-wrap">
+    <button class="btn-pos-done" onclick="donePosition()">✅ 此位置盘点完成</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN 3: SUMMARY ══ -->
+<div class="screen" id="screen-summary">
+  <div class="summary-hero">
+    <div class="sum-title">📊 盘点汇总</div>
+    <div class="sum-sub" id="sumStoreName">家乐福古北店 · 全部位置</div>
+  </div>
+  <div class="sku-summary-list" id="skuSummaryList"></div>
+  <div class="alert-section" id="alertSection"></div>
+  <div class="agent-sync">
+    <div class="as-title">📡 提交后自动同步至</div>
+    <div class="as-rows">
+      <div class="as-row"><div class="as-dot" style="background:var(--amber)"></div>A值校准Agent · 更新各SKU的r日销率</div>
+      <div class="as-row"><div class="as-dot" style="background:var(--red)"></div>蝴蝶效应Agent · 检测失真信号</div>
+      <div class="as-row"><div class="as-dot" style="background:var(--teal)"></div>无菜单推单Agent · 低于2a触发补货推单</div>
+      <div class="as-row"><div class="as-dot" style="background:var(--green)"></div>Uber激励Agent · CB积分实时到账</div>
+      <div class="as-row"><div class="as-dot" style="background:var(--purple)"></div>货架识别训练库 · 照片进入训练数据</div>
+    </div>
+  </div>
+  <div class="submit-wrap">
+    <button class="btn-main ready" onclick="doSubmit()">✅ 确认提交全部数据</button>
+  </div>
+</div>
+
+</div><!-- /scroll -->
+</div><!-- /app -->
+
+<!-- ADD POSITION MODAL -->
+<div class="modal-overlay" id="addModal" onclick="closeAddModal()">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="ms-title">选择新发现的陈列位置</div>
+    <div class="ms-grid" id="addModalGrid"></div>
+    <button class="ms-cancel" onclick="closeAddModal()">取消</button>
+  </div>
+</div>
+
+<!-- NUMPAD -->
+<div class="numpad-overlay" id="numpadOverlay" onclick="closeNumpadOutside(event)">
+  <div class="numpad">
+    <div class="np-hdr">
+      <div class="np-title" id="npTitle">输入数量</div>
+      <div class="np-cancel" onclick="closeNumpad()">取消</div>
+    </div>
+    <div class="np-display" id="npDisplay">0</div>
+    <div class="np-grid">
+      <div class="np-btn" onclick="npKey('1')">1</div>
+      <div class="np-btn" onclick="npKey('2')">2</div>
+      <div class="np-btn" onclick="npKey('3')">3</div>
+      <div class="np-btn" onclick="npKey('4')">4</div>
+      <div class="np-btn" onclick="npKey('5')">5</div>
+      <div class="np-btn" onclick="npKey('6')">6</div>
+      <div class="np-btn" onclick="npKey('7')">7</div>
+      <div class="np-btn" onclick="npKey('8')">8</div>
+      <div class="np-btn" onclick="npKey('9')">9</div>
+      <div class="np-btn np-del" onclick="npDel()">⌫</div>
+      <div class="np-btn" onclick="npKey('0')">0</div>
+      <div class="np-btn np-ok" onclick="npConfirm()">确认</div>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div class="success-screen" id="successScreen">
+  <div class="suc-em">✅</div>
+  <div class="suc-title">上报成功！</div>
+  <div class="suc-sub" id="sucSub">数据已进入INFINITY OS心跳系统</div>
+  <div class="suc-stats" id="sucStats"></div>
+  <button class="suc-next" onclick="resetAll()">继续上报下一家门店 →</button>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════
+const STORE = {
+  name: '家乐福古北店',
+  grade: 'S+',
+  T: 7,
+  type: '大卖场',
+  lastReplenishDays: 5,
+  lastReplenishQty: { s1:120, s2:60, s3:36, s4:84 }
+};
+
+const SKUS = [
+  { id:'s1', name:'六月鲜极鲜 500ml', short:'极鲜500', targetR:9.3, perCase:12, color:'#f5a623', a:65 },
+  { id:'s2', name:'六月鲜极鲜 280ml', short:'极鲜280', targetR:3.5, perCase:12, color:'#ffc85e', a:25 },
+  { id:'s3', name:'禾然有机 500ml',   short:'禾然500', targetR:1.5, perCase:12, color:'#4ecdc4', a:11 },
+  { id:'s4', name:'味达美金标 500ml', short:'味达美',  targetR:5.0, perCase:12, color:'#60a5fa', a:35 },
+];
+
+// All possible position types
+const ALL_POS_TYPES = [
+  { id:'shelf',   icon:'📦', name:'主货架',   sub:'品类主陈列区',    inst:'对准整列货架·包含所有SKU排面', tip:'正面站立·距1.5米·横向覆盖所有排面·包含左右各一竞品' },
+  { id:'endcap',  icon:'🔲', name:'端架',     sub:'走廊两端独立展位', inst:'对准端架正面·包含价格牌',      tip:'包含整个端架从上到下·能看到品牌物料' },
+  { id:'display', icon:'📦', name:'堆头/地堆', sub:'主通道地面码放',  inst:'俯视角度·包含整个堆头',        tip:'45度俯拍·能看清产品和数量·包含地贴' },
+  { id:'veg',     icon:'🥬', name:'蔬菜区旁', sub:'生鲜区场景陈列',  inst:'拍摄生鲜区旁的六月鲜异位',     tip:'包含旁边蔬菜/肉类·体现场景联动陈列' },
+  { id:'meat',    icon:'🥩', name:'肉类区旁', sub:'肉区场景陈列',    inst:'拍摄肉区旁的六月鲜陈列',       tip:'包含肉类货柜和旁边六月鲜·场景感强' },
+  { id:'seafood', icon:'🐟', name:'水产区旁', sub:'海鲜区场景陈列',  inst:'拍摄水产区旁的六月鲜陈列',     tip:'蒸鱼豉油/生抽在此异位效果最佳' },
+  { id:'cashier', icon:'🛒', name:'收银台旁', sub:'等待区冲动购买',  inst:'拍摄收银台旁展架',             tip:'包含收银台背景·体现位置价值' },
+  { id:'promo',   icon:'🎪', name:'入口促销区', sub:'节假日临时位置', inst:'拍摄入口促销整体布局',         tip:'包含门店入口背景·体现活动氛围' },
+  { id:'storage', icon:'🏪', name:'后仓',     sub:'仓库备货区',      inst:'拍摄仓库中的六月鲜整箱存货',   tip:'拍清楚箱数·标签朝前·包含整个存货区域' },
+];
+
+// This store's preset positions (would come from SFA backend)
+const STORE_POSITIONS = ['shelf','endcap','display','veg','storage'];
+
+// State
+let positions = []; // array of {posType, photo, skuData:{s1:{shelf,wh},…}, done}
+let currentPosIdx = -1;
+let npTarget = null; // {posIdx, skuId, field}
+let npStr = '0';
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+(function init(){
+  updateClock(); setInterval(updateClock,1000);
+
+  // Build positions from store preset
+  positions = STORE_POSITIONS.map(id => {
+    const type = ALL_POS_TYPES.find(p=>p.id===id);
+    const skuData = {};
+    SKUS.forEach(s => { skuData[s.id] = { bottles:0, cases:0 }; });
+    return { typeId:id, type, photo:null, skuData, done:false };
+  });
+
+  renderPositionList();
+})();
+
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+}
+
+// ══════════════════════════════════════════════
+// SCREEN 1: POSITION LIST
+// ══════════════════════════════════════════════
+function renderPositionList(){
+  const list = document.getElementById('posList');
+  list.innerHTML = '';
+
+  const doneCount = positions.filter(p=>p.done).length;
+  const total = positions.length;
+  const pct = total > 0 ? (doneCount/total)*100 : 0;
+
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progressTxt').textContent = `${doneCount}/${total} 位置`;
+  document.getElementById('storeType').textContent = `${STORE.type} · ${total}个陈列位`;
+
+  positions.forEach((pos, idx) => {
+    const card = document.createElement('div');
+    const isDone = pos.done;
+    const isCurrent = idx === positions.findIndex(p=>!p.done);
+    card.className = `pos-card ${isDone?'done':''} ${isCurrent&&!isDone?'active-now':''}`;
+    card.innerHTML = `
+      <div class="pos-icon">${pos.type.icon}</div>
+      <div class="pos-info">
+        <div class="pos-name">${pos.type.name}</div>
+        <div class="pos-meta">${pos.type.sub}</div>
+      </div>
+      <div class="pos-status">
+        <div class="pos-badge ${isDone?'badge-done':'badge-todo'}">${isDone?'✅ 完成':'待盘点'}</div>
+      </div>
+      <div class="pos-arrow">›</div>`;
+    card.onclick = () => openPosition(idx);
+    list.appendChild(card);
+  });
+
+  // Update summary strip
+  if(doneCount > 0){
+    document.getElementById('summaryStrip').style.display = 'grid';
+    updateSummaryStrip();
+  }
+
+  // Submit button
+  const btn = document.getElementById('submitBtn');
+  if(doneCount === total && total > 0){
+    btn.className = 'btn-main ready';
+    btn.textContent = '📊 查看汇总并提交';
+  } else {
+    btn.className = 'btn-main disabled';
+    btn.textContent = `还有 ${total-doneCount} 个位置未盘点`;
+  }
+}
+
+function updateSummaryStrip(){
+  const totals = calcTotals();
+  let totalBottles=0, warnCount=0, dangerCount=0;
+  SKUS.forEach(s=>{
+    const t = totals[s.id]||0;
+    totalBottles += t;
+    const level = t/s.a;
+    if(level<1) dangerCount++;
+    else if(level<2) warnCount++;
+  });
+  document.getElementById('ss-total').textContent = totalBottles;
+  document.getElementById('ss-warn').textContent = warnCount;
+  document.getElementById('ss-danger').textContent = dangerCount;
+  const dangerEl=document.getElementById('ss-danger');
+  dangerEl.style.color = dangerCount>0?'var(--red)':'var(--green)';
+}
+
+// ══════════════════════════════════════════════
+// SCREEN 2: POSITION DETAIL
+// ══════════════════════════════════════════════
+function openPosition(idx){
+  currentPosIdx = idx;
+  const pos = positions[idx];
+
+  document.getElementById('posLoc').textContent = '📍 '+STORE.name;
+  document.getElementById('posName').textContent = pos.type.icon+' '+pos.type.name;
+  document.getElementById('posInst').textContent = pos.type.inst;
+
+  // Photo
+  const photoBtn = document.getElementById('photoBtnEl');
+  const pbThumb = document.getElementById('pbThumb');
+  const pbIcon = document.getElementById('pbIcon');
+  const pbLabel = document.getElementById('pbLabel');
+  const pbSub = document.getElementById('pbSub');
+  document.getElementById('photoTip').innerHTML = `<strong>📐 拍摄建议：</strong>${pos.type.tip}`;
+
+  if(pos.photo){
+    photoBtn.classList.add('has-photo');
+    pbThumb.src = pos.photo; pbThumb.classList.add('show');
+    pbIcon.textContent = '✅';
+    pbLabel.textContent = '照片已拍摄 · 点击重拍';
+    pbSub.textContent = '进入训练数据库';
+  } else {
+    photoBtn.classList.remove('has-photo');
+    pbThumb.classList.remove('show');
+    pbIcon.textContent = pos.type.icon==='🏪'?'📦':'📷';
+    pbLabel.textContent = `拍摄${pos.type.name}照片`;
+    pbSub.textContent = '先拍照·再填数字';
+  }
+  document.getElementById('photoInput').value='';
+
+  // Render SKU inputs
+  renderSkuInputs(idx);
+
+  showScreen('pos');
+  document.getElementById('backBtn').classList.add('show');
+}
+
+function renderSkuInputs(idx){
+  const pos = positions[idx];
+  const section = document.getElementById('skuSection');
+
+  // For storage, input is cases; for others, bottles
+  const isStorage = pos.typeId === 'storage';
+  section.innerHTML = `<div class="sec-label">${isStorage?'各SKU仓库库存（箱）':'各SKU货架数量（瓶）'}</div>`;
+
+  SKUS.forEach(s => {
+    const val = isStorage ? pos.skuData[s.id].cases : pos.skuData[s.id].bottles;
+    const filled = val > 0;
+
+    // Compute water if storage
+    const card = document.createElement('div');
+    card.className = `sku-card ${filled?'filled':''}`;
+    card.id = `skucard-${s.id}`;
+
+    const unit = isStorage ? '箱' : '瓶';
+    const hint = isStorage ? `1箱=${s.perCase}瓶` : `目标${s.targetR}瓶/天`;
+
+    card.innerHTML = `
+      <div class="sku-card-top">
+        <div class="skc-color" style="background:${s.color}"></div>
+        <div class="skc-info">
+          <div class="skc-name">${s.name}</div>
+          <div class="skc-target">${hint}</div>
+        </div>
+        <div class="skc-inputs">
+          <div>
+            <div class="is-lbl">${unit}</div>
+            <div class="inline-stepper">
+              <button class="is-btn" onclick="adjVal(${idx},'${s.id}','${isStorage?'cases':'bottles'}',-1)">−</button>
+              <div class="is-val" onclick="openNumpad(${idx},'${s.id}','${isStorage?'cases':'bottles'}','${s.name} ${unit}数')">
+                <div class="is-num" id="val-${idx}-${s.id}-${isStorage?'cases':'bottles'}">${val}</div>
+                <div class="is-unit">${unit}</div>
+              </div>
+              <button class="is-btn" onclick="adjVal(${idx},'${s.id}','${isStorage?'cases':'bottles'}',1)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sku-water" id="water-${s.id}">
+        <div class="sw-bar"><div class="sw-fill" id="wfill-${s.id}"></div></div>
+        <div class="sw-level" id="wlevel-${s.id}"></div>
+        <div class="sw-txt" id="wtxt-${s.id}"></div>
+      </div>`;
+    section.appendChild(card);
+    updateSkuWater(s.id);
+  });
+}
+
+function adjVal(posIdx, skuId, field, delta){
+  const pos = positions[posIdx];
+  pos.skuData[skuId][field] = Math.max(0, (pos.skuData[skuId][field]||0) + delta);
+  refreshSkuCard(posIdx, skuId, field);
+}
+
+function refreshSkuCard(posIdx, skuId, field){
+  const pos = positions[posIdx];
+  const val = pos.skuData[skuId][field];
+  const el = document.getElementById(`val-${posIdx}-${skuId}-${field}`);
+  if(el) el.textContent = val;
+  const card = document.getElementById(`skucard-${skuId}`);
+  if(card) card.className = `sku-card ${val>0?'filled':''}`;
+  updateSkuWater(skuId);
+}
+
+function updateSkuWater(skuId){
+  const sku = SKUS.find(s=>s.id===skuId);
+  const totals = calcTotals();
+  const total = totals[skuId]||0;
+  if(total === 0){
+    const w=document.getElementById('water-'+skuId);
+    if(w) w.classList.remove('show');
+    return;
+  }
+  const level = total/sku.a;
+  const color = level>=3?'var(--green)':level>=2?'var(--blue)':level>=1?'var(--amber)':'var(--red)';
+  const label = level>=3?'满仓':level>=2?'健康':level>=1?'⚠️预警':'🔴危险';
+  const pct = Math.min(100,(level/3)*100);
+
+  const w=document.getElementById('water-'+skuId);
+  const f=document.getElementById('wfill-'+skuId);
+  const lv=document.getElementById('wlevel-'+skuId);
+  const tx=document.getElementById('wtxt-'+skuId);
+  if(w){ w.classList.add('show'); }
+  if(f){ f.style.width=pct+'%'; f.style.background=color; }
+  if(lv){ lv.textContent=level.toFixed(1)+'a'; lv.style.color=color; }
+  if(tx){ tx.textContent=label; tx.style.color=color; }
+}
+
+function calcTotals(){
+  // Sum all positions per SKU
+  const totals = {};
+  SKUS.forEach(s=>{ totals[s.id]=0; });
+  positions.forEach(pos=>{
+    SKUS.forEach(s=>{
+      const bottles = pos.skuData[s.id].bottles||0;
+      const cases   = pos.skuData[s.id].cases||0;
+      totals[s.id] += bottles + cases*s.perCase;
+    });
+  });
+  return totals;
+}
+
+function donePosition(){
+  const pos = positions[currentPosIdx];
+  pos.done = true;
+  showToast(`✅ ${pos.type.name}盘点完成`);
+  goBack();
+  renderPositionList();
+}
+
+// ══════════════════════════════════════════════
+// PHOTO
+// ══════════════════════════════════════════════
+function handlePhoto(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    positions[currentPosIdx].photo=ev.target.result;
+    const thumb=document.getElementById('pbThumb');
+    thumb.src=ev.target.result; thumb.classList.add('show');
+    document.getElementById('photoBtnEl').classList.add('has-photo');
+    document.getElementById('pbIcon').textContent='✅';
+    document.getElementById('pbLabel').textContent='照片已拍摄 · 点击重拍';
+    document.getElementById('pbSub').textContent='已进入训练数据库';
+    showToast('📷 照片已保存·进入训练库');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ══════════════════════════════════════════════
+// SCREEN 3: SUMMARY
+// ══════════════════════════════════════════════
+function goSummary(){
+  const totals = calcTotals();
+  document.getElementById('sumStoreName').textContent = STORE.name+' · 全部位置汇总';
+
+  // SKU summary cards
+  const list=document.getElementById('skuSummaryList');
+  list.innerHTML='';
+  SKUS.forEach(s=>{
+    const total=totals[s.id]||0;
+    const level=total/s.a;
+    const color=level>=3?'var(--green)':level>=2?'var(--blue)':level>=1?'var(--amber)':'var(--red)';
+    const label=level>=3?'满仓 ✅':level>=2?'健康':level>=1?'预警 ⚠️':'危险 🔴';
+
+    // breakdown
+    let breakdown='';
+    positions.forEach(pos=>{
+      const b=pos.skuData[s.id].bottles||0;
+      const c=pos.skuData[s.id].cases||0;
+      const contrib=b+c*s.perCase;
+      if(contrib>0) breakdown+=`${pos.type.name}:${contrib}瓶  `;
+    });
+
+    const card=document.createElement('div');
+    card.className='sku-sum-card';
+    card.style.setProperty('--sku-color',s.color);
+    card.innerHTML=`
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${s.color}"></div>
+      <div class="ssc-top">
+        <div>
+          <div class="ssc-name">${s.name}</div>
+          <div class="ssc-breakdown">${breakdown||'未发现此SKU'}</div>
+        </div>
+        <div class="ssc-score">
+          <div class="ssc-level" style="color:${color}">${level.toFixed(1)}a</div>
+          <div class="ssc-label" style="color:${color}">${label}</div>
+        </div>
+      </div>
+      <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden">
+        <div style="height:100%;border-radius:3px;background:${color};width:${Math.min(100,(level/3)*100)}%;transition:width 0.5s"></div>
+      </div>`;
+    list.appendChild(card);
+  });
+
+  // Alerts
+  const alertSec=document.getElementById('alertSection');
+  alertSec.innerHTML='';
+  const dangers=SKUS.filter(s=>(totals[s.id]||0)/s.a<1);
+  const warns=SKUS.filter(s=>{const l=(totals[s.id]||0)/s.a;return l>=1&&l<2;});
+
+  if(dangers.length>0){
+    const a=document.createElement('div');
+    a.className='alert-card critical';
+    a.innerHTML=`<div class="alert-icon">🔴</div><div class="alert-text"><strong>紧急补货：${dangers.map(s=>s.short).join('、')}</strong>库存低于1a，已触发无菜单推单Agent</div>`;
+    alertSec.appendChild(a);
+  }
+  if(warns.length>0){
+    const a=document.createElement('div');
+    a.className='alert-card warn';
+    a.innerHTML=`<div class="alert-icon">⚠️</div><div class="alert-text"><strong>需关注：${warns.map(s=>s.short).join('、')}</strong>库存在1a-2a预警区间，建议安排补货</div>`;
+    alertSec.appendChild(a);
+  }
+  if(dangers.length===0&&warns.length===0){
+    const a=document.createElement('div');
+    a.className='alert-card good';
+    a.innerHTML=`<div class="alert-icon">✅</div><div class="alert-text"><strong>全部SKU水位健康</strong>本次盘点无补货预警</div>`;
+    alertSec.appendChild(a);
+  }
+
+  showScreen('summary');
+  document.getElementById('backBtn').classList.add('show');
+}
+
+function doSubmit(){
+  const totals=calcTotals();
+  let totalBottles=0; SKUS.forEach(s=>totalBottles+=totals[s.id]||0);
+  const photoCount=positions.filter(p=>p.photo).length;
+  const now=new Date();
+  const ts=`${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+
+  document.getElementById('sucSub').textContent='数据已进入INFINITY OS心跳系统';
+  document.getElementById('sucStats').innerHTML=`
+    <div class="suc-row"><span class="suc-key">门店</span><span class="suc-val">${STORE.name}</span></div>
+    <div class="suc-row"><span class="suc-key">盘点位置</span><span class="suc-val">${positions.length}个位置全部完成</span></div>
+    <div class="suc-row"><span class="suc-key">照片上传</span><span class="suc-val">${photoCount}张·进入训练库</span></div>
+    <div class="suc-row"><span class="suc-key">总库存</span><span class="suc-val">${totalBottles}瓶</span></div>
+    <div class="suc-row"><span class="suc-key">CB积分</span><span class="suc-val c-amber">+${28+photoCount*5} 本次获得</span></div>
+    <div class="suc-row"><span class="suc-key">上报时间</span><span class="suc-val">${ts}</span></div>`;
+  document.getElementById('successScreen').classList.add('show');
+}
+
+function resetAll(){
+  positions.forEach(pos=>{
+    pos.photo=null; pos.done=false;
+    SKUS.forEach(s=>{ pos.skuData[s.id]={bottles:0,cases:0}; });
+  });
+  document.getElementById('successScreen').classList.remove('show');
+  document.getElementById('summaryStrip').style.display='none';
+  showScreen('store');
+  document.getElementById('backBtn').classList.remove('show');
+  renderPositionList();
+}
+
+// ══════════════════════════════════════════════
+// ADD POSITION MODAL
+// ══════════════════════════════════════════════
+function openAddModal(){
+  const existing=positions.map(p=>p.typeId);
+  const available=ALL_POS_TYPES.filter(t=>!existing.includes(t.id));
+  const grid=document.getElementById('addModalGrid');
+  grid.innerHTML='';
+  available.forEach(t=>{
+    const opt=document.createElement('div');
+    opt.className='ms-opt';
+    opt.innerHTML=`<div class="ms-opt-icon">${t.icon}</div><div class="ms-opt-name">${t.name}</div><div class="ms-opt-sub">${t.sub}</div>`;
+    opt.onclick=()=>addPosition(t.id);
+    grid.appendChild(opt);
+  });
+  if(available.length===0){
+    grid.innerHTML='<div style="grid-column:span 2;text-align:center;padding:20px;font-size:13px;color:var(--text3)">所有陈列位置已全部添加</div>';
+  }
+  document.getElementById('addModal').classList.add('show');
+}
+function closeAddModal(){ document.getElementById('addModal').classList.remove('show'); }
+function addPosition(typeId){
+  const type=ALL_POS_TYPES.find(t=>t.id===typeId);
+  const skuData={};
+  SKUS.forEach(s=>{ skuData[s.id]={bottles:0,cases:0}; });
+  positions.push({typeId,type,photo:null,skuData,done:false});
+  closeAddModal();
+  renderPositionList();
+  showToast(`➕ 已添加 ${type.name}`);
+}
+
+// ══════════════════════════════════════════════
+// NUMPAD
+// ══════════════════════════════════════════════
+function openNumpad(posIdx,skuId,field,title){
+  npTarget={posIdx,skuId,field};
+  npStr=String(positions[posIdx].skuData[skuId][field]||0);
+  document.getElementById('npTitle').textContent=title;
+  document.getElementById('npDisplay').textContent=npStr;
+  document.getElementById('numpadOverlay').classList.add('show');
+}
+function closeNumpad(){ document.getElementById('numpadOverlay').classList.remove('show'); }
+function closeNumpadOutside(e){ if(e.target===document.getElementById('numpadOverlay'))closeNumpad(); }
+function npKey(d){
+  if(npStr==='0') npStr=d; else npStr+=d;
+  if(parseInt(npStr)>9999) npStr='9999';
+  document.getElementById('npDisplay').textContent=npStr;
+}
+function npDel(){
+  npStr=npStr.length>1?npStr.slice(0,-1):'0';
+  document.getElementById('npDisplay').textContent=npStr;
+}
+function npConfirm(){
+  if(!npTarget)return;
+  const val=parseInt(npStr)||0;
+  positions[npTarget.posIdx].skuData[npTarget.skuId][npTarget.field]=val;
+  refreshSkuCard(npTarget.posIdx,npTarget.skuId,npTarget.field);
+  closeNumpad();
+}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+let screenHistory=[];
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.getElementById('mainScroll').scrollTop=0;
+}
+function goBack(){
+  const cur=document.querySelector('.screen.active').id.replace('screen-','');
+  if(cur==='pos'||cur==='summary'){
+    showScreen('store');
+    document.getElementById('backBtn').classList.remove('show');
+  }
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+</script>
+</body>
+</html>
