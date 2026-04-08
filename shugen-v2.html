@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>樹根 v2 · 经营诊断系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0d0b09;
+  --bg2:     #141009;
+  --bark:    #1c1610;
+  --bark2:   #251d14;
+  --bark3:   #2e2418;
+  --root:    #c4892a;
+  --root2:   #f5d07a;
+  --root-dim:rgba(196,137,42,0.1);
+  --leaf:    #5a8a3a;
+  --leaf-dim:rgba(90,138,58,0.1);
+  --red:     #c55a11;
+  --red-dim: rgba(197,90,17,0.1);
+  --water:   #1f4e79;
+  --water-dim:rgba(31,78,121,0.12);
+  --cream:   #e8e0d0;
+  --cream2:  #c8c0b0;
+  --ash:     #8a8070;
+  --dust:    #4a4438;
+  --border:  rgba(196,137,42,0.1);
+  --border2: rgba(196,137,42,0.22);
+  --green:   #375623;
+  --green-dim:rgba(55,86,35,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--cream);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── TOP BAR ── */
+.topbar{
+  position:sticky;top:0;z-index:200;
+  background:rgba(13,11,9,0.96);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:50px;
+}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand-zh{font-family:'Noto Serif SC',serif;font-size:22px;font-weight:600;color:var(--root);letter-spacing:0.05em}
+.brand-v{font-family:'Space Mono',monospace;font-size:9px;color:var(--root);letter-spacing:0.15em;margin-bottom:2px}
+.brand-sub{font-size:11px;color:var(--ash)}
+
+/* Tab bar */
+.tabbar{
+  display:flex;gap:0;
+  background:rgba(13,11,9,0.9);
+  border-bottom:1px solid var(--border);
+  overflow-x:auto;scrollbar-width:none;
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  padding:10px 16px;font-size:12px;color:var(--ash);
+  cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;
+  transition:all 0.2s;font-family:'Noto Sans SC',sans-serif;
+  display:flex;align-items:center;gap:5px;
+}
+.tab:hover{color:var(--cream2)}
+.tab.active{color:var(--root2);border-bottom-color:var(--root)}
+
+/* ── PANELS ── */
+.panel{display:none;animation:fadeUp 0.2s ease}
+.panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+.panel-body{padding:16px;display:flex;flex-direction:column;gap:14px}
+
+/* Cards */
+.card{
+  background:var(--bark);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;
+}
+.card-title{
+  font-size:11px;font-weight:600;color:var(--ash);
+  letter-spacing:0.08em;text-transform:uppercase;
+  margin-bottom:12px;font-family:'Space Mono',monospace;
+  display:flex;align-items:center;gap:8px;
+}
+.card-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Input grid */
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.input-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.input-group{display:flex;flex-direction:column;gap:5px}
+.input-group label{font-size:10px;color:var(--ash);letter-spacing:0.05em}
+.input-group input,.input-group select{
+  background:var(--bark2);border:1px solid var(--border);
+  border-radius:8px;padding:8px 10px;
+  font-size:13px;color:var(--cream);font-family:'Noto Sans SC',sans-serif;
+  outline:none;transition:border-color 0.2s;width:100%;
+}
+.input-group input:focus,.input-group select:focus{border-color:var(--root)}
+.input-group input::placeholder{color:var(--dust)}
+.input-group .unit{font-size:9px;color:var(--dust);margin-top:2px}
+
+/* Calc button */
+.calc-btn{
+  background:var(--root);border:none;border-radius:10px;
+  padding:12px;font-size:14px;font-weight:600;color:#000;
+  cursor:pointer;transition:all 0.2s;font-family:'Noto Sans SC',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;
+}
+.calc-btn:hover{background:var(--root2);transform:translateY(-1px)}
+
+/* ── CHAIN DISPLAY ── */
+.chain{display:flex;flex-direction:column;gap:0}
+.chain-node{
+  display:flex;align-items:stretch;gap:0;
+  position:relative;
+}
+.chain-connector{
+  width:2px;height:10px;
+  background:linear-gradient(to bottom,var(--root),var(--border));
+  margin-left:28px;flex-shrink:0;
+}
+.node-card{
+  flex:1;background:var(--bark);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;
+  display:flex;align-items:center;gap:10px;
+  transition:all 0.2s;cursor:default;
+}
+.node-card:hover{border-color:var(--border2);background:var(--bark2)}
+
+.node-tag{
+  width:50px;flex-shrink:0;
+  background:var(--bark3);border-radius:6px;padding:5px 4px;
+  text-align:center;
+}
+.node-tag-key{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--root);display:block}
+.node-tag-t{font-size:9px;color:var(--ash);display:block;margin-top:2px}
+
+.node-info{flex:1;min-width:0}
+.node-name{font-size:12px;font-weight:600;color:var(--cream);margin-bottom:2px}
+.node-desc{font-size:10px;color:var(--ash);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.node-metrics{flex-shrink:0;text-align:right}
+.node-a{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--root);line-height:1}
+.node-r{font-size:9px;color:var(--ash);margin-top:2px}
+
+/* Health indicator */
+.health-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+  box-shadow:0 0 6px currentColor;
+}
+.h-green{background:#4ade80;color:#4ade80}
+.h-amber{background:var(--root);color:var(--root)}
+.h-red{background:#ef4444;color:#ef4444}
+.h-gray{background:var(--dust);color:var(--dust)}
+
+/* Water level bar */
+.water-bar{
+  height:4px;background:rgba(255,255,255,0.06);
+  border-radius:2px;overflow:hidden;margin-top:4px;
+}
+.water-fill{height:100%;border-radius:2px;transition:width 0.6s ease}
+
+/* ── GRADE MATRIX ── */
+.grade-matrix{display:flex;flex-direction:column;gap:6px}
+.grade-row{display:flex;gap:6px;align-items:center}
+.grade-city{font-size:11px;color:var(--ash);width:60px;flex-shrink:0}
+.grade-sku{
+  flex:1;border-radius:6px;padding:5px 6px;text-align:center;
+  font-size:10px;font-weight:600;border:1px solid transparent;
+  cursor:default;transition:all 0.2s;
+}
+.grade-empty{background:var(--bark);color:var(--dust);border-color:var(--border)}
+.g1{background:var(--red-dim);color:var(--red);border-color:rgba(197,90,17,0.3)}
+.g2{background:rgba(196,137,42,0.1);color:var(--root);border-color:rgba(196,137,42,0.25)}
+.g3{background:var(--green-dim);color:#7ab050;border-color:rgba(90,138,58,0.3)}
+.g4{background:var(--water-dim);color:#60a5fa;border-color:rgba(31,78,121,0.3)}
+.gx{background:var(--bark2);color:var(--dust);border-color:var(--border)}
+
+/* ── DIAGNOSTIC PANEL ── */
+.diag-section{margin-bottom:10px}
+.diag-label{font-size:10px;color:var(--ash);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;font-family:'Space Mono',monospace}
+.diag-item{
+  background:var(--bark2);border:1px solid var(--border);border-radius:8px;
+  padding:10px 12px;margin-bottom:6px;
+  font-size:12px;color:var(--cream2);line-height:1.6;
+}
+.diag-item.warn{border-color:rgba(196,137,42,0.35);background:var(--root-dim)}
+.diag-item.danger{border-color:rgba(197,90,17,0.35);background:var(--red-dim)}
+.diag-item.good{border-color:rgba(55,86,35,0.4);background:var(--green-dim)}
+.diag-title{font-size:11px;font-weight:700;margin-bottom:4px}
+.diag-title.warn{color:var(--root2)}
+.diag-title.danger{color:var(--red)}
+.diag-title.good{color:#7ab050}
+
+/* ── CHAT PANEL ── */
+.chat-wrap{
+  height:calc(100vh - 140px);display:flex;flex-direction:column;
+}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;scrollbar-width:thin;scrollbar-color:var(--bark3) transparent}
+.chat-msgs::-webkit-scrollbar{width:3px}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--bark3);border-radius:2px}
+
+.msg{display:flex;flex-direction:column;gap:3px;animation:fadeUp 0.2s ease}
+.msg.user{align-items:flex-end}
+.msg.assistant{align-items:flex-start}
+.msg-role{font-family:'Space Mono',monospace;font-size:8px;color:var(--dust);letter-spacing:0.15em;text-transform:uppercase;padding:0 4px}
+.msg-bubble{
+  max-width:88%;border-radius:12px;padding:10px 14px;
+  font-size:13px;line-height:1.75;
+}
+.msg.user .msg-bubble{background:var(--bark3);border:1px solid var(--border2);color:var(--cream);border-bottom-right-radius:3px}
+.msg.assistant .msg-bubble{background:var(--bark);border:1px solid var(--border);color:var(--cream2);border-bottom-left-radius:3px;white-space:pre-wrap}
+
+.chat-input-area{
+  padding:12px 16px 20px;background:rgba(13,11,9,0.95);
+  border-top:1px solid var(--border);
+}
+
+/* Mode chips */
+.mode-chips{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none}
+.mode-chips::-webkit-scrollbar{display:none}
+.mode-chip{
+  background:var(--bark);border:1px solid var(--border);border-radius:20px;
+  padding:4px 12px;font-size:11px;color:var(--ash);cursor:pointer;
+  white-space:nowrap;transition:all 0.15s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif;
+}
+.mode-chip:hover{border-color:var(--border2);color:var(--cream2)}
+.mode-chip.active{background:var(--root-dim);border-color:var(--root);color:var(--root2)}
+
+.input-row{display:flex;gap:8px;align-items:flex-end}
+.chat-textarea{
+  flex:1;background:var(--bark);border:1px solid var(--border);border-radius:12px;
+  padding:10px 14px;font-size:13px;color:var(--cream);font-family:'Noto Sans SC',sans-serif;
+  resize:none;min-height:42px;max-height:100px;line-height:1.6;outline:none;
+  transition:border-color 0.2s;
+}
+.chat-textarea:focus{border-color:var(--root)}
+.chat-textarea::placeholder{color:var(--dust)}
+.send-btn{
+  width:42px;height:42px;border-radius:12px;background:var(--root);
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:18px;transition:all 0.15s;color:#000;flex-shrink:0;
+}
+.send-btn:hover{background:var(--root2)}
+.send-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+/* Quick prompts */
+.quick-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.quick-chip{
+  background:var(--bark2);border:1px solid var(--border);border-radius:8px;
+  padding:5px 10px;font-size:11px;color:var(--cream2);
+  cursor:pointer;transition:all 0.15s;font-family:'Noto Sans SC',sans-serif;
+}
+.quick-chip:hover{border-color:var(--root);color:var(--root2);background:var(--root-dim)}
+
+/* Thinking */
+.thinking{display:flex;gap:4px;align-items:center;padding:4px 0}
+.td{width:5px;height:5px;border-radius:50%;background:var(--root);animation:pulse 1.4s infinite;opacity:0.3}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{opacity:.2;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
+
+/* Summary bar */
+.summary-bar{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  padding:12px 16px;background:var(--bark);border-bottom:1px solid var(--border);
+}
+.sum-item{text-align:center}
+.sum-val{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--root);line-height:1}
+.sum-lbl{font-size:9px;color:var(--ash);margin-top:3px}
+
+/* Hb indicator */
+.hb-badge{
+  display:flex;align-items:center;gap:5px;
+  background:var(--root-dim);border:1px solid var(--border2);
+  border-radius:20px;padding:3px 10px;
+  font-size:10px;color:var(--root2);font-family:'Space Mono',monospace;
+}
+.hb-dot{width:5px;height:5px;border-radius:50%;background:var(--root);animation:hb 1.2s ease-in-out infinite}
+@keyframes hb{0%,100%{transform:scale(1)}50%{transform:scale(1.8)}}
+
+/* scrollbar */
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bark3);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand">
+    <div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span class="brand-zh">樹根</span>
+        <span class="brand-v">v2.0</span>
+      </div>
+      <div class="brand-sub">经营诊断系统</div>
+    </div>
+  </div>
+  <div class="hb-badge">
+    <div class="hb-dot"></div>
+    <span id="hbStatus">等待数据</span>
+  </div>
+</div>
+
+<!-- SUMMARY BAR (hidden until data) -->
+<div class="summary-bar" id="summaryBar" style="display:none">
+  <div class="sum-item"><div class="sum-val" id="sumR">—</div><div class="sum-lbl">R 全网流速/天</div></div>
+  <div class="sum-item"><div class="sum-val" id="sumHealth">—</div><div class="sum-lbl">链路健康度</div></div>
+  <div class="sum-item"><div class="sum-val" id="sumGrade">—</div><div class="sum-lbl">SKU①年级</div></div>
+  <div class="sum-item"><div class="sum-val" id="sumAlert">—</div><div class="sum-lbl">预警数量</div></div>
+</div>
+
+<!-- TAB BAR -->
+<div class="tabbar">
+  <div class="tab active" onclick="switchTab('input')" id="tab-input">📋 数据输入</div>
+  <div class="tab" onclick="switchTab('chain')" id="tab-chain">💓 心跳全链</div>
+  <div class="tab" onclick="switchTab('grade')" id="tab-grade">🎓 年级矩阵</div>
+  <div class="tab" onclick="switchTab('diag')" id="tab-diag">🔍 诊断报告</div>
+  <div class="tab" onclick="switchTab('chat')" id="tab-chat">🧠 AI对话</div>
+</div>
+
+<!-- ══ PANEL: 数据输入 ══ -->
+<div class="panel active" id="panel-input">
+  <div class="panel-body">
+
+    <div class="card">
+      <div class="card-title">📍 基础参数</div>
+      <div class="input-grid">
+        <div class="input-group">
+          <label>品牌名称</label>
+          <input id="brandName" placeholder="如：六月鲜" value="六月鲜">
+        </div>
+        <div class="input-group">
+          <label>目标城市</label>
+          <input id="cityName" placeholder="如：上海" value="上海">
+        </div>
+        <div class="input-group">
+          <label>城市总家庭数（万户）</label>
+          <input id="totalHH" type="number" placeholder="1000" value="1000">
+          <div class="unit">上海约1000万户</div>
+        </div>
+        <div class="input-group">
+          <label>目标渗透率（%）</label>
+          <input id="penetration" type="number" placeholder="1.5" value="1.5" step="0.1">
+          <div class="unit">第1年建议1.5%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📦 SKU参数</div>
+      <div class="input-grid">
+        <div class="input-group">
+          <label>SKU① 零售价（元/瓶）</label>
+          <input id="price1" type="number" placeholder="30" value="30">
+        </div>
+        <div class="input-group">
+          <label>SKU① 销量占比（%）</label>
+          <input id="share1" type="number" placeholder="70" value="70">
+        </div>
+        <div class="input-group">
+          <label>每户年购买瓶数</label>
+          <input id="bottlesPerHH" type="number" placeholder="5" value="5">
+          <div class="unit">调味品约5瓶/年</div>
+        </div>
+        <div class="input-group">
+          <label>SKU①当前年级</label>
+          <select id="currentGrade">
+            <option value="0">校准期（新品）</option>
+            <option value="1" selected>1年级</option>
+            <option value="2">2年级</option>
+            <option value="3">3年级</option>
+            <option value="4">4年级</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏪 渠道参数</div>
+      <div class="input-grid-3">
+        <div class="input-group">
+          <label>铺货门店数</label>
+          <input id="storeCount" type="number" placeholder="1000" value="1000">
+        </div>
+        <div class="input-group">
+          <label>经销商数量</label>
+          <input id="dealerCount" type="number" placeholder="3" value="3">
+        </div>
+        <div class="input-group">
+          <label>二批商数量（P2）</label>
+          <input id="subDealerCount" type="number" placeholder="5" value="5">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 实际r值（选填·用于健康诊断）</div>
+      <div class="input-grid">
+        <div class="input-group">
+          <label>实际r₁ 门店流速（瓶/天/店）</label>
+          <input id="actual_r1" type="number" placeholder="自动计算" step="0.1">
+          <div class="unit">空白=使用计算值</div>
+        </div>
+        <div class="input-group">
+          <label>实际r₃ 经销商出货（瓶/天）</label>
+          <input id="actual_r3" type="number" placeholder="自动计算">
+          <div class="unit">空白=使用计算值</div>
+        </div>
+        <div class="input-group">
+          <label>当前门店库存（瓶/店）</label>
+          <input id="actual_inv" type="number" placeholder="如：85">
+          <div class="unit">用于水位诊断</div>
+        </div>
+        <div class="input-group">
+          <label>r值达标率（%）</label>
+          <input id="rAchieve" type="number" placeholder="如：75" step="1">
+          <div class="unit">实际÷目标×100</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calculate()">
+      <span>💓</span>
+      <span>计算心跳全链 · 生成诊断报告</span>
+    </button>
+
+  </div>
+</div>
+
+<!-- ══ PANEL: 心跳全链 ══ -->
+<div class="panel" id="panel-chain">
+  <div class="panel-body">
+    <div id="chainContent">
+      <div class="card">
+        <div class="card-title">等待数据</div>
+        <div style="text-align:center;padding:24px;color:var(--ash);font-size:13px">
+          请先在「数据输入」中填写参数并计算
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PANEL: 年级矩阵 ══ -->
+<div class="panel" id="panel-grade">
+  <div class="panel-body">
+    <div id="gradeContent">
+      <div class="card">
+        <div class="card-title">等待数据</div>
+        <div style="text-align:center;padding:24px;color:var(--ash);font-size:13px">
+          请先在「数据输入」中填写参数并计算
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PANEL: 诊断报告 ══ -->
+<div class="panel" id="panel-diag">
+  <div class="panel-body">
+    <div id="diagContent">
+      <div class="card">
+        <div class="card-title">等待数据</div>
+        <div style="text-align:center;padding:24px;color:var(--ash);font-size:13px">
+          请先在「数据输入」中填写参数并计算
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PANEL: AI对话 ══ -->
+<div class="panel" id="panel-chat">
+  <div class="chat-wrap">
+    <div class="chat-msgs" id="chatMsgs">
+      <div class="msg assistant">
+        <div class="msg-role">樹根 · AI诊断</div>
+        <div class="msg-bubble">你好。我是樹根经营诊断系统。
+
+在「数据输入」中填写你的品牌参数后，我可以：
+· 解读你的心跳全链健康状态
+· 判断SKU年级是否需要调整
+· 诊断失真风险
+· 给出具体的行动建议
+
+你也可以直接问我任何品牌经营问题。</div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="mode-chips">
+        <div class="mode-chip active" data-mode="diagnose" onclick="setMode(this)">🔍 诊断</div>
+        <div class="mode-chip" data-mode="heartbeat" onclick="setMode(this)">💓 心跳</div>
+        <div class="mode-chip" data-mode="grade" onclick="setMode(this)">🎓 年级</div>
+        <div class="mode-chip" data-mode="strategy" onclick="setMode(this)">⭐ 战略</div>
+        <div class="mode-chip" data-mode="simulate" onclick="setMode(this)">⚡ 推演</div>
+      </div>
+      <div class="quick-row" id="quickRow"></div>
+      <div class="input-row">
+        <textarea class="chat-textarea" id="chatInput" placeholder="问樹根任何问题…" rows="1"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMsg()">↑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────
+let calcData = null;
+let chatHistory = [];
+let isLoading = false;
+let currentMode = 'diagnose';
+
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+// ── CALCULATE ─────────────────────────────────────────────────
+function calculate() {
+  const brand = v('brandName');
+  const city  = v('cityName');
+  const totalHH = parseFloat(v('totalHH')) || 1000;
+  const pct   = parseFloat(v('penetration')) / 100 || 0.015;
+  const price1 = parseFloat(v('price1')) || 30;
+  const share1 = parseFloat(v('share1')) / 100 || 0.7;
+  const bph   = parseFloat(v('bottlesPerHH')) || 5;
+  const grade = parseInt(v('currentGrade')) || 1;
+  const stores = parseInt(v('storeCount')) || 1000;
+  const dealers = parseInt(v('dealerCount')) || 3;
+  const subs  = parseInt(v('subDealerCount')) || 5;
+  const actual_r1 = parseFloat(v('actual_r1')) || null;
+  const actual_r3 = parseFloat(v('actual_r3')) || null;
+  const actual_inv = parseFloat(v('actual_inv')) || null;
+  const rAchieve = parseFloat(v('rAchieve')) || null;
+
+  // Core calculations
+  const targetHH = totalHH * pct;                 // 万户
+  const R = (targetHH * 10000 * bph) / 365;       // 瓶/天
+  const r0 = bph / 365;                            // 瓶/天/户
+  const r1_target = R / stores;                    // 瓶/天/店
+  const r3_target = R / dealers;                   // 瓶/天/商
+  const r1 = actual_r1 || r1_target;
+  const r3 = actual_r3 || r3_target;
+
+  // a values per IPO node
+  const nodes = [
+    { id:'IPO0', name:'原料采购计划', T:60, a: R*60, r:R, level:'factory', desc:'断供防火墙·最大缓冲', full:R*60*2, warn:R*60 },
+    { id:'IPO1', name:'工厂成品库存', T:30, a: R*30, r:R, level:'factory', desc:'工厂提前备货', full:R*30*2, warn:R*30 },
+    { id:'IPO2', name:'经销商进货',   T:30, a: R*30, r:R, level:'dealer', desc:'月结·推单信号节点', full:R*30*2, warn:R*30 },
+    { id:'IPO3', name:'经销商仓库',   T:30, a: R*30, r:R, level:'dealer', desc:'T30→T14缓冲池', full:R*30*2, warn:R*30 },
+    { id:'IPO4', name:'经销商出货',   T:14, a: R*14, r:r3, level:'dealer', desc:'匹配门店补货节奏', full:R*14*1.5, warn:R*14 },
+    { id:'IPO5', name:'二批进货(P2)', T:14, a: R*14, r:R, level:'sub', desc:'严控1a上限', full:R*14, warn:R*14*0.5 },
+    { id:'IPO6', name:'二批库存(P2)', T:14, a: R*14, r:R, level:'sub', desc:'超1a=压货预警', full:R*14, warn:R*14*0.5 },
+    { id:'IPO7', name:'二批出货(P2)', T:14, a: R*14, r:R, level:'sub', desc:'进=出=库存', full:R*14, warn:R*14*0.5 },
+    { id:'IPO8', name:'门店进货',     T:14, a: R*14, r:R, level:'store', desc:'承接IPO4出货', full:R*14*1.5, warn:R*14 },
+    { id:'IPO9', name:'货架库存(单店)',T:14, a: r1*14, r:r1, level:'store', desc:'货架=品牌领地', full:r1*14*3, warn:r1*14*2, danger:r1*14, actualInv: actual_inv },
+    { id:'IPO10',name:'门店日销',     T:7,  a: r1*7, r:r1, level:'store', desc:'周度验证r₁', full:r1*7*2, warn:r1*7 },
+    { id:'IPO11',name:'消费者购买',   T:73, a: R*73, r:R, level:'consumer', desc:'行为触发节点', full:R*73, warn:R*73*0.5 },
+    { id:'IPO12',name:'家中库存',     T:73, a: R*73, r:R, level:'consumer', desc:'品牌承诺兑现层', full:R*73, warn:R*73*0.5 },
+    { id:'IPO13',name:'家庭消耗',     T:73, a: R*73, r:r0, level:'consumer', desc:'全链锚点·所有节点之源', full:R*73, warn:0 },
+  ];
+
+  // Grade calculation
+  const gradeCoeffs = [0, 2.0, 1.5, 1.0, 0.7];
+  const gradeRates  = [0, 0.5, 0.35, 0.2, 0.12];
+
+  // Annual revenue
+  const annualBottles = targetHH * 10000 * bph;
+  const annualRev = annualBottles * price1 / 10000; // 万元
+
+  // Health score
+  let healthScore = 100;
+  let alerts = [];
+  let recommendations = [];
+
+  if (rAchieve !== null) {
+    if (rAchieve < 60) { healthScore -= 30; alerts.push({ level:'danger', title:'r值严重不达标', body:`当前r值达标率${rAchieve}%，低于60%警戒线。需要立即诊断：是货架断货？竞品打压？还是铺货不足？` }); }
+    else if (rAchieve < 80) { healthScore -= 15; alerts.push({ level:'warn', title:'r值偏低·年级风险', body:`r值达标率${rAchieve}%，低于80%升级门槛。如连续3个月低于80%，年级将自动降级。` }); }
+    else if (rAchieve >= 100) { alerts.push({ level:'good', title:'r值达标·可考虑升级', body:`r值达标率${rAchieve}%，已达升级标准。如连续${grade<=1?3:6}个月达标，可申请升至${grade+1}年级。` }); }
+  }
+
+  if (actual_inv !== null) {
+    const a9 = r1_target * 14;
+    const warn_level = a9 * 2;
+    const danger_level = a9;
+    if (actual_inv < danger_level) { healthScore -= 20; alerts.push({ level:'danger', title:'货架库存危险（低于1a）', body:`当前库存${actual_inv.toFixed(0)}瓶/店，低于危险线${danger_level.toFixed(0)}瓶。品牌领地严重萎缩，立即补货。` }); }
+    else if (actual_inv < warn_level) { healthScore -= 10; alerts.push({ level:'warn', title:'货架库存预警（低于2a）', body:`当前库存${actual_inv.toFixed(0)}瓶/店，低于预警线${warn_level.toFixed(0)}瓶。已触发补货信号。` }); }
+    else { alerts.push({ level:'good', title:'货架水位健康', body:`当前库存${actual_inv.toFixed(0)}瓶/店，高于预警线${warn_level.toFixed(0)}瓶。货架库存充足。` }); }
+  }
+
+  // Grade recommendation
+  if (rAchieve && rAchieve >= 100 && grade < 4) {
+    recommendations.push({ title:`建议升级至${grade+1}年级`, body:`连续达标后，费用率可从${(gradeRates[grade]*100).toFixed(0)}%降至${(gradeRates[grade+1]*100).toFixed(0)}%，释放资金${(annualRev*(gradeRates[grade]-gradeRates[grade+1])).toFixed(0)}万元。` });
+  }
+  if (rAchieve && rAchieve < 80) {
+    recommendations.push({ title:'暂缓升级·保持现有费用率', body:`r值未达标时，绝对不减少投入。年级系统的核心原则：年级不到，费用不减。` });
+  }
+
+  calcData = {
+    brand, city, totalHH, pct, price1, share1, bph, grade,
+    stores, dealers, subs, R, r0, r1: r1_target, r3: r3_target,
+    annualBottles, annualRev, nodes, alerts, recommendations,
+    healthScore: Math.max(0, healthScore),
+    gradeCoeff: gradeCoeffs[grade], gradeRate: gradeRates[grade],
+    actual_r1, actual_r3, actual_inv, rAchieve
+  };
+
+  renderSummary();
+  renderChain();
+  renderGrade();
+  renderDiag();
+
+  document.getElementById('hbStatus').textContent = '心跳运转中';
+  document.getElementById('summaryBar').style.display = 'grid';
+
+  switchTab('chain');
+}
+
+function v(id) { return document.getElementById(id).value; }
+
+// ── RENDER SUMMARY BAR ─────────────────────────────────────────
+function renderSummary() {
+  const d = calcData;
+  document.getElementById('sumR').textContent = fmt(d.R, 0);
+  const h = d.healthScore;
+  document.getElementById('sumHealth').textContent = h >= 80 ? '🟢健康' : h >= 60 ? '🟡预警' : '🔴告急';
+  document.getElementById('sumGrade').textContent = ['校准期','1年级','2年级','3年级','4年级'][d.grade] || '—';
+  document.getElementById('sumAlert').textContent = d.alerts.filter(a=>a.level!=='good').length + '项';
+}
+
+// ── RENDER CHAIN ───────────────────────────────────────────────
+function renderChain() {
+  const d = calcData;
+  const levelColors = { factory:'var(--red)', dealer:'var(--root)', sub:'var(--leaf)', store:'#60a5fa', consumer:'var(--cream2)' };
+  const levelBg = { factory:'rgba(197,90,17,0.08)', dealer:'rgba(196,137,42,0.08)', sub:'rgba(90,138,58,0.08)', store:'rgba(96,165,250,0.08)', consumer:'rgba(232,224,208,0.06)' };
+
+  let html = `
+    <div class="card">
+      <div class="card-title">💓 IPO0-13 心跳全链 · ${d.brand} · ${d.city}</div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="background:var(--bark2);border-radius:8px;padding:8px 12px;flex:1;min-width:120px">
+          <div style="font-size:9px;color:var(--ash);font-family:'Space Mono',monospace">R 全网</div>
+          <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--root)">${fmt(d.R,0)}</div>
+          <div style="font-size:9px;color:var(--ash)">瓶/天</div>
+        </div>
+        <div style="background:var(--bark2);border-radius:8px;padding:8px 12px;flex:1;min-width:120px">
+          <div style="font-size:9px;color:var(--ash);font-family:'Space Mono',monospace">r₀ 消费者</div>
+          <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--root)">${d.r0.toFixed(4)}</div>
+          <div style="font-size:9px;color:var(--ash)">瓶/天/户</div>
+        </div>
+        <div style="background:var(--bark2);border-radius:8px;padding:8px 12px;flex:1;min-width:120px">
+          <div style="font-size:9px;color:var(--ash);font-family:'Space Mono',monospace">r₁ 单店</div>
+          <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--root)">${d.r1.toFixed(1)}</div>
+          <div style="font-size:9px;color:var(--ash)">瓶/天</div>
+        </div>
+        <div style="background:var(--bark2);border-radius:8px;padding:8px 12px;flex:1;min-width:120px">
+          <div style="font-size:9px;color:var(--ash);font-family:'Space Mono',monospace">年度收入</div>
+          <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--root)">¥${fmt(d.annualRev,0)}万</div>
+          <div style="font-size:9px;color:var(--ash)">目标值</div>
+        </div>
+      </div>
+      <div class="chain">`;
+
+  d.nodes.forEach((n, i) => {
+    const pct = n.actualInv != null ? Math.min(100, (n.actualInv / n.full) * 100) :
+                Math.min(100, (n.a / n.full) * 100);
+    const color = pct > 66 ? '#4ade80' : pct > 33 ? 'var(--root)' : '#ef4444';
+    const healthClass = pct > 66 ? 'h-green' : pct > 33 ? 'h-amber' : 'h-red';
+    const isAnchor = n.id === 'IPO13';
+    const displayA = ['IPO9','IPO10'].includes(n.id) ? fmt(n.a,0)+'瓶/店' : fmt(n.a,0)+'瓶';
+
+    if (i > 0) html += `<div class="chain-connector"></div>`;
+
+    html += `
+      <div class="chain-node">
+        <div class="node-card" style="border-color:${isAnchor ? 'var(--root)' : ''}">
+          <div class="health-dot ${healthClass}"></div>
+          <div class="node-tag" style="border:1px solid ${levelColors[n.level]}20;background:${levelBg[n.level]}">
+            <span class="node-tag-key" style="color:${levelColors[n.level]}">${n.id}</span>
+            <span class="node-tag-t">T${n.T}天</span>
+          </div>
+          <div class="node-info">
+            <div class="node-name" ${isAnchor ? 'style="color:var(--root)"' : ''}>${n.name}</div>
+            <div class="node-desc">${n.desc}</div>
+            <div class="water-bar">
+              <div class="water-fill" style="width:${pct}%;background:${color}"></div>
+            </div>
+          </div>
+          <div class="node-metrics">
+            <div class="node-a" style="${isAnchor ? 'color:var(--root2)' : ''}">${displayA}</div>
+            <div class="node-r">r=${n.r.toFixed(1)}/天</div>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  html += `</div></div>`;
+
+  // Three-tier water level summary
+  const a9 = calcData.r1 * 14;
+  const inv = calcData.actual_inv;
+  html += `
+    <div class="card">
+      <div class="card-title">🌊 三层水位 · 门店层（IPO9）</div>
+      <div style="display:flex;gap:8px">
+        ${[
+          {label:'满仓3a',val:fmt(a9*3,0)+'瓶',color:'#4ade80'},
+          {label:'预警2a',val:fmt(a9*2,0)+'瓶',color:'var(--root)'},
+          {label:'危险1a',val:fmt(a9,0)+'瓶',color:'#ef4444'},
+          ...(inv ? [{label:'当前库存',val:fmt(inv,0)+'瓶',color:inv>=a9*2?'#4ade80':inv>=a9?'var(--root)':'#ef4444'}] : [])
+        ].map(item => `
+          <div style="flex:1;background:var(--bark2);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:9px;color:var(--ash)">${item.label}</div>
+            <div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:${item.color};margin-top:3px">${item.val}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  document.getElementById('chainContent').innerHTML = html;
+}
+
+// ── RENDER GRADE ───────────────────────────────────────────────
+function renderGrade() {
+  const d = calcData;
+  const gradeCoeffs = [0, 2.0, 1.5, 1.0, 0.7];
+  const gradeRates  = [0, 0.5, 0.35, 0.2, 0.12];
+  const gradeName   = ['校准期','1年级','2年级','3年级','4年级'];
+  const gradeClass  = ['gx','g1','g2','g3','g4'];
+
+  // Multi-city simulation
+  const cities = [
+    { name: d.city, g1: d.grade, g2: Math.max(0, d.grade-1), g3: Math.max(0, d.grade-2) },
+    { name: '城市B', g1: Math.max(1, d.grade-1), g2: Math.max(0, d.grade-2), g3: 0 },
+    { name: '城市C', g1: 1, g2: 0, g3: 0 },
+    { name: '新城市', g1: 1, g2: 0, g3: 0 },
+  ];
+
+  const skus = ['SKU①', 'SKU②', 'SKU③', 'SKU④'];
+
+  let html = `
+    <div class="card">
+      <div class="card-title">🎓 当前年级 · ${d.brand} · SKU①</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
+        <div style="background:var(--bark2);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:10px;color:var(--ash);margin-bottom:6px">当前年级</div>
+          <div style="font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:var(--root)">${gradeName[d.grade]}</div>
+        </div>
+        <div style="background:var(--bark2);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:10px;color:var(--ash);margin-bottom:6px">激励系数</div>
+          <div style="font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:var(--root2)">×${gradeCoeffs[d.grade]}</div>
+        </div>
+        <div style="background:var(--bark2);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:10px;color:var(--ash);margin-bottom:6px">费用率</div>
+          <div style="font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:var(--root)">${(gradeRates[d.grade]*100).toFixed(0)}%</div>
+        </div>
+        <div style="background:var(--bark2);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:10px;color:var(--ash);margin-bottom:6px">年度费用预算</div>
+          <div style="font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--root)">¥${fmt(d.annualRev*gradeRates[d.grade],0)}万</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🗺️ 城市×SKU 年级矩阵</div>
+      <div style="margin-bottom:8px">
+        <div class="grade-row">
+          <div class="grade-city" style="font-size:10px;font-family:'Space Mono',monospace;color:var(--dust)">城市</div>
+          ${skus.map(s=>`<div class="grade-sku" style="background:var(--bark3);color:var(--ash);border-color:var(--border)">${s}</div>`).join('')}
+        </div>
+      </div>
+      <div class="grade-matrix">`;
+
+  cities.forEach((c, ci) => {
+    const grades = [c.g1, Math.max(0, c.g1-1), Math.max(0, c.g1-2), 0];
+    html += `<div class="grade-row">
+      <div class="grade-city">${c.name}</div>
+      ${grades.map((g, gi) => {
+        if (g === 0 && gi > 0) return `<div class="grade-sku grade-empty">—</div>`;
+        return `<div class="grade-sku ${gradeClass[g]}">${gradeName[g]}</div>`;
+      }).join('')}
+    </div>`;
+  });
+
+  html += `</div>
+      <div style="margin-top:12px;font-size:10px;color:var(--ash);line-height:1.7;padding:10px;background:var(--bark2);border-radius:8px">
+        💡 铁律：SKU①进新城市·其他SKU才能跟进。城市年级独立计算，不能混算。
+      </div>
+    </div>`;
+
+  // Grade release model
+  if (d.grade < 4) {
+    const releaseAmt = d.annualRev * (gradeRates[d.grade] - gradeRates[Math.min(4, d.grade+1)]);
+    html += `
+      <div class="card">
+        <div class="card-title">💰 年级升级·资金释放模拟</div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;background:var(--bark2);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:10px;color:var(--ash)">当前${gradeName[d.grade]}费用</div>
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--root);margin-top:4px">¥${fmt(d.annualRev*gradeRates[d.grade],0)}万</div>
+          </div>
+          <div style="display:flex;align-items:center;color:var(--root);font-size:18px">→</div>
+          <div style="flex:1;background:var(--bark2);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:10px;color:var(--ash)">${gradeName[Math.min(4,d.grade+1)]}费用</div>
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:#4ade80;margin-top:4px">¥${fmt(d.annualRev*gradeRates[Math.min(4,d.grade+1)],0)}万</div>
+          </div>
+          <div style="display:flex;align-items:center;color:var(--root);font-size:18px">→</div>
+          <div style="flex:1;background:var(--root-dim);border:1px solid var(--border2);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:10px;color:var(--ash)">释放资金</div>
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--root2);margin-top:4px">+¥${fmt(releaseAmt,0)}万</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:10px;color:var(--ash);padding:8px;background:var(--bark2);border-radius:8px">
+          释放资金用途：新城市启动(¥160万/城) · 1年级新品导入 · 净利润沉淀
+        </div>
+      </div>`;
+  }
+
+  document.getElementById('gradeContent').innerHTML = html;
+}
+
+// ── RENDER DIAG ─────────────────────────────────────────────────
+function renderDiag() {
+  const d = calcData;
+  const gradeName = ['校准期','1年级','2年级','3年级','4年级'];
+
+  let html = `
+    <div class="card">
+      <div class="card-title">🔍 诊断报告 · ${d.brand} · ${d.city}</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <div style="flex:1;background:var(--bark2);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:10px;color:var(--ash)">整体健康度</div>
+          <div style="font-family:'Space Mono',monospace;font-size:32px;font-weight:700;color:${d.healthScore>=80?'#4ade80':d.healthScore>=60?'var(--root)':'#ef4444'};margin-top:4px">${d.healthScore}</div>
+          <div style="font-size:9px;color:var(--ash)">满分100</div>
+        </div>
+        <div style="flex:1;background:var(--bark2);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:10px;color:var(--ash)">预警项目</div>
+          <div style="font-family:'Space Mono',monospace;font-size:32px;font-weight:700;color:${d.alerts.filter(a=>a.level!=='good').length?'#ef4444':'#4ade80'};margin-top:4px">${d.alerts.filter(a=>a.level!=='good').length}</div>
+          <div style="font-size:9px;color:var(--ash)">项</div>
+        </div>
+      </div>
+    </div>`;
+
+  if (d.alerts.length === 0) {
+    html += `<div class="card"><div style="text-align:center;padding:20px;color:var(--ash);font-size:13px">填写实际r值数据后·系统将自动生成健康诊断</div></div>`;
+  } else {
+    html += `<div class="card"><div class="card-title">⚠️ 健康诊断结果</div><div style="display:flex;flex-direction:column;gap:8px">`;
+    d.alerts.forEach(a => {
+      html += `<div class="diag-item ${a.level}"><div class="diag-title ${a.level}">${a.title}</div>${a.body}</div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  if (d.recommendations.length > 0) {
+    html += `<div class="card"><div class="card-title">💡 行动建议</div><div style="display:flex;flex-direction:column;gap:8px">`;
+    d.recommendations.forEach(r => {
+      html += `<div class="diag-item warn"><div class="diag-title warn">${r.title}</div>${r.body}</div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Key metrics summary
+  html += `
+    <div class="card">
+      <div class="card-title">📊 核心指标汇总</div>
+      ${makeMetricTable([
+        ['指标', '计算值', '说明'],
+        ['R 全网日流速', fmt(d.R,0)+'瓶/天', `${d.city} ${(d.pct*100).toFixed(1)}%渗透率`],
+        ['r₀ 消费者', d.r0.toFixed(4)+'瓶/天/户', '家庭日均消耗'],
+        ['r₁ 目标门店', d.r1.toFixed(1)+'瓶/天', `基于${d.stores}家门店`],
+        ['a₉ 单店心跳', fmt(d.r1*14,0)+'瓶/14天', '货架1a值'],
+        ['年度目标收入', '¥'+fmt(d.annualRev,0)+'万', `${fmt(d.annualBottles/10000,0)}万瓶×¥${d.price1}`],
+        ['当前年级', ['校准期','1年级','2年级','3年级','4年级'][d.grade], `激励×${[0,2.0,1.5,1.0,0.7][d.grade]}·费用率${([0,50,35,20,12][d.grade])}%`],
+      ])}
+    </div>
+    <div class="card">
+      <div class="card-title">🦋 失真风险检测</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${[
+          {type:'A类·渠道压货', risk:'低', desc:'需要实际库存数据验证·暂无异常信号'},
+          {type:'B类·促销扰动', risk:'低', desc:'需要r值历史趋势数据·暂无异常信号'},
+          {type:'C类·灰市窜货', risk:'低', desc:'需要价签数据接入·暂无异常信号'},
+        ].map(item=>`<div style="display:flex;align-items:center;gap:10px;background:var(--bark2);border-radius:8px;padding:10px">
+          <div style="font-size:11px;font-weight:600;color:var(--cream);flex:1">${item.type}</div>
+          <div style="font-size:10px;color:#4ade80;background:var(--green-dim);border-radius:5px;padding:2px 8px">${item.risk}</div>
+          <div style="font-size:10px;color:var(--ash);max-width:50%;text-align:right">${item.desc}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+
+  document.getElementById('diagContent').innerHTML = html;
+}
+
+function makeMetricTable(rows) {
+  return `<table style="width:100%;border-collapse:collapse">
+    ${rows.map((r,i)=>i===0?
+      `<tr>${r.map(c=>`<th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--ash);border-bottom:1px solid var(--border);font-family:'Space Mono',monospace">${c}</th>`).join('')}</tr>`:
+      `<tr style="background:${i%2?'var(--bark2)':'transparent'}">${r.map((c,ci)=>`<td style="padding:7px 10px;font-size:11px;color:${ci===0?'var(--cream)':'var(--cream2)'};border-bottom:1px solid var(--border)">${c}</td>`).join('')}</tr>`
+    ).join('')}
+  </table>`;
+}
+
+// ── CHAT ───────────────────────────────────────────────────────
+const MODES = {
+  diagnose: { label:'🔍 诊断', prompts:['分析我的r值健康状态', '当前水位是否正常？', '有没有失真风险？'] },
+  heartbeat:{ label:'💓 心跳', prompts:['心跳公式怎么理解？', 'r₀到R是什么关系？', 'IPO13为什么是锚点？'] },
+  grade:    { label:'🎓 年级', prompts:['我的SKU该升几年级了？', '年级系数怎么影响费用？', '老品如何养新品？'] },
+  strategy: { label:'⭐ 战略', prompts:['六月鲜最紧迫的战略是什么？', '新品方向怎么选？', '怎么做城市分级？'] },
+  simulate: { label:'⚡ 推演', prompts:['如果定价降¥5会怎样？', '如果进入新城市？', '如果砍掉SKU②？'] },
+};
+
+function setMode(el) {
+  document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentMode = el.dataset.mode;
+  renderQuickPrompts();
+}
+
+function renderQuickPrompts() {
+  const prompts = MODES[currentMode]?.prompts || [];
+  document.getElementById('quickRow').innerHTML = prompts
+    .map(p => `<div class="quick-chip" onclick="sendQuick('${p.replace(/'/g,"\\'")}')">${p}</div>`)
+    .join('');
+}
+
+function buildSysPrompt() {
+  const dataCtx = calcData ? `
+【当前品牌数据】
+品牌：${calcData.brand}，城市：${calcData.city}
+R全网流速：${calcData.R.toFixed(0)}瓶/天
+r₁目标门店：${calcData.r1.toFixed(1)}瓶/天/店
+年度目标收入：¥${calcData.annualRev.toFixed(0)}万
+SKU①当前年级：${['校准期','1年级','2年级','3年级','4年级'][calcData.grade]}
+激励系数：×${[0,2.0,1.5,1.0,0.7][calcData.grade]}，费用率：${[0,50,35,20,12][calcData.grade]}%
+健康度：${calcData.healthScore}/100
+预警项：${calcData.alerts.map(a=>a.title).join('、') || '暂无'}
+` : '【暂无品牌数据·请引导用户在数据输入面板中填写】';
+
+  const modeInstr = {
+    diagnose: '专注健康诊断，基于数据给出精准判断和行动建议',
+    heartbeat:'专注心跳公式解释，用生动比喻让用户真正理解r值',
+    grade:    '专注年级系统，帮用户判断当前年级是否合理，费用该增还是减',
+    strategy: '专注品牌战略，尤其是六月鲜的新品断层和城市心跳问题',
+    simulate: '专注推演，严格量化每个假设的后果，让用户看到真实代价',
+  };
+
+  return `你是樹根经营诊断系统，欣和SH品牌底层操作系统的AI引擎。
+
+核心知识：
+· 心跳公式：a=R×T，r=a÷T，R=Σr₁=Σr₂=Σr₃=消费者真实消耗
+· 层级：r₀消费者·r₁门店·r₂二批商·r₃经销商·R全网
+· 三层水位：零售3a/2a/1a·经销商2a/1a·二批商严控1a
+· IPO0-13：工厂→经销商→二批→门店→消费者全链
+· 年级系统：1年级×2.0(50%)→2级×1.5(35%)→3级×1.0(20%)→4级×0.7(12%)
+· r值说了算，不看时间，每SKU每城市独立
+· 三条铁律：英雄SKU先行·城市独立核算·止损线=第3年利润50%
+
+${dataCtx}
+
+当前模式：${modeInstr[currentMode] || '综合回答'}
+
+回答要求：中文，简洁，核心结论在前，有数字的地方必须量化。不超过250字。`;
+}
+
+async function sendQuick(text) {
+  document.getElementById('chatInput').value = text;
+  await sendMsg();
+}
+
+async function sendMsg() {
+  const input = document.getElementById('chatInput');
+  const q = input.value.trim();
+  if (!q || isLoading) return;
+
+  input.value = '';
+  input.style.height = '';
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  const msgs = document.getElementById('chatMsgs');
+
+  // User bubble
+  const userDiv = document.createElement('div');
+  userDiv.className = 'msg user';
+  userDiv.innerHTML = `<div class="msg-role">你</div><div class="msg-bubble">${escHtml(q)}</div>`;
+  msgs.appendChild(userDiv);
+
+  // Thinking
+  const aiDiv = document.createElement('div');
+  aiDiv.className = 'msg assistant';
+  aiDiv.innerHTML = `<div class="msg-role">樹根</div><div class="msg-bubble"><div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
+  msgs.appendChild(aiDiv);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  chatHistory.push({ role:'user', content:q });
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        system: buildSysPrompt(),
+        messages: chatHistory
+      })
+    });
+    const data = await resp.json();
+    const txt = data.content?.map(c=>c.text||'').join('') || '无法获取回答，请重试。';
+    aiDiv.querySelector('.msg-bubble').innerHTML = escHtml(txt).replace(/\n/g,'<br>');
+    chatHistory.push({ role:'assistant', content: txt });
+  } catch(e) {
+    aiDiv.querySelector('.msg-bubble').innerHTML = `<span style="color:var(--red)">⚠️ ${e.message}</span>`;
+  }
+
+  isLoading = false;
+  document.getElementById('sendBtn').disabled = false;
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ── UTILS ──────────────────────────────────────────────────────
+function fmt(n, decimals = 0) {
+  if (n === undefined || n === null || isNaN(n)) return '—';
+  return n.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function escHtml(t) {
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function handleKey(e) {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+renderQuickPrompts();
+</script>
+</body>
+</html>
