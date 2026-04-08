@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>樹根 · SHUGEN</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --soil:    #0d0b09;
+  --earth:   #141009;
+  --bark:    #1c1610;
+  --bark2:   #251d14;
+  --bark3:   #2e2418;
+  --moss:    #2a3d1a;
+  --root:    #c4892a;
+  --root2:   #e8aa4a;
+  --root-dim:rgba(196,137,42,0.12);
+  --leaf:    #5a8a3a;
+  --leaf2:   #7ab050;
+  --leaf-dim:rgba(90,138,58,0.12);
+  --water:   #3a6a8a;
+  --water-dim:rgba(58,106,138,0.12);
+  --ash:     #8a8070;
+  --dust:    #4a4438;
+  --parchment:#e8e0d0;
+  --parchment2:#c8c0b0;
+  --border:  rgba(196,137,42,0.12);
+  --border2: rgba(196,137,42,0.25);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+body {
+  background: var(--soil);
+  color: var(--parchment);
+  font-family: 'Noto Sans SC', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Root network background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 85%, rgba(196,137,42,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 80% at 85% 20%, rgba(90,138,58,0.03) 0%, transparent 70%),
+    radial-gradient(ellipse 100% 100% at 50% 50%, rgba(20,16,9,0.8) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* SVG root lines */
+.root-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.06;
+}
+
+/* Layout */
+.app {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ── HEADER ── */
+.header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  background: rgba(13,11,9,0.92);
+  backdrop-filter: blur(20px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.brand-zh {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--root);
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.brand-en {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--dust);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.brand-sub {
+  font-size: 11px;
+  color: var(--ash);
+  letter-spacing: 0.05em;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Mode selector */
+.mode-bar {
+  display: flex;
+  gap: 6px;
+  padding: 12px 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: rgba(13,11,9,0.6);
+}
+.mode-bar::-webkit-scrollbar{display:none}
+
+.mode-btn {
+  background: var(--bark);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--ash);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  font-family: 'Noto Sans SC', sans-serif;
+  flex-shrink: 0;
+}
+.mode-btn:hover { border-color: var(--border2); color: var(--parchment2); }
+.mode-btn.active {
+  background: var(--root-dim);
+  border-color: var(--root);
+  color: var(--root2);
+  font-weight: 500;
+}
+
+/* ── CHAT AREA ── */
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bark3) transparent;
+}
+.chat-area::-webkit-scrollbar{width:4px}
+.chat-area::-webkit-scrollbar-thumb{background:var(--bark3);border-radius:2px}
+
+/* Welcome state */
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  gap: 32px;
+  animation: fadeIn 0.6s ease;
+}
+
+.welcome-glyph {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 80px;
+  color: var(--root);
+  opacity: 0.8;
+  line-height: 1;
+  text-shadow: 0 0 60px rgba(196,137,42,0.3);
+  animation: breathe 4s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,100%{opacity:0.6;transform:scale(1)}
+  50%{opacity:1;transform:scale(1.03)}
+}
+
+.welcome-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--parchment2);
+  letter-spacing: 0.1em;
+  line-height: 1.8;
+}
+
+.welcome-desc {
+  font-size: 13px;
+  color: var(--ash);
+  line-height: 1.8;
+  max-width: 400px;
+}
+
+/* Quick prompts */
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-width: 560px;
+}
+@media(max-width:500px){.quick-grid{grid-template-columns:1fr}}
+
+.quick-btn {
+  background: var(--bark);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.quick-btn:hover {
+  background: var(--bark2);
+  border-color: var(--border2);
+  transform: translateY(-1px);
+}
+.quick-btn-icon { font-size: 16px; margin-bottom: 6px; display: block; }
+.quick-btn-text { font-size: 12px; color: var(--parchment2); line-height: 1.5; }
+.quick-btn-sub  { font-size: 10px; color: var(--ash); margin-top: 2px; }
+
+/* Messages */
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: fadeUp 0.25s ease;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.msg.user { align-items: flex-end; }
+.msg.assistant { align-items: flex-start; }
+
+.msg-role {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--dust);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0 4px;
+}
+
+.msg-bubble {
+  max-width: 85%;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.msg.user .msg-bubble {
+  background: var(--bark3);
+  border: 1px solid var(--border2);
+  color: var(--parchment);
+  border-bottom-right-radius: 4px;
+}
+
+.msg.assistant .msg-bubble {
+  background: var(--bark);
+  border: 1px solid var(--border);
+  color: var(--parchment2);
+  border-bottom-left-radius: 4px;
+  white-space: pre-wrap;
+}
+
+/* Metric cards in assistant response */
+.metric-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0 4px;
+}
+.metric-card {
+  background: var(--bark2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 8px 12px;
+  min-width: 80px;
+}
+.metric-label { font-size: 9px; color: var(--ash); letter-spacing: 0.1em; text-transform: uppercase; font-family: 'Space Mono', monospace; }
+.metric-val   { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; color: var(--root); line-height: 1.2; margin-top: 2px; }
+.metric-unit  { font-size: 10px; color: var(--ash); }
+
+/* Thinking dots */
+.thinking {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding: 4px 0;
+}
+.td {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--root);
+  animation: pulse 1.4s infinite;
+  opacity: 0.4;
+}
+.td:nth-child(2){animation-delay:.2s}
+.td:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{opacity:.2;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
+
+/* Heartbeat indicator */
+.hb-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--root-dim);
+  border: 1px solid var(--root);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--root2);
+  font-family: 'Space Mono', monospace;
+}
+.hb-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--root);
+  animation: hb 1.2s ease-in-out infinite;
+}
+@keyframes hb{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:0.6}}
+
+/* ── INPUT AREA ── */
+.input-area {
+  padding: 16px 24px 24px;
+  background: rgba(13,11,9,0.95);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.input-wrap {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  background: var(--bark);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 10px 14px;
+  transition: border-color 0.2s;
+}
+.input-wrap:focus-within { border-color: var(--root); }
+
+.chat-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--parchment);
+  font-size: 14px;
+  font-family: 'Noto Sans SC', sans-serif;
+  resize: none;
+  min-height: 24px;
+  max-height: 120px;
+  line-height: 1.6;
+}
+.chat-input::placeholder { color: var(--dust); }
+
+.send-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--root);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  color: var(--soil);
+  font-size: 16px;
+}
+.send-btn:hover { background: var(--root2); transform: scale(1.05); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.input-hint {
+  font-size: 10px;
+  color: var(--dust);
+  text-align: center;
+  margin-top: 8px;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+/* Context bar */
+.ctx-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.ctx-tag {
+  background: var(--bark2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-size: 10px;
+  color: var(--ash);
+  font-family: 'Space Mono', monospace;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ctx-tag:hover { border-color: var(--border2); color: var(--parchment2); }
+.ctx-tag.set { border-color: var(--root); color: var(--root2); background: var(--root-dim); }
+
+/* Clear btn */
+.clear-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--dust);
+  cursor: pointer;
+  font-family: 'Noto Sans SC', sans-serif;
+  transition: all 0.15s;
+  margin-left: auto;
+}
+.clear-btn:hover { border-color: var(--border2); color: var(--ash); }
+
+/* Divider in chat */
+.chat-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--dust);
+  font-size: 10px;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 0.1em;
+}
+.chat-divider::before,.chat-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bark3); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- Root SVG background -->
+<svg class="root-bg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
+  <g stroke="#c4892a" fill="none" stroke-width="0.8">
+    <path d="M500,1000 Q480,800 420,650 Q360,500 200,400 Q100,350 0,320"/>
+    <path d="M500,1000 Q510,780 560,620 Q620,460 800,350 Q900,300 1000,280"/>
+    <path d="M500,1000 Q490,850 450,700 Q400,550 350,450 Q280,350 150,250"/>
+    <path d="M500,1000 Q520,820 580,680 Q650,520 750,420 Q850,340 950,200"/>
+    <path d="M420,650 Q380,580 300,520 Q220,460 100,440"/>
+    <path d="M560,620 Q620,540 700,490 Q780,440 900,420"/>
+    <path d="M450,700 Q410,640 320,590 Q230,540 80,500"/>
+    <path d="M580,680 Q650,610 740,560 Q830,510 970,480"/>
+    <path d="M300,520 Q250,480 180,460 Q120,445 30,430"/>
+    <path d="M700,490 Q780,460 860,440 Q930,425 1000,410"/>
+  </g>
+</svg>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-zh">樹根</div>
+      <div>
+        <div class="brand-en">SHUGEN · v1.0</div>
+        <div class="brand-sub">品牌底层操作系统</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="hb-indicator">
+        <div class="hb-dot"></div>
+        <span>心跳在线</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODE BAR -->
+  <div class="mode-bar" id="modeBar">
+    <button class="mode-btn active" onclick="setMode('strategy','⭐ 战略模式','你要进入这个市场吗？SKU怎么规划？三年目标是多少？')" data-mode="strategy">⭐ 战略模式</button>
+    <button class="mode-btn" onclick="setMode('ops','💓 经营模式','今天哪里出问题了？r值健康吗？谁需要补货？')" data-mode="ops">💓 经营模式</button>
+    <button class="mode-btn" onclick="setMode('diagnose','🔍 诊断模式','这个品牌健康吗？年级对吗？失真了吗？')" data-mode="diagnose">🔍 诊断模式</button>
+    <button class="mode-btn" onclick="setMode('learn','🌱 学习模式','什么是a值？年级系统怎么用？心跳公式是什么？')" data-mode="learn">🌱 学习模式</button>
+    <button class="mode-btn" onclick="setMode('simulate','⚡ 推演模式','如果我降价¥5？如果进成都？如果砍掉SKU②？')" data-mode="simulate">⚡ 推演模式</button>
+  </div>
+
+  <!-- CHAT AREA -->
+  <div class="chat-area" id="chatArea">
+    <div class="welcome" id="welcome">
+      <div class="welcome-glyph">樹</div>
+      <div class="welcome-title">
+        根不问服务谁<br>根服务所有人
+      </div>
+      <div class="welcome-desc">
+        樹根是品牌的底层操作系统。<br>
+        心跳公式 · 年级系统 · 全链a值 · SKU规划 · 城市扩张<br>
+        问任何经营问题。
+      </div>
+      <div class="quick-grid" id="quickGrid">
+        <!-- filled by JS based on mode -->
+      </div>
+    </div>
+  </div>
+
+  <!-- INPUT AREA -->
+  <div class="input-area">
+    <div class="ctx-bar" id="ctxBar">
+      <span class="ctx-tag" id="ctx-brand" onclick="toggleCtx('brand','品牌名称')">品牌</span>
+      <span class="ctx-tag" id="ctx-city" onclick="toggleCtx('city','目标城市')">城市</span>
+      <span class="ctx-tag" id="ctx-price" onclick="toggleCtx('price','零售价格')">定价</span>
+      <span class="ctx-tag" id="ctx-year" onclick="toggleCtx('year','当前年份')">年份</span>
+      <button class="clear-btn" onclick="clearChat()">清空对话</button>
+    </div>
+    <div class="input-wrap">
+      <textarea
+        class="chat-input"
+        id="chatInput"
+        placeholder="问樹根任何关于品牌经营的问题…"
+        rows="1"
+        onkeydown="handleKey(event)"
+        oninput="autoResize(this)"
+      ></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+    </div>
+    <div class="input-hint">心跳 · 流速 · 新鲜 · 三层水位 · 年级系统 · IPO0-13</div>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let conversationHistory = [];
+let isLoading = false;
+let currentMode = 'strategy';
+let context = { brand: '', city: '', price: '', year: '' };
+
+// ── MODES ──────────────────────────────────────────────────────────────────
+const MODES = {
+  strategy: {
+    label: '战略模式',
+    desc: '市场进入决策·SKU规划·三年目标·城市选择',
+    quickPrompts: [
+      { icon: '🌱', text: '我要进入这个市场吗？帮我判断', sub: '五维进入决策框架' },
+      { icon: '📦', text: '第一年应该推几个SKU？推什么？', sub: 'SKU规划 + 英雄款选择' },
+      { icon: '🏙️', text: '第一个城市选哪里？标准是什么？', sub: 'PRISM城市筛选逻辑' },
+      { icon: '💰', text: '三年战略目标应该定多少？', sub: '量化推导 + 盈亏模型' },
+    ]
+  },
+  ops: {
+    label: '经营模式',
+    desc: '日常r值监控·补货预警·水位检测',
+    quickPrompts: [
+      { icon: '💓', text: '我的r₁门店流速正常吗？', sub: '输入当前数值·我来诊断' },
+      { icon: '📊', text: '哪些门店需要今天补货？', sub: 'a值水位·三层预警' },
+      { icon: '🔗', text: '经销商库存健康吗？', sub: 'IPO2-4检测' },
+      { icon: '⚠️', text: '蝴蝶效应：哪里有失真风险？', sub: 'A/B/C三类失真检测' },
+    ]
+  },
+  diagnose: {
+    label: '诊断模式',
+    desc: '品牌健康评估·年级诊断·失真检测',
+    quickPrompts: [
+      { icon: '🩺', text: '帮我诊断这个品牌的整体健康度', sub: '输入关键数据·全面评估' },
+      { icon: '📈', text: '我的SKU应该升几年级了？', sub: '年级判断 + 激励系数建议' },
+      { icon: '🦋', text: '我的数据是否有失真？', sub: '压货/促销扰动/窜货检测' },
+      { icon: '💸', text: '我的销售费用率合理吗？', sub: '对比行业标准 + 年级基准' },
+    ]
+  },
+  learn: {
+    label: '学习模式',
+    desc: '学习樹根框架·心跳公式·年级系统',
+    quickPrompts: [
+      { icon: '❤️', text: '什么是心跳公式？a值和r值是什么？', sub: '核心框架入门' },
+      { icon: '🎓', text: '年级系统怎么理解？', sub: '四个年级·激励系数·升降逻辑' },
+      { icon: '🔢', text: 'IPO0到IPO13是什么？', sub: '全链心跳节点详解' },
+      { icon: '🌊', text: '三层水位系统怎么设计？', sub: '满仓·预警·危险的逻辑' },
+    ]
+  },
+  simulate: {
+    label: '推演模式',
+    desc: '假设推演·情景分析·敏感性测试',
+    quickPrompts: [
+      { icon: '📉', text: '如果我把定价从¥30降到¥25？', sub: '保本销量·毛利·盈亏变化' },
+      { icon: '🏙️', text: '如果我现在进入成都？', sub: '启动成本·节奏·预期亏损' },
+      { icon: '✂️', text: '如果我砍掉SKU②？', sub: 'LTV影响·未来利润损失' },
+      { icon: '🚀', text: '如果我第1年推4个SKU？', sub: '资源分散风险·a值稀释' },
+    ]
+  }
+};
+
+// ── SYSTEM PROMPT ──────────────────────────────────────────────────────────
+function buildSystemPrompt() {
+  const modeInstructions = {
+    strategy: '你现在处于战略模式。专注于市场进入决策、SKU规划、三年目标制定、城市选择。引导用户量化假设，推导出完整的战略框架。',
+    ops: '你现在处于经营模式。专注于日常r值监控、水位预警、补货建议。要求用户提供具体数字，给出精准的行动建议。',
+    diagnose: '你现在处于诊断模式。像一个品牌医生，系统性评估品牌健康度，诊断年级、流速、水位是否正常，发现潜在问题。',
+    learn: '你现在处于学习模式。用清晰、生动的方式解释樹根框架的每一个概念。多用比喻，确保用户真正理解而不只是背诵。',
+    simulate: '你现在处于推演模式。针对用户的假设情景，严格按照樹根框架推导出量化结果，让用户看到决策的真实后果。'
+  };
+
+  const ctxStr = Object.entries(context)
+    .filter(([k,v]) => v)
+    .map(([k,v]) => `${k}: ${v}`)
+    .join(', ');
+
+  return `你是樹根（SHUGEN）——一个品牌底层操作系统级别的AI战略顾问。
+
+你的核心知识体系是「樹根框架」，包含以下五大支柱：
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【支柱一：心跳公式】
+
+基础定义：
+• a（心跳单元）= 一个完整周转周期T内的销售量
+• r（流速/心跳）= a ÷ T，是全系统跨层计算的通用语言
+• 管理层叫"心跳"，销售员叫"流速"，消费者叫"新鲜"
+
+五层心跳体系：
+• r₀ = 消费者层，家庭每天消耗的速率
+• r₁ = 门店层，单店每天卖出的速率
+• r₂ = 二批商层，二批商每天流转的速率
+• r₃ = 经销商层，经销商每天出货的速率
+• R  = 全网层，整个市场每天总销售速率
+• 关系：R = Σr₁ = Σr₂ = Σr₃（必须等于消费者真实消耗）
+
+三个r值的区别：
+• r_actual（实际）= 真实发生的
+• r_target（目标）= 应该达到的
+• r_market（市场）= 这个品类应有的天花板
+
+心跳失真三类保护：
+• A类失真：渠道压货（IPO3高 AND IPO9低→暂停推单）
+• B类失真：促销扰动（r值暴涨>50%→标记扰动期）
+• C类失真：灰市窜货（价格低于底价→触发价签核查）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【支柱二：三层水位系统】
+
+零售层（最前线·最敏感）：
+• 满仓 3a → 预警 2a → 危险 1a
+• 货架=品牌领地，断货一次可能永久失去消费者
+
+经销商层（中游缓冲池）：
+• 满仓 2a → 预警 1a
+• 经销商是蓄水池，不需要太多，够流转就好
+
+二批商层（严格管控）：
+• 上限 1a → 触0即补
+• 超过1a = 压货 = 蝴蝶效应风险
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【支柱三：IPO0-13全链节点】
+
+IPO0  原料采购     T60  最大缓冲·断供防火墙
+IPO1  工厂库存     T30  2a满·1a预警
+IPO2  经销商进货   T30  月结触发推单信号
+IPO3  经销商仓库   T30  T30→T14的缓冲池
+IPO4  经销商出货   T14  匹配门店补货节奏
+IPO5  二批进货P2   T14  严控1a上限
+IPO6  二批库存P2   T14  超1a=失真信号
+IPO7  二批出货P2   T14  进=出=库存
+IPO8  门店进货     T14  承接IPO4
+IPO9  货架库存     T14  3a/2a/1a三级水位
+IPO10 门店日销     T7   周度验证r值
+IPO11 消费者购买   T73  行为触发节点
+IPO12 家中库存     T73  品牌承诺兑现层
+IPO13 家庭消耗     T73  全链锚点·所有节点之源
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【支柱四：年级系统】
+
+四个年级：
+• 1年级 ×2.0激励 费用率50%：建认知·抢铺货·容忍亏损
+• 2年级 ×1.5激励 费用率35%：扩渗透·提复购·回收投入
+• 3年级 ×1.0激励 费用率20%：正常经营·靠口碑增长
+• 4年级 ×0.7激励 费用率12%：收割利润·降费用
+
+升降级机制：
+• 升级：r值连续3个月≥目标80%（2→3级需连续6个月）
+• 降级：r值连续2月下滑>20%→自动降级
+• 锁级：促销期间标记扰动·不参与计算
+
+关键原则：
+• 年级看r值不看时间
+• 每个SKU在每个城市独立计算年级
+• SKU②永远维持1年级（获客工具·不毕业）
+• 利润SKU养获客SKU
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【支柱五：SKU规划与财务模型】
+
+SKU五年节奏：
+• 第1年：2个（英雄款+获客款）
+• 第2年：4个（+升级客单价+品牌形象）
+• 第3年：8个（+横向品类延伸+B端+联名）
+• 第4年：12个（+区域专属+有机线+便利店）
+• 第5年：16个（+场景专属+仓储+订阅）
+
+SKU①与SKU②联动逻辑：
+• SKU①：英雄款·利润发动机·目标4年级
+• SKU②：获客工具·永远1年级·LTV/CAC目标>3倍
+• 砍掉SKU②省¥115万·但失去未来¥495万·不能砍
+
+财务关键数字（上海试点假设）：
+• 零售价¥30·目标渗透1.5%·15万户
+• 第1年目标：75万瓶·¥1845万收入
+• 加权平均毛利：¥8.3/瓶
+• 保本销量：84.3万瓶（1.69%渗透率）
+• 导入期销售费用率：50%（行业规律）
+• CAC标准：老用户升级¥8.3·新用户获客¥25.7
+• 新城市标准启动包：¥160万
+
+三条铁律：
+1. 英雄SKU永远先行（SKU①进新城市·其他SKU跟着进）
+2. 城市年级独立核算（上海4年级·北京就是1年级）
+3. 新城市亏损止损线（≤第3年预期利润50%）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${ctxStr ? `【当前用户上下文】\n${ctxStr}\n\n` : ''}
+
+【当前模式】${modeInstructions[currentMode]}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【回答风格要求】
+
+1. 永远先回答核心问题，再展开解释
+2. 遇到数字问题，必须量化计算，不能模糊
+3. 如果用户没有给出足够数据，先假设标准值，说明假设，再计算
+4. 用"心跳"对管理层，用"流速"对销售员，用"新鲜"对消费者
+5. 保持清晰的结构，但不要过度格式化——这是对话不是报告
+6. 字数适中：简单问题100字内，复杂推演可以展开，但核心结论永远在前
+7. 中文回答，专业但不晦涩
+8. 如果推导出r₀/r₁/r₂/r₃/R的具体数值，用格式[METRICS:r0=X,r1=Y,r2=Z,r3=W,R=V]标注（可以只标出有值的）
+9. 记住：樹根不是工具，是根。根不问服务谁，根服务所有人。`;
+}
+
+// ── RENDER QUICK PROMPTS ──────────────────────────────────────────────────
+function renderQuickPrompts() {
+  const grid = document.getElementById('quickGrid');
+  const mode = MODES[currentMode];
+  grid.innerHTML = mode.quickPrompts.map(p => `
+    <button class="quick-btn" onclick="sendQuick(${JSON.stringify(p.text)})">
+      <span class="quick-btn-icon">${p.icon}</span>
+      <div class="quick-btn-text">${p.text}</div>
+      <div class="quick-btn-sub">${p.sub}</div>
+    </button>
+  `).join('');
+}
+
+// ── MODE SWITCHING ─────────────────────────────────────────────────────────
+function setMode(mode, label, desc) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  renderQuickPrompts();
+  // Add mode change divider if there are messages
+  const area = document.getElementById('chatArea');
+  const welcome = document.getElementById('welcome');
+  if (!welcome) {
+    const div = document.createElement('div');
+    div.className = 'chat-divider';
+    div.textContent = `切换至 ${MODES[mode].label}`;
+    area.appendChild(div);
+    area.scrollTop = area.scrollHeight;
+  }
+}
+
+// ── CONTEXT MANAGEMENT ────────────────────────────────────────────────────
+function toggleCtx(key, label) {
+  const val = prompt(`设置${label}（当前：${context[key] || '未设置'}）`, context[key] || '');
+  if (val !== null) {
+    context[key] = val;
+    const el = document.getElementById('ctx-' + key);
+    if (val) {
+      el.textContent = val;
+      el.classList.add('set');
+    } else {
+      el.textContent = label;
+      el.classList.remove('set');
+    }
+  }
+}
+
+// ── SEND MESSAGE ──────────────────────────────────────────────────────────
+async function sendQuick(text) {
+  document.getElementById('chatInput').value = text;
+  await sendMessage();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const q = input.value.trim();
+  if (!q || isLoading) return;
+
+  // Hide welcome
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+
+  input.value = '';
+  input.style.height = '';
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  const area = document.getElementById('chatArea');
+
+  // User message
+  const userMsg = document.createElement('div');
+  userMsg.className = 'msg user';
+  userMsg.innerHTML = `
+    <div class="msg-role">你</div>
+    <div class="msg-bubble">${escHtml(q)}</div>
+  `;
+  area.appendChild(userMsg);
+
+  // Thinking
+  const thinkMsg = document.createElement('div');
+  thinkMsg.className = 'msg assistant';
+  thinkMsg.innerHTML = `
+    <div class="msg-role">樹根</div>
+    <div class="msg-bubble">
+      <div class="thinking">
+        <div class="td"></div><div class="td"></div><div class="td"></div>
+      </div>
+    </div>
+  `;
+  area.appendChild(thinkMsg);
+  area.scrollTop = area.scrollHeight;
+
+  // Add to history
+  conversationHistory.push({ role: 'user', content: q });
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: buildSystemPrompt(),
+        messages: conversationHistory
+      })
+    });
+
+    const data = await resp.json();
+    const raw = data.content?.map(c => c.text || '').join('') || '暂时无法回答，请重试。';
+
+    // Parse metrics
+    const metricMatch = raw.match(/\[METRICS:([^\]]+)\]/);
+    const cleanText = raw.replace(/\[METRICS:[^\]]+\]/g, '').trim();
+    let metrics = null;
+    if (metricMatch) {
+      metrics = {};
+      metricMatch[1].split(',').forEach(kv => {
+        const [k, v] = kv.trim().split('=');
+        if (k && v) metrics[k.trim()] = v.trim();
+      });
+    }
+
+    // Build response
+    let metricHtml = '';
+    if (metrics && Object.keys(metrics).length > 0) {
+      metricHtml = '<div class="metric-row">';
+      const labels = { r0:'r₀ 消费者', r1:'r₁ 门店', r2:'r₂ 二批', r3:'r₃ 经销商', R:'R 全网' };
+      Object.entries(metrics).forEach(([k, v]) => {
+        if (labels[k]) {
+          metricHtml += `
+            <div class="metric-card">
+              <div class="metric-label">${labels[k]}</div>
+              <div class="metric-val">${v}</div>
+            </div>`;
+        }
+      });
+      metricHtml += '</div>';
+    }
+
+    thinkMsg.querySelector('.msg-bubble').innerHTML = metricHtml + escHtmlPreserve(cleanText);
+
+    // Add to history
+    conversationHistory.push({ role: 'assistant', content: raw });
+
+  } catch (e) {
+    thinkMsg.querySelector('.msg-bubble').innerHTML =
+      `<span style="color:var(--root);font-size:12px">⚠️ 连接错误：${e.message}</span>`;
+  }
+
+  isLoading = false;
+  document.getElementById('sendBtn').disabled = false;
+  area.scrollTop = area.scrollHeight;
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function escHtmlPreserve(t) {
+  // Preserve line breaks and basic formatting
+  return t
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>');
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function clearChat() {
+  conversationHistory = [];
+  const area = document.getElementById('chatArea');
+  area.innerHTML = '';
+  // Re-add welcome
+  const welcome = document.createElement('div');
+  welcome.className = 'welcome';
+  welcome.id = 'welcome';
+  welcome.innerHTML = `
+    <div class="welcome-glyph">樹</div>
+    <div class="welcome-title">根不问服务谁<br>根服务所有人</div>
+    <div class="welcome-desc">樹根是品牌的底层操作系统。<br>心跳公式 · 年级系统 · 全链a值 · SKU规划 · 城市扩张<br>问任何经营问题。</div>
+    <div class="quick-grid" id="quickGrid"></div>
+  `;
+  area.appendChild(welcome);
+  renderQuickPrompts();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+renderQuickPrompts();
+</script>
+</body>
+</html>
