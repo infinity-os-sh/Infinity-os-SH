@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>樹根 v3 · 经营操作系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --soil:     #0d0b09;
+  --earth:    #141009;
+  --bark:     #1c1610;
+  --bark2:    #251d14;
+  --bark3:    #2e2418;
+  --moss:     #2a3d1a;
+  --root:     #c4892a;
+  --root2:    #e8aa4a;
+  --root3:    #f5d07a;
+  --root-dim: rgba(196,137,42,0.10);
+  --root-dim2:rgba(196,137,42,0.18);
+  --leaf:     #5a8a3a;
+  --leaf2:    #7ab050;
+  --leaf-dim: rgba(90,138,58,0.12);
+  --water:    #3a6a8a;
+  --water-dim:rgba(58,106,138,0.12);
+  --red:      #c55a11;
+  --red-dim:  rgba(197,90,17,0.10);
+  --parch:    #e8e0d0;
+  --parch2:   #c8c0b0;
+  --ash:      #8a8070;
+  --dust:     #4a4438;
+  --border:   rgba(196,137,42,0.10);
+  --border2:  rgba(196,137,42,0.25);
+  --green:    #4ade80;
+  --green-dim:rgba(55,86,35,0.18);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+body {
+  background:var(--soil);
+  color:var(--parch);
+  font-family:'Noto Sans SC',sans-serif;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* Root SVG bg */
+.root-bg{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.055}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 85%,rgba(196,137,42,0.04) 0%,transparent 70%),
+    radial-gradient(ellipse 60% 80% at 85% 20%,rgba(90,138,58,0.03) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+
+.app{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;
+  height:100vh;max-width:860px;margin:0 auto;
+}
+
+/* ── HEADER ── */
+.header{
+  padding:14px 20px 12px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+  background:rgba(13,11,9,0.95);backdrop-filter:blur(20px);
+  position:relative;z-index:10;
+}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand-zh{font-family:'Noto Serif SC',serif;font-size:26px;font-weight:600;color:var(--root);letter-spacing:0.04em}
+.brand-info{}
+.brand-en{font-family:'Space Mono',monospace;font-size:9px;color:var(--root2);letter-spacing:0.15em}
+.brand-sub{font-size:11px;color:var(--ash);margin-top:1px}
+.hb-indicator{
+  display:flex;align-items:center;gap:6px;
+  background:var(--root-dim);border:1px solid var(--border2);
+  border-radius:20px;padding:4px 12px;
+  font-size:10px;color:var(--root2);font-family:'Space Mono',monospace;
+}
+.hb-dot{width:5px;height:5px;border-radius:50%;background:var(--root);animation:hb 1.4s ease-in-out infinite}
+@keyframes hb{0%,100%{transform:scale(1);opacity:0.6}50%{transform:scale(1.8);opacity:1}}
+
+/* ── SUMMARY BAR ── */
+.summary-bar{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  background:var(--bark);border-bottom:1px solid var(--border);
+  flex-shrink:0;animation:fadeUp 0.3s ease;
+}
+.sum-item{padding:8px 12px;text-align:center;border-right:1px solid var(--border)}
+.sum-item:last-child{border-right:none}
+.sum-val{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:var(--root);line-height:1}
+.sum-lbl{font-size:9px;color:var(--ash);margin-top:3px;letter-spacing:0.04em}
+
+/* ── MODE BAR ── */
+.mode-bar{
+  display:flex;overflow-x:auto;scrollbar-width:none;
+  background:rgba(13,11,9,0.9);border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.mode-bar::-webkit-scrollbar{display:none}
+.mode-btn{
+  padding:10px 14px;font-size:11px;color:var(--ash);
+  cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;
+  transition:all 0.2s;font-family:'Noto Sans SC',sans-serif;
+  background:none;border-top:none;border-left:none;border-right:none;
+  display:flex;align-items:center;gap:4px;flex-shrink:0;
+}
+.mode-btn:hover{color:var(--parch2)}
+.mode-btn.active{color:var(--root2);border-bottom-color:var(--root)}
+.mode-btn.data-mode{border-left:1px solid var(--border);margin-left:auto}
+
+/* ── CONTENT AREA ── */
+.content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── CHAT PANEL ── */
+.chat-panel{
+  display:none;flex:1;flex-direction:column;overflow:hidden;
+}
+.chat-panel.active{display:flex}
+
+/* Quadrant banner */
+.quadrant-banner{
+  margin:12px 16px 0;
+  border-radius:10px;padding:10px 14px;
+  font-size:12px;line-height:1.6;
+  border:1px solid var(--border2);
+  animation:fadeUp 0.3s ease;
+  flex-shrink:0;
+}
+.quadrant-banner.dead-loop{background:var(--red-dim);border-color:rgba(197,90,17,0.3)}
+.quadrant-banner.demand{background:rgba(196,137,42,0.08);border-color:var(--border2)}
+.quadrant-banner.supply{background:var(--leaf-dim);border-color:rgba(90,138,58,0.3)}
+.quadrant-banner.healthy{background:var(--green-dim);border-color:rgba(74,222,128,0.25)}
+.quadrant-banner.unknown{background:rgba(255,255,255,0.03);border-color:var(--border)}
+.q-title{font-weight:700;margin-bottom:3px}
+.q-title.dead-loop{color:var(--red)}
+.q-title.demand{color:var(--root2)}
+.q-title.supply{color:var(--leaf2)}
+.q-title.healthy{color:#4ade80}
+.q-title.unknown{color:var(--ash)}
+.q-action{font-size:11px;color:var(--parch2);margin-top:4px}
+.q-action strong{color:var(--root2)}
+
+.chat-area{
+  flex:1;overflow-y:auto;padding:16px;
+  display:flex;flex-direction:column;gap:14px;
+  scrollbar-width:thin;scrollbar-color:var(--bark3) transparent;
+}
+.chat-area::-webkit-scrollbar{width:3px}
+.chat-area::-webkit-scrollbar-thumb{background:var(--bark3);border-radius:2px}
+
+/* Welcome */
+.welcome{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:24px 16px;gap:14px;
+  animation:fadeUp 0.4s ease;
+}
+.welcome-glyph{
+  font-family:'Noto Serif SC',serif;font-size:64px;
+  color:var(--root);opacity:0.5;line-height:1;
+  text-shadow:0 0 40px rgba(196,137,42,0.3);
+}
+.welcome-title{
+  font-family:'Noto Serif SC',serif;font-size:20px;
+  color:var(--parch2);line-height:1.5;
+}
+.welcome-desc{font-size:12px;color:var(--ash);line-height:1.8;max-width:340px}
+.quick-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  width:100%;max-width:480px;
+}
+.quick-btn{
+  background:var(--bark);border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;text-align:left;cursor:pointer;
+  transition:all 0.15s;font-family:'Noto Sans SC',sans-serif;
+  display:flex;flex-direction:column;gap:3px;
+}
+.quick-btn:hover{border-color:var(--border2);background:var(--bark2)}
+.qb-icon{font-size:16px}
+.qb-text{font-size:11px;color:var(--parch2);line-height:1.4}
+.qb-sub{font-size:9px;color:var(--dust);font-family:'Space Mono',monospace}
+
+/* Messages */
+.msg{display:flex;flex-direction:column;gap:3px;animation:fadeUp 0.2s ease}
+.msg.user{align-items:flex-end}
+.msg.ai{align-items:flex-start}
+.msg-role{font-family:'Space Mono',monospace;font-size:8px;color:var(--dust);letter-spacing:0.15em;text-transform:uppercase;padding:0 4px}
+.msg-bubble{
+  max-width:88%;border-radius:12px;padding:10px 14px;
+  font-size:13px;line-height:1.75;
+}
+.msg.user .msg-bubble{
+  background:var(--bark3);border:1px solid var(--border2);
+  color:var(--parch);border-bottom-right-radius:3px;
+}
+.msg.ai .msg-bubble{
+  background:var(--bark);border:1px solid var(--border);
+  color:var(--parch2);border-bottom-left-radius:3px;white-space:pre-wrap;
+}
+
+/* Metric cards inside AI bubble */
+.metric-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.metric-card{
+  background:var(--bark2);border:1px solid var(--border2);border-radius:8px;
+  padding:5px 10px;
+}
+.metric-label{font-size:9px;color:var(--ash);font-family:'Space Mono',monospace}
+.metric-val{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--root2)}
+
+/* Chat divider */
+.chat-divider{
+  display:flex;align-items:center;gap:10px;
+  color:var(--dust);font-size:10px;
+  font-family:'Space Mono',monospace;letter-spacing:0.1em;
+}
+.chat-divider::before,.chat-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Thinking */
+.thinking{display:flex;gap:4px;align-items:center;padding:4px 0}
+.td{width:5px;height:5px;border-radius:50%;background:var(--root);animation:pulse 1.4s infinite;opacity:0.3}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{opacity:.2;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
+
+/* ── INPUT AREA ── */
+.input-area{
+  padding:10px 16px 16px;
+  background:rgba(13,11,9,0.95);border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+.ctx-bar{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.ctx-tag{
+  background:var(--bark);border:1px solid var(--border);border-radius:8px;
+  padding:3px 10px;font-size:10px;color:var(--ash);
+  font-family:'Space Mono',monospace;cursor:pointer;transition:all 0.15s;
+}
+.ctx-tag:hover{border-color:var(--border2);color:var(--parch2)}
+.ctx-tag.set{border-color:var(--root);color:var(--root2);background:var(--root-dim)}
+.clear-btn{
+  background:none;border:1px solid var(--border);border-radius:8px;
+  padding:3px 10px;font-size:10px;color:var(--dust);
+  cursor:pointer;font-family:'Noto Sans SC',sans-serif;
+  transition:all 0.15s;margin-left:auto;
+}
+.clear-btn:hover{border-color:var(--border2);color:var(--ash)}
+.input-wrap{display:flex;gap:8px;align-items:flex-end}
+.chat-input{
+  flex:1;background:var(--bark);border:1px solid var(--border);border-radius:12px;
+  padding:10px 14px;font-size:13px;color:var(--parch);
+  font-family:'Noto Sans SC',sans-serif;resize:none;
+  min-height:42px;max-height:100px;line-height:1.6;
+  outline:none;transition:border-color 0.2s;
+}
+.chat-input:focus{border-color:var(--root)}
+.chat-input::placeholder{color:var(--dust)}
+.send-btn{
+  width:42px;height:42px;border-radius:12px;background:var(--root);
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:#000;flex-shrink:0;transition:all 0.15s;
+}
+.send-btn:hover{background:var(--root2)}
+.send-btn:disabled{opacity:0.4;cursor:not-allowed}
+.input-hint{font-size:10px;color:var(--dust);margin-top:6px;font-family:'Space Mono',monospace;letter-spacing:0.03em}
+
+/* ── DATA PANEL ── */
+.data-panel{
+  display:none;flex:1;flex-direction:column;overflow:hidden;
+}
+.data-panel.active{display:flex}
+
+.inner-tabbar{
+  display:flex;background:rgba(13,11,9,0.9);
+  border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none;
+}
+.inner-tabbar::-webkit-scrollbar{display:none}
+.inner-tab{
+  padding:9px 14px;font-size:11px;color:var(--ash);
+  cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;
+  transition:all 0.2s;background:none;border-top:none;border-left:none;border-right:none;
+  font-family:'Noto Sans SC',sans-serif;flex-shrink:0;
+}
+.inner-tab:hover{color:var(--parch2)}
+.inner-tab.active{color:var(--root2);border-bottom-color:var(--root)}
+
+.inner-panels{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bark3) transparent}
+.inner-panels::-webkit-scrollbar{width:3px}
+.inner-panels::-webkit-scrollbar-thumb{background:var(--bark3)}
+.inner-panel{display:none;padding:16px;flex-direction:column;gap:12px}
+.inner-panel.active{display:flex}
+
+/* Cards (data panel) */
+.card{background:var(--bark);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.card-title{
+  font-size:10px;font-weight:600;color:var(--ash);
+  letter-spacing:0.08em;text-transform:uppercase;
+  margin-bottom:12px;font-family:'Space Mono',monospace;
+  display:flex;align-items:center;gap:8px;
+}
+.card-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.input-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.input-group{display:flex;flex-direction:column;gap:4px}
+.input-group label{font-size:10px;color:var(--ash);letter-spacing:0.04em}
+.input-group input,.input-group select{
+  background:var(--bark2);border:1px solid var(--border);border-radius:8px;
+  padding:8px 10px;font-size:13px;color:var(--parch);
+  font-family:'Noto Sans SC',sans-serif;outline:none;
+  transition:border-color 0.2s;width:100%;
+}
+.input-group input:focus,.input-group select:focus{border-color:var(--root)}
+.input-group input::placeholder{color:var(--dust)}
+.input-group .unit{font-size:9px;color:var(--dust)}
+
+.calc-btn{
+  background:var(--root);border:none;border-radius:10px;
+  padding:12px;font-size:14px;font-weight:600;color:#000;
+  cursor:pointer;transition:all 0.2s;
+  font-family:'Noto Sans SC',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+}
+.calc-btn:hover{background:var(--root2);transform:translateY(-1px)}
+
+/* Quadrant result card */
+.quadrant-card{
+  border-radius:12px;padding:14px 16px;
+  border:1px solid;
+}
+.qc-dead{background:var(--red-dim);border-color:rgba(197,90,17,0.35)}
+.qc-demand{background:var(--root-dim);border-color:var(--border2)}
+.qc-supply{background:var(--leaf-dim);border-color:rgba(90,138,58,0.35)}
+.qc-healthy{background:var(--green-dim);border-color:rgba(74,222,128,0.3)}
+.qc-unknown{background:rgba(255,255,255,0.02);border-color:var(--border)}
+.qc-title{font-size:13px;font-weight:700;margin-bottom:6px}
+.qc-body{font-size:12px;color:var(--parch2);line-height:1.65}
+.qc-action{
+  margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);
+  font-size:11px;color:var(--ash);
+}
+.qc-action strong{color:var(--root2)}
+
+/* Chain display */
+.chain{display:flex;flex-direction:column;gap:0}
+.chain-connector{width:2px;height:8px;background:linear-gradient(to bottom,var(--root),var(--border));margin-left:26px}
+.node-card{
+  display:flex;align-items:center;gap:10px;
+  background:var(--bark);border:1px solid var(--border);
+  border-radius:10px;padding:9px 12px;transition:all 0.2s;
+}
+.node-card:hover{border-color:var(--border2);background:var(--bark2)}
+.health-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;box-shadow:0 0 6px currentColor}
+.h-green{background:#4ade80;color:#4ade80}
+.h-amber{background:var(--root);color:var(--root)}
+.h-red{background:#ef4444;color:#ef4444}
+.node-tag{
+  width:48px;flex-shrink:0;background:var(--bark3);
+  border-radius:6px;padding:4px;text-align:center;
+}
+.node-tag-key{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--root);display:block}
+.node-tag-t{font-size:8px;color:var(--ash);display:block;margin-top:1px}
+.node-info{flex:1;min-width:0}
+.node-name{font-size:11px;font-weight:600;color:var(--parch);margin-bottom:1px}
+.node-desc{font-size:9px;color:var(--ash);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.water-bar{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:4px}
+.water-fill{height:100%;border-radius:2px;transition:width 0.6s ease}
+.node-metrics{flex-shrink:0;text-align:right}
+.node-a{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--root);line-height:1}
+.node-r{font-size:9px;color:var(--ash);margin-top:2px}
+
+/* Grade matrix */
+.grade-matrix{display:flex;flex-direction:column;gap:5px}
+.grade-row{display:flex;gap:5px;align-items:center}
+.grade-city{font-size:10px;color:var(--ash);width:56px;flex-shrink:0}
+.grade-cell{
+  flex:1;border-radius:6px;padding:5px 4px;text-align:center;
+  font-size:9px;font-weight:600;border:1px solid transparent;cursor:default;
+}
+.g1{background:var(--red-dim);color:var(--red);border-color:rgba(197,90,17,0.3)}
+.g2{background:var(--root-dim);color:var(--root);border-color:rgba(196,137,42,0.25)}
+.g3{background:var(--leaf-dim);color:var(--leaf2);border-color:rgba(90,138,58,0.3)}
+.g4{background:var(--water-dim);color:#60a5fa;border-color:rgba(58,106,138,0.3)}
+.gx{background:var(--bark2);color:var(--dust);border-color:var(--border)}
+
+/* Diag items */
+.diag-item{
+  background:var(--bark2);border:1px solid var(--border);border-radius:8px;
+  padding:10px 12px;font-size:12px;color:var(--parch2);line-height:1.6;
+}
+.diag-item.warn{border-color:rgba(196,137,42,0.35);background:var(--root-dim)}
+.diag-item.danger{border-color:rgba(197,90,17,0.35);background:var(--red-dim)}
+.diag-item.good{border-color:rgba(55,86,35,0.4);background:var(--green-dim)}
+.diag-title{font-size:11px;font-weight:700;margin-bottom:4px}
+.diag-title.warn{color:var(--root2)}
+.diag-title.danger{color:var(--red)}
+.diag-title.good{color:var(--leaf2)}
+
+/* ── THREE YEAR ── */
+.yr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.yr-card{
+  border-radius:12px;padding:14px;border:1px solid var(--border);
+  background:var(--bark);display:flex;flex-direction:column;gap:6px;
+  position:relative;overflow:hidden;
+}
+.yr-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.yr-card.y1::before{background:var(--ash)}
+.yr-card.y2::before{background:var(--root)}
+.yr-card.y3::before{background:var(--leaf2)}
+.yr-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--ash);letter-spacing:0.1em}
+.yr-year{font-family:'Noto Serif SC',serif;font-size:16px;font-weight:600;color:var(--parch);margin-bottom:4px}
+.yr-row{display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;border-bottom:1px solid var(--border)}
+.yr-row:last-child{border-bottom:none}
+.yr-key{font-size:10px;color:var(--ash)}
+.yr-val{font-family:'Space Mono',monospace;font-size:11px;font-weight:700}
+.yr-val.good{color:var(--green)}
+.yr-val.warn{color:var(--root2)}
+.yr-val.bad{color:var(--red)}
+.yr-val.neutral{color:var(--parch2)}
+.yr-grade-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;
+  border:1px solid;margin-top:2px;
+}
+.gb-1{background:rgba(197,90,17,0.1);color:var(--red);border-color:rgba(197,90,17,0.3)}
+.gb-2{background:var(--root-dim);color:var(--root2);border-color:var(--border2)}
+.gb-3{background:var(--leaf-dim);color:var(--leaf2);border-color:rgba(90,138,58,0.3)}
+.gb-4{background:var(--green-dim);color:var(--green);border-color:rgba(74,222,128,0.3)}
+
+.breakeven-banner{
+  border-radius:10px;padding:12px 14px;margin-bottom:10px;
+  border:1px solid;display:flex;align-items:center;gap:10px;
+}
+.bb-profit{background:var(--green-dim);border-color:rgba(74,222,128,0.3)}
+.bb-loss{background:var(--red-dim);border-color:rgba(197,90,17,0.3)}
+.bb-icon{font-size:22px;flex-shrink:0}
+.bb-text{}
+.bb-title{font-size:12px;font-weight:700;margin-bottom:2px}
+.bb-sub{font-size:11px;color:var(--ash);line-height:1.5}
+
+.progress-track{
+  height:8px;background:rgba(255,255,255,0.06);border-radius:4px;
+  overflow:hidden;margin:4px 0 2px;
+}
+.progress-fill{height:100%;border-radius:4px;transition:width 0.8s ease}
+
+.yr-assumption-card{
+  background:rgba(196,137,42,0.04);border:1px solid var(--border);
+  border-radius:12px;padding:14px;margin-bottom:12px;
+}
+.yr-assumption-title{font-size:11px;color:var(--ash);font-family:'Space Mono',monospace;letter-spacing:0.08em;margin-bottom:10px}
+.yr-input-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.yr-input-row-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.yr-recalc-btn{
+  background:var(--bark2);border:1px solid var(--border2);border-radius:8px;
+  padding:8px 14px;font-size:12px;color:var(--root2);cursor:pointer;
+  font-family:'Noto Sans SC',sans-serif;transition:all 0.15s;width:100%;margin-top:8px;
+}
+.yr-recalc-btn:hover{background:var(--root-dim);border-color:var(--root)}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bark3);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- Root SVG background -->
+<svg class="root-bg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
+  <g stroke="#c4892a" fill="none" stroke-width="0.8">
+    <path d="M500,1000 Q480,800 420,650 Q360,500 200,400 Q100,350 0,320"/>
+    <path d="M500,1000 Q510,780 560,620 Q620,460 800,350 Q900,300 1000,280"/>
+    <path d="M500,1000 Q490,850 450,700 Q400,550 350,450 Q280,350 150,250"/>
+    <path d="M500,1000 Q520,820 580,680 Q650,520 750,420 Q850,340 950,200"/>
+    <path d="M420,650 Q380,580 300,520 Q220,460 100,440"/>
+    <path d="M560,620 Q620,540 700,490 Q780,440 900,420"/>
+    <path d="M300,520 Q250,480 180,460 Q120,445 30,430"/>
+    <path d="M700,490 Q780,460 860,440 Q930,425 1000,410"/>
+  </g>
+</svg>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-zh">樹根</div>
+      <div class="brand-info">
+        <div class="brand-en">SHUGEN · v3.0</div>
+        <div class="brand-sub">品牌底层操作系统</div>
+      </div>
+    </div>
+    <div class="hb-indicator">
+      <div class="hb-dot"></div>
+      <span id="hbStatus">等待数据</span>
+    </div>
+  </div>
+
+  <!-- SUMMARY BAR (hidden until data) -->
+  <div class="summary-bar" id="summaryBar" style="display:none">
+    <div class="sum-item"><div class="sum-val" id="sumR">—</div><div class="sum-lbl">R 全网/天</div></div>
+    <div class="sum-item"><div class="sum-val" id="sumHealth">—</div><div class="sum-lbl">链路健康</div></div>
+    <div class="sum-item"><div class="sum-val" id="sumGrade">—</div><div class="sum-lbl">SKU①年级</div></div>
+    <div class="sum-item"><div class="sum-val" id="sumAlert">—</div><div class="sum-lbl">预警数量</div></div>
+  </div>
+
+  <!-- MODE BAR -->
+  <div class="mode-bar">
+    <button class="mode-btn active" data-mode="strategy" onclick="setMode('strategy')">⭐ 战略</button>
+    <button class="mode-btn" data-mode="ops" onclick="setMode('ops')">💓 经营</button>
+    <button class="mode-btn" data-mode="diagnose" onclick="setMode('diagnose')">🔍 诊断</button>
+    <button class="mode-btn" data-mode="learn" onclick="setMode('learn')">🌱 学习</button>
+    <button class="mode-btn" data-mode="simulate" onclick="setMode('simulate')">⚡ 推演</button>
+    <button class="mode-btn data-mode" data-mode="data" onclick="setMode('data')">📊 数据</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ═══ CHAT PANEL ═══ -->
+    <div class="chat-panel active" id="chatPanel">
+
+      <!-- Quadrant banner (shown when data exists) -->
+      <div id="quadrantBanner" style="display:none"></div>
+
+      <div class="chat-area" id="chatArea">
+        <div class="welcome" id="welcome">
+          <div class="welcome-glyph">樹</div>
+          <div class="welcome-title">根不问服务谁<br>根服务所有人</div>
+          <div class="welcome-desc">
+            心跳公式 · 年级系统 · IPO0-13全链<br>
+            SKU规划 · 城市扩张 · 实时诊断<br>
+            输入数据，问任何经营问题。
+          </div>
+          <div class="quick-grid" id="quickGrid"></div>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <div class="ctx-bar">
+          <span class="ctx-tag" id="ctx-brand" onclick="toggleCtx('brand','品牌名称')">品牌</span>
+          <span class="ctx-tag" id="ctx-city" onclick="toggleCtx('city','目标城市')">城市</span>
+          <span class="ctx-tag" id="ctx-price" onclick="toggleCtx('price','零售价格')">定价</span>
+          <span class="ctx-tag" id="ctx-year" onclick="toggleCtx('year','当前年份')">年份</span>
+          <button class="clear-btn" onclick="clearChat()">清空</button>
+        </div>
+        <div class="input-wrap">
+          <textarea
+            class="chat-input" id="chatInput"
+            placeholder="问樹根任何经营问题…"
+            rows="1"
+            onkeydown="handleKey(event)"
+            oninput="autoResize(this)"
+          ></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+        </div>
+        <div class="input-hint" id="inputHint">心跳 · 流速 · 新鲜 · 三层水位 · 年级系统 · IPO0-13</div>
+      </div>
+    </div>
+
+    <!-- ═══ DATA PANEL ═══ -->
+    <div class="data-panel" id="dataPanel">
+      <div class="inner-tabbar">
+        <button class="inner-tab active" onclick="switchInnerTab('input')">📋 数据输入</button>
+        <button class="inner-tab" id="itab-chain" onclick="switchInnerTab('chain')">💓 心跳全链</button>
+        <button class="inner-tab" id="itab-grade" onclick="switchInnerTab('grade')">🎓 年级矩阵</button>
+        <button class="inner-tab" id="itab-diag" onclick="switchInnerTab('diag')">🔍 诊断报告</button>
+        <button class="inner-tab" id="itab-3year" onclick="switchInnerTab('3year')">🌱 三年推演</button>
+      </div>
+
+      <div class="inner-panels">
+
+        <!-- 数据输入 -->
+        <div class="inner-panel active" id="ipanel-input">
+          <div class="card">
+            <div class="card-title">📍 基础参数</div>
+            <div class="input-grid">
+              <div class="input-group">
+                <label>品牌名称</label>
+                <input id="brandName" placeholder="如：六月鲜" value="六月鲜">
+              </div>
+              <div class="input-group">
+                <label>目标城市</label>
+                <input id="cityName" placeholder="如：上海" value="上海">
+              </div>
+              <div class="input-group">
+                <label>城市总家庭数（万户）</label>
+                <input id="totalHH" type="number" value="1000">
+                <div class="unit">上海约1000万户</div>
+              </div>
+              <div class="input-group">
+                <label>目标渗透率（%）</label>
+                <input id="penetration" type="number" value="1.5" step="0.1">
+                <div class="unit">第1年建议1.5%</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">📦 SKU参数</div>
+            <div class="input-grid">
+              <div class="input-group">
+                <label>SKU① 零售价（元/瓶）</label>
+                <input id="price1" type="number" value="30">
+              </div>
+              <div class="input-group">
+                <label>每户年购买瓶数</label>
+                <input id="bottlesPerHH" type="number" value="5">
+                <div class="unit">调味品约5瓶/年</div>
+              </div>
+              <div class="input-group">
+                <label>SKU①当前年级</label>
+                <select id="currentGrade">
+                  <option value="0">校准期（新品）</option>
+                  <option value="1" selected>1年级</option>
+                  <option value="2">2年级</option>
+                  <option value="3">3年级</option>
+                  <option value="4">4年级</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label>SKU①销量占比（%）</label>
+                <input id="share1" type="number" value="70">
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">🏪 渠道参数</div>
+            <div class="input-grid-3">
+              <div class="input-group">
+                <label>铺货门店数</label>
+                <input id="storeCount" type="number" value="1000">
+              </div>
+              <div class="input-group">
+                <label>经销商数量</label>
+                <input id="dealerCount" type="number" value="3">
+              </div>
+              <div class="input-group">
+                <label>二批商数量</label>
+                <input id="subDealerCount" type="number" value="5">
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">📊 实际数据（填入后获得象限诊断）</div>
+            <div class="input-grid">
+              <div class="input-group">
+                <label>实际r₁ 门店流速（瓶/天/店）</label>
+                <input id="actual_r1" type="number" placeholder="空白=用计算值" step="0.01">
+              </div>
+              <div class="input-group">
+                <label>r值达标率（%）</label>
+                <input id="rAchieve" type="number" placeholder="实际÷目标×100">
+                <div class="unit">影响象限诊断</div>
+              </div>
+              <div class="input-group">
+                <label>当前门店库存（瓶/店）</label>
+                <input id="actual_inv" type="number" placeholder="用于水位诊断">
+                <div class="unit">影响象限诊断</div>
+              </div>
+              <div class="input-group">
+                <label>实际r₃ 经销商出货（瓶/天）</label>
+                <input id="actual_r3" type="number" placeholder="空白=用计算值">
+              </div>
+            </div>
+          </div>
+
+          <button class="calc-btn" onclick="calculate()">
+            <span>💓</span>
+            <span>计算心跳全链 · 生成象限诊断</span>
+          </button>
+        </div>
+
+        <!-- 心跳全链 -->
+        <div class="inner-panel" id="ipanel-chain">
+          <div id="chainContent">
+            <div class="card" style="text-align:center;padding:32px;color:var(--ash);font-size:13px">
+              请先在「数据输入」中填写参数并计算
+            </div>
+          </div>
+        </div>
+
+        <!-- 年级矩阵 -->
+        <div class="inner-panel" id="ipanel-grade">
+          <div id="gradeContent">
+            <div class="card" style="text-align:center;padding:32px;color:var(--ash);font-size:13px">
+              请先在「数据输入」中填写参数并计算
+            </div>
+          </div>
+        </div>
+
+        <!-- 诊断报告 -->
+        <div class="inner-panel" id="ipanel-diag">
+          <div id="diagContent">
+            <div class="card" style="text-align:center;padding:32px;color:var(--ash);font-size:13px">
+              请先在「数据输入」中填写参数并计算
+            </div>
+          </div>
+        </div>
+
+        <!-- 三年推演 -->
+        <div class="inner-panel" id="ipanel-3year">
+          <div class="yr-assumption-card">
+            <div class="yr-assumption-title">ASSUMPTIONS · 三年推演假设（可调整）</div>
+            <div class="yr-input-row">
+              <div class="input-group">
+                <label>毛利（元/瓶）</label>
+                <input id="yr_margin" type="number" placeholder="如：8" step="0.5">
+                <div class="unit">出厂价-变动成本</div>
+              </div>
+              <div class="input-group">
+                <label>第2年渗透率（%）</label>
+                <input id="yr_pct2" type="number" placeholder="自动：×2" step="0.1">
+              </div>
+              <div class="input-group">
+                <label>第3年渗透率（%）</label>
+                <input id="yr_pct3" type="number" placeholder="自动：×3.5" step="0.1">
+              </div>
+            </div>
+            <div class="yr-input-row-2">
+              <div class="input-group">
+                <label>第2年门店数</label>
+                <input id="yr_stores2" type="number" placeholder="自动：×1.5">
+              </div>
+              <div class="input-group">
+                <label>第3年门店数</label>
+                <input id="yr_stores3" type="number" placeholder="自动：×2.5">
+              </div>
+            </div>
+            <button class="yr-recalc-btn" onclick="renderThreeYear()">🌱 重新推演</button>
+          </div>
+          <div id="threeYearContent">
+            <div class="card" style="text-align:center;padding:32px;color:var(--ash);font-size:13px">
+              请先在「数据输入」中填写参数并计算
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let conversationHistory = [];
+let isLoading = false;
+let currentMode = 'strategy';
+let context = { brand: '', city: '', price: '', year: '' };
+let calcData = null;
+
+// ═══════════════════════════════════════════════════════════
+// QUADRANT DIAGNOSTIC ENGINE
+// ═══════════════════════════════════════════════════════════
+function diagnoseQuadrant() {
+  if (!calcData) return null;
+
+  const r = calcData.rAchieve;
+  const inv = calcData.actual_inv;
+  const a1 = calcData.r1 * 14;       // 1a level
+  const a2 = calcData.r1 * 14 * 2;   // 2a level
+
+  const hasR   = r !== null && r !== undefined;
+  const hasInv = inv !== null && inv !== undefined;
+
+  if (!hasR && !hasInv) return {
+    type: 'unknown',
+    cssClass: 'unknown',
+    title: '📋 等待实际数据',
+    conclusion: '输入r值达标率和当前门店库存，获得精准象限诊断。',
+    action: '填入「实际数据」两栏，重新计算。',
+    aiContext: '用户尚未输入实际r值和库存数据，给出通用分析。'
+  };
+
+  const rLow = hasR && r < 80;
+  const rOk  = hasR && r >= 80;
+  const invLow = hasInv && inv < a2;
+  const invOk  = hasInv && inv >= a2;
+  const invDanger = hasInv && inv < a1;
+
+  if (rLow && invLow) return {
+    type: 'dead_loop',
+    cssClass: 'dead-loop',
+    title: `🔴 死循环 · r=${r}% · 库存${inv ? inv.toFixed(0) : '?'}瓶`,
+    conclusion: `低库存（${inv ? inv.toFixed(0) : '?'}瓶/店，低于2a预警线${a2.toFixed(0)}瓶）正在压低r值（${r}%），两个预警互为因果。`,
+    action: '先补货打破死循环，r值会自然回升。补货到位后再查动销根因。',
+    aiContext: `【象限：死循环】r值达标率${r}%（<80%），门店库存${inv ? inv.toFixed(0) : '?'}瓶（低于2a预警线${a2.toFixed(0)}瓶）。低库存正在压低r值，形成恶性循环。第一行动是补货，不是查原因。`
+  };
+
+  if (rLow && invOk) return {
+    type: 'demand',
+    cssClass: 'demand',
+    title: `🟡 动销偏慢 · r=${r}% · 库存充足`,
+    conclusion: `货架库存充足（${inv ? inv.toFixed(0) : '?'}瓶，高于2a预警线），但r值仅${r}%，是需求侧问题。`,
+    action: '查铺货率、货架陈列、竞品打压。考虑加大美顾/促销投入或重审SKU定价。',
+    aiContext: `【象限：动销问题】r值达标率${r}%（<80%），但库存充足（${inv ? inv.toFixed(0) : '?'}瓶，>2a线）。供应侧没问题，问题在需求侧：陈列、竞品、价格、或触达不足。`
+  };
+
+  if (rOk && invLow) return {
+    type: 'supply',
+    cssClass: 'supply',
+    title: `🟢 好问题 · r=${r}% · 供应跟不上`,
+    conclusion: `r值达标（${r}%），卖得好，但库存偏低（${inv ? inv.toFixed(0) : '?'}瓶，低于2a线${a2.toFixed(0)}瓶），是供应侧问题。`,
+    action: `加快补货频次，检查经销商出货节奏。${invDanger ? '⚠️ 库存已低于1a危险线，今天就要行动。' : ''}`,
+    aiContext: `【象限：供应跟不上】r值达标（${r}%），动销健康，但库存偏低（${inv ? inv.toFixed(0) : '?'}瓶<2a线）。这是高质量问题：卖得好但供应链跟不上。重点是加快补货频次。`
+  };
+
+  if (rOk && invOk) return {
+    type: 'healthy',
+    cssClass: 'healthy',
+    title: `✅ 状态健康 · r=${r}% · 库存充足`,
+    conclusion: `r值达标（${r}%），库存健康（${inv ? inv.toFixed(0) : '?'}瓶，高于2a线）。系统运转正常。`,
+    action: `持续${calcData.grade <= 1 ? 3 : 6}个月达标后可申请升至${calcData.grade < 4 ? calcData.grade + 1 : 4}年级，释放费用率空间。`,
+    aiContext: `【象限：健康】r值达标（${r}%），库存充足（${inv ? inv.toFixed(0) : '?'}瓶>2a线）。系统健康，重点是保持并推动升级。`
+  };
+
+  // Only one dimension available
+  if (hasR && !hasInv) return {
+    type: 'unknown',
+    cssClass: 'unknown',
+    title: `📊 r值${r}% · 等待库存数据`,
+    conclusion: `r值${r >= 80 ? '达标' : '偏低'}（${r}%）。补充门店实际库存数据可获得完整象限诊断。`,
+    action: '填入当前门店库存瓶数，获得精准行动建议。',
+    aiContext: `r值达标率${r}%（${r >= 80 ? '达标' : '低于80%警戒线'}），库存数据未输入。`
+  };
+
+  return {
+    type: 'unknown', cssClass: 'unknown',
+    title: '📦 库存数据已读取',
+    conclusion: `当前库存${inv ? inv.toFixed(0) : '?'}瓶/店。补充r值达标率可获得完整诊断。`,
+    action: '填入r值达标率（实际流速÷目标流速×100），获得象限定位。',
+    aiContext: `门店库存${inv ? inv.toFixed(0) : '?'}瓶，r值达标率未输入。`
+  };
+}
+
+function renderQuadrantBanner() {
+  const banner = document.getElementById('quadrantBanner');
+  if (!calcData) { banner.style.display = 'none'; return; }
+  const q = diagnoseQuadrant();
+  if (!q) { banner.style.display = 'none'; return; }
+
+  banner.style.display = 'block';
+  banner.innerHTML = `
+    <div class="quadrant-banner ${q.cssClass}">
+      <div class="q-title ${q.cssClass}">${q.title}</div>
+      <div style="font-size:12px;color:var(--parch2);line-height:1.6">${q.conclusion}</div>
+      <div class="q-action"><strong>→ ${q.action}</strong></div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// MODES
+// ═══════════════════════════════════════════════════════════
+const MODES = {
+  strategy: {
+    label:'战略模式',
+    hint:'市场进入 · SKU规划 · 三年目标 · 城市选择',
+    quickPrompts:[
+      {icon:'🌱',text:'我要进入这个市场吗？帮我判断',sub:'五维进入决策框架'},
+      {icon:'📦',text:'第一年应该推几个SKU？推什么？',sub:'SKU规划 + 英雄款选择'},
+      {icon:'📅',text:'基于三年推演，战略目标合理吗？',sub:'结合三年数据给出战略判断'},
+      {icon:'💰',text:'三年总投入和回报是否值得？',sub:'ROI推算 + 盈亏转折点'},
+    ]
+  },
+  ops: {
+    label:'经营模式',
+    hint:'r值监控 · 补货预警 · 水位检测 · 今天要做什么',
+    quickPrompts:[
+      {icon:'💓',text:'我的r₁门店流速正常吗？',sub:'输入数值·立即诊断'},
+      {icon:'📊',text:'哪些门店需要今天补货？',sub:'a值水位·三层预警'},
+      {icon:'🔗',text:'经销商库存健康吗？',sub:'IPO2-4全链检测'},
+      {icon:'⚠️',text:'蝴蝶效应：哪里有失真风险？',sub:'A/B/C三类失真检测'},
+    ]
+  },
+  diagnose: {
+    label:'诊断模式',
+    hint:'品牌健康 · 年级诊断 · 失真检测 · 费用率评估',
+    quickPrompts:[
+      {icon:'🩺',text:'帮我诊断这个品牌的整体健康度',sub:'输入关键数据·全面评估'},
+      {icon:'📈',text:'我的SKU应该升几年级了？',sub:'年级判断 + 激励系数建议'},
+      {icon:'🦋',text:'我的数据是否有失真？',sub:'压货/促销扰动/窜货检测'},
+      {icon:'💸',text:'我的销售费用率合理吗？',sub:'对比行业标准 + 年级基准'},
+    ]
+  },
+  learn: {
+    label:'学习模式',
+    hint:'心跳公式 · 年级系统 · IPO链路 · 三层水位',
+    quickPrompts:[
+      {icon:'❤️',text:'什么是心跳公式？a值和r值是什么？',sub:'核心框架入门'},
+      {icon:'🎓',text:'年级系统怎么理解？',sub:'四个年级·激励系数·升降逻辑'},
+      {icon:'🔢',text:'IPO0到IPO13是什么？',sub:'全链心跳节点详解'},
+      {icon:'🌊',text:'三层水位系统怎么设计？',sub:'满仓·预警·危险的逻辑'},
+    ]
+  },
+  simulate: {
+    label:'推演模式',
+    hint:'假设推演 · 情景分析 · 三年盈亏测试',
+    quickPrompts:[
+      {icon:'📉',text:'如果把定价降¥5，三年盈亏怎么变？',sub:'价格敏感性 × 三年模型'},
+      {icon:'🏙️',text:'如果第2年进入第二个城市？',sub:'启动成本·节奏·总体盈亏'},
+      {icon:'📈',text:'如果渗透率增速比预期慢一半？',sub:'悲观情景下的三年路径'},
+      {icon:'✂️',text:'如果砍掉SKU②，三年利润影响？',sub:'LTV损失 × 费用节省对比'},
+    ]
+  }
+};
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+
+  const isData = mode === 'data';
+  document.getElementById('chatPanel').classList.toggle('active', !isData);
+  document.getElementById('dataPanel').classList.toggle('active', isData);
+
+  if (!isData) {
+    renderQuickPrompts();
+    const hint = document.getElementById('inputHint');
+    if (hint) hint.textContent = MODES[mode]?.hint || '';
+
+    // Add mode divider if chat has messages
+    const area = document.getElementById('chatArea');
+    if (!document.getElementById('welcome') && MODES[mode]) {
+      const div = document.createElement('div');
+      div.className = 'chat-divider';
+      div.textContent = `切换至 ${MODES[mode].label}`;
+      area.appendChild(div);
+      area.scrollTop = area.scrollHeight;
+    }
+  }
+}
+
+function renderQuickPrompts() {
+  const grid = document.getElementById('quickGrid');
+  if (!grid) return;
+  const mode = MODES[currentMode];
+  if (!mode) return;
+  grid.innerHTML = mode.quickPrompts.map(p => `
+    <button class="quick-btn" onclick="sendQuick(${JSON.stringify(p.text)})">
+      <span class="qb-icon">${p.icon}</span>
+      <div class="qb-text">${p.text}</div>
+      <div class="qb-sub">${p.sub}</div>
+    </button>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// SYSTEM PROMPT (Bridge 1: calcData → AI context)
+// ═══════════════════════════════════════════════════════════
+function buildDataContext() {
+  if (!calcData) return '';
+  const q = diagnoseQuadrant();
+  const gradeNames = ['校准期','1年级','2年级','3年级','4年级'];
+
+  // Three-year projection context
+  let threeYearCtx = '';
+  if (calcData._threeYear) {
+    const { Y1, Y2, Y3, marginPerBottle } = calcData._threeYear;
+    threeYearCtx = `
+三年推演：
+• Y1：${(Y1.pct*100).toFixed(1)}%渗透→${(Y1.annualBtls/10000).toFixed(1)}万瓶→¥${Y1.annualRev.toFixed(0)}万 [${gradeNames[Y1.grade]}·费用率${(Y1.expRate*100).toFixed(0)}%·费用¥${Y1.expenses.toFixed(0)}万${marginPerBottle?'·净利¥'+Y1.netProfit.toFixed(0)+'万':''}]
+• Y2：${(Y2.pct*100).toFixed(1)}%渗透→${(Y2.annualBtls/10000).toFixed(1)}万瓶→¥${Y2.annualRev.toFixed(0)}万 [${gradeNames[Y2.grade]}·费用率${(Y2.expRate*100).toFixed(0)}%·费用¥${Y2.expenses.toFixed(0)}万${marginPerBottle?'·净利¥'+Y2.netProfit.toFixed(0)+'万':''}]
+• Y3：${(Y3.pct*100).toFixed(1)}%渗透→${(Y3.annualBtls/10000).toFixed(1)}万瓶→¥${Y3.annualRev.toFixed(0)}万 [${gradeNames[Y3.grade]}·费用率${(Y3.expRate*100).toFixed(0)}%·费用¥${Y3.expenses.toFixed(0)}万${marginPerBottle?'·净利¥'+Y3.netProfit.toFixed(0)+'万':''}]
+${marginPerBottle?`三年累计净利润：¥${(Y1.netProfit+Y2.netProfit+Y3.netProfit).toFixed(0)}万`:'毛利未输入，盈亏待解锁'}`;
+  }
+
+  return `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【当前真实经营数据 · ${calcData.brand} · ${calcData.city}】
+
+核心流速：
+• R全网流速：${calcData.R.toFixed(0)}瓶/天
+• r₁单店目标：${calcData.r1.toFixed(2)}瓶/天/店
+• r₀消费者：${calcData.r0.toFixed(4)}瓶/天/户
+• r₃经销商出货：${calcData.r3.toFixed(0)}瓶/天
+${calcData.actual_r1 ? `• r₁实际：${calcData.actual_r1}瓶/天/店` : ''}
+${calcData.rAchieve ? `• r值达标率：${calcData.rAchieve}%` : '• r值达标率：未输入'}
+${calcData.actual_inv ? `• 当前门店库存：${calcData.actual_inv}瓶/店（2a线=${(calcData.r1*14*2).toFixed(0)}瓶）` : '• 门店库存：未输入'}
+
+规模参数：
+• 目标家庭：${(calcData.totalHH * calcData.pct * 10000).toFixed(0)}户（${calcData.city}${(calcData.pct*100).toFixed(1)}%渗透率）
+• 铺货门店：${calcData.stores}家 | 经销商：${calcData.dealers}家
+• 当前年级：${gradeNames[calcData.grade]}（激励系数×${calcData.gradeCoeff}，费用率${(calcData.gradeRate*100).toFixed(0)}%）
+• 年度目标收入：¥${calcData.annualRev.toFixed(0)}万元
+${threeYearCtx}
+象限诊断：${q ? q.aiContext : '数据不完整'}
+链路健康分：${calcData.healthScore}分
+活跃预警：${calcData.alerts.filter(a=>a.level!=='good').length}项
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
+}
+
+function buildSystemPrompt() {
+  const modeInstructions = {
+    strategy: '你现在处于战略模式。专注于市场进入决策、SKU规划、三年目标制定、城市选择。引导用户量化假设，推导出完整的战略框架。',
+    ops: '你现在处于经营模式。专注于日常r值监控、水位预警、补货建议。如有真实数据，直接基于数据给出精准行动建议，不要泛泛而谈。',
+    diagnose: '你现在处于诊断模式。像一个品牌医生，系统性评估品牌健康度。如有真实数据，优先基于象限诊断结论给出针对性建议。',
+    learn: '你现在处于学习模式。用清晰、生动的方式解释樹根框架的每一个概念。多用比喻，结合用户已有数据举例说明。',
+    simulate: '你现在处于推演模式。针对用户的假设情景，严格按照樹根框架推导量化结果。如有基础数据，在真实基数上推演。'
+  };
+
+  const ctxStr = Object.entries(context).filter(([k,v])=>v).map(([k,v])=>`${k}: ${v}`).join(', ');
+  const dataCtx = buildDataContext();
+
+  return `你是樹根（SHUGEN）——品牌底层操作系统级别的AI战略顾问。
+
+你的核心知识体系是「樹根框架」，包含以下五大支柱：
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【支柱一：心跳公式】
+
+基础定义：
+• a（心跳单元）= 一个完整周转周期T内的销售量
+• r（流速/心跳）= a ÷ T，是全系统跨层计算的通用语言
+• 管理层叫"心跳"，销售员叫"流速"，消费者叫"新鲜"
+
+五层心跳体系：
+• r₀ = 消费者层，家庭每天消耗的速率
+• r₁ = 门店层，单店每天卖出的速率
+• r₂ = 二批商层，二批商每天流转的速率
+• r₃ = 经销商层，经销商每天出货的速率
+• R  = 全网层，整个市场每天总销售速率
+• 关系：R = Σr₁ = Σr₂ = Σr₃（必须等于消费者真实消耗）
+
+心跳失真三类保护：
+• A类失真：渠道压货（IPO3高 AND IPO9低→暂停推单）
+• B类失真：促销扰动（r值暴涨>50%→标记扰动期）
+• C类失真：灰市窜货（价格低于底价→触发价签核查）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【支柱二：三层水位系统】
+
+零售层（最前线·最敏感）：满仓3a → 预警2a → 危险1a
+经销商层（中游缓冲池）：满仓2a → 预警1a
+二批商层（严格管控）：上限1a → 触0即补（超过1a=压货=蝴蝶效应风险）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【支柱三：IPO0-13全链节点】
+
+IPO0  原料采购     T60  最大缓冲·断供防火墙
+IPO1  工厂库存     T30  2a满·1a预警
+IPO2  经销商进货   T30  月结触发推单信号
+IPO3  经销商仓库   T30  T30→T14的缓冲池
+IPO4  经销商出货   T14  匹配门店补货节奏
+IPO5  二批进货P2   T14  严控1a上限
+IPO6  二批库存P2   T14  超1a=失真信号
+IPO7  二批出货P2   T14  进=出=库存
+IPO8  门店进货     T14  承接IPO4
+IPO9  货架库存     T14  3a/2a/1a三级水位
+IPO10 门店日销     T7   周度验证r值
+IPO11 消费者购买   T73  行为触发节点
+IPO12 家中库存     T73  品牌承诺兑现层
+IPO13 家庭消耗     T73  全链锚点·所有节点之源
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【支柱四：年级系统】
+
+1年级 ×2.0激励 费用率50%：建认知·抢铺货·容忍亏损
+2年级 ×1.5激励 费用率35%：扩渗透·提复购·回收投入
+3年级 ×1.0激励 费用率20%：正常经营·靠口碑增长
+4年级 ×0.7激励 费用率12%：收割利润·降费用
+
+升级：r值连续3个月≥目标80%（2→3级需6个月）
+降级：r值连续2月下滑>20%→自动降级
+原则：年级看r值不看时间；每个SKU在每个城市独立计算
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【支柱五：SKU规划与财务模型】
+
+SKU五年节奏：第1年2个 → 第2年4个 → 第3年8个 → 第5年16个
+SKU①英雄款：利润发动机·目标4年级
+SKU②获客工具：永远1年级·LTV/CAC目标>3倍·不能砍
+新城市启动包标准：¥160万
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${dataCtx}
+${ctxStr ? `【用户上下文】${ctxStr}\n` : ''}
+【当前模式】${modeInstructions[currentMode] || ''}
+
+【回答风格】
+1. 先回答核心问题，再展开
+2. 有真实数据时，直接用数据说话，不用泛泛假设
+3. 遇到数字问题必须量化，不能模糊
+4. 有象限诊断时，第一句话直接给出行动指令
+5. 字数适中：简单问题100字内，复杂推演可展开，核心结论永远在前
+6. 如推导出r值，用格式 [METRICS:r0=X,r1=Y,r3=Z,R=V] 标注
+7. 中文回答，专业但不晦涩
+8. 樹根不是工具，是根。根不问服务谁，根服务所有人。`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CHAT FUNCTIONS
+// ═══════════════════════════════════════════════════════════
+async function sendQuick(text) {
+  document.getElementById('chatInput').value = text;
+  await sendMessage();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const q = input.value.trim();
+  if (!q || isLoading) return;
+
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+
+  input.value = '';
+  input.style.height = '';
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  const area = document.getElementById('chatArea');
+
+  // User bubble
+  const userMsg = document.createElement('div');
+  userMsg.className = 'msg user';
+  userMsg.innerHTML = `<div class="msg-role">你</div><div class="msg-bubble">${escHtml(q)}</div>`;
+  area.appendChild(userMsg);
+
+  // Thinking bubble
+  const thinkMsg = document.createElement('div');
+  thinkMsg.className = 'msg ai';
+  thinkMsg.innerHTML = `<div class="msg-role">樹根</div><div class="msg-bubble"><div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
+  area.appendChild(thinkMsg);
+  area.scrollTop = area.scrollHeight;
+
+  conversationHistory.push({ role: 'user', content: q });
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: buildSystemPrompt(),
+        messages: conversationHistory
+      })
+    });
+
+    const data = await resp.json();
+    const raw = data.content?.map(c => c.text || '').join('') || '暂时无法回答，请重试。';
+
+    // Parse [METRICS:...]
+    const metricMatch = raw.match(/\[METRICS:([^\]]+)\]/);
+    const cleanText = raw.replace(/\[METRICS:[^\]]+\]/g, '').trim();
+    let metricHtml = '';
+    if (metricMatch) {
+      const labels = { r0:'r₀ 消费者', r1:'r₁ 门店', r2:'r₂ 二批', r3:'r₃ 经销商', R:'R 全网' };
+      const metrics = {};
+      metricMatch[1].split(',').forEach(kv => {
+        const [k, v] = kv.trim().split('=');
+        if (k && v) metrics[k.trim()] = v.trim();
+      });
+      if (Object.keys(metrics).length > 0) {
+        metricHtml = '<div class="metric-row">';
+        Object.entries(metrics).forEach(([k, v]) => {
+          if (labels[k]) metricHtml += `<div class="metric-card"><div class="metric-label">${labels[k]}</div><div class="metric-val">${v}</div></div>`;
+        });
+        metricHtml += '</div>';
+      }
+    }
+
+    thinkMsg.querySelector('.msg-bubble').innerHTML = metricHtml + escHtmlPreserve(cleanText);
+    conversationHistory.push({ role: 'assistant', content: raw });
+
+  } catch (e) {
+    thinkMsg.querySelector('.msg-bubble').innerHTML =
+      `<span style="color:var(--red);font-size:12px">⚠️ 连接错误：${e.message}</span>`;
+  }
+
+  isLoading = false;
+  document.getElementById('sendBtn').disabled = false;
+  area.scrollTop = area.scrollHeight;
+}
+
+function clearChat() {
+  conversationHistory = [];
+  const area = document.getElementById('chatArea');
+  area.innerHTML = '';
+  const welcome = document.createElement('div');
+  welcome.className = 'welcome';
+  welcome.id = 'welcome';
+  welcome.innerHTML = `
+    <div class="welcome-glyph">樹</div>
+    <div class="welcome-title">根不问服务谁<br>根服务所有人</div>
+    <div class="welcome-desc">心跳公式 · 年级系统 · IPO0-13全链<br>SKU规划 · 城市扩张 · 实时诊断<br>输入数据，问任何经营问题。</div>
+    <div class="quick-grid" id="quickGrid"></div>
+  `;
+  area.appendChild(welcome);
+  renderQuickPrompts();
+}
+
+// ═══════════════════════════════════════════════════════════
+// CONTEXT TAGS
+// ═══════════════════════════════════════════════════════════
+function toggleCtx(key, label) {
+  const val = prompt(`设置${label}（当前：${context[key] || '未设置'}）`, context[key] || '');
+  if (val !== null) {
+    context[key] = val;
+    const el = document.getElementById('ctx-' + key);
+    el.textContent = val || label;
+    el.classList.toggle('set', !!val);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// CALCULATION ENGINE (from v2)
+// ═══════════════════════════════════════════════════════════
+function g(id) { return document.getElementById(id); }
+function gv(id) { return g(id)?.value || ''; }
+
+function calculate() {
+  const brand   = gv('brandName') || '品牌';
+  const city    = gv('cityName') || '城市';
+  const totalHH = parseFloat(gv('totalHH')) || 1000;
+  const pct     = parseFloat(gv('penetration')) / 100 || 0.015;
+  const price1  = parseFloat(gv('price1')) || 30;
+  const share1  = parseFloat(gv('share1')) / 100 || 0.7;
+  const bph     = parseFloat(gv('bottlesPerHH')) || 5;
+  const grade   = parseInt(gv('currentGrade')) || 1;
+  const stores  = parseInt(gv('storeCount')) || 1000;
+  const dealers = parseInt(gv('dealerCount')) || 3;
+  const subs    = parseInt(gv('subDealerCount')) || 5;
+  const actual_r1  = parseFloat(gv('actual_r1')) || null;
+  const actual_r3  = parseFloat(gv('actual_r3')) || null;
+  const actual_inv = parseFloat(gv('actual_inv')) || null;
+  const rAchieve   = parseFloat(gv('rAchieve')) || null;
+
+  const targetHH  = totalHH * pct;
+  const R         = (targetHH * 10000 * bph) / 365;
+  const r0        = bph / 365;
+  const r1_target = R / stores;
+  const r3_target = R / dealers;
+  const r1        = actual_r1 || r1_target;
+  const r3        = actual_r3 || r3_target;
+
+  const nodes = [
+    { id:'IPO0',  name:'原料采购计划',    T:60, a:R*60,    r:R,  level:'factory',  desc:'断供防火墙·最大缓冲',         full:R*60*2,    warn:R*60 },
+    { id:'IPO1',  name:'工厂成品库存',    T:30, a:R*30,    r:R,  level:'factory',  desc:'工厂提前备货',                 full:R*30*2,    warn:R*30 },
+    { id:'IPO2',  name:'经销商进货',      T:30, a:R*30,    r:R,  level:'dealer',   desc:'月结·推单信号节点',            full:R*30*2,    warn:R*30 },
+    { id:'IPO3',  name:'经销商仓库',      T:30, a:R*30,    r:R,  level:'dealer',   desc:'T30→T14缓冲池',               full:R*30*2,    warn:R*30 },
+    { id:'IPO4',  name:'经销商出货',      T:14, a:R*14,    r:r3, level:'dealer',   desc:'匹配门店补货节奏',             full:R*14*1.5,  warn:R*14 },
+    { id:'IPO5',  name:'二批进货 (P2)',   T:14, a:R*14,    r:R,  level:'sub',      desc:'严控1a上限',                   full:R*14,      warn:R*14*0.5 },
+    { id:'IPO6',  name:'二批库存 (P2)',   T:14, a:R*14,    r:R,  level:'sub',      desc:'超1a=压货预警',                full:R*14,      warn:R*14*0.5 },
+    { id:'IPO7',  name:'二批出货 (P2)',   T:14, a:R*14,    r:R,  level:'sub',      desc:'进=出=库存',                   full:R*14,      warn:R*14*0.5 },
+    { id:'IPO8',  name:'门店进货',        T:14, a:R*14,    r:R,  level:'store',    desc:'承接IPO4出货',                 full:R*14*1.5,  warn:R*14 },
+    { id:'IPO9',  name:'货架库存（单店）', T:14, a:r1*14,   r:r1, level:'store',    desc:'货架=品牌领地',                full:r1*14*3,   warn:r1*14*2, danger:r1*14, actualInv:actual_inv },
+    { id:'IPO10', name:'门店日销',        T:7,  a:r1*7,    r:r1, level:'store',    desc:'周度验证r₁',                  full:r1*7*2,    warn:r1*7 },
+    { id:'IPO11', name:'消费者购买',      T:73, a:R*73,    r:R,  level:'consumer', desc:'行为触发节点',                 full:R*73,      warn:R*73*0.5 },
+    { id:'IPO12', name:'家中库存',        T:73, a:R*73,    r:R,  level:'consumer', desc:'品牌承诺兑现层',               full:R*73,      warn:R*73*0.5 },
+    { id:'IPO13', name:'家庭消耗',        T:73, a:R*73,    r:r0, level:'consumer', desc:'全链锚点·所有节点之源',        full:R*73,      warn:0 },
+  ];
+
+  const gradeCoeffs = [0, 2.0, 1.5, 1.0, 0.7];
+  const gradeRates  = [0, 0.5, 0.35, 0.2, 0.12];
+  const annualBottles = targetHH * 10000 * bph;
+  const annualRev = annualBottles * price1 / 10000;
+
+  let healthScore = 100;
+  let alerts = [];
+  let recommendations = [];
+
+  if (rAchieve !== null) {
+    if (rAchieve < 60) {
+      healthScore -= 30;
+      alerts.push({ level:'danger', title:'r值严重不达标', body:`当前r值达标率${rAchieve}%，低于60%警戒线。需立即诊断：是货架断货？竞品打压？还是铺货不足？` });
+    } else if (rAchieve < 80) {
+      healthScore -= 15;
+      alerts.push({ level:'warn', title:'r值偏低·年级风险', body:`r值达标率${rAchieve}%，低于80%升级门槛。连续3个月低于80%将自动降级。` });
+    } else {
+      alerts.push({ level:'good', title:'r值达标·可考虑升级', body:`r值达标率${rAchieve}%，已达升级标准。连续${grade<=1?3:6}个月达标后可申请升至${grade+1}年级。` });
+    }
+  }
+
+  if (actual_inv !== null) {
+    const warn_level = r1_target * 14 * 2;
+    const danger_level = r1_target * 14;
+    if (actual_inv < danger_level) {
+      healthScore -= 20;
+      alerts.push({ level:'danger', title:'货架库存危险（低于1a）', body:`当前库存${actual_inv.toFixed(0)}瓶/店，低于危险线${danger_level.toFixed(0)}瓶。品牌领地严重萎缩，立即补货。` });
+    } else if (actual_inv < warn_level) {
+      healthScore -= 10;
+      alerts.push({ level:'warn', title:'货架库存预警（低于2a）', body:`当前库存${actual_inv.toFixed(0)}瓶/店，低于预警线${warn_level.toFixed(0)}瓶。已触发补货信号。` });
+    } else {
+      alerts.push({ level:'good', title:'货架水位健康', body:`当前库存${actual_inv.toFixed(0)}瓶/店，高于预警线${warn_level.toFixed(0)}瓶。库存充足。` });
+    }
+  }
+
+  if (rAchieve && rAchieve >= 100 && grade < 4) {
+    recommendations.push({ title:`建议升级至${grade+1}年级`, body:`费用率可从${(gradeRates[grade]*100).toFixed(0)}%降至${(gradeRates[grade+1]*100).toFixed(0)}%，释放资金${(annualRev*(gradeRates[grade]-gradeRates[grade+1])).toFixed(0)}万元。` });
+  }
+  if (rAchieve && rAchieve < 80) {
+    recommendations.push({ title:'暂缓升级·保持现有费用率', body:'r值未达标时绝对不减少投入。年级不到，费用不减。' });
+  }
+
+  calcData = {
+    brand, city, totalHH, pct, price1, share1, bph, grade,
+    stores, dealers, subs, R, r0, r1:r1_target, r3:r3_target,
+    annualBottles, annualRev, nodes, alerts, recommendations,
+    healthScore: Math.max(0, healthScore),
+    gradeCoeff: gradeCoeffs[grade], gradeRate: gradeRates[grade],
+    actual_r1, actual_r3, actual_inv, rAchieve
+  };
+
+  // Sync context tags with brand/city
+  if (brand) { context.brand = brand; const el=g('ctx-brand'); if(el){el.textContent=brand;el.classList.add('set')} }
+  if (city)  { context.city  = city;  const el=g('ctx-city');  if(el){el.textContent=city; el.classList.add('set')} }
+
+  renderSummary();
+  renderChain();
+  renderGrade();
+  renderDiag();
+  renderThreeYear();
+  renderQuadrantBanner();
+
+  g('summaryBar').style.display = 'grid';
+  g('hbStatus').textContent = '心跳运转中';
+
+  switchInnerTab('chain');
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ═══════════════════════════════════════════════════════════
+function fmt(n, d=0) { return n.toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+function renderSummary() {
+  const d = calcData;
+  g('sumR').textContent = fmt(d.R, 0);
+  const h = d.healthScore;
+  g('sumHealth').textContent = h >= 80 ? '🟢 健康' : h >= 60 ? '🟡 预警' : '🔴 告急';
+  g('sumGrade').textContent = ['校准期','1年级','2年级','3年级','4年级'][d.grade] || '—';
+  g('sumAlert').textContent = d.alerts.filter(a=>a.level!=='good').length + ' 项';
+}
+
+function renderChain() {
+  const d = calcData;
+  const levelColors = { factory:'var(--red)', dealer:'var(--root)', sub:'var(--leaf2)', store:'#60a5fa', consumer:'var(--parch2)' };
+  const levelBg     = { factory:'rgba(197,90,17,0.08)', dealer:'rgba(196,137,42,0.08)', sub:'rgba(90,138,58,0.08)', store:'rgba(96,165,250,0.08)', consumer:'rgba(232,224,208,0.05)' };
+
+  // Quadrant card
+  const q = diagnoseQuadrant();
+  let qCardHtml = '';
+  if (q && q.type !== 'unknown') {
+    const qMap = { dead_loop:'qc-dead', demand:'qc-demand', supply:'qc-supply', healthy:'qc-healthy' };
+    const tColors = { dead_loop:'var(--red)', demand:'var(--root2)', supply:'var(--leaf2)', healthy:'#4ade80' };
+    qCardHtml = `
+      <div class="quadrant-card ${qMap[q.type] || 'qc-unknown'}">
+        <div class="qc-title" style="color:${tColors[q.type] || 'var(--parch2)'}">${q.title}</div>
+        <div class="qc-body">${q.conclusion}</div>
+        <div class="qc-action"><strong>→ ${q.action}</strong></div>
+      </div>`;
+  }
+
+  let chainHtml = `<div class="chain">`;
+  d.nodes.forEach((n, i) => {
+    const pct = n.actualInv != null ? Math.min(100, (n.actualInv / n.full) * 100) : Math.min(100, (n.a / n.full) * 100);
+    const color = pct > 66 ? '#4ade80' : pct > 33 ? 'var(--root)' : '#ef4444';
+    const hClass = pct > 66 ? 'h-green' : pct > 33 ? 'h-amber' : 'h-red';
+    const isAnchor = n.id === 'IPO13';
+    const displayA = ['IPO9','IPO10'].includes(n.id) ? fmt(n.a,0)+'瓶/店' : fmt(n.a,0)+'瓶';
+    if (i > 0) chainHtml += `<div class="chain-connector"></div>`;
+    chainHtml += `
+      <div class="chain-node">
+        <div class="node-card" style="${isAnchor?'border-color:var(--root)':''}">
+          <div class="health-dot ${hClass}"></div>
+          <div class="node-tag" style="border:1px solid ${levelColors[n.level]}25;background:${levelBg[n.level]}">
+            <span class="node-tag-key" style="color:${levelColors[n.level]}">${n.id}</span>
+            <span class="node-tag-t">T${n.T}天</span>
+          </div>
+          <div class="node-info">
+            <div class="node-name" style="${isAnchor?'color:var(--root)':''}">${n.name}</div>
+            <div class="node-desc">${n.desc}</div>
+            <div class="water-bar"><div class="water-fill" style="width:${pct}%;background:${color}"></div></div>
+          </div>
+          <div class="node-metrics">
+            <div class="node-a" style="${isAnchor?'color:var(--root2)':''}">${displayA}</div>
+            <div class="node-r">r=${n.r.toFixed(1)}/天</div>
+          </div>
+        </div>
+      </div>`;
+  });
+  chainHtml += '</div>';
+
+  g('chainContent').innerHTML = `
+    <div class="card">
+      <div class="card-title">💓 IPO0-13 心跳全链 · ${d.brand} · ${d.city}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        <div style="background:var(--bark2);border-radius:8px;padding:8px 10px">
+          <div style="font-size:9px;color:var(--ash);font-family:'Space Mono',monospace">R 全网</div>
+          <div style="font-family:'Space Mono',monospace;font-size:17px;font-weight:700;color:var(--root)">${fmt(d.R,0)}</div>
+          <div style="font-size:9px;color:var(--ash)">瓶/天</div>
+        </div>
+        <div style="background:var(--bark2);border-radius:8px;padding:8px 10px">
+          <div style="font-size:9px;color:var(--ash);font-family:'Space Mono',monospace">r₁ 单店目标</div>
+          <div style="font-family:'Space Mono',monospace;font-size:17px;font-weight:700;color:var(--root)">${d.r1.toFixed(2)}</div>
+          <div style="font-size:9px;color:var(--ash)">瓶/天/店</div>
+        </div>
+        <div style="background:var(--bark2);border-radius:8px;padding:8px 10px">
+          <div style="font-size:9px;color:var(--ash);font-family:'Space Mono',monospace">r₀ 消费者</div>
+          <div style="font-family:'Space Mono',monospace;font-size:17px;font-weight:700;color:var(--root)">${d.r0.toFixed(4)}</div>
+          <div style="font-size:9px;color:var(--ash)">瓶/天/户</div>
+        </div>
+        <div style="background:var(--bark2);border-radius:8px;padding:8px 10px">
+          <div style="font-size:9px;color:var(--ash);font-family:'Space Mono',monospace">年度目标</div>
+          <div style="font-family:'Space Mono',monospace;font-size:17px;font-weight:700;color:var(--root)">¥${fmt(d.annualRev,0)}万</div>
+          <div style="font-size:9px;color:var(--ash)">收入</div>
+        </div>
+      </div>
+      ${qCardHtml}
+    </div>
+    <div class="card">${chainHtml}</div>`;
+}
+
+function renderGrade() {
+  const d = calcData;
+  const gradeCoeffs = [0, 2.0, 1.5, 1.0, 0.7];
+  const gradeRates  = [0, 0.5, 0.35, 0.2, 0.12];
+  const gradeNames  = ['校准期','1年级','2年级','3年级','4年级'];
+  const gClass      = ['gx','g1','g2','g3','g4'];
+
+  const cities = [d.city, '北京', '成都', '广州'];
+  const skus   = ['SKU①英雄款','SKU②获客款','SKU③升级款'];
+  const grades = [
+    [d.grade, 0, 0],
+    [1, 1, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+  ];
+
+  let matrixHtml = `<div class="grade-matrix">
+    <div class="grade-row">
+      <div class="grade-city"></div>
+      ${skus.map(s=>`<div class="grade-cell" style="background:var(--bark2);color:var(--ash);font-size:9px;border:none">${s}</div>`).join('')}
+    </div>`;
+  cities.forEach((c, ci) => {
+    matrixHtml += `<div class="grade-row"><div class="grade-city">${c}</div>`;
+    grades[ci].forEach((gr, si) => {
+      const cls = gClass[gr] || 'gx';
+      matrixHtml += `<div class="grade-cell ${cls}">${gr > 0 ? gradeNames[gr] : '—'}</div>`;
+    });
+    matrixHtml += '</div>';
+  });
+  matrixHtml += '</div>';
+
+  // Coefficients table
+  let coeffHtml = `<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px">
+    <thead><tr>
+      <th style="padding:6px 8px;color:var(--ash);text-align:left;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:9px">年级</th>
+      <th style="padding:6px 8px;color:var(--ash);text-align:center;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:9px">激励系数</th>
+      <th style="padding:6px 8px;color:var(--ash);text-align:center;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:9px">费用率</th>
+      <th style="padding:6px 8px;color:var(--ash);text-align:right;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:9px">年度费用(${d.city})</th>
+    </tr></thead><tbody>`;
+  [1,2,3,4].forEach(gr => {
+    const isCur = gr === d.grade;
+    const fee = d.annualRev * gradeRates[gr];
+    coeffHtml += `<tr style="${isCur?'background:var(--root-dim)':''}">
+      <td style="padding:6px 8px;color:${isCur?'var(--root2)':'var(--parch2)'};font-weight:${isCur?700:400}">${gradeNames[gr]}${isCur?' ←当前':''}</td>
+      <td style="padding:6px 8px;text-align:center;font-family:'Space Mono',monospace;color:var(--root)">×${gradeCoeffs[gr]}</td>
+      <td style="padding:6px 8px;text-align:center;font-family:'Space Mono',monospace;color:var(--ash)">${(gradeRates[gr]*100).toFixed(0)}%</td>
+      <td style="padding:6px 8px;text-align:right;font-family:'Space Mono',monospace;color:${isCur?'var(--root2)':'var(--ash)'}">¥${fmt(fee,0)}万</td>
+    </tr>`;
+  });
+  coeffHtml += '</tbody></table>';
+
+  g('gradeContent').innerHTML = `
+    <div class="card">
+      <div class="card-title">🎓 年级矩阵 · ${d.brand}</div>
+      ${matrixHtml}
+    </div>
+    <div class="card">
+      <div class="card-title">💰 年级系数对照</div>
+      ${coeffHtml}
+      <div style="font-size:11px;color:var(--ash);margin-top:12px;line-height:1.6;padding-top:10px;border-top:1px solid var(--border)">
+        升级条件：r值连续${d.grade<=1?3:6}个月≥目标80%<br>
+        降级触发：r值连续2月下滑>20%<br>
+        原则：年级看r值不看时间；每个SKU每个城市独立计算
+      </div>
+    </div>`;
+}
+
+function renderDiag() {
+  const d = calcData;
+  const q = diagnoseQuadrant();
+
+  // Quadrant conclusion card
+  const qMap = { dead_loop:'qc-dead', demand:'qc-demand', supply:'qc-supply', healthy:'qc-healthy', unknown:'qc-unknown' };
+  const tColors = { dead_loop:'var(--red)', demand:'var(--root2)', supply:'var(--leaf2)', healthy:'#4ade80', unknown:'var(--ash)' };
+  let qHtml = '';
+  if (q) {
+    qHtml = `
+      <div class="quadrant-card ${qMap[q.type] || 'qc-unknown'}">
+        <div class="qc-title" style="color:${tColors[q.type] || 'var(--parch2)'}">${q.title}</div>
+        <div class="qc-body">${q.conclusion}</div>
+        <div class="qc-action"><strong>→ ${q.action}</strong></div>
+      </div>`;
+  }
+
+  let alertsHtml = d.alerts.map(a => `
+    <div class="diag-item ${a.level}">
+      <div class="diag-title ${a.level}">${a.level==='good'?'✅':a.level==='warn'?'⚠️':'🔴'} ${a.title}</div>
+      ${a.body}
+    </div>`).join('');
+
+  let recoHtml = d.recommendations.length > 0 ? d.recommendations.map(r => `
+    <div class="diag-item" style="border-color:var(--border2)">
+      <div class="diag-title" style="color:var(--root2)">💡 ${r.title}</div>
+      ${r.body}
+    </div>`).join('') : `<div class="diag-item" style="color:var(--ash)">暂无针对性建议</div>`;
+
+  g('diagContent').innerHTML = `
+    ${qHtml}
+    <div class="card">
+      <div class="card-title">🔍 预警列表</div>
+      ${alertsHtml || '<div style="color:var(--ash);font-size:12px">暂无预警</div>'}
+    </div>
+    <div class="card">
+      <div class="card-title">💡 行动建议</div>
+      ${recoHtml}
+    </div>
+    <div class="card" style="cursor:pointer" onclick="setMode('diagnose');document.getElementById('chatInput').focus()">
+      <div style="font-size:12px;color:var(--parch2);line-height:1.7">
+        <span style="color:var(--root2);font-weight:700">→ 切换到诊断模式</span>，基于以上数据问樹根任何问题。<br>
+        <span style="color:var(--ash);font-size:11px">AI已获取你的全部计算数据，回答将基于真实数字。</span>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// THREE YEAR PROJECTION
+// ═══════════════════════════════════════════════════════════
+function renderThreeYear() {
+  if (!calcData) return;
+  const d = calcData;
+
+  const gradeCoeffs = [0, 2.0, 1.5, 1.0, 0.7];
+  const gradeRates  = [0, 0.50, 0.35, 0.20, 0.12];
+  const gradeNames  = ['校准期','1年级','2年级','3年级','4年级'];
+  const gbClass     = ['','gb-1','gb-2','gb-3','gb-4'];
+
+  // Read assumption overrides
+  const marginPerBottle = parseFloat(gv('yr_margin')) || null;
+  const pct2override    = parseFloat(gv('yr_pct2'))   || null;
+  const pct3override    = parseFloat(gv('yr_pct3'))   || null;
+  const stores2override = parseFloat(gv('yr_stores2'))|| null;
+  const stores3override = parseFloat(gv('yr_stores3'))|| null;
+
+  // Year parameters
+  const y1pct    = d.pct;
+  const y2pct    = pct2override   ? pct2override/100   : Math.min(d.totalHH > 0 ? 0.5 : 0.5, y1pct * 2);
+  const y3pct    = pct3override   ? pct3override/100   : Math.min(d.totalHH > 0 ? 0.5 : 0.5, y1pct * 3.5);
+  const y1stores = d.stores;
+  const y2stores = stores2override || Math.round(y1stores * 1.5);
+  const y3stores = stores3override || Math.round(y1stores * 2.5);
+
+  // Grade progression logic
+  // Y1 = current grade
+  // Y2 = upgrade if current r ≥ 80% (assume they'll hit it), cap at 4
+  // Y3 = upgrade again if conditions met
+  const y1grade = d.grade || 1;
+  const rOk = d.rAchieve ? d.rAchieve >= 80 : true; // optimistic if no data
+  const y2grade = rOk && y1grade < 4 ? Math.min(4, y1grade + 1) : y1grade;
+  const y3grade = y2grade < 4 ? Math.min(4, y2grade + 1) : y2grade;
+
+  function calcYear(pct, stores, grade) {
+    const targetHH    = d.totalHH * pct;
+    const annualBtls  = targetHH * 10000 * d.bph;
+    const annualRev   = annualBtls * d.price1 / 10000;
+    const R           = (targetHH * 10000 * d.bph) / 365;
+    const r1          = R / stores;
+    const expRate     = gradeRates[grade];
+    const expenses    = annualRev * expRate;
+    const grossProfit = marginPerBottle ? annualBtls * marginPerBottle / 10000 : null;
+    const netProfit   = grossProfit !== null ? grossProfit - expenses : null;
+    const breakeven   = marginPerBottle ? (expenses * 10000) / marginPerBottle / 10000 : null; // 万瓶
+    return { pct, targetHH, annualBtls, annualRev, R, r1, stores, grade, expRate, expenses, grossProfit, netProfit, breakeven };
+  }
+
+  const Y1 = calcYear(y1pct, y1stores, y1grade);
+  const Y2 = calcYear(y2pct, y2stores, y2grade);
+  const Y3 = calcYear(y3pct, y3stores, y3grade);
+  const years = [Y1, Y2, Y3];
+
+  // Store for AI context
+  calcData._threeYear = { Y1, Y2, Y3, marginPerBottle };
+
+  // Breakeven analysis
+  let breakevenHtml = '';
+  if (marginPerBottle) {
+    const profitYear = [Y1,Y2,Y3].findIndex(y => y.netProfit > 0);
+    if (profitYear >= 0) {
+      breakevenHtml = `
+        <div class="breakeven-banner bb-profit">
+          <div class="bb-icon">✅</div>
+          <div class="bb-text">
+            <div class="bb-title" style="color:var(--green)">第${profitYear+1}年实现盈利</div>
+            <div class="bb-sub">净利润：¥${fmt([Y1,Y2,Y3][profitYear].netProfit,0)}万元<br>
+            毛利假设 ¥${marginPerBottle}/瓶 · 三年累计：¥${fmt(Y1.netProfit+Y2.netProfit+Y3.netProfit,0)}万元</div>
+          </div>
+        </div>`;
+    } else {
+      const totalLoss = Y1.netProfit + Y2.netProfit + Y3.netProfit;
+      breakevenHtml = `
+        <div class="breakeven-banner bb-loss">
+          <div class="bb-icon">📈</div>
+          <div class="bb-text">
+            <div class="bb-title" style="color:var(--red)">三年内尚未盈利·投入期</div>
+            <div class="bb-sub">三年累计净利润：¥${fmt(totalLoss,0)}万元（负值=投入）<br>
+            需提高渗透率或降低费用率（升年级）</div>
+          </div>
+        </div>`;
+    }
+  } else {
+    breakevenHtml = `
+      <div class="breakeven-banner" style="background:var(--root-dim);border-color:var(--border2)">
+        <div class="bb-icon">💡</div>
+        <div class="bb-text">
+          <div class="bb-title" style="color:var(--root2)">填入毛利（元/瓶）解锁盈亏分析</div>
+          <div class="bb-sub">在上方「假设」区填入每瓶毛利，系统自动计算三年盈亏和保本销量</div>
+        </div>
+      </div>`;
+  }
+
+  // Year cards
+  const yearLabels = ['第1年·导入期', '第2年·成长期', '第3年·成熟期'];
+  const yearClass  = ['y1', 'y2', 'y3'];
+  const maxRev = Math.max(Y1.annualRev, Y2.annualRev, Y3.annualRev);
+
+  let cardsHtml = '<div class="yr-grid">';
+  years.forEach((y, i) => {
+    const revPct = maxRev > 0 ? (y.annualRev / maxRev * 100) : 0;
+    const profColor = !marginPerBottle ? 'neutral' : y.netProfit > 0 ? 'good' : 'bad';
+    const profVal   = !marginPerBottle ? '—' : `¥${fmt(y.netProfit,0)}万`;
+    const beVal     = y.breakeven ? `${fmt(y.breakeven/10000*10000,0)}万瓶` : '—';
+
+    cardsHtml += `
+      <div class="yr-card ${yearClass[i]}">
+        <div class="yr-label">${yearLabels[i]}</div>
+        <div class="yr-year">${d.brand} Y${i+1}</div>
+        <div class="yr-grade-badge ${gbClass[y.grade]}">${gradeNames[y.grade]} ×${gradeCoeffs[y.grade]}</div>
+        <div style="margin-top:8px">
+          <div class="yr-row">
+            <span class="yr-key">渗透率</span>
+            <span class="yr-val neutral">${(y.pct*100).toFixed(1)}%</span>
+          </div>
+          <div class="yr-row">
+            <span class="yr-key">目标家庭</span>
+            <span class="yr-val neutral">${fmt(y.targetHH*10000,0)}户</span>
+          </div>
+          <div class="yr-row">
+            <span class="yr-key">年销量</span>
+            <span class="yr-val warn">${fmt(y.annualBtls/10000,1)}万瓶</span>
+          </div>
+          <div class="yr-row">
+            <span class="yr-key">年收入</span>
+            <span class="yr-val warn">¥${fmt(y.annualRev,0)}万</span>
+          </div>
+          <div class="yr-row">
+            <span class="yr-key">费用率</span>
+            <span class="yr-val neutral">${(y.expRate*100).toFixed(0)}%</span>
+          </div>
+          <div class="yr-row">
+            <span class="yr-key">销售费用</span>
+            <span class="yr-val bad">¥${fmt(y.expenses,0)}万</span>
+          </div>
+          <div class="yr-row">
+            <span class="yr-key">净利润</span>
+            <span class="yr-val ${profColor}">${profVal}</span>
+          </div>
+          <div class="yr-row">
+            <span class="yr-key">铺货门店</span>
+            <span class="yr-val neutral">${fmt(y.stores,0)}家</span>
+          </div>
+          <div class="yr-row">
+            <span class="yr-key">r₁目标</span>
+            <span class="yr-val neutral">${y.r1.toFixed(2)}瓶/天</span>
+          </div>
+        </div>
+        <div class="progress-track" style="margin-top:8px">
+          <div class="progress-fill" style="width:${revPct.toFixed(0)}%;background:${i===0?'var(--ash)':i===1?'var(--root)':'var(--leaf2)'}"></div>
+        </div>
+        <div style="font-size:9px;color:var(--dust);font-family:'Space Mono',monospace;margin-top:2px">收入进度 ${revPct.toFixed(0)}%</div>
+      </div>`;
+  });
+  cardsHtml += '</div>';
+
+  // Cumulative summary
+  const totalRev  = Y1.annualRev + Y2.annualRev + Y3.annualRev;
+  const totalExp  = Y1.expenses  + Y2.expenses  + Y3.expenses;
+  const totalBtls = (Y1.annualBtls + Y2.annualBtls + Y3.annualBtls) / 10000;
+  const totalNet  = marginPerBottle ? Y1.netProfit + Y2.netProfit + Y3.netProfit : null;
+
+  const summaryHtml = `
+    <div class="card">
+      <div class="card-title">📊 三年累计</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+        <div style="background:var(--bark2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:9px;color:var(--ash);font-family:'Space Mono',monospace">三年总收入</div>
+          <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--root2)">¥${fmt(totalRev,0)}万</div>
+        </div>
+        <div style="background:var(--bark2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:9px;color:var(--ash);font-family:'Space Mono',monospace">三年总销量</div>
+          <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--root2)">${fmt(totalBtls,1)}万瓶</div>
+        </div>
+        <div style="background:var(--bark2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:9px;color:var(--ash);font-family:'Space Mono',monospace">三年总费用</div>
+          <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--red)">¥${fmt(totalExp,0)}万</div>
+        </div>
+        <div style="background:var(--bark2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:9px;color:var(--ash);font-family:'Space Mono',monospace">三年净利润</div>
+          <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:${totalNet===null?'var(--ash)':totalNet>=0?'var(--green)':'var(--red)'}">${totalNet===null?'填毛利解锁':('¥'+fmt(totalNet,0)+'万')}</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Grade upgrade path
+  const upgradeHtml = `
+    <div class="card">
+      <div class="card-title">🎓 年级升迁路径</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <div class="yr-grade-badge ${gbClass[y1grade]}" style="font-size:11px;padding:4px 12px">Y1 ${gradeNames[y1grade]}</div>
+        <span style="color:var(--ash);font-family:'Space Mono',monospace;font-size:12px">→</span>
+        <div class="yr-grade-badge ${gbClass[y2grade]}" style="font-size:11px;padding:4px 12px">Y2 ${gradeNames[y2grade]}</div>
+        <span style="color:var(--ash);font-family:'Space Mono',monospace;font-size:12px">→</span>
+        <div class="yr-grade-badge ${gbClass[y3grade]}" style="font-size:11px;padding:4px 12px">Y3 ${gradeNames[y3grade]}</div>
+      </div>
+      <div style="font-size:11px;color:var(--ash);margin-top:10px;line-height:1.7">
+        ${y1grade < y2grade ? `Y1→Y2升级条件：r值连续3个月≥目标80%<br>` : `Y1→Y2：r值未达标，维持${gradeNames[y1grade]}<br>`}
+        ${y2grade < y3grade ? `Y2→Y3升级条件：r值连续6个月≥目标80%` : `Y2→Y3：需继续积累达标月数`}
+      </div>
+      <div style="font-size:11px;color:var(--root2);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        三年费用节省：¥${fmt((gradeRates[y1grade]-gradeRates[y3grade])*Y3.annualRev,0)}万/年（Y3 vs 若始终维持Y1费用率）
+      </div>
+    </div>`;
+
+  g('threeYearContent').innerHTML = breakevenHtml + cardsHtml + summaryHtml + upgradeHtml;
+}
+
+
+function switchInnerTab(id) {
+  document.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.inner-panel').forEach(p => p.classList.remove('active'));
+  const tabEl = document.querySelector(`.inner-tab[onclick*="${id}"]`);
+  if (tabEl) tabEl.classList.add('active');
+  const panelEl = g('ipanel-' + id);
+  if (panelEl) panelEl.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escHtmlPreserve(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+renderQuickPrompts();
+</script>
+</body>
+</html>
