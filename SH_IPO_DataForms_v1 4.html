@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 上海IPO数据采集系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#09090f;--bg2:#0e1018;--bg3:#13161f;
+  --card:#141820;--card2:#1a2030;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.13);
+  --text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--purple:#a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── TOP BAR ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(9,9,15,0.95);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:52px;
+}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-sym{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000;
+  box-shadow:0 3px 12px rgba(245,166,35,0.3);
+}
+.logo-text{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.04em}
+.logo-text span{color:var(--amber)}
+.badge{font-size:10px;background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.2);padding:2px 8px;border-radius:10px;font-family:'Space Mono',monospace}
+.clock{font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)}
+
+/* ── NAV TABS ── */
+.nav-area{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  overflow-x:auto;scrollbar-width:none;
+  display:flex;padding:0 12px;gap:2px;
+}
+.nav-area::-webkit-scrollbar{display:none}
+.tab-btn{
+  flex-shrink:0;padding:12px 14px;font-size:12px;font-weight:600;
+  color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;
+  white-space:nowrap;transition:all 0.18s;display:flex;align-items:center;gap:5px;
+}
+.tab-btn:hover{color:var(--text2)}
+.tab-btn.active{color:var(--amber);border-bottom-color:var(--amber)}
+.tab-em{font-size:13px}
+
+/* ── FORM PANELS ── */
+.panel{display:none;padding:16px;animation:fu 0.2s ease}
+.panel.active{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── PANEL HEADER ── */
+.panel-hdr{
+  background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(78,205,196,0.04));
+  border:1px solid rgba(245,166,35,0.15);border-radius:14px;
+  padding:16px 18px;margin-bottom:16px;
+}
+.panel-hdr-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.ph-left{}
+.ph-code{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);margin-bottom:4px;letter-spacing:0.06em}
+.ph-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px}
+.ph-desc{font-size:12px;color:var(--text2);line-height:1.6;max-width:520px}
+.ph-right{flex-shrink:0;text-align:right}
+.freq-pill{
+  background:var(--card2);border:1px solid var(--border2);border-radius:20px;
+  padding:4px 11px;font-size:11px;color:var(--text2);font-family:'Space Mono',monospace;white-space:nowrap;
+}
+.ipos{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.ipo-tag{
+  font-size:10px;padding:2px 8px;border-radius:6px;font-family:'Space Mono',monospace;
+  background:var(--card2);border:1px solid var(--border);color:var(--text3);
+}
+.ipo-tag.active-ipo{background:rgba(245,166,35,0.12);color:var(--amber);border-color:rgba(245,166,35,0.25)}
+
+/* ── LEGEND ── */
+.legend{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)}
+.leg-dot{width:8px;height:8px;border-radius:50%}
+.leg-input{background:rgba(245,166,35,0.04);border:1px solid rgba(245,166,35,0.15);border-radius:3px;width:14px;height:10px}
+
+/* ── TABLE WRAPPER ── */
+.tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);margin-bottom:16px}
+table{width:100%;border-collapse:collapse;min-width:700px}
+thead tr th{
+  background:var(--bg3);color:var(--text3);font-size:10px;font-weight:700;
+  letter-spacing:0.05em;padding:9px 10px;text-align:left;border-bottom:1px solid var(--border2);
+  white-space:nowrap;
+}
+thead tr th.center{text-align:center}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,0.015)}
+tbody tr.total-row{background:rgba(245,166,35,0.04);border-top:1px solid rgba(245,166,35,0.2)}
+tbody tr.total-row td{font-weight:700;color:var(--amber2)}
+td{padding:9px 10px;font-size:12px;vertical-align:middle}
+td.label-cell{font-weight:700;white-space:nowrap;color:var(--text)}
+td.sub-cell{font-size:10px;color:var(--text3);white-space:nowrap}
+td.calc{font-family:'Space Mono',monospace;font-size:11px;color:var(--teal)}
+td.center{text-align:center}
+
+/* Officer cell */
+.officer-cell{display:flex;flex-direction:column;gap:1px}
+.off-name{font-weight:700;font-size:13px}
+.off-zone{font-size:10px;color:var(--text3)}
+
+/* Input cells */
+.cell-input{
+  background:rgba(245,166,35,0.04);border:1px solid rgba(245,166,35,0.15);
+  border-radius:6px;padding:5px 8px;font-size:12px;color:var(--text);
+  font-family:'Noto Sans SC',sans-serif;width:100%;min-width:60px;outline:none;
+  transition:border-color 0.15s;
+}
+.cell-input:focus{border-color:var(--amber);background:rgba(245,166,35,0.08)}
+.cell-input::placeholder{color:var(--text3);font-size:11px}
+.cell-input.wide{min-width:120px}
+.cell-input.narrow{min-width:48px;width:65px}
+
+/* Status badges */
+.status{border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;white-space:nowrap;font-family:'Space Mono',monospace;display:inline-block}
+.s-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,0.2)}
+.s-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.2)}
+.s-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,0.2)}
+.s-blue{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(78,205,196,0.2)}
+.s-grey{background:rgba(255,255,255,0.04);color:var(--text3);border:1px solid var(--border)}
+
+/* Grade badges */
+.grade{border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;font-family:'Space Mono',monospace;display:inline-block}
+.g1{background:rgba(255,95,95,0.12);color:var(--red);border:1px solid rgba(255,95,95,0.25)}
+.g2{background:rgba(245,166,35,0.12);color:var(--amber);border:1px solid rgba(245,166,35,0.25)}
+.g3{background:rgba(74,222,128,0.12);color:var(--green);border:1px solid rgba(74,222,128,0.25)}
+.g4{background:rgba(96,165,250,0.12);color:var(--blue);border:1px solid rgba(96,165,250,0.25)}
+
+/* Watermark level */
+.wlevel{display:flex;align-items:center;gap:5px}
+.wbar{width:50px;height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;display:inline-block}
+.wfill{height:100%;border-radius:3px}
+.wfill-g{background:var(--green)}
+.wfill-a{background:var(--amber)}
+.wfill-r{background:var(--red)}
+.wlbl{font-size:10px;font-family:'Space Mono',monospace}
+
+/* Section title within form */
+.form-sec{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.form-sec::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Note block */
+.note{background:rgba(78,205,196,0.04);border:1px solid rgba(78,205,196,0.12);border-left:3px solid var(--teal);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:14px}
+.note strong{color:var(--teal)}
+
+/* Formula chip */
+.formula{
+  font-family:'Space Mono',monospace;font-size:10px;
+  background:rgba(78,205,196,0.06);color:var(--teal);border:1px solid rgba(78,205,196,0.15);
+  border-radius:5px;padding:2px 7px;display:inline-block;white-space:nowrap;
+}
+
+/* Summary row colors */
+.num-g{color:var(--green);font-weight:700}
+.num-a{color:var(--amber);font-weight:700}
+.num-r{color:var(--red);font-weight:700}
+.num-b{color:var(--blue)}
+.mono{font-family:'Space Mono',monospace}
+
+/* Col header with sub */
+.th-wrap{display:flex;flex-direction:column;gap:2px}
+.th-main{color:var(--text2)}
+.th-sub{color:var(--text3);font-size:9px;font-weight:400;letter-spacing:0}
+
+/* Overview grid */
+.overview-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
+@media(max-width:600px){.overview-grid{grid-template-columns:repeat(3,1fr)}}
+.ov-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:11px 10px;text-align:center;
+}
+.ov-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1}
+.ov-lbl{font-size:10px;color:var(--text3);margin-top:3px}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-row">
+    <div class="logo-sym">∞</div>
+    <div>
+      <div class="logo-text">INFINITY <span>OS</span></div>
+    </div>
+  </div>
+  <div class="badge">上海IPO数据采集 v1.0</div>
+  <div class="clock" id="clock"></div>
+</div>
+
+<!-- TABS -->
+<div class="nav-area">
+  <div class="tab-btn active" onclick="switchTab(0)"><span class="tab-em">🗂️</span>T0 区域配置</div>
+  <div class="tab-btn" onclick="switchTab(1)"><span class="tab-em">🏭</span>T1 IPO1 工厂发货</div>
+  <div class="tab-btn" onclick="switchTab(2)"><span class="tab-em">🤝</span>T2 IPO2-4 经销商</div>
+  <div class="tab-btn" onclick="switchTab(3)"><span class="tab-em">🚚</span>T3 IPO5-7 二批商</div>
+  <div class="tab-btn" onclick="switchTab(4)"><span class="tab-em">🏪</span>T4 IPO8-10 门店</div>
+  <div class="tab-btn" onclick="switchTab(5)"><span class="tab-em">👥</span>T5 IPO11-13 消费者</div>
+  <div class="tab-btn" onclick="switchTab(6)"><span class="tab-em">📊</span>T6 SKU年级投产</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     T0 · 区域基础配置表
+══════════════════════════════════════════ -->
+<div class="panel active" id="panel-0">
+  <div class="panel-hdr">
+    <div class="panel-hdr-row">
+      <div class="ph-left">
+        <div class="ph-code">T0 · BASE CONFIG · 季度维护</div>
+        <div class="ph-title">区域基础配置表</div>
+        <div class="ph-desc">五个增长官的区域划分、经销商分配、门店分级数量、负责品牌与SKU清单。每季度核对一次，有变动随时更新。此表为所有其他表单的基准参照。</div>
+        <div class="ipos">
+          <div class="ipo-tag">全局配置</div>
+          <div class="ipo-tag">门店分级</div>
+          <div class="ipo-tag">经销商归属</div>
+          <div class="ipo-tag">品牌SKU</div>
+        </div>
+      </div>
+      <div class="ph-right">
+        <div class="freq-pill">🔄 季度更新</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right">2025 · Q2</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-sec">上海五区 · 增长官总览</div>
+  <div class="overview-grid">
+    <div class="ov-card"><div class="ov-val" style="color:var(--amber)">5</div><div class="ov-lbl">增长官</div></div>
+    <div class="ov-card"><div class="ov-val" style="color:var(--teal)">17</div><div class="ov-lbl">经销商总数</div></div>
+    <div class="ov-card"><div class="ov-val" style="color:var(--green)">614</div><div class="ov-lbl">门店总数</div></div>
+    <div class="ov-card"><div class="ov-val" style="color:var(--blue)">38</div><div class="ov-lbl">S+重点门店</div></div>
+    <div class="ov-card"><div class="ov-val" style="color:var(--purple)">5</div><div class="ov-lbl">品牌数</div></div>
+  </div>
+
+  <div class="note"><strong>填写说明：</strong>黄色底色为增长官填写项；蓝色文字为系统自动汇总。门店数量务必与SFA系统中的分级保持一致。</div>
+
+  <div class="form-sec">Section A · 增长官 × 区域 × 经销商</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="min-width:90px">增长官</th>
+          <th>负责区域</th>
+          <th class="center">经销商<br>数量</th>
+          <th style="min-width:180px">经销商名称<br><span style="font-weight:400;color:var(--text3)">(每行一个，逗号分隔)</span></th>
+          <th class="center">P1直供<br>经销商</th>
+          <th class="center">P2餐饮<br>经销商</th>
+          <th class="center">负责品牌</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">东区</span></div></td>
+          <td>浦东新区（陆家嘴·张江·川沙）</td>
+          <td class="center"><input class="cell-input narrow" value="4"></td>
+          <td><input class="cell-input wide" value="汇丰商贸、东方物流、金桥配送、陆家嘴商贸"></td>
+          <td class="center"><input class="cell-input narrow" value="3"></td>
+          <td class="center"><input class="cell-input narrow" value="1"></td>
+          <td><input class="cell-input" value="六月鲜、味达美"></td>
+          <td><input class="cell-input wide" placeholder="备注…"></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">中区</span></div></td>
+          <td>黄浦·徐汇·静安（内环核心）</td>
+          <td class="center"><input class="cell-input narrow" value="3"></td>
+          <td><input class="cell-input wide" value="南京路商贸、徐汇配送、静安物流"></td>
+          <td class="center"><input class="cell-input narrow" value="2"></td>
+          <td class="center"><input class="cell-input narrow" value="1"></td>
+          <td><input class="cell-input" value="六月鲜、禾然、葱伴侣"></td>
+          <td><input class="cell-input wide" placeholder="备注…"></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">西区</span></div></td>
+          <td>长宁·普陀·嘉定</td>
+          <td class="center"><input class="cell-input narrow" value="3"></td>
+          <td><input class="cell-input wide" value="虹桥物流、普陀商贸、嘉定配送"></td>
+          <td class="center"><input class="cell-input narrow" value="2"></td>
+          <td class="center"><input class="cell-input narrow" value="1"></td>
+          <td><input class="cell-input" value="六月鲜、味达美、小康"></td>
+          <td><input class="cell-input wide" placeholder="备注…"></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">北区</span></div></td>
+          <td>宝山·杨浦·虹口</td>
+          <td class="center"><input class="cell-input narrow" value="3"></td>
+          <td><input class="cell-input wide" value="宝山物流、杨浦商贸、四川北路配送"></td>
+          <td class="center"><input class="cell-input narrow" value="2"></td>
+          <td class="center"><input class="cell-input narrow" value="1"></td>
+          <td><input class="cell-input" value="六月鲜、味达美"></td>
+          <td><input class="cell-input wide" placeholder="备注…"></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">南区</span></div></td>
+          <td>闵行·松江·青浦·金山</td>
+          <td class="center"><input class="cell-input narrow" value="4"></td>
+          <td><input class="cell-input wide" value="闵行配送、松江物流、青浦商贸、漕河泾供应链"></td>
+          <td class="center"><input class="cell-input narrow" value="3"></td>
+          <td class="center"><input class="cell-input narrow" value="1"></td>
+          <td><input class="cell-input" value="六月鲜、葱伴侣、小康"></td>
+          <td><input class="cell-input wide" placeholder="备注…"></td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="2" class="label-cell">🔢 上海合计</td>
+          <td class="center calc mono">17</td>
+          <td class="calc">—</td>
+          <td class="center calc mono">12</td>
+          <td class="center calc mono">5</td>
+          <td class="calc">5品牌全覆盖</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="form-sec">Section B · 门店分级数量</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>增长官</th>
+          <th class="center">S+ <span style="font-weight:400;color:var(--text3)">(3次/周)</span></th>
+          <th class="center">S <span style="font-weight:400;color:var(--text3)">(2次/周)</span></th>
+          <th class="center">A <span style="font-weight:400;color:var(--text3)">(1次/周)</span></th>
+          <th class="center">B <span style="font-weight:400;color:var(--text3)">(双周)</span></th>
+          <th class="center">C <span style="font-weight:400;color:var(--text3)">(月)</span></th>
+          <th class="center">D <span style="font-weight:400;color:var(--text3)">(季)</span></th>
+          <th class="center calc">门店合计</th>
+          <th class="center">周拜访<br>工作量</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="label-cell">张伟 · 东区</td>
+          <td class="center"><input class="cell-input narrow" value="8"></td>
+          <td class="center"><input class="cell-input narrow" value="12"></td>
+          <td class="center"><input class="cell-input narrow" value="25"></td>
+          <td class="center"><input class="cell-input narrow" value="45"></td>
+          <td class="center"><input class="cell-input narrow" value="30"></td>
+          <td class="center"><input class="cell-input narrow" value="20"></td>
+          <td class="center calc num-b mono">140</td>
+          <td class="center"><span class="formula">8×3+12×2+25×1=73次</span></td>
+        </tr>
+        <tr>
+          <td class="label-cell">李娜 · 中区</td>
+          <td class="center"><input class="cell-input narrow" value="12"></td>
+          <td class="center"><input class="cell-input narrow" value="15"></td>
+          <td class="center"><input class="cell-input narrow" value="20"></td>
+          <td class="center"><input class="cell-input narrow" value="35"></td>
+          <td class="center"><input class="cell-input narrow" value="25"></td>
+          <td class="center"><input class="cell-input narrow" value="15"></td>
+          <td class="center calc num-b mono">122</td>
+          <td class="center"><span class="formula">12×3+15×2+20×1=86次</span></td>
+        </tr>
+        <tr>
+          <td class="label-cell">王磊 · 西区</td>
+          <td class="center"><input class="cell-input narrow" value="6"></td>
+          <td class="center"><input class="cell-input narrow" value="10"></td>
+          <td class="center"><input class="cell-input narrow" value="22"></td>
+          <td class="center"><input class="cell-input narrow" value="40"></td>
+          <td class="center"><input class="cell-input narrow" value="28"></td>
+          <td class="center"><input class="cell-input narrow" value="18"></td>
+          <td class="center calc num-b mono">124</td>
+          <td class="center"><span class="formula">6×3+10×2+22×1=60次</span></td>
+        </tr>
+        <tr>
+          <td class="label-cell">刘芳 · 北区</td>
+          <td class="center"><input class="cell-input narrow" value="5"></td>
+          <td class="center"><input class="cell-input narrow" value="9"></td>
+          <td class="center"><input class="cell-input narrow" value="18"></td>
+          <td class="center"><input class="cell-input narrow" value="38"></td>
+          <td class="center"><input class="cell-input narrow" value="22"></td>
+          <td class="center"><input class="cell-input narrow" value="15"></td>
+          <td class="center calc num-b mono">107</td>
+          <td class="center"><span class="formula">5×3+9×2+18×1=51次</span></td>
+        </tr>
+        <tr>
+          <td class="label-cell">陈勇 · 南区</td>
+          <td class="center"><input class="cell-input narrow" value="7"></td>
+          <td class="center"><input class="cell-input narrow" value="11"></td>
+          <td class="center"><input class="cell-input narrow" value="20"></td>
+          <td class="center"><input class="cell-input narrow" value="42"></td>
+          <td class="center"><input class="cell-input narrow" value="25"></td>
+          <td class="center"><input class="cell-input narrow" value="16"></td>
+          <td class="center calc num-b mono">121</td>
+          <td class="center"><span class="formula">7×3+11×2+20×1=63次</span></td>
+        </tr>
+        <tr class="total-row">
+          <td class="label-cell">🔢 上海合计</td>
+          <td class="center calc num-g mono">38</td>
+          <td class="center calc num-g mono">57</td>
+          <td class="center calc num-g mono">105</td>
+          <td class="center calc mono">200</td>
+          <td class="center calc mono">130</td>
+          <td class="center calc mono">84</td>
+          <td class="center calc num-g mono">614</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ T1 · IPO1 ══ -->
+<div class="panel" id="panel-1">
+  <div class="panel-hdr">
+    <div class="panel-hdr-row">
+      <div class="ph-left">
+        <div class="ph-code">T1 · IPO1 · 工厂出货节点</div>
+        <div class="ph-title">IPO1 · 工厂→经销商 发货接收表</div>
+        <div class="ph-desc">工厂按计划向各区经销商发货。增长官核实本周实际到货量，记录破损与近效期批次，差异立即上报供应链。IPO1数据是IPO2期初库存的直接来源。</div>
+        <div class="ipos"><div class="ipo-tag active-ipo">IPO1 工厂出货</div><div class="ipo-tag">IPO0 产能（工厂填）</div></div>
+      </div>
+      <div class="ph-right"><div class="freq-pill">📅 周报 · 周一提交</div></div>
+    </div>
+  </div>
+  <div class="note"><strong>联动：</strong>IPO1实际到货量 = IPO2本周新增进货。到货率&lt;90%须标红并联动IPO3库存预警。</div>
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>增长官</th><th>填报周次</th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">计划到货(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">实际到货(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">计划到货(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">实际到货(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">到货率</span><span class="th-sub">实际÷计划</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">破损/异常</span><span class="th-sub">瓶</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">近效期批次</span><span class="th-sub">≤90天</span></div></th>
+      <th class="center">状态</th>
+      <th>差异说明</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">浦东</span></div></td>
+        <td><input class="cell-input narrow" value="第20周·5/12"></td>
+        <td class="center"><input class="cell-input narrow" value="29,000"></td>
+        <td class="center"><input class="cell-input narrow" value="28,500"></td>
+        <td class="center"><input class="cell-input narrow" value="110,000"></td>
+        <td class="center"><input class="cell-input narrow" value="108,200"></td>
+        <td class="center"><span class="num-g mono">98.4%</span></td>
+        <td class="center"><input class="cell-input narrow" value="120"></td>
+        <td class="center"><input class="cell-input narrow" value="0"></td>
+        <td class="center"><span class="status s-green">正常</span></td>
+        <td><input class="cell-input wide" value="运输压损已申报"></td>
+      </tr>
+      <tr>
+        <td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">黄浦</span></div></td>
+        <td><input class="cell-input narrow" value="第20周·5/12"></td>
+        <td class="center"><input class="cell-input narrow" value="25,300"></td>
+        <td class="center"><input class="cell-input narrow" value="25,300"></td>
+        <td class="center"><input class="cell-input narrow" value="96,000"></td>
+        <td class="center"><input class="cell-input narrow" value="96,000"></td>
+        <td class="center"><span class="num-g mono">100%</span></td>
+        <td class="center"><input class="cell-input narrow" value="0"></td>
+        <td class="center"><input class="cell-input narrow" value="0"></td>
+        <td class="center"><span class="status s-green">正常</span></td>
+        <td><input class="cell-input wide" value="无异常"></td>
+      </tr>
+      <tr>
+        <td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">长宁</span></div></td>
+        <td><input class="cell-input narrow" value="第20周·5/12"></td>
+        <td class="center"><input class="cell-input narrow" value="25,700"></td>
+        <td class="center"><input class="cell-input narrow" value="21,200"></td>
+        <td class="center"><input class="cell-input narrow" value="97,000"></td>
+        <td class="center"><input class="cell-input narrow" value="97,000"></td>
+        <td class="center"><span class="num-r mono">84.5%⚠️</span></td>
+        <td class="center"><input class="cell-input narrow" value="0"></td>
+        <td class="center"><input class="cell-input narrow" value="0"></td>
+        <td class="center"><span class="status s-red">短发</span></td>
+        <td><input class="cell-input wide" value="遵循自然短发4,500瓶，补发5/15"></td>
+      </tr>
+      <tr>
+        <td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">宝山</span></div></td>
+        <td><input class="cell-input narrow" value="第20周·5/12"></td>
+        <td class="center"><input class="cell-input narrow" value="22,100"></td>
+        <td class="center"><input class="cell-input narrow" value="22,100"></td>
+        <td class="center"><input class="cell-input narrow" value="83,800"></td>
+        <td class="center"><input class="cell-input narrow" value="83,800"></td>
+        <td class="center"><span class="num-g mono">100%</span></td>
+        <td class="center"><input class="cell-input narrow" value="60"></td>
+        <td class="center"><input class="cell-input narrow" value="300"></td>
+        <td class="center"><span class="status s-amber">关注</span></td>
+        <td><input class="cell-input wide" value="300瓶特级近效期批次·优先出货"></td>
+      </tr>
+      <tr>
+        <td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">闵行</span></div></td>
+        <td><input class="cell-input narrow" value="第20周·5/12"></td>
+        <td class="center"><input class="cell-input narrow" value="25,100"></td>
+        <td class="center"><input class="cell-input narrow" value="24,600"></td>
+        <td class="center"><input class="cell-input narrow" value="95,200"></td>
+        <td class="center"><input class="cell-input narrow" value="95,200"></td>
+        <td class="center"><span class="num-g mono">99.0%</span></td>
+        <td class="center"><input class="cell-input narrow" value="0"></td>
+        <td class="center"><input class="cell-input narrow" value="0"></td>
+        <td class="center"><span class="status s-green">正常</span></td>
+        <td><input class="cell-input wide" value="无异常"></td>
+      </tr>
+      <tr class="total-row">
+        <td colspan="2" class="label-cell">🔢 上海合计</td>
+        <td class="center calc mono">127,200</td>
+        <td class="center calc mono">121,700</td>
+        <td class="center calc mono">482,000</td>
+        <td class="center calc mono">480,200</td>
+        <td class="center calc"><span class="num-a mono">96.9%</span></td>
+        <td class="center calc mono">180</td>
+        <td class="center calc num-a mono">300⚠️</td>
+        <td class="center"><span class="status s-amber">关注</span></td>
+        <td class="calc">西区短发待补</td>
+      </tr>
+    </tbody>
+  </table></div>
+</div>
+<!-- ══ T2 · IPO2+3+4 ══ -->
+<div class="panel" id="panel-2">
+  <div class="panel-hdr">
+    <div class="panel-hdr-row">
+      <div class="ph-left">
+        <div class="ph-code">T2 · IPO2 / IPO3 / IPO4 · 经销商三节点</div>
+        <div class="ph-title">经销商进货 · 库存 · 出货（IPO2/3/4）</div>
+        <div class="ph-desc">经销商链路三个独立节点分开采集。IPO2=进货量（来自工厂）· IPO3=期末库存水位（心跳单元a基准）· IPO4=出货量（发往二批或门店）。三节点合起来计算消化率与渠道健康度。</div>
+        <div class="ipos">
+          <div class="ipo-tag active-ipo">IPO2 经销进货</div>
+          <div class="ipo-tag active-ipo">IPO3 经销库存</div>
+          <div class="ipo-tag active-ipo">IPO4 经销出货</div>
+        </div>
+      </div>
+      <div class="ph-right"><div class="freq-pill">📅 周报 · 周五提交</div></div>
+    </div>
+  </div>
+
+  <!-- IPO2 -->
+  <div style="background:var(--bg3);border:1px solid var(--border);border-left:4px solid var(--amber);border-radius:10px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px">
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--amber);flex-shrink:0;line-height:1">IPO2</div>
+    <div><div style="font-size:13px;font-weight:700;margin-bottom:2px">经销商进货量（来自工厂）</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.5">经销商本周从工厂实际进货量。T=30天先款后货。进货量决定IPO3库存变动。遵循自然IPO2价¥9.50 · 特级IPO2价¥9.80（4月起涨价）</div></div>
+    <div style="margin-left:auto;flex-shrink:0"><span class="freq-pill">📅 周报</span></div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>增长官</th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">进货量(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">进货额(万元)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">进货均价(元)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">进货量(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">进货额(万元)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">进货均价(元)</span></div></th>
+      <th class="center">付款状态</th>
+      <th>备注</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">浦东</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="57,200"></td><td class="center calc num-b mono">54.3</td><td class="center"><span class="num-g mono">¥9.50</span></td>
+        <td class="center"><input class="cell-input narrow" value="107,200"></td><td class="center calc num-b mono">105.1</td><td class="center"><span class="num-a mono">¥9.80</span></td>
+        <td class="center"><span class="status s-green">已结算</span></td><td><input class="cell-input wide" value="正常"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">黄浦</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="49,800"></td><td class="center calc num-b mono">47.3</td><td class="center"><span class="num-g mono">¥9.50</span></td>
+        <td class="center"><input class="cell-input narrow" value="93,600"></td><td class="center calc num-b mono">91.7</td><td class="center"><span class="num-a mono">¥9.80</span></td>
+        <td class="center"><span class="status s-green">已结算</span></td><td><input class="cell-input wide" value="正常"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">长宁</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="50,600"></td><td class="center calc num-b mono">48.1</td><td class="center"><span class="num-g mono">¥9.50</span></td>
+        <td class="center"><input class="cell-input narrow" value="95,200"></td><td class="center calc num-b mono">93.3</td><td class="center"><span class="num-a mono">¥9.80</span></td>
+        <td class="center"><span class="status s-amber">账期中</span></td><td><input class="cell-input wide" value="月底结款"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">宝山</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="43,500"></td><td class="center calc num-b mono">41.3</td><td class="center"><span class="num-g mono">¥9.50</span></td>
+        <td class="center"><input class="cell-input narrow" value="82,000"></td><td class="center calc num-b mono">80.4</td><td class="center"><span class="num-a mono">¥9.80</span></td>
+        <td class="center"><span class="status s-green">已结算</span></td><td><input class="cell-input wide" value="正常"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">闵行</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="49,400"></td><td class="center calc num-b mono">46.9</td><td class="center"><span class="num-g mono">¥9.50</span></td>
+        <td class="center"><input class="cell-input narrow" value="93,000"></td><td class="center calc num-b mono">91.1</td><td class="center"><span class="num-a mono">¥9.80</span></td>
+        <td class="center"><span class="status s-green">已结算</span></td><td><input class="cell-input wide" value="正常"></td></tr>
+      <tr class="total-row">
+        <td class="label-cell">🔢 上海合计</td>
+        <td class="center calc num-g mono">250,500</td><td class="center calc num-g mono">237.9万</td><td class="center calc">¥9.50</td>
+        <td class="center calc mono">471,000</td><td class="center calc mono">461.6万</td><td class="center calc">¥9.80</td>
+        <td class="center calc">—</td><td></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <!-- IPO3 -->
+  <div style="background:var(--bg3);border:1px solid var(--border);border-left:4px solid var(--teal);border-radius:10px;padding:12px 16px;margin:16px 0 10px;display:flex;align-items:flex-start;gap:12px">
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--teal);flex-shrink:0;line-height:1">IPO3</div>
+    <div><div style="font-size:13px;font-weight:700;margin-bottom:2px">经销商期末库存（心跳水位）</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.5">经销商仓库期末实物库存。水位基准：<strong style="color:var(--green)">2a = 满仓正常</strong> · <strong style="color:var(--amber)">1a = 补货预警</strong> · &lt;1a = 紧急。超过2a触发A类畸变（渠道压货）预警。</div></div>
+    <div style="margin-left:auto;flex-shrink:0"><span class="freq-pill">📅 周报</span></div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>增长官</th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">期末库存(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">心跳单元a</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">水位(库存÷a)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">期末库存(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">心跳单元a</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">水位(库存÷a)</span></div></th>
+      <th class="center">压货预警</th>
+      <th>处置措施</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">浦东</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="68,400"></td><td class="center"><input class="cell-input narrow" value="34,200"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:100%"></div></div><span class="wlbl num-g">2.0a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="196,000"></td><td class="center"><input class="cell-input narrow" value="112,000"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:88%"></div></div><span class="wlbl">1.75a</span></div></td>
+        <td class="center"><span class="status s-green">正常</span></td>
+        <td><input class="cell-input wide" value="库存健康"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">黄浦</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="74,700"></td><td class="center"><input class="cell-input narrow" value="35,000"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:100%"></div></div><span class="wlbl num-g">2.1a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="168,500"></td><td class="center"><input class="cell-input narrow" value="98,000"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:86%"></div></div><span class="wlbl">1.72a</span></div></td>
+        <td class="center"><span class="status s-green">正常</span></td>
+        <td><input class="cell-input wide" value="库存健康"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">长宁</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="96,100"></td><td class="center"><input class="cell-input narrow" value="35,500"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-r" style="width:100%"></div></div><span class="wlbl num-r">2.7a⚠️</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="171,400"></td><td class="center"><input class="cell-input narrow" value="95,000"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-a" style="width:90%"></div></div><span class="wlbl num-a">1.8a</span></div></td>
+        <td class="center"><span class="status s-red">🚨遵循自然压货</span></td>
+        <td><input class="cell-input wide" value="遵循自然2.7a·暂停推单·消化优先"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">宝山</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="58,000"></td><td class="center"><input class="cell-input narrow" value="30,400"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:95%"></div></div><span class="wlbl">1.9a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="147,600"></td><td class="center"><input class="cell-input narrow" value="85,600"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-a" style="width:87%"></div></div><span class="wlbl num-a">1.72a</span></div></td>
+        <td class="center"><span class="status s-green">正常</span></td>
+        <td><input class="cell-input wide" value="正常水位"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">闵行</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="66,200"></td><td class="center"><input class="cell-input narrow" value="34,600"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:96%"></div></div><span class="wlbl">1.91a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="167,400"></td><td class="center"><input class="cell-input narrow" value="97,200"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:86%"></div></div><span class="wlbl">1.72a</span></div></td>
+        <td class="center"><span class="status s-green">正常</span></td>
+        <td><input class="cell-input wide" value="正常水位"></td></tr>
+      <tr class="total-row">
+        <td class="label-cell">🔢 上海合计</td>
+        <td class="center calc mono">363,400</td><td class="center calc mono">169,700</td>
+        <td class="center calc num-a mono">均2.14a</td>
+        <td class="center calc mono">851,000</td><td class="center calc mono">487,800</td>
+        <td class="center calc num-a mono">均1.74a</td>
+        <td class="center"><span class="status s-amber">西区⚠️</span></td><td></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <!-- IPO4 -->
+  <div style="background:var(--bg3);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:10px;padding:12px 16px;margin:16px 0 10px;display:flex;align-items:flex-start;gap:12px">
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--green);flex-shrink:0;line-height:1">IPO4</div>
+    <div><div style="font-size:13px;font-weight:700;margin-bottom:2px">经销商出货量（发往二批或门店）</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.5">经销商本周向二批商或门店实际出货量。消化率 = IPO4 ÷ IPO2。健康消化率目标：2025年≥65% · 2027年≥75%。当前46.6%处于铁律③临界。</div></div>
+    <div style="margin-left:auto;flex-shrink:0"><span class="freq-pill">📅 周报</span></div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>增长官</th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">出货量(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">消化率(IPO4÷IPO2)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">出货去向</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">出货量(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">消化率(IPO4÷IPO2)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">出货去向</span></div></th>
+      <th class="center">消化健康</th>
+      <th>预警说明</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">浦东</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="26,300"></td><td class="center"><span class="num-a mono">46.0%⚠️</span></td>
+        <td class="center"><input class="cell-input narrow" value="P1 85%/P2 15%"></td>
+        <td class="center"><input class="cell-input narrow" value="55,700"></td><td class="center"><span class="num-a mono">51.9%</span></td>
+        <td class="center"><input class="cell-input narrow" value="P1 90%/P2 10%"></td>
+        <td class="center"><span class="status s-amber">临界</span></td>
+        <td><input class="cell-input wide" value="消化率偏低·加速铺货"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">黄浦</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="24,900"></td><td class="center"><span class="num-a mono">50.0%</span></td>
+        <td class="center"><input class="cell-input narrow" value="P1 88%/P2 12%"></td>
+        <td class="center"><input class="cell-input narrow" value="51,500"></td><td class="center"><span class="num-a mono">55.0%</span></td>
+        <td class="center"><input class="cell-input narrow" value="P1 92%/P2 8%"></td>
+        <td class="center"><span class="status s-amber">临界</span></td>
+        <td><input class="cell-input wide" value="消化率刚达铁律线"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">长宁</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="22,300"></td><td class="center"><span class="num-r mono">44.1%🚨</span></td>
+        <td class="center"><input class="cell-input narrow" value="P1 80%/P2 20%"></td>
+        <td class="center"><input class="cell-input narrow" value="45,700"></td><td class="center"><span class="num-a mono">48.0%</span></td>
+        <td class="center"><input class="cell-input narrow" value="P1 85%/P2 15%"></td>
+        <td class="center"><span class="status s-red">🚨触铁律③</span></td>
+        <td><input class="cell-input wide" value="双产品消化率均低·联动IPO3压货处理"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">宝山</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="21,100"></td><td class="center"><span class="num-r mono">48.5%⚠️</span></td>
+        <td class="center"><input class="cell-input narrow" value="P1 88%/P2 12%"></td>
+        <td class="center"><input class="cell-input narrow" value="41,000"></td><td class="center"><span class="num-a mono">50.0%</span></td>
+        <td class="center"><input class="cell-input narrow" value="P1 90%/P2 10%"></td>
+        <td class="center"><span class="status s-amber">⚠️临界</span></td>
+        <td><input class="cell-input wide" value="美顾推荐力度需加大"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">闵行</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="23,500"></td><td class="center"><span class="num-a mono">47.6%⚠️</span></td>
+        <td class="center"><input class="cell-input narrow" value="P1 86%/P2 14%"></td>
+        <td class="center"><input class="cell-input narrow" value="47,500"></td><td class="center"><span class="num-a mono">51.1%</span></td>
+        <td class="center"><input class="cell-input narrow" value="P1 91%/P2 9%"></td>
+        <td class="center"><span class="status s-amber">临界</span></td>
+        <td><input class="cell-input wide" value="持续监控消化节奏"></td></tr>
+      <tr class="total-row">
+        <td class="label-cell">🔢 上海合计</td>
+        <td class="center calc mono">118,100</td><td class="center calc num-r mono">47.1%🚨</td><td class="center calc">P1主/P2辅</td>
+        <td class="center calc mono">241,400</td><td class="center calc num-a mono">51.3%</td><td class="center calc">P1主/P2辅</td>
+        <td class="center"><span class="status s-red">全线临界</span></td><td></td>
+      </tr>
+    </tbody>
+  </table></div>
+</div>
+<!-- ══ T3 · IPO5+6+7 ══ -->
+<div class="panel" id="panel-3">
+  <div class="panel-hdr">
+    <div class="panel-hdr-row">
+      <div class="ph-left">
+        <div class="ph-code">T3 · IPO5 / IPO6 / IPO7 · 二批商三节点 · P2路径</div>
+        <div class="ph-title">二批商进货 · 库存 · 出货（IPO5/6/7）</div>
+        <div class="ph-desc">P2路径（餐饮/食服渠道）专属三节点。二批商库存严控1:1（库存=1a · 超1a=压货 · &lt;0.5a=断货）。遵循自然IPO7出货均价≥¥14 · 特级≥¥17，低于底价触发铁律①。</div>
+        <div class="ipos">
+          <div class="ipo-tag active-ipo">IPO5 二批进货</div>
+          <div class="ipo-tag active-ipo">IPO6 二批库存</div>
+          <div class="ipo-tag active-ipo">IPO7 二批出货</div>
+        </div>
+      </div>
+      <div class="ph-right"><div class="freq-pill">📅 周报 · 周四提交</div></div>
+    </div>
+  </div>
+
+  <!-- IPO5 -->
+  <div style="background:var(--bg3);border:1px solid var(--border);border-left:4px solid var(--amber);border-radius:10px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px">
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--amber);flex-shrink:0;line-height:1">IPO5</div>
+    <div><div style="font-size:13px;font-weight:700;margin-bottom:2px">二批商进货量（来自经销商·P2路径）</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.5">二批商从经销商进货量（P2路径专属）。进货量控制严格，超过1a即触发压货预警，应优先消化再进。</div></div>
+    <div style="margin-left:auto"><span class="freq-pill">📅 周报</span></div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>增长官</th>
+      <th class="center">区域二批商数</th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">本周进货量(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">进货均价(元/瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">本周进货量(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">进货均价(元/瓶)</span></div></th>
+      <th class="center">进货节奏</th>
+      <th>备注</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">浦东</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="12"></td>
+        <td class="center"><input class="cell-input narrow" value="8,600"></td><td class="center"><span class="num-g mono">¥9.50</span></td>
+        <td class="center"><input class="cell-input narrow" value="10,700"></td><td class="center"><span class="num-a mono">¥9.80</span></td>
+        <td class="center"><span class="status s-green">正常</span></td>
+        <td><input class="cell-input wide" value="正常"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">黄浦</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="8"></td>
+        <td class="center"><input class="cell-input narrow" value="7,500"></td><td class="center"><span class="num-g mono">¥9.50</span></td>
+        <td class="center"><input class="cell-input narrow" value="9,400"></td><td class="center"><span class="num-a mono">¥9.80</span></td>
+        <td class="center"><span class="status s-amber">偏快</span></td>
+        <td><input class="cell-input wide" value="进货速度略快，关注IPO6水位"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">长宁</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="9"></td>
+        <td class="center"><input class="cell-input narrow" value="6,700"></td><td class="center"><span class="num-g mono">¥9.50</span></td>
+        <td class="center"><input class="cell-input narrow" value="9,500"></td><td class="center"><span class="num-a mono">¥9.80</span></td>
+        <td class="center"><span class="status s-green">正常</span></td>
+        <td><input class="cell-input wide" value="正常"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">宝山</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="7"></td>
+        <td class="center"><input class="cell-input narrow" value="5,800"></td><td class="center"><span class="num-g mono">¥9.50</span></td>
+        <td class="center"><input class="cell-input narrow" value="8,200"></td><td class="center"><span class="num-a mono">¥9.80</span></td>
+        <td class="center"><span class="status s-green">正常</span></td>
+        <td><input class="cell-input wide" value="正常"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">闵行</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="10"></td>
+        <td class="center"><input class="cell-input narrow" value="6,500"></td><td class="center"><span class="num-g mono">¥9.50</span></td>
+        <td class="center"><input class="cell-input narrow" value="9,300"></td><td class="center"><span class="num-a mono">¥9.80</span></td>
+        <td class="center"><span class="status s-green">正常</span></td>
+        <td><input class="cell-input wide" value="正常"></td></tr>
+      <tr class="total-row">
+        <td class="label-cell">🔢 上海</td><td class="center calc mono">46家</td>
+        <td class="center calc mono">35,100</td><td class="center calc">¥9.50</td>
+        <td class="center calc mono">47,100</td><td class="center calc">¥9.80</td>
+        <td class="center"><span class="status s-green">正常</span></td><td></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <!-- IPO6 -->
+  <div style="background:var(--bg3);border:1px solid var(--border);border-left:4px solid var(--teal);border-radius:10px;padding:12px 16px;margin:16px 0 10px;display:flex;align-items:flex-start;gap:12px">
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--teal);flex-shrink:0;line-height:1">IPO6</div>
+    <div><div style="font-size:13px;font-weight:700;margin-bottom:2px">二批商期末库存（1:1严控）</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.5">二批商库存严格控制在1a（精准周转）。超1a = A类畸变（压货）预警 · 超1.5a = 蝴蝶效应Agent自动上报。</div></div>
+    <div style="margin-left:auto"><span class="freq-pill">📅 周报</span></div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>增长官</th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然库存</span><span class="th-sub">瓶</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">水位(目标=1a)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油库存</span><span class="th-sub">瓶</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">水位(目标=1a)</span></div></th>
+      <th class="center">超1a预警数</th>
+      <th class="center">状态</th>
+      <th>处置</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">浦东</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="9,200"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:95%"></div></div><span class="wlbl">0.98a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="10,800"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:95%"></div></div><span class="wlbl">0.95a</span></div></td>
+        <td class="center"><span class="num-g mono">0家</span></td>
+        <td class="center"><span class="status s-green">健康</span></td>
+        <td><input class="cell-input wide" value="正常"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">黄浦</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="10,500"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-r" style="width:100%"></div></div><span class="wlbl num-r">1.25a⚠️</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="9,800"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:95%"></div></div><span class="wlbl">0.98a</span></div></td>
+        <td class="center"><span class="num-a mono">2家</span></td>
+        <td class="center"><span class="status s-amber">⚠️压货</span></td>
+        <td><input class="cell-input wide" value="遵循自然2家超1a·暂停补货"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">长宁</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="7,800"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:90%"></div></div><span class="wlbl">0.90a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="9,100"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:92%"></div></div><span class="wlbl">0.92a</span></div></td>
+        <td class="center"><span class="num-g mono">0家</span></td>
+        <td class="center"><span class="status s-green">健康</span></td>
+        <td><input class="cell-input wide" value="正常"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">宝山</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="6,200"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:88%"></div></div><span class="wlbl">0.88a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="7,800"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:88%"></div></div><span class="wlbl">0.88a</span></div></td>
+        <td class="center"><span class="num-g mono">0家</span></td>
+        <td class="center"><span class="status s-green">健康</span></td>
+        <td><input class="cell-input wide" value="正常"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">闵行</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="7,200"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:95%"></div></div><span class="wlbl">0.95a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="9,600"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:98%"></div></div><span class="wlbl">0.98a</span></div></td>
+        <td class="center"><span class="num-g mono">0家</span></td>
+        <td class="center"><span class="status s-green">健康</span></td>
+        <td><input class="cell-input wide" value="正常"></td></tr>
+      <tr class="total-row">
+        <td class="label-cell">🔢 上海合计</td>
+        <td class="center calc mono">40,900</td><td class="center calc num-a mono">均0.99a</td>
+        <td class="center calc mono">47,100</td><td class="center calc num-g mono">均0.94a</td>
+        <td class="center calc num-a mono">2家⚠️</td>
+        <td class="center"><span class="status s-amber">关注</span></td><td></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <!-- IPO7 -->
+  <div style="background:var(--bg3);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:10px;padding:12px 16px;margin:16px 0 10px;display:flex;align-items:flex-start;gap:12px">
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--green);flex-shrink:0;line-height:1">IPO7</div>
+    <div><div style="font-size:13px;font-weight:700;margin-bottom:2px">二批商出货量 · 价格合规监控</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.5">二批商向门店/餐厅出货量及出货均价。遵循自然IPO7价格守护线≥¥14（铁律①&lt;¥13触发） · 特级守护线≥¥17（&lt;¥16.5触发乱价预警）。</div></div>
+    <div style="margin-left:auto"><span class="freq-pill">📅 周报</span></div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>增长官</th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">出货量(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">出货均价(≥¥14)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">出货量(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">出货均价(≥¥17)</span></div></th>
+      <th class="center">乱价预警数<br><span style="font-weight:400;color:var(--text3);font-size:9px">违规门店</span></th>
+      <th class="center">价格状态</th>
+      <th>处置</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">浦东</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="8,400"></td><td class="center"><span class="num-g mono">¥14.20 ✓</span></td>
+        <td class="center"><input class="cell-input narrow" value="10,300"></td><td class="center"><span class="num-a mono">¥17.15 ✓</span></td>
+        <td class="center"><span class="num-g mono">0</span></td>
+        <td class="center"><span class="status s-green">合规</span></td>
+        <td><input class="cell-input wide" value="正常"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">黄浦</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="7,200"></td><td class="center"><span class="num-g mono">¥14.50 ✓</span></td>
+        <td class="center"><input class="cell-input narrow" value="9,200"></td><td class="center"><span class="num-a mono">¥17.20 ✓</span></td>
+        <td class="center"><span class="num-g mono">0</span></td>
+        <td class="center"><span class="status s-green">合规</span></td>
+        <td><input class="cell-input wide" value="正常"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">长宁</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="6,100"></td><td class="center"><span class="num-r mono">¥13.80 ⚠️</span></td>
+        <td class="center"><input class="cell-input narrow" value="8,900"></td><td class="center"><span class="num-r mono">¥16.50 ⚠️</span></td>
+        <td class="center"><span class="num-r mono">2家</span></td>
+        <td class="center"><span class="status s-red">🚨双乱价</span></td>
+        <td><input class="cell-input wide" value="2家门店低价·已约谈·上报蝴蝶效应Agent"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">宝山</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="5,600"></td><td class="center"><span class="num-g mono">¥14.00 ✓</span></td>
+        <td class="center"><input class="cell-input narrow" value="7,800"></td><td class="center"><span class="num-a mono">¥17.05 ✓</span></td>
+        <td class="center"><span class="num-g mono">0</span></td>
+        <td class="center"><span class="status s-green">合规</span></td>
+        <td><input class="cell-input wide" value="正常"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">闵行</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="6,600"></td><td class="center"><span class="num-g mono">¥14.10 ✓</span></td>
+        <td class="center"><input class="cell-input narrow" value="9,100"></td><td class="center"><span class="num-a mono">¥17.18 ✓</span></td>
+        <td class="center"><span class="num-g mono">0</span></td>
+        <td class="center"><span class="status s-green">合规</span></td>
+        <td><input class="cell-input wide" value="正常"></td></tr>
+      <tr class="total-row">
+        <td class="label-cell">🔢 上海合计</td>
+        <td class="center calc mono">33,900</td><td class="center calc num-a mono">均¥14.12</td>
+        <td class="center calc mono">45,300</td><td class="center calc num-a mono">均¥17.02</td>
+        <td class="center calc num-r mono">2家⚠️</td>
+        <td class="center"><span class="status s-amber">西区关注</span></td><td></td>
+      </tr>
+    </tbody>
+  </table></div>
+</div>
+<!-- ══ T4 · IPO8+9+10 ══ -->
+<div class="panel" id="panel-4">
+  <div class="panel-hdr">
+    <div class="panel-hdr-row">
+      <div class="ph-left">
+        <div class="ph-code">T4 · IPO8 / IPO9 / IPO10 · 门店三节点</div>
+        <div class="ph-title">门店进货 · 库存 · 消费者购买（IPO8/9/10）</div>
+        <div class="ph-desc">零售门店链路三个独立节点。IPO8=门店进货 · IPO9=货架+仓库库存（货架优先原则）· IPO10=消费者实际购买量（动销）。IPO10是整个链路最终产出，遵循自然翻盘的核心计量单位。</div>
+        <div class="ipos">
+          <div class="ipo-tag active-ipo">IPO8 门店进货</div>
+          <div class="ipo-tag active-ipo">IPO9 门店库存</div>
+          <div class="ipo-tag active-ipo">IPO10 消费者购买</div>
+        </div>
+      </div>
+      <div class="ph-right"><div class="freq-pill">📅 S+/S周报 · A-D月报</div></div>
+    </div>
+  </div>
+
+  <!-- IPO8 -->
+  <div style="background:var(--bg3);border:1px solid var(--border);border-left:4px solid var(--amber);border-radius:10px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px">
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--amber);flex-shrink:0;line-height:1">IPO8</div>
+    <div><div style="font-size:13px;font-weight:700;margin-bottom:2px">门店进货量（来自经销商/二批）</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.5">门店从经销商或二批商进货量。按门店级别分列：S+/S/A=重要门店（每单小量高频）· B/C/D=标准门店（每单大量低频）。进货量联动IPO9库存计算。</div></div>
+    <div style="margin-left:auto"><span class="freq-pill">📅 周报</span></div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>增长官</th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">S+/S/A进货(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">B/C/D进货(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">合计(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">S+/S/A进货(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">B/C/D进货(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">合计(瓶)</span></div></th>
+      <th class="center">进货节奏</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">浦东</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="15,800"></td><td class="center"><input class="cell-input narrow" value="7,400"></td><td class="center calc num-b mono">23,200</td>
+        <td class="center"><input class="cell-input narrow" value="34,600"></td><td class="center"><input class="cell-input narrow" value="18,200"></td><td class="center calc num-b mono">52,800</td>
+        <td class="center"><span class="status s-green">正常</span></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">黄浦</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="14,600"></td><td class="center"><input class="cell-input narrow" value="6,200"></td><td class="center calc num-b mono">20,800</td>
+        <td class="center"><input class="cell-input narrow" value="31,800"></td><td class="center"><input class="cell-input narrow" value="15,400"></td><td class="center calc num-b mono">47,200</td>
+        <td class="center"><span class="status s-green">正常</span></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">长宁</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="13,200"></td><td class="center"><input class="cell-input narrow" value="5,800"></td><td class="center calc num-b mono">19,000</td>
+        <td class="center"><input class="cell-input narrow" value="30,400"></td><td class="center"><input class="cell-input narrow" value="14,600"></td><td class="center calc num-b mono">45,000</td>
+        <td class="center"><span class="status s-amber">偏慢</span></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">宝山</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="11,400"></td><td class="center"><input class="cell-input narrow" value="5,000"></td><td class="center calc num-b mono">16,400</td>
+        <td class="center"><input class="cell-input narrow" value="26,200"></td><td class="center"><input class="cell-input narrow" value="12,600"></td><td class="center calc num-b mono">38,800</td>
+        <td class="center"><span class="status s-green">正常</span></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">闵行</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="12,900"></td><td class="center"><input class="cell-input narrow" value="5,600"></td><td class="center calc num-b mono">18,500</td>
+        <td class="center"><input class="cell-input narrow" value="29,800"></td><td class="center"><input class="cell-input narrow" value="14,400"></td><td class="center calc num-b mono">44,200</td>
+        <td class="center"><span class="status s-green">正常</span></td></tr>
+      <tr class="total-row">
+        <td class="label-cell">🔢 上海合计</td>
+        <td class="center calc mono">67,900</td><td class="center calc mono">30,000</td><td class="center calc num-g mono">97,900</td>
+        <td class="center calc mono">152,800</td><td class="center calc mono">75,200</td><td class="center calc num-g mono">228,000</td>
+        <td class="center"><span class="status s-green">正常</span></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <!-- IPO9 -->
+  <div style="background:var(--bg3);border:1px solid var(--border);border-left:4px solid var(--teal);border-radius:10px;padding:12px 16px;margin:16px 0 10px;display:flex;align-items:flex-start;gap:12px">
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--teal);flex-shrink:0;line-height:1">IPO9</div>
+    <div><div style="font-size:13px;font-weight:700;margin-bottom:2px">门店库存（货架+仓库 · 货架优先）</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.5">货架库存优先于仓库库存（货架=领地）。水位：3a=满仓 · 2a=补货预警 · 1a=紧急。BP现状：全国特级IPO9仅126.4万瓶=目标13.3%，门店货架严重缺货。近效期≤60天须标记。</div></div>
+    <div style="margin-left:auto"><span class="freq-pill">📅 拜访时填报</span></div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>增长官</th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">货架量(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">仓库量(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">水位(÷a)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">货架量(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">仓库量(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">水位(÷a)</span></div></th>
+      <th class="center">补货预警<br><span style="font-weight:400;color:var(--text3);font-size:9px">≤2a门店数</span></th>
+      <th class="center">近效期<br><span style="font-weight:400;color:var(--text3);font-size:9px">≤60天</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">浦东</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="18,400"></td><td class="center"><input class="cell-input narrow" value="6,100"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-a" style="width:75%"></div></div><span class="wlbl num-a">2.4a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="32,100"></td><td class="center"><input class="cell-input narrow" value="10,800"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-a" style="width:65%"></div></div><span class="wlbl num-a">2.2a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="8"></td>
+        <td class="center"><input class="cell-input narrow" value="0"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">黄浦</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="20,200"></td><td class="center"><input class="cell-input narrow" value="6,800"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:90%"></div></div><span class="wlbl num-g">2.9a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="35,600"></td><td class="center"><input class="cell-input narrow" value="12,400"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:85%"></div></div><span class="wlbl">2.7a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="3"></td>
+        <td class="center"><input class="cell-input narrow" value="0"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">长宁</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="14,600"></td><td class="center"><input class="cell-input narrow" value="5,200"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-r" style="width:55%"></div></div><span class="wlbl num-r">2.0a⚠️</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="28,800"></td><td class="center"><input class="cell-input narrow" value="9,600"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-a" style="width:62%"></div></div><span class="wlbl num-a">2.1a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="18"></td>
+        <td class="center"><input class="cell-input narrow" value="2"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">宝山</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="13,200"></td><td class="center"><input class="cell-input narrow" value="4,400"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-a" style="width:60%"></div></div><span class="wlbl num-a">2.1a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="24,600"></td><td class="center"><input class="cell-input narrow" value="8,200"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-a" style="width:60%"></div></div><span class="wlbl num-a">2.1a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="15"></td>
+        <td class="center"><input class="cell-input narrow" value="3"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">闵行</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="15,600"></td><td class="center"><input class="cell-input narrow" value="5,200"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-a" style="width:72%"></div></div><span class="wlbl num-a">2.3a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="28,900"></td><td class="center"><input class="cell-input narrow" value="9,600"></td>
+        <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-a" style="width:68%"></div></div><span class="wlbl num-a">2.2a</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="10"></td>
+        <td class="center"><input class="cell-input narrow" value="1"></td></tr>
+      <tr class="total-row">
+        <td class="label-cell">🔢 上海合计</td>
+        <td class="center calc mono">82,000</td><td class="center calc mono">27,700</td>
+        <td class="center calc num-a mono">均2.3a</td>
+        <td class="center calc mono">150,000</td><td class="center calc mono">50,600</td>
+        <td class="center calc num-a mono">均2.3a</td>
+        <td class="center calc num-r mono">54家⚠️</td>
+        <td class="center calc num-a mono">6个</td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <!-- IPO10 -->
+  <div style="background:var(--bg3);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:10px;padding:12px 16px;margin:16px 0 10px;display:flex;align-items:flex-start;gap:12px">
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--green);flex-shrink:0;line-height:1">IPO10</div>
+    <div><div style="font-size:13px;font-weight:700;margin-bottom:2px">消费者实际购买量（动销 · 翻盘核心指标）</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.5">消费者从门店货架实际购买量 = 链路终端产出 = 品牌翻盘的真实计量。IPO10消化率=IPO10÷IPO2。遵循自然IPO10须持续成长并最终超越特级IPO10，翻盘才成立。</div></div>
+    <div style="margin-left:auto"><span class="freq-pill">📅 月报</span></div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>增长官</th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">月销量(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">IPO10均价</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">消化率(10÷2)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">月增速</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">月销量(瓶)</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">IPO10均价</span></div></th>
+      <th class="center"><div class="th-wrap"><span class="th-main">翻盘进度</span><span class="th-sub">遵循÷特级</span></div></th>
+      <th class="center">铺货率</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">浦东</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="26,300"></td><td class="center"><span class="num-g mono">¥14.20</span></td>
+        <td class="center"><span class="num-a mono">46.0%⚠️</span></td><td class="center"><input class="cell-input narrow" value="+22%"></td>
+        <td class="center"><input class="cell-input narrow" value="107,200"></td><td class="center"><span class="num-a mono">¥17.20</span></td>
+        <td class="center"><span class="num-a mono">24.5%</span></td>
+        <td class="center"><input class="cell-input narrow" value="58%"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">黄浦</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="24,900"></td><td class="center"><span class="num-g mono">¥14.50</span></td>
+        <td class="center"><span class="num-a mono">50.0%</span></td><td class="center"><input class="cell-input narrow" value="+31%"></td>
+        <td class="center"><input class="cell-input narrow" value="93,600"></td><td class="center"><span class="num-a mono">¥17.45</span></td>
+        <td class="center"><span class="num-a mono">26.6%</span></td>
+        <td class="center"><input class="cell-input narrow" value="65%"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">长宁</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="22,300"></td><td class="center"><span class="num-r mono">¥13.80⚠️</span></td>
+        <td class="center"><span class="num-r mono">44.1%🚨</span></td><td class="center"><input class="cell-input narrow" value="+15%"></td>
+        <td class="center"><input class="cell-input narrow" value="95,200"></td><td class="center"><span class="num-r mono">¥16.80⚠️</span></td>
+        <td class="center"><span class="num-r mono">23.4%</span></td>
+        <td class="center"><input class="cell-input narrow" value="50%"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">宝山</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="21,100"></td><td class="center"><span class="num-g mono">¥14.00</span></td>
+        <td class="center"><span class="num-r mono">48.5%⚠️</span></td><td class="center"><input class="cell-input narrow" value="+18%"></td>
+        <td class="center"><input class="cell-input narrow" value="82,000"></td><td class="center"><span class="num-a mono">¥17.10</span></td>
+        <td class="center"><span class="num-a mono">25.7%</span></td>
+        <td class="center"><input class="cell-input narrow" value="48%"></td></tr>
+      <tr><td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">闵行</span></div></td>
+        <td class="center"><input class="cell-input narrow" value="23,500"></td><td class="center"><span class="num-g mono">¥14.10</span></td>
+        <td class="center"><span class="num-a mono">47.6%⚠️</span></td><td class="center"><input class="cell-input narrow" value="+20%"></td>
+        <td class="center"><input class="cell-input narrow" value="93,000"></td><td class="center"><span class="num-a mono">¥17.25</span></td>
+        <td class="center"><span class="num-a mono">25.3%</span></td>
+        <td class="center"><input class="cell-input narrow" value="55%"></td></tr>
+      <tr class="total-row">
+        <td class="label-cell">🔢 上海合计</td>
+        <td class="center calc num-g mono">118,100</td><td class="center calc num-a mono">¥14.12</td>
+        <td class="center calc num-r mono">47.1%🚨</td><td class="center calc num-g mono">+21%</td>
+        <td class="center calc mono">471,000</td><td class="center calc num-a mono">¥17.16</td>
+        <td class="center calc" style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--amber)">25.1%</td>
+        <td class="center calc num-a mono">55.2%</td>
+      </tr>
+    </tbody>
+  </table></div>
+  <div class="note"><strong>IPO10 → 翻盘基准：</strong>当前遵循自然上海月销118,100瓶 = 特级471,000瓶的25.1%。按+60.7% CAGR增速，2029年遵循自然上海月销预计超越特级。届时品牌翻盘成立。</div>
+</div>
+<!-- ══════════════════════════════════════════
+     T5 · IPO11-13 消费者渗透表
+══════════════════════════════════════════ -->
+<div class="panel" id="panel-5">
+  <div class="panel-hdr">
+    <div class="panel-hdr-row">
+      <div class="ph-left">
+        <div class="ph-code">T5 · IPO11-13 · 月报</div>
+        <div class="ph-title">消费者渗透&复购月报</div>
+        <div class="ph-desc">消费者侧终端数据：家庭渗透率、活跃购买用户数、购买频次、复购率、流失预警。结合PRISM选点活动效果回收。数据来源：会员系统、PRISM活动报告、问卷调研。</div>
+        <div class="ipos">
+          <div class="ipo-tag active-ipo">IPO11 消费者购买</div>
+          <div class="ipo-tag active-ipo">IPO12 家庭库存</div>
+          <div class="ipo-tag active-ipo">IPO13 复购触发</div>
+        </div>
+      </div>
+      <div class="ph-right">
+        <div class="freq-pill">📅 月报 · 月末提交</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:6px">目标渗透率：≥35%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note"><strong>复购率公式：</strong>（本月重复购买用户数 ÷ 上月购买用户数）× 100%。家庭渗透率基于PRISM活动覆盖小区的入户调研估算。IPO12家庭库存通过问卷采样推算。</div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>增长官</th>
+          <th class="center"><div class="th-wrap"><span class="th-main">PRISM活动</span><span class="th-sub">本月覆盖小区</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">活跃消费者</span><span class="th-sub">会员+采样</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">家庭渗透率</span><span class="th-sub">目标≥35%</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">月均购频</span><span class="th-sub">次/月</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">复购率</span><span class="th-sub">目标≥65%</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">IPO12</span><span class="th-sub">家庭库存估算</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">流失预警</span><span class="th-sub">60天未购</span></div></th>
+          <th class="center">NPS</th>
+          <th class="center">复购健康</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">浦东</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="18个"></td>
+          <td class="center"><input class="cell-input narrow" value="12,400"></td>
+          <td class="center"><span class="num-g mono">38.2%</span></td>
+          <td class="center"><input class="cell-input narrow" value="1.8"></td>
+          <td class="center"><span class="num-g mono">68.5%</span></td>
+          <td class="center"><input class="cell-input narrow" value="1.2瓶/户"></td>
+          <td class="center"><input class="cell-input narrow" value="320"></td>
+          <td class="center"><input class="cell-input narrow" value="+42"></td>
+          <td class="center"><span class="status s-green">健康</span></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">黄浦</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="22个"></td>
+          <td class="center"><input class="cell-input narrow" value="15,800"></td>
+          <td class="center"><span class="num-g mono">42.1%</span></td>
+          <td class="center"><input class="cell-input narrow" value="2.1"></td>
+          <td class="center"><span class="num-g mono">73.2%</span></td>
+          <td class="center"><input class="cell-input narrow" value="1.5瓶/户"></td>
+          <td class="center"><input class="cell-input narrow" value="210"></td>
+          <td class="center"><input class="cell-input narrow" value="+58"></td>
+          <td class="center"><span class="status s-green">优秀</span></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">长宁</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="14个"></td>
+          <td class="center"><input class="cell-input narrow" value="9,200"></td>
+          <td class="center"><span class="num-a mono">31.5%</span></td>
+          <td class="center"><input class="cell-input narrow" value="1.5"></td>
+          <td class="center"><span class="num-a mono">58.3%</span></td>
+          <td class="center"><input class="cell-input narrow" value="0.9瓶/户"></td>
+          <td class="center"><input class="cell-input narrow" value="480"></td>
+          <td class="center"><input class="cell-input narrow" value="+28"></td>
+          <td class="center"><span class="status s-amber">⚠️ 关注</span></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">宝山</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="11个"></td>
+          <td class="center"><input class="cell-input narrow" value="7,600"></td>
+          <td class="center"><span class="num-a mono">28.4%</span></td>
+          <td class="center"><input class="cell-input narrow" value="1.4"></td>
+          <td class="center"><span class="num-a mono">61.0%</span></td>
+          <td class="center"><input class="cell-input narrow" value="0.8瓶/户"></td>
+          <td class="center"><input class="cell-input narrow" value="390"></td>
+          <td class="center"><input class="cell-input narrow" value="+22"></td>
+          <td class="center"><span class="status s-amber">⚠️ 关注</span></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">闵行</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="16个"></td>
+          <td class="center"><input class="cell-input narrow" value="10,900"></td>
+          <td class="center"><span class="num-g mono">34.8%</span></td>
+          <td class="center"><input class="cell-input narrow" value="1.7"></td>
+          <td class="center"><span class="num-g mono">66.2%</span></td>
+          <td class="center"><input class="cell-input narrow" value="1.1瓶/户"></td>
+          <td class="center"><input class="cell-input narrow" value="350"></td>
+          <td class="center"><input class="cell-input narrow" value="+35"></td>
+          <td class="center"><span class="status s-green">健康</span></td>
+        </tr>
+        <tr class="total-row">
+          <td class="label-cell">🔢 上海合计</td>
+          <td class="center calc mono">81个小区</td>
+          <td class="center calc num-g mono">55,900</td>
+          <td class="center calc num-a mono">35.0%↑</td>
+          <td class="center calc mono">1.7次</td>
+          <td class="center calc num-a mono">65.4%</td>
+          <td class="center calc mono">1.1瓶/户</td>
+          <td class="center calc num-r mono">1,750⚠️</td>
+          <td class="center calc num-g mono">+37</td>
+          <td class="center"><span class="status s-amber">达标边缘</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     T6 · 双引擎产出表（遵循自然 × 特级）
+══════════════════════════════════════════ -->
+<div class="panel" id="panel-6">
+  <div class="panel-hdr">
+    <div class="panel-hdr-row">
+      <div class="ph-left">
+        <div class="ph-code">T6 · 双引擎 · 月报 · 翻盘仪表盘</div>
+        <div class="ph-title">遵循自然 × 特级酱油 双引擎产出表</div>
+        <div class="ph-desc">六月鲜有两个引擎：<strong style="color:var(--red)">特级酱油（旧引擎·商品化·止血中）</strong>和<strong style="color:var(--green)">遵循自然系列（新引擎·必须成长）</strong>。品牌翻盘的唯一判据：<strong style="color:var(--amber)">遵循自然月销量超过特级酱油</strong>，时间窗口2029年。增长官每月填报两个引擎数据，系统自动计算翻盘进度。</div>
+        <div class="ipos">
+          <div class="ipo-tag active-ipo">遵循自然·新引擎</div>
+          <div class="ipo-tag active-ipo">特级酱油·旧引擎</div>
+          <div class="ipo-tag active-ipo">翻盘基准线</div>
+          <div class="ipo-tag active-ipo">消化率·价格守卫</div>
+        </div>
+      </div>
+      <div class="ph-right">
+        <div class="freq-pill">📅 月报 · 月末填报</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:6px">2029目标：遵循自然 > 特级</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+    <div style="background:linear-gradient(135deg,rgba(255,95,95,0.04),rgba(255,95,95,0.02));border:1px solid rgba(255,95,95,0.2);border-left:4px solid var(--red);border-radius:12px;padding:14px 16px">
+      <div style="font-size:10px;color:var(--red);font-weight:700;letter-spacing:0.06em;margin-bottom:8px">旧引擎 · 止血中</div>
+      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:6px">特级酱油</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
+        <div><span style="color:var(--text3)">2025全国月销</span><br><strong>~225万瓶/月</strong></div>
+        <div><span style="color:var(--text3)">上海月销估算</span><br><strong>~47万瓶/月</strong></div>
+        <div><span style="color:var(--text3)">IPO10均价</span><br><strong class="num-r">¥17.13→跌</strong></div>
+        <div><span style="color:var(--text3)">费用率</span><br><strong class="num-r">106.5%·亏损</strong></div>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--text3);border-top:1px solid rgba(255,95,95,0.15);padding-top:6px">
+        动作：4月1日IPO2涨价¥9.25→¥9.80 · 收缩低效SKU · 先清库存再推新单
+      </div>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(74,222,128,0.05),rgba(78,205,196,0.03));border:1px solid rgba(74,222,128,0.25);border-left:4px solid var(--green);border-radius:12px;padding:14px 16px">
+      <div style="font-size:10px;color:var(--green);font-weight:700;letter-spacing:0.06em;margin-bottom:8px">新引擎 · 必须成长</div>
+      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:6px">遵循自然系列</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
+        <div><span style="color:var(--text3)">2025全国月销</span><br><strong>~55万瓶/月</strong></div>
+        <div><span style="color:var(--text3)">上海月销估算</span><br><strong>~11.5万瓶/月</strong></div>
+        <div><span style="color:var(--text3)">IPO10守护价</span><br><strong class="num-g">¥14.00·必须守</strong></div>
+        <div><span style="color:var(--text3)">渠道利润空间</span><br><strong class="num-g">¥4.50（+40%）</strong></div>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--red);border-top:1px solid rgba(74,222,128,0.15);padding-top:6px">
+        ⚠️ 当前消化率46.6%·铁律③触发线&lt;50%·已在临界边缘
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:12px">翻盘路线图（全国·万瓶/年）</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px">2025 实际</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="background:rgba(255,95,95,0.1);border:1px solid rgba(255,95,95,0.2);border-radius:6px;padding:5px 4px;font-size:11px;font-weight:700;color:var(--red)">特级 2,702</div>
+          <div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.15);border-radius:6px;padding:5px 4px;font-size:11px;font-weight:700;color:var(--green)">遵循 663</div>
+          <div style="font-size:9px;color:var(--text3)">比值 24.5%</div>
+        </div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px">2026</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="background:rgba(255,95,95,0.08);border:1px solid rgba(255,95,95,0.15);border-radius:6px;padding:5px 4px;font-size:11px;font-weight:700;color:var(--red)">特级 2,730</div>
+          <div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);border-radius:6px;padding:5px 4px;font-size:11px;font-weight:700;color:var(--green)">遵循 1,193</div>
+          <div style="font-size:9px;color:var(--text3)">比值 43.7%</div>
+        </div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--amber);margin-bottom:6px;font-weight:700">2027 ★转折</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="background:rgba(255,95,95,0.08);border:1px solid rgba(255,95,95,0.15);border-radius:6px;padding:5px 4px;font-size:11px;font-weight:700;color:var(--red)">特级 2,650</div>
+          <div style="background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.25);border-radius:6px;padding:5px 4px;font-size:11px;font-weight:700;color:var(--green)">遵循 1,968</div>
+          <div style="font-size:9px;color:var(--amber);font-weight:700">74%·超红烧</div>
+        </div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px">2028</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="background:rgba(255,95,95,0.06);border:1px solid rgba(255,95,95,0.12);border-radius:6px;padding:5px 4px;font-size:11px;font-weight:700;color:var(--text3)">特级 2,500</div>
+          <div style="background:rgba(74,222,128,0.14);border:1px solid rgba(74,222,128,0.28);border-radius:6px;padding:5px 4px;font-size:11px;font-weight:700;color:var(--green)">遵循 3,054</div>
+          <div style="font-size:9px;color:var(--green);font-weight:700">比值 122%</div>
+        </div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--amber);margin-bottom:6px;font-weight:800">2029 🏁翻盘</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="background:rgba(255,95,95,0.04);border:1px solid rgba(255,95,95,0.1);border-radius:6px;padding:5px 4px;font-size:11px;font-weight:700;color:var(--text3)">特级 2,380</div>
+          <div style="background:rgba(74,222,128,0.18);border:1px solid var(--green);border-radius:6px;padding:5px 4px;font-size:11px;font-weight:800;color:var(--green)">遵循 4,432</div>
+          <div style="font-size:9px;color:var(--green);font-weight:800">比值 186% ✅</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note"><strong>铁律①价格守卫：</strong>遵循自然 IPO10跌破¥13/瓶 = 立即暂停该区新进·重审定价。¥14是整个BP成立的核心前提。<br><strong>铁律③消化率：</strong>遵循自然 IPO2→IPO10消化率连续2月&lt;50% = 蝴蝶效应Agent预警·暂停推单。当前46.6%已在临界线。</div>
+
+  <div class="form-sec">Section A · 产品线年级配置（品牌团队设定）</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>产品线</th><th class="center">年级</th><th class="center">战略角色</th><th class="center">系数</th>
+          <th class="center">IPO2价<br><span style="font-weight:400;color:var(--text3);font-size:9px">元/瓶</span></th>
+          <th class="center">IPO10守护价<br><span style="font-weight:400;color:var(--text3);font-size:9px">元/瓶</span></th>
+          <th class="center">渠道利润<br><span style="font-weight:400;color:var(--text3);font-size:9px">元/瓶</span></th>
+          <th class="center">铺货目标</th><th class="center">消化率目标<br><span style="font-weight:400;color:var(--text3);font-size:9px">IPO2→IPO10</span></th>
+          <th>全国CAGR</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background:rgba(74,222,128,0.03);border-left:3px solid var(--green)">
+          <td><div style="font-weight:800;font-size:14px;color:var(--green)">遵循自然系列</div><div style="font-size:10px;color:var(--text3)">新引擎·接替零添加·高端</div></td>
+          <td class="center"><span class="grade g2">G2 成长</span></td>
+          <td class="center"><span class="status s-green">新引擎↑</span></td>
+          <td class="center"><span class="formula">×1.5</span></td>
+          <td class="center"><strong style="color:var(--green)">¥9.50</strong></td>
+          <td class="center"><strong style="color:var(--green)">¥14.00 ★</strong></td>
+          <td class="center"><strong style="color:var(--green)">¥4.50</strong></td>
+          <td class="center">55–75%</td>
+          <td class="center"><span class="status s-amber">⚠️ 46.6%→≥65%</span></td>
+          <td><strong style="color:var(--green)">+60.7%</strong></td>
+        </tr>
+        <tr style="background:rgba(255,95,95,0.02);border-left:3px solid var(--red)">
+          <td><div style="font-weight:800;font-size:14px;color:var(--text2)">特级酱油</div><div style="font-size:10px;color:var(--text3)">旧引擎·止血·商品化价格每年-9%</div></td>
+          <td class="center"><span class="grade g3">G3 成熟</span></td>
+          <td class="center"><span class="status s-red">止血↓</span></td>
+          <td class="center"><span class="formula">×1.0</span></td>
+          <td class="center"><span class="num-a">¥9.80</span><div style="font-size:9px;color:var(--text3)">4月起涨</div></td>
+          <td class="center"><span class="num-a">~¥17</span><div style="font-size:9px;color:var(--text3)">仍在下滑</div></td>
+          <td class="center"><span class="num-a">¥2.20–3.20</span></td>
+          <td class="center">75–90%</td>
+          <td class="center"><span class="num-r">46.6%↑</span></td>
+          <td><span style="color:var(--red)">-4.3%</span></td>
+        </tr>
+        <tr>
+          <td><div style="font-weight:700;color:var(--blue)">红烧酱油</div><div style="font-size:10px;color:var(--text3)">稳定增长·2027被遵循自然超越</div></td>
+          <td class="center"><span class="grade g3">G3 成熟</span></td>
+          <td class="center"><span class="status s-blue">稳增→</span></td>
+          <td class="center"><span class="formula">×1.0</span></td>
+          <td class="center">—</td><td class="center">—</td><td class="center">—</td>
+          <td class="center">65–80%</td><td class="center">—</td>
+          <td>+9.0%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="form-sec">Section B-1 · 遵循自然系列 · 各区月度填报（新引擎·核心追踪）</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>增长官</th>
+          <th class="center"><div class="th-wrap"><span class="th-main">铺货率</span><span class="th-sub">S+/S/A</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">IPO2进货量</span><span class="th-sub">瓶·本月</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">IPO10销量</span><span class="th-sub">瓶·消费者购买</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">消化率</span><span class="th-sub">IPO10÷IPO2</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">IPO10均价</span><span class="th-sub">≥¥14守住</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">月增速</span><span class="th-sub">vs上月</span></div></th>
+          <th class="center">价格状态</th>
+          <th>消化率处置</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">浦东</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="58%"></td>
+          <td class="center"><input class="cell-input narrow" value="57,200"></td>
+          <td class="center"><input class="cell-input narrow" value="26,300"></td>
+          <td class="center"><span class="num-a mono">46.0%⚠️</span></td>
+          <td class="center"><input class="cell-input narrow" value="¥14.20"></td>
+          <td class="center"><input class="cell-input narrow" value="+22%"></td>
+          <td class="center"><span class="status s-green">¥14.20 ✓</span></td>
+          <td><input class="cell-input wide" value="消化率偏低·加大S+门店陈列投入"></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">黄浦</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="65%"></td>
+          <td class="center"><input class="cell-input narrow" value="49,800"></td>
+          <td class="center"><input class="cell-input narrow" value="24,900"></td>
+          <td class="center"><span class="num-a mono">50.0%</span></td>
+          <td class="center"><input class="cell-input narrow" value="¥14.50"></td>
+          <td class="center"><input class="cell-input narrow" value="+31%"></td>
+          <td class="center"><span class="status s-green">¥14.50 ✓</span></td>
+          <td><input class="cell-input wide" value="消化率刚达铁律线，持续监控"></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">长宁</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="50%"></td>
+          <td class="center"><input class="cell-input narrow" value="50,600"></td>
+          <td class="center"><input class="cell-input narrow" value="22,300"></td>
+          <td class="center"><span class="num-r mono">44.1%🚨</span></td>
+          <td class="center"><input class="cell-input narrow" value="¥13.80"></td>
+          <td class="center"><input class="cell-input narrow" value="+15%"></td>
+          <td class="center"><span class="status s-amber">¥13.80 ⚠️</span></td>
+          <td><input class="cell-input wide" value="🚨触铁律③·消化率+价格双警·暂缓推单"></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">宝山</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="48%"></td>
+          <td class="center"><input class="cell-input narrow" value="43,500"></td>
+          <td class="center"><input class="cell-input narrow" value="21,100"></td>
+          <td class="center"><span class="num-r mono">48.5%⚠️</span></td>
+          <td class="center"><input class="cell-input narrow" value="¥14.00"></td>
+          <td class="center"><input class="cell-input narrow" value="+18%"></td>
+          <td class="center"><span class="status s-amber">¥14.00 边线</span></td>
+          <td><input class="cell-input wide" value="消化率临界·美顾推荐力度需加大"></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">闵行</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="55%"></td>
+          <td class="center"><input class="cell-input narrow" value="49,400"></td>
+          <td class="center"><input class="cell-input narrow" value="23,500"></td>
+          <td class="center"><span class="num-a mono">47.6%⚠️</span></td>
+          <td class="center"><input class="cell-input narrow" value="¥14.10"></td>
+          <td class="center"><input class="cell-input narrow" value="+20%"></td>
+          <td class="center"><span class="status s-green">¥14.10 ✓</span></td>
+          <td><input class="cell-input wide" value="消化率偏低·加快门店库存消化节奏"></td>
+        </tr>
+        <tr class="total-row">
+          <td class="label-cell">🔢 上海合计</td>
+          <td class="center calc num-a mono">55.2%</td>
+          <td class="center calc mono">250,500</td>
+          <td class="center calc mono">118,100</td>
+          <td class="center calc"><span class="num-r mono">47.1%🚨</span></td>
+          <td class="center calc num-a mono">¥14.12</td>
+          <td class="center calc num-g mono">+21.2%</td>
+          <td class="center"><span class="status s-red">⚠️ 临铁律③</span></td>
+          <td class="calc">全区消化率未达65%目标</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="form-sec">Section B-2 · 特级酱油 · 各区月度填报（旧引擎·止血监控）</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>增长官</th>
+          <th class="center"><div class="th-wrap"><span class="th-main">铺货率</span><span class="th-sub">目标75–90%</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">IPO10月销量</span><span class="th-sub">瓶</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">IPO10均价</span><span class="th-sub">止血目标≥¥17</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">消化率</span><span class="th-sub">IPO2→IPO10</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">经销商水位</span><span class="th-sub">目标≤2a</span></div></th>
+          <th class="center">止血状态</th>
+          <th>本月动作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">浦东</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="86%"></td>
+          <td class="center"><input class="cell-input narrow" value="107,200"></td>
+          <td class="center"><span class="num-a mono">¥17.20</span></td>
+          <td class="center"><input class="cell-input narrow" value="52%"></td>
+          <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:65%"></div></div><span class="wlbl">1.8a</span></div></td>
+          <td class="center"><span class="status s-amber">止血中</span></td>
+          <td><input class="cell-input wide" value="涨价后渠道反应正常，继续消化库存"></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">黄浦</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="92%"></td>
+          <td class="center"><input class="cell-input narrow" value="93,600"></td>
+          <td class="center"><span class="num-a mono">¥17.45</span></td>
+          <td class="center"><input class="cell-input narrow" value="55%"></td>
+          <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:75%"></div></div><span class="wlbl">2.0a</span></div></td>
+          <td class="center"><span class="status s-amber">止血中</span></td>
+          <td><input class="cell-input wide" value="重心逐步转移至遵循自然"></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">长宁</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="78%"></td>
+          <td class="center"><input class="cell-input narrow" value="95,200"></td>
+          <td class="center"><span class="num-r mono">¥16.80⚠️</span></td>
+          <td class="center"><input class="cell-input narrow" value="48%"></td>
+          <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-a" style="width:55%"></div></div><span class="wlbl num-a">2.2a</span></div></td>
+          <td class="center"><span class="status s-red">⚠️ 价格破线</span></td>
+          <td><input class="cell-input wide" value="¥16.80低于目标，排查促销来源"></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">宝山</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="80%"></td>
+          <td class="center"><input class="cell-input narrow" value="82,000"></td>
+          <td class="center"><span class="num-a mono">¥17.10</span></td>
+          <td class="center"><input class="cell-input narrow" value="50%"></td>
+          <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-a" style="width:60%"></div></div><span class="wlbl num-a">2.4a</span></div></td>
+          <td class="center"><span class="status s-amber">关注</span></td>
+          <td><input class="cell-input wide" value="库存2.4a偏高，暂缓新推单"></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">闵行</span></div></td>
+          <td class="center"><input class="cell-input narrow" value="83%"></td>
+          <td class="center"><input class="cell-input narrow" value="93,000"></td>
+          <td class="center"><span class="num-a mono">¥17.25</span></td>
+          <td class="center"><input class="cell-input narrow" value="51%"></td>
+          <td class="center"><div class="wlevel"><div class="wbar"><div class="wfill wfill-g" style="width:65%"></div></div><span class="wlbl">1.9a</span></div></td>
+          <td class="center"><span class="status s-amber">止血中</span></td>
+          <td><input class="cell-input wide" value="正常止血节奏，引导门店消化库存"></td>
+        </tr>
+        <tr class="total-row">
+          <td class="label-cell">🔢 上海合计</td>
+          <td class="center calc num-a mono">83.8%</td>
+          <td class="center calc mono">471,000</td>
+          <td class="center calc num-a mono">¥17.16</td>
+          <td class="center calc num-a mono">51.2%</td>
+          <td class="center calc num-a mono">均2.1a</td>
+          <td class="center"><span class="status s-amber">止血中</span></td>
+          <td class="calc">西区价格需关注</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="form-sec">Section C · 翻盘进度仪表盘（遵循自然 vs 特级 · 上海各区）</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>增长官</th>
+          <th class="center"><div class="th-wrap"><span class="th-main">遵循自然</span><span class="th-sub">月销瓶</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">特级酱油</span><span class="th-sub">月销瓶（基准）</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">翻盘进度</span><span class="th-sub">遵循÷特级</span></div></th>
+          <th style="min-width:160px">进度条</th>
+          <th class="center"><div class="th-wrap"><span class="th-main">消化率</span><span class="th-sub">铁律③&lt;50%</span></div></th>
+          <th class="center"><div class="th-wrap"><span class="th-main">¥14价格</span><span class="th-sub">铁律①&lt;¥13</span></div></th>
+          <th class="center">翻盘健康度</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">张伟</span><span class="off-zone">浦东</span></div></td>
+          <td class="center num-g mono">26,300</td><td class="center num-a mono">107,200</td>
+          <td class="center"><span class="num-a mono">24.5%</span></td>
+          <td><div style="height:7px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden"><div style="height:100%;width:24.5%;background:var(--green);border-radius:4px"></div></div><div style="font-size:9px;color:var(--text3);margin-top:2px">差80,900瓶→翻盘</div></td>
+          <td class="center"><span class="num-a mono">46.0%⚠️</span></td>
+          <td class="center"><span class="num-g mono">¥14.20 ✓</span></td>
+          <td class="center"><span class="status s-amber">成长中</span></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">李娜</span><span class="off-zone">黄浦</span></div></td>
+          <td class="center num-g mono">24,900</td><td class="center num-a mono">93,600</td>
+          <td class="center"><span class="num-a mono">26.6%</span></td>
+          <td><div style="height:7px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden"><div style="height:100%;width:26.6%;background:var(--green);border-radius:4px"></div></div><div style="font-size:9px;color:var(--text3);margin-top:2px">差68,700瓶→翻盘</div></td>
+          <td class="center"><span class="num-a mono">50.0%</span></td>
+          <td class="center"><span class="num-g mono">¥14.50 ✓</span></td>
+          <td class="center"><span class="status s-green">最佳区</span></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">王磊</span><span class="off-zone">长宁</span></div></td>
+          <td class="center num-g mono">22,300</td><td class="center num-a mono">95,200</td>
+          <td class="center"><span class="num-r mono">23.4%</span></td>
+          <td><div style="height:7px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden"><div style="height:100%;width:23.4%;background:var(--red);border-radius:4px"></div></div><div style="font-size:9px;color:var(--red);margin-top:2px">🚨消化率+价格双警</div></td>
+          <td class="center"><span class="num-r mono">44.1%🚨</span></td>
+          <td class="center"><span class="num-a mono">¥13.80⚠️</span></td>
+          <td class="center"><span class="status s-red">🚨双警报</span></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">刘芳</span><span class="off-zone">宝山</span></div></td>
+          <td class="center num-g mono">21,100</td><td class="center num-a mono">82,000</td>
+          <td class="center"><span class="num-a mono">25.7%</span></td>
+          <td><div style="height:7px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden"><div style="height:100%;width:25.7%;background:var(--amber);border-radius:4px"></div></div><div style="font-size:9px;color:var(--text3);margin-top:2px">差60,900瓶→翻盘</div></td>
+          <td class="center"><span class="num-r mono">48.5%⚠️</span></td>
+          <td class="center"><span class="num-g mono">¥14.00 ✓</span></td>
+          <td class="center"><span class="status s-amber">⚠️关注</span></td>
+        </tr>
+        <tr>
+          <td><div class="officer-cell"><span class="off-name">陈勇</span><span class="off-zone">闵行</span></div></td>
+          <td class="center num-g mono">23,500</td><td class="center num-a mono">93,000</td>
+          <td class="center"><span class="num-a mono">25.3%</span></td>
+          <td><div style="height:7px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden"><div style="height:100%;width:25.3%;background:var(--amber);border-radius:4px"></div></div><div style="font-size:9px;color:var(--text3);margin-top:2px">差69,500瓶→翻盘</div></td>
+          <td class="center"><span class="num-a mono">47.6%⚠️</span></td>
+          <td class="center"><span class="num-g mono">¥14.10 ✓</span></td>
+          <td class="center"><span class="status s-amber">成长中</span></td>
+        </tr>
+        <tr class="total-row">
+          <td class="label-cell">🔢 上海合计</td>
+          <td class="center calc num-g mono">118,100</td>
+          <td class="center calc mono">471,000</td>
+          <td class="center calc num-a mono" style="font-size:15px;font-family:'Syne',sans-serif">25.1%</td>
+          <td>
+            <div style="height:7px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden"><div style="height:100%;width:25.1%;background:linear-gradient(90deg,var(--green),var(--amber));border-radius:4px"></div></div>
+            <div style="font-size:9px;color:var(--amber);margin-top:2px;font-weight:700">当前25% → 2029目标186% (翻盘)</div>
+          </td>
+          <td class="center calc num-r mono">47.1%🚨</td>
+          <td class="center calc num-a mono">¥14.12</td>
+          <td class="center"><span class="status s-red">消化率全线危险</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="background:rgba(255,95,95,0.04);border:1px solid rgba(255,95,95,0.18);border-radius:10px;padding:12px 16px;margin-top:4px">
+    <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:8px">🚨 本月最优先任务 · 消化率从47%→65%</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11px;color:var(--text2);line-height:1.6">
+      <div><strong style="color:var(--text)">西区（王磊）双警报处置：</strong><br>消化率44.1%触铁律③ + ¥13.80接近铁律①<br>→ 立即暂停推单 → 排查渠道压货 → 蝴蝶效应Agent上报</div>
+      <div><strong style="color:var(--text)">根本解法：SFA库存上报上线：</strong><br>INFINITY OS补货推单依赖r_实际数据<br>→ SFA上线那天 = 消化率问题开始真正解决的第一天</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Clock
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.getHours().toString().padStart(2,'0')+':'+
+    n.getMinutes().toString().padStart(2,'0')+':'+
+    n.getSeconds().toString().padStart(2,'0');
+}tick();setInterval(tick,1000);
+
+// Tab switch
+function switchTab(idx){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
