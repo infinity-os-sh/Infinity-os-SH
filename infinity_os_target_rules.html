@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 目标规则引擎</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;--card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.08);
+  --orange:#fb923c;--orange-dim:rgba(251,146,60,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(7,8,14,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-sym{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#ff7c38);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000}
+.logo-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.logo-name em{color:var(--amber);font-style:normal}
+.home-btn{background:var(--card2);border:1px solid var(--border2);border-radius:16px;padding:5px 11px;font-size:11px;color:var(--text2);text-decoration:none;white-space:nowrap}
+.clock{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;position:sticky;top:52px;z-index:90;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:11px 14px;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;flex-shrink:0}
+.tab.active{color:var(--amber);border-bottom-color:var(--amber)}
+.page{display:none;padding:14px 16px 80px;max-width:900px;margin:0 auto;flex-direction:column;gap:12px}
+.page.active{display:flex}
+.sec{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.09em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec .badge{font-size:9px;padding:1px 7px;border-radius:8px;font-family:'Space Mono',monospace}
+.b-a{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.b-b{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.b-c{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+
+/* 概念卡 */
+.concept{background:linear-gradient(135deg,rgba(245,166,35,.07),rgba(9,9,15,1));border:1px solid rgba(245,166,35,.18);border-radius:14px;padding:16px}
+.concept-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--amber);margin-bottom:8px}
+.concept-body{font-size:12px;color:var(--text2);line-height:1.8}
+.concept-body strong{color:var(--text)}
+
+/* 规则卡 */
+.rule-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:8px;transition:all .2s}
+.rule-card:hover{border-color:var(--border2)}
+.rule-header{padding:13px 15px;display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.rh-type{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:800}
+.rt-a{background:rgba(255,95,95,.15);color:var(--red)}
+.rt-b{background:rgba(245,166,35,.15);color:var(--amber)}
+.rt-c{background:rgba(167,139,250,.15);color:var(--purple)}
+.rh-body{flex:1}
+.rh-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.rh-name{font-size:13px;font-weight:700}
+.rh-scope{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+.rh-desc{font-size:11px;color:var(--text2);line-height:1.5}
+.rh-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.rule-toggle{width:36px;height:20px;border-radius:10px;cursor:pointer;transition:all .2s;position:relative;border:none}
+.rule-toggle.on{background:var(--green)}
+.rule-toggle.off{background:rgba(255,255,255,.12)}
+.rule-toggle::after{content:'';position:absolute;top:2px;width:16px;height:16px;border-radius:8px;background:#fff;transition:all .2s}
+.rule-toggle.on::after{left:18px}
+.rule-toggle.off::after{left:2px}
+.conf-badge{font-size:9px;font-family:'Space Mono',monospace;padding:2px 7px;border-radius:8px}
+.cf-auto{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.cf-manual{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.rule-detail{display:none;padding:0 15px 13px;border-top:1px solid var(--border)}
+.rule-detail.show{display:block}
+.rule-detail-body{padding-top:12px;display:flex;flex-direction:column;gap:10px}
+
+/* 条件行 */
+.cond-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px}
+.cond-label{color:var(--text3);width:80px;flex-shrink:0;font-size:11px}
+.cond-val{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 10px;font-family:'Space Mono',monospace;font-size:11px;color:var(--amber2)}
+.cond-op{color:var(--text3);font-family:'Space Mono',monospace;font-size:11px}
+.cond-result{color:var(--green);font-family:'Space Mono',monospace;font-size:11px;background:var(--green-dim);border:1px solid rgba(74,222,128,.2);padding:3px 8px;border-radius:6px}
+
+/* 模拟按钮 */
+.btn-simulate{background:linear-gradient(135deg,var(--amber),var(--orange));border:none;border-radius:9px;padding:7px 14px;font-size:11px;font-weight:700;color:#000;cursor:pointer;transition:all .15s;font-family:'Noto Sans SC',sans-serif}
+.btn-simulate:hover{transform:scale(1.03)}
+.btn-approve-sm{background:var(--green-dim);border:1px solid rgba(74,222,128,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:600;color:var(--green);cursor:pointer;font-family:'Noto Sans SC',sans-serif}
+.btn-reject-sm{background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:8px;padding:5px 12px;font-size:11px;color:var(--text2);cursor:pointer;font-family:'Noto Sans SC',sans-serif}
+.btn-propose{background:var(--amber-dim);border:1px solid rgba(245,166,35,.25);border-radius:8px;padding:5px 12px;font-size:11px;color:var(--amber);cursor:pointer;font-family:'Noto Sans SC',sans-serif}
+
+/* 模拟结果 */
+.sim-result{display:none;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px;margin-top:8px}
+.sim-result.show{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.sim-before-after{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:10px}
+.sba-box{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:10px}
+.sba-lbl{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;text-transform:uppercase;margin-bottom:5px}
+.sba-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;line-height:1}
+.sba-sub{font-size:10px;color:var(--text3);margin-top:3px}
+.sba-arrow{text-align:center;color:var(--amber);font-size:20px}
+.sim-impact{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.si-chip{font-size:10px;padding:3px 9px;border-radius:7px;font-family:'Space Mono',monospace}
+.si-pos{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.si-neg{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.si-neu{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.sim-actions{display:flex;gap:6px;padding-top:8px;border-top:1px solid var(--border)}
+.sim-decided{font-size:11px;color:var(--green);display:flex;align-items:center;gap:5px}
+
+/* 传导链路 */
+.cascade-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+.cascade-title{font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.cascade-flow{display:flex;flex-direction:column;gap:0}
+.cascade-step{display:flex;gap:12px;padding:12px 0;position:relative}
+.cascade-step::before{content:'';position:absolute;left:19px;top:44px;bottom:0;width:1px;background:rgba(245,166,35,.2)}
+.cascade-step:last-child::before{display:none}
+.cs-icon{width:38px;height:38px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;position:relative;z-index:1}
+.cs-body{flex:1}
+.cs-role{font-size:10px;font-family:'Space Mono',monospace;color:var(--text3);text-transform:uppercase;margin-bottom:3px}
+.cs-name{font-size:13px;font-weight:600;margin-bottom:4px}
+.cs-change{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.cs-old{font-family:'Space Mono',monospace;font-size:11px;color:var(--text3);text-decoration:line-through}
+.cs-arrow{color:var(--amber);font-size:13px}
+.cs-new{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--amber)}
+.cs-delta{font-size:10px;padding:2px 7px;border-radius:6px}
+.cs-up{background:var(--red-dim);color:var(--red)}
+.cs-dn{background:var(--green-dim);color:var(--green)}
+.cs-time{font-size:10px;color:var(--text3);margin-top:4px;font-family:'Space Mono',monospace}
+.cs-notify{font-size:10px;color:var(--teal);margin-top:3px;display:flex;align-items:center;gap:4px}
+.cascade-step.pending .cs-icon{opacity:.4}
+.cascade-step.pending .cs-body{opacity:.4}
+.cascade-step.active .cs-icon{box-shadow:0 0 14px rgba(245,166,35,.3);animation:pulse .8s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 8px rgba(245,166,35,.3)}50%{box-shadow:0 0 20px rgba(245,166,35,.5)}}
+
+/* 调整历史 */
+.history-list{display:flex;flex-direction:column;gap:7px}
+.history-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.hi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;flex-wrap:wrap}
+.hi-title{font-size:12px;font-weight:600}
+.hi-status{font-size:9px;padding:2px 8px;border-radius:8px;font-family:'Space Mono',monospace}
+.hs-approved{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.hs-rejected{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.hs-overridden{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.hs-pending{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.hi-meta{display:flex;gap:12px;font-size:11px;color:var(--text3);flex-wrap:wrap}
+.hi-detail{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:none}
+.hi-detail.show{display:block}
+.hi-outcome{font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:6px}
+.hi-learn{background:var(--amber-dim);border:1px solid rgba(245,166,35,.15);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--text2);margin-top:6px}
+.hi-learn strong{color:var(--amber)}
+
+/* SQL modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:760px;max-height:80vh;display:flex;flex-direction:column;gap:12px}
+.modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+.sql-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:'Space Mono',monospace;font-size:10px;color:var(--green);line-height:1.8;overflow-y:auto;flex:1;max-height:50vh;white-space:pre}
+.btn-copy{background:var(--amber);border:none;border-radius:10px;padding:9px 20px;font-size:12px;font-weight:700;color:#000;cursor:pointer}
+
+/* bottom */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(7,8,14,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:10px 16px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.bb-info{font-size:11px;color:var(--text3)}
+.bb-info strong{color:var(--amber)}
+.btn-sql{background:var(--amber);border:none;border-radius:10px;padding:9px 20px;font-size:12px;font-weight:700;color:#000;cursor:pointer}
+
+/* AI */
+.ai-wrap{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.ai-hdr{padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.07em;text-transform:uppercase}
+.chips{display:flex;gap:5px;padding:8px 12px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:4px 10px;font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.chip:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+.ai-bubble{margin:0 12px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text2);line-height:1.65}
+.ai-resp{display:none;margin:0 12px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.ai-resp.show{display:block}
+.ai-q{font-size:10px;color:var(--text3);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ai-row{display:flex;gap:6px;padding:6px 12px 10px}
+.ai-in{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:12px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif}
+.ai-in:focus{border-color:rgba(245,166,35,.4)}
+.ai-in::placeholder{color:var(--text3)}
+.ai-btn{width:36px;height:36px;border-radius:9px;background:var(--amber);border:none;cursor:pointer;font-size:14px;flex-shrink:0}
+.td-wrap{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:tda 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tda{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-sym">∞</div>
+    <div class="logo-name">INFINITY <em>OS</em></div>
+  </div>
+  <a class="home-btn" href="index.html">⌂ 门户</a>
+  <div class="clock" id="clock"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="st('rules')">⚙️ 规则库</div>
+  <div class="tab" onclick="st('sim')">▶ 触发模拟</div>
+  <div class="tab" onclick="st('cascade')">🔗 传导链路</div>
+  <div class="tab" onclick="st('history')">📋 调整历史</div>
+</div>
+
+<!-- ══════════════════ TAB 1: 规则库 ══════════════════ -->
+<div class="page active" id="page-rules">
+
+  <div class="concept">
+    <div class="concept-title">⚙️ 目标规则引擎 · 三种触发源</div>
+    <div class="concept-body">
+      目标不是年初定死的数字，是<strong>根据规则动态计算的结果</strong>。三种触发源对应三种处理逻辑：A类市场信号（外部竞争变化）、B类执行偏差（内部达成率异常）、C类战略调整（管理层主动）。每条规则有置信度阈值——超过阈值自动执行，低于阈值推给人决策。
+    </div>
+  </div>
+
+  <!-- A类规则 -->
+  <div class="sec">A类 · 市场信号触发 <span class="badge b-a">外部</span></div>
+
+  <div class="rule-card" id="rule-A1">
+    <div class="rule-header" onclick="toggleRule('A1')">
+      <div class="rh-type rt-a">A</div>
+      <div class="rh-body">
+        <div class="rh-top">
+          <span class="rh-name">竞品低价冲击 → 防御性目标下调</span>
+          <span class="rh-scope">适用：全品牌 · 所有区域</span>
+        </div>
+        <div class="rh-desc">检测到同类竞品IPO10价格低于我方底价15%以上，持续7天以上，判定为竞品主动降价而非促销。</div>
+      </div>
+      <div class="rh-right">
+        <button class="rule-toggle on" id="toggle-A1" onclick="event.stopPropagation();toggleSwitch('A1')"></button>
+        <span class="conf-badge cf-auto">≥80% 自动执行</span>
+      </div>
+    </div>
+    <div class="rule-detail" id="detail-A1">
+      <div class="rule-detail-body">
+        <div class="cond-row"><span class="cond-label">触发条件</span><span class="cond-val">竞品价格</span><span class="cond-op">≤</span><span class="cond-val">我方底价 × 0.85</span><span class="cond-op">持续</span><span class="cond-val">≥7天</span></div>
+        <div class="cond-row"><span class="cond-label">调整逻辑</span><span class="cond-op">业绩目标</span><span class="cond-op">×</span><span class="cond-val">0.90</span><span class="cond-op">利润目标</span><span class="cond-op">×</span><span class="cond-val">1.05</span><span class="cond-op">（保利润，降业绩压力）</span></div>
+        <div class="cond-row"><span class="cond-label">适用范围</span><span class="cond-val">竞品出现的具体区域</span><span class="cond-op">而非全国</span></div>
+        <div class="cond-row"><span class="cond-label">例外条件</span><span class="cond-val">竞品是促销期（B类）</span><span class="cond-op">→ 不触发，观察14天</span></div>
+        <div class="cond-row"><span class="cond-label">恢复条件</span><span class="cond-val">竞品价格回升</span><span class="cond-op">或</span><span class="cond-val">我方市占率恢复</span><span class="cond-op">→ 下月目标自动还原</span></div>
+        <div style="display:flex;gap:7px;margin-top:4px">
+          <button class="btn-simulate" onclick="runSim('A1')">▶ 模拟触发</button>
+        </div>
+        <div class="sim-result" id="sim-A1">
+          <div class="sba-lbl" style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:8px">A1规则触发模拟 · 浦东区 · 遵循自然500ml</div>
+          <div class="sim-before-after">
+            <div class="sba-box"><div class="sba-lbl">调整前</div><div class="sba-val" style="color:var(--text2)">¥60,000</div><div class="sba-sub">业绩目标/月</div></div>
+            <div class="sba-arrow">→</div>
+            <div class="sba-box"><div class="sba-lbl">调整后</div><div class="sba-val" style="color:var(--amber)">¥54,000</div><div class="sba-sub">业绩目标/月 (-10%)</div></div>
+          </div>
+          <div class="sim-impact">
+            <span class="si-chip si-dn">业绩目标 ↓¥6,000</span>
+            <span class="si-chip si-pos">利润目标 ↑¥300</span>
+            <span class="si-chip si-neu">影响DSR薪酬权重重算</span>
+            <span class="si-chip si-neu">置信度 82%</span>
+          </div>
+          <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:8px">系统判断：竞品「XX酱油」在浦东5家大卖场连续9天低价促销，较我方底价低18%，判定为<strong style="color:var(--amber)">竞品主动降价（A类）</strong>，建议在浦东区下调遵循自然系列业绩目标。</div>
+          <div class="sim-actions" id="sim-A1-actions">
+            <button class="btn-approve-sm" onclick="decideSim('A1','approved')">✓ 确认执行</button>
+            <button class="btn-reject-sm" onclick="decideSim('A1','rejected')">✗ 拒绝</button>
+            <button class="btn-propose" onclick="decideSim('A1','proposed')">我有更好方案</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule-card" id="rule-A2">
+    <div class="rule-header" onclick="toggleRule('A2')">
+      <div class="rh-type rt-a">A</div>
+      <div class="rh-body">
+        <div class="rh-top">
+          <span class="rh-name">竞品退市 → 进攻性目标上调</span>
+          <span class="rh-scope">适用：具体区域 · 相关SKU年级</span>
+        </div>
+        <div class="rh-desc">检测到竞品断货或退市超过14天，该区域出现市场空白，建议上调业绩目标抢占份额。</div>
+      </div>
+      <div class="rh-right">
+        <button class="rule-toggle on" id="toggle-A2" onclick="event.stopPropagation();toggleSwitch('A2')"></button>
+        <span class="conf-badge cf-manual">需管理者确认</span>
+      </div>
+    </div>
+    <div class="rule-detail" id="detail-A2">
+      <div class="rule-detail-body">
+        <div class="cond-row"><span class="cond-label">触发条件</span><span class="cond-val">竞品断货</span><span class="cond-op">≥14天</span><span class="cond-op">且</span><span class="cond-val">该品类整体动销下降</span></div>
+        <div class="cond-row"><span class="cond-label">调整逻辑</span><span class="cond-op">业绩目标</span><span class="cond-op">×</span><span class="cond-val">1.15～1.25</span><span class="cond-op">（区间由管理者确定）</span></div>
+        <div class="cond-row"><span class="cond-label">配套动作</span><span class="cond-val">同步增加促销预算</span><span class="cond-op">+</span><span class="cond-val">提高拜访频次</span></div>
+        <button class="btn-simulate" onclick="runSim('A2')" style="margin-top:8px">▶ 模拟触发</button>
+        <div class="sim-result" id="sim-A2">
+          <div class="sba-lbl" style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:8px">A2规则触发模拟 · 长宁区 · 红烧酱油系列</div>
+          <div class="sim-before-after">
+            <div class="sba-box"><div class="sba-lbl">调整前</div><div class="sba-val" style="color:var(--text2)">¥40,000</div><div class="sba-sub">业绩目标/月</div></div>
+            <div class="sba-arrow">→</div>
+            <div class="sba-box"><div class="sba-lbl">调整后（建议）</div><div class="sba-val" style="color:var(--green)">¥46,000</div><div class="sba-sub">+15%，待确认</div></div>
+          </div>
+          <div class="sim-impact">
+            <span class="si-chip si-pos">业绩目标 ↑¥6,000</span>
+            <span class="si-chip si-pos">薪酬上限提升</span>
+            <span class="si-chip si-neu">置信度 68%（需确认）</span>
+          </div>
+          <div class="sim-actions" id="sim-A2-actions">
+            <button class="btn-approve-sm" onclick="decideSim('A2','approved')">✓ 确认+15%</button>
+            <button class="btn-propose" onclick="decideSim('A2','proposed')">调整为+20%</button>
+            <button class="btn-reject-sm" onclick="decideSim('A2','rejected')">暂不调整</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B类规则 -->
+  <div class="sec" style="margin-top:4px">B类 · 执行偏差触发 <span class="badge b-b">内部</span></div>
+
+  <div class="rule-card" id="rule-B1">
+    <div class="rule-header" onclick="toggleRule('B1')">
+      <div class="rh-type rt-b">B</div>
+      <div class="rh-body">
+        <div class="rh-top">
+          <span class="rh-name">持续低达成 → 目标合理性审查</span>
+          <span class="rh-scope">适用：所有角色 · 所有SKU</span>
+        </div>
+        <div class="rh-desc">连续3周r达成率 &lt;60%，且同品牌其他区域达成正常，说明目标可能设置偏高或资源分配不合理。</div>
+      </div>
+      <div class="rh-right">
+        <button class="rule-toggle on" id="toggle-B1" onclick="event.stopPropagation();toggleSwitch('B1')"></button>
+        <span class="conf-badge cf-auto">≥75% 自动建议</span>
+      </div>
+    </div>
+    <div class="rule-detail" id="detail-B1">
+      <div class="rule-detail-body">
+        <div class="cond-row"><span class="cond-label">触发条件</span><span class="cond-val">连续3周</span><span class="cond-op">r达成 &lt;</span><span class="cond-val">60%</span></div>
+        <div class="cond-row"><span class="cond-label">排除条件</span><span class="cond-val">同品牌其他区域也低</span><span class="cond-op">→ 市场问题，非目标问题</span></div>
+        <div class="cond-row"><span class="cond-label">调整逻辑</span><span class="cond-op">参考</span><span class="cond-val">同类最优区域的达成率</span><span class="cond-op">重新计算目标基准</span></div>
+        <div class="cond-row"><span class="cond-label">同时触发</span><span class="cond-val">执行干预任务</span><span class="cond-op">区分「目标问题」与「执行问题」</span></div>
+        <button class="btn-simulate" onclick="runSim('B1')" style="margin-top:8px">▶ 模拟触发</button>
+        <div class="sim-result" id="sim-B1">
+          <div style="font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:10px">
+            <strong style="color:var(--amber)">系统诊断：</strong>宝山区·刘芳 遵循自然500ml 连续3周达成率52%/55%/54%。<br>
+            对比：浦东78%，黄浦87%，长宁91%。<br>
+            结论：<strong style="color:var(--red)">非市场问题，是执行问题</strong>（其他区域正常）。目标不下调，触发执行干预。
+          </div>
+          <div class="sim-before-after">
+            <div class="sba-box"><div class="sba-lbl">目标</div><div class="sba-val" style="color:var(--text2)">¥50,000</div><div class="sba-sub">维持不变</div></div>
+            <div class="sba-arrow">→</div>
+            <div class="sba-box"><div class="sba-lbl">触发行动</div><div class="sba-val" style="color:var(--red)">执行干预</div><div class="sba-sub">DOM介入 + 拜访频次检查</div></div>
+          </div>
+          <div class="sim-impact">
+            <span class="si-chip si-neg">目标不变</span>
+            <span class="si-chip si-neg">薪酬风险 -¥820/月</span>
+            <span class="si-chip si-neu">DOM收到通知</span>
+          </div>
+          <div class="sim-actions" id="sim-B1-actions">
+            <button class="btn-approve-sm" onclick="decideSim('B1','approved')">✓ 确认干预</button>
+            <button class="btn-propose" onclick="decideSim('B1','proposed')">目标确实偏高，需调整</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule-card" id="rule-B2">
+    <div class="rule-header" onclick="toggleRule('B2')">
+      <div class="rh-type rt-b">B</div>
+      <div class="rh-body">
+        <div class="rh-top">
+          <span class="rh-name">超额达成 → 目标动态上调</span>
+          <span class="rh-scope">适用：年级1-2 · 成长期SKU</span>
+        </div>
+        <div class="rh-desc">连续2个月达成率 &gt;120%，说明目标低估了该SKU/区域的潜力，建议上调。避免员工「刚够用」不再努力。</div>
+      </div>
+      <div class="rh-right">
+        <button class="rule-toggle on" id="toggle-B2" onclick="event.stopPropagation();toggleSwitch('B2')"></button>
+        <span class="conf-badge cf-manual">需双方确认</span>
+      </div>
+    </div>
+    <div class="rule-detail" id="detail-B2">
+      <div class="rule-detail-body">
+        <div class="cond-row"><span class="cond-label">触发条件</span><span class="cond-val">连续2个月</span><span class="cond-op">达成率 &gt;</span><span class="cond-val">120%</span></div>
+        <div class="cond-row"><span class="cond-label">调整逻辑</span><span class="cond-op">新目标 =</span><span class="cond-val">近2月平均实际 × 1.05</span><span class="cond-op">（给5%成长空间）</span></div>
+        <div class="cond-row"><span class="cond-label">薪酬联动</span><span class="cond-val">同步上调薪酬上限</span><span class="cond-op">员工不受损，公司利润提升</span></div>
+        <div class="cond-row"><span class="cond-label">需要确认</span><span class="cond-val">员工和管理者双方同意</span><span class="cond-op">任一方否决 → 维持原目标</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C类规则 -->
+  <div class="sec" style="margin-top:4px">C类 · 战略主动调整 <span class="badge b-c">管理层</span></div>
+
+  <div class="rule-card" id="rule-C1">
+    <div class="rule-header" onclick="toggleRule('C1')">
+      <div class="rh-type rt-c">C</div>
+      <div class="rh-body">
+        <div class="rh-top">
+          <span class="rh-name">大促节点 → 临时目标上调</span>
+          <span class="rh-scope">适用：全品牌 · 指定活动期间</span>
+        </div>
+        <div class="rh-desc">618/双十一/春节等大促期间，管理层主动上调目标，同时按比例增加促销预算和激励上限，员工有更高薪酬上限。</div>
+      </div>
+      <div class="rh-right">
+        <button class="rule-toggle on" id="toggle-C1" onclick="event.stopPropagation();toggleSwitch('C1')"></button>
+        <span class="conf-badge cf-manual">管理层发起</span>
+      </div>
+    </div>
+    <div class="rule-detail" id="detail-C1">
+      <div class="rule-detail-body">
+        <div class="cond-row"><span class="cond-label">触发方式</span><span class="cond-val">管理层手动输入</span><span class="cond-op">活动名称 + 日期 + 目标倍数</span></div>
+        <div class="cond-row"><span class="cond-label">调整逻辑</span><span class="cond-op">活动期间目标 ×</span><span class="cond-val">1.3～2.0（管理者设定）</span></div>
+        <div class="cond-row"><span class="cond-label">薪酬联动</span><span class="cond-val">激励池按比例增加</span><span class="cond-op">→ 员工有更高上限</span></div>
+        <div class="cond-row"><span class="cond-label">传导方式</span><span class="cond-val">自动向下传导到所有层级</span><span class="cond-op">实时推送通知</span></div>
+        <div class="cond-row"><span class="cond-label">恢复方式</span><span class="cond-val">活动结束自动恢复原目标</span><span class="cond-op">无需手动操作</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule-card" id="rule-C2">
+    <div class="rule-header" onclick="toggleRule('C2')">
+      <div class="rh-type rt-c">C</div>
+      <div class="rh-body">
+        <div class="rh-top">
+          <span class="rh-name">年级迁徙 → 目标结构重组</span>
+          <span class="rh-scope">适用：SKU从年级N升到N+1时</span>
+        </div>
+        <div class="rh-desc">SKU年级升级时（如遵循自然从年级2升年级3），利润目标权重自动提升，激励系数从×1.5降至×1.0，同时重新分配薪酬结构。</div>
+      </div>
+      <div class="rh-right">
+        <button class="rule-toggle on" id="toggle-C2" onclick="event.stopPropagation();toggleSwitch('C2')"></button>
+        <span class="conf-badge cf-manual">需双方确认</span>
+      </div>
+    </div>
+    <div class="rule-detail" id="detail-C2">
+      <div class="rule-detail-body">
+        <div class="cond-row"><span class="cond-label">触发条件</span><span class="cond-val">消化率≥75% 连续3月</span><span class="cond-op">+</span><span class="cond-val">费用率≤100%</span></div>
+        <div class="cond-row"><span class="cond-label">调整内容</span><span class="cond-op">年级系数</span><span class="cond-val">×1.5 → ×1.0</span><span class="cond-op">利润目标权重</span><span class="cond-val">↑10%</span></div>
+        <div class="cond-row"><span class="cond-label">薪酬说明</span><span class="cond-val">激励绝对额不降</span><span class="cond-op">因为业绩基数扩大了</span></div>
+        <div style="font-size:11px;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,166,35,.2);border-radius:8px;padding:8px 10px;margin-top:4px">⚡ 当前触发候选：遵循自然500ml 消化率已连续2月回升，如果下月≥75%，将触发年级迁徙评审。</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════ TAB 2: 触发模拟 ══════════════════ -->
+<div class="page" id="page-sim">
+  <div style="background:var(--card2);border:1px solid rgba(245,166,35,.15);border-radius:13px;padding:14px;font-size:12px;color:var(--text2);line-height:1.8">
+    <strong style="color:var(--amber)">模拟逻辑：</strong>选择一个情境，系统模拟如果这个情境发生，哪些规则会被触发，各层级目标如何变化，通知谁，谁需要做决定。
+  </div>
+
+  <div class="sec">选择情境</div>
+  <div style="display:flex;flex-direction:column;gap:8px" id="scenarioList"></div>
+
+  <div class="sec" style="margin-top:4px">模拟结果</div>
+  <div id="scenarioResult" style="display:none;flex-direction:column;gap:10px"></div>
+
+  <div class="sec" style="margin-top:4px">规则引擎 AI</div>
+  <div class="ai-wrap">
+    <div class="ai-hdr">⚙️ 规则引擎 Agent</div>
+    <div class="chips">
+      <div class="chip" onclick="askAI('竞品突然降价20%，系统会触发哪些规则，我们应该怎么应对？')">竞品降价20%应对</div>
+      <div class="chip" onclick="askAI('如果遵循自然消化率下个月达到75%，会触发什么？薪酬怎么变？')">消化率达标后变化</div>
+      <div class="chip" onclick="askAI('618大促期间目标上调30%，激励池需要准备多少预算？')">大促预算计算</div>
+      <div class="chip" onclick="askAI('一个DSR连续3周低达成，系统和管理者各自应该做什么？')">低达成处理流程</div>
+    </div>
+    <div class="ai-bubble">你好，我是规则引擎 Agent。我能模拟任何情境下，系统会触发哪些规则，产生哪些调整建议。</div>
+    <div class="ai-resp" id="aiResp"><div class="ai-q" id="aiQ"></div><div id="aiA"></div></div>
+    <div class="ai-row">
+      <input class="ai-in" id="aiIn" placeholder="描述一个情境，我告诉你系统会怎么处理…" onkeydown="if(event.key==='Enter')askAI(this.value,this)"/>
+      <button class="ai-btn" onclick="askAI(document.getElementById('aiIn').value,document.getElementById('aiIn'))">↑</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ TAB 3: 传导链路 ══════════════════ -->
+<div class="page" id="page-cascade">
+  <div style="background:var(--card2);border:1px solid rgba(245,166,35,.15);border-radius:13px;padding:14px;font-size:12px;color:var(--text2);line-height:1.8">
+    <strong style="color:var(--amber)">传导原则：</strong>任何目标调整，从触发层级开始，自动向下传导到所有子层级。每层收到通知后有<strong style="color:var(--text)">24小时确认窗口</strong>，超时视为默认接受。每层可以提出异议，异议向上汇报。
+  </div>
+
+  <div class="sec">传导案例 · 618大促目标上调30%</div>
+  <div class="cascade-wrap">
+    <div class="cascade-title">⚡ C类触发 · 管理层发起 · 2026年6月1日 09:00</div>
+    <div class="cascade-flow" id="cascadeFlow"></div>
+  </div>
+
+  <div class="sec" style="margin-top:4px">传导规则说明</div>
+  <div style="display:flex;flex-direction:column;gap:7px">
+    <div style="background:var(--card);border:1px solid rgba(74,222,128,.15);border-left:3px solid var(--green);border-radius:0 12px 12px 0;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:5px">向下传导：自动</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.6">管理层调整 → DOM → 经销商 → DSR 全部自动更新。不需要每层手动通知，系统统一推送，24小时内确认。</div>
+    </div>
+    <div style="background:var(--card);border:1px solid rgba(245,166,35,.15);border-left:3px solid var(--amber);border-radius:0 12px 12px 0;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:5px">向上反馈：有窗口</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.6">任何层级有异议，必须在24小时内提出，说明理由。系统记录异议原因，作为下次规则修正的学习数据。</div>
+    </div>
+    <div style="background:var(--card);border:1px solid rgba(96,165,250,.15);border-left:3px solid var(--blue);border-radius:0 12px 12px 0;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:5px">学习记录：强制</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.6">每次目标调整的最终结果（达成/未达成/异议原因）强制写入 inf_learning_log。没有这个数据，系统永远无法提高置信度。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ TAB 4: 调整历史 ══════════════════ -->
+<div class="page" id="page-history">
+  <div class="sec">调整记录 · 学习数据库</div>
+  <div class="history-list" id="historyList"></div>
+
+  <div class="sec" style="margin-top:4px">学习进度</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:10px">系统学习状态</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--amber)">12</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">已记录决策</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--red)">488</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">需500个解锁自动化</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text3)">2.4%</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">当前自动化率</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text3);line-height:1.7">
+      预计：按当前数据积累速度（约10条/周），<strong style="color:var(--amber)">约12个月后</strong>达到500条样本，系统置信度提升至可自动执行大部分B类规则。A类规则因需要竞品数据，需价签识别（A23）上线后才能进入训练。
+    </div>
+  </div>
+</div>
+
+<!-- SQL MODAL -->
+<div class="modal-overlay" id="sqlModal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div class="modal-title">SQL · inf_target_rules 建表 + 种子数据</div>
+      <button style="cursor:pointer;color:var(--text2);font-size:18px;background:none;border:none" onclick="closeSQL()">×</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3)">执行以下SQL，目标规则引擎即可在数据库中运行。</div>
+    <div class="sql-box" id="sqlBox"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button style="background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:9px 16px;font-size:12px;color:var(--text2);cursor:pointer" onclick="closeSQL()">关闭</button>
+      <button class="btn-copy" onclick="copySQL()">📋 复制全部</button>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <div class="bb-info">目标规则引擎 · <strong>共6条规则已配置</strong> · 3条自动执行 · 3条需确认</div>
+  <button class="btn-sql" onclick="showSQL()">导出 SQL ↗</button>
+</div>
+
+<script>
+function tick(){const n=new Date();document.getElementById('clock').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')}
+tick();setInterval(tick,1000);
+function st(id){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));event.currentTarget.classList.add('active');document.getElementById('page-'+id).classList.add('active');window.scrollTo(0,100)}
+function toggleRule(id){const d=document.getElementById('detail-'+id);d.classList.toggle('show')}
+function toggleSwitch(id){const t=document.getElementById('toggle-'+id);t.classList.toggle('on');t.classList.toggle('off')}
+function runSim(id){const r=document.getElementById('sim-'+id);r.classList.toggle('show')}
+function decideSim(id,decision){
+  const actions=document.getElementById('sim-'+id+'-actions');
+  if(!actions)return;
+  const msgs={approved:'✅ 已确认执行 · 写入 inf_target_adjustments · 向下传导通知',rejected:'✗ 已拒绝 · 原因已记录到学习数据库',proposed:'💡 替代方案已提交 · 等待管理者审批'};
+  actions.outerHTML=`<div style="font-size:11px;color:var(--green);display:flex;align-items:center;gap:5px;padding-top:8px;border-top:1px solid var(--border)">${msgs[decision]||'已处理'}</div>`;
+}
+
+// 触发模拟情境
+const SCENARIOS = [
+  {id:'s1', icon:'🏪', title:'竞品突然降价15%，连续9天', type:'A类市场信号',
+   rules:['A1触发：建议下调浦东区遵循自然业绩目标10%','同时标注B类观察期排除法，14天后重新评估'],
+   impact:'3名DSR收到通知 · 1名DOM需确认 · 置信度82%',
+   color:'var(--red)'},
+  {id:'s2', icon:'📉', title:'DSR张伟连续3周达成率55%', type:'B类执行偏差',
+   rules:['B1触发：目标合理性审查','对比分析：其他区域达成78-91%，判定为执行问题而非目标问题','生成执行干预任务：DOM介入，检查拜访频次'],
+   impact:'DOM收到介入通知 · 目标维持不变 · 系统生成改善任务',
+   color:'var(--amber)'},
+  {id:'s3', icon:'🎉', title:'618大促，管理层上调目标30%', type:'C类战略调整',
+   rules:['C1触发：全国传导','DOM目标×1.30，激励池×1.30','经销商目标×1.30','DSR目标×1.30，薪酬上限×1.30'],
+   impact:'全链24小时内完成传导 · 所有人收到通知 · 24小时确认窗口',
+   color:'var(--green)'},
+  {id:'s4', icon:'📈', title:'遵循自然消化率连续2月≥75%', type:'C类年级迁徙',
+   rules:['C2触发：年级升级评审','建议遵循自然从年级2→年级3','激励系数×1.5→×1.0','利润目标权重↑10%','需DSR和管理者双方确认'],
+   impact:'DSR和管理者各自收到确认请求 · 任一方拒绝则维持原状',
+   color:'var(--purple)'},
+];
+
+function renderScenarios(){
+  const list=document.getElementById('scenarioList');
+  list.innerHTML=SCENARIOS.map(s=>`
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:10px" onclick="runScenario('${s.id}')" onmouseover="this.style.background='var(--card2)'" onmouseout="this.style.background='var(--card)'">
+    <span style="font-size:22px;flex-shrink:0">${s.icon}</span>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:600;margin-bottom:3px">${s.title}</div>
+      <div style="font-size:10px;font-family:'Space Mono',monospace;color:${s.color}">${s.type}</div>
+    </div>
+    <div style="font-size:12px;color:var(--text3)">▶</div>
+  </div>`).join('');
+}
+
+function runScenario(id){
+  const s=SCENARIOS.find(x=>x.id===id);
+  if(!s)return;
+  const result=document.getElementById('scenarioResult');
+  result.style.display='flex';
+  result.innerHTML=`
+  <div style="background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:16px;animation:fadeIn .3s ease">
+    <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:${s.color};margin-bottom:12px">${s.icon} ${s.title}</div>
+    <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">触发规则</div>
+    ${s.rules.map((r,i)=>`<div style="display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.5">
+      <span style="width:18px;height:18px;border-radius:5px;background:rgba(245,166,35,.15);color:var(--amber);font-family:'Space Mono',monospace;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${i+1}</span>
+      ${r}
+    </div>`).join('')}
+    <div style="margin-top:10px;padding:10px 12px;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:10px;font-size:11px;color:var(--text2)">
+      <strong style="color:var(--amber)">影响范围：</strong>${s.impact}
+    </div>
+  </div>`;
+  result.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// 传导链路
+function renderCascade(){
+  const steps=[
+    {role:'MGR',name:'全国负责人',icon:'⚡',bg:'rgba(245,166,35,.15)',color:'var(--amber)',
+     change:{from:'¥200,000',to:'¥260,000',delta:'+30%'},time:'09:00发起',notify:'系统自动向下传导',status:'active'},
+    {role:'DOM',name:'上海区 DOM',icon:'🏢',bg:'rgba(167,139,250,.15)',color:'var(--purple)',
+     change:{from:'¥3,400,000',to:'¥4,420,000',delta:'+30%'},time:'09:01自动更新',notify:'DOM 09:02收到通知',status:'active'},
+    {role:'DIST×5',name:'上海5个经销商',icon:'🤝',bg:'rgba(245,166,35,.12)',color:'var(--amber)',
+     change:{from:'各自目标',to:'×1.30',delta:'+30%'},time:'09:01自动更新',notify:'5名经销商收到通知',status:'active'},
+    {role:'DSR×15',name:'上海15名业务员',icon:'👔',bg:'rgba(78,205,196,.12)',color:'var(--teal)',
+     change:{from:'各SKU目标',to:'×1.30',delta:'+30%，薪酬上限同步'},time:'09:01自动更新',notify:'15名DSR收到通知',status:'active'},
+    {role:'BA×30',name:'上海30名美顾',icon:'✨',bg:'rgba(74,222,128,.12)',color:'var(--green)',
+     change:{from:'任务目标',to:'×1.20（相对调整小）',delta:'+20%'},time:'09:02自动更新',notify:'30名BA收到通知',status:'active'},
+  ];
+  const flow=document.getElementById('cascadeFlow');
+  flow.innerHTML=steps.map((s,i)=>`
+  <div class="cascade-step ${s.status}">
+    <div class="cs-icon" style="background:${s.bg};">${s.icon}</div>
+    <div class="cs-body">
+      <div class="cs-role">${s.role}</div>
+      <div class="cs-name">${s.name}</div>
+      <div class="cs-change">
+        <span class="cs-old">${s.change.from}</span>
+        <span class="cs-arrow">→</span>
+        <span class="cs-new">${s.change.to}</span>
+        <span class="cs-delta cs-up">${s.change.delta}</span>
+      </div>
+      <div class="cs-time">${s.time}</div>
+      <div class="cs-notify">📱 ${s.notify}</div>
+    </div>
+  </div>`).join('');
+}
+
+// 调整历史
+function renderHistory(){
+  const items=[
+    {title:'A1触发：浦东区遵循自然500ml业绩目标下调10%',type:'A类',status:'approved',
+     time:'2026-03-15',trigger:'系统',decided:'DOM王主管',
+     outcome:'下调后3周达成率从62%升至81%，验证了目标偏高的判断',
+     learn:'B类情境：区域达成率显著低于全国均值 → 首先怀疑目标偏高，而非执行问题'},
+    {title:'B1触发：宝山刘芳DSR执行干预（目标维持不变）',type:'B类',status:'overridden',
+     time:'2026-03-08',trigger:'系统',decided:'DOM张主管',
+     outcome:'DOM实地核查后发现是该区域竞品新上市导致，而非执行问题，推翻了系统判断',
+     learn:'B类情境：竞品新品上市窗口期（30天内）→ B类执行偏差需先排除竞品因素'},
+    {title:'C1触发：妇女节大促目标上调25%',type:'C类',status:'approved',
+     time:'2026-03-01',trigger:'管理层',decided:'全链确认',
+     outcome:'大促期间实际达成率143%，超额完成，证明上调25%是合理的',
+     learn:'C类情境：妇女节/母亲节等节日 → 六月鲜目标可上调25-35%'},
+    {title:'B2触发：李娜DSR遵循自然连续2月达成率126%，建议上调目标',type:'B类',status:'rejected',
+     time:'2026-02-28',trigger:'系统',decided:'李娜本人',
+     outcome:'李娜提出异议：超额是因为竞品临时缺货，下月竞品补货后会恢复正常，目标不应上调',
+     learn:'B类情境：超额达成需排除竞品断货因素 → 需要配合A类竞品监控数据'},
+  ];
+  const list=document.getElementById('historyList');
+  list.innerHTML=items.map((h,i)=>`
+  <div class="history-item">
+    <div class="hi-top">
+      <div class="hi-title">${h.title}</div>
+      <span class="hi-status hs-${h.status}">${{approved:'✓ 已执行',rejected:'✗ 已拒绝',overridden:'↩ 已覆盖',pending:'待决策'}[h.status]}</span>
+    </div>
+    <div class="hi-meta">
+      <span>${h.time}</span>
+      <span>${h.type}</span>
+      <span>触发：${h.trigger}</span>
+      <span>决策：${h.decided}</span>
+    </div>
+    <div style="margin-top:6px;cursor:pointer;font-size:11px;color:var(--amber)" onclick="this.nextElementSibling.classList.toggle('show')">▼ 查看结果与学习</div>
+    <div class="hi-detail">
+      <div class="hi-outcome"><strong style="color:var(--text)">执行结果：</strong>${h.outcome}</div>
+      <div class="hi-learn"><strong>🧠 系统学到：</strong>${h.learn}</div>
+    </div>
+  </div>`).join('');
+}
+
+// AI
+async function askAI(q,el){
+  if(!q||!q.trim())return;
+  if(el instanceof HTMLElement)el.value='';
+  document.getElementById('aiResp').classList.add('show');
+  document.getElementById('aiQ').textContent='❓ '+q;
+  const aEl=document.getElementById('aiA');
+  aEl.innerHTML='<div class="td-wrap"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  const sys=`你是 INFINITY OS 目标规则引擎 Agent。系统有6条规则：A1竞品降价触发（≥80%自动执行），A2竞品退市触发（需确认），B1连续低达成触发（≥75%自动），B2超额达成触发（需双方确认），C1大促目标上调（管理层发起），C2年级迁徙触发（需双方确认）。全自动化需要500条学习样本，目前12条，约12个月可达。中文简洁，不超过150字。`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})});
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'—'}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`}
+}
+
+// SQL
+function generateSQL(){
+  return `-- ================================================================
+-- INFINITY OS · 目标规则引擎 DDL + 种子数据
+-- ================================================================
+
+-- 规则主表
+CREATE TABLE inf_target_rules (
+  rule_id           VARCHAR(16)   PRIMARY KEY,
+  rule_name         VARCHAR(128)  NOT NULL,
+  trigger_type      ENUM('market_signal','execution_gap','strategic') NOT NULL,
+  trigger_condition JSON          NOT NULL,   -- 触发条件
+  adjustment_logic  JSON          NOT NULL,   -- 调整算法
+  scope_brand       VARCHAR(32)   DEFAULT NULL,
+  scope_region      VARCHAR(64)   DEFAULT NULL,
+  scope_grade       TINYINT       DEFAULT NULL,
+  requires_approval BOOLEAN       DEFAULT TRUE,
+  confidence_floor  TINYINT       DEFAULT 75, -- 低于此值强制人工介入
+  is_active         BOOLEAN       DEFAULT TRUE,
+  created_by        VARCHAR(64)   NOT NULL,
+  created_at        DATETIME      DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 调整记录表
+CREATE TABLE inf_target_adjustments (
+  adjustment_id     BIGINT        AUTO_INCREMENT PRIMARY KEY,
+  contract_id       VARCHAR(64)   NOT NULL,
+  sku_id            VARCHAR(64)   NOT NULL,
+  rule_id           VARCHAR(16)   DEFAULT NULL,  -- NULL=人工发起
+  trigger_type      VARCHAR(32)   NOT NULL,
+  old_rev_target    DECIMAL(12,2),
+  new_rev_target    DECIMAL(12,2),
+  old_profit_target DECIMAL(12,2),
+  new_profit_target DECIMAL(12,2),
+  adjustment_reason TEXT          NOT NULL,
+  confidence_pct    TINYINT,
+  status    ENUM('pending','approved','rejected','overridden','applied') DEFAULT 'pending',
+  proposed_by       VARCHAR(64)   NOT NULL,
+  decided_by        VARCHAR(64),
+  decided_at        DATETIME,
+  cascade_ids       JSON,         -- 下游调整ID列表
+  outcome_actual    TEXT,         -- 执行后实际结果（学习数据）
+  created_at        DATETIME      DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 学习日志表
+CREATE TABLE inf_learning_log (
+  log_id            BIGINT        AUTO_INCREMENT PRIMARY KEY,
+  adjustment_id     BIGINT        NOT NULL,
+  decision_type     ENUM('approved','rejected','overridden') NOT NULL,
+  context_snapshot  JSON          NOT NULL,  -- 决策时的完整情境
+  override_reason   TEXT,                    -- 被覆盖时必填
+  outcome_30d       TEXT,                    -- 30天后实际结果
+  pattern_update    JSON,                    -- 更新了哪些规则模式
+  created_at        DATETIME      DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 规则种子数据
+INSERT INTO inf_target_rules VALUES
+('RULE-A1','竞品低价冲击→防御性目标下调','market_signal',
+ '{"competitor_price_ratio":"<=0.85","duration_days":">=7"}',
+ '{"rev_target_multiplier":0.90,"profit_target_multiplier":1.05}',
+ NULL,NULL,NULL,FALSE,80,TRUE,'system','2026-04-13'),
+
+('RULE-A2','竞品退市→进攻性目标上调','market_signal',
+ '{"competitor_stockout_days":">=14"}',
+ '{"rev_target_multiplier":"1.15~1.25","requires_manager_range":true}',
+ NULL,NULL,NULL,TRUE,65,TRUE,'system','2026-04-13'),
+
+('RULE-B1','持续低达成→目标合理性审查','execution_gap',
+ '{"consecutive_weeks":3,"achievement_threshold":"<0.60","cross_region_check":true}',
+ '{"action":"execution_intervention","target_unchanged":true}',
+ NULL,NULL,NULL,FALSE,75,TRUE,'system','2026-04-13'),
+
+('RULE-B2','超额达成→目标动态上调','execution_gap',
+ '{"consecutive_months":2,"achievement_threshold":">1.20"}',
+ '{"new_target":"avg_actual_2m * 1.05","comp_ceiling_update":true}',
+ NULL,NULL,NULL,TRUE,70,TRUE,'system','2026-04-13'),
+
+('RULE-C1','大促节点→临时目标上调','strategic',
+ '{"trigger":"manual","event_type":"promotion"}',
+ '{"rev_target_multiplier":"manual","pool_multiplier":"match"}',
+ NULL,NULL,NULL,TRUE,100,TRUE,'system','2026-04-13'),
+
+('RULE-C2','年级迁徙→目标结构重组','strategic',
+ '{"digest_rate":">=0.75","consecutive_months":3,"fee_rate":"<=1.00"}',
+ '{"grade_upgrade":true,"coeff_change":"1.5->1.0","profit_weight_increase":0.10}',
+ NULL,NULL,NULL,TRUE,90,TRUE,'system','2026-04-13');
+
+-- ✅ 执行完成后，目标规则引擎即可运行
+-- ================================================================`;
+}
+function showSQL(){document.getElementById('sqlBox').textContent=generateSQL();document.getElementById('sqlModal').classList.add('show')}
+function closeSQL(){document.getElementById('sqlModal').classList.remove('show')}
+function copySQL(){navigator.clipboard.writeText(document.getElementById('sqlBox').textContent).then(()=>{const b=document.querySelector('.btn-copy');b.textContent='✅ 已复制';b.style.background='var(--green)';setTimeout(()=>{b.textContent='📋 复制全部';b.style.background='var(--amber)'},2000)})}
+
+// 启动
+renderScenarios();
+renderCascade();
+renderHistory();
+</script>
+</body>
+</html>
