@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · v8.1 · AIO 晨报</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;
+  --card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(7,8,14,0.96);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:52px;gap:10px;
+}
+.logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.logo-sym{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000;
+  box-shadow:0 0 14px rgba(245,166,35,0.25);
+}
+.logo-text{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.logo-text em{color:var(--amber);font-style:normal}
+.topbar-center{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);
+  gap:8px;overflow:hidden;
+}
+.live-pip{width:6px;height:6px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 7px var(--green);animation:pip 2s infinite;flex-shrink:0}
+@keyframes pip{0%,100%{opacity:1}50%{opacity:.3}}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.clock{font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)}
+.pending-badge{
+  background:var(--red);color:#fff;font-size:10px;font-weight:700;
+  font-family:'Space Mono',monospace;padding:2px 8px;border-radius:10px;
+  animation:badgepulse 2s infinite;
+}
+@keyframes badgepulse{0%,100%{box-shadow:0 0 0 0 rgba(255,95,95,.4)}70%{box-shadow:0 0 0 6px rgba(255,95,95,0)}}
+
+/* ── LAYOUT ── */
+.page{padding:14px 16px 100px;display:flex;flex-direction:column;gap:12px}
+
+/* ── MORNING BRIEF CARD ── */
+.brief{
+  background:linear-gradient(135deg,rgba(245,166,35,0.07) 0%,rgba(9,9,15,1) 70%);
+  border:1px solid rgba(245,166,35,0.18);border-radius:16px;
+  padding:18px;position:relative;overflow:hidden;
+}
+.brief::after{
+  content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;
+  border-radius:50%;background:radial-gradient(circle,rgba(245,166,35,0.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.brief-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.brief-agent{display:flex;align-items:center;gap:7px;font-size:10px;
+  color:var(--amber);font-family:'Space Mono',monospace;letter-spacing:.07em}
+.brief-pulse{width:6px;height:6px;border-radius:50%;background:var(--amber);
+  animation:pip 1.5s infinite}
+.brief-time{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+.brief-headline{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;
+  line-height:1.45;margin-bottom:10px}
+.brief-body{font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:14px}
+.brief-body strong{color:var(--text)}
+.brief-kpis{display:flex;gap:7px;flex-wrap:wrap}
+.bk{background:rgba(255,255,255,.04);border:1px solid var(--border2);
+  border-radius:10px;padding:8px 12px;flex-shrink:0}
+.bk-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;line-height:1}
+.bk-lbl{font-size:9px;color:var(--text3);margin-top:2px}
+.brief-regen{
+  margin-top:12px;padding-top:10px;border-top:1px solid rgba(245,166,35,.12);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.brief-regen-text{font-size:10px;color:var(--text3)}
+.regen-btn{
+  background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.2);
+  border-radius:8px;padding:5px 12px;font-size:11px;color:var(--amber);
+  cursor:pointer;transition:all .15s;font-family:'Noto Sans SC',sans-serif;
+}
+.regen-btn:hover{background:rgba(245,166,35,.2)}
+.brief-loading{display:none;padding:20px 0;text-align:center}
+.brief-loading.show{display:block}
+.td-wrap{display:flex;gap:4px;align-items:center;justify-content:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:tda 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tda{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* ── SEC LABEL ── */
+.sec{
+  font-size:10px;font-weight:700;color:var(--text3);
+  letter-spacing:.09em;text-transform:uppercase;
+  display:flex;align-items:center;gap:8px;
+}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec .n{
+  font-size:9px;background:var(--red);color:#fff;padding:1px 6px;border-radius:8px;
+  font-family:'Space Mono',monospace;
+}
+.sec .na{background:var(--amber);color:#000}
+.sec .ng{background:rgba(74,222,128,.15);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+
+/* ── IRON LAW BANNER ── */
+.iron-banner{
+  background:rgba(255,95,95,.05);border:1px solid rgba(255,95,95,.25);
+  border-left:3px solid var(--red);border-radius:0 12px 12px 0;
+  padding:13px 15px;display:flex;align-items:flex-start;gap:10px;
+}
+.ib-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.ib-body{flex:1}
+.ib-label{font-size:9px;color:var(--red);font-family:'Space Mono',monospace;
+  letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:4px}
+.ib-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.ib-desc{font-size:11px;color:var(--text2);line-height:1.55}
+.ib-actions{display:flex;gap:7px;margin-top:9px}
+.btn-halt{background:var(--red);border:none;border-radius:8px;
+  padding:7px 14px;font-size:11px;color:#fff;font-weight:700;cursor:pointer;
+  font-family:'Noto Sans SC',sans-serif;transition:all .15s}
+.btn-halt:hover{background:#ff4040}
+.btn-probe{background:rgba(255,95,95,.1);border:1px solid rgba(255,95,95,.2);
+  border-radius:8px;padding:7px 14px;font-size:11px;color:var(--red);cursor:pointer;
+  font-family:'Noto Sans SC',sans-serif;transition:all .15s}
+.btn-probe:hover{background:rgba(255,95,95,.18)}
+
+/* ── DECISION QUEUE ── */
+.dcard{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:13px;overflow:hidden;
+  transition:all .15s;
+}
+.dcard.high{border-color:rgba(255,95,95,.2);background:rgba(255,95,95,.02)}
+.dcard.mid{border-color:rgba(245,166,35,.15)}
+.dcard.decided{opacity:.42;pointer-events:none}
+.dc-body{padding:12px 14px;display:flex;gap:9px}
+.dc-emoji{
+  width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+}
+.dc-info{flex:1;min-width:0}
+.dc-agent{font-size:10px;color:var(--text3);margin-bottom:3px;
+  display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.dc-agent-name{color:var(--amber)}
+.impact-tag{font-size:9px;font-family:'Space Mono',monospace;padding:1px 6px;border-radius:6px}
+.imp-high{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.imp-mid{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.imp-low{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(78,205,196,.2)}
+.dc-title{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:5px}
+.dc-reason{font-size:11px;color:var(--text2);line-height:1.5}
+.dc-conf{display:flex;align-items:center;gap:5px;margin-top:5px;
+  font-size:10px;font-family:'Space Mono',monospace}
+.cbar{width:55px;height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
+.cfill{height:100%;border-radius:2px}
+.dc-btns{display:flex;gap:6px;padding:0 14px 11px}
+.btn-ok{flex:1;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.25);
+  border-radius:9px;padding:8px;font-size:12px;font-weight:600;color:var(--green);
+  cursor:pointer;transition:all .15s;font-family:'Noto Sans SC',sans-serif}
+.btn-ok:hover{background:rgba(74,222,128,.22)}
+.btn-mod{flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border2);
+  border-radius:9px;padding:8px;font-size:12px;color:var(--text2);cursor:pointer;
+  transition:all .15s;font-family:'Noto Sans SC',sans-serif}
+.btn-mod:hover{border-color:var(--amber);color:var(--amber)}
+.btn-x{width:36px;background:rgba(255,95,95,.07);border:1px solid rgba(255,95,95,.15);
+  border-radius:9px;cursor:pointer;color:var(--red);transition:all .15s;font-size:12px}
+.btn-x:hover{background:rgba(255,95,95,.18)}
+.decided-row{padding:8px 14px;font-size:11px;color:var(--green);
+  display:flex;align-items:center;gap:5px}
+
+/* ── HEARTBEAT GRID ── */
+.hb-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(min-width:480px){.hb-grid{grid-template-columns:repeat(3,1fr)}}
+.hb-cell{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:12px;position:relative;cursor:pointer;transition:all .15s;
+}
+.hb-cell:hover{background:var(--card2);transform:translateY(-1px)}
+.hb-cell.crit{border-color:rgba(255,95,95,.3);background:rgba(255,95,95,.03)}
+.hb-cell.warn{border-color:rgba(245,166,35,.2)}
+.hb-cell.ok{border-color:rgba(74,222,128,.15)}
+.hb-pip{position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%}
+.hb-pip.crit{background:var(--red);box-shadow:0 0 8px var(--red);animation:pip .8s infinite}
+.hb-pip.warn{background:var(--amber);box-shadow:0 0 7px var(--amber);animation:pip 1.5s infinite}
+.hb-pip.ok{background:var(--green);animation:pip 3s infinite}
+.hb-region{font-size:10px;color:var(--text3);margin-bottom:4px}
+.hb-r{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1}
+.hb-label{font-size:9px;color:var(--text3);margin-top:2px}
+.hb-bar{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:7px}
+.hb-fill{height:100%;border-radius:2px;transition:width .8s ease}
+.water-tag{font-size:9px;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:5px;margin-top:5px;display:inline-block}
+.wt-overflow{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.wt-full{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.wt-warn{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.wt-low{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+
+/* ── ACTIVITY STREAM ── */
+.stream{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.stream-hdr{
+  padding:11px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.stream-title{font-size:11px;font-weight:700;color:var(--text3);
+  letter-spacing:.07em;text-transform:uppercase;display:flex;align-items:center;gap:7px}
+.live-tag{font-size:9px;background:var(--red-dim);color:var(--red);
+  border:1px solid rgba(255,95,95,.2);padding:1px 6px;border-radius:8px;
+  font-family:'Space Mono',monospace}
+.stream-ct{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+.stream-list{max-height:260px;overflow-y:auto}
+.si{
+  padding:9px 14px;display:flex;align-items:flex-start;gap:9px;
+  border-bottom:1px solid rgba(255,255,255,.025);
+  animation:slideIn .3s ease;
+}
+@keyframes slideIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+.si:last-child{border-bottom:none}
+.si-em{font-size:14px;flex-shrink:0;margin-top:1px}
+.si-body{flex:1;min-width:0}
+.si-action{font-size:11px;color:var(--text);line-height:1.5}
+.si-meta{font-size:10px;color:var(--text3);margin-top:2px;display:flex;align-items:center;gap:6px}
+.si-agent{color:var(--amber)}
+.si-badge{font-size:9px;padding:1px 5px;border-radius:5px}
+.res-ok{background:var(--green-dim);color:var(--green)}
+.res-warn{background:var(--amber-dim);color:var(--amber)}
+.si-time{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);flex-shrink:0}
+
+/* ── BRAND SNAPSHOT ── */
+.brand-row{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:11px 14px;display:flex;align-items:center;gap:10px;
+  cursor:pointer;transition:all .15s;margin-bottom:7px;
+}
+.brand-row:hover{background:var(--card2);transform:translateX(2px)}
+.br-icon{width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:16px}
+.br-body{flex:1;min-width:0}
+.br-name{font-size:13px;font-weight:600}
+.br-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.br-right{text-align:right;flex-shrink:0}
+.br-pct{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;line-height:1}
+.br-status{font-size:9px;margin-top:3px;padding:2px 6px;border-radius:6px;
+  display:inline-block;font-family:'Space Mono',monospace}
+
+/* ── CMD BAR ── */
+.cmdbar{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(7,8,14,.97);backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);padding:9px 16px 13px;
+}
+.cmd-lbl{font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;
+  font-family:'Space Mono',monospace;margin-bottom:6px;
+  display:flex;align-items:center;gap:5px}
+.cmd-lbl::before{content:'⌘';color:var(--amber)}
+.cmd-row{display:flex;gap:7px}
+.cmd-in{
+  flex:1;background:var(--card2);border:1px solid var(--border2);border-radius:12px;
+  padding:10px 14px;font-size:13px;color:var(--text);outline:none;
+  font-family:'Noto Sans SC',sans-serif;transition:border-color .2s;
+}
+.cmd-in:focus{border-color:rgba(245,166,35,.4)}
+.cmd-in::placeholder{color:var(--text3)}
+.cmd-btn{width:42px;height:42px;border-radius:11px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--amber),#ff8c3a);border:none;
+  cursor:pointer;font-size:16px;transition:all .2s;
+  box-shadow:0 3px 12px rgba(245,166,35,.3)}
+.cmd-btn:hover{transform:scale(1.05);box-shadow:0 5px 18px rgba(245,166,35,.4)}
+.cmd-resp{
+  display:none;position:fixed;bottom:68px;left:16px;right:16px;z-index:99;
+  background:var(--card2);border:1px solid var(--border2);border-radius:14px;
+  padding:13px;max-height:44vh;overflow-y:auto;
+  box-shadow:0 -8px 32px rgba(0,0,0,.55);
+}
+.cmd-resp.show{display:block;animation:slideUp .2s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.cmd-q{font-size:10px;color:var(--amber);margin-bottom:7px;
+  padding-bottom:7px;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace}
+.cmd-x{position:absolute;top:9px;right:12px;cursor:pointer;
+  color:var(--text3);font-size:13px;background:none;border:none}
+.cmd-a{font-size:12px;color:var(--text2);line-height:1.75;white-space:pre-wrap}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-sym">∞</div>
+    <div class="logo-text">INFINITY <em>OS</em></div>
+  </div>
+  <div class="topbar-center">
+    <div class="live-pip"></div>
+    <span>24 AGENTS · LIVE · 欣和SH</span>
+  </div>
+  <div class="topbar-right">
+    <div class="clock" id="clock"></div>
+    <div class="pending-badge" id="pendingBadge">3 待批</div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ① AIO 晨报 -->
+  <div class="brief" id="briefCard">
+    <div class="brief-header">
+      <div class="brief-agent"><div class="brief-pulse"></div>⚡ AIO 总指挥 · 自动生成</div>
+      <div class="brief-time" id="briefTime"></div>
+    </div>
+    <div id="briefContent">
+      <div class="brief-headline" id="briefHeadline">
+        上海4区动销稳健，浦东出现<span style="color:var(--red)">A类压货信号</span>，铁律③已触发
+      </div>
+      <div class="brief-body" id="briefBody">
+        今日 r 值整体达成率 <strong>78.4%</strong>，较昨日 +2.1%。宝仓贸易（浦东）库存 4.2a，消化率连续两月 47.1%，铁律③自动启动暂停建议。黄浦库存 1.2a 接近预警线，无菜单推单已提交 240 件补货建议待批。系统今日自主处理 <strong>19 项</strong>，需要你决策 <strong>3 项</strong>。
+      </div>
+      <div class="brief-kpis">
+        <div class="bk"><div class="bk-val" style="color:var(--amber)">78.4%</div><div class="bk-lbl">r值达成</div></div>
+        <div class="bk"><div class="bk-val" style="color:var(--red)">1</div><div class="bk-lbl">铁律预警</div></div>
+        <div class="bk"><div class="bk-val" style="color:var(--green)">19</div><div class="bk-lbl">已自主处理</div></div>
+        <div class="bk"><div class="bk-val" style="color:var(--amber)">3</div><div class="bk-lbl">待你决策</div></div>
+        <div class="bk"><div class="bk-val" style="color:var(--teal)">86%</div><div class="bk-lbl">Agent自主率</div></div>
+      </div>
+    </div>
+    <div class="brief-loading" id="briefLoading">
+      <div class="td-wrap"><div class="td"></div><div class="td"></div><div class="td"></div></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px">AIO 总指挥正在生成今日战情简报…</div>
+    </div>
+    <div class="brief-regen">
+      <div class="brief-regen-text">基于实时 r 值 + 库存心跳 + 铁律状态 · 自动生成</div>
+      <button class="regen-btn" onclick="regenBrief()">↻ 重新生成</button>
+    </div>
+  </div>
+
+  <!-- ② 铁律预警 -->
+  <div>
+    <div class="sec" style="margin-bottom:8px">铁律预警 <span class="n">紧急</span></div>
+    <div class="iron-banner" id="ironBanner">
+      <div class="ib-icon">⚠️</div>
+      <div class="ib-body">
+        <div class="ib-label">铁律③ 触发 · 蝴蝶效应Agent · A类失真</div>
+        <div class="ib-title">浦东·宝仓贸易 — 消化率连续2月低于50%</div>
+        <div class="ib-desc">当前库存 4.2a（满仓标准 2a），消化率 47.1%，已连续两个月低于铁律③基准线 50%。无菜单推单已自动暂停，等待你确认。</div>
+        <div class="ib-actions">
+          <button class="btn-halt" onclick="resolveIron()">确认暂停补货</button>
+          <button class="btn-probe" onclick="drillIron()">启动溯源调查</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 全局决策队列 -->
+  <div>
+    <div class="sec" style="margin-bottom:8px">
+      今日决策队列 <span class="na n">3项待你批准</span>
+    </div>
+    <div id="decisionQueue"></div>
+  </div>
+
+  <!-- ④ 库存心跳地图 -->
+  <div>
+    <div class="sec" style="margin-bottom:8px">库存心跳 · 上海5区实时水位</div>
+    <div class="hb-grid" id="hbGrid"></div>
+  </div>
+
+  <!-- ⑤ 品牌全局快照 -->
+  <div>
+    <div class="sec" style="margin-bottom:8px">品牌全局快照</div>
+    <div id="brandSnap"></div>
+  </div>
+
+  <!-- ⑥ Agent 实时动作流 -->
+  <div>
+    <div class="sec" style="margin-bottom:8px">Agent 动作流 <span class="n" style="background:var(--red)">LIVE</span></div>
+    <div class="stream">
+      <div class="stream-hdr">
+        <div class="stream-title"><span class="live-tag">LIVE</span>今日自主处理</div>
+        <div class="stream-ct" id="streamCt">19 actions</div>
+      </div>
+      <div class="stream-list" id="streamList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CMD RESPONSE -->
+<div class="cmd-resp" id="cmdResp">
+  <button class="cmd-x" onclick="closeCmd()">×</button>
+  <div class="cmd-q" id="cmdQ"></div>
+  <div class="cmd-a" id="cmdA"></div>
+</div>
+
+<!-- CMD BAR -->
+<div class="cmdbar">
+  <div class="cmd-lbl">指令中枢 · 说话即行动</div>
+  <div class="cmd-row">
+    <input class="cmd-in" id="cmdIn"
+      placeholder="「查上海r值」「暂停浦东补货」「今日低水位」「推单黄浦」…"
+      onkeydown="if(event.key==='Enter')sendCmd()"/>
+    <button class="cmd-btn" onclick="sendCmd()">↑</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// INFINITY OS v8.1 · AIO 晨报 + 全局决策队列
+// 所有数据结构对齐 NodeResponse.java DTO
+// API 上线后只替换数据源，界面逻辑零修改
+// ════════════════════════════════════════════════════════════
+
+// ── 时钟 ────────────────────────────────────────────────────
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    n.getHours().toString().padStart(2,'0') + ':' +
+    n.getMinutes().toString().padStart(2,'0') + ':' +
+    n.getSeconds().toString().padStart(2,'0');
+  document.getElementById('briefTime').textContent =
+    `今日 ${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}`;
+}
+tick(); setInterval(tick, 1000);
+
+// ── 唯一 AI 函数 ─────────────────────────────────────────────
+async function callClaude(sys, q, el) {
+  el.innerHTML = '<div class="td-wrap"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000,
+        system: sys, messages:[{role:'user',content:q}] })
+    });
+    const d = await r.json();
+    el.innerHTML = `<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'—'}</div>`;
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`;
+  }
+}
+
+// ── 晨报重新生成 ─────────────────────────────────────────────
+async function regenBrief() {
+  document.getElementById('briefContent').style.display = 'none';
+  document.getElementById('briefLoading').classList.add('show');
+
+  const sys = `你是 INFINITY OS 的 AIO 总指挥 Agent。
+今日数据：上海r值达成78.4%（目标85%），浦东宝仓贸易库存4.2a超满仓触发铁律③，黄浦1.2a接近预警，长宁2.4a健康，宝山1.8a偏低。
+系统自主处理19项，需人工决策3项：①暂停宝仓补货②黄浦推单240件③徐汇共创活动。
+用中文生成今日战情简报，格式：一句核心判断+关键数据+行动建议，不超过100字，语气简洁有力。`;
+
+  const hl  = document.getElementById('briefHeadline');
+  const bod = document.getElementById('briefBody');
+  hl.textContent  = '正在生成…';
+  bod.textContent = '';
+  document.getElementById('briefContent').style.display = 'block';
+  document.getElementById('briefLoading').classList.remove('show');
+
+  await callClaude(sys, '请生成今日战情简报', bod);
+  hl.textContent = '⚡ AIO 今日战情 · AI实时生成';
+}
+
+// ── 决策队列数据 ──────────────────────────────────────────────
+// 对齐 InfAction 实体结构
+const DECISIONS = [
+  {
+    actionId:205, impactLevel:'high', agentSource:'butterfly_agent',
+    agentEmoji:'🦋', agentBg:'rgba(255,95,95,0.15)',
+    title:'建议对浦东「宝仓贸易」暂停补货2周',
+    reason:'A类压货失真：库存4.2a，消化率47.1%，连续两月低于50%基准线，属系统性问题。',
+    confidencePct:91,
+    nodeId:'lyx-sh-dist-baocang', nodeName:'宝仓贸易（浦东）'
+  },
+  {
+    actionId:206, impactLevel:'mid', agentSource:'omakase_agent',
+    agentEmoji:'🍣', agentBg:'rgba(245,166,35,0.15)',
+    title:'推单黄浦经销商：遵循自然500ml × 240件',
+    reason:'黄浦库存降至1.2a，按r值预测5.3天后跌破1a预警线，建议本周三前到货。',
+    confidencePct:85,
+    nodeId:'lyx-sh-dist-lina', nodeName:'李娜负责（黄浦）'
+  },
+  {
+    actionId:207, impactLevel:'low', agentSource:'prism_agent',
+    agentEmoji:'◈', agentBg:'rgba(167,139,252,0.15)',
+    title:'启动徐汇滨江「世纪华城」本月共创活动',
+    reason:'PRISM评分83分，房价9.2万/㎡，高端渗透率0.34%低于均值，适合六月鲜品牌触达。',
+    confidencePct:72,
+    nodeId:'lyx-sh', nodeName:'上海'
+  }
+];
+
+function renderDecisions() {
+  const container = document.getElementById('decisionQueue');
+  container.innerHTML = '';
+  DECISIONS.forEach(d => {
+    const div = document.createElement('div');
+    div.className = `dcard ${d.impactLevel}`;
+    div.id = `dc-${d.actionId}`;
+    const confColor = d.confidencePct >= 80 ? 'var(--green)' : 'var(--amber)';
+    div.innerHTML = `
+    <div class="dc-body">
+      <div class="dc-emoji" style="background:${d.agentBg}">${d.agentEmoji}</div>
+      <div class="dc-info">
+        <div class="dc-agent">
+          <span class="dc-agent-name">${d.agentSource}</span>
+          <span class="impact-tag imp-${d.impactLevel}">${{high:'高影响',mid:'中影响',low:'低影响'}[d.impactLevel]}</span>
+        </div>
+        <div class="dc-title">${d.title}</div>
+        <div class="dc-reason">${d.reason}</div>
+        <div class="dc-conf">
+          置信度
+          <div class="cbar"><div class="cfill" style="width:${d.confidencePct}%;background:${confColor}"></div></div>
+          <span style="color:${confColor}">${d.confidencePct}%</span>
+          <span style="color:var(--text3)">·</span>
+          <span style="color:var(--text3)">${d.nodeName}</span>
+        </div>
+      </div>
+    </div>
+    <div class="dc-btns">
+      <button class="btn-ok"  onclick="decide(${d.actionId},'approved','✅ 已批准执行')">✓ 批准执行</button>
+      <button class="btn-mod" onclick="decide(${d.actionId},'override','⚡ 已标记观察')">调整</button>
+      <button class="btn-x"   onclick="decide(${d.actionId},'rejected','✗ 已拒绝')">✕</button>
+    </div>`;
+    container.appendChild(div);
+  });
+}
+
+function decide(id, status, msg) {
+  const card = document.getElementById(`dc-${id}`);
+  if (!card) return;
+  card.querySelector('.dc-btns').outerHTML = `<div class="decided-row">${msg}</div>`;
+  card.classList.add('decided');
+  // 更新角标
+  const badge = document.getElementById('pendingBadge');
+  const cur   = parseInt(badge.textContent) || 0;
+  const next  = Math.max(0, cur - 1);
+  badge.textContent = `${next} 待批`;
+  if (next === 0) badge.style.animation = 'none';
+  // TODO: POST /api/v1/node/action/{id}/(approve|reject)
+}
+
+// ── 心跳地图数据 ──────────────────────────────────────────────
+// 对齐 InfHeartbeat 实体
+const HB_DATA = [
+  { region:'浦东·张伟', rActual:3.2, rTarget:4.1, inventoryA:4.2, waterLevel:'overflow',
+    status:'crit', nodeId:'lyx-sh-dist-baocang' },
+  { region:'黄浦·李娜', rActual:3.5, rTarget:4.0, inventoryA:1.2, waterLevel:'warn',
+    status:'warn', nodeId:'lyx-sh-dist-lina' },
+  { region:'长宁·王磊', rActual:3.8, rTarget:4.0, inventoryA:2.4, waterLevel:'full',
+    status:'ok',   nodeId:'lyx-sh-dist-wanglei' },
+  { region:'宝山·刘芳', rActual:3.0, rTarget:4.0, inventoryA:1.8, waterLevel:'warn',
+    status:'warn', nodeId:'lyx-sh-dist-baoshang' },
+  { region:'闵行·陈勇', rActual:3.9, rTarget:4.0, inventoryA:2.1, waterLevel:'full',
+    status:'ok',   nodeId:'lyx-sh-dist-minhang' },
+];
+
+function renderHBGrid() {
+  const grid = document.getElementById('hbGrid');
+  grid.innerHTML = '';
+  HB_DATA.forEach(h => {
+    const ach = (h.rActual / h.rTarget * 100).toFixed(0);
+    const fillColor = h.status === 'crit' ? 'var(--red)' : h.status === 'warn' ? 'var(--amber)' : 'var(--green)';
+    const fillPct   = Math.min(100, (h.inventoryA / 3) * 100);
+    const wtClass   = {overflow:'wt-overflow',full:'wt-full',warn:'wt-warn',low:'wt-low'}[h.waterLevel] || 'wt-warn';
+    const wtLabel   = {overflow:'超库存',full:'满仓',warn:'预警',low:'低库'}[h.waterLevel] || '—';
+    const cell = document.createElement('div');
+    cell.className = `hb-cell ${h.status}`;
+    cell.innerHTML = `
+      <div class="hb-pip ${h.status}"></div>
+      <div class="hb-region">${h.region}</div>
+      <div class="hb-r" style="color:${fillColor}">${h.inventoryA.toFixed(1)}a</div>
+      <div class="hb-label">r达成 ${ach}%</div>
+      <div class="hb-bar"><div class="hb-fill" style="width:${fillPct}%;background:${fillColor}"></div></div>
+      <div class="water-tag ${wtClass}">${wtLabel}</div>`;
+    grid.appendChild(cell);
+  });
+}
+
+// ── 品牌快照 ──────────────────────────────────────────────────
+const BRANDS = [
+  { id:'lyx', emoji:'🍶', name:'六月鲜', sub:'premium · 上海试点',
+    bg:'rgba(245,166,35,0.15)', rAch:78.4, status:'warn', statusLabel:'需关注' },
+  { id:'wdm', emoji:'🥢', name:'味达美', sub:'mass market · 数据待接入',
+    bg:'rgba(78,205,196,0.12)', rAch:null, status:'ok', statusLabel:'数据待接入' },
+  { id:'hr',  emoji:'🌿', name:'禾然',   sub:'organic · 数据待接入',
+    bg:'rgba(74,222,128,0.12)', rAch:null, status:'ok', statusLabel:'数据待接入' },
+];
+
+function renderBrands() {
+  const wrap = document.getElementById('brandSnap');
+  wrap.innerHTML = '';
+  BRANDS.forEach(b => {
+    const pctColor = !b.rAch ? 'var(--text3)' : b.rAch >= 80 ? 'var(--green)' : b.rAch >= 65 ? 'var(--amber)' : 'var(--red)';
+    const stColor  = b.status === 'ok' ? 'var(--teal)' : 'var(--amber)';
+    const stBg     = b.status === 'ok' ? 'var(--teal-dim)' : 'var(--amber-dim)';
+    const row = document.createElement('div');
+    row.className = 'brand-row';
+    row.innerHTML = `
+      <div class="br-icon" style="background:${b.bg}">${b.emoji}</div>
+      <div class="br-body">
+        <div class="br-name">${b.name}</div>
+        <div class="br-sub">${b.sub}</div>
+      </div>
+      <div class="br-right">
+        <div class="br-pct" style="color:${pctColor}">${b.rAch ? b.rAch.toFixed(1)+'%' : '--'}</div>
+        <div class="br-status" style="color:${stColor};background:${stBg}">${b.statusLabel}</div>
+      </div>`;
+    wrap.appendChild(row);
+  });
+}
+
+// ── 动作流 ────────────────────────────────────────────────────
+const STREAM_INIT = [
+  {em:'🍣',action:'闵行补货推单已执行：遵循自然500ml × 180件，经销商陈勇已接单确认',agent:'无菜单推单',badge:'res-ok',badgeText:'✓ 完成',time:'09:41'},
+  {em:'🎯',action:'长宁a值校准完成：6个SKU上调均值8.3%，r值基准已更新',agent:'A值校准',badge:'res-ok',badgeText:'✓ 完成',time:'09:17'},
+  {em:'🦋',action:'宝山大润发检测到B类促销扰动：本周促销期短期失真，标注后观察5天',agent:'蝴蝶效应',badge:'res-warn',badgeText:'⚡ 观察中',time:'08:55'},
+  {em:'📕',action:'小红书监测：「六月鲜遵循自然」新增爆文3篇，互动量超均值180%，拉力信号增强',agent:'小红书种草棒',badge:'res-ok',badgeText:'✓ 记录',time:'08:30'},
+  {em:'🚗',action:'今日美顾任务派发：宝山区8名美顾，覆盖16家S+/S门店',agent:'Uber激励',badge:'res-ok',badgeText:'✓ 完成',time:'07:45'},
+  {em:'⚡',action:'生成今日战情简报，汇总24个Agent状态，推送企微完成',agent:'AIO总指挥',badge:'res-ok',badgeText:'✓ 完成',time:'07:02'},
+];
+
+function renderStream(items) {
+  const list = document.getElementById('streamList');
+  list.innerHTML = '';
+  items.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'si';
+    div.innerHTML = `
+      <div class="si-em">${s.em}</div>
+      <div class="si-body">
+        <div class="si-action">${s.action}</div>
+        <div class="si-meta">
+          by <span class="si-agent">${s.agent}</span>
+          <span class="si-badge ${s.badge}">${s.badgeText}</span>
+        </div>
+      </div>
+      <div class="si-time">${s.time}</div>`;
+    list.appendChild(div);
+  });
+}
+
+// 模拟实时新增动作
+const STREAM_NEW = [
+  {em:'📷',action:'长宁家乐福中山公园货架识别完成：六月鲜6排面，竞品3排，黄金位占67%',agent:'货架识别',badge:'res-ok',badgeText:'✓ 完成',time:'10:15'},
+  {em:'💎',action:'品牌AI顾问检测到味达美与六月鲜定价重叠风险，建议隔离策略，报告已生成',agent:'品牌AI顾问',badge:'res-warn',badgeText:'⚡ 待查看',time:'09:58'},
+];
+let streamAdded = 0;
+setInterval(() => {
+  if (streamAdded >= STREAM_NEW.length) return;
+  const s    = STREAM_NEW[streamAdded];
+  const list = document.getElementById('streamList');
+  const div  = document.createElement('div');
+  div.className = 'si';
+  div.innerHTML = `
+    <div class="si-em">${s.em}</div>
+    <div class="si-body">
+      <div class="si-action">${s.action}</div>
+      <div class="si-meta">by <span class="si-agent">${s.agent}</span>
+        <span class="si-badge ${s.badge}">${s.badgeText}</span></div>
+    </div>
+    <div class="si-time">${s.time}</div>`;
+  list.insertBefore(div, list.firstChild);
+  streamAdded++;
+  const ct = document.getElementById('streamCt');
+  ct.textContent = (parseInt(ct.textContent) + 1) + ' actions';
+}, 9000);
+
+// ── 铁律动作 ─────────────────────────────────────────────────
+function resolveIron() {
+  const banner = document.getElementById('ironBanner');
+  banner.innerHTML = `
+    <div class="ib-icon">✅</div>
+    <div class="ib-body">
+      <div class="ib-label">铁律③ · 已处置</div>
+      <div class="ib-title" style="color:var(--green)">宝仓贸易补货已暂停 · 2周后自动复查</div>
+      <div class="ib-desc">无菜单推单已暂停，蝴蝶效应Agent将在14天后重新计算消化率，达标后自动恢复推单。</div>
+    </div>`;
+  banner.style.borderColor = 'rgba(74,222,128,0.25)';
+  banner.style.background  = 'rgba(74,222,128,0.04)';
+  // TODO: POST /api/v1/node/action/205/approve
+}
+
+function drillIron() {
+  alert('溯源调查：已创建任务，蝴蝶效应Agent将分析IPO2-10链路数据并在30分钟内生成报告。');
+}
+
+// ── 指令中枢 ─────────────────────────────────────────────────
+async function sendCmd() {
+  const input = document.getElementById('cmdIn');
+  const q = input.value.trim(); if (!q) return;
+  input.value = '';
+  const resp = document.getElementById('cmdResp');
+  const qEl  = document.getElementById('cmdQ');
+  const aEl  = document.getElementById('cmdA');
+  resp.classList.add('show');
+  qEl.textContent = '⌘ ' + q;
+  const sys = `你是 INFINITY OS 指挥中台 AI。当前状态：上海r值达成78.4%，宝仓贸易铁律③触发（4.2a库存，消化率47.1%），黄浦1.2a待补货，长宁2.4a健康，宝山1.8a偏低。
+指令类型：行动指令→确认执行+效果；查询→数据+判断+建议。中文，不超过120字，直接给结论。`;
+  await callClaude(sys, q, aEl);
+}
+function closeCmd() { document.getElementById('cmdResp').classList.remove('show'); }
+document.getElementById('cmdIn').addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeCmd();
+});
+
+// ── 启动 ─────────────────────────────────────────────────────
+renderDecisions();
+renderHBGrid();
+renderBrands();
+renderStream(STREAM_INIT);
+</script>
+</body>
+</html>

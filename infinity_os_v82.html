@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · v8.2 · 一本账 + 年级P&L</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;
+  --card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(7,8,14,.96);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:52px;gap:10px;
+}
+.logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.logo-sym{
+  width:28px;height:28px;border-radius:7px;
+  background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000;
+}
+.logo-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.logo-name em{color:var(--amber);font-style:normal}
+.ver{font-size:9px;font-family:'Space Mono',monospace;color:var(--amber);
+  background:var(--amber-dim);border:1px solid rgba(245,166,35,.2);
+  padding:2px 7px;border-radius:10px}
+.topbar-center{flex:1;text-align:center;font-size:11px;color:var(--text3);
+  font-family:'Space Mono',monospace}
+.clock{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+
+/* ── TABS ── */
+.tabs{
+  display:flex;background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:0 16px;overflow-x:auto;scrollbar-width:none;position:sticky;top:52px;z-index:90;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  padding:12px 16px;font-size:12px;font-weight:600;color:var(--text3);
+  cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;
+  transition:all .2s;flex-shrink:0;
+}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--amber);border-bottom-color:var(--amber)}
+
+/* ── PAGE ── */
+.page{display:none;padding:14px 16px 80px;flex-direction:column;gap:12px}
+.page.active{display:flex}
+
+/* ── SECTION LABEL ── */
+.sec{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.09em;
+  text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── CONCEPT CARD ── */
+.concept{
+  background:linear-gradient(135deg,rgba(245,166,35,.06),rgba(9,9,15,1));
+  border:1px solid rgba(245,166,35,.18);border-radius:14px;padding:16px;
+}
+.concept-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+  color:var(--amber);margin-bottom:8px}
+.concept-body{font-size:12px;color:var(--text2);line-height:1.8}
+.concept-body strong{color:var(--text)}
+.formula-row{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin:12px 0;flex-wrap:wrap;
+}
+.f-box{
+  background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
+  padding:8px 14px;text-align:center;
+}
+.f-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
+.f-lbl{font-size:9px;color:var(--text3);margin-top:2px}
+.f-op{font-size:18px;color:var(--text3)}
+
+/* ── SLIDER CONTROLS ── */
+.ctrl-panel{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;
+}
+.ctrl-title{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:14px;
+  display:flex;align-items:center;gap:8px}
+.ctrl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:400px){.ctrl-grid{grid-template-columns:1fr}}
+.ctrl-item{}
+.ctrl-label{font-size:10px;color:var(--text3);margin-bottom:6px;
+  display:flex;justify-content:space-between;align-items:center}
+.ctrl-val{font-family:'Space Mono',monospace;color:var(--amber);font-weight:700}
+input[type=range]{
+  width:100%;height:4px;border-radius:2px;
+  background:rgba(255,255,255,.08);outline:none;cursor:pointer;
+  -webkit-appearance:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--amber);cursor:pointer;box-shadow:0 0 8px rgba(245,166,35,.4);
+}
+.ctrl-desc{font-size:10px;color:var(--text3);margin-top:5px}
+
+/* ── INCOME CARDS ── */
+.income-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(max-width:360px){.income-grid{grid-template-columns:1fr}}
+.income-card{
+  border-radius:14px;padding:16px;position:relative;overflow:hidden;
+}
+.income-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.ic-rep{background:rgba(78,205,196,.08);border:1px solid rgba(78,205,196,.2)}
+.ic-rep::before{background:var(--teal)}
+.ic-dist{background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.18)}
+.ic-dist::before{background:var(--amber)}
+.ic-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.ic-rep .ic-label{color:var(--teal)}
+.ic-dist .ic-label{color:var(--amber)}
+.ic-main{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1;margin-bottom:4px}
+.ic-sub{font-size:10px;color:var(--text3)}
+.ic-breakdown{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06)}
+.ic-row{display:flex;justify-content:space-between;align-items:center;
+  font-size:11px;color:var(--text2);margin-bottom:5px}
+.ic-row:last-child{margin-bottom:0}
+.ic-row-val{font-family:'Space Mono',monospace;font-weight:600}
+.ic-row-val.pos{color:var(--green)}
+.ic-row-val.neg{color:var(--red)}
+.ic-row-val.neu{color:var(--amber)}
+.ic-vs{
+  margin-top:10px;padding:6px 10px;border-radius:8px;font-size:10px;
+  display:flex;align-items:center;gap:6px;
+}
+.ic-vs.up{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.ic-vs.down{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+
+/* ── PEER COMPARISON ── */
+.peer-list{display:flex;flex-direction:column;gap:7px}
+.peer-row{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:10px 14px;display:flex;align-items:center;gap:10px;
+}
+.peer-row.self{border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.04)}
+.peer-rank{
+  width:22px;height:22px;border-radius:6px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:800;
+}
+.peer-rank.gold{background:rgba(245,166,35,.2);color:var(--amber)}
+.peer-rank.silver{background:rgba(255,255,255,.08);color:var(--text2)}
+.peer-rank.bronze{background:rgba(78,205,196,.12);color:var(--teal)}
+.peer-rank.self-r{background:rgba(245,166,35,.15);color:var(--amber);
+  border:1px solid rgba(245,166,35,.3)}
+.peer-info{flex:1;min-width:0}
+.peer-name{font-size:12px;font-weight:600}
+.peer-bar-wrap{height:4px;background:rgba(255,255,255,.06);border-radius:2px;
+  overflow:hidden;margin-top:5px}
+.peer-bar{height:100%;border-radius:2px;transition:width .6s ease}
+.peer-right{text-align:right;flex-shrink:0}
+.peer-income{font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
+.peer-r{font-size:10px;color:var(--text3);margin-top:2px;font-family:'Space Mono',monospace}
+.you-tag{font-size:9px;background:var(--amber-dim);color:var(--amber);
+  border:1px solid rgba(245,166,35,.2);padding:1px 6px;border-radius:6px;
+  font-family:'Space Mono',monospace;margin-left:6px}
+
+/* ── GRADE TABLE ── */
+.grade-table-wrap{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;
+}
+.grade-table-hdr{
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.grade-table-title{font-size:13px;font-weight:700}
+.grade-table-sub{font-size:10px;color:var(--text3)}
+table.gt{width:100%;border-collapse:collapse;font-size:12px}
+table.gt th{
+  padding:8px 12px;text-align:right;
+  font-size:9px;font-weight:700;color:var(--text3);
+  letter-spacing:.07em;text-transform:uppercase;
+  background:rgba(255,255,255,.02);border-bottom:1px solid var(--border);
+}
+table.gt th:first-child{text-align:left}
+table.gt td{
+  padding:10px 12px;text-align:right;
+  border-bottom:1px solid rgba(255,255,255,.025);
+  color:var(--text2);font-family:'Space Mono',monospace;font-size:11px;
+}
+table.gt td:first-child{text-align:left;font-family:'Noto Sans SC',sans-serif;font-size:12px}
+table.gt tr:last-child td{border-bottom:none}
+table.gt tr:hover td{background:rgba(255,255,255,.015)}
+table.gt .total-row td{
+  border-top:1px solid var(--border2);color:var(--text);font-weight:700;
+  background:rgba(255,255,255,.03);
+}
+.grade-chip{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 8px;
+  border-radius:8px;font-size:11px;font-weight:700;font-family:'Noto Sans SC',sans-serif;
+}
+.g1{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.g2{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.g3{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.g4{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.profit-pos{color:var(--green)}
+.profit-neg{color:var(--red)}
+.coeff-badge{font-size:9px;color:var(--text3);margin-left:3px}
+
+/* ── INSIGHT CARDS ── */
+.insight-grid{display:flex;flex-direction:column;gap:8px}
+.insight-card{
+  border-radius:12px;padding:13px 14px;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.insight-card.warn{background:rgba(255,95,95,.05);border:1px solid rgba(255,95,95,.2)}
+.insight-card.amber{background:rgba(245,166,35,.05);border:1px solid rgba(245,166,35,.18)}
+.insight-card.green{background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.18)}
+.insight-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.insight-body{}
+.insight-title{font-size:12px;font-weight:700;margin-bottom:4px}
+.insight-desc{font-size:11px;color:var(--text2);line-height:1.6}
+.insight-card.warn .insight-title{color:var(--red)}
+.insight-card.amber .insight-title{color:var(--amber)}
+.insight-card.green .insight-title{color:var(--green)}
+
+/* ── AI CHAT ── */
+.ai-wrap{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.ai-hdr{padding:10px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;
+  color:var(--text3);letter-spacing:.07em;text-transform:uppercase}
+.ai-chips{display:flex;gap:5px;padding:8px 12px;overflow-x:auto;scrollbar-width:none}
+.ai-chips::-webkit-scrollbar{display:none}
+.chip{background:var(--bg3);border:1px solid var(--border);border-radius:14px;
+  padding:4px 10px;font-size:11px;color:var(--text2);white-space:nowrap;
+  cursor:pointer;transition:all .15s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.chip:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+.ai-bubble{margin:0 12px 8px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text2);line-height:1.65}
+.ai-resp{display:none;margin:0 12px 8px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.ai-resp.show{display:block}
+.ai-q{font-size:10px;color:var(--text3);margin-bottom:6px;padding-bottom:6px;
+  border-bottom:1px solid var(--border)}
+.ai-input-row{display:flex;gap:6px;padding:6px 12px 10px}
+.ai-in{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;
+  padding:8px 11px;font-size:12px;color:var(--text);outline:none;
+  font-family:'Noto Sans SC',sans-serif}
+.ai-in:focus{border-color:rgba(245,166,35,.4)}
+.ai-in::placeholder{color:var(--text3)}
+.ai-send{width:36px;height:36px;border-radius:9px;background:var(--amber);border:none;
+  cursor:pointer;font-size:14px;flex-shrink:0;transition:all .15s}
+.ai-send:hover{background:var(--amber2);transform:scale(1.05)}
+.td-wrap{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:tda 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tda{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* ── WATERFALL CHART ── */
+.waterfall{display:flex;flex-direction:column;gap:5px}
+.wf-row{display:flex;align-items:center;gap:8px}
+.wf-label{font-size:11px;color:var(--text2);width:90px;flex-shrink:0;text-align:right}
+.wf-bar-wrap{flex:1;height:28px;position:relative;background:rgba(255,255,255,.03);border-radius:4px;overflow:hidden}
+.wf-bar{height:100%;border-radius:4px;position:absolute;display:flex;align-items:center;padding:0 8px;
+  font-family:'Space Mono',monospace;font-size:10px;font-weight:700;white-space:nowrap;
+  transition:width .7s ease;min-width:30px;}
+.wf-val{font-family:'Space Mono',monospace;font-size:11px;width:72px;flex-shrink:0;text-align:right}
+.wf-divider{height:1px;background:var(--border);margin:4px 0}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-sym">∞</div>
+    <div class="logo-name">INFINITY <em>OS</em></div>
+    <div class="ver">v8.2</div>
+  </div>
+  <div class="topbar-center">一本账 · 年级P&amp;L</div>
+  <div class="clock" id="clock"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('account')">💰 一本账</div>
+  <div class="tab" onclick="switchTab('grade')">📊 年级P&amp;L</div>
+  <div class="tab" onclick="switchTab('peer')">👥 关系对比</div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- TAB 1: 一本账                                    -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="page active" id="page-account">
+
+  <!-- 概念说明 -->
+  <div class="concept">
+    <div class="concept-title">一本账 · 核心逻辑</div>
+    <div class="concept-body">
+      员工收入、经销商收入、关系对比，<strong>三者来自同一个 r 值</strong>。r 值上升，所有人同时受益；r 值下降，所有人同时感受到压力。这是推拉双引擎的激励内核。
+    </div>
+    <div class="formula-row">
+      <div class="f-box">
+        <div class="f-val" style="color:var(--teal)">r实际</div>
+        <div class="f-lbl">实际日销率</div>
+      </div>
+      <div class="f-op">÷</div>
+      <div class="f-box">
+        <div class="f-val" style="color:var(--text2)">r目标</div>
+        <div class="f-lbl">目标日销率</div>
+      </div>
+      <div class="f-op">=</div>
+      <div class="f-box">
+        <div class="f-val" style="color:var(--amber)" id="fAch">78%</div>
+        <div class="f-lbl">达成率</div>
+      </div>
+      <div class="f-op">×</div>
+      <div class="f-box">
+        <div class="f-val" style="color:var(--purple)" id="fCoeff">×1.5</div>
+        <div class="f-lbl">年级系数</div>
+      </div>
+      <div class="f-op">=</div>
+      <div class="f-box" style="border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.06)">
+        <div class="f-val" style="color:var(--amber)" id="fResult">117%</div>
+        <div class="f-lbl">激励系数</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 参数控制 -->
+  <div class="ctrl-panel">
+    <div class="ctrl-title">📐 参数调节 · 实时计算</div>
+    <div class="ctrl-grid">
+      <div class="ctrl-item">
+        <div class="ctrl-label">r达成率 <span class="ctrl-val" id="v-ach">78%</span></div>
+        <input type="range" id="sl-ach" min="40" max="150" value="78" oninput="compute()">
+        <div class="ctrl-desc">实际r ÷ 目标r · 来自汉询数据</div>
+      </div>
+      <div class="ctrl-item">
+        <div class="ctrl-label">SKU年级 <span class="ctrl-val" id="v-grade">年级2</span></div>
+        <input type="range" id="sl-grade" min="1" max="4" step="1" value="2" oninput="compute()">
+        <div class="ctrl-desc">年级1=×2.0 / 2=×1.5 / 3=×1.0 / 4=×0.7</div>
+      </div>
+      <div class="ctrl-item">
+        <div class="ctrl-label">业务员基础月薪 <span class="ctrl-val" id="v-base">¥8,000</span></div>
+        <input type="range" id="sl-base" min="5000" max="20000" step="500" value="8000" oninput="compute()">
+        <div class="ctrl-desc">固定部分，不受r影响</div>
+      </div>
+      <div class="ctrl-item">
+        <div class="ctrl-label">经销商进货量 <span class="ctrl-val" id="v-qty">120件</span></div>
+        <input type="range" id="sl-qty" min="60" max="500" step="10" value="120" oninput="compute()">
+        <div class="ctrl-desc">本月a值 · 心跳单元</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 收入结果 -->
+  <div class="sec" style="margin:0">收入计算结果</div>
+  <div class="income-grid">
+    <!-- 业务员 -->
+    <div class="income-card ic-rep">
+      <div class="ic-label">👔 业务员月收入</div>
+      <div class="ic-main" id="repTotal" style="color:var(--teal)">¥12,480</div>
+      <div class="ic-sub">= 基薪 + 激励</div>
+      <div class="ic-breakdown">
+        <div class="ic-row">
+          <span>基础月薪</span>
+          <span class="ic-row-val neu" id="repBase">¥8,000</span>
+        </div>
+        <div class="ic-row">
+          <span>动销激励</span>
+          <span class="ic-row-val pos" id="repBonus">+¥4,480</span>
+        </div>
+        <div class="ic-row">
+          <span>激励池 × 系数</span>
+          <span class="ic-row-val neu" id="repFormula">¥2,000 × 2.24</span>
+        </div>
+      </div>
+      <div class="ic-vs up" id="repVs">↑ 高于地区均值 ¥1,920</div>
+    </div>
+    <!-- 经销商 -->
+    <div class="income-card ic-dist">
+      <div class="ic-label">🤝 经销商月净收入</div>
+      <div class="ic-main" id="distTotal" style="color:var(--amber)">¥18,720</div>
+      <div class="ic-sub">= 进货利差 + 动销奖励</div>
+      <div class="ic-breakdown">
+        <div class="ic-row">
+          <span>进货利差</span>
+          <span class="ic-row-val pos" id="distMargin">+¥14,400</span>
+        </div>
+        <div class="ic-row">
+          <span>动销达成奖励</span>
+          <span class="ic-row-val pos" id="distBonus">+¥4,320</span>
+        </div>
+        <div class="ic-row">
+          <span>库存占用成本</span>
+          <span class="ic-row-val neg" id="distCost">-¥0</span>
+        </div>
+      </div>
+      <div class="ic-vs up" id="distVs">↑ 高于同级经销商均值 ¥3,200</div>
+    </div>
+  </div>
+
+  <!-- 瀑布图：r变化影响 -->
+  <div class="sec" style="margin:4px 0 0">r值变化对收入的影响</div>
+  <div class="grade-table-wrap">
+    <div class="grade-table-hdr">
+      <div class="grade-title" style="font-size:13px;font-weight:700">r达成率 → 业务员月收入对照表</div>
+      <div class="grade-table-sub">年级2 · 基薪¥8,000 · 激励池¥2,000</div>
+    </div>
+    <div style="padding:14px">
+      <div class="waterfall" id="waterfallChart"></div>
+    </div>
+  </div>
+
+  <!-- AI 对话 -->
+  <div class="sec" style="margin:4px 0 0">一本账 AI 解读</div>
+  <div class="ai-wrap">
+    <div class="ai-hdr">💰 一本账 Agent</div>
+    <div class="ai-chips">
+      <div class="chip" onclick="askAccount('当前r达成78%，业务员能拿多少？比地区均值高多少？')">业务员实际收入？</div>
+      <div class="chip" onclick="askAccount('如果r达成率从78%提升到90%，业务员和经销商各多赚多少？')">提升r值收益测算</div>
+      <div class="chip" onclick="askAccount('一本账系统如何保证员工和经销商利益方向一致？')">激励对齐逻辑</div>
+      <div class="chip" onclick="askAccount('年级2的SKU为什么激励系数是×1.5？与年级3有什么区别？')">年级系数的意义</div>
+    </div>
+    <div class="ai-bubble">你好，我是一本账 Agent。基于当前 r 值和年级设置，我可以实时计算收入并解释激励逻辑。</div>
+    <div class="ai-resp" id="accountResp">
+      <div class="ai-q" id="accountQ"></div>
+      <div id="accountA"></div>
+    </div>
+    <div class="ai-input-row">
+      <input class="ai-in" id="accountIn" placeholder="问一本账问题…"
+        onkeydown="if(event.key==='Enter')askAccount(this.value,this)"/>
+      <button class="ai-send"
+        onclick="askAccount(document.getElementById('accountIn').value,document.getElementById('accountIn'))">↑</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- TAB 2: 年级P&L                                  -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="page" id="page-grade">
+
+  <div class="concept">
+    <div class="concept-title">年级P&amp;L · 设计逻辑</div>
+    <div class="concept-body">
+      年级不是SKU的固定属性，是<strong>投入策略的信号</strong>。年级1新品用高激励系数（×2.0）换渗透率，年级3成熟品用低系数（×1.0）收获利润。P&amp;L视图让管理者看清：哪些年级在补贴哪些年级，整体是否健康。
+    </div>
+  </div>
+
+  <!-- 年级P&L总表 -->
+  <div class="grade-table-wrap">
+    <div class="grade-table-hdr">
+      <div>
+        <div class="grade-table-title">六月鲜 · 全国年级P&amp;L · 2025年实际</div>
+        <div class="grade-table-sub">数据来源：v781 SPEC_DATA · 单位：万元</div>
+      </div>
+    </div>
+    <table class="gt">
+      <thead>
+        <tr>
+          <th>年级</th>
+          <th>收入</th>
+          <th>利润</th>
+          <th>费用率</th>
+          <th>激励系数</th>
+          <th>SKU数</th>
+          <th>状态</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="grade-chip g1">年级1 · 新品</span></td>
+          <td>533</td>
+          <td class="profit-neg">-127</td>
+          <td style="color:var(--red)">123.9%</td>
+          <td style="color:var(--green)">×2.0</td>
+          <td>1</td>
+          <td><span style="color:var(--teal);font-size:10px">引入投入期</span></td>
+        </tr>
+        <tr>
+          <td><span class="grade-chip g2">年级2 · 成长</span></td>
+          <td>8,926</td>
+          <td class="profit-neg">-1,534</td>
+          <td style="color:var(--red)">117.2%</td>
+          <td style="color:var(--amber)">×1.5</td>
+          <td>18</td>
+          <td><span style="color:var(--amber);font-size:10px">加速但亏损</span></td>
+        </tr>
+        <tr>
+          <td><span class="grade-chip g3">年级3 · 成熟</span></td>
+          <td>11,473</td>
+          <td class="profit-pos">+613</td>
+          <td style="color:var(--green)">94.7%</td>
+          <td style="color:var(--blue)">×1.0</td>
+          <td>22</td>
+          <td><span style="color:var(--green);font-size:10px">健康盈利</span></td>
+        </tr>
+        <tr>
+          <td><span class="grade-chip g4">年级4 · 特级</span></td>
+          <td>5,470</td>
+          <td class="profit-neg">-868</td>
+          <td style="color:var(--red)">115.9%</td>
+          <td style="color:var(--purple)">×0.7</td>
+          <td>9</td>
+          <td><span style="color:var(--red);font-size:10px">旗舰商品化</span></td>
+        </tr>
+        <tr class="total-row">
+          <td>合计</td>
+          <td>26,402</td>
+          <td class="profit-neg">-1,916</td>
+          <td style="color:var(--red)">107.2%</td>
+          <td>—</td>
+          <td>50</td>
+          <td><span style="color:var(--red);font-size:10px">整体亏损</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 可视化：年级利润瀑布 -->
+  <div class="sec" style="margin:4px 0 0">年级利润结构 · 可视化</div>
+  <div class="grade-table-wrap">
+    <div style="padding:16px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px;font-family:'Space Mono',monospace">
+        年级3（成熟期）是唯一盈利年级，补贴其他年级的亏损
+      </div>
+      <div class="waterfall" id="gradeWaterfall"></div>
+    </div>
+  </div>
+
+  <!-- 洞察 -->
+  <div class="sec" style="margin:4px 0 0">关键洞察</div>
+  <div class="insight-grid">
+    <div class="insight-card warn">
+      <div class="insight-icon">🚨</div>
+      <div class="insight-body">
+        <div class="insight-title">年级4特级品商品化失控</div>
+        <div class="insight-desc">特级系列费用率115.9%、亏损868万，激励系数×0.7是四个年级中最低，但市场端价格被持续压低。旗舰品的溢价能力正在崩塌——这不是年级系统的问题，是IPO10价格管控的失效。</div>
+      </div>
+    </div>
+    <div class="insight-card warn">
+      <div class="insight-icon">⚠️</div>
+      <div class="insight-body">
+        <div class="insight-title">年级2「遵循自然」烧钱速度超预期</div>
+        <div class="insight-desc">年级2的激励系数×1.5设计的初衷是加速成长，但遵循自然的消化率46.6%说明渠道在压货而非真实销售。高激励+压货 = 渠道赚钱+公司亏损+消费者不买单，必须与铁律③联动。</div>
+      </div>
+    </div>
+    <div class="insight-card green">
+      <div class="insight-icon">✅</div>
+      <div class="insight-body">
+        <div class="insight-title">年级3红烧系列是真正的现金奶牛</div>
+        <div class="insight-desc">22个SKU、费用率94.7%、利润+613万，是唯一在补贴全系亏损的年级。战略重点应是保护红烧系列的健康度，不要过度促销干扰其自然消化节奏。</div>
+      </div>
+    </div>
+    <div class="insight-card amber">
+      <div class="insight-icon">💡</div>
+      <div class="insight-body">
+        <div class="insight-title">年级系统的正确使用方式</div>
+        <div class="insight-desc">年级2→3的毕业条件应该是「消化率连续3月≥75%且费用率≤100%」，不是简单的销售额门槛。当前遵循自然消化率47%，不应继续享受×1.5激励，建议触发年级降级评审。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI -->
+  <div class="sec" style="margin:4px 0 0">年级P&amp;L AI 分析</div>
+  <div class="ai-wrap">
+    <div class="ai-hdr">📊 年级P&amp;L Agent</div>
+    <div class="ai-chips">
+      <div class="chip" onclick="askGrade('遵循自然消化率46.6%，年级2的×1.5激励系数是否应该暂停？')">遵循自然年级评审</div>
+      <div class="chip" onclick="askGrade('特级品年级4费用率115.9%，如何在不调价的情况下改善P&L？')">特级品P&L改善</div>
+      <div class="chip" onclick="askGrade('如果年级2所有SKU消化率提升到75%，全国P&L会改善多少？')">消化率提升测算</div>
+      <div class="chip" onclick="askGrade('年级3红烧系列如何在保持盈利的同时加速增长？')">红烧系列增长策略</div>
+    </div>
+    <div class="ai-bubble">你好，我是年级P&L Agent。基于2025年全国数据，我可以分析年级结构和P&L改善路径。</div>
+    <div class="ai-resp" id="gradeResp">
+      <div class="ai-q" id="gradeQ"></div>
+      <div id="gradeA"></div>
+    </div>
+    <div class="ai-input-row">
+      <input class="ai-in" id="gradeIn" placeholder="问年级P&L问题…"
+        onkeydown="if(event.key==='Enter')askGrade(this.value,this)"/>
+      <button class="ai-send"
+        onclick="askGrade(document.getElementById('gradeIn').value,document.getElementById('gradeIn'))">↑</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- TAB 3: 关系对比                                  -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="page" id="page-peer">
+
+  <div class="concept">
+    <div class="concept-title">关系对比 · 可见性即动力</div>
+    <div class="concept-body">
+      每个业务员和经销商都能看到自己在同类中的排名和收入差距。<strong>不是排名羞辱，是信息透明</strong>。看到Top 1比自己多赚¥3,200/月，比任何培训都更有驱动力。
+    </div>
+  </div>
+
+  <!-- 业务员排名 -->
+  <div class="sec" style="margin:0">上海区 · 业务员月收入排名</div>
+  <div class="peer-list" id="repRanking"></div>
+
+  <!-- 经销商排名 -->
+  <div class="sec" style="margin:8px 0 0">上海区 · 经销商月净收入排名</div>
+  <div class="peer-list" id="distRanking"></div>
+
+  <!-- AI -->
+  <div class="sec" style="margin:8px 0 0">关系对比 AI 解读</div>
+  <div class="ai-wrap">
+    <div class="ai-hdr">👥 关系对比 Agent</div>
+    <div class="ai-chips">
+      <div class="chip" onclick="askPeer('我的r达成78%，在上海区排第几？还差多少能进Top3？')">我的排名分析</div>
+      <div class="chip" onclick="askPeer('第1名和第5名的收入差距是多少？差距的根本原因是什么？')">头尾差距分析</div>
+      <div class="chip" onclick="askPeer('如果我把r达成率提升10个百分点，月收入能增加多少？')">收入提升测算</div>
+    </div>
+    <div class="ai-bubble">你好，我是关系对比 Agent。你可以查看自己相对于同类的排名和收入差距。</div>
+    <div class="ai-resp" id="peerResp">
+      <div class="ai-q" id="peerQ"></div>
+      <div id="peerA"></div>
+    </div>
+    <div class="ai-input-row">
+      <input class="ai-in" id="peerIn" placeholder="问关系对比问题…"
+        onkeydown="if(event.key==='Enter')askPeer(this.value,this)"/>
+      <button class="ai-send"
+        onclick="askPeer(document.getElementById('peerIn').value,document.getElementById('peerIn'))">↑</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── 时钟 ─────────────────────────────────────────────
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.getHours().toString().padStart(2,'0')+':'+
+    n.getMinutes().toString().padStart(2,'0');
+}
+tick();setInterval(tick,1000);
+
+// ── Tab 切换 ──────────────────────────────────────────
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('page-'+id).classList.add('active');
+  window.scrollTo(0,52);
+}
+
+// ── 年级系数查表 ─────────────────────────────────────
+const GRADE_COEFFS = {1:2.0, 2:1.5, 3:1.0, 4:0.7};
+const GRADE_NAMES  = {1:'年级1·新品', 2:'年级2·成长', 3:'年级3·成熟', 4:'年级4·特级'};
+
+// ── 核心计算引擎 ──────────────────────────────────────
+function compute(){
+  const ach   = parseInt(document.getElementById('sl-ach').value);
+  const grade = parseInt(document.getElementById('sl-grade').value);
+  const base  = parseInt(document.getElementById('sl-base').value);
+  const qty   = parseInt(document.getElementById('sl-qty').value);
+
+  const coeff    = GRADE_COEFFS[grade];
+  const achDec   = ach / 100;
+  const incentivePool = 2000;           // 激励池基础金额
+  const incentiveMult = achDec * coeff;
+
+  // 业务员收入
+  const repBonus = Math.round(incentivePool * incentiveMult);
+  const repTotal = base + repBonus;
+  const repAvg   = base + Math.round(incentivePool * 0.85 * coeff);
+  const repDiff  = repTotal - repAvg;
+
+  // 经销商收入 (简化模型: 进货利差 ¥120/件 + 达成奖励)
+  const unitMargin  = 120;
+  const distMargin  = qty * unitMargin;
+  const distBonus   = Math.round(distMargin * achDec * 0.30);
+  const distCost    = ach >= 80 ? 0 : Math.round((qty * 3) * (80 - ach) / 100 * 20);
+  const distTotal   = distMargin + distBonus - distCost;
+  const distAvg     = distTotal - 3200;
+
+  // 更新 UI
+  document.getElementById('v-ach').textContent    = ach + '%';
+  document.getElementById('v-grade').textContent  = GRADE_NAMES[grade];
+  document.getElementById('v-base').textContent   = '¥' + base.toLocaleString();
+  document.getElementById('v-qty').textContent    = qty + '件';
+
+  document.getElementById('fAch').textContent    = ach + '%';
+  document.getElementById('fCoeff').textContent  = '×' + coeff;
+  document.getElementById('fResult').textContent = (achDec * coeff * 100).toFixed(0) + '%';
+
+  document.getElementById('repTotal').textContent  = '¥' + repTotal.toLocaleString();
+  document.getElementById('repBase').textContent   = '¥' + base.toLocaleString();
+  document.getElementById('repBonus').textContent  = '+¥' + repBonus.toLocaleString();
+  document.getElementById('repFormula').textContent= '¥' + incentivePool.toLocaleString() + ' × ' + incentiveMult.toFixed(2);
+  const repVsEl = document.getElementById('repVs');
+  repVsEl.textContent = (repDiff >= 0 ? '↑ 高于地区均值 ¥' : '↓ 低于地区均值 ¥') + Math.abs(repDiff).toLocaleString();
+  repVsEl.className   = 'ic-vs ' + (repDiff >= 0 ? 'up' : 'down');
+
+  document.getElementById('distTotal').textContent = '¥' + distTotal.toLocaleString();
+  document.getElementById('distMargin').textContent= '+¥' + distMargin.toLocaleString();
+  document.getElementById('distBonus').textContent = '+¥' + distBonus.toLocaleString();
+  document.getElementById('distCost').textContent  = '-¥' + distCost.toLocaleString();
+  const distVsEl = document.getElementById('distVs');
+  distVsEl.textContent = '↑ 高于同级经销商均值 ¥3,200';
+  distVsEl.className = 'ic-vs up';
+
+  renderWaterfall(base, grade);
+}
+
+// ── r达成率 → 收入瀑布 ───────────────────────────────
+function renderWaterfall(base, grade){
+  const coeff = GRADE_COEFFS[grade];
+  const pool  = 2000;
+  const levels = [
+    {ach:60,  label:'r=60%'},
+    {ach:70,  label:'r=70%'},
+    {ach:80,  label:'r=80%'},
+    {ach:90,  label:'r=90%'},
+    {ach:100, label:'r=100%'},
+    {ach:120, label:'r=120%'},
+  ];
+  const max = base + Math.round(pool * 1.2 * coeff);
+  const chart = document.getElementById('waterfallChart');
+  chart.innerHTML = '';
+  levels.forEach(l => {
+    const total = base + Math.round(pool * (l.ach/100) * coeff);
+    const pct   = Math.round(total / max * 100);
+    const color = l.ach >= 90 ? 'var(--green)' : l.ach >= 70 ? 'var(--amber)' : 'var(--red)';
+    chart.innerHTML += `
+    <div class="wf-row">
+      <div class="wf-label">${l.label}</div>
+      <div class="wf-bar-wrap">
+        <div class="wf-bar" style="width:${pct}%;background:${color}18;border:1px solid ${color}40;color:${color}">
+          ¥${total.toLocaleString()}
+        </div>
+      </div>
+      <div class="wf-val" style="color:${color}">¥${total.toLocaleString()}</div>
+    </div>`;
+  });
+}
+
+// ── 年级P&L瀑布图 ────────────────────────────────────
+function renderGradeWaterfall(){
+  const data = [
+    {label:'年级3·成熟', val:613,   color:'var(--green)'},
+    {label:'年级2·成长', val:-1534, color:'var(--red)'},
+    {label:'年级4·特级', val:-868,  color:'var(--red)'},
+    {label:'年级1·新品', val:-127,  color:'var(--amber)'},
+    {label:'合计', val:-1916, color:'var(--red)', isTotal:true},
+  ];
+  const maxAbs = Math.max(...data.map(d=>Math.abs(d.val)));
+  const chart  = document.getElementById('gradeWaterfall');
+  chart.innerHTML = '';
+  data.forEach((d,i) => {
+    if(d.isTotal && i>0) chart.innerHTML += '<div class="wf-divider"></div>';
+    const pct   = Math.round(Math.abs(d.val) / maxAbs * 85);
+    const label = (d.val >= 0 ? '+' : '') + d.val.toLocaleString() + '万';
+    chart.innerHTML += `
+    <div class="wf-row">
+      <div class="wf-label">${d.label}</div>
+      <div class="wf-bar-wrap">
+        <div class="wf-bar" style="width:${pct}%;background:${d.color}18;border:1px solid ${d.color}40;color:${d.color}">
+          ${label}
+        </div>
+      </div>
+      <div class="wf-val" style="color:${d.color}">${label}</div>
+    </div>`;
+  });
+}
+
+// ── 关系对比数据 ──────────────────────────────────────
+const REP_RANKING = [
+  {name:'陈勇（闵行）', rAch:95, income:14800, self:false},
+  {name:'王磊（长宁）', rAch:91, income:13760, self:false},
+  {name:'刘芳（宝山）', rAch:82, income:12240, self:false},
+  {name:'张伟（浦东）', rAch:78, income:11480, self:true},  // 当前用户
+  {name:'李娜（黄浦）', rAch:74, income:10880, self:false},
+];
+const DIST_RANKING = [
+  {name:'闵行·陈勇代理',  rAch:95, income:24600, self:false},
+  {name:'长宁·王磊代理',  rAch:91, income:22800, self:false},
+  {name:'黄浦·李娜代理',  rAch:82, income:19400, self:false},
+  {name:'宝山·刘芳代理',  rAch:78, income:18720, self:true},  // 当前用户
+  {name:'浦东·宝仓贸易',  rAch:47, income:9200,  self:false},
+];
+
+function renderRankings(){
+  [
+    {data:REP_RANKING,  el:'repRanking',  unit:'月收入'},
+    {data:DIST_RANKING, el:'distRanking', unit:'月净收入'},
+  ].forEach(({data,el,unit}) => {
+    const maxIncome = data[0].income;
+    document.getElementById(el).innerHTML = data.map((p,i) => {
+      const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':p.self?'self-r':'silver';
+      const rankTxt   = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'';
+      const barPct    = Math.round(p.income/maxIncome*100);
+      const barColor  = p.self?'var(--amber)':i<=2?'var(--green)':'var(--blue)';
+      const diff      = p.income - data.find(d=>d.self)?.income;
+      return `
+      <div class="peer-row ${p.self?'self':''}">
+        <div class="peer-rank ${rankClass}">${rankTxt}</div>
+        <div class="peer-info">
+          <div class="peer-name">
+            ${p.name}${p.self?'<span class="you-tag">你</span>':''}
+            ${!p.self&&diff!==0?`<span style="font-size:10px;color:${diff>0?'var(--green)':'var(--red)'}">
+              ${diff>0?'↑+':'↓'}¥${Math.abs(diff).toLocaleString()}</span>`:''}
+          </div>
+          <div class="peer-bar-wrap">
+            <div class="peer-bar" style="width:${barPct}%;background:${barColor}40;border-right:2px solid ${barColor}"></div>
+          </div>
+        </div>
+        <div class="peer-right">
+          <div class="peer-income" style="color:${p.self?'var(--amber)':barColor}">¥${p.income.toLocaleString()}</div>
+          <div class="peer-r">r达成 ${p.rAch}%</div>
+        </div>
+      </div>`;
+    }).join('');
+  });
+}
+
+// ── 唯一 AI 函数 ─────────────────────────────────────
+async function callClaude(sys, q, aEl){
+  aEl.innerHTML='<div class="td-wrap"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:sys,messages:[{role:'user',content:q}]})
+    });
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'—'}</div>`;
+  }catch(e){
+    aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`;
+  }
+}
+
+async function askAccount(q, inputEl){
+  if(!q||!q.trim())return;
+  if(inputEl instanceof HTMLElement) inputEl.value='';
+  const ach=document.getElementById('sl-ach').value;
+  const grade=document.getElementById('sl-grade').value;
+  const base=document.getElementById('sl-base').value;
+  document.getElementById('accountResp').classList.add('show');
+  document.getElementById('accountQ').textContent='❓ '+q;
+  const sys=`你是 INFINITY OS 一本账 Agent。当前参数：r达成率=${ach}%，SKU年级=${grade}（激励系数×${GRADE_COEFFS[grade]}），基础月薪=¥${parseInt(base).toLocaleString()}，激励池=¥2,000。
+一本账核心逻辑：激励收入 = 激励池 × (r达成率) × 年级系数。用中文简洁回答，含具体数字，不超过150字。`;
+  await callClaude(sys, q, document.getElementById('accountA'));
+}
+
+async function askGrade(q, inputEl){
+  if(!q||!q.trim())return;
+  if(inputEl instanceof HTMLElement) inputEl.value='';
+  document.getElementById('gradeResp').classList.add('show');
+  document.getElementById('gradeQ').textContent='❓ '+q;
+  const sys=`你是 INFINITY OS 年级P&L Agent。2025年全国数据：年级1亏损127万费率123.9%，年级2亏损1534万费率117.2%（主因遵循自然消化率46.6%），年级3盈利613万费率94.7%，年级4亏损868万费率115.9%。整体亏损1916万。激励系数：年级1×2.0，年级2×1.5，年级3×1.0，年级4×0.7。用中文简洁回答，含具体数字，不超过150字。`;
+  await callClaude(sys, q, document.getElementById('gradeA'));
+}
+
+async function askPeer(q, inputEl){
+  if(!q||!q.trim())return;
+  if(inputEl instanceof HTMLElement) inputEl.value='';
+  document.getElementById('peerResp').classList.add('show');
+  document.getElementById('peerQ').textContent='❓ '+q;
+  const sys=`你是 INFINITY OS 关系对比 Agent。上海区业务员排名：1陈勇r95%¥14800，2王磊r91%¥13760，3刘芳r82%¥12240，4张伟r78%¥11480（当前用户），5李娜r74%¥10880。经销商排名（按净收入）：1闵行¥24600，2长宁¥22800，3黄浦¥19400，4宝山¥18720，5浦东宝仓¥9200（铁律③触发）。用中文简洁回答，不超过120字。`;
+  await callClaude(sys, q, document.getElementById('peerA'));
+}
+
+// ── 启动 ─────────────────────────────────────────────
+compute();
+renderGradeWaterfall();
+renderRankings();
+</script>
+</body>
+</html>

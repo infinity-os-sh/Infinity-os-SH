@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 欣和SH · 指挥中台</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;
+  --card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── HERO ── */
+.hero{
+  position:relative;padding:40px 20px 32px;text-align:center;overflow:hidden;
+  background:radial-gradient(ellipse 80% 60% at 50% -20%,rgba(245,166,35,0.07),transparent);
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.015) 40px),
+             repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.015) 40px);
+  pointer-events:none;
+}
+.hero-sym{
+  width:64px;height:64px;border-radius:18px;margin:0 auto 16px;
+  background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:#000;
+  box-shadow:0 0 40px rgba(245,166,35,0.3),0 0 80px rgba(245,166,35,0.1);
+  position:relative;z-index:1;
+}
+.hero-title{
+  font-family:'Syne',sans-serif;font-size:32px;font-weight:800;
+  margin-bottom:6px;position:relative;z-index:1;letter-spacing:-.01em;
+}
+.hero-title em{color:var(--amber);font-style:normal}
+.hero-brand{
+  font-size:13px;color:var(--text2);margin-bottom:16px;
+  font-family:'Space Mono',monospace;position:relative;z-index:1;
+}
+.hero-pills{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1;margin-bottom:24px}
+.pill{
+  font-size:10px;font-family:'Space Mono',monospace;padding:4px 10px;border-radius:20px;
+  border:1px solid;letter-spacing:.05em;
+}
+.pill-green{color:var(--green);border-color:rgba(74,222,128,.3);background:var(--green-dim)}
+.pill-amber{color:var(--amber);border-color:rgba(245,166,35,.3);background:var(--amber-dim)}
+.pill-blue{color:var(--blue);border-color:rgba(96,165,250,.3);background:var(--blue-dim)}
+.pill-teal{color:var(--teal);border-color:rgba(78,205,196,.3);background:var(--teal-dim)}
+
+/* LIVE status bar */
+.status-bar{
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  padding:10px 20px;background:rgba(255,255,255,.02);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  overflow-x:auto;scrollbar-width:none;
+}
+.status-bar::-webkit-scrollbar{display:none}
+.sb-item{display:flex;align-items:center;gap:6px;flex-shrink:0;font-size:11px;color:var(--text3)}
+.sb-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sb-dot.live{background:var(--green);box-shadow:0 0 7px var(--green);animation:pip 2s infinite}
+.sb-dot.mock{background:var(--amber);animation:pip 3s infinite}
+.sb-dot.pending{background:var(--text3)}
+@keyframes pip{0%,100%{opacity:1}50%{opacity:.3}}
+.sb-sep{color:rgba(255,255,255,.08)}
+
+/* ── MAIN ── */
+.main{padding:20px 16px 80px;max-width:900px;margin:0 auto}
+
+/* ── SYSTEM STATUS ── */
+.sys-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+@media(max-width:400px){.sys-grid{grid-template-columns:repeat(2,1fr)}}
+.sys-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 10px;text-align:center}
+.sys-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1}
+.sys-lbl{font-size:9px;color:var(--text3);margin-top:4px;line-height:1.3}
+
+/* ── SECTION ── */
+.sec{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec .badge{font-size:9px;padding:1px 7px;border-radius:8px;font-family:'Space Mono',monospace}
+
+/* ── MODULE GRID ── */
+.module-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
+@media(min-width:600px){.module-grid{grid-template-columns:repeat(3,1fr)}}
+
+.module-card{
+  border-radius:16px;padding:18px 16px;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+  position:relative;overflow:hidden;min-height:140px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  border:1px solid rgba(255,255,255,.06);
+  text-decoration:none;color:inherit;
+}
+.module-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.module-card:active{transform:scale(.97)}
+.mc-status{
+  position:absolute;top:12px;right:12px;
+  font-size:8px;font-family:'Space Mono',monospace;padding:2px 7px;border-radius:8px;
+}
+.mcs-live{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.mcs-mock{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.mcs-tool{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.mcs-doc{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.mc-icon{font-size:28px;margin-bottom:8px}
+.mc-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:3px}
+.mc-sub{font-size:10px;opacity:.55;line-height:1.4}
+.mc-ver{font-size:9px;font-family:'Space Mono',monospace;margin-top:8px;opacity:.5}
+.mc-arrow{position:absolute;bottom:12px;right:14px;font-size:16px;opacity:.3}
+
+/* card backgrounds */
+.gc-home{background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)}
+.gc-brief{background:linear-gradient(135deg,#0d1520,#152030,#0d2040)}
+.gc-account{background:linear-gradient(135deg,#1a100a,#2d1a08,#1a1205)}
+.gc-butterfly{background:linear-gradient(135deg,#1a0808,#2d0e0e,#200808)}
+.gc-prism{background:linear-gradient(135deg,#0a1020,#0f1830,#0a1525)}
+.gc-finance{background:linear-gradient(135deg,#0a1a0a,#102010,#0a1a08)}
+.gc-targets{background:linear-gradient(135deg,#10100a,#1a1a08,#181800)}
+.gc-schema{background:linear-gradient(135deg,#0e0a18,#180f28,#130a20)}
+.gc-api{background:linear-gradient(135deg,#0a0d18,#101525,#0a1020)}
+
+/* ── DATA PIPELINE ── */
+.pipeline{display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
+.pipe-row{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:11px 14px;display:flex;align-items:center;gap:10px;
+}
+.pipe-source{
+  width:72px;flex-shrink:0;text-align:center;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:8px;
+  padding:6px 4px;
+}
+.ps-name{font-size:11px;font-weight:700}
+.ps-sub{font-size:9px;color:var(--text3);margin-top:1px}
+.pipe-arrow{font-size:13px;color:var(--text3);flex-shrink:0}
+.pipe-body{flex:1}
+.pipe-target{font-size:11px;color:var(--text);margin-bottom:3px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.pipe-field{font-family:'Space Mono',monospace;font-size:10px;color:var(--teal)}
+.pipe-status{font-size:10px;color:var(--text3)}
+.pipe-badge{font-size:9px;padding:1px 6px;border-radius:6px;font-family:'Space Mono',monospace;flex-shrink:0}
+.pb-live{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.pb-pending{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.pb-blocked{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+
+/* ── ROADMAP ── */
+.roadmap{display:flex;flex-direction:column;gap:0}
+.rm-row{display:flex;gap:12px;padding:12px 0;position:relative}
+.rm-row::before{content:'';position:absolute;left:15px;top:0;bottom:0;width:1px;background:var(--border)}
+.rm-row:last-child::before{display:none}
+.rm-circle{
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;font-family:'Space Mono',monospace;
+  position:relative;z-index:1;border:2px solid;
+}
+.rm-done{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+.rm-active{background:var(--amber-dim);border-color:var(--amber);color:var(--amber);box-shadow:0 0 12px rgba(245,166,35,.3)}
+.rm-future{background:rgba(255,255,255,.03);border-color:var(--text3);color:var(--text3)}
+.rm-body{flex:1;padding-top:4px}
+.rm-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.rm-done-title{color:var(--green)}
+.rm-active-title{color:var(--amber)}
+.rm-future-title{color:var(--text3)}
+.rm-desc{font-size:11px;color:var(--text3);line-height:1.5}
+.rm-tag{font-size:9px;font-family:'Space Mono',monospace;padding:1px 6px;border-radius:6px;margin-top:4px;display:inline-block}
+
+/* ── ACCESS MATRIX ── */
+.access-table{width:100%;border-collapse:collapse;font-size:11px}
+.access-table th{padding:7px 10px;text-align:center;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.07em;text-transform:uppercase;background:rgba(255,255,255,.02);border-bottom:1px solid var(--border)}
+.access-table th:first-child{text-align:left}
+.access-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.025);text-align:center;color:var(--text2)}
+.access-table td:first-child{text-align:left;color:var(--text);font-weight:600}
+.access-table tr:last-child td{border:none}
+.ac-yes{color:var(--green);font-size:14px}
+.ac-no{color:var(--text3);font-size:12px}
+.ac-partial{color:var(--amber);font-size:12px}
+
+/* ── TEAM ── */
+.team-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:20px}
+@media(min-width:500px){.team-grid{grid-template-columns:repeat(4,1fr)}}
+.team-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
+.tc-emoji{font-size:24px;margin-bottom:6px}
+.tc-role{font-size:12px;font-weight:700;margin-bottom:3px}
+.tc-desc{font-size:10px;color:var(--text3);line-height:1.4}
+.tc-access{font-size:9px;color:var(--amber);margin-top:6px;font-family:'Space Mono',monospace}
+
+/* ── FOOTER ── */
+.footer{
+  border-top:1px solid var(--border);padding:24px 20px;text-align:center;
+  font-size:11px;color:var(--text3);line-height:1.8;
+}
+.footer strong{color:var(--text2)}
+
+/* ── CMD BAR ── */
+.cmdbar{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(7,8,14,.97);backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);padding:9px 16px 13px;
+}
+.cmd-lbl{font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;font-family:'Space Mono',monospace;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.cmd-lbl::before{content:'⌘';color:var(--amber)}
+.cmd-row{display:flex;gap:7px}
+.cmd-in{flex:1;background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:10px 14px;font-size:13px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif;transition:border-color .2s}
+.cmd-in:focus{border-color:rgba(245,166,35,.4)}
+.cmd-in::placeholder{color:var(--text3)}
+.cmd-btn{width:42px;height:42px;border-radius:11px;flex-shrink:0;background:linear-gradient(135deg,var(--amber),#ff8c3a);border:none;cursor:pointer;font-size:16px;transition:all .2s}
+.cmd-btn:hover{transform:scale(1.05)}
+.cmd-resp{display:none;position:fixed;bottom:68px;left:16px;right:16px;z-index:99;background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:13px;max-height:44vh;overflow-y:auto;box-shadow:0 -8px 32px rgba(0,0,0,.55)}
+.cmd-resp.show{display:block;animation:slideUp .2s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.cmd-q{font-size:10px;color:var(--amber);margin-bottom:7px;padding-bottom:7px;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace}
+.cmd-x{position:absolute;top:9px;right:12px;cursor:pointer;color:var(--text3);font-size:13px;background:none;border:none}
+.cmd-a{font-size:12px;color:var(--text2);line-height:1.75;white-space:pre-wrap}
+.td-wrap{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:tda 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tda{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-sym">∞</div>
+  <div class="hero-title">INFINITY <em>OS</em></div>
+  <div class="hero-brand">欣和SH · 全链销售管理操作系统 · v8.5</div>
+  <div class="hero-pills">
+    <span class="pill pill-green">✦ 24个Agent</span>
+    <span class="pill pill-amber">Layer 1.3 → 3.0</span>
+    <span class="pill pill-blue">Universal Node Schema</span>
+    <span class="pill pill-teal">5品牌 · 337城市</span>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="sb-item"><div class="sb-dot live"></div>v8系列已部署</div>
+  <div class="sb-sep">|</div>
+  <div class="sb-item"><div class="sb-dot mock"></div>数据：Mock</div>
+  <div class="sb-sep">|</div>
+  <div class="sb-item"><div class="sb-dot pending"></div>汉询接入：待</div>
+  <div class="sb-sep">|</div>
+  <div class="sb-item"><div class="sb-dot pending"></div>Dcloud接入：待</div>
+  <div class="sb-sep">|</div>
+  <div class="sb-item" id="liveTime" style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)">--:--:--</div>
+</div>
+
+<div class="main">
+
+  <!-- 系统状态 -->
+  <div class="sys-grid">
+    <div class="sys-box">
+      <div class="sys-val" style="color:var(--amber)">24</div>
+      <div class="sys-lbl">Agent 总数</div>
+    </div>
+    <div class="sys-box">
+      <div class="sys-val" style="color:var(--teal)">9</div>
+      <div class="sys-lbl">已部署模块</div>
+    </div>
+    <div class="sys-box">
+      <div class="sys-val" style="color:var(--green)">v8.5</div>
+      <div class="sys-lbl">当前版本</div>
+    </div>
+    <div class="sys-box">
+      <div class="sys-val" style="color:var(--red)">0%</div>
+      <div class="sys-lbl">真实数据接入</div>
+    </div>
+  </div>
+
+  <!-- 核心模块 -->
+  <div class="sec">核心模块 <span class="badge" style="background:var(--amber);color:#000">v8系列</span></div>
+  <div class="module-grid">
+
+    <a class="module-card gc-brief" href="infinity_os_v81.html">
+      <div class="mc-status mcs-mock">Mock</div>
+      <div>
+        <div class="mc-icon">⚡</div>
+        <div class="mc-name">晨报中台</div>
+        <div class="mc-sub">AIO晨报 · 全局决策队列 · 心跳地图 · Agent动作流</div>
+      </div>
+      <div class="mc-ver">v8.1 · 每日首开</div>
+      <div class="mc-arrow">›</div>
+    </a>
+
+    <a class="module-card gc-account" href="infinity_os_v82.html">
+      <div class="mc-status mcs-mock">Mock</div>
+      <div>
+        <div class="mc-icon">💰</div>
+        <div class="mc-name">一本账</div>
+        <div class="mc-sub">业务员收入 · 经销商收入 · 关系对比 · 年级P&L</div>
+      </div>
+      <div class="mc-ver">v8.2 · 激励引擎</div>
+      <div class="mc-arrow">›</div>
+    </a>
+
+    <a class="module-card gc-butterfly" href="infinity_os_v83.html">
+      <div class="mc-status mcs-mock">Mock</div>
+      <div>
+        <div class="mc-icon">🦋</div>
+        <div class="mc-name">蝴蝶效应</div>
+        <div class="mc-sub">A/B/C/D四类失真 · 传导链路 · 铁律守门</div>
+      </div>
+      <div class="mc-ver">v8.3 · 全链预警</div>
+      <div class="mc-arrow">›</div>
+    </a>
+
+    <a class="module-card gc-prism" href="infinity_os_v83.html#prism">
+      <div class="mc-status mcs-mock">Mock</div>
+      <div>
+        <div class="mc-icon">◈</div>
+        <div class="mc-name">PRISM选点</div>
+        <div class="mc-sub">Sale=N×P×F×B×ASP · Stage Gate共创 · 高价值小区</div>
+      </div>
+      <div class="mc-ver">v8.3 · 消费者端</div>
+      <div class="mc-arrow">›</div>
+    </a>
+
+    <a class="module-card gc-finance" href="infinity_os_v84.html">
+      <div class="mc-status mcs-mock">真实数据</div>
+      <div>
+        <div class="mc-icon">📊</div>
+        <div class="mc-name">财务视图</div>
+        <div class="mc-sub">P&L瀑布 · 滚动预算 · 差距摊销 · 情景分析</div>
+      </div>
+      <div class="mc-ver">v8.4 · 2025实际数据</div>
+      <div class="mc-arrow">›</div>
+    </a>
+
+    <a class="module-card gc-home" href="infinity_os_v8.html">
+      <div class="mc-status mcs-mock">Mock</div>
+      <div>
+        <div class="mc-icon">🔗</div>
+        <div class="mc-name">节点下钻</div>
+        <div class="mc-sub">renderNode · 品牌→城市→经销商→门店→SKU</div>
+      </div>
+      <div class="mc-ver">v8.0 · 统一架构</div>
+      <div class="mc-arrow">›</div>
+    </a>
+
+  </div>
+
+  <!-- 工具与文档 -->
+  <div class="sec">工具 & 文档 <span class="badge" style="background:var(--blue-dim);color:var(--blue);border:1px solid rgba(96,165,250,.2)">交付物</span></div>
+  <div class="module-grid">
+
+    <a class="module-card gc-targets" href="infinity_os_node_targets.html">
+      <div class="mc-status mcs-tool">业务团队</div>
+      <div>
+        <div class="mc-icon">📝</div>
+        <div class="mc-name">目标填报</div>
+        <div class="mc-sub">r_target + 年级填报 · 导出SQL · 解锁SAP Step2</div>
+      </div>
+      <div class="mc-ver">inf_node_targets · 最紧急</div>
+      <div class="mc-arrow">›</div>
+    </a>
+
+    <a class="module-card gc-schema" href="infinity_os_universal_node_schema.html">
+      <div class="mc-status mcs-doc">技术文档</div>
+      <div>
+        <div class="mc-icon">📐</div>
+        <div class="mc-name">Node Schema</div>
+        <div class="mc-sub">5张表DDL · API格式 · 数据源映射 · 铁律规则</div>
+      </div>
+      <div class="mc-ver">v1.0 · 后端基础</div>
+      <div class="mc-arrow">›</div>
+    </a>
+
+    <a class="module-card gc-api" href="#" onclick="alert('下载 infinity_os_api_package.zip')">
+      <div class="mc-status mcs-doc">Java包</div>
+      <div>
+        <div class="mc-icon">☕</div>
+        <div class="mc-name">Spring Boot API</div>
+        <div class="mc-sub">13个Java文件 · Entity · Service · Controller · Engine</div>
+      </div>
+      <div class="mc-ver">v1.0 · 后端团队</div>
+      <div class="mc-arrow">↓</div>
+    </a>
+
+  </div>
+
+  <!-- 数据管道状态 -->
+  <div class="sec">数据管道 <span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)">当前最大阻塞</span></div>
+  <div class="pipeline">
+    <div class="pipe-row">
+      <div class="pipe-source"><div class="ps-name">业务团队</div><div class="ps-sub">手动填报</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-body">
+        <div class="pipe-target">
+          <span class="pipe-field">r_target + grade</span>
+          <span style="color:var(--text3)">→ inf_node_targets</span>
+          <span class="pipe-badge pb-blocked">🔴 未完成</span>
+        </div>
+        <div class="pipe-status">⚡ 这是整个系统的唯一解锁键。使用「目标填报」工具填写并导出SQL，DBA执行即解锁Step2。</div>
+      </div>
+    </div>
+    <div class="pipe-row">
+      <div class="pipe-source"><div class="ps-name">汉询</div><div class="ps-sub">日销POS</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-body">
+        <div class="pipe-target">
+          <span class="pipe-field">r_actual</span>
+          <span style="color:var(--text3)">→ inf_heartbeat</span>
+          <span class="pipe-badge pb-pending">🟡 待接入</span>
+        </div>
+        <div class="pipe-status">最高优先级 P1 · 接通后全系统心跳激活 · 等待Step2解锁</div>
+      </div>
+    </div>
+    <div class="pipe-row">
+      <div class="pipe-source"><div class="ps-name">Dcloud</div><div class="ps-sub">EPP经销商</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-body">
+        <div class="pipe-target">
+          <span class="pipe-field">inventory_units</span>
+          <span style="color:var(--text3)">→ inf_heartbeat</span>
+          <span class="pipe-badge pb-pending">🟡 待接入</span>
+        </div>
+        <div class="pipe-status">P1优先 · 经销商库存水位计算依赖此数据</div>
+      </div>
+    </div>
+    <div class="pipe-row">
+      <div class="pipe-source"><div class="ps-name">SFA</div><div class="ps-sub">库存上报</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-body">
+        <div class="pipe-target">
+          <span class="pipe-field">shelf_qty + warehouse_qty</span>
+          <span style="color:var(--text3)">→ store节点</span>
+          <span class="pipe-badge pb-pending">🟡 代码已交</span>
+        </div>
+        <div class="pipe-status">SFA WebView已集成，Spring Boot包已交付，等待部署</div>
+      </div>
+    </div>
+    <div class="pipe-row">
+      <div class="pipe-source"><div class="ps-name">SAP/WMS</div><div class="ps-sub">工厂仓库</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-body">
+        <div class="pipe-target">
+          <span class="pipe-field">factory_stock</span>
+          <span style="color:var(--text3)">→ brand/sku节点</span>
+          <span class="pipe-badge pb-pending">🟡 P3</span>
+        </div>
+        <div class="pipe-status">Step3-5规划中 · 等Step2完成后启动</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 团队访问 -->
+  <div class="sec">团队 & 访问权限</div>
+  <div class="team-grid">
+    <div class="team-card">
+      <div class="tc-emoji">🎯</div>
+      <div class="tc-role">T.San</div>
+      <div class="tc-desc">系统架构师<br>战略决策者</div>
+      <div class="tc-access">全部模块 · 管理员</div>
+    </div>
+    <div class="team-card">
+      <div class="tc-emoji">💼</div>
+      <div class="tc-role">业务团队</div>
+      <div class="tc-desc">填报r_target<br>年级设定</div>
+      <div class="tc-access">目标填报 · 一本账</div>
+    </div>
+    <div class="team-card">
+      <div class="tc-emoji">☕</div>
+      <div class="tc-role">后端团队</div>
+      <div class="tc-desc">Java Spring Boot<br>MySQL部署</div>
+      <div class="tc-access">Schema文档 · API包</div>
+    </div>
+    <div class="team-card">
+      <div class="tc-emoji">📱</div>
+      <div class="tc-role">业务员/经销商</div>
+      <div class="tc-desc">SFA库存上报<br>一本账查看</div>
+      <div class="tc-access">SFA · 一本账只读</div>
+    </div>
+  </div>
+
+  <!-- 版本路线图 -->
+  <div class="sec">版本路线图</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px">
+    <div class="roadmap">
+      <div class="rm-row">
+        <div class="rm-circle rm-done">✓</div>
+        <div class="rm-body"><div class="rm-title rm-done-title">v8.0 · 架构地基</div><div class="rm-desc">renderNode + callClaude · Universal Node Schema · 消灭重复</div></div>
+      </div>
+      <div class="rm-row">
+        <div class="rm-circle rm-done">✓</div>
+        <div class="rm-body"><div class="rm-title rm-done-title">v8.1 · 晨报中台</div><div class="rm-desc">AIO晨报 · 全局决策队列 · 心跳地图 · Agent动作流</div></div>
+      </div>
+      <div class="rm-row">
+        <div class="rm-circle rm-done">✓</div>
+        <div class="rm-body"><div class="rm-title rm-done-title">v8.2 · 一本账</div><div class="rm-desc">激励计算 · 年级P&L · 关系对比 · 真实数据已接入</div></div>
+      </div>
+      <div class="rm-row">
+        <div class="rm-circle rm-done">✓</div>
+        <div class="rm-body"><div class="rm-title rm-done-title">v8.3 · 蝴蝶效应 + PRISM</div><div class="rm-desc">A/B/C/D失真检测 · 传导链路可视化 · 消费者精准选点</div></div>
+      </div>
+      <div class="rm-row">
+        <div class="rm-circle rm-done">✓</div>
+        <div class="rm-body"><div class="rm-title rm-done-title">v8.4 · 财务视图</div><div class="rm-desc">P&L瀑布 · 36月滚动预算 · 差距摊销 · 情景分析</div></div>
+      </div>
+      <div class="rm-row">
+        <div class="rm-circle rm-active">▶</div>
+        <div class="rm-body">
+          <div class="rm-title rm-active-title">v8.5 · 统一部署 ← 当前</div>
+          <div class="rm-desc">GitHub Pages门户 · 统一导航 · 团队访问 · 部署指南</div>
+          <span class="rm-tag" style="background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)">今天完成</span>
+        </div>
+      </div>
+      <div class="rm-row">
+        <div class="rm-circle rm-future">6</div>
+        <div class="rm-body"><div class="rm-title rm-future-title">v8.6 · 真实数据接入</div><div class="rm-desc">汉询r_actual → Dcloud库存 → SFA上报 · Mock全部替换</div><span class="rm-tag" style="background:rgba(255,255,255,.04);color:var(--text3);border:1px solid var(--border)">等Step2解锁</span></div>
+      </div>
+      <div class="rm-row">
+        <div class="rm-circle rm-future">7</div>
+        <div class="rm-body"><div class="rm-title rm-future-title">v8.7 · 企微推送</div><div class="rm-desc">铁律预警 → 企微 · 推单通知 · 晨报自动发送</div><span class="rm-tag" style="background:rgba(255,255,255,.04);color:var(--text3);border:1px solid var(--border)">等数据接入</span></div>
+      </div>
+      <div class="rm-row">
+        <div class="rm-circle rm-future">★</div>
+        <div class="rm-body"><div class="rm-title rm-future-title">v9.0 · Layer 3 · 真正Agent</div><div class="rm-desc">自主行动 · 置信度决策 · 沉默即健康 · 人类只做审批</div><span class="rm-tag" style="background:rgba(255,255,255,.04);color:var(--text3);border:1px solid var(--border)">目标态</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 访问权限矩阵 -->
+  <div class="sec">权限矩阵</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px">
+    <table class="access-table">
+      <thead>
+        <tr><th>模块</th><th>T.San</th><th>业务团队</th><th>后端团队</th><th>业务员</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>晨报中台 v8.1</td><td class="ac-yes">✓</td><td class="ac-yes">✓</td><td class="ac-no">—</td><td class="ac-partial">只读</td></tr>
+        <tr><td>一本账 v8.2</td><td class="ac-yes">✓</td><td class="ac-yes">✓</td><td class="ac-no">—</td><td class="ac-yes">✓</td></tr>
+        <tr><td>蝴蝶效应 v8.3</td><td class="ac-yes">✓</td><td class="ac-yes">✓</td><td class="ac-no">—</td><td class="ac-partial">只读</td></tr>
+        <tr><td>财务视图 v8.4</td><td class="ac-yes">✓</td><td class="ac-yes">✓</td><td class="ac-no">—</td><td class="ac-no">—</td></tr>
+        <tr><td>目标填报工具</td><td class="ac-yes">✓</td><td class="ac-yes">✓</td><td class="ac-no">—</td><td class="ac-no">—</td></tr>
+        <tr><td>Schema文档</td><td class="ac-yes">✓</td><td class="ac-no">—</td><td class="ac-yes">✓</td><td class="ac-no">—</td></tr>
+        <tr><td>Spring Boot包</td><td class="ac-yes">✓</td><td class="ac-no">—</td><td class="ac-yes">✓</td><td class="ac-no">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="footer">
+  <strong>INFINITY OS v8.5</strong> · 欣和SH · 全链销售管理操作系统<br>
+  Universal Node Schema · renderNode() · callClaude() · 24 Agents<br>
+  <span style="color:var(--text3)">数据接入状态：Mock → 等待业务团队完成目标填报（最关键的下一步）</span>
+</div>
+
+<!-- CMD RESPONSE -->
+<div class="cmd-resp" id="cmdResp">
+  <button class="cmd-x" onclick="closeCmd()">×</button>
+  <div class="cmd-q" id="cmdQ"></div>
+  <div class="cmd-a" id="cmdA"></div>
+</div>
+
+<!-- CMD BAR -->
+<div class="cmdbar">
+  <div class="cmd-lbl">INFINITY OS 指令中枢</div>
+  <div class="cmd-row">
+    <input class="cmd-in" id="cmdIn"
+      placeholder="「这个系统解决了什么问题」「下一步最紧急的是什么」「v9.0什么时候能实现」…"
+      onkeydown="if(event.key==='Enter')sendCmd()"/>
+    <button class="cmd-btn" onclick="sendCmd()">↑</button>
+  </div>
+</div>
+
+<script>
+// ── 时钟 ─────────────────────────────────────────────
+function tick(){
+  const n=new Date();
+  const s=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')+':'+n.getSeconds().toString().padStart(2,'0');
+  document.getElementById('liveTime').textContent=s;
+}
+tick();setInterval(tick,1000);
+
+// ── CMD ──────────────────────────────────────────────
+async function sendCmd(){
+  const input=document.getElementById('cmdIn');
+  const q=input.value.trim();if(!q)return;
+  input.value='';
+  const resp=document.getElementById('cmdResp');
+  const qEl=document.getElementById('cmdQ');
+  const aEl=document.getElementById('cmdA');
+  resp.classList.add('show');
+  qEl.textContent='⌘ '+q;
+  aEl.innerHTML='<div class="td-wrap"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+
+  const sys=`你是 INFINITY OS 系统的 AI。这是欣和SH的全链销售管理操作系统，当前版本v8.5。
+  
+系统已完成：v8.0架构（renderNode+callClaude统一函数）、v8.1晨报中台、v8.2一本账+年级P&L、v8.3蝴蝶效应+PRISM、v8.4财务视图+滚动预算、v8.5统一部署门户。
+
+后端：Spring Boot API包已交付（13个Java文件），5张MySQL表DDL已完成，等待部署。
+
+当前最大阻塞：业务团队需要填写inf_node_targets表（r_target+年级），有「目标填报」工具可用，填完导出SQL给DBA执行即可解锁整个数据链路。
+
+数据全部是Mock，等业务团队填报+汉询日销接入后，系统会自动激活。
+
+2025年六月鲜P&L：收入2.74亿，利润-1916万，费用率107.2%，遵循自然消化率46.6%。
+
+用中文简洁回答，不超过150字。`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})
+    });
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'—'}</div>`;
+  }catch(e){
+    aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`;
+  }
+}
+function closeCmd(){document.getElementById('cmdResp').classList.remove('show')}
+document.getElementById('cmdIn').addEventListener('keydown',e=>{if(e.key==='Escape')closeCmd()});
+</script>
+</body>
+</html>

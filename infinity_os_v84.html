@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · v8.4 · 财务视图 + 滚动预算</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;
+  --card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh}
+
+/* ── TOP ── */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(7,8,14,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;gap:10px}
+.logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.logo-sym{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#ff7c38);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000}
+.logo-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.logo-name em{color:var(--amber);font-style:normal}
+.ver{font-size:9px;font-family:'Space Mono',monospace;color:var(--green);background:var(--green-dim);border:1px solid rgba(74,222,128,.2);padding:2px 7px;border-radius:10px}
+.clock{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;position:sticky;top:52px;z-index:90;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:12px 16px;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;flex-shrink:0}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--amber);border-bottom-color:var(--amber)}
+
+.page{display:none;padding:14px 16px 80px;flex-direction:column;gap:12px}
+.page.active{display:flex}
+
+.sec{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.09em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── KPI STRIP ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+@media(max-width:360px){.kpi-strip{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:11px 10px;text-align:center;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi.good::before{background:var(--green)}
+.kpi.bad::before{background:var(--red)}
+.kpi.warn::before{background:var(--amber)}
+.kpi.neu::before{background:var(--blue)}
+.kpi-val{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;line-height:1}
+.kpi-lbl{font-size:9px;color:var(--text3);margin-top:3px;line-height:1.3}
+.kpi-delta{font-size:9px;margin-top:4px;font-family:'Space Mono',monospace}
+
+/* ── WATERFALL CHART ── */
+.wf-chart-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.wf-chart-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.wf-chart-title{font-size:13px;font-weight:700}
+.wf-chart-sub{font-size:10px;color:var(--text3)}
+.wf-body{padding:14px 16px}
+.wf-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.wf-lbl{font-size:11px;color:var(--text2);width:76px;flex-shrink:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wf-bar-wrap{flex:1;height:28px;background:rgba(255,255,255,.03);border-radius:5px;overflow:hidden;position:relative}
+.wf-bar{height:100%;border-radius:5px;display:flex;align-items:center;padding:0 8px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;transition:width .7s ease;min-width:4px;position:absolute}
+.wf-bar.pos{left:0}
+.wf-bar.neg{right:0}
+.wf-center-line{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.15)}
+.wf-val{width:72px;flex-shrink:0;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;text-align:right}
+.wf-divider{height:1px;background:var(--border2);margin:8px 0}
+.wf-total .wf-lbl{color:var(--text);font-weight:700}
+.wf-total .wf-bar-wrap{height:32px}
+
+/* ── SERIES TABLE ── */
+.series-table{width:100%;border-collapse:collapse;font-size:11px}
+.series-table th{padding:7px 10px;text-align:right;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.07em;text-transform:uppercase;background:rgba(255,255,255,.02);border-bottom:1px solid var(--border)}
+.series-table th:first-child{text-align:left}
+.series-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.025);text-align:right;font-family:'Space Mono',monospace;color:var(--text2)}
+.series-table td:first-child{text-align:left;font-family:'Noto Sans SC',sans-serif}
+.series-table tr:last-child td{border:none}
+.series-table .total-row td{border-top:1px solid var(--border2);color:var(--text);font-weight:700;background:rgba(255,255,255,.02)}
+.profit-pos{color:var(--green)} .profit-neg{color:var(--red)}
+.fee-ok{color:var(--green)} .fee-warn{color:var(--amber)} .fee-bad{color:var(--red)}
+.series-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+
+/* ── ROLLING BUDGET ── */
+.rolling-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+@media(max-width:400px){.rolling-grid{grid-template-columns:1fr}}
+.rolling-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px}
+.rc-label{font-size:10px;color:var(--text3);margin-bottom:5px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.07em}
+.rc-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1}
+.rc-sub{font-size:10px;color:var(--text3);margin-top:4px}
+.rc-bar{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:8px}
+.rc-fill{height:100%;border-radius:2px;transition:width .7s ease}
+
+/* Monthly bar chart */
+.month-chart{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;overflow:hidden}
+.mc-title{font-size:12px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.mc-legend{display:flex;gap:12px;font-size:10px;color:var(--text3)}
+.mc-leg-item{display:flex;align-items:center;gap:5px}
+.mc-leg-dot{width:8px;height:8px;border-radius:2px}
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:100px;overflow-x:auto;scrollbar-width:none;padding-bottom:20px}
+.bar-chart::-webkit-scrollbar{display:none}
+.bar-group{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;width:32px}
+.bar-pair{display:flex;gap:2px;align-items:flex-end;height:80px}
+.bar{border-radius:3px 3px 0 0;min-height:2px;transition:height .6s ease;width:12px;position:relative}
+.bar:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--border2);border-radius:6px;padding:3px 7px;font-size:9px;white-space:nowrap;color:var(--text);z-index:10;font-family:'Space Mono',monospace;pointer-events:none}
+.bar-target{background:rgba(255,255,255,.15)}
+.bar-actual{background:var(--green)}
+.bar-actual.miss{background:var(--red)}
+.bar-actual.warn{background:var(--amber)}
+.bar-month{font-size:8px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:4px;text-align:center;width:32px}
+.bar-future{opacity:.4}
+
+/* ── GAP AMORTIZATION ── */
+.gap-hero{
+  background:linear-gradient(135deg,rgba(255,95,95,.07),rgba(9,9,15,1));
+  border:1px solid rgba(255,95,95,.2);border-radius:14px;padding:16px;
+}
+.gap-hero-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--red);margin-bottom:8px}
+.gap-hero-body{font-size:12px;color:var(--text2);line-height:1.75;margin-bottom:12px}
+.gap-hero-body strong{color:var(--text)}
+.gap-numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gn{background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:10px;padding:10px;text-align:center}
+.gn-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;line-height:1}
+.gn-lbl{font-size:9px;color:var(--text3);margin-top:3px}
+
+/* Scenario cards */
+.scenario-grid{display:flex;flex-direction:column;gap:8px}
+.scenario-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:14px;cursor:pointer;transition:all .15s}
+.scenario-card:hover{background:var(--card2)}
+.scenario-card.selected{border-color:rgba(245,166,35,.35)}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sc-name{font-size:13px;font-weight:700}
+.sc-badge{font-size:10px;font-family:'Space Mono',monospace;padding:2px 8px;border-radius:8px;border:1px solid}
+.sc-optimistic .sc-badge{color:var(--green);border-color:rgba(74,222,128,.3);background:var(--green-dim)}
+.sc-base .sc-badge{color:var(--amber);border-color:rgba(245,166,35,.3);background:var(--amber-dim)}
+.sc-pessimistic .sc-badge{color:var(--red);border-color:rgba(255,95,95,.3);background:var(--red-dim)}
+.sc-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sc-m{text-align:center}
+.sc-m-val{font-family:'Space Mono',monospace;font-size:12px;font-weight:700}
+.sc-m-lbl{font-size:9px;color:var(--text3);margin-top:2px}
+.sc-amort-row{margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text2);display:flex;align-items:center;justify-content:space-between}
+.sc-amort-val{font-family:'Space Mono',monospace;font-weight:700}
+
+/* Amortization timeline */
+.amort-timeline{display:flex;flex-direction:column;gap:6px}
+.at-row{display:flex;align-items:center;gap:8px}
+.at-month{font-size:10px;color:var(--text3);width:44px;flex-shrink:0;font-family:'Space Mono',monospace}
+.at-bar-wrap{flex:1;height:22px;background:rgba(255,255,255,.03);border-radius:4px;overflow:hidden;position:relative}
+.at-target{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 7px;font-size:9px;font-family:'Space Mono',monospace;font-weight:700;transition:width .7s ease}
+.at-val{width:62px;flex-shrink:0;font-size:10px;font-family:'Space Mono',monospace;text-align:right}
+
+/* AI chat */
+.ai-wrap{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.ai-hdr{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.07em;text-transform:uppercase}
+.ai-chips{display:flex;gap:5px;padding:8px 12px;overflow-x:auto;scrollbar-width:none}
+.ai-chips::-webkit-scrollbar{display:none}
+.chip{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:4px 10px;font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.chip:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+.ai-bubble{margin:0 12px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text2);line-height:1.65}
+.ai-resp{display:none;margin:0 12px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.ai-resp.show{display:block}
+.ai-q{font-size:10px;color:var(--text3);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ai-input-row{display:flex;gap:6px;padding:6px 12px 10px}
+.ai-in{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:12px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif}
+.ai-in:focus{border-color:rgba(245,166,35,.4)}
+.ai-in::placeholder{color:var(--text3)}
+.ai-send{width:36px;height:36px;border-radius:9px;background:var(--amber);border:none;cursor:pointer;font-size:14px;flex-shrink:0;transition:all .15s}
+.ai-send:hover{background:#ffc85e;transform:scale(1.05)}
+.td-wrap{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:tda 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tda{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* ctrl */
+.ctrl-panel{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:14px}
+.ctrl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(max-width:400px){.ctrl-grid{grid-template-columns:1fr}}
+.ctrl-label{font-size:10px;color:var(--text3);margin-bottom:5px;display:flex;justify-content:space-between}
+.ctrl-val{font-family:'Space Mono',monospace;color:var(--amber);font-weight:700}
+input[type=range]{width:100%;height:4px;border-radius:2px;background:rgba(255,255,255,.08);outline:none;cursor:pointer;-webkit-appearance:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--amber);cursor:pointer;box-shadow:0 0 8px rgba(245,166,35,.4)}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-sym">∞</div>
+    <div class="logo-name">INFINITY <em>OS</em></div>
+    <div class="ver">v8.4</div>
+  </div>
+  <div style="flex:1;text-align:center;font-size:11px;color:var(--text3);font-family:'Space Mono',monospace">财务视图 · 滚动预算</div>
+  <div class="clock" id="clock"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('pl')">📊 P&amp;L总览</div>
+  <div class="tab" onclick="switchTab('rolling')">🔄 滚动预算</div>
+  <div class="tab" onclick="switchTab('gap')">⚡ 差距摊销</div>
+</div>
+
+<!-- ══════════════════════════════════════ TAB 1: P&L总览 -->
+<div class="page active" id="page-pl">
+
+  <!-- KPI Strip -->
+  <div class="kpi-strip">
+    <div class="kpi bad">
+      <div class="kpi-val" style="color:var(--red)">-1,916</div>
+      <div class="kpi-lbl">全年利润（万元）</div>
+      <div class="kpi-delta" style="color:var(--red)">目标+1,000万</div>
+    </div>
+    <div class="kpi warn">
+      <div class="kpi-val" style="color:var(--amber)">107.2%</div>
+      <div class="kpi-lbl">综合费用率</div>
+      <div class="kpi-delta" style="color:var(--red)">目标≤95%</div>
+    </div>
+    <div class="kpi neu">
+      <div class="kpi-val" style="color:var(--blue)">27,363</div>
+      <div class="kpi-lbl">总收入（万元）</div>
+      <div class="kpi-delta" style="color:var(--green)">+28.4% YoY</div>
+    </div>
+    <div class="kpi warn">
+      <div class="kpi-val" style="color:var(--amber)">46.6%</div>
+      <div class="kpi-lbl">遵循自然消化率</div>
+      <div class="kpi-delta" style="color:var(--red)">铁律③风险</div>
+    </div>
+  </div>
+
+  <!-- P&L 瀑布图 -->
+  <div class="wf-chart-wrap">
+    <div class="wf-chart-hdr">
+      <div class="wf-chart-title">P&amp;L 利润瀑布 · 按系列分解</div>
+      <div class="wf-chart-sub">2025年全国实际数据 · 万元</div>
+    </div>
+    <div class="wf-body" id="plWaterfall"></div>
+  </div>
+
+  <!-- 系列明细表 -->
+  <div class="sec" style="margin:0">系列财务明细</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+    <table class="series-table">
+      <thead>
+        <tr>
+          <th>系列</th><th>收入(万)</th><th>利润(万)</th><th>费用率</th><th>年级</th>
+        </tr>
+      </thead>
+      <tbody id="seriesTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- 费用率分析 -->
+  <div class="sec" style="margin:4px 0 0">费用率 vs 目标（95%基准线）</div>
+  <div class="wf-chart-wrap">
+    <div class="wf-body" id="feeRateChart"></div>
+  </div>
+
+  <!-- AI -->
+  <div class="sec" style="margin:4px 0 0">💰 CFO Agent</div>
+  <div class="ai-wrap">
+    <div class="ai-hdr">财务视图 · CFO</div>
+    <div class="ai-chips">
+      <div class="chip" onclick="askPL('当前P&L最大的问题是什么？3件最紧急的事是什么？')">P&L最紧急3件事</div>
+      <div class="chip" onclick="askPL('遵循自然系列亏损2159万，但收入9651万。继续投入还是减速？')">遵循自然投入决策</div>
+      <div class="chip" onclick="askPL('费用率从107%降到95%，每个系列需要做什么？')">费用率改善路径</div>
+      <div class="chip" onclick="askPL('如果红烧系列能维持91.8%费用率，其他系列需要达到什么费用率才能整体盈利？')">盈亏平衡测算</div>
+    </div>
+    <div class="ai-bubble">你好，我是 CFO Agent。基于2025年全国实际P&L数据，我可以分析财务结构并给出改善建议。</div>
+    <div class="ai-resp" id="plResp"><div class="ai-q" id="plQ"></div><div id="plA"></div></div>
+    <div class="ai-input-row">
+      <input class="ai-in" id="plIn" placeholder="问P&L问题…" onkeydown="if(event.key==='Enter')askPL(this.value,this)"/>
+      <button class="ai-send" onclick="askPL(document.getElementById('plIn').value,document.getElementById('plIn'))">↑</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ TAB 2: 滚动预算 -->
+<div class="page" id="page-rolling">
+
+  <div style="background:linear-gradient(135deg,rgba(96,165,250,.06),rgba(9,9,15,1));border:1px solid rgba(96,165,250,.18);border-radius:14px;padding:16px">
+    <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--blue);margin-bottom:8px">滚动预算 · 36个月滚动机制</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.8">不是年初定死的固定预算，而是<strong style="color:var(--text)">每月根据实际r值动态调整</strong>的预算。当月达成率低于目标，差距自动摊销到剩余月份。当月超额完成，前期亏损自动加速弥合。</div>
+  </div>
+
+  <!-- 动态参数 -->
+  <div class="ctrl-panel">
+    <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:12px">📐 调整参数 · 实时重算</div>
+    <div class="ctrl-grid">
+      <div>
+        <div class="ctrl-label">当前r达成率 <span class="ctrl-val" id="rv-ach">78%</span></div>
+        <input type="range" id="rs-ach" min="50" max="130" value="78" oninput="computeRolling()">
+      </div>
+      <div>
+        <div class="ctrl-label">年度收入目标（万元）<span class="ctrl-val" id="rv-target">35,000</span></div>
+        <input type="range" id="rs-target" min="20000" max="60000" step="1000" value="35000" oninput="computeRolling()">
+      </div>
+      <div>
+        <div class="ctrl-label">费用率改善目标 <span class="ctrl-val" id="rv-fee">95%</span></div>
+        <input type="range" id="rs-fee" min="80" max="120" value="95" oninput="computeRolling()">
+      </div>
+      <div>
+        <div class="ctrl-label">已过月份 <span class="ctrl-val" id="rv-months">4个月</span></div>
+        <input type="range" id="rs-months" min="1" max="11" value="4" oninput="computeRolling()">
+      </div>
+    </div>
+  </div>
+
+  <!-- 滚动预算核心指标 -->
+  <div class="rolling-grid">
+    <div class="rolling-card">
+      <div class="rc-label">年度目标</div>
+      <div class="rc-val" id="rc-year-target" style="color:var(--blue)">¥3.5亿</div>
+      <div class="rc-sub">收入目标</div>
+      <div class="rc-bar"><div class="rc-fill" style="width:78%;background:var(--blue)" id="rc-bar1"></div></div>
+    </div>
+    <div class="rolling-card">
+      <div class="rc-label">YTD实际收入</div>
+      <div class="rc-val" id="rc-ytd" style="color:var(--amber)">¥8,450万</div>
+      <div class="rc-sub">前4个月累计</div>
+      <div class="rc-bar"><div class="rc-fill" style="width:60%;background:var(--amber)" id="rc-bar2"></div></div>
+    </div>
+    <div class="rolling-card">
+      <div class="rc-label">剩余月份目标</div>
+      <div class="rc-val" id="rc-remain" style="color:var(--green)">¥2,631万/月</div>
+      <div class="rc-sub">8个月均摊</div>
+      <div class="rc-bar"><div class="rc-fill" style="width:75%;background:var(--green)" id="rc-bar3"></div></div>
+    </div>
+    <div class="rolling-card">
+      <div class="rc-label">当前预计全年</div>
+      <div class="rc-val" id="rc-forecast" style="color:var(--red)">¥2.94亿</div>
+      <div class="rc-sub">按当前r值线性外推</div>
+      <div class="rc-bar"><div class="rc-fill" style="width:84%;background:var(--red)" id="rc-bar4"></div></div>
+    </div>
+  </div>
+
+  <!-- 月度柱状图 -->
+  <div class="month-chart">
+    <div class="mc-title">
+      月度收入：目标 vs 实际
+      <div class="mc-legend">
+        <div class="mc-leg-item"><div class="mc-leg-dot" style="background:rgba(255,255,255,.15)"></div>目标</div>
+        <div class="mc-leg-item"><div class="mc-leg-dot" style="background:var(--green)"></div>达成</div>
+        <div class="mc-leg-item"><div class="mc-leg-dot" style="background:var(--red)"></div>未达</div>
+      </div>
+    </div>
+    <div class="bar-chart" id="monthBarChart"></div>
+  </div>
+
+  <!-- AI -->
+  <div class="sec" style="margin:4px 0 0">🔄 滚动预算 Agent</div>
+  <div class="ai-wrap">
+    <div class="ai-hdr">滚动预算 · 动态调整</div>
+    <div class="ai-chips">
+      <div class="chip" onclick="askRolling('当前r达成78%，年度目标缺口多少？需要后8个月每月提升多少才能弥合？')">全年差距计算</div>
+      <div class="chip" onclick="askRolling('滚动预算和固定年度预算相比，对经销商行为的驱动有什么不同？')">滚动预算的行为意义</div>
+      <div class="chip" onclick="askRolling('如果遵循自然消化率提升到75%，滚动预算会如何自动调整？')">消化率提升对预算的影响</div>
+    </div>
+    <div class="ai-bubble">你好，我是滚动预算 Agent。每月根据实际r值动态重算年度轨迹，差距自动摊销。</div>
+    <div class="ai-resp" id="rollingResp"><div class="ai-q" id="rollingQ"></div><div id="rollingA"></div></div>
+    <div class="ai-input-row">
+      <input class="ai-in" id="rollingIn" placeholder="问滚动预算问题…" onkeydown="if(event.key==='Enter')askRolling(this.value,this)"/>
+      <button class="ai-send" onclick="askRolling(document.getElementById('rollingIn').value,document.getElementById('rollingIn'))">↑</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ TAB 3: 差距摊销 -->
+<div class="page" id="page-gap">
+
+  <!-- 当前差距 -->
+  <div class="gap-hero">
+    <div class="gap-hero-title">⚡ 当前差距状态</div>
+    <div class="gap-hero-body">
+      2025年全国六月鲜目标利润 <strong>+¥1,000万</strong>，当前实际利润 <strong>-¥1,916万</strong>，总差距 <strong style="color:var(--red)">¥2,916万</strong>。剩余8个月，每月需额外贡献 <strong style="color:var(--amber)">¥364万</strong>——这等于将综合费用率从107.2%降至97.8%，或r值整体提升约<strong style="color:var(--amber)">14.7个百分点</strong>。
+    </div>
+    <div class="gap-numbers">
+      <div class="gn"><div class="gn-val" style="color:var(--red)">-¥2,916万</div><div class="gn-lbl">总差距</div></div>
+      <div class="gn"><div class="gn-val" style="color:var(--amber)">8个月</div><div class="gn-lbl">剩余摊销期</div></div>
+      <div class="gn"><div class="gn-val" style="color:var(--amber)">¥364万/月</div><div class="gn-lbl">月均需改善</div></div>
+    </div>
+  </div>
+
+  <!-- 三种情景 -->
+  <div class="sec" style="margin:0">情景分析</div>
+  <div class="scenario-grid" id="scenarioGrid"></div>
+
+  <!-- 选定情景的摊销时间线 -->
+  <div class="sec" style="margin:4px 0 0">摊销时间线 · <span id="selectedScenarioName" style="color:var(--amber)">基准情景</span></div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px">
+    <div class="amort-timeline" id="amortTimeline"></div>
+  </div>
+
+  <!-- 杠杆分析 -->
+  <div class="sec" style="margin:4px 0 0">关键杠杆：哪件事对差距影响最大</div>
+  <div style="display:flex;flex-direction:column;gap:7px" id="leverageList"></div>
+
+  <!-- AI -->
+  <div class="sec" style="margin:4px 0 0">⚡ 差距摊销 Agent</div>
+  <div class="ai-wrap">
+    <div class="ai-hdr">差距摊销 · 路径规划</div>
+    <div class="ai-chips">
+      <div class="chip" onclick="askGap('如果只能做一件事来缩小差距，应该做什么？')">单一最高杠杆行动</div>
+      <div class="chip" onclick="askGap('遵循自然消化率从46.6%提升到75%，能弥合多少差距？需要什么条件？')">遵循自然消化率改善影响</div>
+      <div class="chip" onclick="askGap('差距2916万中，有多少是结构性的（费用设计问题），多少是执行性的（r值未达标）？')">结构性 vs 执行性差距分解</div>
+      <div class="chip" onclick="askGap('如果按乐观情景走，6月份会是什么财务状态？')">乐观情景6月预测</div>
+    </div>
+    <div class="ai-bubble">你好，我是差距摊销 Agent。基于当前P&L和剩余时间，我可以规划最优的差距追赶路径。</div>
+    <div class="ai-resp" id="gapResp"><div class="ai-q" id="gapQ"></div><div id="gapA"></div></div>
+    <div class="ai-input-row">
+      <input class="ai-in" id="gapIn" placeholder="问差距摊销问题…" onkeydown="if(event.key==='Enter')askGap(this.value,this)"/>
+      <button class="ai-send" onclick="askGap(document.getElementById('gapIn').value,document.getElementById('gapIn'))">↑</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 时钟 ─────────────────────────────────────────────
+function tick(){const n=new Date();document.getElementById('clock').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')}
+tick();setInterval(tick,1000);
+
+// ── Tab ──────────────────────────────────────────────
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('page-'+id).classList.add('active');
+  window.scrollTo(0,52);
+}
+
+// ════════════════════════════════════════════════════
+// 数据：来自 v781 SPEC_DATA 真实数据
+// ════════════════════════════════════════════════════
+const SERIES = [
+  {name:'红烧',     color:'#60a5fa', rev:9699.2,  profit:483.8,   fee:91.8,  grade:3},
+  {name:'遵循自然', color:'#4ade80', rev:9650.8,  profit:-2158.7, fee:135.3, grade:2},
+  {name:'特级',     color:'#C4892A', rev:4680.2,  profit:68.0,    fee:98.3,  grade:4},
+  {name:'零添加',   color:'#f97316', rev:1472.5,  profit:-68.8,   fee:137.4, grade:3},
+  {name:'轻',       color:'#94a3b8', rev:735.4,   profit:-75.9,   fee:121.0, grade:2},
+  {name:'原汁',     color:'#a78bfa', rev:318.3,   profit:19.4,    fee:93.8,  grade:4},
+  {name:'有机松茸', color:'#4ecdc4', rev:533.2,   profit:-127.3,  fee:123.9, grade:1},
+];
+
+// ── P&L 瀑布图 ────────────────────────────────────────
+function renderPLWaterfall(){
+  const total = SERIES.reduce((s,d)=>s+d.profit,0);
+  const maxAbs = Math.max(...SERIES.map(d=>Math.abs(d.profit)), Math.abs(total));
+  const wrap = document.getElementById('plWaterfall');
+  wrap.innerHTML = '';
+  SERIES.forEach(d=>{
+    const pct = Math.round(Math.abs(d.profit)/maxAbs*80);
+    const isPos = d.profit >= 0;
+    const color = isPos ? 'var(--green)' : 'var(--red)';
+    const label = (isPos?'+':'')+d.profit.toFixed(0)+'万';
+    wrap.innerHTML += `
+    <div class="wf-row">
+      <div class="wf-lbl"><span class="series-dot" style="background:${d.color}"></span>${d.name}</div>
+      <div class="wf-bar-wrap">
+        <div class="wf-center-line" style="left:50%"></div>
+        <div class="wf-bar ${isPos?'pos':'neg'}" style="width:${pct/2}%;${isPos?'left:50%':'right:50%'};background:${color}22;border:1px solid ${color}55;color:${color}">${label}</div>
+      </div>
+      <div class="wf-val" style="color:${color}">${label}</div>
+    </div>`;
+  });
+  wrap.innerHTML += '<div class="wf-divider"></div>';
+  const tPct = Math.round(Math.abs(total)/maxAbs*80);
+  const tColor = total>=0?'var(--green)':'var(--red)';
+  const tLabel = (total>=0?'+':'')+total.toFixed(0)+'万';
+  wrap.innerHTML += `
+  <div class="wf-row wf-total">
+    <div class="wf-lbl">合计</div>
+    <div class="wf-bar-wrap" style="height:32px">
+      <div class="wf-center-line" style="left:50%"></div>
+      <div class="wf-bar neg" style="width:${tPct/2}%;right:50%;background:${tColor}22;border:1px solid ${tColor}55;color:${tColor};font-size:11px">${tLabel}</div>
+    </div>
+    <div class="wf-val" style="color:${tColor};font-size:13px;font-weight:700">${tLabel}</div>
+  </div>`;
+}
+
+// ── 系列明细表 ────────────────────────────────────────
+function renderSeriesTable(){
+  const tbody = document.getElementById('seriesTableBody');
+  const totalRev = SERIES.reduce((s,d)=>s+d.rev,0);
+  const totalProfit = SERIES.reduce((s,d)=>s+d.profit,0);
+  const totalFee = (totalRev - totalProfit) / totalRev * 100;
+  tbody.innerHTML = SERIES.map(d=>{
+    const fc = d.fee<=95?'fee-ok':d.fee<=110?'fee-warn':'fee-bad';
+    const pc = d.profit>=0?'profit-pos':'profit-neg';
+    const gColors = {1:'#4ade80',2:'#f5a623',3:'#60a5fa',4:'#a78bfa'};
+    return `<tr>
+      <td><span class="series-dot" style="background:${d.color}"></span>${d.name}</td>
+      <td>${d.rev.toLocaleString('zh',{maximumFractionDigits:0})}</td>
+      <td class="${pc}">${d.profit>=0?'+':''}${d.profit.toFixed(0)}</td>
+      <td class="${fc}">${d.fee.toFixed(1)}%</td>
+      <td><span style="color:${gColors[d.grade]};font-size:11px;font-family:'Space Mono',monospace">年级${d.grade}</span></td>
+    </tr>`;
+  }).join('') + `<tr class="total-row">
+    <td>合计</td>
+    <td>${totalRev.toFixed(0)}</td>
+    <td class="profit-neg">${totalProfit.toFixed(0)}</td>
+    <td class="fee-bad">${totalFee.toFixed(1)}%</td>
+    <td>—</td>
+  </tr>`;
+}
+
+// ── 费用率图表 ────────────────────────────────────────
+function renderFeeChart(){
+  const wrap = document.getElementById('feeRateChart');
+  wrap.innerHTML = '';
+  const sorted = [...SERIES].sort((a,b)=>a.fee-b.fee);
+  sorted.forEach(d=>{
+    const pct = Math.min(100,d.fee);
+    const fc = d.fee<=95?'var(--green)':d.fee<=110?'var(--amber)':'var(--red)';
+    wrap.innerHTML += `
+    <div class="wf-row">
+      <div class="wf-lbl"><span class="series-dot" style="background:${d.color}"></span>${d.name}</div>
+      <div class="wf-bar-wrap">
+        <div class="wf-bar pos" style="width:${pct}%;background:${fc}18;border:1px solid ${fc}55;color:${fc}">${d.fee.toFixed(1)}%</div>
+        <div style="position:absolute;top:0;bottom:0;left:95%;width:1px;background:rgba(255,255,255,.3);z-index:2"></div>
+      </div>
+      <div class="wf-val" style="color:${fc}">${d.fee.toFixed(1)}%</div>
+    </div>`;
+  });
+}
+
+// ── 滚动预算计算 ──────────────────────────────────────
+const MONTH_LABELS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const ACTUAL_DATA  = [1980,2100,2200,2170,null,null,null,null,null,null,null,null]; // 前4月实际
+
+function computeRolling(){
+  const ach      = parseInt(document.getElementById('rs-ach').value);
+  const target   = parseInt(document.getElementById('rs-target').value);
+  const fee      = parseInt(document.getElementById('rs-fee').value);
+  const months   = parseInt(document.getElementById('rs-months').value);
+
+  document.getElementById('rv-ach').textContent    = ach+'%';
+  document.getElementById('rv-target').textContent = target.toLocaleString();
+  document.getElementById('rv-fee').textContent    = fee+'%';
+  document.getElementById('rv-months').textContent = months+'个月';
+
+  const monthTarget = target/12;
+  const ytdTarget   = monthTarget * months;
+  const achDec      = ach/100;
+  const ytdActual   = monthTarget * months * achDec;
+  const remainMths  = 12 - months;
+  const remaining   = target - ytdActual;
+  const monthNeed   = remainMths > 0 ? remaining/remainMths : 0;
+  const forecast    = ytdActual + (monthTarget * achDec * remainMths);
+
+  document.getElementById('rc-year-target').textContent = '¥'+Math.round(target/1000*10)/10+'亿';
+  document.getElementById('rc-ytd').textContent         = '¥'+Math.round(ytdActual)+'万';
+  document.getElementById('rc-remain').textContent      = '¥'+Math.round(monthNeed)+'万/月';
+  document.getElementById('rc-forecast').textContent    = '¥'+Math.round(forecast/1000*10)/10+'亿';
+  document.getElementById('rc-bar1').style.width        = Math.min(100,ach)+'%';
+  document.getElementById('rc-bar2').style.width        = Math.min(100,(ytdActual/target*100))+'%';
+  document.getElementById('rc-bar3').style.width        = Math.min(100,(monthNeed/monthTarget*100))+'%';
+  document.getElementById('rc-bar4').style.width        = Math.min(100,(forecast/target*100))+'%';
+  document.getElementById('rc-bar4').style.background   = forecast>=target?'var(--green)':ach>=80?'var(--amber)':'var(--red)';
+
+  renderMonthBars(months, monthTarget, ach);
+}
+
+function renderMonthBars(months, monthTarget, ach){
+  const chart = document.getElementById('monthBarChart');
+  chart.innerHTML = '';
+  const maxVal = monthTarget * 1.3;
+  MONTH_LABELS.forEach((lbl,i) => {
+    const isFuture = i >= months;
+    const actual   = isFuture ? monthTarget*(ach/100) : (ACTUAL_DATA[i] || monthTarget*(ach/100));
+    const tPct     = Math.round(monthTarget/maxVal*90);
+    const aPct     = Math.round(actual/maxVal*90);
+    const aClass   = isFuture ? 'bar-actual bar-future' : actual>=monthTarget*0.9?'bar-actual':'bar-actual miss';
+    chart.innerHTML += `
+    <div class="bar-group">
+      <div class="bar-pair">
+        <div class="bar bar-target" style="height:${tPct}px" data-tip="目标:¥${Math.round(monthTarget)}万"></div>
+        <div class="bar ${aClass}" style="height:${aPct}px" data-tip="${isFuture?'预测':'实际'}:¥${Math.round(actual)}万"></div>
+      </div>
+      <div class="bar-month">${lbl}</div>
+    </div>`;
+  });
+}
+
+// ── 情景分析 ──────────────────────────────────────────
+const GAP_TOTAL = 2916;
+const REMAINING_MONTHS = 8;
+
+const SCENARIOS = [
+  {
+    id:'optimistic', name:'乐观情景', badge:'r+15% · 费率-8%',
+    rImprove:15, feeImprove:8,
+    description:'遵循自然消化率回升至75%，整体r值提升15个百分点，同步压降费用率8个百分点',
+    monthlyImprove:480, className:'sc-optimistic',
+  },
+  {
+    id:'base', name:'基准情景', badge:'r+8% · 费率-4%',
+    rImprove:8, feeImprove:4,
+    description:'铁律③处置后遵循自然压货缓解，r值温和提升，费用率小幅改善',
+    monthlyImprove:280, className:'sc-base',
+  },
+  {
+    id:'pessimistic', name:'悲观情景', badge:'维持现状',
+    rImprove:0, feeImprove:0,
+    description:'当前压货问题未解决，r值持续低迷，全年差距进一步扩大',
+    monthlyImprove:0, className:'sc-pessimistic',
+  },
+];
+
+let selectedScenario = 'base';
+
+function renderScenarios(){
+  const grid = document.getElementById('scenarioGrid');
+  grid.innerHTML = '';
+  SCENARIOS.forEach(s => {
+    const totalClosed = s.monthlyImprove * REMAINING_MONTHS;
+    const remaining   = GAP_TOTAL - totalClosed;
+    const closePct    = Math.min(100,Math.round(totalClosed/GAP_TOTAL*100));
+    const div = document.createElement('div');
+    div.className = `scenario-card ${s.className} ${s.id===selectedScenario?'selected':''}`;
+    div.onclick = () => { selectedScenario=s.id; renderScenarios(); renderAmortTimeline(); };
+    div.innerHTML = `
+    <div class="sc-top">
+      <div class="sc-name">${s.name}</div>
+      <div class="sc-badge">${s.badge}</div>
+    </div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.5">${s.description}</div>
+    <div class="sc-metrics">
+      <div class="sc-m"><div class="sc-m-val" style="color:${s.monthlyImprove>0?'var(--green)':'var(--red)'}">+¥${s.monthlyImprove}万/月</div><div class="sc-m-lbl">月均改善</div></div>
+      <div class="sc-m"><div class="sc-m-val" style="color:${closePct>=80?'var(--green)':closePct>=50?'var(--amber)':'var(--red)'}">${closePct}%</div><div class="sc-m-lbl">差距弥合率</div></div>
+      <div class="sc-m"><div class="sc-m-val" style="color:${remaining<=0?'var(--green)':'var(--red)'}">${remaining<=0?'盈利':'-¥'+Math.round(remaining)+'万'}</div><div class="sc-m-lbl">年末状态</div></div>
+    </div>
+    <div class="sc-amort-row">
+      <span>8个月总弥合</span>
+      <span class="sc-amort-val" style="color:${s.monthlyImprove>0?'var(--green)':'var(--text3)'}">+¥${totalClosed}万</span>
+    </div>`;
+    grid.appendChild(div);
+  });
+}
+
+function renderAmortTimeline(){
+  const s = SCENARIOS.find(x=>x.id===selectedScenario);
+  document.getElementById('selectedScenarioName').textContent = s.name;
+  const tl = document.getElementById('amortTimeline');
+  tl.innerHTML = '';
+  let cumGap = -GAP_TOTAL;
+  const months = ['5月','6月','7月','8月','9月','10月','11月','12月'];
+  months.forEach(m => {
+    cumGap += s.monthlyImprove;
+    const isPos = cumGap >= 0;
+    const color = isPos?'var(--green)':cumGap>-GAP_TOTAL*0.3?'var(--amber)':'var(--red)';
+    const barPct = Math.min(100, Math.abs(cumGap)/GAP_TOTAL*100);
+    tl.innerHTML += `
+    <div class="at-row">
+      <div class="at-month">${m}</div>
+      <div class="at-bar-wrap">
+        <div class="at-target" style="width:${barPct}%;background:${color}18;border:1px solid ${color}44;color:${color}">
+          ${isPos?'+':''} ¥${Math.round(cumGap)}万
+        </div>
+      </div>
+      <div class="at-val" style="color:${color}">${isPos?'盈':'差'}¥${Math.abs(Math.round(cumGap))}万</div>
+    </div>`;
+  });
+}
+
+// ── 杠杆分析 ──────────────────────────────────────────
+function renderLeverage(){
+  const levers = [
+    {action:'遵循自然消化率: 46.6%→75%', impact:1820, type:'最高杠杆', color:'var(--green)'},
+    {action:'特级系列费用率: 115.9%→95%', impact:620,  type:'高杠杆',  color:'var(--green)'},
+    {action:'整体r值: 78%→90%',           impact:480,  type:'中杠杆',  color:'var(--amber)'},
+    {action:'零添加系列缩减SKU',           impact:280,  type:'中杠杆',  color:'var(--amber)'},
+    {action:'铁律①价格管控恢复',          impact:180,  type:'低杠杆',  color:'var(--blue)'},
+  ];
+  const list = document.getElementById('leverageList');
+  list.innerHTML = levers.map((l,i) => `
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:11px;padding:11px 14px;display:flex;align-items:center;gap:10px">
+    <div style="width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--text3);flex-shrink:0">${i+1}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:12px;font-weight:600;margin-bottom:3px">${l.action}</div>
+      <div style="font-size:10px;color:var(--text3)">${l.type}</div>
+    </div>
+    <div style="text-align:right;flex-shrink:0">
+      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:${l.color}">+¥${l.impact}万</div>
+      <div style="font-size:9px;color:var(--text3)">年度改善</div>
+    </div>
+  </div>`).join('');
+}
+
+// ── 唯一 AI 函数 ─────────────────────────────────────
+async function callClaude(sys,q,aEl){
+  aEl.innerHTML='<div class="td-wrap"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})});
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'—'}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`}
+}
+
+const SYS_PL = `你是 INFINITY OS CFO Agent。2025年全国六月鲜P&L：红烧收入9699万利润+484万费率91.8%（年级3）；遵循自然收入9651万利润-2159万费率135.3%（年级2·消化率46.6%）；特级收入4680万利润+68万费率98.3%（年级4）；零添加收入1473万利润-69万费率137.4%；轻收入735万利润-76万费率121%；合计收入27363万利润-1916万综合费率107.2%。用中文简洁回答含具体数字，不超过150字。`;
+const SYS_ROLLING = `你是 INFINITY OS 滚动预算 Agent。年度目标35000万，当前r达成78%，4个月YTD约8450万，全年按当前r值外推约29400万，差距约5600万。滚动预算机制：每月根据实际r值重算剩余目标，差距自动摊销。用中文简洁回答，不超过150字。`;
+const SYS_GAP = `你是 INFINITY OS 差距摊销 Agent。年度利润差距2916万（目标+1000万vs实际-1916万），剩余8个月，月均需改善364万。最高杠杆：遵循自然消化率46.6%→75%可改善1820万；特级费率115.9%→95%改善620万；整体r值78%→90%改善480万。三种情景：乐观（弥合100%+盈利）、基准（弥合77%）、悲观（差距扩大）。用中文简洁回答，含具体数字，不超过150字。`;
+
+async function askPL(q,el){if(!q||!q.trim())return;if(el instanceof HTMLElement)el.value='';document.getElementById('plResp').classList.add('show');document.getElementById('plQ').textContent='❓ '+q;await callClaude(SYS_PL,q,document.getElementById('plA'))}
+async function askRolling(q,el){if(!q||!q.trim())return;if(el instanceof HTMLElement)el.value='';document.getElementById('rollingResp').classList.add('show');document.getElementById('rollingQ').textContent='❓ '+q;await callClaude(SYS_ROLLING,q,document.getElementById('rollingA'))}
+async function askGap(q,el){if(!q||!q.trim())return;if(el instanceof HTMLElement)el.value='';document.getElementById('gapResp').classList.add('show');document.getElementById('gapQ').textContent='❓ '+q;await callClaude(SYS_GAP,q,document.getElementById('gapA'))}
+
+// ── 启动 ─────────────────────────────────────────────
+renderPLWaterfall();
+renderSeriesTable();
+renderFeeChart();
+computeRolling();
+renderScenarios();
+renderAmortTimeline();
+renderLeverage();
+</script>
+</body>
+</html>

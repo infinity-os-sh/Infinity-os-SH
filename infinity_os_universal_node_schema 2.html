@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INFINITY OS · Universal Node Schema · 技术规格文档</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;--card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;line-height:1.6}
+
+/* ── HEADER ── */
+.doc-header{
+  background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(13,16,25,1));
+  border-bottom:1px solid rgba(245,166,35,0.15);
+  padding:32px 40px 28px;
+}
+.doc-logo{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.doc-sym{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#000;
+}
+.doc-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800}
+.doc-title span{color:var(--amber)}
+.doc-meta{display:flex;gap:12px;flex-wrap:wrap}
+.doc-tag{
+  font-size:10px;font-family:'Space Mono',monospace;letter-spacing:0.08em;
+  padding:3px 10px;border-radius:20px;border:1px solid;
+}
+.tag-ver{color:var(--amber);border-color:rgba(245,166,35,0.3);background:var(--amber-dim)}
+.tag-type{color:var(--teal);border-color:rgba(78,205,196,0.3);background:var(--teal-dim)}
+.tag-team{color:var(--blue);border-color:rgba(96,165,250,0.3);background:var(--blue-dim)}
+
+/* ── LAYOUT ── */
+.doc-body{max-width:900px;margin:0 auto;padding:32px 40px 80px}
+@media(max-width:600px){.doc-body{padding:20px 16px 60px}.doc-header{padding:20px 16px}}
+
+/* ── SECTIONS ── */
+.section{margin-bottom:40px}
+.section-title{
+  font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+  color:var(--amber);letter-spacing:0.06em;text-transform:uppercase;
+  margin-bottom:16px;padding-bottom:8px;
+  border-bottom:1px solid rgba(245,166,35,0.15);
+  display:flex;align-items:center;gap:8px;
+}
+.section-title .num{
+  width:22px;height:22px;border-radius:6px;
+  background:rgba(245,166,35,0.15);color:var(--amber);
+  font-size:11px;display:flex;align-items:center;justify-content:center;
+  font-family:'Space Mono',monospace;flex-shrink:0;
+}
+.prose{font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:14px}
+.prose strong{color:var(--text)}
+.prose code{
+  font-family:'Space Mono',monospace;font-size:11px;
+  background:rgba(255,255,255,0.06);border:1px solid var(--border2);
+  padding:1px 6px;border-radius:4px;color:var(--amber2);
+}
+
+/* ── CONCEPT DIAGRAM ── */
+.hierarchy-flow{
+  display:flex;align-items:center;gap:0;
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:16px;overflow-x:auto;margin-bottom:14px;
+}
+.hf-node{
+  display:flex;flex-direction:column;align-items:center;
+  min-width:80px;flex-shrink:0;
+}
+.hf-box{
+  background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
+  padding:8px 12px;text-align:center;width:72px;
+}
+.hf-type{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;text-transform:uppercase;margin-bottom:3px}
+.hf-name{font-size:12px;font-weight:600;color:var(--text)}
+.hf-r{font-size:10px;color:var(--amber);margin-top:3px;font-family:'Space Mono',monospace}
+.hf-arrow{font-size:18px;color:var(--text3);margin:0 4px;padding-top:20px}
+
+.hf-node.active .hf-box{border-color:rgba(245,166,35,0.4);background:rgba(245,166,35,0.06)}
+.hf-node.active .hf-name{color:var(--amber)}
+
+/* ── CODE BLOCK ── */
+.code-wrap{position:relative;margin-bottom:16px}
+.code-label{
+  font-size:9px;font-family:'Space Mono',monospace;letter-spacing:0.1em;
+  color:var(--text3);text-transform:uppercase;
+  padding:6px 14px;background:rgba(255,255,255,0.03);
+  border:1px solid var(--border);border-bottom:none;
+  border-radius:8px 8px 0 0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.code-label .lang{color:var(--amber);font-weight:700}
+.code-block{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:0 0 10px 10px;
+  padding:16px;overflow-x:auto;
+  font-family:'Space Mono',monospace;font-size:11px;line-height:1.8;
+  color:var(--text2);
+}
+.code-block::-webkit-scrollbar{height:3px}
+.code-block::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08)}
+
+/* SQL syntax */
+.kw{color:#60a5fa}    /* keywords */
+.ty{color:#4ecdc4}    /* types */
+.st{color:#4ade80}    /* strings */
+.cm{color:#3d4457;font-style:italic}  /* comments */
+.fn{color:#f5a623}    /* field names */
+.va{color:#a78bfa}    /* values */
+.pu{color:#ff5f5f}    /* punctuation special */
+
+/* JSON syntax */
+.jk{color:#60a5fa}    /* keys */
+.jv{color:#4ade80}    /* string values */
+.jn{color:#a78bfa}    /* number values */
+.jb{color:#f5a623}    /* boolean */
+
+/* ── FIELD TABLE ── */
+.field-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px}
+.field-table th{
+  background:rgba(255,255,255,0.04);color:var(--text3);
+  padding:7px 12px;text-align:left;border-bottom:1px solid var(--border);
+  font-weight:600;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;
+}
+.field-table td{
+  padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.025);
+  color:var(--text2);vertical-align:top;
+}
+.field-table tr:last-child td{border-bottom:none}
+.field-table tr:hover td{background:rgba(255,255,255,0.015)}
+.fname{color:var(--amber2);font-family:'Space Mono',monospace;font-size:11px}
+.ftype{color:var(--teal);font-family:'Space Mono',monospace;font-size:10px}
+.fbadge{
+  display:inline-block;font-size:9px;padding:1px 6px;border-radius:6px;
+  font-family:'Space Mono',monospace;margin-right:3px;
+}
+.fb-pk{background:rgba(245,166,35,0.15);color:var(--amber);border:1px solid rgba(245,166,35,0.2)}
+.fb-fk{background:rgba(96,165,250,0.15);color:var(--blue);border:1px solid rgba(96,165,250,0.2)}
+.fb-idx{background:rgba(78,205,196,0.15);color:var(--teal);border:1px solid rgba(78,205,196,0.2)}
+.fb-calc{background:rgba(167,139,250,0.15);color:var(--purple);border:1px solid rgba(167,139,250,0.2)}
+.fb-core{background:rgba(74,222,128,0.15);color:var(--green);border:1px solid rgba(74,222,128,0.2)}
+
+/* ── INFO CARDS ── */
+.info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:500px){.info-grid{grid-template-columns:1fr}}
+.info-card{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:14px;
+}
+.ic-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px}
+.ic-item{display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--text2);margin-bottom:5px;line-height:1.4}
+.ic-dot{width:5px;height:5px;border-radius:50%;background:var(--amber);flex-shrink:0;margin-top:5px}
+.ic-item.green .ic-dot{background:var(--green)}
+.ic-item.red .ic-dot{background:var(--red)}
+.ic-item.blue .ic-dot{background:var(--blue)}
+
+/* ── CALLOUT ── */
+.callout{
+  border-radius:12px;padding:14px 16px;margin-bottom:16px;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.callout.amber{background:var(--amber-dim);border:1px solid rgba(245,166,35,0.2)}
+.callout.green{background:var(--green-dim);border:1px solid rgba(74,222,128,0.2)}
+.callout.red{background:var(--red-dim);border:1px solid rgba(255,95,95,0.2)}
+.callout.blue{background:var(--blue-dim);border:1px solid rgba(96,165,250,0.2)}
+.callout-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.callout-body{font-size:12px;line-height:1.7;color:var(--text2)}
+.callout-body strong{color:var(--text)}
+
+/* ── INTEGRATION MAP ── */
+.int-row{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:12px 14px;margin-bottom:8px;
+  display:flex;align-items:flex-start;gap:12px;
+}
+.int-source{
+  width:80px;flex-shrink:0;text-align:center;
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:8px;padding:7px 4px;
+}
+.int-src-name{font-size:11px;font-weight:700;color:var(--text)}
+.int-src-sub{font-size:9px;color:var(--text3);margin-top:1px}
+.int-arrow{font-size:14px;color:var(--text3);margin-top:12px;flex-shrink:0}
+.int-fields{flex:1}
+.int-field-row{font-size:11px;color:var(--text2);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.int-field-name{color:var(--amber2);font-family:'Space Mono',monospace}
+.int-field-target{color:var(--teal);font-family:'Space Mono',monospace}
+.int-sep{color:var(--text3);font-size:10px}
+.int-priority{font-size:9px;padding:1px 6px;border-radius:6px;font-family:'Space Mono',monospace}
+.p1{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,0.2)}
+.p2{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.2)}
+.p3{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(78,205,196,0.2)}
+
+/* ── RULE BOX ── */
+.rule-box{
+  background:linear-gradient(135deg,rgba(255,95,95,0.06),rgba(13,16,25,1));
+  border:1px solid rgba(255,95,95,0.2);border-left:3px solid var(--red);
+  border-radius:0 12px 12px 0;padding:14px 16px;margin-bottom:12px;
+}
+.rule-title{font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px}
+.rule-body{font-size:12px;color:var(--text2);line-height:1.7}
+.rule-body code{
+  font-family:'Space Mono',monospace;font-size:11px;
+  background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;color:var(--amber2);
+}
+
+/* ── TOC ── */
+.toc{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:16px 20px;margin-bottom:32px;
+}
+.toc-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px}
+.toc-list{list-style:none;display:flex;flex-direction:column;gap:5px}
+.toc-list li{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px}
+.toc-list li::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--amber);flex-shrink:0}
+.toc-list a{color:var(--text2);text-decoration:none;transition:color 0.15s}
+.toc-list a:hover{color:var(--amber)}
+
+.divider{height:1px;background:var(--border);margin:32px 0}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div class="doc-logo">
+    <div class="doc-sym">∞</div>
+    <div>
+      <div class="doc-title">INFINITY <span>OS</span> · Universal Node Schema</div>
+    </div>
+  </div>
+  <div class="doc-meta">
+    <span class="doc-tag tag-ver">v1.0 · 2026-04-13</span>
+    <span class="doc-tag tag-type">技术规格文档 · 后端交付物</span>
+    <span class="doc-tag tag-team">Java Spring Boot + MySQL</span>
+    <span class="doc-tag tag-type">作者：T.San · INFINITY OS</span>
+  </div>
+</div>
+
+<div class="doc-body">
+
+  <!-- TOC -->
+  <div class="toc">
+    <div class="toc-title">文档目录</div>
+    <ul class="toc-list">
+      <li><a href="#s1">1. 核心思想 — 为什么需要 Universal Node Schema</a></li>
+      <li><a href="#s2">2. 节点层级结构 — 下钻的完整地图</a></li>
+      <li><a href="#s3">3. Schema 字段定义 — 每个字段的含义与来源</a></li>
+      <li><a href="#s4">4. MySQL 建表语句 — 直接可执行的 DDL</a></li>
+      <li><a href="#s5">5. API Response 格式 — 前端需要的 JSON 结构</a></li>
+      <li><a href="#s6">6. 计算规则 — r值/水位/年级系数的自动计算逻辑</a></li>
+      <li><a href="#s7">7. 数据源映射 — SAP/汉询/Dcloud 对接到哪个字段</a></li>
+      <li><a href="#s8">8. 铁律触发规则 — 自动写入 inf_alerts 的条件</a></li>
+      <li><a href="#s9">9. 前端对接说明 — renderNode 如何使用这个 API</a></li>
+    </ul>
+  </div>
+
+  <!-- S1 -->
+  <div class="section" id="s1">
+    <div class="section-title"><span class="num">1</span>核心思想</div>
+    <div class="callout amber">
+      <div class="callout-icon">⚡</div>
+      <div class="callout-body">
+        <strong>一个原则：INFINITY OS 里所有实体（城市/区/经销商/门店/SKU）都是同一种东西——节点。</strong><br>
+        每个节点有相同的字段，走相同的下钻逻辑，被同一个前端组件渲染。<br>
+        数据不同，代码完全相同。这是消灭重复的根本方法。
+      </div>
+    </div>
+    <div class="prose">
+      纵横框架的98个交叉点，本质上是同一张表的98行记录，而不是98个不同的页面。
+      <strong>Universal Node Schema 就是这张表的完整定义。</strong>
+    </div>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="ic-title">没有这个 Schema 时</div>
+        <div class="ic-item red"><div class="ic-dot"></div>经销商、门店、SKU 各自一套数据结构</div>
+        <div class="ic-item red"><div class="ic-dot"></div>每个新模块重写渲染代码</div>
+        <div class="ic-item red"><div class="ic-dot"></div>前后端接口字段每次都在谈</div>
+        <div class="ic-item red"><div class="ic-dot"></div>v781 → 11,947行，越写越长</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-title">有了这个 Schema 之后</div>
+        <div class="ic-item green"><div class="ic-dot"></div>所有实体一套字段，一个接口</div>
+        <div class="ic-item green"><div class="ic-dot"></div>renderNode(node) 渲染任何层级</div>
+        <div class="ic-item green"><div class="ic-dot"></div>后端新城市 = 插入一行记录</div>
+        <div class="ic-item green"><div class="ic-dot"></div>前端代码量减少 60% 以上</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- S2 -->
+  <div class="section" id="s2">
+    <div class="section-title"><span class="num">2</span>节点层级结构</div>
+    <div class="prose">下钻路径：从品牌到 SKU，共6层。每层都是一个节点，每个节点有相同的 Schema。</div>
+
+    <div class="hierarchy-flow">
+      <div class="hf-node">
+        <div class="hf-box">
+          <div class="hf-type">L0</div>
+          <div class="hf-name">品牌</div>
+          <div class="hf-r">r_品牌</div>
+        </div>
+        <div style="font-size:9px;color:var(--text3);margin-top:4px;font-family:'Space Mono',monospace">BRAND</div>
+      </div>
+      <div class="hf-arrow">›</div>
+      <div class="hf-node">
+        <div class="hf-box">
+          <div class="hf-type">L1</div>
+          <div class="hf-name">城市</div>
+          <div class="hf-r">r_城市</div>
+        </div>
+        <div style="font-size:9px;color:var(--text3);margin-top:4px;font-family:'Space Mono',monospace">CITY</div>
+      </div>
+      <div class="hf-arrow">›</div>
+      <div class="hf-node active">
+        <div class="hf-box">
+          <div class="hf-type">L2</div>
+          <div class="hf-name">经销商</div>
+          <div class="hf-r">r_经销商</div>
+        </div>
+        <div style="font-size:9px;color:var(--amber);margin-top:4px;font-family:'Space Mono',monospace">DIST</div>
+      </div>
+      <div class="hf-arrow">›</div>
+      <div class="hf-node">
+        <div class="hf-box">
+          <div class="hf-type">L3</div>
+          <div class="hf-name">门店</div>
+          <div class="hf-r">r_门店</div>
+        </div>
+        <div style="font-size:9px;color:var(--text3);margin-top:4px;font-family:'Space Mono',monospace">STORE</div>
+      </div>
+      <div class="hf-arrow">›</div>
+      <div class="hf-node">
+        <div class="hf-box">
+          <div class="hf-type">L4</div>
+          <div class="hf-name">SKU</div>
+          <div class="hf-r">r_SKU</div>
+        </div>
+        <div style="font-size:9px;color:var(--text3);margin-top:4px;font-family:'Space Mono',monospace">SKU</div>
+      </div>
+    </div>
+
+    <div class="callout blue">
+      <div class="callout-icon">🔗</div>
+      <div class="callout-body">
+        <strong>每层 r 值的关系：</strong> 门店 r 值汇总 → 经销商 r 值 → 城市 r 值 → 品牌 r 值。<br>
+        上层 r 值 = 下层所有子节点 r 值的加权聚合，由系统自动计算，不需要人工填写。
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- S3 -->
+  <div class="section" id="s3">
+    <div class="section-title"><span class="num">3</span>Schema 字段定义</div>
+
+    <div class="prose">每个节点的完整字段集。<strong>绿色 = 心跳公式核心字段，必须实时更新。</strong></div>
+
+    <table class="field-table">
+      <thead>
+        <tr>
+          <th>字段名</th><th>类型</th><th>标记</th><th>含义</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="4" style="background:rgba(245,166,35,0.04);color:var(--amber);font-size:10px;font-weight:700;letter-spacing:0.08em;padding:7px 12px">── 身份字段</td></tr>
+        <tr>
+          <td><span class="fname">node_id</span></td>
+          <td><span class="ftype">VARCHAR(64)</span></td>
+          <td><span class="fbadge fb-pk">PK</span></td>
+          <td>全局唯一ID，格式：<code>品牌-城市-层级-名称</code>，如 <code>lyx-sh-dist-baocang</code></td>
+        </tr>
+        <tr>
+          <td><span class="fname">node_type</span></td>
+          <td><span class="ftype">ENUM</span></td>
+          <td></td>
+          <td><code>brand</code> / <code>city</code> / <code>district</code> / <code>distributor</code> / <code>sub_dist</code> / <code>store</code> / <code>sku</code></td>
+        </tr>
+        <tr>
+          <td><span class="fname">node_name</span></td>
+          <td><span class="ftype">VARCHAR(128)</span></td>
+          <td></td>
+          <td>显示名称，如「上海宝仓贸易」「大润发金桥店」「遵循自然500ml」</td>
+        </tr>
+        <tr>
+          <td><span class="fname">parent_id</span></td>
+          <td><span class="ftype">VARCHAR(64)</span></td>
+          <td><span class="fbadge fb-fk">FK</span></td>
+          <td>父节点ID，指向同表。根节点（品牌）parent_id = NULL</td>
+        </tr>
+        <tr>
+          <td><span class="fname">brand_code</span></td>
+          <td><span class="ftype">VARCHAR(16)</span></td>
+          <td><span class="fbadge fb-idx">IDX</span></td>
+          <td><code>lyx</code> / <code>wdm</code> / <code>hr</code> / <code>cbl</code> / <code>xk</code>，所有层级都带此字段，方便跨品牌查询</td>
+        </tr>
+        <tr>
+          <td><span class="fname">channel_type</span></td>
+          <td><span class="ftype">ENUM</span></td>
+          <td></td>
+          <td><code>P1</code>（直供零售）/ <code>P2</code>（餐饮分销）/ <code>both</code></td>
+        </tr>
+
+        <tr><td colspan="4" style="background:rgba(74,222,128,0.04);color:var(--green);font-size:10px;font-weight:700;letter-spacing:0.08em;padding:7px 12px">── 心跳公式字段（核心 · 实时更新）</td></tr>
+        <tr>
+          <td><span class="fname">a_value</span></td>
+          <td><span class="ftype">DECIMAL(10,2)</span></td>
+          <td><span class="fbadge fb-core">核心</span></td>
+          <td>心跳单元 a = 一个完整周转周期T内的销售量。基准单位，全系统从此派生</td>
+        </tr>
+        <tr>
+          <td><span class="fname">T_days</span></td>
+          <td><span class="ftype">TINYINT</span></td>
+          <td><span class="fbadge fb-core">核心</span></td>
+          <td>周转周期天数。零售S+/S/A = 7天，B/C/D = 14天，经销商 = 30天</td>
+        </tr>
+        <tr>
+          <td><span class="fname">r_actual</span></td>
+          <td><span class="ftype">DECIMAL(10,4)</span></td>
+          <td><span class="fbadge fb-core">核心</span></td>
+          <td>实际日销率 = a ÷ T。来自汉询日销数据，每日更新</td>
+        </tr>
+        <tr>
+          <td><span class="fname">r_target</span></td>
+          <td><span class="ftype">DECIMAL(10,4)</span></td>
+          <td><span class="fbadge fb-core">核心</span></td>
+          <td>目标日销率。由业务团队设定，按年级/季节调整，存入 <code>inf_node_targets</code></td>
+        </tr>
+        <tr>
+          <td><span class="fname">r_achievement</span></td>
+          <td><span class="ftype">DECIMAL(5,2)</span></td>
+          <td><span class="fbadge fb-calc">自动计算</span></td>
+          <td>达成率 = r_actual ÷ r_target × 100，系统自动算，不需要人工填</td>
+        </tr>
+        <tr>
+          <td><span class="fname">inventory_a</span></td>
+          <td><span class="ftype">DECIMAL(10,2)</span></td>
+          <td><span class="fbadge fb-core">核心</span></td>
+          <td>当前库存折算成几个a，来自SFA上报或Dcloud。计算：库存件数 ÷ a_value</td>
+        </tr>
+        <tr>
+          <td><span class="fname">water_level</span></td>
+          <td><span class="ftype">ENUM</span></td>
+          <td><span class="fbadge fb-calc">自动计算</span></td>
+          <td><code>overflow</code>(>3a) / <code>full</code>(3a) / <code>warn</code>(2a) / <code>low</code>(1a) / <code>empty</code>(0)。系统自动判断</td>
+        </tr>
+        <tr>
+          <td><span class="fname">digest_rate</span></td>
+          <td><span class="ftype">DECIMAL(5,2)</span></td>
+          <td><span class="fbadge fb-calc">自动计算</span></td>
+          <td>消化率 = 本月出货 ÷ 上月进货。铁律③监控字段：连续2月 &lt;50% 触发警报</td>
+        </tr>
+
+        <tr><td colspan="4" style="background:rgba(167,139,250,0.04);color:var(--purple);font-size:10px;font-weight:700;letter-spacing:0.08em;padding:7px 12px">── 年级与激励字段</td></tr>
+        <tr>
+          <td><span class="fname">grade</span></td>
+          <td><span class="ftype">TINYINT(1)</span></td>
+          <td><span class="fbadge fb-idx">IDX</span></td>
+          <td>SKU年级：1=新品 / 2=成长 / 3=成熟 / 4=特级。城市/门店级节点不适用，填NULL</td>
+        </tr>
+        <tr>
+          <td><span class="fname">grade_coeff</span></td>
+          <td><span class="ftype">DECIMAL(3,1)</span></td>
+          <td><span class="fbadge fb-calc">自动计算</span></td>
+          <td>激励系数：年级1=×2.0 / 年级2=×1.5 / 年级3=×1.0 / 年级4=×0.7。系统查表填入</td>
+        </tr>
+
+        <tr><td colspan="4" style="background:rgba(96,165,250,0.04);color:var(--blue);font-size:10px;font-weight:700;letter-spacing:0.08em;padding:7px 12px">── CB公式字段</td></tr>
+        <tr>
+          <td><span class="fname">cb_brand</span></td><td><span class="ftype">DECIMAL(5,2)</span></td><td></td>
+          <td>CB = Brand分。品牌认知/忠诚度评估</td>
+        </tr>
+        <tr>
+          <td><span class="fname">cb_value</span></td><td><span class="ftype">DECIMAL(5,2)</span></td><td></td>
+          <td>CB = Value分。产品价值感</td>
+        </tr>
+        <tr>
+          <td><span class="fname">cb_relation</span></td><td><span class="ftype">DECIMAL(5,2)</span></td><td></td>
+          <td>CB = Relation分。渠道/终端关系粘性</td>
+        </tr>
+        <tr>
+          <td><span class="fname">cb_cost</span></td><td><span class="ftype">DECIMAL(5,2)</span></td><td></td>
+          <td>CB = Cost分（负向）。转换成本</td>
+        </tr>
+        <tr>
+          <td><span class="fname">cb_time</span></td><td><span class="ftype">DECIMAL(5,2)</span></td><td></td>
+          <td>CB = Time分（负向）。时间摩擦</td>
+        </tr>
+        <tr>
+          <td><span class="fname">cb_total</span></td>
+          <td><span class="ftype">DECIMAL(5,2)</span></td>
+          <td><span class="fbadge fb-calc">自动计算</span></td>
+          <td>CB合计 = Brand + Value + Relation − Cost − Time。系统自动算</td>
+        </tr>
+
+        <tr><td colspan="4" style="background:rgba(255,95,95,0.04);color:var(--red);font-size:10px;font-weight:700;letter-spacing:0.08em;padding:7px 12px">── 状态与时间字段</td></tr>
+        <tr>
+          <td><span class="fname">active_alert_count</span></td>
+          <td><span class="ftype">TINYINT</span></td>
+          <td><span class="fbadge fb-calc">自动计算</span></td>
+          <td>当前未处理的蝴蝶效应警报数量，从 <code>inf_alerts</code> 聚合</td>
+        </tr>
+        <tr>
+          <td><span class="fname">pending_action_count</span></td>
+          <td><span class="ftype">TINYINT</span></td>
+          <td><span class="fbadge fb-calc">自动计算</span></td>
+          <td>待批准决策数量，从 <code>inf_actions</code> 聚合</td>
+        </tr>
+        <tr>
+          <td><span class="fname">last_updated</span></td>
+          <td><span class="ftype">DATETIME</span></td>
+          <td></td>
+          <td>最后一次数据更新时间，用于判断数据新鲜度</td>
+        </tr>
+        <tr>
+          <td><span class="fname">data_source</span></td>
+          <td><span class="ftype">VARCHAR(32)</span></td>
+          <td></td>
+          <td>数据来源：<code>hanxun</code> / <code>dcloud</code> / <code>sfa</code> / <code>wms</code> / <code>manual</code> / <code>calculated</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- S4 -->
+  <div class="section" id="s4">
+    <div class="section-title"><span class="num">4</span>MySQL 建表语句</div>
+
+    <div class="callout green">
+      <div class="callout-icon">✅</div>
+      <div class="callout-body"><strong>共5张核心表：</strong> inf_nodes（节点注册表）· inf_heartbeat（心跳快照）· inf_r_series（r值时序）· inf_alerts（蝴蝶效应警报）· inf_actions（决策队列）</div>
+    </div>
+
+    <!-- Table 1 -->
+    <div class="code-wrap">
+      <div class="code-label"><span>表 1/5 · 节点注册表</span><span class="lang">MySQL DDL</span></div>
+      <div class="code-block"><span class="cm">-- ============================================================
+-- 表1: inf_nodes · 节点注册表
+-- 所有实体的身份注册，下钻结构由 parent_id 自引用实现
+-- ============================================================</span>
+<span class="kw">CREATE TABLE</span> <span class="fn">inf_nodes</span> (
+  <span class="fn">node_id</span>           <span class="ty">VARCHAR(64)</span>   <span class="kw">NOT NULL</span>,
+  <span class="fn">node_type</span>         <span class="ty">ENUM</span>(<span class="st">'brand'</span>,<span class="st">'city'</span>,<span class="st">'district'</span>,<span class="st">'distributor'</span>,
+                         <span class="st">'sub_dist'</span>,<span class="st">'store'</span>,<span class="st">'sku'</span>) <span class="kw">NOT NULL</span>,
+  <span class="fn">node_name</span>         <span class="ty">VARCHAR(128)</span>  <span class="kw">NOT NULL</span>,
+  <span class="fn">parent_id</span>         <span class="ty">VARCHAR(64)</span>   <span class="kw">DEFAULT NULL</span>,   <span class="cm">-- 根节点为NULL</span>
+  <span class="fn">brand_code</span>        <span class="ty">VARCHAR(16)</span>   <span class="kw">NOT NULL</span>,        <span class="cm">-- lyx/wdm/hr/cbl/xk</span>
+  <span class="fn">channel_type</span>      <span class="ty">ENUM</span>(<span class="st">'P1'</span>,<span class="st">'P2'</span>,<span class="st">'both'</span>) <span class="kw">DEFAULT</span> <span class="st">'P1'</span>,
+  <span class="fn">grade</span>             <span class="ty">TINYINT(1)</span>    <span class="kw">DEFAULT NULL</span>,   <span class="cm">-- 仅SKU节点有效</span>
+  <span class="fn">grade_coeff</span>       <span class="ty">DECIMAL(3,1)</span>  <span class="kw">DEFAULT NULL</span>,   <span class="cm">-- 系统自动填入</span>
+  <span class="fn">store_class</span>       <span class="ty">ENUM</span>(<span class="st">'S+'</span>,<span class="st">'S'</span>,<span class="st">'A'</span>,<span class="st">'B'</span>,<span class="st">'C'</span>,<span class="st">'D'</span>) <span class="kw">DEFAULT NULL</span>, <span class="cm">-- 仅store节点</span>
+  <span class="fn">T_days</span>            <span class="ty">TINYINT</span>       <span class="kw">NOT NULL DEFAULT</span> <span class="va">30</span>,
+  <span class="fn">ipo10_price</span>       <span class="ty">DECIMAL(8,2)</span>  <span class="kw">DEFAULT NULL</span>,   <span class="cm">-- 仅SKU节点 · 铁律①监控</span>
+  <span class="fn">is_active</span>         <span class="ty">BOOLEAN</span>       <span class="kw">DEFAULT</span> <span class="va">TRUE</span>,
+  <span class="fn">created_at</span>        <span class="ty">DATETIME</span>      <span class="kw">DEFAULT</span> <span class="fn">CURRENT_TIMESTAMP</span>,
+  <span class="fn">updated_at</span>        <span class="ty">DATETIME</span>      <span class="kw">ON UPDATE</span> <span class="fn">CURRENT_TIMESTAMP</span>,
+
+  <span class="kw">PRIMARY KEY</span> (<span class="fn">node_id</span>),
+  <span class="kw">FOREIGN KEY</span> (<span class="fn">parent_id</span>) <span class="kw">REFERENCES</span> <span class="fn">inf_nodes</span>(<span class="fn">node_id</span>),
+  <span class="kw">INDEX</span> <span class="fn">idx_brand</span> (<span class="fn">brand_code</span>),
+  <span class="kw">INDEX</span> <span class="fn">idx_type</span> (<span class="fn">node_type</span>),
+  <span class="kw">INDEX</span> <span class="fn">idx_parent</span> (<span class="fn">parent_id</span>)
+) <span class="kw">ENGINE</span>=InnoDB <span class="kw">CHARSET</span>=utf8mb4 <span class="kw">COMMENT</span>=<span class="st">'节点注册表·全体系实体的身份与层级'</span>;</div>
+    </div>
+
+    <!-- Table 2 -->
+    <div class="code-wrap">
+      <div class="code-label"><span>表 2/5 · 心跳快照表</span><span class="lang">MySQL DDL</span></div>
+      <div class="code-block"><span class="cm">-- ============================================================
+-- 表2: inf_heartbeat · 心跳快照
+-- 每天一条记录，存当日r值和库存水位
+-- ============================================================</span>
+<span class="kw">CREATE TABLE</span> <span class="fn">inf_heartbeat</span> (
+  <span class="fn">hb_id</span>             <span class="ty">BIGINT</span>        <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="fn">node_id</span>           <span class="ty">VARCHAR(64)</span>   <span class="kw">NOT NULL</span>,
+  <span class="fn">snapshot_date</span>     <span class="ty">DATE</span>          <span class="kw">NOT NULL</span>,
+
+  <span class="cm">-- 心跳公式核心</span>
+  <span class="fn">a_value</span>           <span class="ty">DECIMAL(10,2)</span> <span class="kw">NOT NULL</span>,        <span class="cm">-- 心跳单元</span>
+  <span class="fn">r_actual</span>          <span class="ty">DECIMAL(10,4)</span> <span class="kw">NOT NULL</span>,        <span class="cm">-- 实际日销率</span>
+  <span class="fn">r_target</span>          <span class="ty">DECIMAL(10,4)</span> <span class="kw">NOT NULL</span>,        <span class="cm">-- 目标日销率</span>
+  <span class="fn">r_achievement</span>     <span class="ty">DECIMAL(5,2)</span>  <span class="kw">AS</span> (<span class="fn">r_actual</span> / <span class="fn">r_target</span> * <span class="va">100</span>) <span class="kw">STORED</span>,
+
+  <span class="cm">-- 库存水位</span>
+  <span class="fn">inventory_units</span>   <span class="ty">INT</span>           <span class="kw">NOT NULL</span>,        <span class="cm">-- 实物库存件数</span>
+  <span class="fn">inventory_a</span>       <span class="ty">DECIMAL(10,2)</span> <span class="kw">AS</span> (<span class="fn">inventory_units</span> / <span class="fn">a_value</span>) <span class="kw">STORED</span>,
+  <span class="fn">water_level</span>       <span class="ty">ENUM</span>(<span class="st">'overflow'</span>,<span class="st">'full'</span>,<span class="st">'warn'</span>,<span class="st">'low'</span>,<span class="st">'empty'</span>),  <span class="cm">-- 触发器自动写</span>
+  <span class="fn">digest_rate</span>       <span class="ty">DECIMAL(5,2)</span>  <span class="kw">DEFAULT NULL</span>,   <span class="cm">-- 消化率，月底计算</span>
+
+  <span class="cm">-- CB得分快照</span>
+  <span class="fn">cb_total</span>          <span class="ty">DECIMAL(5,2)</span>  <span class="kw">DEFAULT NULL</span>,
+
+  <span class="fn">data_source</span>       <span class="ty">VARCHAR(32)</span>   <span class="kw">NOT NULL</span>,        <span class="cm">-- hanxun/dcloud/sfa/manual</span>
+  <span class="fn">created_at</span>        <span class="ty">DATETIME</span>      <span class="kw">DEFAULT</span> <span class="fn">CURRENT_TIMESTAMP</span>,
+
+  <span class="kw">UNIQUE KEY</span> <span class="fn">uk_node_date</span> (<span class="fn">node_id</span>, <span class="fn">snapshot_date</span>),
+  <span class="kw">FOREIGN KEY</span> (<span class="fn">node_id</span>) <span class="kw">REFERENCES</span> <span class="fn">inf_nodes</span>(<span class="fn">node_id</span>),
+  <span class="kw">INDEX</span> <span class="fn">idx_date</span> (<span class="fn">snapshot_date</span>)
+) <span class="kw">ENGINE</span>=InnoDB <span class="kw">CHARSET</span>=utf8mb4 <span class="kw">COMMENT</span>=<span class="st">'心跳快照·每日r值和库存水位'</span>;</div>
+    </div>
+
+    <!-- Table 3 -->
+    <div class="code-wrap">
+      <div class="code-label"><span>表 3/5 · 蝴蝶效应警报表</span><span class="lang">MySQL DDL</span></div>
+      <div class="code-block"><span class="cm">-- ============================================================
+-- 表3: inf_alerts · 蝴蝶效应警报
+-- A类压货/B类促销扰动/C类窜货/D类战略扰动
+-- ============================================================</span>
+<span class="kw">CREATE TABLE</span> <span class="fn">inf_alerts</span> (
+  <span class="fn">alert_id</span>          <span class="ty">BIGINT</span>        <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="fn">node_id</span>           <span class="ty">VARCHAR(64)</span>   <span class="kw">NOT NULL</span>,
+  <span class="fn">alert_type</span>        <span class="ty">ENUM</span>(<span class="st">'A'</span>,<span class="st">'B'</span>,<span class="st">'C'</span>,<span class="st">'D'</span>) <span class="kw">NOT NULL</span>,  <span class="cm">-- A压货/B促销/C窜货/D战略</span>
+  <span class="fn">severity</span>          <span class="ty">ENUM</span>(<span class="st">'yellow'</span>,<span class="st">'orange'</span>,<span class="st">'red'</span>) <span class="kw">NOT NULL</span>,
+  <span class="fn">iron_law_ref</span>      <span class="ty">TINYINT</span>       <span class="kw">DEFAULT NULL</span>,   <span class="cm">-- 关联铁律编号1/2/3，无关联填NULL</span>
+  <span class="fn">title</span>             <span class="ty">VARCHAR(256)</span>  <span class="kw">NOT NULL</span>,
+  <span class="fn">description</span>       <span class="ty">TEXT</span>,
+  <span class="fn">trigger_value</span>     <span class="ty">JSON</span>,                          <span class="cm">-- 触发数据快照，如{"digest_rate":0.471}</span>
+  <span class="fn">status</span>            <span class="ty">ENUM</span>(<span class="st">'active'</span>,<span class="st">'acknowledged'</span>,<span class="st">'resolved'</span>,<span class="st">'overridden'</span>) <span class="kw">DEFAULT</span> <span class="st">'active'</span>,
+  <span class="fn">triggered_at</span>      <span class="ty">DATETIME</span>      <span class="kw">NOT NULL</span>,
+  <span class="fn">resolved_at</span>       <span class="ty">DATETIME</span>      <span class="kw">DEFAULT NULL</span>,
+  <span class="fn">resolved_by</span>       <span class="ty">VARCHAR(64)</span>   <span class="kw">DEFAULT NULL</span>,
+
+  <span class="kw">FOREIGN KEY</span> (<span class="fn">node_id</span>) <span class="kw">REFERENCES</span> <span class="fn">inf_nodes</span>(<span class="fn">node_id</span>),
+  <span class="kw">INDEX</span> <span class="fn">idx_status</span> (<span class="fn">status</span>),
+  <span class="kw">INDEX</span> <span class="fn">idx_triggered</span> (<span class="fn">triggered_at</span>)
+) <span class="kw">ENGINE</span>=InnoDB <span class="kw">CHARSET</span>=utf8mb4 <span class="kw">COMMENT</span>=<span class="st">'蝴蝶效应警报·A/B/C/D四类失真'</span>;</div>
+    </div>
+
+    <!-- Table 4 -->
+    <div class="code-wrap">
+      <div class="code-label"><span>表 4/5 · 决策队列表</span><span class="lang">MySQL DDL</span></div>
+      <div class="code-block"><span class="cm">-- ============================================================
+-- 表4: inf_actions · 决策队列
+-- Agent 提出行动建议，等待人工批准/拒绝/覆盖
+-- ============================================================</span>
+<span class="kw">CREATE TABLE</span> <span class="fn">inf_actions</span> (
+  <span class="fn">action_id</span>         <span class="ty">BIGINT</span>        <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="fn">node_id</span>           <span class="ty">VARCHAR(64)</span>   <span class="kw">NOT NULL</span>,
+  <span class="fn">agent_source</span>      <span class="ty">VARCHAR(64)</span>   <span class="kw">NOT NULL</span>,  <span class="cm">-- 哪个Agent提出，如 butterfly_agent</span>
+  <span class="fn">action_type</span>       <span class="ty">ENUM</span>(<span class="st">'replenish'</span>,<span class="st">'suspend'</span>,<span class="st">'grade_change'</span>,
+                         <span class="st">'price_check'</span>,<span class="st">'alert_resolve'</span>,<span class="st">'custom'</span>) <span class="kw">NOT NULL</span>,
+  <span class="fn">title</span>             <span class="ty">VARCHAR(256)</span>  <span class="kw">NOT NULL</span>,
+  <span class="fn">description</span>       <span class="ty">TEXT</span>,
+  <span class="fn">confidence_pct</span>    <span class="ty">TINYINT</span>       <span class="kw">NOT NULL</span>,  <span class="cm">-- 0-100，Agent置信度</span>
+  <span class="fn">impact_level</span>      <span class="ty">ENUM</span>(<span class="st">'high'</span>,<span class="st">'mid'</span>,<span class="st">'low'</span>) <span class="kw">NOT NULL</span>,
+  <span class="fn">proposed_payload</span>  <span class="ty">JSON</span>,                     <span class="cm">-- 具体建议参数，如{"qty":240,"sku":"lyx-500ml"}</span>
+  <span class="fn">status</span>            <span class="ty">ENUM</span>(<span class="st">'pending'</span>,<span class="st">'approved'</span>,<span class="st">'rejected'</span>,
+                         <span class="st">'overridden'</span>,<span class="st">'auto_executed'</span>) <span class="kw">DEFAULT</span> <span class="st">'pending'</span>,
+  <span class="fn">override_reason</span>   <span class="ty">TEXT</span>          <span class="kw">DEFAULT NULL</span>,
+  <span class="fn">proposed_at</span>       <span class="ty">DATETIME</span>      <span class="kw">NOT NULL</span>,
+  <span class="fn">decided_at</span>        <span class="ty">DATETIME</span>      <span class="kw">DEFAULT NULL</span>,
+  <span class="fn">decided_by</span>        <span class="ty">VARCHAR(64)</span>   <span class="kw">DEFAULT NULL</span>,  <span class="cm">-- 操作人工号或 'system'</span>
+
+  <span class="kw">FOREIGN KEY</span> (<span class="fn">node_id</span>) <span class="kw">REFERENCES</span> <span class="fn">inf_nodes</span>(<span class="fn">node_id</span>),
+  <span class="kw">INDEX</span> <span class="fn">idx_status_impact</span> (<span class="fn">status</span>, <span class="fn">impact_level</span>),
+  <span class="kw">INDEX</span> <span class="fn">idx_pending</span> (<span class="fn">status</span>, <span class="fn">proposed_at</span>)
+) <span class="kw">ENGINE</span>=InnoDB <span class="kw">CHARSET</span>=utf8mb4 <span class="kw">COMMENT</span>=<span class="st">'决策队列·Agent行动建议的审批闭环'</span>;</div>
+    </div>
+
+    <!-- Table 5 -->
+    <div class="code-wrap">
+      <div class="code-label"><span>表 5/5 · 目标设定表</span><span class="lang">MySQL DDL</span></div>
+      <div class="code-block"><span class="cm">-- ============================================================
+-- 表5: inf_node_targets · 目标设定
+-- 业务团队填写每个节点的r_target和年级，解锁 Step 2 数据接入
+-- ============================================================</span>
+<span class="kw">CREATE TABLE</span> <span class="fn">inf_node_targets</span> (
+  <span class="fn">target_id</span>         <span class="ty">BIGINT</span>        <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+  <span class="fn">node_id</span>           <span class="ty">VARCHAR(64)</span>   <span class="kw">NOT NULL</span>,
+  <span class="fn">effective_month</span>   <span class="ty">DATE</span>          <span class="kw">NOT NULL</span>,   <span class="cm">-- 生效月份，格式 YYYY-MM-01</span>
+  <span class="fn">r_target</span>          <span class="ty">DECIMAL(10,4)</span> <span class="kw">NOT NULL</span>,   <span class="cm">-- 这是当前 SAP Step2 的最大阻塞点</span>
+  <span class="fn">grade</span>             <span class="ty">TINYINT(1)</span>    <span class="kw">DEFAULT NULL</span>,
+  <span class="fn">set_by</span>            <span class="ty">VARCHAR(64)</span>   <span class="kw">NOT NULL</span>,
+  <span class="fn">created_at</span>        <span class="ty">DATETIME</span>      <span class="kw">DEFAULT</span> <span class="fn">CURRENT_TIMESTAMP</span>,
+
+  <span class="kw">UNIQUE KEY</span> <span class="fn">uk_node_month</span> (<span class="fn">node_id</span>, <span class="fn">effective_month</span>),
+  <span class="kw">FOREIGN KEY</span> (<span class="fn">node_id</span>) <span class="kw">REFERENCES</span> <span class="fn">inf_nodes</span>(<span class="fn">node_id</span>)
+) <span class="kw">ENGINE</span>=InnoDB <span class="kw">CHARSET</span>=utf8mb4 <span class="kw">COMMENT</span>=<span class="st">'目标设定·业务团队填写r_target和年级'</span>;</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- S5 -->
+  <div class="section" id="s5">
+    <div class="section-title"><span class="num">5</span>API Response 格式</div>
+    <div class="prose">前端请求一个节点：<code>GET /api/v1/node/{node_id}</code>，返回以下格式。<strong>不管请求的是城市还是SKU，格式完全相同。</strong></div>
+
+    <div class="code-wrap">
+      <div class="code-label"><span>GET /api/v1/node/{node_id} · 完整响应</span><span class="lang">JSON</span></div>
+      <div class="code-block">{
+  <span class="jk">"node"</span>: {
+    <span class="jk">"id"</span>: <span class="jv">"lyx-sh-dist-baocang"</span>,
+    <span class="jk">"type"</span>: <span class="jv">"distributor"</span>,
+    <span class="jk">"name"</span>: <span class="jv">"上海宝仓贸易"</span>,
+    <span class="jk">"brand"</span>: <span class="jv">"lyx"</span>,
+    <span class="jk">"channel"</span>: <span class="jv">"P1"</span>,
+    <span class="jk">"grade"</span>: <span class="jn">null</span>,           <span class="cm">// 经销商层级无年级，SKU层级才有</span>
+    <span class="jk">"grade_coeff"</span>: <span class="jn">null</span>,
+    <span class="jk">"T_days"</span>: <span class="jn">30</span>
+  },
+
+  <span class="jk">"heartbeat"</span>: {             <span class="cm">// 心跳公式核心，前端水位图直接读这里</span>
+    <span class="jk">"a_value"</span>: <span class="jn">120</span>,
+    <span class="jk">"r_actual"</span>: <span class="jn">3.2</span>,
+    <span class="jk">"r_target"</span>: <span class="jn">4.1</span>,
+    <span class="jk">"r_achievement"</span>: <span class="jn">78.0</span>,   <span class="cm">// 百分比，系统计算</span>
+    <span class="jk">"inventory_units"</span>: <span class="jn">504</span>,
+    <span class="jk">"inventory_a"</span>: <span class="jn">4.2</span>,       <span class="cm">// 504 ÷ 120 = 4.2a，超3a触发铁律③</span>
+    <span class="jk">"water_level"</span>: <span class="jv">"overflow"</span>,
+    <span class="jk">"digest_rate"</span>: <span class="jn">0.471</span>,    <span class="cm">// 47.1%，连续2月低于50%触发铁律③</span>
+    <span class="jk">"snapshot_date"</span>: <span class="jv">"2026-04-13"</span>,
+    <span class="jk">"data_source"</span>: <span class="jv">"dcloud"</span>
+  },
+
+  <span class="jk">"cb"</span>: {
+    <span class="jk">"brand"</span>: <span class="jn">7.2</span>, <span class="jk">"value"</span>: <span class="jn">6.8</span>, <span class="jk">"relation"</span>: <span class="jn">8.1</span>,
+    <span class="jk">"cost"</span>: <span class="jn">3.2</span>, <span class="jk">"time"</span>: <span class="jn">2.4</span>,
+    <span class="jk">"total"</span>: <span class="jn">16.5</span>             <span class="cm">// 7.2+6.8+8.1-3.2-2.4</span>
+  },
+
+  <span class="jk">"alerts"</span>: [               <span class="cm">// 蝴蝶效应，status=active的全部返回</span>
+    {
+      <span class="jk">"alert_id"</span>: <span class="jn">1042</span>,
+      <span class="jk">"type"</span>: <span class="jv">"A"</span>,
+      <span class="jk">"severity"</span>: <span class="jv">"red"</span>,
+      <span class="jk">"iron_law_ref"</span>: <span class="jn">3</span>,
+      <span class="jk">"title"</span>: <span class="jv">"连续2月消化率低于50%"</span>,
+      <span class="jk">"triggered_at"</span>: <span class="jv">"2026-04-13T07:00:00"</span>
+    }
+  ],
+
+  <span class="jk">"actions"</span>: [              <span class="cm">// 待批准决策队列，status=pending</span>
+    {
+      <span class="jk">"action_id"</span>: <span class="jn">205</span>,
+      <span class="jk">"type"</span>: <span class="jv">"suspend"</span>,
+      <span class="jk">"agent"</span>: <span class="jv">"butterfly_agent"</span>,
+      <span class="jk">"title"</span>: <span class="jv">"建议暂停2周补货"</span>,
+      <span class="jk">"confidence_pct"</span>: <span class="jn">91</span>,
+      <span class="jk">"impact_level"</span>: <span class="jv">"high"</span>
+    }
+  ],
+
+  <span class="jk">"breadcrumb"</span>: [           <span class="cm">// 前端面包屑导航直接用这个数组</span>
+    {<span class="jk">"id"</span>:<span class="jv">"lyx"</span>,         <span class="jk">"name"</span>:<span class="jv">"六月鲜"</span>,      <span class="jk">"type"</span>:<span class="jv">"brand"</span>},
+    {<span class="jk">"id"</span>:<span class="jv">"lyx-sh"</span>,      <span class="jk">"name"</span>:<span class="jv">"上海"</span>,         <span class="jk">"type"</span>:<span class="jv">"city"</span>},
+    {<span class="jk">"id"</span>:<span class="jv">"lyx-sh-dist-baocang"</span>, <span class="jk">"name"</span>:<span class="jv">"宝仓贸易"</span>, <span class="jk">"type"</span>:<span class="jv">"distributor"</span>}
+  ],
+
+  <span class="jk">"children"</span>: [             <span class="cm">// 下钻列表，只返回id/name/type/heartbeat摘要</span>
+    {
+      <span class="jk">"id"</span>: <span class="jv">"lyx-sh-dist-baocang-store-001"</span>,
+      <span class="jk">"name"</span>: <span class="jv">"大润发金桥店"</span>,
+      <span class="jk">"type"</span>: <span class="jv">"store"</span>,
+      <span class="jk">"r_achievement"</span>: <span class="jn">74.0</span>,
+      <span class="jk">"water_level"</span>: <span class="jv">"warn"</span>,
+      <span class="jk">"active_alert_count"</span>: <span class="jn">1</span>
+    }
+  ]
+}</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- S6 -->
+  <div class="section" id="s6">
+    <div class="section-title"><span class="num">6</span>计算规则</div>
+    <div class="prose">以下字段由系统自动计算，<strong>不允许人工填写</strong>。后端在写入心跳记录时执行。</div>
+
+    <div class="code-wrap">
+      <div class="code-label"><span>自动计算逻辑</span><span class="lang">伪代码</span></div>
+      <div class="code-block"><span class="cm">// 1. r达成率</span>
+<span class="fn">r_achievement</span> = <span class="fn">r_actual</span> / <span class="fn">r_target</span> * <span class="va">100</span>
+
+<span class="cm">// 2. 库存折算</span>
+<span class="fn">inventory_a</span> = <span class="fn">inventory_units</span> / <span class="fn">a_value</span>
+
+<span class="cm">// 3. 水位判断（根据节点类型）</span>
+<span class="kw">IF</span> node_type == <span class="st">'store'</span>:     <span class="cm">// 零售：3a满仓</span>
+  <span class="kw">IF</span> inventory_a > <span class="va">3</span>:   water_level = <span class="st">'overflow'</span>
+  <span class="kw">IF</span> inventory_a >= <span class="va">2</span>:  water_level = <span class="st">'full'</span>
+  <span class="kw">IF</span> inventory_a >= <span class="va">1</span>:  water_level = <span class="st">'warn'</span>
+  <span class="kw">ELSE</span>:                   water_level = <span class="st">'low'</span> | <span class="st">'empty'</span>
+
+<span class="kw">IF</span> node_type == <span class="st">'distributor'</span>: <span class="cm">// 经销商：2a满仓</span>
+  <span class="kw">IF</span> inventory_a > <span class="va">2</span>:   water_level = <span class="st">'overflow'</span>
+  <span class="kw">IF</span> inventory_a >= <span class="va">1</span>:  water_level = <span class="st">'full'</span>
+  <span class="kw">ELSE</span>:                   water_level = <span class="st">'low'</span> | <span class="st">'empty'</span>
+
+<span class="kw">IF</span> node_type == <span class="st">'sub_dist'</span>: <span class="cm">// 二批商：严控1a</span>
+  <span class="kw">IF</span> inventory_a > <span class="va">1</span>:   water_level = <span class="st">'overflow'</span>  <span class="cm">// 触发窜货预警</span>
+  <span class="kw">IF</span> inventory_a == <span class="va">1</span>:  water_level = <span class="st">'full'</span>
+  <span class="kw">ELSE</span>:                   water_level = <span class="st">'low'</span>
+
+<span class="cm">// 4. 年级激励系数</span>
+<span class="fn">grade_coeff</span> = {<span class="va">1</span>:<span class="va">2.0</span>, <span class="va">2</span>:<span class="va">1.5</span>, <span class="va">3</span>:<span class="va">1.0</span>, <span class="va">4</span>:<span class="va">0.7</span>}[grade]
+
+<span class="cm">// 5. 铁律③触发条件（每月月末执行检查）</span>
+<span class="kw">IF</span> <span class="fn">digest_rate</span> < <span class="va">0.50</span> <span class="kw">AND</span> consecutive_months >= <span class="va">2</span>:
+  INSERT <span class="fn">inf_alerts</span> (type=<span class="st">'A'</span>, severity=<span class="st">'red'</span>, iron_law_ref=<span class="va">3</span>)
+  UPDATE <span class="fn">inf_actions</span>: 自动暂停该节点的 pending replenish 推单</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- S7 -->
+  <div class="section" id="s7">
+    <div class="section-title"><span class="num">7</span>数据源映射</div>
+    <div class="prose">每个数据源对应哪些字段，按接入优先级排序。</div>
+
+    <div class="int-row">
+      <div class="int-source">
+        <div class="int-src-name">汉询</div>
+        <div class="int-src-sub">日销 POS</div>
+      </div>
+      <div class="int-arrow">→</div>
+      <div class="int-fields">
+        <div class="int-field-row">
+          <span class="int-field-name">rixiao_qty</span>
+          <span class="int-sep">→</span>
+          <span class="int-field-target">inf_heartbeat.r_actual</span>
+          <span class="int-priority p1">P1 最高优先</span>
+        </div>
+        <div class="int-field-row">
+          <span class="int-field-name">store_id</span>
+          <span class="int-sep">→</span>
+          <span class="int-field-target">inf_nodes.node_id</span>
+          <span class="int-sep">（需映射表）</span>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">这是整个系统的数据血液。r_actual 上线，所有心跳计算即刻启动。</div>
+      </div>
+    </div>
+
+    <div class="int-row">
+      <div class="int-source">
+        <div class="int-src-name">Dcloud</div>
+        <div class="int-src-sub">EPP 经销商</div>
+      </div>
+      <div class="int-arrow">→</div>
+      <div class="int-fields">
+        <div class="int-field-row">
+          <span class="int-field-name">stock_qty</span>
+          <span class="int-sep">→</span>
+          <span class="int-field-target">inf_heartbeat.inventory_units</span>
+          <span class="int-priority p1">P1 最高优先</span>
+        </div>
+        <div class="int-field-row">
+          <span class="int-field-name">shipout_qty</span>
+          <span class="int-sep">→</span>
+          <span class="int-field-target">digest_rate 计算输入</span>
+          <span class="int-priority p1">P1</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="int-row">
+      <div class="int-source">
+        <div class="int-src-name">SFA</div>
+        <div class="int-src-sub">库存上报</div>
+      </div>
+      <div class="int-arrow">→</div>
+      <div class="int-fields">
+        <div class="int-field-row">
+          <span class="int-field-name">shelf_qty + warehouse_qty</span>
+          <span class="int-sep">→</span>
+          <span class="int-field-target">store节点 inventory_units</span>
+          <span class="int-priority p2">P2</span>
+        </div>
+        <div class="int-field-row">
+          <span class="int-field-name">shelf_photo</span>
+          <span class="int-sep">→</span>
+          <span class="int-field-target">cb_value 输入 + 货架识别训练数据</span>
+          <span class="int-priority p2">P2</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="int-row">
+      <div class="int-source">
+        <div class="int-src-name">WMS</div>
+        <div class="int-src-sub">工厂仓库</div>
+      </div>
+      <div class="int-arrow">→</div>
+      <div class="int-fields">
+        <div class="int-field-row">
+          <span class="int-field-name">factory_stock</span>
+          <span class="int-sep">→</span>
+          <span class="int-field-target">brand/sku节点 inventory_units（IPO0-1）</span>
+          <span class="int-priority p3">P3</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="int-row">
+      <div class="int-source">
+        <div class="int-src-name">业务团队</div>
+        <div class="int-src-sub">手动填写</div>
+      </div>
+      <div class="int-arrow">→</div>
+      <div class="int-fields">
+        <div class="int-field-row">
+          <span class="int-field-name">r_target + grade</span>
+          <span class="int-sep">→</span>
+          <span class="int-field-target">inf_node_targets（SAP Step2 当前阻塞点）</span>
+          <span class="int-priority p1">P1 解锁 Step2</span>
+        </div>
+        <div style="font-size:10px;color:var(--red);margin-top:4px">⚠ 业务团队填完 r_target + grade，Step2 立即解锁。这是当前最紧急的手动动作。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- S8 -->
+  <div class="section" id="s8">
+    <div class="section-title"><span class="num">8</span>铁律触发规则</div>
+
+    <div class="rule-box">
+      <div class="rule-title">铁律① — IPO10 价格低于 ¥13/瓶 → 立即暂停</div>
+      <div class="rule-body">
+        监控字段：<code>inf_nodes.ipo10_price</code><br>
+        触发条件：<code>ipo10_price &lt; 13.00</code><br>
+        自动动作：INSERT inf_alerts(type='D', severity='red', iron_law_ref=1)，同时 INSERT inf_actions(type='suspend', confidence=100)
+      </div>
+    </div>
+
+    <div class="rule-box">
+      <div class="rule-title">铁律③ — 连续两月消化率低于 50% → 蝴蝶效应A类警报</div>
+      <div class="rule-body">
+        监控字段：<code>inf_heartbeat.digest_rate</code>，每月最后一天计算<br>
+        触发条件：当月 digest_rate &lt; 0.50 AND 上月 digest_rate &lt; 0.50<br>
+        自动动作：INSERT inf_alerts(type='A', severity='red', iron_law_ref=3)，暂停该节点所有 pending 推单<br>
+        当前触发节点：上海宝仓贸易（digest_rate = 47.1%，已连续2月）
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- S9 -->
+  <div class="section" id="s9">
+    <div class="section-title"><span class="num">9</span>前端对接说明</div>
+    <div class="prose">Schema 确认后，前端只需要一个函数。<strong>下钻永远是同一行代码。</strong></div>
+
+    <div class="code-wrap">
+      <div class="code-label"><span>前端 renderNode 伪代码</span><span class="lang">JavaScript</span></div>
+      <div class="code-block"><span class="cm">// 全系统唯一的渲染函数，接受任何类型节点</span>
+<span class="kw">async function</span> <span class="fn">renderNode</span>(nodeId) {
+  <span class="kw">const</span> node = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="st">`/api/v1/node/${nodeId}`</span>)
+
+  <span class="cm">// 面包屑：直接用 breadcrumb 数组</span>
+  <span class="fn">renderBreadcrumb</span>(node.breadcrumb)
+
+  <span class="cm">// 心跳水位：直接读 heartbeat</span>
+  <span class="fn">renderHeartbeat</span>(node.heartbeat)     <span class="cm">// 颜色/水位条/r达成率</span>
+
+  <span class="cm">// 警报：直接渲染 alerts 数组</span>
+  <span class="fn">renderAlerts</span>(node.alerts)
+
+  <span class="cm">// 决策队列：直接渲染 actions 数组</span>
+  <span class="fn">renderActions</span>(node.actions)
+
+  <span class="cm">// 子节点列表（下钻入口）</span>
+  node.children.<span class="fn">forEach</span>(child => {
+    <span class="cm">// 点击任何子节点 → 再次调用 renderNode，无限下钻</span>
+    child.onclick = () => <span class="fn">renderNode</span>(child.id)
+  })
+
+  <span class="cm">// AI对话：节点自带上下文</span>
+  <span class="fn">callClaude</span>(<span class="fn">buildPrompt</span>(node), userQuestion)
+}
+
+<span class="cm">// 全系统唯一的 Claude 调用函数</span>
+<span class="kw">async function</span> <span class="fn">callClaude</span>(systemPrompt, userQuestion) {
+  <span class="cm">// 12个函数 → 1个，原来的 12 个全部删除</span>
+  <span class="kw">return</span> <span class="kw">await</span> <span class="fn">fetch</span>(<span class="st">'https://api.anthropic.com/v1/messages'</span>, {
+    body: <span class="fn">JSON.stringify</span>({ model, system: systemPrompt, messages })
+  })
+}</div>
+    </div>
+
+    <div class="callout green">
+      <div class="callout-icon">✅</div>
+      <div class="callout-body">
+        <strong>Schema 上线后的系统行为：</strong><br>
+        新增一个城市 = 插入一行 inf_nodes 记录，前端自动显示，不写任何新代码。<br>
+        新增一个 SKU = 同上。新增一个经销商 = 同上。<br>
+        v781 的 11,947 行，可以重构到 3,000 行以内。
+      </div>
+    </div>
+
+    <div class="callout amber">
+      <div class="callout-icon">⚡</div>
+      <div class="callout-body">
+        <strong>交给后端团队的优先级：</strong><br>
+        第1步：建5张表（DDL 已在本文档，直接执行）<br>
+        第2步：业务团队填写 inf_node_targets（r_target + grade），解锁 SAP Step2<br>
+        第3步：汉询日销数据 → inf_heartbeat.r_actual（接通后全系统激活）<br>
+        第4步：Dcloud 库存 → inf_heartbeat.inventory_units
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

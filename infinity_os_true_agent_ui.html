@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 真正Agent界面 · 理想态</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07080e;
+  --bg2: #0b0d15;
+  --bg3: #10131c;
+  --card: #13161f;
+  --card2: #181c28;
+  --border: rgba(255,255,255,0.05);
+  --border2: rgba(255,255,255,0.10);
+  --text: #dde3f0;
+  --text2: #7a8499;
+  --text3: #3d4457;
+  --amber: #f5a623;
+  --amber2: #ffc85e;
+  --amber-dim: rgba(245,166,35,0.08);
+  --amber-glow: rgba(245,166,35,0.15);
+  --teal: #4ecdc4;
+  --teal-dim: rgba(78,205,196,0.08);
+  --red: #ff5f5f;
+  --red-dim: rgba(255,95,95,0.08);
+  --red-glow: rgba(255,95,95,0.2);
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.08);
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:sticky;top:0;z-index:200;
+  background:rgba(7,8,14,0.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:52px;
+}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-sym{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000;
+  box-shadow:0 0 16px rgba(245,166,35,0.25);
+}
+.logo-text{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.05em}
+.logo-text .acc{color:var(--amber)}
+.system-status{display:flex;align-items:center;gap:6px;font-size:11px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse-green 2s infinite}
+@keyframes pulse-green{0%,100%{opacity:1}50%{opacity:0.5}}
+.status-txt{color:var(--text2);font-family:'Space Mono',monospace;font-size:10px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.agent-count{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,166,35,0.15);padding:3px 9px;border-radius:20px}
+.clock{font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)}
+
+/* ── PHILOSOPHY STRIP ── */
+.phi-strip{
+  background:linear-gradient(90deg, rgba(245,166,35,0.04) 0%, transparent 50%, rgba(78,205,196,0.03) 100%);
+  border-bottom:1px solid var(--border);
+  padding:8px 16px;
+  display:flex;align-items:center;gap:12px;
+  font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;
+  overflow-x:auto;white-space:nowrap;scrollbar-width:none;
+}
+.phi-strip::-webkit-scrollbar{display:none}
+.phi-item{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.phi-sep{color:var(--text3);opacity:0.3;margin:0 4px}
+
+/* ── MAIN LAYOUT ── */
+.main{padding:14px 16px 80px;display:flex;flex-direction:column;gap:14px}
+
+/* ── MORNING BRIEF ── */
+.brief-card{
+  background:linear-gradient(135deg,rgba(245,166,35,0.06) 0%,rgba(13,16,25,1) 60%);
+  border:1px solid rgba(245,166,35,0.15);
+  border-radius:18px;padding:18px;position:relative;overflow:hidden;
+}
+.brief-card::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:140px;height:140px;border-radius:50%;
+  background:radial-gradient(circle,rgba(245,166,35,0.07) 0%,transparent 70%);
+}
+.brief-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.brief-label{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--amber);font-family:'Space Mono',monospace;letter-spacing:0.08em;text-transform:uppercase}
+.brief-label-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:pulse-amber 1.5s infinite}
+@keyframes pulse-amber{0%,100%{opacity:1;box-shadow:0 0 6px var(--amber)}50%{opacity:0.4;box-shadow:none}}
+.brief-time{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+.brief-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;line-height:1.4;margin-bottom:8px}
+.brief-body{font-size:12px;color:var(--text2);line-height:1.75;margin-bottom:12px}
+.brief-metrics{display:flex;gap:8px;flex-wrap:wrap}
+.bm{background:rgba(255,255,255,0.04);border:1px solid var(--border2);border-radius:10px;padding:7px 11px;flex-shrink:0}
+.bm-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;line-height:1}
+.bm-lbl{font-size:9px;color:var(--text3);margin-top:2px}
+.c-a{color:var(--amber)}.c-g{color:var(--green)}.c-r{color:var(--red)}.c-t{color:var(--teal)}
+
+/* ── DECISION QUEUE ── */
+.section-label{
+  display:flex;align-items:center;gap:8px;
+  font-size:10px;font-weight:700;color:var(--text3);
+  letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.section-label .badge{background:var(--red);color:#fff;font-size:9px;padding:1px 6px;border-radius:10px;font-family:'Space Mono',monospace}
+.section-label .badge-a{background:var(--amber);color:#000}
+
+.decision-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;margin-bottom:8px;
+  transition:all 0.2s;
+}
+.decision-card.urgent{border-color:rgba(255,95,95,0.25);background:rgba(255,95,95,0.03)}
+.decision-card.normal{border-color:rgba(245,166,35,0.15)}
+.decision-card.approved{opacity:0.4;pointer-events:none}
+
+.dc-top{padding:12px 14px;display:flex;align-items:flex-start;gap:10px}
+.dc-agent-badge{
+  width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+}
+.dc-content{flex:1;min-width:0}
+.dc-agent{font-size:10px;color:var(--text3);margin-bottom:3px;display:flex;align-items:center;gap:5px}
+.dc-agent-name{color:var(--amber);font-weight:600}
+.dc-action{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:5px}
+.dc-reason{font-size:11px;color:var(--text2);line-height:1.5}
+.dc-confidence{
+  display:flex;align-items:center;gap:5px;
+  font-size:10px;font-family:'Space Mono',monospace;
+  margin-top:5px;
+}
+.conf-bar{width:60px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+.conf-fill{height:100%;border-radius:2px}
+.conf-high{background:var(--green)} .conf-mid{background:var(--amber)} .conf-low{background:var(--red)}
+.conf-pct{color:var(--green);font-size:10px}
+.conf-pct.mid{color:var(--amber)}
+
+.dc-btns{display:flex;gap:6px;padding:0 14px 12px}
+.btn-approve{
+  flex:1;background:linear-gradient(135deg,rgba(74,222,128,0.15),rgba(74,222,128,0.08));
+  border:1px solid rgba(74,222,128,0.25);border-radius:10px;
+  padding:9px;font-size:12px;font-weight:600;color:var(--green);cursor:pointer;
+  transition:all 0.15s;font-family:'Noto Sans SC',sans-serif;
+}
+.btn-approve:hover{background:rgba(74,222,128,0.2);transform:translateY(-1px)}
+.btn-override{
+  flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border2);
+  border-radius:10px;padding:9px;font-size:12px;color:var(--text2);cursor:pointer;
+  transition:all 0.15s;font-family:'Noto Sans SC',sans-serif;
+}
+.btn-override:hover{border-color:var(--amber);color:var(--amber)}
+.btn-reject{
+  width:38px;background:rgba(255,95,95,0.08);border:1px solid rgba(255,95,95,0.15);
+  border-radius:10px;font-size:12px;cursor:pointer;transition:all 0.15s;color:var(--red);
+}
+.btn-reject:hover{background:rgba(255,95,95,0.15)}
+.approved-banner{padding:8px 14px;font-size:11px;color:var(--green);display:flex;align-items:center;gap:6px}
+
+/* Impact tag */
+.impact-tag{
+  font-size:9px;padding:2px 7px;border-radius:8px;
+  font-family:'Space Mono',monospace;font-weight:700;letter-spacing:0.05em;flex-shrink:0;
+}
+.impact-high{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,0.2)}
+.impact-mid{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.2)}
+.impact-low{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(78,205,196,0.2)}
+
+/* ── LIVE ACTIVITY STREAM ── */
+.stream-wrap{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+}
+.stream-header{
+  padding:11px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.stream-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:7px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.stream-count{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+
+.stream-list{max-height:280px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.06) transparent}
+.stream-item{
+  padding:9px 14px;display:flex;align-items:flex-start;gap:9px;
+  border-bottom:1px solid rgba(255,255,255,0.025);
+  animation:slideIn 0.3s ease;
+}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.stream-item:last-child{border-bottom:none}
+.si-emoji{font-size:14px;flex-shrink:0;margin-top:1px}
+.si-body{flex:1;min-width:0}
+.si-action{font-size:11px;color:var(--text);line-height:1.5}
+.si-agent{font-size:10px;color:var(--text3);margin-top:2px;display:flex;align-items:center;gap:5px}
+.si-agent-name{color:var(--amber)}
+.si-time{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);flex-shrink:0}
+.si-result{display:inline-flex;align-items:center;gap:3px;font-size:9px;padding:1px 6px;border-radius:6px;margin-top:3px}
+.res-ok{background:var(--green-dim);color:var(--green)}
+.res-warn{background:var(--amber-dim);color:var(--amber)}
+.res-err{background:var(--red-dim);color:var(--red)}
+
+/* ── HEARTBEAT MAP ── */
+.hb-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.hb-cell{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:12px;position:relative;overflow:hidden;
+}
+.hb-cell.crit{border-color:rgba(255,95,95,0.3);background:rgba(255,95,95,0.03)}
+.hb-cell.warn{border-color:rgba(245,166,35,0.2);background:rgba(245,166,35,0.02)}
+.hb-cell.ok{border-color:rgba(74,222,128,0.15)}
+.hb-region{font-size:10px;color:var(--text3);margin-bottom:5px;display:flex;align-items:center;justify-content:space-between}
+.hb-r-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1;margin-bottom:3px}
+.hb-label{font-size:9px;color:var(--text3)}
+.hb-bar{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:6px}
+.hb-fill{height:100%;border-radius:2px;transition:width 1s ease}
+.fill-crit{background:var(--red)}
+.fill-warn{background:var(--amber)}
+.fill-ok{background:var(--green)}
+.hb-pulse{
+  position:absolute;top:10px;right:10px;
+  width:8px;height:8px;border-radius:50%;
+}
+.hb-pulse.crit{background:var(--red);box-shadow:0 0 10px var(--red);animation:hbp 0.8s infinite}
+.hb-pulse.warn{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:hbp 1.5s infinite}
+.hb-pulse.ok{background:var(--green);animation:hbp 2.5s infinite}
+@keyframes hbp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.3;transform:scale(0.7)}}
+
+/* ── COMMAND BAR ── */
+.cmd-wrap{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(7,8,14,0.97);backdrop-filter:blur(24px);
+  border-top:1px solid var(--border);
+  padding:10px 16px 16px;
+}
+.cmd-label{font-size:9px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;font-family:'Space Mono',monospace;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.cmd-label::before{content:'⌘';color:var(--amber)}
+.cmd-row{display:flex;gap:8px;align-items:center}
+.cmd-input{
+  flex:1;background:var(--card2);border:1px solid var(--border2);
+  border-radius:14px;padding:11px 15px;
+  font-size:13px;color:var(--text);font-family:'Noto Sans SC',sans-serif;outline:none;
+  transition:border-color 0.2s,box-shadow 0.2s;
+}
+.cmd-input:focus{border-color:rgba(245,166,35,0.4);box-shadow:0 0 0 3px rgba(245,166,35,0.06)}
+.cmd-input::placeholder{color:var(--text3)}
+.cmd-send{
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,var(--amber),#ff8c3a);border:none;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:17px;transition:all 0.2s;flex-shrink:0;
+  box-shadow:0 4px 14px rgba(245,166,35,0.3);
+}
+.cmd-send:hover{transform:scale(1.05);box-shadow:0 6px 20px rgba(245,166,35,0.4)}
+.cmd-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-top:8px}
+.cmd-chips::-webkit-scrollbar{display:none}
+.cmd-chip{
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:20px;padding:5px 11px;font-size:10px;color:var(--text2);
+  white-space:nowrap;cursor:pointer;transition:all 0.15s;flex-shrink:0;
+  font-family:'Noto Sans SC',sans-serif;
+}
+.cmd-chip:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+
+/* ── CMD RESPONSE ── */
+.cmd-resp{
+  display:none;position:fixed;bottom:110px;left:16px;right:16px;z-index:99;
+  background:var(--card2);border:1px solid var(--border2);border-radius:16px;
+  padding:14px;max-height:50vh;overflow-y:auto;
+  box-shadow:0 -8px 40px rgba(0,0,0,0.5);
+}
+.cmd-resp.show{display:block;animation:slideUp 0.2s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.cmd-resp-q{font-size:10px;color:var(--amber);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace}
+.cmd-resp-close{position:absolute;top:10px;right:12px;cursor:pointer;color:var(--text3);font-size:14px}
+.cmd-resp-a{font-size:12px;color:var(--text2);line-height:1.75;white-space:pre-wrap}
+.thinking-dots{display:flex;gap:4px;align-items:center;padding:4px 0}
+.td{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:td 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* ── IRON LAW ALERT ── */
+.iron-law-alert{
+  background:rgba(255,95,95,0.06);border:1px solid rgba(255,95,95,0.3);
+  border-radius:14px;padding:14px;display:flex;align-items:flex-start;gap:10px;
+  position:relative;overflow:hidden;
+}
+.iron-law-alert::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--red);
+}
+.ila-icon{font-size:22px;flex-shrink:0;margin-top:1px}
+.ila-content{}
+.ila-label{font-size:9px;color:var(--red);font-family:'Space Mono',monospace;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;font-weight:700}
+.ila-text{font-size:12px;color:var(--text);line-height:1.5;margin-bottom:6px;font-weight:600}
+.ila-sub{font-size:11px;color:var(--text2);line-height:1.5}
+.ila-action{margin-top:8px;display:flex;gap:6px}
+.btn-halt{background:var(--red);border:none;border-radius:8px;padding:7px 14px;font-size:11px;color:#fff;cursor:pointer;font-weight:700;font-family:'Noto Sans SC',sans-serif}
+.btn-investigate{background:rgba(255,95,95,0.1);border:1px solid rgba(255,95,95,0.2);border-radius:8px;padding:7px 14px;font-size:11px;color:var(--red);cursor:pointer;font-family:'Noto Sans SC',sans-serif}
+
+/* ── AUTONOMOUS LOG ── */
+.auto-log{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.al-header{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.al-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.al-auto-badge{font-size:9px;background:rgba(96,165,250,0.1);color:var(--blue);border:1px solid rgba(96,165,250,0.2);padding:1px 7px;border-radius:10px;font-family:'Space Mono',monospace}
+.al-row{padding:10px 14px;display:flex;gap:10px;align-items:flex-start;border-bottom:1px solid rgba(255,255,255,0.025)}
+.al-row:last-child{border-bottom:none}
+.al-time{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);width:44px;flex-shrink:0;padding-top:2px}
+.al-body{flex:1}
+.al-desc{font-size:11px;color:var(--text2);line-height:1.5}
+.al-result{font-size:10px;margin-top:3px;display:flex;align-items:center;gap:5px}
+.al-agent-tag{font-size:9px;color:var(--text3)}
+.al-agent-tag span{color:var(--amber)}
+
+/* ── PHILOSOPHY CARD ── */
+.phi-card{
+  background:linear-gradient(135deg,rgba(78,205,196,0.05),rgba(78,205,196,0.02));
+  border:1px solid rgba(78,205,196,0.1);border-radius:14px;
+  padding:16px;text-align:center;
+}
+.phi-card-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--teal);margin-bottom:8px}
+.phi-card-body{font-size:12px;color:var(--text2);line-height:1.8}
+.phi-card-body strong{color:var(--text)}
+.phi-three{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.phi-three-item{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center}
+.phi-three-icon{font-size:18px;margin-bottom:5px}
+.phi-three-lbl{font-size:9px;color:var(--text3);line-height:1.4}
+.phi-three-val{font-size:11px;font-weight:700;color:var(--text);margin-top:2px}
+
+/* ── ANNOTATION ── */
+.anno-wrap{display:flex;flex-direction:column;gap:6px;padding:4px 0}
+.anno{
+  background:rgba(245,166,35,0.04);border:1px solid rgba(245,166,35,0.12);
+  border-radius:10px;padding:10px 12px;
+  display:flex;align-items:flex-start;gap:8px;
+}
+.anno-num{
+  width:20px;height:20px;border-radius:6px;background:rgba(245,166,35,0.15);
+  color:var(--amber);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-family:'Space Mono',monospace;
+}
+.anno-text{font-size:11px;color:var(--text2);line-height:1.6}
+.anno-text strong{color:var(--text)}
+
+/* scrollbar */
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:2px}
+
+.pb{height:130px}
+
+/* ── DESIGN LABEL ── */
+.design-label{
+  text-align:center;padding:20px 16px 8px;
+  font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:0.1em;
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-row">
+    <div class="logo-sym">∞</div>
+    <div>
+      <div class="logo-text">INFINITY <span class="acc">OS</span></div>
+    </div>
+  </div>
+  <div class="system-status">
+    <div class="status-dot"></div>
+    <div class="status-txt">24 AGENTS · LIVE</div>
+  </div>
+  <div class="topbar-right">
+    <div class="agent-count">3 待批准</div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</div>
+
+<!-- PHILOSOPHY STRIP -->
+<div class="phi-strip">
+  <div class="phi-item">⚡ 真正Agent态</div>
+  <span class="phi-sep">·</span>
+  <div class="phi-item">沉默=健康，推送=需要你</div>
+  <span class="phi-sep">·</span>
+  <div class="phi-item">Agent行动，人类审批</div>
+  <span class="phi-sep">·</span>
+  <div class="phi-item">纵横98 × 心跳公式实时运转</div>
+  <span class="phi-sep">·</span>
+  <div class="phi-item">置信度可见</div>
+  <span class="phi-sep">·</span>
+  <div class="phi-item">自然语言 = 主界面</div>
+</div>
+
+<div class="main">
+
+  <!-- DESIGN LABEL -->
+  <div class="design-label">
+    ── 理想态界面原型 · 这不是当前状态，而是真正Agent时应有的样子 ──
+  </div>
+
+  <!-- MORNING BRIEF -->
+  <div>
+    <div class="section-label">AIO 总指挥 · 今日战情简报</div>
+    <div class="brief-card">
+      <div class="brief-top">
+        <div class="brief-label">
+          <div class="brief-label-dot"></div>
+          AIO 总指挥 · 自动生成
+        </div>
+        <div class="brief-time">今日 07:02</div>
+      </div>
+      <div class="brief-title">上海4区动销健康，浦东出现<span style="color:var(--red)">压货信号</span>，蝴蝶效应已拦截</div>
+      <div class="brief-body">
+        今日r值整体达成率 <strong style="color:var(--amber)">78.4%</strong>，较昨日+2.1%。浦东张伟辖区大润发门店检测到A类失真（渠道压货），库存已超3a水位触发铁律③预警。无菜单推单Agent已暂停该经销商本周推单。<br><br>
+        需要你决策的事项今日共 <strong style="color:var(--amber)">3项</strong>。系统已自主处理 <strong style="color:var(--green)">19项</strong>。
+      </div>
+      <div class="brief-metrics">
+        <div class="bm"><div class="bm-val c-a">78.4%</div><div class="bm-lbl">r值达成</div></div>
+        <div class="bm"><div class="bm-val c-r">1</div><div class="bm-lbl">铁律预警</div></div>
+        <div class="bm"><div class="bm-val c-g">19</div><div class="bm-lbl">自主处理</div></div>
+        <div class="bm"><div class="bm-val c-a">3</div><div class="bm-lbl">待你批准</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IRON LAW ALERT -->
+  <div>
+    <div class="section-label">铁律预警 <span class="badge">紧急</span></div>
+    <div class="iron-law-alert">
+      <div class="ila-icon">⚠️</div>
+      <div class="ila-content">
+        <div class="ila-label">铁律③ 触发 · 蝴蝶效应Agent · A类失真</div>
+        <div class="ila-text">浦东·大润发金桥店 — 消化率连续2月低于50%</div>
+        <div class="ila-sub">六月鲜遵循自然 500ml 当前库存 4.2a（超3a满仓），近30天消化率 47.1%。无菜单推单已自动暂停，等待你确认后续处置方案。</div>
+        <div class="ila-action">
+          <button class="btn-halt">确认暂停补货</button>
+          <button class="btn-investigate">启动溯源调查</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECISION QUEUE -->
+  <div>
+    <div class="section-label">决策队列 — 今日需要你的判断 <span class="badge-a badge">3项</span></div>
+
+    <!-- Decision 1 -->
+    <div class="decision-card urgent" id="dc1">
+      <div class="dc-top">
+        <div class="dc-agent-badge" style="background:rgba(255,95,95,0.15)">🦋</div>
+        <div class="dc-content">
+          <div class="dc-agent"><span class="dc-agent-name">蝴蝶效应Agent</span> → 经销商处置建议 <span class="impact-tag impact-high">高影响</span></div>
+          <div class="dc-action">建议对浦东经销商「上海宝仓贸易」降级为B级，暂停2周补货</div>
+          <div class="dc-reason">过去30天进货量超出实际消化量2.8倍，判定为A类渠道压货失真，连续发生属于系统性问题而非偶发。</div>
+          <div class="dc-confidence">
+            置信度
+            <div class="conf-bar"><div class="conf-fill conf-high" style="width:91%"></div></div>
+            <span class="conf-pct">91%</span>
+          </div>
+        </div>
+      </div>
+      <div class="dc-btns">
+        <button class="btn-approve" onclick="approveDecision('dc1','✅ 已批准：暂停宝仓贸易补货，降级B级')">✓ 批准执行</button>
+        <button class="btn-override" onclick="approveDecision('dc1','⚡ 已覆盖：标记为促销扰动，继续观察')">覆盖·改为观察</button>
+        <button class="btn-reject" onclick="approveDecision('dc1','✗ 已拒绝')">✕</button>
+      </div>
+    </div>
+
+    <!-- Decision 2 -->
+    <div class="decision-card normal" id="dc2">
+      <div class="dc-top">
+        <div class="dc-agent-badge" style="background:rgba(245,166,35,0.15)">🍣</div>
+        <div class="dc-content">
+          <div class="dc-agent"><span class="dc-agent-name">无菜单推单Agent</span> → 补货推单 <span class="impact-tag impact-mid">中影响</span></div>
+          <div class="dc-action">推送本周补货：黄浦经销商「李娜负责」，六月鲜350ml × 240件</div>
+          <div class="dc-reason">黄浦区库存降至1.2a，按r值预测5.3天后跌破1a预警线，建议本周三前到货。</div>
+          <div class="dc-confidence">
+            置信度
+            <div class="conf-bar"><div class="conf-fill conf-high" style="width:85%"></div></div>
+            <span class="conf-pct">85%</span>
+          </div>
+        </div>
+      </div>
+      <div class="dc-btns">
+        <button class="btn-approve" onclick="approveDecision('dc2','✅ 已批准：推单黄浦240件')">✓ 批准推单</button>
+        <button class="btn-override" onclick="approveDecision('dc2','⚡ 已调整：改为200件')">调整数量</button>
+        <button class="btn-reject" onclick="approveDecision('dc2','✕ 已拒绝')">✕</button>
+      </div>
+    </div>
+
+    <!-- Decision 3 -->
+    <div class="decision-card normal" id="dc3">
+      <div class="dc-top">
+        <div class="dc-agent-badge" style="background:rgba(167,139,252,0.15)">◈</div>
+        <div class="dc-content">
+          <div class="dc-agent"><span class="dc-agent-name">PRISM精准选点Agent</span> → 共创活动 <span class="impact-tag impact-low">低影响</span></div>
+          <div class="dc-action">建议在徐汇滨江「世纪华城小区」启动本月共创活动</div>
+          <div class="dc-reason">房价指数9.2万/㎡，高端渗透率0.34%（低于均值），PRISM评分83分，适合六月鲜品牌共创触达。</div>
+          <div class="dc-confidence">
+            置信度
+            <div class="conf-bar"><div class="conf-fill conf-mid" style="width:72%"></div></div>
+            <span class="conf-pct mid">72%</span>
+          </div>
+        </div>
+      </div>
+      <div class="dc-btns">
+        <button class="btn-approve" onclick="approveDecision('dc3','✅ 已批准：启动世纪华城共创')">✓ 批准活动</button>
+        <button class="btn-override" onclick="approveDecision('dc3','⚡ 已推迟：下月执行')">推迟</button>
+        <button class="btn-reject" onclick="approveDecision('dc3','✕ 已拒绝')">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEARTBEAT MAP -->
+  <div>
+    <div class="section-label">库存心跳 · 实时水位 · 上海5区</div>
+    <div class="hb-grid">
+      <div class="hb-cell crit">
+        <div class="hb-pulse crit"></div>
+        <div class="hb-region"><span>浦东 · 张伟</span></div>
+        <div class="hb-r-val c-r">4.2a</div>
+        <div class="hb-label">当前库存 · 铁律③触发</div>
+        <div class="hb-bar"><div class="hb-fill fill-crit" style="width:100%"></div></div>
+      </div>
+      <div class="hb-cell ok">
+        <div class="hb-pulse ok"></div>
+        <div class="hb-region"><span>黄浦 · 李娜</span></div>
+        <div class="hb-r-val c-a">1.2a</div>
+        <div class="hb-label">接近1a预警线</div>
+        <div class="hb-bar"><div class="hb-fill fill-warn" style="width:40%"></div></div>
+      </div>
+      <div class="hb-cell ok">
+        <div class="hb-pulse ok"></div>
+        <div class="hb-region"><span>长宁 · 王磊</span></div>
+        <div class="hb-r-val c-g">2.4a</div>
+        <div class="hb-label">水位健康</div>
+        <div class="hb-bar"><div class="hb-fill fill-ok" style="width:80%"></div></div>
+      </div>
+      <div class="hb-cell warn">
+        <div class="hb-pulse warn"></div>
+        <div class="hb-region"><span>宝山 · 刘芳</span></div>
+        <div class="hb-r-val c-a">1.8a</div>
+        <div class="hb-label">r值达成74%，偏低</div>
+        <div class="hb-bar"><div class="hb-fill fill-warn" style="width:60%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE ACTIVITY STREAM -->
+  <div>
+    <div class="section-label">Agent 实时动作流 <span class="badge">LIVE</span></div>
+    <div class="stream-wrap">
+      <div class="stream-header">
+        <div class="stream-title">
+          <div class="live-dot"></div>
+          今日Agent自主处理
+        </div>
+        <div class="stream-count">19 actions · 2h内</div>
+      </div>
+      <div class="stream-list" id="streamList">
+        <div class="stream-item">
+          <div class="si-emoji">🍣</div>
+          <div class="si-body">
+            <div class="si-action">自动推送补货建议至闵行经销商「陈勇」：遵循自然500ml × 180件</div>
+            <div class="si-agent">by <span class="si-agent-name">无菜单推单</span> · 经销商已接单</div>
+            <div class="si-result res-ok">✓ 已执行</div>
+          </div>
+          <div class="si-time">09:41</div>
+        </div>
+        <div class="stream-item">
+          <div class="si-emoji">🎯</div>
+          <div class="si-body">
+            <div class="si-action">完成本周a值校准：长宁区6个SKU调整，平均上调8.3%</div>
+            <div class="si-agent">by <span class="si-agent-name">A值校准</span> · 已更新r值基准</div>
+            <div class="si-result res-ok">✓ 已执行</div>
+          </div>
+          <div class="si-time">09:17</div>
+        </div>
+        <div class="stream-item">
+          <div class="si-emoji">🦋</div>
+          <div class="si-body">
+            <div class="si-action">检测到浦东大润发金桥店B类促销扰动：本周促销期，消化率暂时下降，标记为短期失真</div>
+            <div class="si-agent">by <span class="si-agent-name">蝴蝶效应</span> · 已标注，无需干预</div>
+            <div class="si-result res-warn">⚡ 标注</div>
+          </div>
+          <div class="si-time">08:55</div>
+        </div>
+        <div class="stream-item">
+          <div class="si-emoji">📕</div>
+          <div class="si-body">
+            <div class="si-action">监测到「六月鲜遵循自然」爆文新增3篇，互动量超均值180%，种草指数上升</div>
+            <div class="si-agent">by <span class="si-agent-name">小红书种草棒</span> · 拉力信号增强</div>
+            <div class="si-result res-ok">✓ 已记录</div>
+          </div>
+          <div class="si-time">08:30</div>
+        </div>
+        <div class="stream-item">
+          <div class="si-emoji">🚗</div>
+          <div class="si-body">
+            <div class="si-action">派发今日美顾任务：宝山区8名美顾 × 各自负责2-3家门店货架核查</div>
+            <div class="si-agent">by <span class="si-agent-name">Uber激励</span> · 8人已接单</div>
+            <div class="si-result res-ok">✓ 已执行</div>
+          </div>
+          <div class="si-time">07:45</div>
+        </div>
+        <div class="stream-item">
+          <div class="si-emoji">⚡</div>
+          <div class="si-body">
+            <div class="si-action">生成今日战情简报 · 汇总24个Agent状态 · 已推送企微</div>
+            <div class="si-agent">by <span class="si-agent-name">AIO总指挥</span></div>
+            <div class="si-result res-ok">✓ 已执行</div>
+          </div>
+          <div class="si-time">07:02</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTONOMOUS LOG -->
+  <div>
+    <div class="section-label">已自主决策（无需你介入） <span class="al-auto-badge">AUTO</span></div>
+    <div class="auto-log">
+      <div class="al-header">
+        <div class="al-title">今日 Agent 自主处理记录</div>
+        <div style="font-size:10px;color:var(--text3)">19/22 · 自主率 86%</div>
+      </div>
+      <div class="al-row">
+        <div class="al-time">09:41</div>
+        <div class="al-body">
+          <div class="al-desc">闵行补货推单 · 遵循自然500ml × 180件 · 经销商已接单确认</div>
+          <div class="al-result"><span class="si-result res-ok">✓ 完成</span><span class="al-agent-tag">by <span>无菜单推单</span></span></div>
+        </div>
+      </div>
+      <div class="al-row">
+        <div class="al-time">09:17</div>
+        <div class="al-body">
+          <div class="al-desc">长宁a值校准完成 · 6SKU上调8.3% · r值基准已更新</div>
+          <div class="al-result"><span class="si-result res-ok">✓ 完成</span><span class="al-agent-tag">by <span>A值校准</span></span></div>
+        </div>
+      </div>
+      <div class="al-row">
+        <div class="al-time">08:55</div>
+        <div class="al-body">
+          <div class="al-desc">浦东大润发B类促销扰动标记 · 短期失真，非系统性 · 观察5天</div>
+          <div class="al-result"><span class="si-result res-warn">⚡ 观察中</span><span class="al-agent-tag">by <span>蝴蝶效应</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESIGN PHILOSOPHY -->
+  <div>
+    <div class="section-label">为什么这个界面是对的</div>
+    <div class="phi-card">
+      <div class="phi-card-title">界面设计哲学 · 真正Agent时的范式转变</div>
+      <div class="phi-card-body">
+        <strong>你不去找信息，信息来找你。</strong><br>
+        系统处理了86%的决策，把剩下14%最需要人类判断的事情呈现给你。<br>
+        你打开这个界面，只有一个原因：<strong>有决策在等你</strong>。
+      </div>
+      <div class="phi-three">
+        <div class="phi-three-item">
+          <div class="phi-three-icon">🔕</div>
+          <div class="phi-three-lbl">沉默即健康</div>
+          <div class="phi-three-val">无通知=系统正常</div>
+        </div>
+        <div class="phi-three-item">
+          <div class="phi-three-icon">✅</div>
+          <div class="phi-three-lbl">置信度透明</div>
+          <div class="phi-three-val">每个推荐都有%</div>
+        </div>
+        <div class="phi-three-item">
+          <div class="phi-three-icon">⌘</div>
+          <div class="phi-three-lbl">语言即操作</div>
+          <div class="phi-three-val">说话=行动</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B V3 VS IDEAL COMPARISON -->
+  <div>
+    <div class="section-label">B v3 现在 vs 理想态 · 差距分析</div>
+    <div class="anno-wrap">
+      <div class="anno">
+        <div class="anno-num">1</div>
+        <div class="anno-text"><strong>首屏从"导航"变成"决策队列"</strong> — 现在你打开看24个Agent格子，理想态你打开看今天有几件事需要你拍板，其他系统自己搞定了</div>
+      </div>
+      <div class="anno">
+        <div class="anno-num">2</div>
+        <div class="anno-text"><strong>数字从"静态评分"变成"实时心跳"</strong> — 现在的65分/70分是主观固定值，理想态是每个区域r值每小时更新，心跳地图会动</div>
+      </div>
+      <div class="anno">
+        <div class="anno-num">3</div>
+        <div class="anno-text"><strong>Agent行为从"展示"变成"记录"</strong> — 现在Agent是一个可以聊天的卡片，理想态Agent是有行动历史的行动者，你看的是它做了什么</div>
+      </div>
+      <div class="anno">
+        <div class="anno-num">4</div>
+        <div class="anno-text"><strong>指令从"点击"变成"说话"</strong> — 现在底部输入是战略大脑，理想态底部指令直接触发Agent行动："暂停浦东补货" = 立即执行</div>
+      </div>
+      <div class="anno">
+        <div class="anno-num">5</div>
+        <div class="anno-text"><strong>铁律从"文字规则"变成"实时拦截"</strong> — 铁律①②③不再是知识库里的描述，是自动触发、自动暂停、推给你最终确认的守门员</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pb"></div>
+</div>
+
+<!-- COMMAND RESPONSE -->
+<div class="cmd-resp" id="cmdResp">
+  <div class="cmd-resp-close" onclick="closeResp()">×</div>
+  <div class="cmd-resp-q" id="cmdQ"></div>
+  <div class="cmd-resp-a" id="cmdA"></div>
+</div>
+
+<!-- COMMAND BAR -->
+<div class="cmd-wrap">
+  <div class="cmd-label">指令中枢 · 说话即行动</div>
+  <div class="cmd-row">
+    <input class="cmd-input" id="cmdInput" placeholder="「暂停浦东补货」「查上海今日r值」「推单黄浦」…"
+      onkeydown="if(event.key==='Enter')sendCmd()" />
+    <button class="cmd-send" onclick="sendCmd()">↑</button>
+  </div>
+  <div class="cmd-chips">
+    <div class="cmd-chip" onclick="askCmd('上海今日整体r值达成率是多少？')">📊 今日r值</div>
+    <div class="cmd-chip" onclick="askCmd('哪些区域库存低于1a需要立即补货？')">⚠️ 低水位预警</div>
+    <div class="cmd-chip" onclick="askCmd('蝴蝶效应今天检测到哪些失真信号？')">🦋 失真信号</div>
+    <div class="cmd-chip" onclick="askCmd('六月鲜遵循自然今日动销top3门店是哪些？')">🏆 动销TOP3</div>
+    <div class="cmd-chip" onclick="askCmd('所有等待批准的推单汇总给我看')">🍣 推单汇总</div>
+    <div class="cmd-chip" onclick="askCmd('对比上周，哪个品牌表现最好？')">📈 品牌对比</div>
+  </div>
+</div>
+
+<script>
+// Clock
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clock').textContent=
+    now.getHours().toString().padStart(2,'0')+':'+
+    now.getMinutes().toString().padStart(2,'0')+':'+
+    now.getSeconds().toString().padStart(2,'0');
+}
+updateClock();setInterval(updateClock,1000);
+
+// Decision approve
+function approveDecision(id, msg){
+  const card=document.getElementById(id);
+  const btns=card.querySelector('.dc-btns');
+  btns.innerHTML=`<div class="approved-banner">✓ ${msg}</div>`;
+  card.classList.add('approved');
+  // update badge
+  const badges=document.querySelectorAll('.badge-a');
+  badges.forEach(b=>{
+    const n=parseInt(b.textContent);
+    if(n>0) b.textContent=(n-1)+'项';
+  });
+  const topBadge=document.querySelector('.agent-count');
+  if(topBadge){
+    const n=parseInt(topBadge.textContent);
+    if(n>0) topBadge.textContent=(n-1)+' 待批准';
+  }
+}
+
+// Simulated stream refresh
+const streamItems=[
+  {emoji:'📷',action:'长宁区S+门店「家乐福中山公园」货架识别完成：六月鲜面列6排，竞品3排，黄金位占有率67%',agent:'货架识别',time:'10:15',res:'res-ok',resText:'✓ 完成'},
+  {emoji:'🚗',action:'美顾任务：宝山陈勇完成大润发庙行店巡检，CB得分+2.3，奖励已到账',agent:'Uber激励',time:'10:08',res:'res-ok',resText:'✓ 完成'},
+  {emoji:'💎',action:'品牌AI顾问：检测到味达美价格段与六月鲜重叠风险，建议隔离定价策略，已生成报告',agent:'品牌AI顾问',time:'09:58',res:'res-warn',resText:'⚡ 待查看'},
+];
+
+let addedItems=0;
+setInterval(()=>{
+  if(addedItems>=streamItems.length)return;
+  const item=streamItems[addedItems];
+  const list=document.getElementById('streamList');
+  const el=document.createElement('div');
+  el.className='stream-item';
+  el.innerHTML=`
+    <div class="si-emoji">${item.emoji}</div>
+    <div class="si-body">
+      <div class="si-action">${item.action}</div>
+      <div class="si-agent">by <span class="si-agent-name">${item.agent}</span></div>
+      <div class="si-result ${item.res}">${item.resText}</div>
+    </div>
+    <div class="si-time">${item.time}</div>`;
+  list.insertBefore(el,list.firstChild);
+  addedItems++;
+},8000);
+
+// Command
+function askCmd(q){
+  document.getElementById('cmdInput').value=q;
+  sendCmd();
+}
+
+async function sendCmd(){
+  const input=document.getElementById('cmdInput');
+  const q=input.value.trim();if(!q)return;
+  input.value='';
+  const resp=document.getElementById('cmdResp');
+  const qEl=document.getElementById('cmdQ');
+  const aEl=document.getElementById('cmdA');
+  resp.classList.add('show');
+  qEl.textContent='⌘ '+q;
+  aEl.innerHTML='<div class="thinking-dots"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  
+  const sys=`你是欣和SH INFINITY OS指挥中台的核心Agent。你已接入真实数据，正在真正Agent运行态。
+  
+  系统状态：上海24个Agent实时运转，今日r值达成78.4%，浦东铁律③触发，黄浦库存1.2a需补货，长宁健康2.4a，宝山偏低1.8a。
+  
+  你的职责：接收指令 → 即时分析 → 给出清晰的行动结论。
+  
+  回答要求：
+  - 直接给结论，不超过150字
+  - 如果是行动指令（暂停/推单/调整），确认已执行并说明效果
+  - 如果是查询，给出数据 + 一句判断 + 一个建议
+  - 用中文，简洁有力
+  - 可以附带1-2个相关数字`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:sys,
+        messages:[{role:'user',content:q}]
+      })
+    });
+    const d=await r.json();
+    const txt=d.content?.map(c=>c.text||'').join('')||'指令已接收，正在处理。';
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${txt}</div>`;
+  }catch(e){
+    aEl.innerHTML=`<div style="color:var(--red)">⚠️ 连接异常：${e.message}</div>`;
+  }
+}
+
+function closeResp(){
+  document.getElementById('cmdResp').classList.remove('show');
+}
+
+// Button sounds/haptics (mobile)
+document.querySelectorAll('.btn-approve,.btn-override,.btn-reject').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    if(navigator.vibrate) navigator.vibrate(30);
+  });
+});
+</script>
+</body>
+</html>

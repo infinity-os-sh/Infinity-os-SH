@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · v8.3 · 蝴蝶效应 + PRISM</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;
+  --card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.08);
+  --orange:#fb923c;--orange-dim:rgba(251,146,60,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh}
+
+.topbar{position:sticky;top:0;z-index:100;background:rgba(7,8,14,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;gap:10px}
+.logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.logo-sym{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#ff7c38);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000}
+.logo-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.logo-name em{color:var(--amber);font-style:normal}
+.ver{font-size:9px;font-family:'Space Mono',monospace;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,166,35,.2);padding:2px 7px;border-radius:10px}
+.clock{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;position:sticky;top:52px;z-index:90;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:12px 16px;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;flex-shrink:0}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--amber);border-bottom-color:var(--amber)}
+
+.page{display:none;padding:14px 16px 80px;flex-direction:column;gap:12px}
+.page.active{display:flex}
+
+.sec{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.09em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.badge{font-size:9px;padding:1px 7px;border-radius:8px;font-family:'Space Mono',monospace}
+.b-red{background:var(--red);color:#fff}
+.b-amber{background:var(--amber);color:#000}
+.b-green{background:rgba(74,222,128,.15);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+
+/* concept card */
+.concept{background:linear-gradient(135deg,rgba(245,166,35,.06),rgba(9,9,15,1));border:1px solid rgba(245,166,35,.18);border-radius:14px;padding:16px}
+.concept-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--amber);margin-bottom:8px}
+.concept-body{font-size:12px;color:var(--text2);line-height:1.8}
+.concept-body strong{color:var(--text)}
+
+/* ── 蝴蝶效应类型卡 ── */
+.type-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.type-card{border-radius:13px;padding:14px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.type-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.type-card:hover{transform:translateY(-1px)}
+.tc-a{background:rgba(255,95,95,.07);border:1px solid rgba(255,95,95,.25)} .tc-a::before{background:var(--red)}
+.tc-b{background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.22)} .tc-b::before{background:var(--amber)}
+.tc-c{background:rgba(251,146,60,.07);border:1px solid rgba(251,146,60,.22)} .tc-c::before{background:var(--orange)}
+.tc-d{background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.22)} .tc-d::before{background:var(--purple)}
+.type-card.active-a{box-shadow:0 0 0 2px var(--red)}
+.type-card.active-b{box-shadow:0 0 0 2px var(--amber)}
+.type-card.active-c{box-shadow:0 0 0 2px var(--orange)}
+.type-card.active-d{box-shadow:0 0 0 2px var(--purple)}
+.tc-letter{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1;margin-bottom:4px}
+.tc-a .tc-letter{color:var(--red)} .tc-b .tc-letter{color:var(--amber)}
+.tc-c .tc-letter{color:var(--orange)} .tc-d .tc-letter{color:var(--purple)}
+.tc-name{font-size:12px;font-weight:700;margin-bottom:4px}
+.tc-desc{font-size:10px;color:var(--text2);line-height:1.5}
+.tc-count{position:absolute;top:12px;right:12px;font-family:'Space Mono',monospace;font-size:11px;font-weight:700}
+.tc-a .tc-count{color:var(--red)} .tc-b .tc-count{color:var(--amber)}
+.tc-c .tc-count{color:var(--orange)} .tc-d .tc-count{color:var(--purple)}
+
+/* ── 传导链路图 ── */
+.chain-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;overflow-x:auto}
+.chain-title{font-size:12px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.chain{display:flex;align-items:stretch;gap:0;min-width:max-content}
+.chain-node{
+  display:flex;flex-direction:column;align-items:center;
+  width:80px;flex-shrink:0;
+}
+.cn-box{
+  width:68px;border-radius:10px;padding:9px 6px;text-align:center;
+  border:1px solid var(--border2);background:var(--bg3);
+  transition:all .3s;
+}
+.cn-box.infected{animation:infect .5s ease forwards}
+@keyframes infect{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+.cn-box.alert-a{border-color:rgba(255,95,95,.5);background:rgba(255,95,95,.12);box-shadow:0 0 12px rgba(255,95,95,.2)}
+.cn-box.alert-b{border-color:rgba(245,166,35,.5);background:rgba(245,166,35,.1)}
+.cn-box.alert-c{border-color:rgba(251,146,60,.5);background:rgba(251,146,60,.1)}
+.cn-box.ok{border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.07)}
+.cn-label{font-size:9px;color:var(--text3);margin-top:2px;font-family:'Space Mono',monospace;text-transform:uppercase}
+.cn-name{font-size:10px;font-weight:600;margin-top:3px}
+.cn-val{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;margin-top:4px}
+.cn-status{font-size:9px;margin-top:3px}
+.chain-arrow{display:flex;align-items:center;padding-top:20px;color:var(--text3);font-size:14px;flex-shrink:0}
+.chain-arrow.infected-arrow{color:var(--red);animation:arrowpulse 1s infinite}
+@keyframes arrowpulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* ── 警报列表 ── */
+.alert-list{display:flex;flex-direction:column;gap:7px}
+.alert-item{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;transition:all .15s;
+}
+.ai-hdr-row{
+  padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;
+}
+.ai-hdr-row:hover{background:rgba(255,255,255,.02)}
+.ai-type-badge{
+  width:28px;height:28px;border-radius:7px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:800;
+}
+.badge-a{background:rgba(255,95,95,.2);color:var(--red)}
+.badge-b{background:rgba(245,166,35,.2);color:var(--amber)}
+.badge-c{background:rgba(251,146,60,.2);color:var(--orange)}
+.badge-d{background:rgba(167,139,250,.2);color:var(--purple)}
+.ai-info{flex:1;min-width:0}
+.ai-title{font-size:12px;font-weight:600;margin-bottom:2px}
+.ai-meta{font-size:10px;color:var(--text3);display:flex;gap:8px;flex-wrap:wrap}
+.ai-sev{font-size:9px;padding:1px 6px;border-radius:6px;font-family:'Space Mono',monospace}
+.sev-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.sev-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.ai-expand{font-size:11px;color:var(--text3);flex-shrink:0}
+.ai-detail{display:none;padding:0 14px 12px;border-top:1px solid var(--border)}
+.ai-detail.show{display:block}
+.ai-detail-body{font-size:11px;color:var(--text2);line-height:1.7;padding-top:10px;margin-bottom:10px}
+.ai-detail-body strong{color:var(--text)}
+.ai-btns{display:flex;gap:6px}
+.btn-sm{border-radius:8px;padding:6px 13px;font-size:11px;cursor:pointer;transition:all .15s;font-family:'Noto Sans SC',sans-serif}
+.btn-resolve{background:var(--green-dim);border:1px solid rgba(74,222,128,.25);color:var(--green);font-weight:600}
+.btn-resolve:hover{background:rgba(74,222,128,.2)}
+.btn-watch{background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text2)}
+.btn-watch:hover{border-color:var(--amber);color:var(--amber)}
+.btn-escalate{background:var(--red-dim);border:1px solid rgba(255,95,95,.2);color:var(--red)}
+.resolved-row{padding:6px 14px;font-size:11px;color:var(--green);display:flex;align-items:center;gap:5px}
+
+/* ── PRISM ── */
+.prism-concept{
+  background:linear-gradient(135deg,rgba(96,165,250,.07),rgba(9,9,15,1));
+  border:1px solid rgba(96,165,250,.2);border-radius:14px;padding:16px;
+}
+.prism-concept-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--blue);margin-bottom:8px}
+.formula-wrap{
+  background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
+  padding:12px 14px;margin:10px 0;
+}
+.formula-main{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text);text-align:center;margin-bottom:8px}
+.formula-parts{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.fp{background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:5px 10px;text-align:center;min-width:60px}
+.fp-sym{font-family:'Syne',sans-serif;font-size:14px;font-weight:800}
+.fp-lbl{font-size:9px;color:var(--text3);margin-top:2px;line-height:1.3}
+
+/* Stage Gate */
+.gate-flow{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.gate-flow::-webkit-scrollbar{display:none}
+.gate{display:flex;flex-direction:column;align-items:center;min-width:90px;flex-shrink:0;position:relative}
+.gate-circle{
+  width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:800;
+  border:2px solid;position:relative;z-index:1;
+  transition:all .2s;cursor:pointer;
+}
+.gate-circle:hover{transform:scale(1.1)}
+.gate.done .gate-circle{background:rgba(74,222,128,.15);border-color:var(--green);color:var(--green)}
+.gate.active .gate-circle{background:rgba(245,166,35,.15);border-color:var(--amber);color:var(--amber);box-shadow:0 0 14px rgba(245,166,35,.3);animation:glow 2s infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 8px rgba(245,166,35,.3)}50%{box-shadow:0 0 20px rgba(245,166,35,.5)}}
+.gate.pending .gate-circle{background:rgba(255,255,255,.03);border-color:var(--text3);color:var(--text3)}
+.gate-name{font-size:10px;font-weight:600;margin-top:6px;text-align:center;line-height:1.3}
+.gate.done .gate-name{color:var(--green)}
+.gate.active .gate-name{color:var(--amber)}
+.gate.pending .gate-name{color:var(--text3)}
+.gate-sub{font-size:9px;color:var(--text3);text-align:center;margin-top:2px}
+.gate-connector{width:42px;height:2px;flex-shrink:0;margin-top:24px}
+.gate-connector.done{background:var(--green)}
+.gate-connector.pending{background:rgba(255,255,255,.08)}
+
+/* 选点评分 */
+.location-list{display:flex;flex-direction:column;gap:7px}
+.loc-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:all .15s}
+.loc-card:hover{background:var(--card2);transform:translateX(2px)}
+.loc-card.selected{border-color:rgba(96,165,250,.3);background:rgba(96,165,250,.04)}
+.loc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.loc-name{font-size:13px;font-weight:600}
+.loc-score-badge{
+  font-family:'Syne',sans-serif;font-size:16px;font-weight:800;
+  padding:3px 10px;border-radius:8px;
+}
+.score-high{color:var(--green);background:var(--green-dim);border:1px solid rgba(74,222,128,.2)}
+.score-mid{color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,166,35,.2)}
+.score-low{color:var(--text3);background:rgba(255,255,255,.03);border:1px solid var(--border)}
+.loc-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lm{text-align:center}
+.lm-val{font-family:'Space Mono',monospace;font-size:12px;font-weight:700}
+.lm-lbl{font-size:9px;color:var(--text3);margin-top:1px}
+.loc-bar{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:8px}
+.loc-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue),var(--teal))}
+.loc-gate{font-size:10px;color:var(--text2);margin-top:6px;display:flex;align-items:center;gap:5px}
+
+/* PRISM 计算器 */
+.prism-calc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+.pc-title{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.pc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.pc-item .pc-label{font-size:10px;color:var(--text3);margin-bottom:5px;display:flex;justify-content:space-between}
+.pc-item .pc-val{font-family:'Space Mono',monospace;color:var(--blue);font-weight:700}
+input[type=range]{width:100%;height:4px;border-radius:2px;background:rgba(255,255,255,.08);outline:none;cursor:pointer;-webkit-appearance:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--blue);cursor:pointer;box-shadow:0 0 8px rgba(96,165,250,.4)}
+.prism-result{
+  margin-top:14px;padding:14px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;text-align:center;
+}
+.pr-label{font-size:10px;color:var(--text3);margin-bottom:6px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.08em}
+.pr-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--blue)}
+.pr-sub{font-size:11px;color:var(--text2);margin-top:4px}
+
+/* AI chat */
+.ai-wrap{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.ai-hdr{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.07em;text-transform:uppercase}
+.ai-chips{display:flex;gap:5px;padding:8px 12px;overflow-x:auto;scrollbar-width:none}
+.ai-chips::-webkit-scrollbar{display:none}
+.chip{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:4px 10px;font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.chip:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+.ai-bubble{margin:0 12px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text2);line-height:1.65}
+.ai-resp{display:none;margin:0 12px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.ai-resp.show{display:block}
+.ai-q{font-size:10px;color:var(--text3);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ai-input-row{display:flex;gap:6px;padding:6px 12px 10px}
+.ai-in{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:12px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif}
+.ai-in:focus{border-color:rgba(245,166,35,.4)}
+.ai-in::placeholder{color:var(--text3)}
+.ai-send{width:36px;height:36px;border-radius:9px;background:var(--amber);border:none;cursor:pointer;font-size:14px;flex-shrink:0;transition:all .15s}
+.ai-send:hover{background:#ffc85e;transform:scale(1.05)}
+.td-wrap{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:tda 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tda{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-sym">∞</div>
+    <div class="logo-name">INFINITY <em>OS</em></div>
+    <div class="ver">v8.3</div>
+  </div>
+  <div style="flex:1;text-align:center;font-size:11px;color:var(--text3);font-family:'Space Mono',monospace">
+    蝴蝶效应 · PRISM
+  </div>
+  <div class="clock" id="clock"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('butterfly')">🦋 蝴蝶效应</div>
+  <div class="tab" onclick="switchTab('chain')">🔗 传导链路</div>
+  <div class="tab" onclick="switchTab('prism')">◈ PRISM选点</div>
+</div>
+
+<!-- ════════════════════════════════════════ TAB 1 -->
+<div class="page active" id="page-butterfly">
+
+  <div class="concept">
+    <div class="concept-title">🦋 蝴蝶效应 · 四类失真</div>
+    <div class="concept-body">
+      任何一个节点的异常，都会沿 IPO0→13 传导并放大。系统的核心任务是<strong>提前2-3个节点识别信号</strong>，在问题扩散前拦截。A/B/C/D 四类失真，处置方式完全不同。
+    </div>
+  </div>
+
+  <!-- 类型选择 -->
+  <div class="type-grid" id="typeGrid">
+    <div class="type-card tc-a" onclick="selectType('A')">
+      <div class="tc-count" id="cnt-A">1条</div>
+      <div class="tc-letter">A</div>
+      <div class="tc-name">渠道压货</div>
+      <div class="tc-desc">经销商超量进货·刷单·库存积压·铁律③联动</div>
+    </div>
+    <div class="type-card tc-b" onclick="selectType('B')">
+      <div class="tc-count" id="cnt-B">2条</div>
+      <div class="tc-letter">B</div>
+      <div class="tc-name">促销扰动</div>
+      <div class="tc-desc">大促期间短期失真·不干预·标注观察期</div>
+    </div>
+    <div class="type-card tc-c" onclick="selectType('C')">
+      <div class="tc-count" id="cnt-C">1条</div>
+      <div class="tc-letter">C</div>
+      <div class="tc-name">窜货灰市</div>
+      <div class="tc-desc">低价跨区流通·底价¥17以下·品牌溢价侵蚀</div>
+    </div>
+    <div class="type-card tc-d" onclick="selectType('D')">
+      <div class="tc-count" id="cnt-D">1条</div>
+      <div class="tc-letter">D</div>
+      <div class="tc-name">战略扰动</div>
+      <div class="tc-desc">管理层主导的短期策略覆盖·上报总指挥</div>
+    </div>
+  </div>
+
+  <!-- 警报列表 -->
+  <div class="sec" style="margin:0">
+    当前活跃警报
+    <span class="badge b-red" id="activeCount">5条</span>
+  </div>
+  <div class="alert-list" id="alertList"></div>
+
+  <!-- AI -->
+  <div class="sec" style="margin:4px 0 0">🦋 蝴蝶效应 Agent</div>
+  <div class="ai-wrap">
+    <div class="ai-hdr">蝴蝶效应 · 全链预警</div>
+    <div class="ai-chips">
+      <div class="chip" onclick="askButterfly('A类和B类失真在数据上怎么区分？有什么关键指标？')">A类vs B类如何区分</div>
+      <div class="chip" onclick="askButterfly('宝仓贸易A类压货，传导路径会影响哪些下游节点？')">A类传导路径分析</div>
+      <div class="chip" onclick="askButterfly('C类窜货如何定位来源经销商？需要哪些数据？')">C类窜货溯源方法</div>
+      <div class="chip" onclick="askButterfly('当前5条活跃警报，处置优先级怎么排？')">警报优先级排序</div>
+    </div>
+    <div class="ai-bubble">你好，我是蝴蝶效应 Agent。实时监控 IPO0-13 全链节点，A/B/C/D 四类失真自动识别，提前2-3节点拦截。</div>
+    <div class="ai-resp" id="butterflyResp">
+      <div class="ai-q" id="butterflyQ"></div>
+      <div id="butterflyA"></div>
+    </div>
+    <div class="ai-input-row">
+      <input class="ai-in" id="butterflyIn" placeholder="问蝴蝶效应问题…" onkeydown="if(event.key==='Enter')askButterfly(this.value,this)"/>
+      <button class="ai-send" onclick="askButterfly(document.getElementById('butterflyIn').value,document.getElementById('butterflyIn'))">↑</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ TAB 2 -->
+<div class="page" id="page-chain">
+
+  <div class="concept">
+    <div class="concept-title">🔗 传导链路 · IPO0→13 可视化</div>
+    <div class="concept-body">
+      任何失真信号在链路上的<strong>传播速度取决于各节点的库存缓冲</strong>。水位越高，传导越慢；水位越低，传导越快。蝴蝶效应Agent 在信号到达零售层之前的2-3个节点介入。
+    </div>
+  </div>
+
+  <div class="chain-wrap">
+    <div class="chain-title">
+      🔴 A类压货失真 · 浦东宝仓贸易 · 当前传导状态
+      <span style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">实时</span>
+    </div>
+    <div class="chain" id="chainViz"></div>
+  </div>
+
+  <!-- 传导规则 -->
+  <div class="sec" style="margin:4px 0 0">传导规则</div>
+  <div style="display:flex;flex-direction:column;gap:7px">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">水位与传导速度</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.8">
+        <span style="color:var(--red)">overflow (>3a)</span> → 信号在本层停止传导，但铁律③触发<br>
+        <span style="color:var(--amber)">warn (1-2a)</span> → 信号在3天内传导至下游节点<br>
+        <span style="color:var(--green)">full (2-3a)</span> → 正常缓冲，传导延迟7-14天
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:6px">提前拦截点</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.8">
+        经销商层（IPO2-4）出现异常 → 比零售层（IPO8-10）提前 <strong style="color:var(--amber)">21天</strong> 发现<br>
+        二批商层（IPO5-7）出现异常 → 提前 <strong style="color:var(--amber)">7-10天</strong><br>
+        每提前一个节点，损失降低约 <strong style="color:var(--green)">35%</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI -->
+  <div class="sec" style="margin:4px 0 0">链路分析 AI</div>
+  <div class="ai-wrap">
+    <div class="ai-hdr">传导链路 · 分析</div>
+    <div class="ai-chips">
+      <div class="chip" onclick="askChain('宝仓贸易的A类信号，如果今天不处置，14天后会影响哪些门店？')">14天后影响预测</div>
+      <div class="chip" onclick="askChain('为什么经销商层的失真比零售层早21天发现？')">提前发现的原理</div>
+      <div class="chip" onclick="askChain('P1和P2路径在蝴蝶效应传导上有什么不同？')">P1 vs P2传导差异</div>
+    </div>
+    <div class="ai-bubble">你好，我是传导链路分析 Agent。我可以模拟任何节点失真后的传导路径和时间线。</div>
+    <div class="ai-resp" id="chainResp">
+      <div class="ai-q" id="chainQ"></div>
+      <div id="chainA"></div>
+    </div>
+    <div class="ai-input-row">
+      <input class="ai-in" id="chainIn" placeholder="问传导链路问题…" onkeydown="if(event.key==='Enter')askChain(this.value,this)"/>
+      <button class="ai-send" onclick="askChain(document.getElementById('chainIn').value,document.getElementById('chainIn'))">↑</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ TAB 3 -->
+<div class="page" id="page-prism">
+
+  <div class="prism-concept">
+    <div class="prism-concept-title">◈ PRISM · 消费者精准选点</div>
+    <div class="concept-body" style="color:var(--text2)">
+      从消费者端出发，找到高价值小区，发起共创活动，拉动真实需求。这是整个系统的<strong style="color:var(--text)">需求侧引擎</strong>，对应推拉双引擎的「拉力」。
+    </div>
+    <div class="formula-wrap">
+      <div class="formula-main">Sale = N × P × F × B × ASP</div>
+      <div class="formula-parts">
+        <div class="fp"><div class="fp-sym" style="color:var(--blue)">N</div><div class="fp-lbl">目标家庭数</div></div>
+        <div class="fp"><div class="fp-sym" style="color:var(--teal)">P</div><div class="fp-lbl">渗透率</div></div>
+        <div class="fp"><div class="fp-sym" style="color:var(--green)">F</div><div class="fp-lbl">购买频次</div></div>
+        <div class="fp"><div class="fp-sym" style="color:var(--amber)">B</div><div class="fp-lbl">购买量</div></div>
+        <div class="fp"><div class="fp-sym" style="color:var(--purple)">ASP</div><div class="fp-lbl">均价</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage Gate 流程 -->
+  <div class="sec" style="margin:0">Stage Gate · 共创推进流程</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;overflow:hidden">
+    <div class="gate-flow">
+      <div class="gate done">
+        <div class="gate-circle">G1</div>
+        <div class="gate-name">选点筛选</div>
+        <div class="gate-sub">PRISM评分≥75</div>
+      </div>
+      <div class="gate-connector done"></div>
+      <div class="gate active">
+        <div class="gate-circle">G2</div>
+        <div class="gate-name">共创启动</div>
+        <div class="gate-sub">社区KOC激活</div>
+      </div>
+      <div class="gate-connector pending"></div>
+      <div class="gate pending">
+        <div class="gate-circle">G3</div>
+        <div class="gate-name">效果验证</div>
+        <div class="gate-sub">r值+渗透率回收</div>
+      </div>
+      <div class="gate-connector pending"></div>
+      <div class="gate pending">
+        <div class="gate-circle">G4</div>
+        <div class="gate-name">复制扩张</div>
+        <div class="gate-sub">同类小区复制</div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:12px;font-family:'Space Mono',monospace">
+      当前：G2 进行中 · 上海4个小区已启动共创 · 等待G3数据回收
+    </div>
+  </div>
+
+  <!-- PRISM 评分计算器 -->
+  <div class="sec" style="margin:4px 0 0">PRISM评分计算器</div>
+  <div class="prism-calc">
+    <div class="pc-title">📐 输入小区参数，计算 PRISM 得分</div>
+    <div class="pc-grid">
+      <div class="pc-item">
+        <div class="pc-label">房价指数（万/㎡）<span class="pc-val" id="v-price">9.2</span></div>
+        <input type="range" id="sl-price" min="2" max="20" step="0.1" value="9.2" oninput="calcPrism()">
+      </div>
+      <div class="pc-item">
+        <div class="pc-label">家庭户数<span class="pc-val" id="v-hh">1,200户</span></div>
+        <input type="range" id="sl-hh" min="200" max="5000" step="100" value="1200" oninput="calcPrism()">
+      </div>
+      <div class="pc-item">
+        <div class="pc-label">当前渗透率<span class="pc-val" id="v-pen">0.34%</span></div>
+        <input type="range" id="sl-pen" min="0" max="5" step="0.01" value="0.34" oninput="calcPrism()">
+      </div>
+      <div class="pc-item">
+        <div class="pc-label">竞品密度（门店/km²）<span class="pc-val" id="v-comp">3</span></div>
+        <input type="range" id="sl-comp" min="0" max="10" step="1" value="3" oninput="calcPrism()">
+      </div>
+    </div>
+    <div class="prism-result">
+      <div class="pr-label">PRISM 综合得分</div>
+      <div class="pr-val" id="prismScore">83</div>
+      <div class="pr-sub" id="prismVerdict">✅ 高价值选点 · 建议启动 G2 共创</div>
+    </div>
+  </div>
+
+  <!-- 候选小区排名 -->
+  <div class="sec" style="margin:4px 0 0">上海 · 候选小区 PRISM 排名</div>
+  <div class="location-list" id="locationList"></div>
+
+  <!-- AI -->
+  <div class="sec" style="margin:8px 0 0">◈ PRISM Agent</div>
+  <div class="ai-wrap">
+    <div class="ai-hdr">PRISM · 精准选点</div>
+    <div class="ai-chips">
+      <div class="chip" onclick="askPrism('PRISM得分83分的世纪华城，共创活动能带来多少新增r值？')">世纪华城投入产出</div>
+      <div class="chip" onclick="askPrism('G2阶段KOC激活的最有效方式是什么？六月鲜适合什么内容形式？')">G2 KOC激活策略</div>
+      <div class="chip" onclick="askPrism('完成4个小区G3验证后，如何筛选可以复制的同类小区？')">G4复制扩张标准</div>
+      <div class="chip" onclick="askPrism('PRISM的N×P×F×B×ASP公式，哪个变量对六月鲜增量最敏感？')">敏感性分析</div>
+    </div>
+    <div class="ai-bubble">你好，我是 PRISM 精准选点 Agent。基于宏观+二三手数据，帮你找到六月鲜高价值渗透小区。</div>
+    <div class="ai-resp" id="prismResp">
+      <div class="ai-q" id="prismQ"></div>
+      <div id="prismA"></div>
+    </div>
+    <div class="ai-input-row">
+      <input class="ai-in" id="prismIn" placeholder="问PRISM选点问题…" onkeydown="if(event.key==='Enter')askPrism(this.value,this)"/>
+      <button class="ai-send" onclick="askPrism(document.getElementById('prismIn').value,document.getElementById('prismIn'))">↑</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 时钟 ─────────────────────────────────────────────
+function tick(){const n=new Date();document.getElementById('clock').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')}
+tick();setInterval(tick,1000);
+
+// ── Tab ──────────────────────────────────────────────
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('page-'+id).classList.add('active');
+  window.scrollTo(0,52);
+}
+
+// ════════════════════════════════════════════════════
+// 蝴蝶效应数据（对齐 InfAlert 实体）
+// ════════════════════════════════════════════════════
+const ALERTS = [
+  {id:1042, type:'A', sev:'red', ironLaw:3,
+    title:'浦东·宝仓贸易 — 消化率连续2月低于50%',
+    node:'lyx-sh-dist-baocang', nodeLabel:'宝仓贸易（浦东）',
+    detail:'当前库存4.2a（经销商满仓标准2a），本月消化率47.1%，上月46.3%。已连续两月低于铁律③基准线50%。属A类渠道压货失真：经销商进货速度超过实际销售速度，差值持续扩大。\n\n<strong>建议处置：</strong>确认暂停推单2周 → 安排业代实地核查货架和仓库实际库存 → 14天后重新计算消化率决定是否恢复。',
+    actions:['confirm','watch']},
+  {id:1043, type:'B', sev:'amber', ironLaw:null,
+    title:'宝山·大润发庙行店 — 促销期间动销波动',
+    node:'lyx-sh-store-baoshang-darunfa', nodeLabel:'大润发庙行店（宝山）',
+    detail:'618大促期间门店动销量提升230%，促销结束后恢复正常。本次波动符合B类促销扰动特征：有明确时间边界，促销期前后库存水位均正常。\n\n<strong>建议处置：</strong>标注观察期结束日期，不干预推单逻辑，5天后自动解除标注。',
+    actions:['watch']},
+  {id:1044, type:'B', sev:'amber', ironLaw:null,
+    title:'黄浦·家乐福 — 双十一备货扰动',
+    node:'lyx-sh-store-huangpu-jialefu', nodeLabel:'家乐福（黄浦）',
+    detail:'双十一前10天大量备货导致库存暂时升至3.8a，超出正常满仓水位。但当前在促销时间窗口内，属B类促销扰动。促销结束预计7天后库存回落至2a健康区间。\n\n<strong>建议处置：</strong>观察14天，到期自动重新评估水位。',
+    actions:['watch']},
+  {id:1045, type:'C', sev:'red', ironLaw:null,
+    title:'成都区 — 疑似遵循自然500ml低价窜货',
+    node:'lyx-cd-dist-all', nodeLabel:'成都经销商（区域）',
+    detail:'汉询数据显示成都区域多个终端出现低于底价¥17的成交记录，最低成交价¥14.8。货流方向疑似来自上海临期库存的跨区流通。\n\n<strong>建议处置：</strong>1. 立即启动价签核查（A23尚未上线，需人工）2. 锁定疑似来源经销商（上海宝仓贸易？）3. 发出书面警告并列入C类失真档案。',
+    actions:['confirm','escalate']},
+  {id:1046, type:'D', sev:'amber', ironLaw:null,
+    title:'全国 — 涨价缓冲期战略扰动',
+    node:'lyx', nodeLabel:'六月鲜（全品牌）',
+    detail:'管理层决策：本季度针对特级系列执行控价策略，部分SKU短期内会出现库存积压现象，属战略主动干预（D类扰动），不属于系统异常。\n\n<strong>建议处置：</strong>全链标注D类战略覆盖，屏蔽相关节点的铁律自动触发，由总指挥定期复查（下次复查：30天后）。',
+    actions:['watch']},
+];
+
+let filteredType = null;
+
+function selectType(t){
+  filteredType = filteredType === t ? null : t;
+  document.querySelectorAll('.type-card').forEach(c=>c.classList.remove('active-a','active-b','active-c','active-d'));
+  if(filteredType) event.currentTarget.classList.add('active-'+t.toLowerCase());
+  renderAlerts();
+}
+
+function renderAlerts(){
+  const list = document.getElementById('alertList');
+  const show = filteredType ? ALERTS.filter(a=>a.type===filteredType) : ALERTS;
+  document.getElementById('activeCount').textContent = show.length + '条';
+  list.innerHTML = '';
+  show.forEach(a => {
+    const typeColor = {A:'var(--red)',B:'var(--amber)',C:'var(--orange)',D:'var(--purple)'}[a.type];
+    const div = document.createElement('div');
+    div.className = 'alert-item';
+    div.id = 'alert-'+a.id;
+    div.innerHTML = `
+    <div class="ai-hdr-row" onclick="toggleAlert(${a.id})">
+      <div class="ai-type-badge badge-${a.type.toLowerCase()}">${a.type}</div>
+      <div class="ai-info">
+        <div class="ai-title">${a.title}</div>
+        <div class="ai-meta">
+          <span style="color:var(--text3)">${a.nodeLabel}</span>
+          <span class="ai-sev sev-${a.sev}">${a.sev.toUpperCase()}</span>
+          ${a.ironLaw ? `<span style="color:var(--red);font-size:9px">铁律③</span>` : ''}
+        </div>
+      </div>
+      <div class="ai-expand" id="exp-${a.id}">▼</div>
+    </div>
+    <div class="ai-detail" id="det-${a.id}">
+      <div class="ai-detail-body">${a.detail}</div>
+      <div class="ai-btns">
+        ${a.actions.includes('confirm')?`<button class="btn-sm btn-resolve" onclick="resolveAlert(${a.id},'✅ 已确认执行')">✓ 确认处置</button>`:''}
+        ${a.actions.includes('watch')?`<button class="btn-sm btn-watch" onclick="resolveAlert(${a.id},'👁 已标注观察')">标注观察</button>`:''}
+        ${a.actions.includes('escalate')?`<button class="btn-sm btn-escalate" onclick="resolveAlert(${a.id},'🚨 已上报总指挥')">上报总指挥</button>`:''}
+      </div>
+    </div>`;
+    list.appendChild(div);
+  });
+}
+
+function toggleAlert(id){
+  const det = document.getElementById('det-'+id);
+  const exp = document.getElementById('exp-'+id);
+  const open = det.classList.toggle('show');
+  exp.textContent = open ? '▲' : '▼';
+}
+
+function resolveAlert(id, msg){
+  const item = document.getElementById('alert-'+id);
+  if(!item) return;
+  item.querySelector('.ai-detail').outerHTML = `<div class="resolved-row">${msg}</div>`;
+  item.querySelector('.ai-hdr-row').style.opacity = '.5';
+  item.querySelector('.ai-expand').style.display = 'none';
+  item.style.pointerEvents = 'none';
+}
+
+// ════════════════════════════════════════════════════
+// 传导链路可视化
+// ════════════════════════════════════════════════════
+const CHAIN_NODES = [
+  {id:'factory', label:'IPO0-1', name:'工厂', val:'96%产能', status:'ok'},
+  {id:'dist',    label:'IPO2-4', name:'宝仓贸易', val:'4.2a⚠️', status:'alert-a', infected:true},
+  {id:'sub',     label:'IPO5-7', name:'二批商', val:'1.0a', status:'ok'},
+  {id:'store',   label:'IPO8-10', name:'门店', val:'2.0a', status:'ok'},
+  {id:'consumer',label:'IPO11-13', name:'消费者', val:'r=3.2/天', status:'ok'},
+];
+
+function renderChain(){
+  const wrap = document.getElementById('chainViz');
+  wrap.innerHTML = '';
+  CHAIN_NODES.forEach((n,i) => {
+    const node = document.createElement('div');
+    node.className = 'chain-node';
+    node.innerHTML = `
+      <div class="cn-box ${n.status}">
+        <div class="cn-label">${n.label}</div>
+        <div class="cn-name">${n.name}</div>
+        <div class="cn-val" style="color:${n.infected?'var(--red)':'var(--text2)'}">${n.val}</div>
+        ${n.infected?`<div class="cn-status" style="color:var(--red)">⚠ 失真源</div>`:'<div class="cn-status" style="color:var(--green)">✓ 正常</div>'}
+      </div>`;
+    wrap.appendChild(node);
+    if(i < CHAIN_NODES.length-1){
+      const arrow = document.createElement('div');
+      arrow.className = 'chain-arrow' + (n.infected?' infected-arrow':'');
+      arrow.textContent = '›';
+      wrap.appendChild(arrow);
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════
+// PRISM 选点数据
+// ════════════════════════════════════════════════════
+const LOCATIONS = [
+  {name:'徐汇滨江·世纪华城', dist:'徐汇', price:9.2, hh:1200, pen:0.34, comp:3, gate:'G2进行中', score:83},
+  {name:'浦东·仁恒河滨城',   dist:'浦东', price:11.8, hh:980, pen:0.28, comp:2, gate:'G1完成',  score:91},
+  {name:'静安·静安府',       dist:'静安', price:13.2, hh:640, pen:0.19, comp:4, gate:'G1候选',  score:78},
+  {name:'长宁·虹桥绿地',    dist:'长宁', price:7.8,  hh:1800, pen:0.45, comp:5, gate:'G3验证中',score:74},
+  {name:'宝山·顾村公园',    dist:'宝山', price:4.2,  hh:2400, pen:0.62, comp:6, gate:'G2待启动',score:62},
+];
+
+function renderLocations(){
+  const list = document.getElementById('locationList');
+  list.innerHTML = LOCATIONS.sort((a,b)=>b.score-a.score).map((l,i) => {
+    const scoreClass = l.score>=80?'score-high':l.score>=65?'score-mid':'score-low';
+    const barPct = l.score;
+    return `
+    <div class="loc-card">
+      <div class="loc-top">
+        <div>
+          <div class="loc-name">${l.name}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">${l.dist} · ${l.hh.toLocaleString()}户</div>
+        </div>
+        <div class="loc-score-badge ${scoreClass}">${l.score}</div>
+      </div>
+      <div class="loc-metrics">
+        <div class="lm"><div class="lm-val" style="color:var(--blue)">¥${l.price}万</div><div class="lm-lbl">房价指数</div></div>
+        <div class="lm"><div class="lm-val" style="color:var(--teal)">${l.pen}%</div><div class="lm-lbl">当前渗透率</div></div>
+        <div class="lm"><div class="lm-val" style="color:var(--amber)">${l.comp}</div><div class="lm-lbl">竞品密度</div></div>
+      </div>
+      <div class="loc-bar"><div class="loc-bar-fill" style="width:${barPct}%"></div></div>
+      <div class="loc-gate">
+        <span style="width:8px;height:8px;border-radius:50%;background:${l.score>=80?'var(--green)':'var(--amber)'};display:inline-block;flex-shrink:0"></span>
+        ${l.gate}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function calcPrism(){
+  const price = parseFloat(document.getElementById('sl-price').value);
+  const hh    = parseInt(document.getElementById('sl-hh').value);
+  const pen   = parseFloat(document.getElementById('sl-pen').value);
+  const comp  = parseInt(document.getElementById('sl-comp').value);
+  document.getElementById('v-price').textContent = price.toFixed(1);
+  document.getElementById('v-hh').textContent    = hh.toLocaleString()+'户';
+  document.getElementById('v-pen').textContent   = pen.toFixed(2)+'%';
+  document.getElementById('v-comp').textContent  = comp;
+
+  // PRISM 评分算法（简化版）
+  const priceScore = Math.min(40, price * 3);      // 房价权重40%
+  const hhScore    = Math.min(20, hh / 250);       // 家庭数权重20%
+  const penScore   = Math.min(25, (5-pen)*5);      // 低渗透率更有潜力 25%
+  const compScore  = Math.max(0, 15 - comp*1.5);   // 竞品密度权重15%
+  const score      = Math.round(priceScore + hhScore + penScore + compScore);
+
+  document.getElementById('prismScore').textContent = score;
+  const verdict = score>=80 ? '✅ 高价值选点 · 建议启动 G2 共创'
+                : score>=65 ? '⚡ 中等价值 · 可列入候选队列'
+                : '⚠️ 价值偏低 · 优先投入其他小区';
+  const color = score>=80 ? 'var(--green)' : score>=65 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('prismVerdict').textContent = verdict;
+  document.getElementById('prismVerdict').style.color = color;
+  document.getElementById('prismScore').style.color = color;
+}
+
+// ════════════════════════════════════════════════════
+// 唯一 AI 函数
+// ════════════════════════════════════════════════════
+async function callClaude(sys,q,aEl){
+  aEl.innerHTML='<div class="td-wrap"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})});
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'—'}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`}
+}
+
+const SYS_BUTTERFLY = `你是 INFINITY OS 蝴蝶效应 Agent。监控 IPO0-13 全链。四类失真：A类=渠道压货（经销商库存超满仓，消化率持续低于50%）；B类=促销扰动（有时间边界的短期波动）；C类=窜货灰市（底价¥17以下跨区流通）；D类=战略覆盖（管理层主导）。当前活跃：A类1条（宝仓贸易铁律③），B类2条，C类1条（成都窜货），D类1条。用中文简洁回答，不超过150字。`;
+const SYS_CHAIN = `你是 INFINITY OS 传导链路 Agent。失真从经销商层（IPO2-4）传导到零售层（IPO8-10）约需21天，水位越高传导越慢。每提前一个节点拦截，损失降低35%。P1路径（直供零售）传导比P2路径（餐饮分销）快3-5天。用中文简洁回答，不超过150字。`;
+const SYS_PRISM = `你是 INFINITY OS PRISM 精准选点 Agent。选点公式：Sale=N×P×F×B×ASP。Stage Gate四阶段：G1选点（PRISM≥75）→G2共创启动（KOC激活）→G3效果验证（r值+渗透率）→G4复制扩张。当前上海4个小区在G2阶段。六月鲜高价值小区特征：房价6-12万/㎡，渗透率<1%，家庭户数>800。用中文简洁回答，不超过150字。`;
+
+async function askButterfly(q,el){if(!q||!q.trim())return;if(el instanceof HTMLElement)el.value='';document.getElementById('butterflyResp').classList.add('show');document.getElementById('butterflyQ').textContent='❓ '+q;await callClaude(SYS_BUTTERFLY,q,document.getElementById('butterflyA'))}
+async function askChain(q,el){if(!q||!q.trim())return;if(el instanceof HTMLElement)el.value='';document.getElementById('chainResp').classList.add('show');document.getElementById('chainQ').textContent='❓ '+q;await callClaude(SYS_CHAIN,q,document.getElementById('chainA'))}
+async function askPrism(q,el){if(!q||!q.trim())return;if(el instanceof HTMLElement)el.value='';document.getElementById('prismResp').classList.add('show');document.getElementById('prismQ').textContent='❓ '+q;await callClaude(SYS_PRISM,q,document.getElementById('prismA'))}
+
+// ── 启动 ─────────────────────────────────────────────
+renderAlerts();
+renderChain();
+renderLocations();
+calcPrism();
+</script>
+</body>
+</html>
