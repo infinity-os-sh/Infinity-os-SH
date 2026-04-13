@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · v8.2 · 一本账</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;--card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh}
+
+/* ── TOP ── */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(7,8,14,.97);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;padding:0 14px;height:52px;gap:8px}
+.logo{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.logo-sym{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000}
+.logo-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.logo-name em{color:var(--amber);font-style:normal}
+.ver{font-size:9px;font-family:'Space Mono',monospace;color:var(--amber);
+  background:var(--amber-dim);border:1px solid rgba(245,166,35,.2);padding:2px 7px;border-radius:10px}
+.home-btn{background:var(--card2);border:1px solid var(--border2);border-radius:16px;
+  padding:5px 11px;font-size:11px;color:var(--text2);text-decoration:none;white-space:nowrap}
+.clock{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+
+/* ── ENTRY SWITCHER ── */
+.entry-bar{
+  display:flex;background:var(--bg2);border-bottom:1px solid var(--border);
+  position:sticky;top:52px;z-index:90;
+}
+.entry-btn{
+  flex:1;padding:0;height:46px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;
+  cursor:pointer;transition:all .2s;border:none;background:none;
+  border-bottom:2px solid transparent;
+}
+.entry-btn.active{border-bottom-color:var(--amber)}
+.entry-icon{font-size:14px}
+.entry-label{font-size:11px;font-weight:600;color:var(--text3)}
+.entry-btn.active .entry-label{color:var(--amber)}
+.entry-sub{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace}
+
+/* ── SCREENS ── */
+.screen{display:none;padding:0 0 80px}
+.screen.active{display:block;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── CONTEXT BAR ── */
+.ctx-bar{
+  background:var(--bg3);border-bottom:1px solid var(--border);
+  padding:8px 14px;display:flex;align-items:center;gap:7px;
+  overflow-x:auto;scrollbar-width:none;position:sticky;top:98px;z-index:89;
+}
+.ctx-bar::-webkit-scrollbar{display:none}
+.ctx-chip{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:4px 11px;font-size:11px;cursor:pointer;transition:all .15s;
+  white-space:nowrap;flex-shrink:0;display:flex;align-items:center;gap:5px;
+}
+.ctx-chip.active{background:var(--amber-dim);border-color:rgba(245,166,35,.35);color:var(--amber)}
+.ctx-lbl{font-size:10px;color:var(--text3);flex-shrink:0}
+
+/* ── SKU LEDGER (入口一) ── */
+.ledger-header{
+  padding:14px 14px 8px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.lh-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+.lh-sub{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px}
+.lh-total{text-align:right}
+.lh-earned{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--amber)}
+.lh-max{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* SKU行 — 核心设计 */
+.sku-ledger{padding:0 14px;display:flex;flex-direction:column;gap:6px}
+
+.sku-row{
+  background:var(--card);border:1px solid var(--border);border-radius:13px;
+  overflow:hidden;cursor:pointer;transition:all .15s;
+}
+.sku-row:hover{border-color:var(--border2)}
+.sku-row.expanded{border-color:rgba(245,166,35,.25)}
+
+.sku-main{padding:12px 14px;display:flex;align-items:center;gap:10px}
+.sku-grade{
+  width:32px;height:32px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:800;
+}
+.g1{background:rgba(74,222,128,.15);color:var(--green)}
+.g2{background:rgba(245,166,35,.15);color:var(--amber)}
+.g3{background:rgba(96,165,250,.15);color:var(--blue)}
+.g4{background:rgba(167,139,250,.15);color:var(--purple)}
+.g5{background:rgba(255,95,95,.15);color:var(--red)}
+
+.sku-info{flex:1;min-width:0}
+.sku-name{font-size:13px;font-weight:600;margin-bottom:3px;
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sku-owner{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+.sku-progress{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:5px}
+.sku-prog-fill{height:100%;border-radius:2px;transition:width .6s ease}
+
+.sku-right{text-align:right;flex-shrink:0;min-width:80px}
+.sku-ach{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;line-height:1}
+.sku-comp{font-size:10px;margin-top:3px;font-family:'Space Mono',monospace}
+.sku-gap{font-size:10px;margin-top:2px}
+
+/* SKU展开详情 */
+.sku-detail{
+  display:none;border-top:1px solid var(--border);
+  padding:12px 14px;background:rgba(255,255,255,.015);
+}
+.sku-row.expanded .sku-detail{display:block}
+.sd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.sd-box{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 10px;text-align:center}
+.sd-val{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;line-height:1}
+.sd-lbl{font-size:9px;color:var(--text3);margin-top:3px}
+
+/* 门店明细（点SKU后的下钻） */
+.store-drill{margin-top:10px}
+.store-drill-title{font-size:10px;font-weight:700;color:var(--text3);
+  letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px}
+.store-item{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:var(--card);border:1px solid var(--border);border-radius:9px;
+  margin-bottom:5px;
+}
+.si-cls{font-size:9px;font-family:'Space Mono',monospace;padding:1px 5px;border-radius:5px}
+.si-sp{background:rgba(245,166,35,.15);color:var(--amber)}
+.si-s{background:rgba(78,205,196,.12);color:var(--teal)}
+.si-a{background:rgba(96,165,250,.12);color:var(--blue)}
+.si-b{background:rgba(255,255,255,.06);color:var(--text3)}
+.si-name{flex:1;font-size:12px;font-weight:600}
+.si-bar-wrap{width:60px;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.si-bar{height:100%;border-radius:2px}
+.si-ach{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;width:34px;text-align:right}
+.si-comp{font-size:10px;width:40px;text-align:right;font-family:'Space Mono',monospace}
+
+/* 行动建议 */
+.action-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10px;padding:4px 10px;border-radius:8px;margin-right:5px;margin-top:8px;
+  cursor:pointer;transition:all .15s;font-family:'Noto Sans SC',sans-serif;
+}
+.ac-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.ac-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.ac-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+
+/* 账单底部汇总 */
+.ledger-footer{
+  margin:10px 14px 0;padding:14px;
+  background:linear-gradient(135deg,rgba(245,166,35,.08),rgba(9,9,15,1));
+  border:1px solid rgba(245,166,35,.2);border-radius:14px;
+}
+.lf-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.lf-label{font-size:12px;font-weight:700}
+.lf-earned{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--amber)}
+.lf-rows{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.lf-row{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);
+  align-items:center}
+.lf-row-val{font-family:'Space Mono',monospace;font-weight:700}
+.lf-gap{
+  padding:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:10px;font-size:11px;color:var(--text2);line-height:1.7;
+}
+.lf-gap strong{color:var(--amber)}
+
+/* ── PERSON LEDGER (入口二) ── */
+.person-header{
+  padding:14px;display:flex;align-items:flex-start;justify-content:space-between;
+}
+.ph-left{}
+.ph-role{font-size:10px;font-family:'Space Mono',monospace;color:var(--teal);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.ph-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:2px}
+.ph-region{font-size:11px;color:var(--text3)}
+.ph-right{text-align:right}
+.ph-earned{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--teal)}
+.ph-max{font-size:10px;color:var(--text3);margin-top:2px}
+.ph-vs{font-size:10px;margin-top:4px;padding:3px 8px;border-radius:7px}
+.ph-vs.up{background:var(--green-dim);color:var(--green)}
+.ph-vs.dn{background:var(--red-dim);color:var(--red)}
+
+/* 人员账单的SKU行（信用卡账单样式）*/
+.bill-section{padding:0 14px}
+.bill-title{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.09em;
+  text-transform:uppercase;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bill-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.bill-row{
+  background:var(--card);border-left:3px solid;border-radius:0 12px 12px 0;
+  padding:11px 14px;margin-bottom:6px;cursor:pointer;transition:all .15s;
+  display:flex;align-items:stretch;gap:10px;
+}
+.bill-row:hover{background:var(--card2)}
+.bill-row.expanded-bill{border-color:var(--amber)!important}
+
+.br-left{flex:1;min-width:0}
+.br-sku{font-size:13px;font-weight:600;margin-bottom:4px;
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.br-targets{display:flex;gap:10px;font-size:10px;color:var(--text3);
+  font-family:'Space Mono',monospace;flex-wrap:wrap}
+.br-progress{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:6px}
+.br-fill{height:100%;border-radius:2px;transition:width .7s ease}
+
+.br-right{text-align:right;flex-shrink:0;display:flex;flex-direction:column;
+  justify-content:space-between;align-items:flex-end;min-width:76px}
+.br-ach{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;line-height:1}
+.br-comp{font-family:'Space Mono',monospace;font-size:11px;margin-top:3px}
+.br-gap{font-size:10px;margin-top:2px;font-family:'Space Mono',monospace}
+
+/* 账单展开：门店下钻 */
+.bill-detail{
+  display:none;margin:0 14px 6px;padding:10px 12px;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:0 0 12px 12px;border-top:none;
+  margin-top:-6px;
+}
+.bill-detail.show{display:block}
+.bd-stores{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.bd-store{display:flex;align-items:center;gap:8px;font-size:11px;
+  padding:7px 10px;background:var(--card);border:1px solid var(--border);border-radius:9px}
+.bd-store-name{flex:1;font-weight:600}
+.bd-store-r{font-family:'Space Mono',monospace;font-size:10px}
+.bd-store-ach{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;width:34px;text-align:right}
+.bd-store-comp{font-size:10px;width:44px;text-align:right;font-family:'Space Mono',monospace}
+.bd-sim{
+  background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.15);
+  border-radius:9px;padding:10px;font-size:11px;color:var(--text2);
+}
+.bd-sim strong{color:var(--green)}
+
+/* 账单汇总 */
+.bill-summary{
+  margin:10px 14px 0;padding:14px;
+  background:var(--card);border:1px solid var(--border2);border-radius:14px;
+}
+.bs-rows{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.bs-row{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.bs-label{color:var(--text2)}
+.bs-val{font-family:'Space Mono',monospace;font-weight:700}
+.bs-divider{height:1px;background:var(--border2);margin:4px 0}
+.bs-total{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px;background:linear-gradient(135deg,rgba(78,205,196,.08),rgba(9,9,15,1));
+  border:1px solid rgba(78,205,196,.2);border-radius:10px;
+}
+.bst-label{font-size:13px;font-weight:700}
+.bst-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--teal)}
+
+/* 模拟器 */
+.sim-section{padding:0 14px;margin-top:10px}
+.sim-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.sim-hdr{padding:11px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700}
+.sim-gain{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--green)}
+.sim-body{padding:12px 14px;display:flex;flex-direction:column;gap:7px}
+.sim-row{
+  background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;display:flex;align-items:center;gap:10px;
+}
+.sr-info{flex:1}
+.sr-name{font-size:12px;font-weight:600;margin-bottom:2px}
+.sr-cur{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+.sr-ctrl{width:90px;flex-shrink:0}
+.sr-lbl{font-size:9px;color:var(--text3);text-align:center;margin-bottom:3px}
+input[type=range]{width:100%;height:4px;border-radius:2px;
+  background:rgba(255,255,255,.08);outline:none;cursor:pointer;-webkit-appearance:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;
+  border-radius:50%;background:var(--green);cursor:pointer}
+.sr-gain{width:56px;text-align:right;flex-shrink:0}
+.sr-gain-val{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--green)}
+.sr-gain-lbl{font-size:9px;color:var(--text3)}
+.sim-new{
+  margin-top:4px;padding:10px 12px;
+  background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.2);
+  border-radius:10px;display:flex;justify-content:space-between;align-items:center;
+}
+.sn-lbl{font-size:12px;font-weight:600;color:var(--green)}
+.sn-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--green)}
+
+/* 关系排名 */
+.rank-section{padding:0 14px;margin-top:10px}
+.rank-list{display:flex;flex-direction:column;gap:6px}
+.rank-row{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:10px 13px;display:flex;align-items:center;gap:9px;
+}
+.rank-row.me{border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.04)}
+.rr-num{width:24px;height:24px;border-radius:7px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Mono',monospace;font-size:11px;font-weight:700}
+.rn1{background:rgba(245,166,35,.2);color:var(--amber)}
+.rn2{background:rgba(255,255,255,.08);color:var(--text2)}
+.rn3{background:rgba(78,205,196,.12);color:var(--teal)}
+.rnn{background:rgba(255,255,255,.04);color:var(--text3)}
+.rnme{background:rgba(245,166,35,.15);color:var(--amber);border:1px solid rgba(245,166,35,.3)}
+.rr-info{flex:1;min-width:0}
+.rr-name{font-size:12px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:6px}
+.me-tag{font-size:9px;background:var(--amber-dim);color:var(--amber);
+  border:1px solid rgba(245,166,35,.2);padding:1px 6px;border-radius:6px;font-family:'Space Mono',monospace}
+.rr-bar-wrap{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.rr-bar{height:100%;border-radius:2px}
+.rr-right{text-align:right;flex-shrink:0}
+.rr-income{font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
+.rr-r{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px}
+.diff-tag{font-size:10px;font-family:'Space Mono',monospace}
+
+/* AI */
+.ai-section{padding:0 14px;margin-top:10px}
+.ai-wrap{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.ai-hdr{padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;
+  color:var(--text3);letter-spacing:.07em;text-transform:uppercase}
+.chips{display:flex;gap:5px;padding:8px 12px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{background:var(--bg3);border:1px solid var(--border);border-radius:14px;
+  padding:4px 10px;font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;
+  transition:all .15s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.chip:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+.ai-bubble{margin:0 12px 8px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text2);line-height:1.65}
+.ai-resp{display:none;margin:0 12px 8px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.ai-resp.show{display:block}
+.ai-q{font-size:10px;color:var(--text3);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ai-row{display:flex;gap:6px;padding:6px 12px 10px}
+.ai-in{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;
+  padding:8px 11px;font-size:12px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif}
+.ai-in:focus{border-color:rgba(245,166,35,.4)}
+.ai-in::placeholder{color:var(--text3)}
+.ai-btn{width:36px;height:36px;border-radius:9px;background:var(--amber);border:none;cursor:pointer;font-size:14px;flex-shrink:0}
+.td-wrap{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:tda 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tda{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+.sec-pad{padding:12px 14px 4px}
+.sec{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.09em;
+  text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-sym">∞</div>
+    <div class="logo-name">INFINITY <em>OS</em></div>
+    <div class="ver">v8.2</div>
+  </div>
+  <a class="home-btn" href="index.html">⌂ 门户</a>
+  <div class="clock" id="clock"></div>
+</div>
+
+<!-- 入口切换 -->
+<div class="entry-bar">
+  <button class="entry-btn active" id="btn-sku" onclick="switchEntry('sku')">
+    <span class="entry-icon">📦</span>
+    <span class="entry-label">SKU账单</span>
+    <span class="entry-sub">公司视角</span>
+  </button>
+  <button class="entry-btn" id="btn-person" onclick="switchEntry('person')">
+    <span class="entry-icon">👤</span>
+    <span class="entry-label">人员账单</span>
+    <span class="entry-sub">员工视角</span>
+  </button>
+  <button class="entry-btn" id="btn-rank" onclick="switchEntry('rank')">
+    <span class="entry-icon">📊</span>
+    <span class="entry-label">关系对比</span>
+    <span class="entry-sub">排名透明</span>
+  </button>
+</div>
+
+<!-- ════════════════════════════════════ SKU账单 -->
+<div class="screen active" id="screen-sku">
+
+  <!-- 筛选器 -->
+  <div class="ctx-bar" id="skuCtxBar"></div>
+
+  <!-- 账单标题 -->
+  <div class="ledger-header">
+    <div>
+      <div class="lh-title" id="skuLedgerTitle">浦东区 · 张伟 · 六月鲜</div>
+      <div class="lh-sub">2026年4月 · 5个SKU · 业绩+利润双目标</div>
+    </div>
+    <div class="lh-total">
+      <div class="lh-earned" id="skuEarned">¥8,920</div>
+      <div class="lh-max">满额 ¥10,000</div>
+    </div>
+  </div>
+
+  <!-- SKU行 -->
+  <div class="sku-ledger" id="skuLedger"></div>
+
+  <!-- 账单汇总 -->
+  <div class="ledger-footer" id="skuFooter"></div>
+
+  <!-- AI -->
+  <div class="sec-pad"><div class="sec">SKU账单 AI 解读</div></div>
+  <div class="ai-section">
+    <div class="ai-wrap">
+      <div class="ai-hdr">📦 SKU账单 Agent</div>
+      <div class="chips">
+        <div class="chip" onclick="askSku('哪个SKU差距最大，应该优先处理哪个？')">差距最大的SKU</div>
+        <div class="chip" onclick="askSku('遵循自然500ml只有62%达成，是目标问题还是执行问题？')">低达成原因诊断</div>
+        <div class="chip" onclick="askSku('如果所有SKU都达成80%，这个月能拿多少？')">80%达成测算</div>
+      </div>
+      <div class="ai-bubble">你好，我是SKU账单 Agent。每行是一个SKU，点开可以看门店级执行情况。</div>
+      <div class="ai-resp" id="skuResp"><div class="ai-q" id="skuQ"></div><div id="skuA"></div></div>
+      <div class="ai-row">
+        <input class="ai-in" id="skuIn" placeholder="问SKU账单问题…" onkeydown="if(event.key==='Enter')askSku(this.value,this)"/>
+        <button class="ai-btn" onclick="askSku(document.getElementById('skuIn').value,document.getElementById('skuIn'))">↑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ 人员账单 -->
+<div class="screen" id="screen-person">
+
+  <!-- 人员选择 -->
+  <div class="ctx-bar" id="personCtxBar"></div>
+
+  <!-- 人员头部 -->
+  <div class="person-header" id="personHeader"></div>
+
+  <!-- 账单明细 -->
+  <div class="bill-section">
+    <div class="bill-title">本月账单明细</div>
+    <div id="billRows"></div>
+  </div>
+
+  <!-- 账单汇总 -->
+  <div class="bill-summary" id="billSummary"></div>
+
+  <!-- 模拟器 -->
+  <div class="sec-pad"><div class="sec">💡 如何多赚 · 模拟器</div></div>
+  <div class="sim-section">
+    <div class="sim-card">
+      <div class="sim-hdr">
+        <span>拖动滑块 · 看增加动销后能多赚多少</span>
+        <span class="sim-gain" id="simGain">+¥0</span>
+      </div>
+      <div class="sim-body" id="simBody"></div>
+    </div>
+  </div>
+
+  <!-- AI -->
+  <div class="sec-pad"><div class="sec">人员账单 AI</div></div>
+  <div class="ai-section">
+    <div class="ai-wrap">
+      <div class="ai-hdr">👤 人员账单 Agent</div>
+      <div class="chips">
+        <div class="chip" onclick="askPerson('我哪个SKU最值得投入更多时间？')">最值得投入的SKU</div>
+        <div class="chip" onclick="askPerson('如果我在大润发金桥店每天多卖2瓶，月薪能增加多少？')">单店动销提升收益</div>
+        <div class="chip" onclick="askPerson('我上个月比这个月少赚，差距主要在哪个SKU？')">月度差异分析</div>
+      </div>
+      <div class="ai-bubble" id="personAiBubble">你好，我是人员账单 Agent。每行是一个SKU，代表这个月这个产品给你挣了多少。</div>
+      <div class="ai-resp" id="personResp"><div class="ai-q" id="personQ"></div><div id="personA"></div></div>
+      <div class="ai-row">
+        <input class="ai-in" id="personIn" placeholder="问账单问题…" onkeydown="if(event.key==='Enter')askPerson(this.value,this)"/>
+        <button class="ai-btn" onclick="askPerson(document.getElementById('personIn').value,document.getElementById('personIn'))">↑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ 关系对比 -->
+<div class="screen" id="screen-rank">
+  <div style="padding:14px 14px 8px">
+    <div style="background:var(--card2);border:1px solid rgba(78,205,196,.12);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.8">
+      <strong style="color:var(--teal)">可见性即动力：</strong>排名差距完全来自r达成率，而r值可以通过拜访频次和货架管理改善。看到第1名比自己多赚¥3,320，比任何培训都更有驱动力。
+    </div>
+  </div>
+
+  <div style="padding:0 14px">
+    <div class="sec" style="margin-bottom:8px">上海区 · 业务员月收入排名</div>
+    <div class="rank-list" id="repRankList"></div>
+    <div class="sec" style="margin:12px 0 8px">上海区 · 经销商月净收入排名</div>
+    <div class="rank-list" id="distRankList"></div>
+  </div>
+
+  <div class="sec-pad"><div class="sec">关系对比 AI</div></div>
+  <div class="ai-section">
+    <div class="ai-wrap">
+      <div class="ai-hdr">📊 关系对比 Agent</div>
+      <div class="chips">
+        <div class="chip" onclick="askRank('张伟要超过第3名刘芳，r达成率需要从78%提到多少？')">超越第3名条件</div>
+        <div class="chip" onclick="askRank('第1名陈勇r达成95%，他具体比张伟多拜访了多少次门店？')">第1名的差距来源</div>
+      </div>
+      <div class="ai-bubble">你好，我是关系对比 Agent。所有差距都来自r值，r值可以改变。</div>
+      <div class="ai-resp" id="rankResp"><div class="ai-q" id="rankQ"></div><div id="rankA"></div></div>
+      <div class="ai-row">
+        <input class="ai-in" id="rankIn" placeholder="问关系对比问题…" onkeydown="if(event.key==='Enter')askRank(this.value,this)"/>
+        <button class="ai-btn" onclick="askRank(document.getElementById('rankIn').value,document.getElementById('rankIn'))">↑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 时钟 ─────────────────────────────────────────────
+function tick(){const n=new Date();document.getElementById('clock').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')}
+tick();setInterval(tick,1000);
+
+// ── 入口切换 ──────────────────────────────────────────
+function switchEntry(id){
+  ['sku','person','rank'].forEach(e=>{
+    document.getElementById('btn-'+e).classList.toggle('active',e===id);
+    document.getElementById('screen-'+e).classList.toggle('active',e===id);
+  });
+  window.scrollTo(0,98);
+}
+
+// ════════════════════════════════════════════════════
+// 数据层 — 同一套数据，两个视角
+// ════════════════════════════════════════════════════
+const PERSONS = [
+  {id:'zw',name:'张伟',region:'浦东',grade:2,coeff:1.5,base:8000,pool:2000},
+  {id:'ln',name:'李娜',region:'黄浦',grade:2,coeff:1.5,base:8000,pool:2000},
+  {id:'wl',name:'王磊',region:'长宁',grade:3,coeff:1.0,base:8000,pool:2000},
+];
+
+// SKU主数据（这是系统的基本粒子）
+const SKUS = [
+  {
+    id:'ziran-500ml',name:'遵循自然 500ml',grade:1,
+    revTarget:10000,revActual:6200,
+    profitTarget:1800,profitActual:1116,
+    compWeight:20,compMax:2000,
+    color:'var(--green)',
+    stores:[
+      {n:'大润发金桥店',cls:'S+',rA:4.8,rT:5.5,ach:87},
+      {n:'家乐福浦东店',cls:'S', rA:3.2,rT:4.2,ach:76},
+      {n:'世纪联华浦东',cls:'B', rA:1.8,rT:3.0,ach:60},
+    ],
+    action:'拜访频次不足 → 建议S+门店提升至3次/周',
+    actionType:'amber',
+  },
+  {
+    id:'ziran-1l',name:'遵循自然 1L',grade:2,
+    revTarget:20000,revActual:15400,
+    profitTarget:3600,profitActual:2772,
+    compWeight:20,compMax:2000,
+    color:'var(--amber)',
+    stores:[
+      {n:'大润发金桥店',cls:'S+',rA:5.1,rT:5.5,ach:93},
+      {n:'大润发联洋店',cls:'A', rA:3.4,rT:4.0,ach:85},
+      {n:'便利蜂浦东',  cls:'B', rA:2.1,rT:3.0,ach:70},
+    ],
+    action:'整体表现良好 → 联洋店有空间再提升',
+    actionType:'green',
+  },
+  {
+    id:'hongshao-500ml',name:'红烧酱油 500ml',grade:3,
+    revTarget:40000,revActual:36800,
+    profitTarget:7200,profitActual:6624,
+    compWeight:20,compMax:2000,
+    color:'var(--blue)',
+    stores:[
+      {n:'大润发金桥店',cls:'S+',rA:6.2,rT:6.5,ach:95},
+      {n:'家乐福浦东店',cls:'S', rA:4.8,rT:5.0,ach:96},
+      {n:'大润发联洋店',cls:'A', rA:3.9,rT:4.2,ach:93},
+      {n:'世纪联华浦东',cls:'B', rA:2.8,rT:3.2,ach:88},
+    ],
+    action:'健康 → 保持现有拜访节奏',
+    actionType:'green',
+  },
+  {
+    id:'hongshao-880ml',name:'红烧酱油 880ml',grade:4,
+    revTarget:50000,revActual:42500,
+    profitTarget:9000,profitActual:7650,
+    compWeight:20,compMax:2000,
+    color:'var(--purple)',
+    stores:[
+      {n:'大润发金桥店',cls:'S+',rA:5.8,rT:6.0,ach:97},
+      {n:'家乐福浦东店',cls:'S', rA:4.2,rT:5.0,ach:84},
+      {n:'罗森浦东店',  cls:'B', rA:2.2,rT:3.0,ach:73},
+    ],
+    action:'家乐福和罗森有差距 → 建议增加陈列面',
+    actionType:'amber',
+  },
+  {
+    id:'teji-885ml',name:'特级酱油 885ml',grade:5,
+    revTarget:60000,revActual:36000,
+    profitTarget:10800,profitActual:6480,
+    compWeight:20,compMax:2000,
+    color:'var(--red)',
+    stores:[
+      {n:'大润发金桥店',cls:'S+',rA:3.5,rT:5.5,ach:64},
+      {n:'家乐福浦东店',cls:'S', rA:2.8,rT:4.5,ach:62},
+      {n:'世纪联华浦东',cls:'B', rA:1.6,rT:3.0,ach:53},
+    ],
+    action:'全面低达成 → 建议检查竞品价格 + 陈列位是否被挤占',
+    actionType:'red',
+  },
+];
+
+// ── 计算薪酬 ──────────────────────────────────────────
+function calcComp(sku, p){
+  const ach = sku.profitActual / sku.profitTarget;
+  return Math.round(sku.compMax * Math.min(ach * p.coeff, 2.0));
+}
+function calcTotalComp(p){
+  return SKUS.reduce((s,sku)=>s+calcComp(sku,p),0);
+}
+
+let currentPerson = PERSONS[0];
+
+// ── 筛选器渲染 ────────────────────────────────────────
+function renderSkuCtx(){
+  const bar = document.getElementById('skuCtxBar');
+  bar.innerHTML = '<span class="ctx-lbl">业务员：</span>';
+  PERSONS.forEach(p=>{
+    const d=document.createElement('div');
+    d.className='ctx-chip'+(p.id===currentPerson.id?' active':'');
+    d.textContent=p.name+'·'+p.region;
+    d.onclick=()=>{currentPerson=p;renderSkuCtx();renderPersonCtx();renderSKULedger();renderPersonLedger()};
+    bar.appendChild(d);
+  });
+}
+function renderPersonCtx(){
+  const bar = document.getElementById('personCtxBar');
+  bar.innerHTML = '<span class="ctx-lbl">查看：</span>';
+  PERSONS.forEach(p=>{
+    const d=document.createElement('div');
+    d.className='ctx-chip'+(p.id===currentPerson.id?' active':'');
+    d.textContent=p.name+'·'+p.region;
+    d.onclick=()=>{currentPerson=p;renderSkuCtx();renderPersonCtx();renderSKULedger();renderPersonLedger()};
+    bar.appendChild(d);
+  });
+}
+
+// ════════════════════════════════════════════════════
+// 入口一：SKU账单（公司视角）
+// ════════════════════════════════════════════════════
+function renderSKULedger(){
+  const p = currentPerson;
+  const totalEarned = calcTotalComp(p);
+  document.getElementById('skuLedgerTitle').textContent = `${p.region}区 · ${p.name} · 六月鲜`;
+  document.getElementById('skuEarned').textContent = '¥'+totalEarned.toLocaleString();
+
+  const container = document.getElementById('skuLedger');
+  container.innerHTML = '';
+
+  SKUS.forEach(sku => {
+    const earned = calcComp(sku,p);
+    const revAch = (sku.revActual/sku.revTarget*100).toFixed(0);
+    const profAch = (sku.profitActual/sku.profitTarget*100).toFixed(0);
+    const pct = Math.min(100,parseInt(profAch));
+    const achColor = pct>=85?'var(--green)':pct>=65?'var(--amber)':'var(--red)';
+    const gap = sku.profitTarget - sku.profitActual;
+    const compGap = sku.compMax - earned;
+
+    const div = document.createElement('div');
+    div.className = 'sku-row';
+    div.innerHTML = `
+    <div class="sku-main" onclick="toggleSkuRow(this.parentElement,'${sku.id}')">
+      <div class="sku-grade g${sku.grade}">年级${sku.grade}</div>
+      <div class="sku-info">
+        <div class="sku-name">
+          ${sku.name}
+          <span style="font-size:9px;font-family:'Space Mono',monospace;color:var(--text3)">
+            业绩${revAch}% · 利润${profAch}%
+          </span>
+        </div>
+        <div class="sku-owner">负责人：${p.name} · 占薪酬${sku.compWeight}%</div>
+        <div class="sku-progress">
+          <div class="sku-prog-fill" style="width:${pct}%;background:${achColor}"></div>
+        </div>
+      </div>
+      <div class="sku-right">
+        <div class="sku-ach" style="color:${achColor}">${profAch}%</div>
+        <div class="sku-comp" style="color:${achColor}">+¥${earned.toLocaleString()}</div>
+        <div class="sku-gap" style="color:${compGap>0?'var(--red)':'var(--green)'}">
+          ${compGap>0?'差¥'+compGap.toLocaleString():'✓ 满额'}
+        </div>
+      </div>
+    </div>
+    <div class="sku-detail" id="sku-detail-${sku.id}">
+      <div class="sd-grid">
+        <div class="sd-box">
+          <div class="sd-val" style="color:${achColor}">¥${sku.profitActual.toLocaleString()}</div>
+          <div class="sd-lbl">实际利润</div>
+        </div>
+        <div class="sd-box">
+          <div class="sd-val" style="color:var(--text2)">¥${sku.profitTarget.toLocaleString()}</div>
+          <div class="sd-lbl">利润目标</div>
+        </div>
+        <div class="sd-box">
+          <div class="sd-val" style="color:${compGap>0?'var(--red)':'var(--green)'}">
+            ${compGap>0?'-¥'+compGap.toLocaleString():'满额'}
+          </div>
+          <div class="sd-lbl">薪酬差距</div>
+        </div>
+      </div>
+      <div class="store-drill">
+        <div class="store-drill-title">门店执行明细</div>
+        ${sku.stores.map(st=>{
+          const cls = {'S+':'si-sp','S':'si-s','A':'si-a','B':'si-b'}[st.cls]||'si-b';
+          const sc = st.ach>=85?'var(--green)':st.ach>=65?'var(--amber)':'var(--red)';
+          const stComp = Math.round(earned * (st.ach/100) * 0.3);
+          return `<div class="store-item">
+            <span class="si-cls ${cls}">${st.cls}</span>
+            <span class="si-name">${st.n}</span>
+            <div class="si-bar-wrap"><div class="si-bar" style="width:${st.ach}%;background:${sc}"></div></div>
+            <span class="si-ach" style="color:${sc}">${st.ach}%</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div>
+        <span class="action-chip ac-${sku.actionType}">💡 ${sku.action}</span>
+      </div>
+    </div>`;
+    container.appendChild(div);
+  });
+
+  // 账单底部
+  const totalGap = SKUS.reduce((s,sku)=>s+(sku.compMax-calcComp(sku,p)),0);
+  const topSku = [...SKUS].sort((a,b)=>(b.compMax-calcComp(b,p))-(a.compMax-calcComp(a,p)))[0];
+  document.getElementById('skuFooter').innerHTML = `
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div style="font-size:13px;font-weight:700">本月账单汇总</div>
+    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--amber)">¥${totalEarned.toLocaleString()}</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2)"><span>基础月薪（固定）</span><span style="font-family:'Space Mono',monospace">¥${p.base.toLocaleString()}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2)"><span>动销激励（5个SKU汇总）</span><span style="font-family:'Space Mono',monospace;color:var(--green)">+¥${(totalEarned-p.base).toLocaleString()}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2)"><span>满额激励上限</span><span style="font-family:'Space Mono',monospace;color:var(--text3)">¥${(p.base+SKUS.reduce((s,sk)=>s+sk.compMax,0)).toLocaleString()}</span></div>
+  </div>
+  <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:11px;color:var(--text2);line-height:1.7">
+    <strong style="color:var(--amber)">差距 ¥${totalGap.toLocaleString()} 可追回</strong>：最大缺口来自「${topSku.name}」，利润差距 ¥${(topSku.profitTarget-topSku.profitActual).toLocaleString()}，对应薪酬风险 ¥${(topSku.compMax-calcComp(topSku,p)).toLocaleString()}。优先改善该SKU在低达成门店的动销。
+  </div>`;
+}
+
+function toggleSkuRow(row, skuId){
+  row.classList.toggle('expanded');
+  const detail = document.getElementById('sku-detail-'+skuId);
+  detail.style.display = row.classList.contains('expanded') ? 'block' : 'none';
+}
+
+// ════════════════════════════════════════════════════
+// 入口二：人员账单（员工视角）
+// ════════════════════════════════════════════════════
+function renderPersonLedger(){
+  const p = currentPerson;
+  const totalEarned = calcTotalComp(p);
+  const totalMax = p.base + SKUS.reduce((s,sk)=>s+sk.compMax,0);
+  const avg = 10550;
+  const diff = totalEarned - avg;
+
+  document.getElementById('personAiBubble').textContent = `你好，我是${p.name}的账单 Agent。每行代表一个SKU这个月给你挣了多少，点开看门店级明细。`;
+
+  document.getElementById('personHeader').innerHTML = `
+  <div class="ph-left">
+    <div class="ph-role">业务员 · DSR</div>
+    <div class="ph-name">${p.name}</div>
+    <div class="ph-region">${p.region}区 · 六月鲜 · 5个SKU · 2026年4月</div>
+  </div>
+  <div class="ph-right">
+    <div class="ph-earned">¥${totalEarned.toLocaleString()}</div>
+    <div class="ph-max">满额 ¥${totalMax.toLocaleString()}</div>
+    <div class="ph-vs ${diff>=0?'up':'dn'}">${diff>=0?'↑高于':'↓低于'}均值 ¥${Math.abs(diff).toLocaleString()}</div>
+  </div>`;
+
+  // 账单行
+  const billRows = document.getElementById('billRows');
+  billRows.innerHTML = '';
+  SKUS.forEach(sku => {
+    const earned = calcComp(sku,p);
+    const profAch = (sku.profitActual/sku.profitTarget*100).toFixed(0);
+    const compGap = sku.compMax - earned;
+    const pct = Math.min(100,parseInt(profAch));
+    const achColor = pct>=85?'var(--green)':pct>=65?'var(--amber)':'var(--red)';
+
+    const div = document.createElement('div');
+    div.className = 'bill-row';
+    div.style.borderColor = sku.color;
+    div.innerHTML = `
+    <div class="br-left" onclick="toggleBillRow('${sku.id}')">
+      <div class="br-sku">
+        <span style="width:10px;height:10px;border-radius:3px;background:${sku.color};display:inline-block;flex-shrink:0"></span>
+        ${sku.name}
+        <span style="background:rgba(255,255,255,.05);padding:1px 6px;border-radius:6px;font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">年级${sku.grade} ×${p.coeff}</span>
+      </div>
+      <div class="br-targets">
+        <span>业绩目标¥${(sku.revTarget/10000).toFixed(1)}万</span>
+        <span>利润目标¥${(sku.profitTarget/1000).toFixed(1)}K</span>
+        <span>薪酬权重${sku.compWeight}%</span>
+      </div>
+      <div class="br-progress">
+        <div class="br-fill" style="width:${pct}%;background:${achColor}"></div>
+      </div>
+    </div>
+    <div class="br-right" onclick="toggleBillRow('${sku.id}')">
+      <div class="br-ach" style="color:${achColor}">${profAch}%</div>
+      <div class="br-comp" style="color:${achColor}">+¥${earned.toLocaleString()}</div>
+      <div class="br-gap" style="color:${compGap>0?'var(--red)':'var(--green)'}">
+        ${compGap>0?'还差¥'+compGap.toLocaleString():'✓'}
+      </div>
+    </div>`;
+    billRows.appendChild(div);
+
+    // 展开详情
+    const detail = document.createElement('div');
+    detail.className = 'bill-detail';
+    detail.id = 'bill-detail-'+sku.id;
+    detail.innerHTML = `
+    <div class="bd-stores">
+      ${sku.stores.map(st=>{
+        const cls = {'S+':'si-sp','S':'si-s','A':'si-a','B':'si-b'}[st.cls]||'si-b';
+        const sc = st.ach>=85?'var(--green)':st.ach>=65?'var(--amber)':'var(--red)';
+        const contribution = Math.round(earned * (st.ach/100) / sku.stores.reduce((s,x)=>s+x.ach,0) * sku.stores.length);
+        return `<div class="bd-store">
+          <span class="si-cls ${cls}">${st.cls}</span>
+          <span class="bd-store-name">${st.n}</span>
+          <span class="bd-store-r" style="color:var(--text3)">r=${st.rA}→${st.rT}</span>
+          <span class="bd-store-ach" style="color:${sc}">${st.ach}%</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="bd-sim">
+      💡 <strong>${sku.action}</strong><br>
+      <span style="font-size:10px;color:var(--text3)">如果所有门店达到85%，本SKU薪酬可提升 ¥${Math.round(sku.compMax*0.85*p.coeff-earned).toLocaleString()}</span>
+    </div>`;
+    billRows.appendChild(detail);
+  });
+
+  // 账单汇总
+  const incentive = totalEarned - p.base;
+  const maxIncentive = SKUS.reduce((s,sk)=>s+sk.compMax,0);
+  document.getElementById('billSummary').innerHTML = `
+  <div class="bs-rows">
+    <div class="bs-row"><span class="bs-label">基础月薪（固定，不受r影响）</span><span class="bs-val">¥${p.base.toLocaleString()}</span></div>
+    <div class="bs-row"><span class="bs-label">动销激励（5个SKU汇总）</span><span class="bs-val" style="color:var(--green)">+¥${incentive.toLocaleString()}</span></div>
+    <div class="bs-row"><span class="bs-label">激励满额上限</span><span class="bs-val" style="color:var(--text3)">¥${maxIncentive.toLocaleString()}</span></div>
+    <div class="bs-row"><span class="bs-label">已达成比例</span><span class="bs-val" style="color:var(--amber)">${(incentive/maxIncentive*100).toFixed(0)}%</span></div>
+  </div>
+  <div class="bs-divider"></div>
+  <div class="bs-total">
+    <div class="bst-label">本月到手</div>
+    <div class="bst-val">¥${totalEarned.toLocaleString()}</div>
+  </div>`;
+
+  // 模拟器
+  renderSimulator(p, totalEarned);
+}
+
+function toggleBillRow(skuId){
+  const detail = document.getElementById('bill-detail-'+skuId);
+  detail.classList.toggle('show');
+}
+
+function renderSimulator(p, baseTotal){
+  const sb = document.getElementById('simBody');
+  sb.innerHTML = '';
+  SKUS.slice(0,4).forEach((sku,i)=>{
+    const div = document.createElement('div');
+    div.className = 'sim-row';
+    div.innerHTML = `
+    <div class="sr-info">
+      <div class="sr-name">${sku.name}</div>
+      <div class="sr-cur">利润达成 ${(sku.profitActual/sku.profitTarget*100).toFixed(0)}% · 薪酬 ¥${calcComp(sku,p).toLocaleString()}</div>
+    </div>
+    <div class="sr-ctrl">
+      <div class="sr-lbl">额外达成 <span id="sim-lbl-${i}">+0%</span></div>
+      <input type="range" min="0" max="30" step="5" value="0" id="sim-sl-${i}" oninput="updSim()">
+    </div>
+    <div class="sr-gain">
+      <div class="sr-gain-val" id="sim-gain-${i}">+¥0</div>
+      <div class="sr-gain-lbl">月增收</div>
+    </div>`;
+    sb.appendChild(div);
+  });
+  const footer = document.createElement('div');
+  footer.className = 'sim-new';
+  footer.innerHTML = `<div class="sn-lbl">调整后月收入</div><div class="sn-val" id="simNewVal">¥${baseTotal.toLocaleString()}</div>`;
+  sb.appendChild(footer);
+}
+
+function updSim(){
+  const p = currentPerson;
+  const base = calcTotalComp(p);
+  let extra = 0;
+  SKUS.slice(0,4).forEach((sku,i)=>{
+    const v = parseInt(document.getElementById('sim-sl-'+i).value);
+    document.getElementById('sim-lbl-'+i).textContent = '+'+v+'%';
+    const newEarned = Math.round(sku.compMax * Math.min((sku.profitActual/sku.profitTarget + v/100) * p.coeff, 2.0));
+    const oldEarned = calcComp(sku,p);
+    const gain = newEarned - oldEarned;
+    document.getElementById('sim-gain-'+i).textContent = (gain>0?'+':'')+'¥'+gain.toLocaleString();
+    extra += gain;
+  });
+  const newTotal = base + extra;
+  document.getElementById('simNewVal').textContent = '¥'+newTotal.toLocaleString();
+  document.getElementById('simGain').textContent = (extra>0?'+':'')+'¥'+extra.toLocaleString();
+  document.getElementById('simGain').style.color = extra>0?'var(--green)':'var(--text3)';
+}
+
+// ── 关系排名 ──────────────────────────────────────────
+const REP_RANK = [
+  {n:'陈勇',r:'闵行',ra:95,v:14800},
+  {n:'王磊',r:'长宁',ra:91,v:13760},
+  {n:'刘芳',r:'宝山',ra:82,v:12240},
+  {n:'张伟',r:'浦东',ra:78,v:10920,me:true},
+  {n:'李娜',r:'黄浦',ra:74,v:10880},
+];
+const DIST_RANK = [
+  {n:'闵行·陈勇代理',ra:95,v:24600},
+  {n:'长宁·王磊代理',ra:91,v:22800},
+  {n:'黄浦·李娜代理',ra:87,v:20400},
+  {n:'宝山·刘芳代理',ra:74,v:18720,me:true},
+  {n:'浦东·宝仓贸易',ra:47,v:9200},
+];
+
+function renderRankings(){
+  [{data:REP_RANK,el:'repRankList'},{data:DIST_RANK,el:'distRankList'}].forEach(({data,el})=>{
+    const self = data.find(d=>d.me)||data[2];
+    const maxV = data[0].v;
+    document.getElementById(el).innerHTML = data.map((d,i)=>{
+      const rc = i===0?'rn1':i===1?'rn2':i===2?'rn3':d.me?'rnme':'rnn';
+      const rt = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'';
+      const bc = d.me?'var(--amber)':i<=2?'var(--green)':'var(--blue)';
+      const diff = d.v - self.v;
+      return `<div class="rank-row ${d.me?'me':''}">
+        <div class="rr-num ${rc}">${rt}</div>
+        <div class="rr-info">
+          <div class="rr-name">
+            ${d.n}${d.r?`<span style="font-size:9px;color:var(--text3)">${d.r}</span>`:''}
+            ${d.me?'<span class="me-tag">你</span>':''}
+            ${!d.me&&diff!==0?`<span class="diff-tag" style="color:${diff>0?'var(--green)':'var(--red)'}">  ${diff>0?'↑+':'↓'}¥${Math.abs(diff).toLocaleString()}</span>`:''}
+          </div>
+          <div class="rr-bar-wrap"><div class="rr-bar" style="width:${Math.round(d.v/maxV*100)}%;background:${bc}50;border-right:2px solid ${bc}"></div></div>
+        </div>
+        <div class="rr-right">
+          <div class="rr-income" style="color:${d.me?'var(--amber)':bc}">¥${d.v.toLocaleString()}</div>
+          <div class="rr-r">r达成 ${d.ra}%</div>
+        </div>
+      </div>`;
+    }).join('');
+  });
+}
+
+// ── AI ───────────────────────────────────────────────
+async function callClaude(sys,q,aEl){
+  aEl.innerHTML='<div class="td-wrap"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})});
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'—'}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`}
+}
+
+const getSkuSys = ()=>{
+  const p=currentPerson;
+  const total=calcTotalComp(p);
+  return `你是 INFINITY OS SKU账单 Agent。当前：${p.name}（${p.region}）。SKU账单：${SKUS.map(s=>`${s.name}利润达成${(s.profitActual/s.profitTarget*100).toFixed(0)}%已挣¥${calcComp(s,p)}`).join('、')}。合计已挣¥${total}满额¥${p.base+SKUS.reduce((s,sk)=>s+sk.compMax,0)}。中文简洁含数字不超过150字。`;
+};
+const getPersonSys = ()=>{
+  const p=currentPerson;
+  return `你是 INFINITY OS 人员账单 Agent，当前：${p.name}（${p.region}）。账单：${SKUS.map(s=>`${s.name}达成${(s.profitActual/s.profitTarget*100).toFixed(0)}%已挣¥${calcComp(s,p)}`).join('、')}。合计¥${calcTotalComp(p)}满额¥${p.base+SKUS.reduce((s,sk)=>s+sk.compMax,0)}。中文简洁不超过150字。`;
+};
+
+async function askSku(q,el){if(!q||!q.trim())return;if(el instanceof HTMLElement)el.value='';document.getElementById('skuResp').classList.add('show');document.getElementById('skuQ').textContent='❓ '+q;await callClaude(getSkuSys(),q,document.getElementById('skuA'))}
+async function askPerson(q,el){if(!q||!q.trim())return;if(el instanceof HTMLElement)el.value='';document.getElementById('personResp').classList.add('show');document.getElementById('personQ').textContent='❓ '+q;await callClaude(getPersonSys(),q,document.getElementById('personA'))}
+async function askRank(q,el){if(!q||!q.trim())return;if(el instanceof HTMLElement)el.value='';document.getElementById('rankResp').classList.add('show');document.getElementById('rankQ').textContent='❓ '+q;await callClaude('你是关系对比Agent。排名：1陈勇95%¥14800，2王磊91%¥13760，3刘芳82%¥12240，4张伟78%¥10920，5李娜74%¥10880。差距全来自r达成率，靠拜访频次和货架管理改善。中文简洁不超过120字。',q,document.getElementById('rankA'))}
+
+// ── 启动 ─────────────────────────────────────────────
+renderSkuCtx();
+renderPersonCtx();
+renderSKULedger();
+renderPersonLedger();
+renderRankings();
+</script>
+</body>
+</html>
