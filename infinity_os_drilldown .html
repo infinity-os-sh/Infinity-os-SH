@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 多维分析</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;--card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.08);
+  --cs:#f5a623;--cd:#4ecdc4;--cst:#60a5fa;--cc:#a78bfa;--cn:#4ade80;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;padding-bottom:60px}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(7,8,14,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:52px}
+.logo{display:flex;align-items:center;gap:7px}
+.ls{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#ff7c38);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000}
+.ln{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.ln em{color:var(--amber);font-style:normal}
+.hb{background:var(--card2);border:1px solid var(--border2);border-radius:16px;padding:5px 11px;font-size:11px;color:var(--text2);text-decoration:none;white-space:nowrap}
+.ck{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+
+/* 模式切换 */
+.mode-bar{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:52px;z-index:91}
+.mb{flex:1;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .2s}
+.mb.on{border-bottom-color:var(--amber)}
+.mb-ic{font-size:13px}
+.mb-lbl{font-size:11px;font-weight:600;color:var(--text3)}
+.mb.on .mb-lbl{color:var(--amber)}
+.mb-sub{font-size:8px;color:var(--text3);font-family:'Space Mono',monospace}
+
+/* SKU 财务锚点 */
+.sku-anchor{background:var(--bg3);border-bottom:1px solid var(--border);padding:10px 14px;overflow-x:auto;scrollbar-width:none}
+.sku-anchor::-webkit-scrollbar{display:none}
+.sku-anchor-label{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sku-anchor-label::after{content:'财务锚点';font-size:9px;background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2);padding:1px 6px;border-radius:6px}
+.sku-tabs{display:flex;gap:6px;min-width:max-content}
+.sku-tab{display:flex;flex-direction:column;align-items:center;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:11px;cursor:pointer;transition:all .15s;min-width:100px}
+.sku-tab.on{border-color:var(--amber);background:var(--amber-dim)}
+.st-name{font-size:11px;font-weight:600;margin-bottom:3px}
+.st-rev{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;line-height:1}
+.st-ach{font-size:9px;margin-top:3px;font-family:'Space Mono',monospace}
+
+/* 屏幕 */
+.sc{display:none;padding:12px 14px 0}
+.sc.on{display:block}
+
+/* ────────────────────────────────────────────────────
+   模式一：矩阵
+──────────────────────────────────────────────────── */
+.matrix-ctrl{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.mc-label{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;flex-shrink:0}
+.mc-pills{display:flex;gap:5px;flex-wrap:wrap}
+.mc-pill{padding:4px 10px;border-radius:14px;font-size:11px;cursor:pointer;
+  border:1px solid var(--border);background:var(--card);color:var(--text3);transition:all .15s}
+.mc-pill.on{background:var(--amber-dim);border-color:rgba(245,166,35,.3);color:var(--amber);font-weight:600}
+
+.matrix-wrap{overflow-x:auto;scrollbar-width:thin;border-radius:12px;
+  border:1px solid var(--border)}
+.matrix-table{border-collapse:collapse;min-width:100%;font-size:11px}
+.mt-head th{padding:9px 10px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border);
+  text-align:center;white-space:nowrap;font-weight:700;font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+.mt-head th:first-child{text-align:left;min-width:100px;position:sticky;left:0;background:rgba(13,16,25,.97)}
+.mt-body td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.025);text-align:center;vertical-align:middle}
+.mt-body td:first-child{text-align:left;font-weight:600;font-size:12px;position:sticky;left:0;background:rgba(13,16,25,.97)}
+.mt-body tr:last-child td{border-bottom:none}
+.mt-body tr:hover td{background:rgba(255,255,255,.02)}
+.cell-val{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;line-height:1}
+.cell-bar{height:3px;border-radius:2px;margin:3px auto 0;transition:width .6s ease}
+.cell-clickable{cursor:pointer;transition:all .15s}
+.cell-clickable:hover{background:rgba(245,166,35,.06)!important;transform:scale(1.02)}
+.total-row td{background:rgba(255,255,255,.02);border-top:1px solid var(--border2);font-weight:700}
+.sku-col-header{color:var(--amber)}
+
+/* ────────────────────────────────────────────────────
+   模式二：固定下钻
+──────────────────────────────────────────────────── */
+.drill-path{display:flex;align-items:center;gap:6px;margin-bottom:10px;
+  padding:8px 12px;background:var(--card);border-radius:10px;overflow-x:auto;scrollbar-width:none}
+.drill-path::-webkit-scrollbar{display:none}
+.dp-step{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:10px;flex-shrink:0}
+.dp-step.active{color:#000;font-weight:700}
+.dp-sep{color:var(--text3);flex-shrink:0}
+
+.drill-list{display:flex;flex-direction:column;gap:5px}
+.drill-row{background:var(--card);border:1px solid var(--border);border-radius:11px;
+  overflow:hidden;cursor:pointer;transition:all .15s}
+.drill-row:hover{border-color:var(--border2)}
+.drill-row.open{border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.03)}
+.dr-main{display:flex;align-items:center;gap:10px;padding:10px 13px}
+.dr-icon{width:34px;height:34px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:15px}
+.dr-body{flex:1;min-width:0}
+.dr-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.dr-meta{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;display:flex;gap:8px;flex-wrap:wrap}
+.dr-bar-wrap{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:5px}
+.dr-bar-fill{height:100%;border-radius:2px;transition:width .6s ease}
+.dr-right{text-align:right;flex-shrink:0;min-width:68px}
+.dr-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;line-height:1}
+.dr-sub{font-size:10px;margin-top:3px;font-family:'Space Mono',monospace}
+.dr-caret{font-size:12px;color:var(--text3);flex-shrink:0;transition:transform .2s}
+.drill-row.open .dr-caret{transform:rotate(90deg)}
+.dr-children{display:none;border-top:1px solid rgba(255,255,255,.04);padding:8px 10px;
+  background:rgba(255,255,255,.01);flex-direction:column;gap:4px}
+.drill-row.open .dr-children{display:flex}
+
+/* ────────────────────────────────────────────────────
+   模式三：自由排序
+──────────────────────────────────────────────────── */
+.free-config{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:12px 14px;margin-bottom:10px}
+.fc-title{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:10px;
+  display:flex;align-items:center;gap:7px}
+.fc-hint{font-size:10px;color:var(--text3);margin-left:auto}
+.fc-dims{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.fc-dim{
+  display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:10px;
+  font-size:12px;font-weight:600;border:1px solid;cursor:grab;transition:all .15s;
+  user-select:none;position:relative;
+}
+.fc-dim.dragging{opacity:.5;cursor:grabbing}
+.fc-dim.drag-over{transform:scale(1.05)}
+.fc-dim .fc-num{
+  width:18px;height:18px;border-radius:5px;background:rgba(0,0,0,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:800;color:inherit;flex-shrink:0;
+}
+.fc-dim.enabled{opacity:1}
+.fc-dim.disabled{opacity:.35;cursor:not-allowed}
+.fc-toggle{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);margin-top:4px;flex-wrap:wrap}
+.fc-toggle-chip{padding:3px 9px;border-radius:10px;border:1px solid var(--border);
+  background:var(--bg3);cursor:pointer;font-size:10px;color:var(--text3);transition:all .15s}
+.fc-toggle-chip.on{border-color:rgba(245,166,35,.3);color:var(--amber);background:var(--amber-dim)}
+
+.free-result{display:flex;flex-direction:column;gap:5px}
+
+/* 通用颜色 */
+.dim-dist .dr-icon,.dim-dist.dr-icon{background:var(--teal-dim);border:1px solid rgba(78,205,196,.2)}
+.dim-store .dr-icon{background:var(--blue-dim);border:1px solid rgba(96,165,250,.2)}
+.dim-comm .dr-icon{background:var(--purple-dim);border:1px solid rgba(167,139,250,.2)}
+.dim-cons .dr-icon{background:var(--green-dim);border:1px solid rgba(74,222,128,.2)}
+
+.tag{font-size:9px;padding:1px 6px;border-radius:6px;font-family:'Space Mono',monospace}
+.tg{background:var(--green-dim);color:var(--green)}.tw{background:var(--amber-dim);color:var(--amber)}.tb{background:var(--red-dim);color:var(--red)}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><div class="ls">∞</div><div class="ln">INFINITY <em>OS</em></div></div>
+  <a class="hb" href="index.html">⌂ 门户</a>
+  <div class="ck" id="ck"></div>
+</div>
+
+<!-- 模式切换 -->
+<div class="mode-bar">
+  <button class="mb on" id="mb-matrix" onclick="switchMode('matrix')">
+    <span class="mb-ic">⊞</span><span class="mb-lbl">矩阵</span><span class="mb-sub">全局一览</span>
+  </button>
+  <button class="mb" id="mb-drill" onclick="switchMode('drill')">
+    <span class="mb-ic">↓</span><span class="mb-lbl">固定下钻</span><span class="mb-sub">逐层追查</span>
+  </button>
+  <button class="mb" id="mb-free" onclick="switchMode('free')">
+    <span class="mb-ic">⇄</span><span class="mb-lbl">自由排序</span><span class="mb-sub">任意组合</span>
+  </button>
+</div>
+
+<!-- SKU 财务锚点（三种模式共享） -->
+<div class="sku-anchor">
+  <div class="sku-anchor-label">SKU</div>
+  <div class="sku-tabs" id="skuTabs"></div>
+</div>
+
+<!-- ══ 模式一：矩阵 ══ -->
+<div class="sc on" id="sc-matrix">
+  <div class="matrix-ctrl">
+    <span class="mc-label">行维度</span>
+    <div class="mc-pills">
+      <div class="mc-pill on" onclick="setMatrixRow('dist')">🤝 经销商</div>
+      <div class="mc-pill"    onclick="setMatrixRow('store')">🏪 门店</div>
+      <div class="mc-pill"    onclick="setMatrixRow('comm')">🏘️ 小区</div>
+      <div class="mc-pill"    onclick="setMatrixRow('cons')">👥 消费者</div>
+    </div>
+    <span class="mc-label" style="margin-left:8px">指标</span>
+    <div class="mc-pills">
+      <div class="mc-pill on" onclick="setMatrixMetric('rev')">收入</div>
+      <div class="mc-pill"    onclick="setMatrixMetric('ach')">达成率</div>
+      <div class="mc-pill"    onclick="setMatrixMetric('growth')">增长率</div>
+    </div>
+  </div>
+  <div class="matrix-wrap">
+    <table class="matrix-table">
+      <thead class="mt-head" id="matrixHead"></thead>
+      <tbody class="mt-body" id="matrixBody"></tbody>
+    </table>
+  </div>
+  <div style="margin-top:8px;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;padding:0 2px">
+    💡 点击任意格子 → 跳转到对应下钻视图
+  </div>
+</div>
+
+<!-- ══ 模式二：固定下钻 ══ -->
+<div class="sc" id="sc-drill">
+  <div class="drill-path" id="drillPath"></div>
+  <div class="drill-list" id="drillList"></div>
+</div>
+
+<!-- ══ 模式三：自由排序 ══ -->
+<div class="sc" id="sc-free">
+  <div class="free-config">
+    <div class="fc-title">
+      拖动维度，自定义下钻顺序
+      <span class="fc-hint">长按拖动</span>
+    </div>
+    <div class="fc-dims" id="fcDims"></div>
+    <div class="fc-toggle">
+      <span style="font-size:10px;color:var(--text3)">排序：</span>
+      <div class="fc-toggle-chip on" onclick="setFreeSort('rev',this)">收入↓</div>
+      <div class="fc-toggle-chip"    onclick="setFreeSort('ach',this)">达成率↓</div>
+      <div class="fc-toggle-chip"    onclick="setFreeSort('gap',this)">差距↓</div>
+      <div class="fc-toggle-chip"    onclick="setFreeSort('growth',this)">增长↓</div>
+    </div>
+  </div>
+  <div class="free-result" id="freeResult"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// 统一数据层 — 财务锚点从SKU出发
+// ══════════════════════════════════════════════════════
+const DB = {
+  skus:[
+    {id:'zr5', name:'遵循自然 500ml',icon:'🧂',grade:'年级1',color:'#4ade80',rev:50000, target:80000, ach:62,profit:-12700,feeRate:1.239,growth:+8.4},
+    {id:'zr1', name:'遵循自然 1L',   icon:'🧂',grade:'年级2',color:'#f5a623',rev:77000, target:100000,ach:77,profit:-15340,feeRate:1.172,growth:+12.1},
+    {id:'hs',  name:'红烧酱油系列',  icon:'🍶',grade:'年级3',color:'#60a5fa',rev:114730,target:120000,ach:92,profit:+6130, feeRate:0.947,growth:+3.2},
+    {id:'hsl', name:'红烧大装',      icon:'🍶',grade:'年级4',color:'#a78bfa',rev:85000, target:100000,ach:85,profit:-8680, feeRate:1.159,growth:+1.8},
+    {id:'tj',  name:'特级酱油',      icon:'🏅',grade:'年级5',color:'#ff5f5f',rev:60000, target:100000,ach:60,profit:-8680, feeRate:1.159,growth:-2.4},
+  ],
+  dists:[
+    {id:'bc',name:'宝仓贸易',icon:'🤝',region:'浦东',rev:142000,ach:72,growth:+4.2,
+     skuAch:{zr5:62,zr1:70,hs:80,hsl:78,tj:55},stores:['bc1','bc2','bc3']},
+    {id:'hp',name:'黄浦经销商',icon:'🤝',region:'黄浦',rev:124000,ach:87,growth:+8.1,
+     skuAch:{zr5:82,zr1:85,hs:92,hsl:88,tj:72},stores:['hp1','hp2']},
+    {id:'cn',name:'长宁经销商',icon:'🤝',region:'长宁',rev:136000,ach:91,growth:+9.8,
+     skuAch:{zr5:88,zr1:90,hs:96,hsl:93,tj:80},stores:['cn1']},
+    {id:'bs',name:'宝山经销商',icon:'🤝',region:'宝山',rev:98000, ach:74,growth:+2.1,
+     skuAch:{zr5:68,zr1:72,hs:82,hsl:76,tj:60},stores:['bs1']},
+    {id:'mh',name:'闵行经销商',icon:'🤝',region:'闵行',rev:158000,ach:95,growth:+14.2,
+     skuAch:{zr5:92,zr1:94,hs:98,hsl:96,tj:88},stores:['mh1','mh2']},
+  ],
+  stores:[
+    {id:'bc1',name:'大润发金桥',icon:'🏪',cls:'S+',dist:'bc',rev:42000,ach:87,growth:+6.2,skuAch:{zr5:87,zr1:85,hs:92,hsl:88,tj:65},comms:['cm1','cm2']},
+    {id:'bc2',name:'家乐福浦东',icon:'🏪',cls:'S', dist:'bc',rev:31000,ach:76,growth:+3.1,skuAch:{zr5:76,zr1:74,hs:82,hsl:78,tj:58},comms:['cm3']},
+    {id:'bc3',name:'世纪联华浦东',icon:'🏪',cls:'B',dist:'bc',rev:21000,ach:60,growth:-1.2,skuAch:{zr5:55,zr1:58,hs:68,hsl:62,tj:45},comms:['cm4']},
+    {id:'hp1',name:'大润发五角场',icon:'🏪',cls:'S+',dist:'hp',rev:48000,ach:95,growth:+11.4,skuAch:{zr5:94,zr1:95,hs:98,hsl:96,tj:85},comms:['cm5','cm6']},
+    {id:'hp2',name:'家乐福黄浦',icon:'🏪',cls:'S', dist:'hp',rev:38000,ach:91,growth:+8.8,skuAch:{zr5:88,zr1:90,hs:95,hsl:92,tj:78},comms:['cm6']},
+    {id:'cn1',name:'家乐福中山公园',icon:'🏪',cls:'S+',dist:'cn',rev:52000,ach:97,growth:+13.2,skuAch:{zr5:96,zr1:97,hs:99,hsl:98,tj:90},comms:['cm7','cm8']},
+    {id:'bs1',name:'家乐福宝山',icon:'🏪',cls:'S', dist:'bs',rev:32000,ach:76,growth:+1.8,skuAch:{zr5:72,zr1:74,hs:82,hsl:76,tj:58},comms:['cm9']},
+    {id:'mh1',name:'大润发古美',icon:'🏪',cls:'S+',dist:'mh',rev:56000,ach:94,growth:+15.1,skuAch:{zr5:93,zr1:94,hs:97,hsl:95,tj:86},comms:['cm10','cm11']},
+    {id:'mh2',name:'家乐福闵行',icon:'🏪',cls:'S', dist:'mh',rev:45000,ach:98,growth:+12.4,skuAch:{zr5:96,zr1:97,hs:99,hsl:98,tj:88},comms:['cm11']},
+  ],
+  comms:[
+    {id:'cm1',name:'仁恒河滨城',icon:'🏘️',store:'bc1',hh:1200,pen:1.2,rev:16800,ach:82,growth:+5.4,prism:83,cons:['cs1','cs2','cs3']},
+    {id:'cm2',name:'东方曼哈顿',icon:'🏘️',store:'bc1',hh:980, pen:0.9,rev:12600,ach:76,growth:+3.2,prism:74,cons:['cs4','cs5']},
+    {id:'cm3',name:'碧云国际',  icon:'🏘️',store:'bc2',hh:860, pen:0.8,rev:13000,ach:80,growth:+4.1,prism:71,cons:['cs6','cs7']},
+    {id:'cm4',name:'金桥碧云',  icon:'🏘️',store:'bc3',hh:640, pen:0.4,rev:9500, ach:55,growth:-2.1,prism:52,cons:['cs8']},
+    {id:'cm5',name:'联洋花园',  icon:'🏘️',store:'hp1',hh:1400,pen:2.1,rev:22000,ach:96,growth:+14.2,prism:91,cons:['cs9','cs10','cs11']},
+    {id:'cm6',name:'太平桥',    icon:'🏘️',store:'hp2',hh:520, pen:1.8,rev:18000,ach:94,growth:+12.8,prism:86,cons:['cs12','cs13']},
+    {id:'cm7',name:'虹桥绿地',  icon:'🏘️',store:'cn1',hh:1800,pen:2.4,rev:24000,ach:97,growth:+16.2,prism:94,cons:['cs14','cs15']},
+    {id:'cm8',name:'维多利亚公寓',icon:'🏘️',store:'cn1',hh:420,pen:3.1,rev:16000,ach:98,growth:+18.4,prism:96,cons:['cs16']},
+    {id:'cm9',name:'顾村公园',  icon:'🏘️',store:'bs1',hh:2400,pen:0.5,rev:14000,ach:62,growth:+1.2,prism:58,cons:['cs17','cs18']},
+    {id:'cm10',name:'古美尚城', icon:'🏘️',store:'mh1',hh:1600,pen:2.6,rev:28000,ach:96,growth:+17.8,prism:93,cons:['cs19','cs20','cs21']},
+    {id:'cm11',name:'七宝清华苑',icon:'🏘️',store:'mh2',hh:1100,pen:2.2,rev:21000,ach:95,growth:+14.6,prism:89,cons:['cs22','cs23']},
+  ],
+  cons:[
+    {id:'cs1', name:'VIP·A088', icon:'👩',comm:'cm1', freq:3,qty:2,rev:7560, ach:92,growth:+8.2, loyal:'高频'},
+    {id:'cs2', name:'会员·B234',icon:'👨',comm:'cm1', freq:2,qty:1,rev:5040, ach:78,growth:+4.1, loyal:'稳定'},
+    {id:'cs3', name:'散客·C',   icon:'👩',comm:'cm1', freq:1,qty:2,rev:2520, ach:52,growth:-1.2, loyal:'流失风险'},
+    {id:'cs4', name:'VIP·D156', icon:'👨',comm:'cm2', freq:4,qty:1,rev:10080,ach:95,growth:+12.4,loyal:'超高频'},
+    {id:'cs5', name:'会员·E789',icon:'👩',comm:'cm2', freq:2,qty:2,rev:10080,ach:88,growth:+6.8, loyal:'稳定'},
+    {id:'cs6', name:'会员·F321',icon:'👩',comm:'cm3', freq:2,qty:2,rev:10080,ach:85,growth:+5.2, loyal:'稳定'},
+    {id:'cs7', name:'散客·G',   icon:'👨',comm:'cm3', freq:1,qty:1,rev:2520, ach:45,growth:-3.1, loyal:'流失风险'},
+    {id:'cs8', name:'散客·H',   icon:'👨',comm:'cm4', freq:1,qty:1,rev:2520, ach:40,growth:-4.8, loyal:'流失风险'},
+    {id:'cs9', name:'VIP·I001', icon:'👩',comm:'cm5', freq:5,qty:2,rev:25200,ach:98,growth:+18.4,loyal:'超高频'},
+    {id:'cs10',name:'会员·J002',icon:'👨',comm:'cm5', freq:3,qty:1,rev:7560, ach:92,growth:+9.2, loyal:'高频'},
+    {id:'cs11',name:'会员·K003',icon:'👩',comm:'cm5', freq:2,qty:2,rev:10080,ach:88,growth:+7.1, loyal:'稳定'},
+    {id:'cs12',name:'VIP·L004', icon:'👩',comm:'cm6', freq:4,qty:2,rev:20160,ach:96,growth:+15.2,loyal:'超高频'},
+    {id:'cs13',name:'会员·M005',icon:'👨',comm:'cm6', freq:3,qty:1,rev:7560, ach:89,growth:+8.4, loyal:'高频'},
+    {id:'cs14',name:'VIP·N001', icon:'👩',comm:'cm7', freq:5,qty:2,rev:25200,ach:99,growth:+22.1,loyal:'超高频'},
+    {id:'cs15',name:'会员·O002',icon:'👨',comm:'cm7', freq:3,qty:2,rev:15120,ach:94,growth:+12.8,loyal:'高频'},
+    {id:'cs16',name:'VIP·P001', icon:'👩',comm:'cm8', freq:6,qty:2,rev:30240,ach:99,growth:+24.6,loyal:'超高频'},
+    {id:'cs17',name:'会员·Q011',icon:'👩',comm:'cm9', freq:1,qty:2,rev:5040, ach:58,growth:+1.2, loyal:'低频'},
+    {id:'cs18',name:'散客·R',   icon:'👨',comm:'cm9', freq:1,qty:1,rev:2520, ach:38,growth:-5.2, loyal:'流失风险'},
+    {id:'cs19',name:'VIP·S001', icon:'👩',comm:'cm10',freq:5,qty:2,rev:25200,ach:97,growth:+19.8,loyal:'超高频'},
+    {id:'cs20',name:'会员·T002',icon:'👨',comm:'cm10',freq:3,qty:1,rev:7560, ach:91,growth:+10.2,loyal:'高频'},
+    {id:'cs21',name:'会员·U003',icon:'👩',comm:'cm10',freq:2,qty:2,rev:10080,ach:85,growth:+7.8, loyal:'稳定'},
+    {id:'cs22',name:'VIP·V001', icon:'👩',comm:'cm11',freq:4,qty:2,rev:20160,ach:96,growth:+16.4,loyal:'超高频'},
+    {id:'cs23',name:'会员·W002',icon:'👨',comm:'cm11',freq:3,qty:1,rev:7560, ach:90,growth:+9.6, loyal:'高频'},
+  ],
+};
+
+// 关联索引
+function getByParent(childType, parentType, parentId){
+  if(parentType==='dist'&&childType==='store') return DB.stores.filter(x=>x.dist===parentId);
+  if(parentType==='store'&&childType==='comm') return DB.comms.filter(x=>x.store===parentId);
+  if(parentType==='comm'&&childType==='cons')  return DB.cons.filter(x=>x.comm===parentId);
+  if(parentType==='cons'&&childType==='comm')  return DB.comms.filter(x=>x.id===DB.cons.find(c=>c.id===parentId)?.comm);
+  if(parentType==='comm'&&childType==='store') return DB.stores.filter(x=>x.id===DB.comms.find(c=>c.id===parentId)?.store);
+  if(parentType==='store'&&childType==='dist') return DB.dists.filter(x=>x.id===DB.stores.find(s=>s.id===parentId)?.dist);
+  return[];
+}
+function getAll(type){return DB[type==='cons'?'cons':type+'s']||[]}
+
+// ══════════════════════════════════════════════════════
+// 状态
+// ══════════════════════════════════════════════════════
+let curMode='matrix';
+let curSkuId='hs'; // 默认红烧（唯一盈利SKU）
+let matrixRow='dist';
+let matrixMetric='rev';
+let drillPath=[{type:'sku',id:curSkuId}];
+let freeDimOrder=['dist','store','comm','cons'];
+let freeSort='rev';
+
+const DIM_CFG={
+  sku:  {label:'SKU',   icon:'📦',color:'var(--amber)',bg:'var(--amber-dim)'},
+  dist: {label:'经销商',icon:'🤝',color:'var(--teal)', bg:'var(--teal-dim)'},
+  store:{label:'门店',  icon:'🏪',color:'var(--blue)', bg:'var(--blue-dim)'},
+  comm: {label:'小区',  icon:'🏘️',color:'var(--purple)',bg:'var(--purple-dim)'},
+  cons: {label:'消费者',icon:'👥',color:'var(--green)', bg:'var(--green-dim)'},
+};
+const FIXED_ORDER=['dist','store','comm','cons'];
+
+// 工具
+function ac(v){return v>=85?'var(--green)':v>=65?'var(--amber)':'var(--red)'}
+function fmt(v,type){
+  if(type==='rev') return '¥'+(v/10000).toFixed(1)+'万';
+  if(type==='ach') return v+'%';
+  if(type==='growth') return (v>=0?'+':'')+v+'%';
+  return String(v);
+}
+function sortBy(arr,key){
+  return [...arr].sort((a,b)=>{
+    if(key==='rev')    return b.rev-a.rev;
+    if(key==='ach')    return b.ach-a.ach;
+    if(key==='gap')    return ((b.target||b.rev*1.2)-b.rev)-((a.target||a.rev*1.2)-a.rev);
+    if(key==='growth') return (b.growth||0)-(a.growth||0);
+    return 0;
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// SKU 财务锚点
+// ══════════════════════════════════════════════════════
+function renderSkuTabs(){
+  const wrap=document.getElementById('skuTabs');
+  wrap.innerHTML=DB.skus.map(s=>{
+    const on=s.id===curSkuId;
+    return `<div class="sku-tab ${on?'on':''}" onclick="selectSku('${s.id}')">
+      <div class="st-name" style="color:${on?s.color:'var(--text2)'}">${s.icon} ${s.name}</div>
+      <div class="st-rev" style="color:${s.color}">¥${(s.rev/10000).toFixed(0)}万</div>
+      <div class="st-ach" style="color:${ac(s.ach)}">${s.ach}%达成 · 费率${(s.feeRate*100).toFixed(0)}%</div>
+    </div>`;
+  }).join('');
+}
+function selectSku(id){
+  curSkuId=id;
+  drillPath=[{type:'sku',id}];
+  renderSkuTabs();
+  renderAll();
+}
+
+// ══════════════════════════════════════════════════════
+// 模式切换
+// ══════════════════════════════════════════════════════
+function switchMode(m){
+  curMode=m;
+  ['matrix','drill','free'].forEach(x=>{
+    document.getElementById('mb-'+x).classList.toggle('on',x===m);
+    document.getElementById('sc-'+x).classList.toggle('on',x===m);
+  });
+  window.scrollTo(0,52);
+  renderAll();
+}
+function renderAll(){
+  if(curMode==='matrix') renderMatrix();
+  if(curMode==='drill')  renderDrill();
+  if(curMode==='free')   renderFree();
+}
+
+// ══════════════════════════════════════════════════════
+// 模式一：矩阵
+// ══════════════════════════════════════════════════════
+function setMatrixRow(r){
+  matrixRow=r;
+  document.querySelectorAll('#sc-matrix .mc-pill').forEach((p,i)=>{
+    p.classList.toggle('on',['dist','store','comm','cons'][i]===r);
+  });
+  renderMatrix();
+}
+function setMatrixMetric(m){
+  matrixMetric=m;
+  const pls=document.querySelectorAll('#sc-matrix .mc-pills:nth-child(4) .mc-pill');
+  pls.forEach((p,i)=>p.classList.toggle('on',['rev','ach','growth'][i]===m));
+  renderMatrix();
+}
+
+function renderMatrix(){
+  const sku=DB.skus.find(s=>s.id===curSkuId);
+  const rows=getAll(matrixRow);
+
+  // 表头：当前SKU + 所有SKU
+  const head=document.getElementById('matrixHead');
+  head.innerHTML=`<tr>
+    <th>${DIM_CFG[matrixRow].icon} ${DIM_CFG[matrixRow].label}</th>
+    ${DB.skus.map(s=>`<th class="sku-col-header" style="color:${s.color}">${s.icon}${s.name}</th>`).join('')}
+    <th style="color:var(--text2)">合计</th>
+  </tr>`;
+
+  const body=document.getElementById('matrixBody');
+  let grandTotal=0;
+  const skuTotals=DB.skus.map(()=>0);
+
+  const rowHtml=rows.map(row=>{
+    const rowTotal=row.rev;
+    grandTotal+=rowTotal;
+
+    const cells=DB.skus.map((s,si)=>{
+      const val=row.skuAch?.[s.id]||row.ach||0;
+      const displayVal=matrixMetric==='rev'
+        ? '¥'+(rowTotal*val/100/DB.skus.length/10000).toFixed(1)+'万'
+        : matrixMetric==='ach' ? val+'%'
+        : (row.growth>=0?'+':'')+row.growth+'%';
+      const color=matrixMetric==='rev'?s.color:matrixMetric==='ach'?ac(val):(row.growth>=0?'var(--green)':'var(--red)');
+      const barW=matrixMetric==='ach'?val:matrixMetric==='rev'?Math.min(100,val):Math.min(100,50+row.growth);
+      skuTotals[si]+=rowTotal*val/100/DB.skus.length;
+      return `<td class="cell-clickable" onclick="drillFromMatrix('${row.id}','${matrixRow}','${s.id}')">
+        <div class="cell-val" style="color:${color}">${displayVal}</div>
+        <div class="cell-bar" style="width:${barW}%;max-width:60px;background:${color}40;height:2px;margin-top:3px"></div>
+      </td>`;
+    }).join('');
+
+    const rowMeta=matrixRow==='dist'?row.region:matrixRow==='store'?row.cls:matrixRow==='comm'?`${row.hh}户`:matrixRow==='cons'?row.loyal:'';
+    return `<tr>
+      <td>
+        <div style="font-weight:600">${row.icon} ${row.name}</div>
+        <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px">${rowMeta}</div>
+      </td>
+      ${cells}
+      <td><div class="cell-val" style="color:var(--amber)">${fmt(rowTotal,'rev')}</div></td>
+    </tr>`;
+  }).join('');
+
+  const totalsRow=`<tr class="total-row">
+    <td>合计</td>
+    ${skuTotals.map((t,i)=>`<td><div class="cell-val" style="color:${DB.skus[i].color}">${fmt(Math.round(t),'rev')}</div></td>`).join('')}
+    <td><div class="cell-val" style="color:var(--amber)">${fmt(grandTotal,'rev')}</div></td>
+  </tr>`;
+
+  body.innerHTML=rowHtml+totalsRow;
+}
+
+function drillFromMatrix(rowId, rowType, skuId){
+  curSkuId=skuId;
+  drillPath=[{type:'sku',id:skuId},{type:rowType,id:rowId}];
+  renderSkuTabs();
+  switchMode('drill');
+}
+
+// ══════════════════════════════════════════════════════
+// 模式二：固定下钻
+// ══════════════════════════════════════════════════════
+function renderDrill(){
+  // 路径显示
+  const pathEl=document.getElementById('drillPath');
+  pathEl.innerHTML=drillPath.map((p,i)=>{
+    const cfg=DIM_CFG[p.type];
+    const item=getAll(p.type).find(x=>x.id===p.id)||DB.skus.find(x=>x.id===p.id);
+    return `${i>0?'<span class="dp-sep">›</span>':''}<div class="dp-step ${i===drillPath.length-1?'active':''}" style="${i===drillPath.length-1?`background:${cfg.color};color:#000`:`color:${cfg.color}`};border-radius:10px;padding:3px 9px;cursor:pointer" onclick="drillBackTo(${i})">
+      ${cfg.icon} ${item?.name||p.id}
+    </div>`;
+  }).join('');
+
+  // 当前层级的下一层
+  const last=drillPath[drillPath.length-1];
+  const nextType=FIXED_ORDER[FIXED_ORDER.indexOf(last.type)];
+  let items=[];
+
+  if(last.type==='sku'){
+    items=getAll('dist');
+  }else{
+    const childType=FIXED_ORDER[FIXED_ORDER.indexOf(last.type)+1];
+    if(childType) items=getByParent(childType,last.type,last.id);
+    else items=[];
+  }
+
+  const sorted=sortBy(items,'rev');
+  const list=document.getElementById('drillList');
+  list.innerHTML='';
+
+  if(!sorted.length){
+    list.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-size:12px">已到最底层</div>';
+    return;
+  }
+
+  const curType=last.type==='sku'?'dist':FIXED_ORDER[FIXED_ORDER.indexOf(last.type)+1];
+  const cfg=DIM_CFG[curType]||DIM_CFG['cons'];
+
+  sorted.forEach((item,idx)=>{
+    const div=document.createElement('div');
+    div.className='drill-row';
+    const skuAch=item.skuAch?.[curSkuId]||item.ach||0;
+    const color=ac(skuAch);
+    const nextType2=FIXED_ORDER[FIXED_ORDER.indexOf(curType)+1];
+    const meta=curType==='dist'?item.region:curType==='store'?item.cls:curType==='comm'?`${item.hh}户 · PRISM ${item.prism||'—'}`:curType==='cons'?`${item.loyal} · ${item.freq}次/月`:'';
+
+    div.innerHTML=`
+    <div class="dr-main" onclick="drillInto('${item.id}','${curType}')">
+      <div class="dr-icon" style="background:${cfg.bg};border:1px solid ${cfg.color}30">${item.icon||cfg.icon}</div>
+      <div class="dr-body">
+        <div class="dr-name">${item.name} <span class="tag ${skuAch>=85?'tg':skuAch>=65?'tw':'tb'}">${skuAch}%</span></div>
+        <div class="dr-meta"><span>${meta}</span></div>
+        <div class="dr-bar-wrap"><div class="dr-bar-fill" style="width:${skuAch}%;background:${color}"></div></div>
+      </div>
+      <div class="dr-right">
+        <div class="dr-val" style="color:${cfg.color}">¥${(item.rev/10000).toFixed(1)}万</div>
+        <div class="dr-sub" style="color:${color}">${skuAch}% 达成</div>
+      </div>
+      ${nextType2?'<div class="dr-caret">›</div>':''}
+    </div>`;
+    list.appendChild(div);
+  });
+}
+
+function drillInto(id, type){
+  drillPath=[...drillPath, {type,id}];
+  renderDrill();
+}
+function drillBackTo(idx){
+  drillPath=drillPath.slice(0,idx+1);
+  renderDrill();
+}
+
+// ══════════════════════════════════════════════════════
+// 模式三：自由排序
+// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// 模式三：自由排序 — ↑↓按钮移动维度
+// ══════════════════════════════════════════════════════
+function moveDim(dim, dir){
+  const i=freeDimOrder.indexOf(dim);
+  const ni=i+dir;
+  if(ni<0||ni>=freeDimOrder.length)return;
+  freeDimOrder.splice(i,1);
+  freeDimOrder.splice(ni,0,dim);
+  renderFreeDims();
+  renderFreeResult();
+}
+
+function renderFreeDims(){
+  const wrap=document.getElementById('fcDims');
+  wrap.innerHTML='';
+  freeDimOrder.forEach((dim,i)=>{
+    const cfg=DIM_CFG[dim];
+    const canUp=i>0;
+    const canDn=i<freeDimOrder.length-1;
+    const row=document.createElement('div');
+    row.style.cssText=`display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:11px;border:1px solid ${cfg.color}40;background:${cfg.bg};margin-bottom:5px`;
+    row.innerHTML=`
+      <span style="width:22px;height:22px;border-radius:6px;background:rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:10px;font-weight:800;color:${cfg.color}">${i+1}</span>
+      <span style="font-size:13px">${cfg.icon}</span>
+      <span style="font-size:12px;font-weight:700;color:${cfg.color};flex:1">${cfg.label}</span>
+      <button onclick="moveDim('${dim}',-1)" style="width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,${canUp?'.2':'.05'});background:rgba(255,255,255,${canUp?'.1':'.02'});color:${canUp?'#fff':'rgba(255,255,255,.2)'};font-size:16px;cursor:${canUp?'pointer':'default'};display:flex;align-items:center;justify-content:center">↑</button>
+      <button onclick="moveDim('${dim}',+1)" style="width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,${canDn?'.2':'.05'});background:rgba(255,255,255,${canDn?'.1':'.02'});color:${canDn?'#fff':'rgba(255,255,255,.2)'};font-size:16px;cursor:${canDn?'pointer':'default'};display:flex;align-items:center;justify-content:center">↓</button>`;
+    wrap.appendChild(row);
+  });
+}
+
+function setFreeSort(s,el){
+  freeSort=s;
+  document.querySelectorAll('.fc-toggle-chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  renderFreeResult();
+}
+
+function renderFree(){
+  renderFreeDims();
+  renderFreeResult();
+}
+
+function fmtSortVal(item){
+  if(freeSort==='rev')    return '¥'+(item.rev/10000).toFixed(1)+'万';
+  if(freeSort==='ach')    return (item.ach||0)+'%';
+  if(freeSort==='gap')    return '差距¥'+Math.round(((item.target||item.rev*1.3)-item.rev)/10000*10)/10+'万';
+  if(freeSort==='growth') return (item.growth>=0?'+':'')+item.growth+'%';
+  return '';
+}
+
+function buildMeta(item,type){
+  if(type==='dist')  return item.region+' · '+item.stores.length+'家门店';
+  if(type==='store') return item.cls+' · r='+item.r+'件/天';
+  if(type==='comm')  return item.hh+'户 · PRISM '+(item.prism||'—');
+  if(type==='cons')  return (item.loyal||'')+' · 月购'+(item.freq||0)+'次';
+  return '';
+}
+
+function renderFreeResult(){
+  const topType=freeDimOrder[0];
+  const items=sortBy(getAll(topType),freeSort);
+  const cfg=DIM_CFG[topType];
+  const wrap=document.getElementById('freeResult');
+  wrap.innerHTML='';
+  items.forEach(item=>{
+    const skuAch=item.skuAch?.[curSkuId]||item.ach||0;
+    const color=ac(skuAch);
+    const hasNext=!!freeDimOrder[1];
+    const div=document.createElement('div');
+    div.className='drill-row';
+    div.innerHTML=`
+    <div class="dr-main" onclick="toggleFreeRow(this.parentElement,'${item.id}','${topType}',1)">
+      <div class="dr-icon" style="background:${cfg.bg};border:1px solid ${cfg.color}30">${item.icon||cfg.icon}</div>
+      <div class="dr-body">
+        <div class="dr-name">${item.name} <span class="tag ${skuAch>=85?'tg':skuAch>=65?'tw':'tb'}">${skuAch}%</span></div>
+        <div class="dr-meta"><span>${buildMeta(item,topType)}</span></div>
+        <div class="dr-bar-wrap"><div class="dr-bar-fill" style="width:${skuAch}%;background:${color}"></div></div>
+      </div>
+      <div class="dr-right">
+        <div class="dr-val" style="color:${cfg.color}">${fmtSortVal(item)}</div>
+        <div class="dr-sub" style="color:${color}">${skuAch}%达成</div>
+      </div>
+      ${hasNext?'<div class="dr-caret">›</div>':''}
+    </div>
+    <div class="dr-children" id="free-ch-${item.id}"></div>`;
+    wrap.appendChild(div);
+  });
+}
+
+function toggleFreeRow(row, parentId, parentType, depth){
+  row.classList.toggle('open');
+  const ch=document.getElementById('free-ch-'+parentId);
+  if(!ch)return;
+  if(row.classList.contains('open')&&ch.children.length===0){
+    loadFreeChildren(ch, parentId, parentType, depth);
+  }
+}
+
+function loadFreeChildren(container, parentId, parentType, depth){
+  const childType=freeDimOrder[depth];
+  if(!childType){
+    container.innerHTML='<div style="padding:10px;font-size:11px;color:var(--text3);text-align:center">已到末层</div>';
+    return;
+  }
+  let children=getByParent(childType,parentType,parentId);
+  children=sortBy(children,freeSort);
+  const cfg=DIM_CFG[childType];
+  const hasNext=!!freeDimOrder[depth+1];
+  const inner=document.createElement('div');
+  inner.style.cssText='padding:6px 8px;display:flex;flex-direction:column;gap:4px';
+  children.forEach(item=>{
+    const skuAch=item.skuAch?.[curSkuId]||item.ach||0;
+    const color=ac(skuAch);
+    const div=document.createElement('div');
+    div.className='drill-row';
+    div.innerHTML=`
+    <div class="dr-main" onclick="toggleFreeRow(this.parentElement,'${item.id}','${childType}',${depth+1})">
+      <div class="dr-icon" style="background:${cfg.bg};border:1px solid ${cfg.color}30;width:28px;height:28px;font-size:12px">${item.icon||cfg.icon}</div>
+      <div class="dr-body">
+        <div class="dr-name" style="font-size:12px">${item.name} <span class="tag ${skuAch>=85?'tg':skuAch>=65?'tw':'tb'}">${skuAch}%</span></div>
+        <div class="dr-meta"><span>${buildMeta(item,childType)}</span></div>
+        <div class="dr-bar-wrap"><div class="dr-bar-fill" style="width:${skuAch}%;background:${color}"></div></div>
+      </div>
+      <div class="dr-right">
+        <div class="dr-val" style="color:${cfg.color};font-size:14px">${fmtSortVal(item)}</div>
+      </div>
+      ${hasNext?'<div class="dr-caret">›</div>':''}
+    </div>
+    <div class="dr-children" id="free-ch-${item.id}"></div>`;
+    inner.appendChild(div);
+  });
+  container.appendChild(inner);
+}
+
+// ── 时钟 ─────────────────────────────────────────────
+function tick(){const n=new Date();document.getElementById('ck').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')}
+tick();setInterval(tick,1000);
+
+// 启动
+renderSkuTabs();
+renderMatrix();
+</script>
+</body>
+</html>
