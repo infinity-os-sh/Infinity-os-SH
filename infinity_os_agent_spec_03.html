@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · Agent规格说明书 · Omakase推单</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;--card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.08);
+  --orange:#fb923c;--orange-dim:rgba(251,146,60,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;padding-bottom:60px}
+
+.topbar{position:sticky;top:0;z-index:100;background:rgba(7,8,14,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:52px}
+.logo{display:flex;align-items:center;gap:7px}
+.ls{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#ff7c38);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000}
+.ln{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.ln em{color:var(--amber);font-style:normal}
+.hb{background:var(--card2);border:1px solid var(--border2);border-radius:16px;padding:5px 11px;font-size:11px;color:var(--text2);text-decoration:none;white-space:nowrap}
+.ck{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+
+.agent-nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;position:sticky;top:52px;z-index:91}
+.agent-nav::-webkit-scrollbar{display:none}
+.an-item{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0;border:1px solid var(--border);background:var(--card);color:var(--text3);text-decoration:none;transition:all .2s}
+.an-item.current{background:var(--teal-dim);border-color:rgba(78,205,196,.35);color:var(--teal)}
+.an-item.done{background:var(--green-dim);border-color:rgba(74,222,128,.25);color:var(--green)}
+
+.wrap{padding:14px 14px 0;max-width:900px;margin:0 auto}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,rgba(78,205,196,.08),rgba(9,9,15,1));border:1px solid rgba(78,205,196,.25);border-radius:16px;padding:20px;margin-bottom:14px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),transparent)}
+.hero-num{font-size:10px;font-family:'Space Mono',monospace;color:var(--teal);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.hero-name{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:4px}
+.hero-en{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace}
+.hero-badge{font-size:11px;padding:4px 10px;border-radius:20px;background:var(--teal-dim);border:1px solid rgba(78,205,196,.3);color:var(--teal);font-family:'Space Mono',monospace}
+.hero-desc{font-size:13px;color:var(--text2);line-height:1.8;padding:12px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border);margin:12px 0}
+.hero-desc strong{color:var(--teal)}
+.hero-why{font-size:12px;color:var(--text2);line-height:1.7;padding:10px 12px;background:rgba(245,166,35,.05);border:1px solid rgba(245,166,35,.15);border-radius:10px}
+.hero-why strong{color:var(--amber)}
+
+/* section */
+.sec{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec-num{width:20px;height:20px;border-radius:6px;background:var(--teal-dim);border:1px solid rgba(78,205,196,.3);color:var(--teal);font-family:'Space Mono',monospace;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* 合约 */
+.contract{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:16px;margin-bottom:14px}
+.cr-row{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start}
+.cr-row:last-child{margin-bottom:0}
+.cr-lbl{font-size:10px;font-family:'Space Mono',monospace;color:var(--teal);text-transform:uppercase;flex-shrink:0;padding-top:2px;min-width:70px}
+.cr-val{font-size:12px;color:var(--text2);line-height:1.7;flex:1}
+.cr-val strong{color:var(--text)}
+.cr-div{height:1px;background:var(--border);margin:8px 0}
+
+/* 触发 */
+.trigger-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.trigger-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
+.ti-type{font-size:9px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:8px;flex-shrink:0;margin-top:1px;font-weight:700}
+.tt-up{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(78,205,196,.2)}
+.tt-sched{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.tt-cond{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.tt-block{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.ti-body{flex:1}
+.ti-name{font-size:13px;font-weight:600;margin-bottom:3px}
+.ti-desc{font-size:11px;color:var(--text3);line-height:1.6}
+.ti-cond{font-size:10px;font-family:'Space Mono',monospace;color:var(--teal);margin-top:4px;padding:4px 8px;background:var(--teal-dim);border-radius:6px;display:inline-block}
+
+/* 数据表 */
+.data-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}
+.data-table th{background:rgba(255,255,255,.04);color:var(--text3);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);font-weight:700;font-family:'Space Mono',monospace;font-size:10px}
+.data-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.025);color:var(--text2);vertical-align:top;line-height:1.5}
+.data-table tr:last-child td{border-bottom:none}
+.td-table{font-family:'Space Mono',monospace;font-size:10px;color:var(--teal)}
+.td-field{font-family:'Space Mono',monospace;font-size:10px;color:var(--blue)}
+.td-crit{font-size:9px;padding:1px 6px;border-radius:5px}
+.crit-core{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.crit-ref{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.crit-gate{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(78,205,196,.2)}
+
+/* 逻辑流 */
+.logic-flow{display:flex;flex-direction:column;gap:0;margin-bottom:14px}
+.lf-step{display:flex;gap:10px;padding:12px 0;position:relative}
+.lf-step::before{content:'';position:absolute;left:18px;top:44px;bottom:0;width:1px;background:rgba(78,205,196,.2)}
+.lf-step:last-child::before{display:none}
+.lf-num{width:36px;height:36px;border-radius:10px;flex-shrink:0;background:var(--teal-dim);border:1px solid rgba(78,205,196,.3);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--teal);position:relative;z-index:1}
+.lf-body{flex:1;padding-top:4px}
+.lf-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.lf-desc{font-size:12px;color:var(--text2);line-height:1.7}
+.lf-formula{font-family:'Space Mono',monospace;font-size:10px;color:var(--teal);background:var(--teal-dim);border:1px solid rgba(78,205,196,.2);border-radius:8px;padding:8px 10px;margin-top:6px;line-height:1.9;white-space:pre-wrap}
+.lf-branches{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.lf-branch{display:flex;gap:8px;align-items:flex-start;font-size:11px;padding:7px 10px;border-radius:8px}
+.lb-if{font-family:'Space Mono',monospace;font-size:10px;flex-shrink:0;padding-top:1px;font-weight:700}
+.lb-then{color:var(--text2);line-height:1.5;flex:1}
+.lb-green{background:var(--green-dim);border:1px solid rgba(74,222,128,.15)}
+.lb-amber{background:var(--amber-dim);border:1px solid rgba(245,166,35,.15)}
+.lb-red{background:var(--red-dim);border:1px solid rgba(255,95,95,.15)}
+.lb-blue{background:var(--blue-dim);border:1px solid rgba(96,165,250,.15)}
+
+/* 推单样例卡 */
+.order-card{background:var(--card);border:1px solid rgba(78,205,196,.25);border-radius:14px;overflow:hidden;margin-bottom:14px}
+.oc-header{background:rgba(78,205,196,.08);padding:12px 14px;border-bottom:1px solid rgba(78,205,196,.15);display:flex;align-items:center;justify-content:space-between}
+.oc-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--teal)}
+.oc-meta{font-size:10px;font-family:'Space Mono',monospace;color:var(--text3)}
+.oc-body{padding:14px}
+.oc-sku-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.oc-sku-row:last-child{border-bottom:none}
+.oc-grade{width:32px;height:32px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:10px;font-weight:800}
+.g1{background:rgba(74,222,128,.15);color:var(--green)}
+.g2{background:rgba(245,166,35,.15);color:var(--amber)}
+.g3{background:rgba(96,165,250,.15);color:var(--blue)}
+.g4{background:rgba(167,139,250,.15);color:var(--purple)}
+.g5{background:rgba(255,95,95,.15);color:var(--red)}
+.oc-sku-info{flex:1}
+.oc-sku-name{font-size:12px;font-weight:600;margin-bottom:2px}
+.oc-sku-reason{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+.oc-qty{text-align:right;flex-shrink:0}
+.oc-qty-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--teal);line-height:1}
+.oc-qty-unit{font-size:10px;color:var(--text3);margin-top:2px}
+.oc-priority{font-size:9px;padding:2px 7px;border-radius:6px;font-family:'Space Mono',monospace;margin-top:3px;display:inline-block}
+.pr-high{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.pr-med{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.pr-low{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.oc-footer{padding:10px 14px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;align-items:center}
+.oc-total{font-size:12px;color:var(--text2)}
+.oc-total strong{color:var(--amber);font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
+.oc-actions{display:flex;gap:6px}
+.btn-approve{background:var(--teal);border:none;border-radius:9px;padding:7px 16px;font-size:12px;font-weight:700;color:#000;cursor:pointer}
+.btn-edit{background:rgba(255,255,255,.08);border:1px solid var(--border2);border-radius:9px;padding:7px 12px;font-size:12px;color:var(--text2);cursor:pointer}
+
+/* 输出 */
+.output-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.output-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.oi-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.oi-icon{font-size:16px}
+.oi-name{font-size:13px;font-weight:600}
+.oi-channel{font-size:10px;font-family:'Space Mono',monospace;padding:2px 7px;border-radius:8px;margin-left:auto}
+.ch-wecom{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.ch-db{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.ch-ui{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.oi-desc{font-size:11px;color:var(--text3);line-height:1.6}
+.oi-example{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;margin-top:6px;line-height:1.8;white-space:pre-wrap}
+
+/* 边界 */
+.boundary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+@media(max-width:500px){.boundary-grid{grid-template-columns:1fr}}
+.boundary-col{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.bc-title{font-size:11px;font-weight:700;margin-bottom:8px}
+.bc-item{font-size:11px;color:var(--text2);line-height:1.5;display:flex;align-items:flex-start;gap:6px;padding:5px 8px;border-radius:7px;margin-bottom:4px}
+.bc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+
+/* 三Agent关系图 */
+.pipeline-card{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:16px;margin-bottom:14px}
+.pc-title{font-size:13px;font-weight:700;margin-bottom:14px;color:var(--text)}
+.pc-flow{display:flex;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.pc-flow::-webkit-scrollbar{display:none}
+.pc-node{flex-shrink:0;text-align:center;min-width:90px}
+.pc-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 6px}
+.pc-name{font-size:11px;font-weight:700}
+.pc-sub{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px}
+.pc-arrow{display:flex;flex-direction:column;align-items:center;padding:0 6px;flex-shrink:0;margin-top:-14px}
+.pc-ar-line{width:36px;height:2px;border-radius:1px}
+.pc-ar-tip{font-size:14px;margin-top:-8px}
+.pc-ar-label{font-size:9px;font-family:'Space Mono',monospace;color:var(--text3);white-space:nowrap;margin-top:4px;max-width:80px;text-align:center}
+
+/* 依赖 */
+.dep-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.dep-chip{padding:6px 12px;border-radius:10px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px}
+.dep-needs{background:var(--red-dim);border:1px solid rgba(255,95,95,.2);color:var(--red)}
+.dep-feeds{background:var(--green-dim);border:1px solid rgba(74,222,128,.2);color:var(--green)}
+.dep-uses{background:var(--blue-dim);border:1px solid rgba(96,165,250,.2);color:var(--blue)}
+
+.sql-block{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:14px;font-family:'Space Mono',monospace;font-size:10px;color:var(--green);line-height:1.9;overflow-x:auto;margin-bottom:14px;white-space:pre}
+
+/* AI */
+.ai-wrap{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:14px}
+.ai-hdr{padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.07em;text-transform:uppercase}
+.cps{display:flex;gap:5px;padding:8px 12px;overflow-x:auto;scrollbar-width:none}
+.cps::-webkit-scrollbar{display:none}
+.cp{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:4px 10px;font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.cp:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-dim)}
+.ai-bubble{margin:0 12px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text2);line-height:1.65}
+.ai-resp{display:none;margin:0 12px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.ai-resp.show{display:block}
+.ai-q{font-size:10px;color:var(--text3);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ai-row{display:flex;gap:6px;padding:6px 12px 10px}
+.ai-in{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:12px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif}
+.ai-in:focus{border-color:rgba(78,205,196,.4)}
+.ai-in::placeholder{color:var(--text3)}
+.ai-btn{width:36px;height:36px;border-radius:9px;background:var(--teal);border:none;cursor:pointer;font-size:14px;flex-shrink:0;color:#000}
+.td-wrap{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:tda 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tda{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+.mb{margin-bottom:14px}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><div class="ls">∞</div><div class="ln">INFINITY <em>OS</em></div></div>
+  <a class="hb" href="index.html">⌂ 门户</a>
+  <div class="ck" id="ck"></div>
+</div>
+
+<div class="agent-nav">
+  <a class="an-item done" href="infinity_os_agent_spec_01.html">✓ A值校准 · 规格书①</a>
+  <a class="an-item done" href="infinity_os_agent_spec_02.html">✓ 蝴蝶效应 · 规格书②</a>
+  <div class="an-item current">🍣 推单Omakase · 规格书③</div>
+</div>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div class="hero-num">Agent规格说明书 · 第③张 · 共3张 · 最终张</div>
+        <div class="hero-name">无菜单推单 Agent</div>
+        <div class="hero-en">Omakase Replenishment Agent</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:4px">Layer 3.0 · 自主决策</div>
+        <div class="hero-badge">每日推单 · 闭环</div>
+      </div>
+    </div>
+    <div class="hero-desc">
+      这个Agent存在的理由：<strong>经销商不应该猜该订多少货。猜测产生的误差，要么是压货（A类失真），要么是断货（消费者体验受损）。</strong><br><br>
+      Omakase的意思是「师傅决定，你来吃」。系统已经知道每个SKU在每个节点的真实动销速率（r值）、当前库存水位、下次补货窗口。<strong>系统直接告诉经销商：你该订什么、订多少、什么时候送到。不需要人猜。</strong>
+    </div>
+    <div class="hero-why">
+      <strong>⚠️ 关键前提：这是三个Agent中执行层级最高的。</strong> 它直接产生补货订单，影响真实资金流动。因此它对前两个Agent的依赖是硬依赖——A值校准Agent必须完成本周校准，蝴蝶效应Agent必须确认目标节点无A类失真，Omakase才能为该节点生成推单。任何一个前置条件不满足，推单暂停。
+    </div>
+  </div>
+
+  <!-- 三Agent协作关系 -->
+  <div class="sec"><span class="sec-num">0</span>三Agent协作关系 · 顺序不可倒置</div>
+  <div class="pipeline-card mb">
+    <div class="pc-title">每周执行顺序（固定，不可并行）</div>
+    <div class="pc-flow">
+      <div class="pc-node">
+        <div class="pc-icon" style="background:var(--amber-dim);border:1px solid rgba(245,166,35,.3)">🎯</div>
+        <div class="pc-name" style="color:var(--amber)">A值校准</div>
+        <div class="pc-sub">周一 06:00</div>
+        <div class="pc-sub">清洁r值</div>
+      </div>
+      <div class="pc-arrow">
+        <div class="pc-ar-line" style="background:rgba(245,166,35,.4)"></div>
+        <div class="pc-ar-tip" style="color:var(--amber)">›</div>
+        <div class="pc-ar-label">干净r值输出</div>
+      </div>
+      <div class="pc-node">
+        <div class="pc-icon" style="background:var(--red-dim);border:1px solid rgba(255,95,95,.3)">🦋</div>
+        <div class="pc-name" style="color:var(--red)">蝴蝶效应</div>
+        <div class="pc-sub">周一 07:00</div>
+        <div class="pc-sub">失真检测</div>
+      </div>
+      <div class="pc-arrow">
+        <div class="pc-ar-line" style="background:rgba(255,95,95,.4)"></div>
+        <div class="pc-ar-tip" style="color:var(--red)">›</div>
+        <div class="pc-ar-label">健康节点名单</div>
+      </div>
+      <div class="pc-node">
+        <div class="pc-icon" style="background:var(--teal-dim);border:1px solid rgba(78,205,196,.3)">🍣</div>
+        <div class="pc-name" style="color:var(--teal)">Omakase</div>
+        <div class="pc-sub">周一 08:00</div>
+        <div class="pc-sub">生成推单</div>
+      </div>
+      <div class="pc-arrow">
+        <div class="pc-ar-line" style="background:rgba(78,205,196,.4)"></div>
+        <div class="pc-ar-tip" style="color:var(--teal)">›</div>
+        <div class="pc-ar-label">推单→经销商</div>
+      </div>
+      <div class="pc-node">
+        <div class="pc-icon" style="background:rgba(255,255,255,.06);border:1px solid var(--border2)">📦</div>
+        <div class="pc-name" style="color:var(--text2)">经销商接单</div>
+        <div class="pc-sub">24小时确认</div>
+        <div class="pc-sub">补货执行</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;font-size:11px;color:var(--text2);line-height:1.7">
+      <strong style="color:var(--teal)">节点门控（Gate）：</strong>Omakase在运行前检查每个目标节点的门控状态。只有同时满足「A值校准已完成本周校准」且「蝴蝶效应确认该节点无A类失真」的节点，才会生成推单。被蝴蝶效应暂停的节点自动跳过，不生成推单。
+    </div>
+  </div>
+
+  <!-- 1. 业务合约 -->
+  <div class="sec"><span class="sec-num">1</span>业务合约</div>
+  <div class="contract mb">
+    <div class="cr-row">
+      <span class="cr-lbl">输入承诺</span>
+      <span class="cr-val">来自A值校准的干净r值 + 来自蝴蝶效应的节点健康状态 + 当前库存水位 + 经销商的账期和信用状态</span>
+    </div>
+    <div class="cr-div"></div>
+    <div class="cr-row">
+      <span class="cr-lbl">输出承诺</span>
+      <span class="cr-val"><strong>精确的SKU×数量×时间的补货推单</strong>，发给经销商确认。不是建议范围，是具体的订单草稿。</span>
+    </div>
+    <div class="cr-div"></div>
+    <div class="cr-row">
+      <span class="cr-lbl">对谁负责</span>
+      <span class="cr-val">对<strong>经销商</strong>负责（推单要准确，不能造成压货）· 对<strong>门店</strong>负责（不能因为推单不及时导致断货）· 对<strong>公司现金流</strong>负责（推单量直接影响回款节奏）</span>
+    </div>
+    <div class="cr-div"></div>
+    <div class="cr-row">
+      <span class="cr-lbl">成功标准</span>
+      <span class="cr-val">推单后28天内经销商消化率保持 &gt;70% · 门店断货率 &lt;5% · 推单量误差 &lt;15%（实际补货量 vs 推荐量）</span>
+    </div>
+    <div class="cr-div"></div>
+    <div class="cr-row">
+      <span class="cr-lbl">失败标准</span>
+      <span class="cr-val">推单后经销商出现A类压货（消化率下降到60%以下）· 或推单后28天内有门店出现断货超过3天</span>
+    </div>
+  </div>
+
+  <!-- 2. 触发条件 -->
+  <div class="sec"><span class="sec-num">2</span>触发条件</div>
+  <div class="trigger-list mb">
+    <div class="trigger-item">
+      <span class="ti-type tt-up">上游触发</span>
+      <div class="ti-body">
+        <div class="ti-name">蝴蝶效应扫描完成后 · 主触发</div>
+        <div class="ti-desc">每周一蝴蝶效应Agent完成全量扫描后，Omakase接收健康节点名单，为所有通过门控的节点生成本周推单。这是主触发，覆盖所有正常经销商节点。</div>
+        <div class="ti-cond">TRIGGER: inf_events.event_type = 'BUTTERFLY_SCAN_COMPLETE' · 周一 08:00</div>
+      </div>
+    </div>
+    <div class="trigger-item">
+      <span class="ti-type tt-cond">条件触发</span>
+      <div class="ti-body">
+        <div class="ti-name">水位低于1a · 紧急补货</div>
+        <div class="ti-desc">当任何节点库存水位跌破1a（预警线），不等下周定时窗口，立即生成紧急补货推单。这是断货预防的最后防线。优先级高于常规推单。</div>
+        <div class="ti-cond">TRIGGER: inf_heartbeat.water_level = 'WARN' OR 'LOW' → 即时触发</div>
+      </div>
+    </div>
+    <div class="trigger-item">
+      <span class="ti-type tt-block">阻断条件</span>
+      <div class="ti-body">
+        <div class="ti-name">以下情况自动跳过，不生成推单</div>
+        <div class="ti-desc">① 蝴蝶效应标记A类失真（OMAKASE_PAUSE事件存在）· ② 经销商信用评级D级（账期超期）· ③ A值校准本周未完成（数据不可信）· ④ 经销商主动申请暂停</div>
+        <div class="ti-cond">BLOCK: 任一条件满足 → 跳过该节点 · 写入跳过原因日志</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 数据读取 -->
+  <div class="sec"><span class="sec-num">3</span>数据读取</div>
+  <table class="data-table mb">
+    <thead>
+      <tr><th>数据源</th><th>表名</th><th>关键字段</th><th>用途</th><th>重要性</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>A值校准Agent</td>
+        <td class="td-table">inf_node_targets</td>
+        <td class="td-field">r_target, confidence, calibrated_at</td>
+        <td>计算补货量的基准动销速率。confidence必须≥MED才使用。</td>
+        <td><span class="td-crit crit-core">核心·门控</span></td>
+      </tr>
+      <tr>
+        <td>蝴蝶效应Agent</td>
+        <td class="td-table">inf_events</td>
+        <td class="td-field">event_type='OMAKASE_PAUSE', node_id, sku_id</td>
+        <td>门控检查。有PAUSE事件则跳过该节点。</td>
+        <td><span class="td-crit crit-core">核心·门控</span></td>
+      </tr>
+      <tr>
+        <td>Dcloud/SAP</td>
+        <td class="td-table">inf_heartbeat</td>
+        <td class="td-field">inventory_units, water_level, inflow_units</td>
+        <td>当前库存水位，计算距离满仓还差多少，即补货量。</td>
+        <td><span class="td-crit crit-core">核心</span></td>
+      </tr>
+      <tr>
+        <td>年级系统</td>
+        <td class="td-table">inf_node_targets</td>
+        <td class="td-field">grade, target_water_level</td>
+        <td>不同年级的目标水位不同（年级1高水位保障，年级3-4适当精简库存）</td>
+        <td><span class="td-crit crit-core">核心</span></td>
+      </tr>
+      <tr>
+        <td>经销商信用</td>
+        <td class="td-table">inf_nodes</td>
+        <td class="td-field">credit_grade, overdue_days, overdue_amount</td>
+        <td>账期超期的经销商暂停推单，防止信用风险扩大</td>
+        <td><span class="td-crit crit-gate">门控</span></td>
+      </tr>
+      <tr>
+        <td>历史推单</td>
+        <td class="td-table">inf_actions</td>
+        <td class="td-field">action_type='REPLENISHMENT', quantity, actual_received, outcome</td>
+        <td>对比历史推单量和实际接单量，校准推单准确率</td>
+        <td><span class="td-crit crit-ref">参考·学习</span></td>
+      </tr>
+      <tr>
+        <td>季节/大促日历</td>
+        <td class="td-table">inf_events</td>
+        <td class="td-field">event_type='CAMPAIGN', multiplier, sku_ids</td>
+        <td>大促前按倍数放大推单量，大促后按消化情况缩减</td>
+        <td><span class="td-crit crit-ref">参考</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 4. 决策逻辑 -->
+  <div class="sec"><span class="sec-num">4</span>决策逻辑 · 五步推单计算</div>
+  <div class="logic-flow mb">
+
+    <div class="lf-step">
+      <div class="lf-num">1</div>
+      <div class="lf-body">
+        <div class="lf-title">门控检查（Gate Check）</div>
+        <div class="lf-desc">对每个目标节点×SKU组合，检查三个门控条件。任一不满足则跳过，不进入计算。</div>
+        <div class="lf-formula">FOR each node × sku in target_list:
+  GATE_1: inf_node_targets.calibrated_at >= THIS_WEEK_MONDAY
+    → A值校准本周已完成
+  GATE_2: NOT EXISTS OMAKASE_PAUSE event(node, sku, active)
+    → 蝴蝶效应未标记失真
+  GATE_3: inf_nodes.credit_grade != 'D'
+    → 经销商信用正常
+
+  IF all gates pass → CONTINUE to step 2
+  IF any gate fails → SKIP, log reason, notify DOM</div>
+      </div>
+    </div>
+
+    <div class="lf-step">
+      <div class="lf-num">2</div>
+      <div class="lf-body">
+        <div class="lf-title">计算目标库存量</div>
+        <div class="lf-desc">根据年级和节点类型，确定目标水位（满仓应该是多少）。</div>
+        <div class="lf-formula">-- 目标水位规则（按经销商层级）
+经销商满仓目标：
+  年级1-2（成长期）: 2a  ← 需要充足库存支撑铺货
+  年级3（成熟期）:   2a  ← 维持正常
+  年级4-5（特殊）:   1.5a ← 谨慎，避免压货
+
+-- a值计算
+a = r_target × T   （T=经销商补货周期，通常30天）
+target_inventory = target_water_level × a
+
+-- 案例：遵循自然500ml · 宝仓贸易
+r_target = 4.82件/天, T = 30天
+a = 4.82 × 30 = 144.6件 ≈ 145件
+target_inventory = 2a = 290件（满仓目标）</div>
+      </div>
+    </div>
+
+    <div class="lf-step">
+      <div class="lf-num">3</div>
+      <div class="lf-body">
+        <div class="lf-title">计算补货量</div>
+        <div class="lf-desc">用目标库存减去当前库存，再加上补货到达前预计消耗的量（在途消耗保护）。</div>
+        <div class="lf-formula">-- 基础补货量
+replenishment_base = target_inventory - current_inventory
+
+-- 在途消耗保护（物流时间 × r值）
+lead_time_days = 3  -- 从推单到到货的天数
+lead_time_consumption = r_target × lead_time_days
+
+-- 最终推荐补货量
+replenishment_qty = replenishment_base + lead_time_consumption
+
+-- 案例：遵循自然500ml · 宝仓贸易
+current_inventory = 180件（当前库存）
+replenishment_base = 290 - 180 = 110件
+lead_time_consumption = 4.82 × 3 = 14.5 ≈ 15件
+replenishment_qty = 110 + 15 = 125件
+
+-- 最小推单保护（避免小额频繁推单）
+IF replenishment_qty < 0.3a → 延迟到下次推单合并</div>
+      </div>
+    </div>
+
+    <div class="lf-step">
+      <div class="lf-num">4</div>
+      <div class="lf-body">
+        <div class="lf-title">季节和大促调整</div>
+        <div class="lf-desc">根据日历事件，对推单量进行系数调整。大促前加量，大促后减量。</div>
+        <div class="lf-branches">
+          <div class="lf-branch lb-amber">
+            <span class="lb-if" style="color:var(--amber)">大促前14天</span>
+            <span class="lb-then">推单量 × 大促系数（通常1.3-1.5）。系数由管理层通过C1规则设定。</span>
+          </div>
+          <div class="lf-branch lb-blue">
+            <span class="lb-if" style="color:var(--blue)">季节性月份</span>
+            <span class="lb-then">如有历史同期数据，应用seasonal_coeff（第一年无数据则coeff=1.0）</span>
+          </div>
+          <div class="lf-branch lb-red">
+            <span class="lb-if" style="color:var(--red)">大促后2周</span>
+            <span class="lb-then">如消化率还在75%以上，正常推单。如消化率下降，减量50%，防止大促后二次压货。</span>
+          </div>
+          <div class="lf-branch lb-green">
+            <span class="lb-if" style="color:var(--green)">正常周期</span>
+            <span class="lb-then">无调整，使用步骤3的计算结果。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lf-step">
+      <div class="lf-num">5</div>
+      <div class="lf-body">
+        <div class="lf-title">SKU组合优先级排序</div>
+        <div class="lf-desc">对同一经销商的所有SKU推单，按优先级排序生成推单清单。帮助经销商在资金有限时决定先订哪个SKU。</div>
+        <div class="lf-formula">优先级评分 = 水位紧急度(40%) + 年级战略价值(30%) + 利润贡献(30%)
+
+-- 水位紧急度
+  EMPTY/LOW = 100分，WARN = 70分，FULL = 0分
+
+-- 年级战略价值（公司设定权重）
+  年级1遵循自然 = 90分（战略新品，优先铺货）
+  年级3红烧系列 = 80分（现金奶牛，保障供应）
+  年级4特级酱油 = 50分（谨慎推进）
+
+-- 利润贡献（经销商视角）
+  进货利差最大的SKU优先</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 推单样例 -->
+  <div class="sec"><span class="sec-num">+</span>推单样例 · 宝仓贸易（浦东）</div>
+  <div class="order-card mb">
+    <div class="oc-header">
+      <div class="oc-title">🍣 本周补货推单</div>
+      <div class="oc-meta">宝仓贸易 · 浦东 · 2026-W15 · 周一生成</div>
+    </div>
+    <div class="oc-body">
+      <div class="oc-sku-row">
+        <div class="oc-grade g2">年级2</div>
+        <div class="oc-sku-info">
+          <div class="oc-sku-name">遵循自然 500ml</div>
+          <div class="oc-sku-reason">水位1.4a→目标2a · r=4.82件/天 · 在途3天消耗15件</div>
+          <div class="oc-priority pr-high">🔴 优先</div>
+        </div>
+        <div class="oc-qty">
+          <div class="oc-qty-val">125件</div>
+          <div class="oc-qty-unit">建议补货量</div>
+        </div>
+      </div>
+      <div class="oc-sku-row">
+        <div class="oc-grade g3">年级3</div>
+        <div class="oc-sku-info">
+          <div class="oc-sku-name">红烧酱油系列</div>
+          <div class="oc-sku-reason">水位1.8a→目标2a · 正常补货 · r=8.4件/天</div>
+          <div class="oc-priority pr-med">🟡 正常</div>
+        </div>
+        <div class="oc-qty">
+          <div class="oc-qty-val">68件</div>
+          <div class="oc-qty-unit">建议补货量</div>
+        </div>
+      </div>
+      <div class="oc-sku-row">
+        <div class="oc-grade g3">年级3</div>
+        <div class="oc-sku-info">
+          <div class="oc-sku-name">红烧酱油大装</div>
+          <div class="oc-sku-reason">水位1.9a→目标2a · 接近满仓 · 小量补充</div>
+          <div class="oc-priority pr-low">🟢 补充</div>
+        </div>
+        <div class="oc-qty">
+          <div class="oc-qty-val">24件</div>
+          <div class="oc-qty-unit">建议补货量</div>
+        </div>
+      </div>
+      <div class="oc-sku-row">
+        <div class="oc-grade g1">年级1</div>
+        <div class="oc-sku-info">
+          <div class="oc-sku-name">遵循自然 1L</div>
+          <div class="oc-sku-reason">水位1.2a→目标2a · 需要补充 · r=3.1件/天</div>
+          <div class="oc-priority pr-high">🔴 优先</div>
+        </div>
+        <div class="oc-qty">
+          <div class="oc-qty-val">96件</div>
+          <div class="oc-qty-unit">建议补货量</div>
+        </div>
+      </div>
+      <div class="oc-sku-row" style="opacity:.5">
+        <div class="oc-grade g5">年级5</div>
+        <div class="oc-sku-info">
+          <div class="oc-sku-name">特级酱油 885ml</div>
+          <div class="oc-sku-reason" style="color:var(--red)">⚠️ 蝴蝶效应暂停 · 消化率61% · 本周跳过</div>
+          <div class="oc-priority pr-med">⏸ 已暂停</div>
+        </div>
+        <div class="oc-qty">
+          <div class="oc-qty-val" style="color:var(--text3)">—</div>
+          <div class="oc-qty-unit">本周不推单</div>
+        </div>
+      </div>
+    </div>
+    <div class="oc-footer">
+      <div class="oc-total">本单合计 <strong>313件</strong> · 预计货款 ¥28,400</div>
+      <div class="oc-actions">
+        <button class="btn-edit">修改</button>
+        <button class="btn-approve">确认接单</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 输出规格 -->
+  <div class="sec"><span class="sec-num">5</span>输出规格</div>
+  <div class="output-list mb">
+
+    <div class="output-item">
+      <div class="oi-top">
+        <span class="oi-icon">📱</span>
+        <span class="oi-name">企微推单通知 · 经销商接收</span>
+        <span class="oi-channel ch-wecom">企业微信</span>
+      </div>
+      <div class="oi-desc">推送给经销商的推单卡片，包含完整SKU清单、数量、建议原因、总货款。24小时内确认，超时视为接受。经销商可以修改数量，但修改超过±30%需要DOM确认。</div>
+      <div class="oi-example">【🍣 本周补货推单】宝仓贸易
+──────────────────────
+📦 遵循自然500ml    → 125件  🔴
+📦 遵循自然1L       → 96件   🔴
+📦 红烧酱油系列     → 68件   🟡
+📦 红烧酱油大装     → 24件   🟢
+⏸ 特级酱油885ml    → 本周暂停
+
+合计：313件 / ¥28,400
+建议到货日：2026-04-17（周四）
+
+[确认接单] [修改数量] [本周跳过]
+──────────────────────
+24小时内未回复 = 默认确认</div>
+    </div>
+
+    <div class="output-item">
+      <div class="oi-top">
+        <span class="oi-icon">🗄️</span>
+        <span class="oi-name">写入推单记录</span>
+        <span class="oi-channel ch-db">inf_actions</span>
+      </div>
+      <div class="oi-desc">每笔推单写入inf_actions，后续跟踪实际接单量、到货量、结果，形成学习闭环。</div>
+      <div class="oi-example">INSERT INTO inf_actions VALUES (
+  action_type:    'REPLENISHMENT',
+  node_id:        'DIST-BC',
+  sku_breakdown: [
+    {sku:'ZR5', qty:125, priority:'HIGH', reason:'water_level_1.4a'},
+    {sku:'ZR1', qty:96,  priority:'HIGH', reason:'water_level_1.2a'},
+    {sku:'HS',  qty:68,  priority:'MED',  reason:'normal_replenishment'},
+    {sku:'HSL', qty:24,  priority:'LOW',  reason:'top_up'},
+    {sku:'TJ',  qty:0,   priority:'SKIP', reason:'OMAKASE_PAUSE'},
+  ],
+  total_qty:     313,
+  total_value:   28400,
+  status:        'PENDING_CONFIRMATION',
+  created_at:    NOW()
+)</div>
+    </div>
+
+    <div class="output-item">
+      <div class="oi-top">
+        <span class="oi-icon">📊</span>
+        <span class="oi-name">推单结果跟踪 · 28天后</span>
+        <span class="oi-channel ch-ui">INFINITY OS界面</span>
+      </div>
+      <div class="oi-desc">推单28天后，系统自动回顾：实际消化率是否达标？是否出现断货？推单量误差多大？结果写入学习日志，提高下次推单准确率。</div>
+      <div class="oi-example">推单结果回顾 2026-W15 · 宝仓贸易
+──────────────────────
+遵循自然500ml:
+  推单125件 → 实际接收122件 → 28天消化率81% ✅
+  推单准确率: 97.6%  结论: 推单量合理
+
+遵循自然1L:
+  推单96件 → 实际接收96件 → 28天消化率69% ⚠️
+  消化率略低，下次推单减量10%
+
+整体评分: 4.2/5.0
+──────────────────────
+学习更新: ZR1节点r值可能略高估，下周校准时参考</div>
+    </div>
+
+  </div>
+
+  <!-- 6. 自主边界 -->
+  <div class="sec"><span class="sec-num">6</span>自主边界</div>
+  <div class="boundary-grid mb">
+    <div class="boundary-col">
+      <div class="bc-title" style="color:var(--green)">✅ Agent可以自动执行</div>
+      <div class="bc-item" style="background:var(--green-dim);border-radius:7px"><div class="bc-dot" style="background:var(--green)"></div>门控检查和跳过（Gate Check）</div>
+      <div class="bc-item" style="background:var(--green-dim);border-radius:7px"><div class="bc-dot" style="background:var(--green)"></div>补货量计算（全公式，无人工干预）</div>
+      <div class="bc-item" style="background:var(--green-dim);border-radius:7px"><div class="bc-dot" style="background:var(--green)"></div>生成推单草稿并推送给经销商</div>
+      <div class="bc-item" style="background:var(--green-dim);border-radius:7px"><div class="bc-dot" style="background:var(--green)"></div>24小时超时后默认确认</div>
+      <div class="bc-item" style="background:var(--green-dim);border-radius:7px"><div class="bc-dot" style="background:var(--green)"></div>紧急补货（水位LOW）即时触发</div>
+      <div class="bc-item" style="background:var(--green-dim);border-radius:7px"><div class="bc-dot" style="background:var(--green)"></div>28天后自动回顾并写入学习日志</div>
+    </div>
+    <div class="boundary-col">
+      <div class="bc-title" style="color:var(--red)">❌ 必须人工确认</div>
+      <div class="bc-item" style="background:var(--red-dim);border-radius:7px"><div class="bc-dot" style="background:var(--red)"></div>经销商修改推单量超过±30%</div>
+      <div class="bc-item" style="background:var(--red-dim);border-radius:7px"><div class="bc-dot" style="background:var(--red)"></div>单笔推单金额超过¥100,000</div>
+      <div class="bc-item" style="background:var(--red-dim);border-radius:7px"><div class="bc-dot" style="background:var(--red)"></div>新经销商首次推单（无历史数据）</div>
+      <div class="bc-item" style="background:var(--red-dim);border-radius:7px"><div class="bc-dot" style="background:var(--red)"></div>大促前推单系数调整</div>
+      <div class="bc-item" style="background:var(--red-dim);border-radius:7px"><div class="bc-dot" style="background:var(--red)"></div>连续两周推单被拒绝（需调查原因）</div>
+      <div class="bc-item" style="background:var(--red-dim);border-radius:7px"><div class="bc-dot" style="background:var(--red)"></div>A值置信度为LOW时的任何推单</div>
+    </div>
+  </div>
+
+  <!-- 依赖 -->
+  <div class="sec"><span class="sec-num">+</span>依赖关系</div>
+  <div class="dep-row mb">
+    <div class="dep-chip dep-needs">⚠️ 硬依赖：A值校准本周完成</div>
+    <div class="dep-chip dep-needs">⚠️ 硬依赖：蝴蝶效应扫描完成</div>
+    <div class="dep-chip dep-needs">⚠️ 需要：Dcloud库存数据实时接入</div>
+    <div class="dep-chip dep-needs">⚠️ 需要：企微发送权限配置</div>
+    <div class="dep-chip dep-feeds">✅ 输出给：经销商（推单卡片）</div>
+    <div class="dep-chip dep-feeds">✅ 输出给：一本账（推单量影响薪酬计算基数）</div>
+    <div class="dep-chip dep-feeds">✅ 输出给：DOM（被跳过节点的通知）</div>
+    <div class="dep-chip dep-uses">📊 反馈给：A值校准（28天结果用于下次校准参考）</div>
+  </div>
+
+  <!-- SQL -->
+  <div class="sec"><span class="sec-num">+</span>核心SQL · Java团队实现参考</div>
+  <div class="sql-block">-- ① 门控检查：查询可以推单的节点
+SELECT DISTINCT h.node_id, h.sku_id
+FROM inf_heartbeat h
+JOIN inf_node_targets t ON h.node_id=t.node_id AND h.sku_id=t.sku_id
+JOIN inf_nodes n ON h.node_id=n.node_id
+WHERE h.date = CURDATE()
+  -- Gate 1: A值校准本周已完成
+  AND t.calibrated_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+  AND t.confidence IN ('HIGH','MED')
+  -- Gate 2: 蝴蝶效应未暂停
+  AND NOT EXISTS (
+    SELECT 1 FROM inf_events e
+    WHERE e.node_id=h.node_id AND e.sku_id=h.sku_id
+      AND e.event_type='OMAKASE_PAUSE'
+      AND e.created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)
+  )
+  -- Gate 3: 信用正常
+  AND n.credit_grade != 'D';
+
+-- ② 计算补货量（核心公式）
+SELECT
+  h.node_id, h.sku_id,
+  t.r_target,
+  t.grade,
+  h.inventory_units AS current_inventory,
+  -- a值
+  ROUND(t.r_target * 30) AS a_value,
+  -- 目标水位（年级1-3为2a，年级4-5为1.5a）
+  ROUND(t.r_target * 30 * IF(t.grade <= 3, 2.0, 1.5)) AS target_inventory,
+  -- 基础补货量
+  GREATEST(0,
+    ROUND(t.r_target * 30 * IF(t.grade <= 3, 2.0, 1.5))
+    - h.inventory_units
+    + ROUND(t.r_target * 3)   -- 在途消耗保护（3天）
+  ) AS replenishment_qty
+FROM inf_heartbeat h
+JOIN inf_node_targets t ON h.node_id=t.node_id AND h.sku_id=t.sku_id
+WHERE h.date = CURDATE()
+  AND h.node_id IN (/* 步骤①的结果 */);
+
+-- ③ 写入推单记录
+INSERT INTO inf_actions (
+  action_type, node_id, sku_id, quantity,
+  priority, reason, status, created_at
+) VALUES (
+  'REPLENISHMENT', ?, ?, ?,
+  ?, ?, 'PENDING_CONFIRMATION', NOW()
+);</div>
+
+  <!-- AI -->
+  <div class="ai-wrap">
+    <div class="ai-hdr">🍣 Omakase推单 Agent · 问答</div>
+    <div class="cps">
+      <div class="cp" onclick="ask('经销商拒绝了推单，系统下一步怎么处理？')">经销商拒绝推单</div>
+      <div class="cp" onclick="ask('如果A值校准置信度是MED，推单量应该保守还是正常？')">低置信度下如何推单</div>
+      <div class="cp" onclick="ask('大促前推单系数1.5，促销后消化不了怎么办？')">大促后库存积压</div>
+      <div class="cp" onclick="ask('三个Agent都运行完了，整个闭环是什么样的？')">三Agent完整闭环</div>
+    </div>
+    <div class="ai-bubble">你好，我是Omakase推单 Agent 规格说明书。三张规格说明书的最后一张。问我任何关于推单逻辑、门控机制、闭环设计的问题。</div>
+    <div class="ai-resp" id="aiResp"><div class="ai-q" id="aiQ"></div><div id="aiA"></div></div>
+    <div class="ai-row">
+      <input class="ai-in" id="aiIn" placeholder="问关于Omakase推单Agent的任何问题…" onkeydown="if(event.key==='Enter')ask(this.value,this)"/>
+      <button class="ai-btn" onclick="ask(document.getElementById('aiIn').value,document.getElementById('aiIn'))">↑</button>
+    </div>
+  </div>
+
+  <!-- 完成卡 -->
+  <div style="background:linear-gradient(135deg,rgba(78,205,196,.08),rgba(9,9,15,1));border:1px solid rgba(78,205,196,.25);border-radius:16px;padding:20px;text-align:center">
+    <div style="font-size:28px;margin-bottom:10px">✅</div>
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px">三张Agent规格说明书完成</div>
+    <div style="font-size:12px;color:var(--text3);line-height:1.8;margin-bottom:14px">
+      A值校准 → 蝴蝶效应 → Omakase推单<br>
+      顺序固定 · 依赖关系明确 · 自主边界清晰 · 学习闭环建立
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <a href="infinity_os_agent_spec_01.html" style="padding:8px 16px;border-radius:10px;background:var(--amber-dim);border:1px solid rgba(245,166,35,.3);color:var(--amber);font-size:12px;font-weight:600;text-decoration:none">🎯 规格书①</a>
+      <a href="infinity_os_agent_spec_02.html" style="padding:8px 16px;border-radius:10px;background:var(--red-dim);border:1px solid rgba(255,95,95,.3);color:var(--red);font-size:12px;font-weight:600;text-decoration:none">🦋 规格书②</a>
+      <a href="index.html" style="padding:8px 16px;border-radius:10px;background:var(--teal-dim);border:1px solid rgba(78,205,196,.3);color:var(--teal);font-size:12px;font-weight:600;text-decoration:none">⌂ 返回门户</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function tick(){const n=new Date();document.getElementById('ck').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')}
+tick();setInterval(tick,1000);
+
+async function ask(q,el){
+  if(!q||!q.trim())return;
+  if(el instanceof HTMLElement)el.value='';
+  const resp=document.getElementById('aiResp');
+  const qEl=document.getElementById('aiQ');
+  const aEl=document.getElementById('aiA');
+  resp.classList.add('show');
+  qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="td-wrap"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+
+  const sys=`你是INFINITY OS的Omakase无菜单推单Agent规格说明书，这是三张规格说明书的最后一张。
+核心职责：在A值校准（干净r值）和蝴蝶效应（无失真确认）两个前置条件满足后，自动计算每个经销商每个SKU的精确补货量，生成推单草稿，推送给经销商确认。
+关键公式：replenishment = (target_water × a) - current_inventory + lead_time_consumption。a = r_target × 30天。
+门控机制：三个Gate同时满足才能推单：校准完成+无PAUSE事件+信用正常。
+自主边界：推单生成和推送可自动；修改超±30%或金额超10万需人工确认。
+闭环：28天后自动回顾结果，反馈给A值校准。
+用中文简洁回答，不超过150字。`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})
+    });
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'—'}</div>`;
+  }catch(e){
+    aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`;
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · Agent规格说明书 · 蝴蝶效应</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;--card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.08);
+  --orange:#fb923c;--orange-dim:rgba(251,146,60,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;padding-bottom:60px}
+
+.topbar{position:sticky;top:0;z-index:100;background:rgba(7,8,14,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:52px}
+.logo{display:flex;align-items:center;gap:7px}
+.ls{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#ff7c38);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000}
+.ln{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.ln em{color:var(--amber);font-style:normal}
+.hb{background:var(--card2);border:1px solid var(--border2);border-radius:16px;padding:5px 11px;font-size:11px;color:var(--text2);text-decoration:none;white-space:nowrap}
+.ck{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+
+.agent-nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;position:sticky;top:52px;z-index:91}
+.agent-nav::-webkit-scrollbar{display:none}
+.an-item{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0;border:1px solid var(--border);background:var(--card);color:var(--text3);text-decoration:none;transition:all .2s}
+.an-item.current{background:var(--red-dim);border-color:rgba(255,95,95,.35);color:var(--red)}
+.an-item.done{background:var(--green-dim);border-color:rgba(74,222,128,.25);color:var(--green)}
+.an-item.pending{opacity:.5}
+
+.wrap{padding:14px 14px 0;max-width:900px;margin:0 auto}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,rgba(255,95,95,.08),rgba(9,9,15,1));border:1px solid rgba(255,95,95,.25);border-radius:16px;padding:20px;margin-bottom:14px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--red),transparent)}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.hero-num{font-size:10px;font-family:'Space Mono',monospace;color:var(--red);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.hero-name{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:4px}
+.hero-en{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace}
+.hero-badge{font-size:11px;padding:4px 10px;border-radius:20px;background:var(--red-dim);border:1px solid rgba(255,95,95,.3);color:var(--red);font-family:'Space Mono',monospace}
+.hero-desc{font-size:13px;color:var(--text2);line-height:1.8;padding:12px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border);margin-bottom:12px}
+.hero-desc strong{color:var(--red)}
+.hero-why{font-size:12px;color:var(--text2);line-height:1.7;padding:10px 12px;background:rgba(245,166,35,.05);border:1px solid rgba(245,166,35,.15);border-radius:10px}
+.hero-why strong{color:var(--amber)}
+
+/* section */
+.sec{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec-num{width:20px;height:20px;border-radius:6px;background:var(--red-dim);border:1px solid rgba(255,95,95,.3);color:var(--red);font-family:'Space Mono',monospace;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* 四类失真卡 */
+.distortion-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+@media(max-width:500px){.distortion-grid{grid-template-columns:1fr}}
+.dist-card{border-radius:13px;padding:14px;border:1px solid}
+.dc-a{background:rgba(255,95,95,.05);border-color:rgba(255,95,95,.2)}
+.dc-b{background:rgba(245,166,35,.05);border-color:rgba(245,166,35,.2)}
+.dc-c{background:rgba(167,139,250,.05);border-color:rgba(167,139,250,.2)}
+.dc-d{background:rgba(96,165,250,.05);border-color:rgba(96,165,250,.2)}
+.dc-label{font-size:10px;font-family:'Space Mono',monospace;font-weight:800;letter-spacing:.08em;margin-bottom:6px}
+.la{color:var(--red)}.lb{color:var(--amber)}.lc{color:var(--purple)}.ld{color:var(--blue)}
+.dc-name{font-size:14px;font-weight:700;margin-bottom:6px}
+.dc-def{font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:8px}
+.dc-signal{font-size:10px;font-family:'Space Mono',monospace;padding:6px 8px;border-radius:7px;line-height:1.7}
+.sa{background:rgba(255,95,95,.08);color:var(--red)}
+.sb{background:rgba(245,166,35,.08);color:var(--amber)}
+.sc{background:rgba(167,139,250,.08);color:var(--purple)}
+.sd{background:rgba(96,165,250,.08);color:var(--blue)}
+
+/* 触发 */
+.trigger-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.trigger-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
+.ti-type{font-size:9px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:8px;flex-shrink:0;margin-top:1px;font-weight:700}
+.tt-rt{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.tt-sched{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.tt-up{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.ti-body{flex:1}
+.ti-name{font-size:13px;font-weight:600;margin-bottom:3px}
+.ti-desc{font-size:11px;color:var(--text3);line-height:1.6}
+.ti-cond{font-size:10px;font-family:'Space Mono',monospace;color:var(--teal);margin-top:4px;padding:4px 8px;background:var(--teal-dim);border-radius:6px;display:inline-block}
+
+/* 数据表 */
+.data-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}
+.data-table th{background:rgba(255,255,255,.04);color:var(--text3);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);font-weight:700;font-family:'Space Mono',monospace;font-size:10px}
+.data-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.025);color:var(--text2);vertical-align:top;line-height:1.5}
+.data-table tr:last-child td{border-bottom:none}
+.td-table{font-family:'Space Mono',monospace;font-size:10px;color:var(--teal)}
+.td-field{font-family:'Space Mono',monospace;font-size:10px;color:var(--blue)}
+.td-crit{font-size:9px;padding:1px 6px;border-radius:5px}
+.crit-core{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.crit-ref{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+
+/* 逻辑流 */
+.logic-flow{display:flex;flex-direction:column;gap:0;margin-bottom:14px}
+.lf-step{display:flex;gap:10px;padding:12px 0;position:relative}
+.lf-step::before{content:'';position:absolute;left:18px;top:44px;bottom:0;width:1px;background:rgba(255,95,95,.2)}
+.lf-step:last-child::before{display:none}
+.lf-num{width:36px;height:36px;border-radius:10px;flex-shrink:0;background:var(--red-dim);border:1px solid rgba(255,95,95,.3);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--red);position:relative;z-index:1}
+.lf-body{flex:1;padding-top:4px}
+.lf-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.lf-desc{font-size:12px;color:var(--text2);line-height:1.7}
+.lf-formula{font-family:'Space Mono',monospace;font-size:10px;color:var(--teal);background:var(--teal-dim);border:1px solid rgba(78,205,196,.2);border-radius:8px;padding:8px 10px;margin-top:6px;line-height:1.9;white-space:pre-wrap}
+.lf-branches{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.lf-branch{display:flex;gap:8px;align-items:flex-start;font-size:11px;padding:7px 10px;border-radius:8px}
+.lb-if{font-family:'Space Mono',monospace;font-size:10px;flex-shrink:0;padding-top:1px;font-weight:700}
+.lb-then{color:var(--text2);line-height:1.5;flex:1}
+.lb-a{background:rgba(255,95,95,.06);border:1px solid rgba(255,95,95,.15)}
+.lb-b{background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.15)}
+.lb-c{background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.15)}
+.lb-d{background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15)}
+.lb-ok{background:var(--green-dim);border:1px solid rgba(74,222,128,.15)}
+
+/* 传导链路图 */
+.cascade-wrap{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:16px;margin-bottom:14px}
+.cascade-title{font-size:13px;font-weight:700;margin-bottom:14px;color:var(--red);display:flex;align-items:center;gap:7px}
+.cascade-nodes{display:flex;flex-direction:column;gap:0}
+.cn-row{display:flex;gap:10px;padding:10px 0;position:relative}
+.cn-row::before{content:'';position:absolute;left:19px;top:42px;bottom:0;width:1px;background:rgba(255,95,95,.15)}
+.cn-row:last-child::before{display:none}
+.cn-dot{width:38px;height:38px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1}
+.cn-body{flex:1}
+.cn-ipo{font-size:9px;font-family:'Space Mono',monospace;color:var(--text3);margin-bottom:2px}
+.cn-name{font-size:13px;font-weight:600;margin-bottom:3px}
+.cn-signal{font-size:11px;color:var(--text3);line-height:1.5}
+.cn-alert{font-size:10px;padding:3px 8px;border-radius:7px;margin-top:4px;display:inline-block;font-family:'Space Mono',monospace}
+.ca-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,95,.2)}
+.ca-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.ca-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.ca-blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+
+/* 输出 */
+.output-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.output-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.oi-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.oi-icon{font-size:16px}
+.oi-name{font-size:13px;font-weight:600}
+.oi-channel{font-size:10px;font-family:'Space Mono',monospace;padding:2px 7px;border-radius:8px;margin-left:auto}
+.ch-wecom{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.ch-db{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.ch-ui{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.ch-api{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2)}
+.oi-desc{font-size:11px;color:var(--text3);line-height:1.6}
+.oi-example{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;margin-top:6px;line-height:1.8;white-space:pre-wrap}
+
+/* 边界 */
+.boundary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+@media(max-width:500px){.boundary-grid{grid-template-columns:1fr}}
+.boundary-col{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.bc-title{font-size:11px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.bc-item{font-size:11px;color:var(--text2);line-height:1.5;display:flex;align-items:flex-start;gap:6px;padding:5px 8px;border-radius:7px;margin-bottom:4px}
+.bc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+
+/* 依赖 */
+.dep-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.dep-chip{padding:6px 12px;border-radius:10px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px}
+.dep-needs{background:var(--red-dim);border:1px solid rgba(255,95,95,.2);color:var(--red)}
+.dep-feeds{background:var(--green-dim);border:1px solid rgba(74,222,128,.2);color:var(--green)}
+.dep-uses{background:var(--blue-dim);border:1px solid rgba(96,165,250,.2);color:var(--blue)}
+
+.sql-block{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:14px;font-family:'Space Mono',monospace;font-size:10px;color:var(--green);line-height:1.9;overflow-x:auto;margin-bottom:14px;white-space:pre}
+
+/* AI */
+.ai-wrap{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:14px}
+.ai-hdr{padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.07em;text-transform:uppercase}
+.cps{display:flex;gap:5px;padding:8px 12px;overflow-x:auto;scrollbar-width:none}
+.cps::-webkit-scrollbar{display:none}
+.cp{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:4px 10px;font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.cp:hover{border-color:var(--red);color:var(--red);background:var(--red-dim)}
+.ai-bubble{margin:0 12px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text2);line-height:1.65}
+.ai-resp{display:none;margin:0 12px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.ai-resp.show{display:block}
+.ai-q{font-size:10px;color:var(--text3);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ai-row{display:flex;gap:6px;padding:6px 12px 10px}
+.ai-in{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:12px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif}
+.ai-in:focus{border-color:rgba(255,95,95,.4)}
+.ai-in::placeholder{color:var(--text3)}
+.ai-btn{width:36px;height:36px;border-radius:9px;background:var(--red);border:none;cursor:pointer;font-size:14px;flex-shrink:0}
+.td-wrap{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--red);animation:tda 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tda{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+.mb{margin-bottom:14px}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><div class="ls">∞</div><div class="ln">INFINITY <em>OS</em></div></div>
+  <a class="hb" href="index.html">⌂ 门户</a>
+  <div class="ck" id="ck"></div>
+</div>
+
+<div class="agent-nav">
+  <a class="an-item done" href="infinity_os_agent_spec_01.html">✓ A值校准 · 规格书①</a>
+  <div class="an-item current">🦋 蝴蝶效应 · 规格书②</div>
+  <a class="an-item pending" href="#">🍣 推单Omakase · 规格书③</a>
+</div>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="hero-num">Agent规格说明书 · 第②张 · 共3张</div>
+        <div class="hero-name">蝴蝶效应 Agent</div>
+        <div class="hero-en">Butterfly Effect Detection Agent</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:4px">Layer 2.5 · 推理+预警</div>
+        <div class="hero-badge">实时监控 · T+1</div>
+      </div>
+    </div>
+    <div class="hero-desc">
+      这个Agent存在的理由：<strong>供应链上的一个微小扰动，如果不被识别和拦截，会沿着IPO0→IPO13向下传导放大，变成系统性问题。</strong> 经销商多进了一批货（压货），门店动销数据看起来正常，但消化率在悄悄下降。两个月后，铁律③触发，整个区域陷入库存危机。<br><br>
+      <strong>这个Agent的职责是在蝴蝶效应传导到下一个节点之前，提前2-3个IPO节点识别并拦截。速度就是一切。</strong>
+    </div>
+    <div class="hero-why">
+      <strong>⚠️ 关键前提：</strong>这个Agent依赖A值校准Agent提供的干净r值。如果r值本身是失真的（促销虚高、断货低估），蝴蝶效应的判断会产生大量误报。两个Agent必须按顺序运行：先校准，再检测。
+    </div>
+  </div>
+
+  <!-- 四类失真定义 -->
+  <div class="sec"><span class="sec-num">0</span>前置定义 · 四类失真模式</div>
+  <div class="distortion-grid mb">
+    <div class="dist-card dc-a">
+      <div class="dc-label la">A类失真</div>
+      <div class="dc-name">压货失真</div>
+      <div class="dc-def">经销商进货量远超实际动销，库存在渠道内积压。表面上看公司出货漂亮，实际上是把库存压力转移给了经销商。消化率持续下降是核心信号。</div>
+      <div class="dc-signal sa">信号：进货量↑ + 消化率↓ + 库存↑ + r值未变
+铁律关联：铁律③（消化率&lt;50%两月）</div>
+    </div>
+    <div class="dist-card dc-b">
+      <div class="dc-label lb">B类失真</div>
+      <div class="dc-name">促销扰动</div>
+      <div class="dc-def">短期促销制造虚假的动销高峰，促销结束后需求断崖式下跌。如果用促销期r值来预测正常期补货，会严重过量。</div>
+      <div class="dc-signal sb">信号：r值突然↑↑ + 有促销事件标记 + 促销后r值回落
+关联：A值校准Agent的剔除对象</div>
+    </div>
+    <div class="dist-card dc-c">
+      <div class="dc-label lc">C类失真</div>
+      <div class="dc-name">窜货失真</div>
+      <div class="dc-def">货物在非授权渠道流动，低价出现在不该出现的区域。价格体系被破坏，品牌溢价受损，正常渠道经销商受到冲击。</div>
+      <div class="dc-signal sc">信号：区域价格低于底价 + 该区域进货量低 + 邻近区域进货量异常高
+铁律关联：铁律①（价格底线）</div>
+    </div>
+    <div class="dist-card dc-d">
+      <div class="dc-label ld">D类失真</div>
+      <div class="dc-name">战略扰动</div>
+      <div class="dc-def">公司主动发起的正常操作（涨价前备货、年级迁徙过渡、新品首铺），会造成短期数据异常。这类失真是授权的，不需要拦截，但需要标记，避免被误判为A/B/C类。</div>
+      <div class="dc-signal sd">信号：有管理层发起的战略事件标记
+处理：标记为D类，保护期内不触发其他类预警</div>
+    </div>
+  </div>
+
+  <!-- 1. 业务合约 -->
+  <div class="sec"><span class="sec-num">1</span>业务合约</div>
+  <div style="background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:16px;margin-bottom:14px">
+    <div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">
+      <span style="font-size:10px;font-family:'Space Mono',monospace;color:var(--red);text-transform:uppercase;flex-shrink:0;padding-top:2px;min-width:70px">输入承诺</span>
+      <span style="font-size:12px;color:var(--text2);line-height:1.7;flex:1">A值校准Agent提供的干净r值 + SAP/汉询的实时进出货和库存数据 + 价签识别的价格数据（未来接入）</span>
+    </div>
+    <div style="height:1px;background:var(--border);margin:8px 0"></div>
+    <div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">
+      <span style="font-size:10px;font-family:'Space Mono',monospace;color:var(--red);text-transform:uppercase;flex-shrink:0;padding-top:2px;min-width:70px">输出承诺</span>
+      <span style="font-size:12px;color:var(--text2);line-height:1.7;flex:1"><strong style="color:var(--text)">准确分类的失真预警</strong>（A/B/C/D四类）+ 传导路径图（哪个节点是起点，会影响哪些下游节点）+ 处置建议 + 紧急程度评级</span>
+    </div>
+    <div style="height:1px;background:var(--border);margin:8px 0"></div>
+    <div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">
+      <span style="font-size:10px;font-family:'Space Mono',monospace;color:var(--red);text-transform:uppercase;flex-shrink:0;padding-top:2px;min-width:70px">对谁负责</span>
+      <span style="font-size:12px;color:var(--text2);line-height:1.7;flex:1">对<strong style="color:var(--text)">Omakase推单Agent</strong>负责（失真节点的推单需要暂停或调整）· 对<strong style="color:var(--text)">DOM和业务员</strong>负责（他们是处置执行者）· 对<strong style="color:var(--text)">一本账</strong>负责（A类压货不应触发薪酬奖励）</span>
+    </div>
+    <div style="height:1px;background:var(--border);margin:8px 0"></div>
+    <div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">
+      <span style="font-size:10px;font-family:'Space Mono',monospace;color:var(--red);text-transform:uppercase;flex-shrink:0;padding-top:2px;min-width:70px">成功标准</span>
+      <span style="font-size:12px;color:var(--text2);line-height:1.7;flex:1">A类失真识别率 &gt;85%（传导到下一节点之前）· 误报率 &lt;15%（误报会产生不必要的人工处置负担）· D类正确豁免率 100%（战略扰动绝不能被误判）</span>
+    </div>
+    <div style="height:1px;background:var(--border);margin:8px 0"></div>
+    <div style="display:flex;gap:10px;align-items:flex-start">
+      <span style="font-size:10px;font-family:'Space Mono',monospace;color:var(--red);text-transform:uppercase;flex-shrink:0;padding-top:2px;min-width:70px">失败标准</span>
+      <span style="font-size:12px;color:var(--text2);line-height:1.7;flex:1">A类压货在触发铁律③之前未被检测到，或D类战略扰动被误判为A类导致正常业务被中断</span>
+    </div>
+  </div>
+
+  <!-- 2. 触发条件 -->
+  <div class="sec"><span class="sec-num">2</span>触发条件</div>
+  <div class="trigger-list mb">
+    <div class="trigger-item">
+      <span class="ti-type tt-rt">实时</span>
+      <div class="ti-body">
+        <div class="ti-name">每日 T+1 · 全量扫描</div>
+        <div class="ti-desc">每天凌晨数据同步完成后（预计07:00），对所有节点×SKU组合执行一次失真检测。这是主检测窗口，覆盖IPO2-IPO10。</div>
+        <div class="ti-cond">CRON: 0 7 * * * · 依赖: 汉询数据T+1同步完成</div>
+      </div>
+    </div>
+    <div class="trigger-item">
+      <span class="ti-type tt-rt">实时</span>
+      <div class="ti-body">
+        <div class="ti-name">价格异常触发 · 铁律①监控</div>
+        <div class="ti-desc">当任何节点检测到零售价低于底价（铁律①），立即触发C类窜货检测，不等T+1批次。需要价签识别Agent提供价格数据（目前待建）。</div>
+        <div class="ti-cond">TRIGGER: price &lt; iron_law_floor → 即时触发 · 优先级: CRITICAL</div>
+      </div>
+    </div>
+    <div class="trigger-item">
+      <span class="ti-type tt-up">上游触发</span>
+      <div class="ti-body">
+        <div class="ti-name">A值校准完成后 · 重新评估</div>
+        <div class="ti-desc">每次A值校准Agent完成校准，蝴蝶效应Agent用新的r值重新计算所有节点的真实消化率，可能触发新的预警或解除旧预警。</div>
+        <div class="ti-cond">TRIGGER: inf_events.event_type = 'CALIBRATION_COMPLETE'</div>
+      </div>
+    </div>
+    <div class="trigger-item">
+      <span class="ti-type tt-sched">月度</span>
+      <div class="ti-body">
+        <div class="ti-name">月末 · 铁律③消化率检查</div>
+        <div class="ti-desc">每月最后一天，计算所有经销商的消化率（月出货/月进货）。连续两月低于50%触发铁律③预警，升级为红色预警推送给管理层。</div>
+        <div class="ti-cond">CRON: 0 20 L * * · 铁律③: 消化率&lt;50%连续2月 → 红色预警</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 数据读取 -->
+  <div class="sec"><span class="sec-num">3</span>数据读取</div>
+  <table class="data-table mb">
+    <thead>
+      <tr><th>数据源</th><th>表名</th><th>关键字段</th><th>用于检测</th><th>重要性</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>A值校准Agent</td>
+        <td class="td-table">inf_node_targets</td>
+        <td class="td-field">r_target, confidence, calibrated_at</td>
+        <td>基准r值，计算真实消化率</td>
+        <td><span class="td-crit crit-core">核心</span></td>
+      </tr>
+      <tr>
+        <td>汉询/SFA</td>
+        <td class="td-table">inf_heartbeat</td>
+        <td class="td-field">r_actual, inflow_units, outflow_units, inventory_units, date</td>
+        <td>实际动销 vs 进货量，计算消化率，识别A类压货</td>
+        <td><span class="td-crit crit-core">核心</span></td>
+      </tr>
+      <tr>
+        <td>SAP事件</td>
+        <td class="td-table">inf_events</td>
+        <td class="td-field">event_type, node_id, sku_id, start_date, end_date, initiated_by</td>
+        <td>识别D类战略扰动（涨价/大促/年级迁徙），避免误判</td>
+        <td><span class="td-crit crit-core">核心</span></td>
+      </tr>
+      <tr>
+        <td>价签识别（待建）</td>
+        <td class="td-table">inf_price_scan</td>
+        <td class="td-field">store_id, sku_id, scanned_price, scan_date</td>
+        <td>C类窜货检测，价格低于底价即触发</td>
+        <td><span class="td-crit crit-core">核心（未来）</span></td>
+      </tr>
+      <tr>
+        <td>目标规则引擎</td>
+        <td class="td-table">inf_target_rules</td>
+        <td class="td-field">rule_id, iron_law_type, threshold</td>
+        <td>铁律①②③的阈值定义，触发对应预警级别</td>
+        <td><span class="td-crit crit-ref">参考</span></td>
+      </tr>
+      <tr>
+        <td>历史预警</td>
+        <td class="td-table">inf_alerts</td>
+        <td class="td-field">alert_type, node_id, sku_id, resolved_at, false_positive</td>
+        <td>避免重复预警；学习历史误报模式</td>
+        <td><span class="td-crit crit-ref">参考</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 4. 决策逻辑 -->
+  <div class="sec"><span class="sec-num">4</span>决策逻辑 · 四步检测流程</div>
+  <div class="logic-flow mb">
+
+    <div class="lf-step">
+      <div class="lf-num">1</div>
+      <div class="lf-body">
+        <div class="lf-title">D类豁免检查（最先执行）</div>
+        <div class="lf-desc">在所有检测之前，先查inf_events，识别当前是否有战略扰动保护期。保护期内的节点跳过A/B/C类检测，直接标记D类并记录原因。</div>
+        <div class="lf-formula">FOR each node × sku:
+  IF EXISTS strategic_event(node, sku, today):
+    label = 'D_STRATEGIC'
+    SKIP A/B/C detection
+    LOG: event_type, initiated_by, expected_end_date
+  ELSE:
+    CONTINUE to step 2</div>
+      </div>
+    </div>
+
+    <div class="lf-step">
+      <div class="lf-num">2</div>
+      <div class="lf-body">
+        <div class="lf-title">A类压货检测 · 消化率计算</div>
+        <div class="lf-desc">用过去30天的进出货数据，计算每个经销商节点的消化率。消化率是最核心的A类信号。</div>
+        <div class="lf-formula">-- 消化率计算
+digest_rate = SUM(outflow_30d) / SUM(inflow_30d)
+
+-- A类判断规则
+IF digest_rate &lt; 0.75 AND inventory_trend = 'RISING':
+  → A类预警候选（压货迹象）
+  
+IF digest_rate &lt; 0.50 AND consecutive_months >= 1:
+  → A类黄色预警（铁律③风险临近）
+  
+IF digest_rate &lt; 0.50 AND consecutive_months >= 2:
+  → A类红色预警（铁律③触发）→ 立即暂停推单
+
+-- 排除误判：同时检查r_actual是否也在下降
+-- 如果r_actual下降（真实需求下降）则不是压货，是市场问题
+IF digest_rate &lt; 0.75 AND r_actual_trend = 'DECLINING':
+  → 不是A类，是真实需求问题，触发B类复查</div>
+      </div>
+    </div>
+
+    <div class="lf-step">
+      <div class="lf-num">3</div>
+      <div class="lf-body">
+        <div class="lf-title">C类窜货检测 · 价格地图扫描</div>
+        <div class="lf-desc">比对各节点的实际售价与底价，同时检测区域间的进货量异常流动模式。</div>
+        <div class="lf-branches">
+          <div class="lf-branch lb-c">
+            <span class="lb-if" style="color:var(--purple)">信号①</span>
+            <span class="lb-then">某区域零售价 &lt; 铁律①底价 → 立即触发C类，不等批次</span>
+          </div>
+          <div class="lf-branch lb-c">
+            <span class="lb-if" style="color:var(--purple)">信号②</span>
+            <span class="lb-then">区域A进货量异常高 + 区域B进货量异常低 + 区域B出现低价 → 跨区窜货</span>
+          </div>
+          <div class="lf-branch lb-c">
+            <span class="lb-if" style="color:var(--purple)">信号③</span>
+            <span class="lb-then">电商平台出现低价（未来接入）→ 线上窜货，影响线下价格体系</span>
+          </div>
+        </div>
+        <div style="margin-top:6px;font-size:11px;color:var(--text3);padding:8px;background:rgba(255,255,255,.03);border-radius:8px">⚠️ 当前限制：价签识别（A23）未上线前，C类检测只能基于进货量异常，无法直接检测零售价。这是最大的检测盲区。</div>
+      </div>
+    </div>
+
+    <div class="lf-step">
+      <div class="lf-num">4</div>
+      <div class="lf-body">
+        <div class="lf-title">传导路径计算 · 影响范围评估</div>
+        <div class="lf-desc">检测到失真后，计算它会沿供应链向哪些下游节点传导，预估影响范围和时间窗口。</div>
+        <div class="lf-formula">-- 传导路径（以A类压货为例）
+SOURCE NODE: 经销商（IPO2-4）
+  ↓ 如果不处置，预计T+14天传导到
+LEVEL_1: 旗下所有门店（IPO8-10）→ 补货压力减少 → 货架断货风险
+  ↓ 如果仍不处置，预计T+30天传导到
+LEVEL_2: 消费者（IPO11-13）→ 断货体验 → 流失风险
+  ↓ 同时向上传导
+UPSTREAM: 公司仓库（IPO1）→ 出货减少 → 库存积压
+
+-- 紧急程度评级
+CRITICAL: 铁律触发 或 传导已到门店层
+HIGH:     消化率<75% 且连续下降
+MEDIUM:   消化率<75% 首次出现
+LOW:      消化率75-85% 观察期</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 传导链路可视化 -->
+  <div class="sec"><span class="sec-num">+</span>传导链路 · A类压货案例</div>
+  <div class="cascade-wrap mb">
+    <div class="cascade-title">🦋 宝仓贸易（浦东）· 遵循自然500ml · A类压货传导路径</div>
+    <div class="cascade-nodes">
+      <div class="cn-row">
+        <div class="cn-dot" style="background:rgba(255,95,95,.15);border:1px solid rgba(255,95,95,.3)">🏭</div>
+        <div class="cn-body">
+          <div class="cn-ipo">IPO1 · 公司仓库</div>
+          <div class="cn-name">公司发货正常</div>
+          <div class="cn-signal">本月出货量+15%，表面健康。问题在下游，这里暂时看不到。</div>
+          <div class="cn-alert ca-green">✅ 正常</div>
+        </div>
+      </div>
+      <div class="cn-row">
+        <div class="cn-dot" style="background:rgba(255,95,95,.2);border:1px solid rgba(255,95,95,.4)">🤝</div>
+        <div class="cn-body">
+          <div class="cn-ipo">IPO2-4 · 经销商 ← 失真起点</div>
+          <div class="cn-name">宝仓贸易 · 库存持续积压</div>
+          <div class="cn-signal">进货量月增15%，但消化率从上月72%降至61%，库存环比+28%。r_actual未变，说明真实需求没有增长，是压货。</div>
+          <div class="cn-alert ca-red">🔴 A类失真 · 消化率61% · 趋势恶化</div>
+        </div>
+      </div>
+      <div class="cn-row">
+        <div class="cn-dot" style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3)">🏪</div>
+        <div class="cn-body">
+          <div class="cn-ipo">IPO8-10 · 零售门店 ← T+14天预测</div>
+          <div class="cn-name">大润发金桥 · 补货将减少</div>
+          <div class="cn-signal">经销商库存积压后会减少向门店补货。预计14天后门店库存水位开始下降，可能触发断货。</div>
+          <div class="cn-alert ca-amber">⚠️ 预测风险 · T+14天</div>
+        </div>
+      </div>
+      <div class="cn-row">
+        <div class="cn-dot" style="background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.3)">👥</div>
+        <div class="cn-body">
+          <div class="cn-ipo">IPO11-13 · 消费者 ← T+30天预测</div>
+          <div class="cn-name">仁恒河滨城 · 断货体验风险</div>
+          <div class="cn-signal">如果门店断货，VIP会员A088等高频用户会遭遇断货体验。高频用户一旦流失很难挽回。</div>
+          <div class="cn-alert ca-blue">💡 流失风险 · T+30天</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 输出规格 -->
+  <div class="sec"><span class="sec-num">5</span>输出规格</div>
+  <div class="output-list mb">
+
+    <div class="output-item">
+      <div class="oi-top">
+        <span class="oi-icon">📱</span>
+        <span class="oi-name">企微预警推送 · 分级接收</span>
+        <span class="oi-channel ch-wecom">企业微信</span>
+      </div>
+      <div class="oi-desc">根据紧急程度，推送给不同层级。CRITICAL推给DOM+城市经理，HIGH推给DOM，MEDIUM推给业务员。避免预警疲劳。</div>
+      <div class="oi-example">【🔴 铁律③预警】宝仓贸易 · 遵循自然500ml
+────────────────────────
+失真类型：A类 · 渠道压货
+消化率：本月61% / 上月72% / 铁律阈值50%
+库存水位：当前4.2a（正常2a满仓）
+传导预测：T+14天影响旗下3家门店补货
+
+⚡ 需要立即行动：
+① 暂停本月对宝仓贸易的推单
+② DOM王磊约谈经销商，了解压货原因
+③ 检查浦东区是否有窜货情况（C类联查）
+
+[确认已了解] [已安排处置] [申请豁免]
+────────────────────────
+处置期限：48小时内回复</div>
+    </div>
+
+    <div class="output-item">
+      <div class="oi-top">
+        <span class="oi-icon">🗄️</span>
+        <span class="oi-name">写入预警记录</span>
+        <span class="oi-channel ch-db">inf_alerts</span>
+      </div>
+      <div class="oi-desc">每条预警写入inf_alerts，包含失真类型、置信度、传导路径、处置状态、最终结果。这是学习数据。</div>
+      <div class="oi-example">INSERT INTO inf_alerts VALUES (
+  alert_type:    'A_CHANNEL_STUFFING',
+  node_id:       'DIST-BC',
+  sku_id:        'ZR5',
+  severity:      'HIGH',
+  digest_rate:   0.61,
+  confidence:    0.82,
+  cascade_nodes: ['STORE-BC-DL','STORE-BC-JL','STORE-BC-XLH'],
+  cascade_eta:   14,  -- 传导预计天数
+  action_items:  ['PAUSE_OMAKASE','DOM_FOLLOWUP'],
+  status:        'PENDING',
+  created_at:    NOW()
+)</div>
+    </div>
+
+    <div class="output-item">
+      <div class="oi-top">
+        <span class="oi-icon">🔗</span>
+        <span class="oi-name">通知Omakase暂停推单</span>
+        <span class="oi-channel ch-api">内部事件总线</span>
+      </div>
+      <div class="oi-desc">A类失真确认后，立即向inf_events写入OMAKASE_PAUSE事件，Omakase Agent收到后暂停对该节点的推单，直到消化率恢复。</div>
+      <div class="oi-example">INSERT INTO inf_events VALUES (
+  event_type: 'OMAKASE_PAUSE',
+  node_id:    'DIST-BC',
+  sku_id:     'ZR5',
+  reason:     'A_CHANNEL_STUFFING',
+  resume_condition: 'digest_rate > 0.65',
+  created_by: 'BUTTERFLY_AGENT'
+)</div>
+    </div>
+
+    <div class="output-item">
+      <div class="oi-top">
+        <span class="oi-icon">📊</span>
+        <span class="oi-name">晨报异常摘要</span>
+        <span class="oi-channel ch-ui">v8.1 晨报中台</span>
+      </div>
+      <div class="oi-desc">每日晨报中显示当日新增预警数量、各类型分布、最紧急的3条，让管理层一眼掌握全局健康度。</div>
+      <div class="oi-example">今日蝴蝶效应扫描结果 2026-04-14
+──────────────────────
+扫描节点：54个 · 发现异常：3条
+🔴 CRITICAL: 0条
+🟡 HIGH:     2条（宝仓贸易A类 · 宝山经销商A类）
+🔵 MEDIUM:   1条（长宁遵循自然消化率预警）
+✅ 健康节点：51个
+──────────────────────
+D类豁免：2个节点（618备货保护期）</div>
+    </div>
+
+  </div>
+
+  <!-- 6. 自主边界 -->
+  <div class="sec"><span class="sec-num">6</span>自主边界</div>
+  <div class="boundary-grid mb">
+    <div class="boundary-col">
+      <div class="bc-title" style="color:var(--green)">✅ Agent可以自动执行</div>
+      <div class="bc-item" style="background:var(--green-dim);border-radius:7px"><div class="bc-dot" style="background:var(--green)"></div>D类战略扰动豁免标记</div>
+      <div class="bc-item" style="background:var(--green-dim);border-radius:7px"><div class="bc-dot" style="background:var(--green)"></div>MEDIUM级预警生成和推送</div>
+      <div class="bc-item" style="background:var(--green-dim);border-radius:7px"><div class="bc-dot" style="background:var(--green)"></div>通知Omakase暂停失真节点推单</div>
+      <div class="bc-item" style="background:var(--green-dim);border-radius:7px"><div class="bc-dot" style="background:var(--green)"></div>写入inf_alerts预警记录</div>
+      <div class="bc-item" style="background:var(--green-dim);border-radius:7px"><div class="bc-dot" style="background:var(--green)"></div>消化率恢复后自动解除预警</div>
+      <div class="bc-item" style="background:var(--green-dim);border-radius:7px"><div class="bc-dot" style="background:var(--green)"></div>传导路径预测计算</div>
+    </div>
+    <div class="boundary-col">
+      <div class="bc-title" style="color:var(--red)">❌ 必须人工确认</div>
+      <div class="bc-item" style="background:var(--red-dim);border-radius:7px"><div class="bc-dot" style="background:var(--red)"></div>铁律③触发（消化率&lt;50%两月）的处置决定</div>
+      <div class="bc-item" style="background:var(--red-dim);border-radius:7px"><div class="bc-dot" style="background:var(--red)"></div>CRITICAL级预警的处置方案</div>
+      <div class="bc-item" style="background:var(--red-dim);border-radius:7px"><div class="bc-dot" style="background:var(--red)"></div>经销商合同暂停或终止</div>
+      <div class="bc-item" style="background:var(--red-dim);border-radius:7px"><div class="bc-dot" style="background:var(--red)"></div>C类窜货的处罚决定</div>
+      <div class="bc-item" style="background:var(--red-dim);border-radius:7px"><div class="bc-dot" style="background:var(--red)"></div>预警豁免申请审批</div>
+      <div class="bc-item" style="background:var(--red-dim);border-radius:7px"><div class="bc-dot" style="background:var(--red)"></div>A类压货的原因认定（压货 vs 真实需求下降）</div>
+    </div>
+  </div>
+
+  <!-- 依赖 -->
+  <div class="sec"><span class="sec-num">+</span>依赖关系</div>
+  <div class="dep-row mb">
+    <div class="dep-chip dep-needs">⚠️ 需要：A值校准Agent先完成校准</div>
+    <div class="dep-chip dep-needs">⚠️ 需要：inf_events事件表（D类豁免）</div>
+    <div class="dep-chip dep-needs">⚠️ 未来需要：价签识别（C类完整检测）</div>
+    <div class="dep-chip dep-feeds">✅ 输出给：Omakase推单Agent（暂停信号）</div>
+    <div class="dep-chip dep-feeds">✅ 输出给：一本账（压货期不计薪酬奖励）</div>
+    <div class="dep-chip dep-feeds">✅ 输出给：晨报中台（每日摘要）</div>
+    <div class="dep-chip dep-uses">📊 使用：目标规则引擎（铁律阈值）</div>
+  </div>
+
+  <!-- SQL -->
+  <div class="sec"><span class="sec-num">+</span>核心SQL · Java团队实现参考</div>
+  <div class="sql-block">-- ① 计算经销商消化率（过去30天）
+SELECT
+  node_id,
+  sku_id,
+  SUM(outflow_units) / NULLIF(SUM(inflow_units), 0) AS digest_rate,
+  SUM(inventory_units) / COUNT(*) AS avg_inventory,
+  COUNT(*) AS data_days
+FROM inf_heartbeat
+WHERE date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+GROUP BY node_id, sku_id;
+
+-- ② 检查是否有D类战略扰动保护
+SELECT COUNT(*) FROM inf_events
+WHERE node_id = ?
+  AND sku_id = ?
+  AND event_type = 'STRATEGIC'
+  AND start_date &lt;= NOW()
+  AND end_date >= NOW();
+
+-- ③ 写入预警
+INSERT INTO inf_alerts (
+  alert_type, node_id, sku_id, severity,
+  digest_rate, confidence, cascade_nodes,
+  cascade_eta, action_items, status, created_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', NOW());
+
+-- ④ 通知Omakase暂停推单
+INSERT INTO inf_events (
+  event_type, node_id, sku_id, reason,
+  resume_condition, created_by, created_at
+) VALUES (
+  'OMAKASE_PAUSE', ?, ?, 'A_CHANNEL_STUFFING',
+  'digest_rate > 0.65', 'BUTTERFLY_AGENT', NOW()
+);</div>
+
+  <!-- AI -->
+  <div class="ai-wrap">
+    <div class="ai-hdr">🦋 蝴蝶效应 Agent · 问答</div>
+    <div class="cps">
+      <div class="cp" onclick="ask('A类压货和真实需求下降，检测逻辑有什么本质区别？')">A类 vs 真实需求下降</div>
+      <div class="cp" onclick="ask('价签识别没有上线之前，C类窜货检测的局限性是什么？')">C类检测的盲区</div>
+      <div class="cp" onclick="ask('D类战略扰动豁免如果被滥用怎么办？')">D类豁免被滥用</div>
+      <div class="cp" onclick="ask('蝴蝶效应Agent和A值校准Agent同时运行会不会冲突？')">两个Agent的协调</div>
+    </div>
+    <div class="ai-bubble">你好，我是蝴蝶效应 Agent 规格说明书。问我任何关于失真检测逻辑、传导机制、边界设计的问题。</div>
+    <div class="ai-resp" id="aiResp"><div class="ai-q" id="aiQ"></div><div id="aiA"></div></div>
+    <div class="ai-row">
+      <input class="ai-in" id="aiIn" placeholder="问关于蝴蝶效应Agent的任何问题…" onkeydown="if(event.key==='Enter')ask(this.value,this)"/>
+      <button class="ai-btn" onclick="ask(document.getElementById('aiIn').value,document.getElementById('aiIn'))">↑</button>
+    </div>
+  </div>
+
+  <!-- 导航 -->
+  <div style="background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:16px;text-align:center">
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px">第②张规格说明书完成</div>
+    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">下一张：🍣 无菜单推单 Agent（Omakase）</div>
+    <div style="font-size:11px;color:var(--text3)">依赖前两张的干净r值和无失真判断 · 自动计算补货量 · 直接推单</div>
+  </div>
+
+</div>
+
+<script>
+function tick(){const n=new Date();document.getElementById('ck').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')}
+tick();setInterval(tick,1000);
+
+async function ask(q,el){
+  if(!q||!q.trim())return;
+  if(el instanceof HTMLElement)el.value='';
+  const resp=document.getElementById('aiResp');
+  const qEl=document.getElementById('aiQ');
+  const aEl=document.getElementById('aiA');
+  resp.classList.add('show');
+  qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="td-wrap"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+
+  const sys=`你是INFINITY OS蝴蝶效应Agent规格说明书。
+核心职责：每日T+1对所有IPO2-10节点检测四类失真：A类压货（消化率异常）、B类促销扰动（A值校准已处理）、C类窜货（价格异常）、D类战略扰动（授权豁免）。
+关键逻辑：D类豁免先检查；A类通过消化率+r_actual趋势双重判断；C类当前有盲区（价签识别未上线）；铁律③（消化率<50%连续2月）是最高级别预警。
+依赖：上游是A值校准Agent；下游通知Omakase暂停推单。
+自主边界：MEDIUM预警可自动推送；CRITICAL需人工决策。
+用中文简洁回答，不超过150字。`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})
+    });
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'—'}</div>`;
+  }catch(e){
+    aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`;
+  }
+}
+</script>
+</body>
+</html>
