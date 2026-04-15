@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>欣和SH · 业务数据填报 v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f6fa;--white:#fff;--border:#e2e5f0;--border2:#c8ccda;
+  --text:#1a1d2e;--text2:#6b7080;--text3:#9ea5b8;
+  --amber:#f5a623;--al:#fff8ee;--ab:#fde8b8;
+  --green:#22c55e;--gl:#f0fdf4;--gb:#bbf7d0;
+  --red:#ef4444;--rl:#fef2f2;--rb:#fecaca;
+  --blue:#3b82f6;--bl:#eff6ff;--bb:#bfdbfe;
+  --purple:#8b5cf6;--pl:#f5f3ff;--pb:#ddd6fe;
+  --teal:#14b8a6;--tl:#f0fdfa;--tb:#99f6e4;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;padding-bottom:120px}
+
+/* HEADER */
+.header{background:var(--white);border-bottom:1px solid var(--border);padding:12px 16px;
+  position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.06);
+  display:flex;align-items:center;justify-content:space-between;gap:10px}
+.hl{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.hs{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000}
+.ht{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.hst{font-size:10px;color:var(--text2);margin-top:1px}
+.hprog{text-align:right;flex-shrink:0}
+.hpl{font-size:10px;color:var(--text2);margin-bottom:3px}
+.hpb{width:72px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-left:auto}
+.hpf{height:100%;border-radius:3px;background:var(--amber);transition:width .3s}
+.hpc{font-size:10px;color:var(--amber);font-weight:700;margin-top:2px;text-align:right}
+
+/* STEP 1: 事业部选择 */
+.step-card{margin:14px 14px 0;background:var(--white);border:1px solid var(--border);border-radius:13px;padding:14px}
+.step-title{font-size:12px;font-weight:700;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.step-num{width:20px;height:20px;border-radius:6px;background:var(--amber);color:#000;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+.bu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bu-btn{border:2px solid var(--border2);border-radius:11px;padding:14px 12px;cursor:pointer;
+  transition:all .2s;background:var(--bg);text-align:center}
+.bu-btn.on.consumer{border-color:var(--blue);background:var(--bl)}
+.bu-btn.on.foodservice{border-color:var(--teal);background:var(--tl)}
+.bu-icon{font-size:24px;margin-bottom:6px}
+.bu-name{font-size:13px;font-weight:700;margin-bottom:3px}
+.bu-desc{font-size:10px;color:var(--text2);line-height:1.5}
+.bu-r{font-size:10px;margin-top:6px;padding:3px 8px;border-radius:8px;display:inline-block;font-weight:600}
+.consumer .bu-r{background:var(--bl);color:var(--blue)}
+.foodservice .bu-r{background:var(--tl);color:var(--teal)}
+
+/* STEP 2: 城市阶段 */
+.phase-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+@media(min-width:500px){.phase-grid{grid-template-columns:repeat(4,1fr)}}
+.ph-btn{border:1.5px solid var(--border2);border-radius:10px;padding:10px 8px;cursor:pointer;
+  transition:all .2s;background:var(--bg);text-align:center}
+.ph-btn.on{border-color:var(--amber);background:var(--al)}
+.ph-num{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text3);line-height:1}
+.ph-btn.on .ph-num{color:var(--amber)}
+.ph-name{font-size:11px;font-weight:700;color:var(--text2);margin-top:3px}
+.ph-btn.on .ph-name{color:var(--amber)}
+.ph-sub{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* STEP 3: 说明 */
+.def-box{background:var(--al);border:1px solid var(--ab);border-radius:10px;padding:11px 13px;margin-top:10px;font-size:12px;color:var(--text2);line-height:1.8}
+.def-box strong{color:var(--amber)}
+
+/* SKU列表 */
+.group-hdr{margin:16px 14px 8px;display:flex;align-items:center;gap:8px}
+.gd{width:9px;height:9px;border-radius:50%}
+.gn{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.gc{font-size:10px;color:var(--text2);background:var(--border);padding:2px 7px;border-radius:10px;margin-left:auto}
+
+.sku-card{margin:0 14px 8px;background:var(--white);border:1.5px solid var(--border);border-radius:13px;overflow:hidden;transition:border-color .2s}
+.sku-card.done{border-color:var(--gb);background:var(--gl)}
+.sku-card.skip{opacity:.45;pointer-events:none}
+
+.sku-top{padding:12px 14px;display:flex;align-items:center;gap:10px}
+.sku-ic{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px}
+.sku-nm{flex:1}
+.sku-name{font-size:13px;font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sku-desc{font-size:10px;color:var(--text2)}
+.tag{font-size:9px;padding:2px 6px;border-radius:5px;font-weight:600}
+.tag-shared{background:#f1f5f9;color:#64748b}
+.tag-consumer{background:var(--bl);color:var(--blue)}
+.tag-fs{background:var(--tl);color:var(--teal)}
+.sku-badge{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:600;flex-shrink:0}
+.badge-done{background:var(--gl);color:var(--green);border:1px solid var(--gb)}
+.badge-todo{background:var(--border);color:var(--text3)}
+
+.sku-fields{padding:0 14px 13px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sku-card.done .sku-fields{border-top-color:var(--gb)}
+.fl{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px}
+.fl span{color:var(--red)}
+.fl em{font-style:normal;font-size:10px;color:var(--text3);font-weight:400;margin-left:3px}
+input[type=number]{width:100%;background:var(--bg);border:1.5px solid var(--border2);border-radius:9px;
+  padding:9px 11px;font-size:15px;font-family:'Noto Sans SC',sans-serif;color:var(--text);
+  outline:none;transition:all .2s;-webkit-appearance:none}
+input[type=number]:focus{border-color:var(--amber);background:var(--white);box-shadow:0 0 0 3px rgba(245,166,35,.1)}
+input[type=number].v{border-color:var(--green);background:var(--white)}
+input::placeholder{color:var(--text3)}
+.fh{font-size:10px;margin-top:4px}
+.fh-ok{color:var(--green)}
+.fh-ng{color:var(--text3)}
+
+.gps{display:flex;gap:5px;flex-wrap:wrap}
+.gp{width:40px;height:40px;border-radius:9px;border:1.5px solid var(--border2);background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .15s;font-size:12px;font-weight:700;color:var(--text3)}
+.gp sub{font-size:7px;font-weight:400;margin-top:1px;display:block;text-align:center}
+.gp.on{color:#fff;border-color:transparent}
+.gp.g1.on{background:#22c55e}
+.gp.g2.on{background:#f5a623}
+.gp.g3.on{background:#3b82f6}
+.gp.g4.on{background:#8b5cf6}
+.gp.g5.on{background:#ef4444}
+
+/* 空状态 */
+.empty{margin:30px 14px;text-align:center;padding:30px;background:var(--white);border-radius:13px;border:1px dashed var(--border2)}
+.empty-ic{font-size:36px;margin-bottom:10px}
+.empty-t{font-size:14px;font-weight:700;margin-bottom:6px}
+.empty-s{font-size:12px;color:var(--text2)}
+
+/* 汇总 */
+.sumcard{margin:14px 14px 0;background:var(--white);border:2px solid var(--border);border-radius:13px;padding:14px;display:none}
+.sumt{font-size:14px;font-weight:700;margin-bottom:10px}
+.sumrows{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.sumrow{display:flex;justify-content:space-between;align-items:center;padding:7px 11px;border-radius:8px;background:var(--bg);font-size:12px}
+.srl{font-weight:600}
+.srr{display:flex;gap:10px}
+.srv{display:flex;align-items:center;gap:3px;font-size:11px}
+.srvl{color:var(--text3)}
+.srvn{font-weight:700}
+.warn{font-size:12px;color:var(--red);background:var(--rl);border:1px solid var(--rb);border-radius:9px;padding:9px 12px;margin-bottom:10px;display:none}
+.expbtn{width:100%;padding:15px;border-radius:11px;font-size:14px;font-weight:700;
+  font-family:'Noto Sans SC',sans-serif;border:none;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:7px}
+.expbtn.ready{background:linear-gradient(135deg,#f5a623,#ff8c3a);color:#000;box-shadow:0 4px 14px rgba(245,166,35,.3)}
+.expbtn.no{background:var(--border);color:var(--text3);cursor:not-allowed}
+
+/* modal */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
+.overlay.show{display:flex}
+.modal{background:var(--white);border-radius:18px 18px 0 0;padding:16px;width:100%;max-width:760px;max-height:85vh;display:flex;flex-direction:column;gap:10px}
+.mh{display:flex;align-items:center;justify-content:space-between}
+.mht{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+.mhx{width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;font-size:16px;color:var(--text2);display:flex;align-items:center;justify-content:center}
+.minstr{font-size:12px;color:var(--text2);background:var(--bl);border:1px solid var(--bb);border-radius:9px;padding:10px 12px;line-height:1.7}
+.minstr strong{color:var(--blue)}
+.sqlbox{background:#1a1d2e;border-radius:11px;padding:13px;font-family:'Space Mono',monospace;font-size:10px;color:#4ade80;line-height:1.9;overflow-y:auto;flex:1;max-height:38vh;white-space:pre}
+.mbtns{display:flex;gap:8px}
+.mbcopy{flex:1;padding:13px;border-radius:10px;background:var(--amber);border:none;font-size:13px;font-weight:700;color:#000;cursor:pointer;font-family:'Noto Sans SC',sans-serif}
+.mbclose{padding:13px 18px;border-radius:10px;background:var(--bg);border:1px solid var(--border2);font-size:13px;color:var(--text2);cursor:pointer;font-family:'Noto Sans SC',sans-serif}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hl">
+    <div class="hs">欣</div>
+    <div><div class="ht">业务数据填报</div><div class="hst">欣和SH · INFINITY OS v2</div></div>
+  </div>
+  <div class="hprog">
+    <div class="hpl">完成进度</div>
+    <div class="hpb"><div class="hpf" id="pbar" style="width:0%"></div></div>
+    <div class="hpc" id="pcnt">0 / 0</div>
+  </div>
+</div>
+
+<!-- STEP 1: 事业部 -->
+<div class="step-card">
+  <div class="step-title"><div class="step-num">1</div>选择事业部</div>
+  <div class="bu-grid">
+    <div class="bu-btn consumer" id="bu-consumer" onclick="selectBU('consumer')">
+      <div class="bu-icon">🛒</div>
+      <div class="bu-name">消费者事业部</div>
+      <div class="bu-desc">零售渠道 · 超市/便利/电商<br>IPO10零售店日出货量</div>
+      <div class="bu-r">r = 零售店日出货量</div>
+    </div>
+    <div class="bu-btn foodservice" id="bu-foodservice" onclick="selectBU('foodservice')">
+      <div class="bu-icon">🍜</div>
+      <div class="bu-name">餐饮事业部</div>
+      <div class="bu-desc">B端渠道 · 餐厅/酒店/食堂<br>餐厅/酒店日进货量</div>
+      <div class="bu-r">r = 餐厅日进货量</div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2: 城市阶段 -->
+<div class="step-card" style="margin-top:10px">
+  <div class="step-title"><div class="step-num">2</div>选择城市进入阶段</div>
+  <div class="phase-grid">
+    <div class="ph-btn" id="ph-pilot" onclick="selectPhase('pilot')">
+      <div class="ph-num">试</div>
+      <div class="ph-name">试点区域</div>
+      <div class="ph-sub">验证阶段</div>
+    </div>
+    <div class="ph-btn" id="ph-batch1" onclick="selectPhase('batch1')">
+      <div class="ph-num">1</div>
+      <div class="ph-name">第一批城市</div>
+      <div class="ph-sub">已铺开</div>
+    </div>
+    <div class="ph-btn" id="ph-batch2" onclick="selectPhase('batch2')">
+      <div class="ph-num">2</div>
+      <div class="ph-name">第二批城市</div>
+      <div class="ph-sub">铺货中</div>
+    </div>
+    <div class="ph-btn" id="ph-batch3" onclick="selectPhase('batch3')">
+      <div class="ph-num">3</div>
+      <div class="ph-name">第三批城市</div>
+      <div class="ph-sub">待进入</div>
+    </div>
+  </div>
+  <div class="def-box" id="defbox" style="display:none"></div>
+</div>
+
+<!-- SKU列表 -->
+<div id="skuSection">
+  <div class="empty">
+    <div class="empty-ic">☝️</div>
+    <div class="empty-t">请先选择事业部和城市阶段</div>
+    <div class="empty-s">选择后会显示对应的SKU填写表格</div>
+  </div>
+</div>
+
+<!-- 汇总 -->
+<div class="sumcard" id="sumcard">
+  <div class="sumt">📊 填写汇总</div>
+  <div class="sumrows" id="sumrows"></div>
+  <div class="warn" id="warnmsg">⚠️ 还有未填写的SKU，请补充完整后再导出</div>
+  <button class="expbtn no" id="expbtn" onclick="doExport()">📤 导出SQL · 发给开发团队</button>
+</div>
+
+<!-- SQL Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="mh"><div class="mht">✅ 导出完成</div><button class="mhx" onclick="closeModal()">×</button></div>
+    <div class="minstr"><strong>操作：</strong>点「复制全部」，通过微信/企微发给Java开发团队，告诉他们「在MySQL执行这段代码」。城市信息待定，后续补充即可。</div>
+    <div class="sqlbox" id="sqlbox"></div>
+    <div class="mbtns">
+      <button class="mbcopy" id="copybtn" onclick="doCopy()">📋 复制全部</button>
+      <button class="mbclose" onclick="closeModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ 数据定义 ══════════════════════════════════════════
+// channels: 'both'=两个事业部共用, 'consumer'=消费者专属, 'foodservice'=餐饮专属
+const BRANDS=[
+  {name:'六月鲜',color:'#f5a623',skus:[
+    {id:'lyx_teji_885ml',   name:'特级酱油 885ml', icon:'🏅',desc:'旗舰SKU·高端定位',  channel:'both'},
+    {id:'lyx_ziran_500ml',  name:'遵循自然 500ml', icon:'🧂',desc:'战略新品·核心成长', channel:'consumer'},
+    {id:'lyx_ziran_1l',    name:'遵循自然 1L',    icon:'🧂',desc:'战略新品·大容量',  channel:'consumer'},
+    {id:'lyx_hongshao',    name:'红烧酱油系列',   icon:'🍶',desc:'现金奶牛·成熟期',  channel:'both'},
+    {id:'lyx_hongshao_xl', name:'红烧酱油大装',   icon:'🍶',desc:'大包装·B端/家庭',  channel:'both'},
+    {id:'lyx_fs_special',  name:'餐饮专供装',     icon:'🍶',desc:'餐饮专属·大桶装',  channel:'foodservice'},
+  ]},
+  {name:'味达美',color:'#3b82f6',skus:[
+    {id:'wdm_main',  name:'味达美酱油（主）',icon:'🫙',desc:'大众市场·现金流',channel:'both'},
+    {id:'wdm_fresh', name:'味达美鲜酱油',   icon:'🫙',desc:'大众升级版',     channel:'consumer'},
+    {id:'wdm_catering',name:'味达美餐饮装', icon:'🫙',desc:'餐饮专属规格',   channel:'foodservice'},
+  ]},
+  {name:'禾然',color:'#22c55e',skus:[
+    {id:'hr_jiangyou',name:'禾然有机酱油',icon:'🌿',desc:'有机定位·战略押注',channel:'both'},
+    {id:'hr_vinegar', name:'禾然有机醋',  icon:'🌿',desc:'有机延伸',        channel:'consumer'},
+  ]},
+  {name:'葱伴侣',color:'#8b5cf6',skus:[
+    {id:'cbl_main',name:'葱伴侣酱油',icon:'🧅',desc:'场景专属·葱油料理',channel:'consumer'},
+  ]},
+  {name:'小康',color:'#ef4444',skus:[
+    {id:'xk_main',name:'小康酱油',icon:'🏷️',desc:'防御性低价·竞品拦截',channel:'both'},
+  ]},
+];
+
+const PHASES={
+  pilot: {name:'试点区域', desc:'<strong>r_target</strong> = 试点城市的真实日动销量（样本数据，可能偏低）<br><strong>年级</strong> = 按照试点城市实际情况填写，通常为年级1-2'},
+  batch1:{name:'第一批城市',desc:'<strong>r_target</strong> = 已成熟城市的稳定日动销量<br><strong>年级</strong> = 按各城市真实成熟度填写，通常年级2-4'},
+  batch2:{name:'第二批城市',desc:'<strong>r_target</strong> = 铺货期间的预期日动销量（可参考第一批城市同类市场）<br><strong>年级</strong> = 通常年级1-2，新进入市场'},
+  batch3:{name:'第三批城市',desc:'<strong>r_target</strong> = 预计进入后的目标日动销量（基于市场调研或类比数据）<br><strong>年级</strong> = 通常年级1，全新市场'},
+};
+
+const BU_LABELS={
+  consumer:{tag:'消费者',color:'var(--blue)',bg:'var(--bl)',rLabel:'IPO10零售店日出货量（件/天）'},
+  foodservice:{tag:'餐饮',color:'var(--teal)',bg:'var(--tl)',rLabel:'餐厅/酒店日进货量（件/天）'},
+};
+
+const GLB=['','新品','成长','成熟','特殊','防御'];
+const GLC=['','#22c55e','#f5a623','#3b82f6','#8b5cf6','#ef4444'];
+
+// 状态
+let curBU=null, curPhase=null;
+const fd={}; // fd[buKey] = {skuId: {r, g}}
+
+function getKey(bu,phase){return bu+'_'+phase}
+function ensureFD(bu,phase){
+  const k=getKey(bu,phase);
+  if(!fd[k]){
+    fd[k]={};
+    getVisibleSkus(bu).forEach(s=>fd[k][s.id]={r:'',g:0});
+  }
+  return fd[k];
+}
+function getVisibleSkus(bu){
+  return BRANDS.flatMap(b=>b.skus.filter(s=>s.channel==='both'||s.channel===bu));
+}
+
+// ══ 事业部选择 ════════════════════════════════════════
+function selectBU(bu){
+  curBU=bu;
+  ['consumer','foodservice'].forEach(b=>{
+    const el=document.getElementById('bu-'+b);
+    el.classList.toggle('on',b===bu);
+  });
+  render();
+}
+
+// ══ 阶段选择 ══════════════════════════════════════════
+function selectPhase(phase){
+  curPhase=phase;
+  Object.keys(PHASES).forEach(p=>{
+    document.getElementById('ph-'+p).classList.toggle('on',p===phase);
+  });
+  const db=document.getElementById('defbox');
+  db.style.display='block';
+  db.innerHTML=PHASES[phase].desc;
+  render();
+}
+
+// ══ 主渲染 ════════════════════════════════════════════
+function render(){
+  const sec=document.getElementById('skuSection');
+  if(!curBU||!curPhase){
+    sec.innerHTML=`<div class="empty"><div class="empty-ic">☝️</div><div class="empty-t">请先选择事业部和城市阶段</div><div class="empty-s">选择后显示对应SKU填写表格</div></div>`;
+    document.getElementById('sumcard').style.display='none';
+    return;
+  }
+
+  const data=ensureFD(curBU,curPhase);
+  const buLabel=BU_LABELS[curBU];
+  sec.innerHTML='';
+
+  BRANDS.forEach(brand=>{
+    const skus=brand.skus.filter(s=>s.channel==='both'||s.channel===curBU);
+    if(!skus.length)return;
+
+    const gh=document.createElement('div');
+    gh.className='group-hdr';
+    gh.innerHTML=`<div class="gd" style="background:${brand.color}"></div><div class="gn" style="color:${brand.color}">${brand.name}</div><div class="gc">${skus.length}个SKU</div>`;
+    sec.appendChild(gh);
+
+    skus.forEach(sku=>{
+      const d=data[sku.id]||{r:'',g:0};
+      const ok=d.r&&d.g>0;
+      const channelTag=sku.channel==='both'?'<span class="tag tag-shared">通用</span>':
+        sku.channel==='consumer'?'<span class="tag tag-consumer">消费者专属</span>':
+        '<span class="tag tag-fs">餐饮专属</span>';
+
+      const card=document.createElement('div');
+      card.className='sku-card'+(ok?' done':'');
+      card.id='card-'+sku.id;
+      card.innerHTML=`
+      <div class="sku-top">
+        <div class="sku-ic" style="background:${brand.color}18;border:1px solid ${brand.color}30">${sku.icon}</div>
+        <div class="sku-nm">
+          <div class="sku-name">${sku.name} ${channelTag}</div>
+          <div class="sku-desc">${sku.desc}</div>
+        </div>
+        <span class="sku-badge ${ok?'badge-done':'badge-todo'}">${ok?'✓ 已填':'待填写'}</span>
+      </div>
+      <div class="sku-fields">
+        <div>
+          <div class="fl">每日目标动销量<span>*</span><em>件/天</em></div>
+          <input type="number" inputmode="decimal" placeholder="例：5.5" step="0.1" min="0.1"
+            value="${d.r}" class="${d.r?'v':''}"
+            oninput="setR('${sku.id}',this.value)"/>
+          <div class="fh ${d.r?'fh-ok':'fh-ng'}">${d.r?'✓ '+d.r+'件/天':buLabel.rLabel}</div>
+        </div>
+        <div>
+          <div class="fl">年级<span>*</span><em>此城市阶段</em></div>
+          <div class="gps">${[1,2,3,4,5].map(g=>`
+            <div class="gp g${g}${d.g===g?' on':''}" onclick="setG('${sku.id}',${g})">
+              ${g}<sub>${GLB[g]}</sub>
+            </div>`).join('')}</div>
+          <div class="fh ${d.g>0?'fh-ok':'fh-ng'}">${d.g>0?'✓ 年级'+d.g+'·'+GLB[d.g]:'点击选择'}</div>
+        </div>
+      </div>`;
+      sec.appendChild(card);
+    });
+  });
+
+  refreshProgress();
+  refreshSummary();
+}
+
+function setR(skuId,val){
+  if(!curBU||!curPhase)return;
+  const data=ensureFD(curBU,curPhase);
+  if(data[skuId])data[skuId].r=val;
+  const card=document.getElementById('card-'+skuId);
+  if(!card)return;
+  const input=card.querySelector('input');
+  input.className=val?'v':'';
+  const hint=card.querySelectorAll('.fh')[0];
+  hint.className='fh '+(val?'fh-ok':'fh-ng');
+  hint.textContent=val?'✓ '+val+'件/天':BU_LABELS[curBU].rLabel;
+  updateCardStatus(skuId);
+  refreshProgress();
+  refreshSummary();
+}
+
+function setG(skuId,g){
+  if(!curBU||!curPhase)return;
+  const data=ensureFD(curBU,curPhase);
+  if(data[skuId])data[skuId].g=g;
+  const card=document.getElementById('card-'+skuId);
+  if(!card)return;
+  card.querySelectorAll('.gp').forEach((p,i)=>{
+    const gr=i+1;
+    p.className=`gp g${gr}${g===gr?' on':''}`;
+  });
+  const hint=card.querySelectorAll('.fh')[1];
+  hint.className='fh fh-ok';
+  hint.textContent='✓ 年级'+g+'·'+GLB[g];
+  updateCardStatus(skuId);
+  refreshProgress();
+  refreshSummary();
+}
+
+function updateCardStatus(skuId){
+  const data=ensureFD(curBU,curPhase);
+  const d=data[skuId]||{r:'',g:0};
+  const ok=d.r&&d.g>0;
+  const card=document.getElementById('card-'+skuId);
+  if(!card)return;
+  card.className='sku-card'+(ok?' done':'');
+  const badge=card.querySelector('.sku-badge');
+  badge.className='sku-badge '+(ok?'badge-done':'badge-todo');
+  badge.textContent=ok?'✓ 已填':'待填写';
+}
+
+function refreshProgress(){
+  if(!curBU||!curPhase){
+    document.getElementById('pbar').style.width='0%';
+    document.getElementById('pcnt').textContent='0 / 0';
+    return;
+  }
+  const data=ensureFD(curBU,curPhase);
+  const total=Object.keys(data).length;
+  const filled=Object.values(data).filter(d=>d.r&&d.g>0).length;
+  const pct=total?Math.round(filled/total*100):0;
+  document.getElementById('pbar').style.width=pct+'%';
+  document.getElementById('pcnt').textContent=filled+' / '+total;
+}
+
+function refreshSummary(){
+  if(!curBU||!curPhase){document.getElementById('sumcard').style.display='none';return}
+  document.getElementById('sumcard').style.display='block';
+  const data=ensureFD(curBU,curPhase);
+  let html='',allOk=true;
+  BRANDS.forEach(brand=>{
+    const skus=brand.skus.filter(s=>s.channel==='both'||s.channel===curBU);
+    skus.forEach(sku=>{
+      const d=data[sku.id]||{r:'',g:0};
+      const ok=d.r&&d.g>0;
+      if(!ok)allOk=false;
+      html+=`<div class="sumrow">
+        <span class="srl">${sku.icon} ${sku.name}</span>
+        <div class="srr">
+          ${d.r?`<span class="srv"><span class="srvl">r</span><span class="srvn">${d.r}件/天</span></span>`:'<span style="font-size:10px;color:var(--red)">⚠️未填</span>'}
+          ${d.g>0?`<span class="srv"><span class="srvl">年级</span><span class="srvn" style="color:${GLC[d.g]}">年级${d.g}</span></span>`:'<span style="font-size:10px;color:var(--red)">⚠️未选</span>'}
+        </div>
+      </div>`;
+    });
+  });
+  document.getElementById('sumrows').innerHTML=html;
+  document.getElementById('warnmsg').style.display=allOk?'none':'block';
+  const btn=document.getElementById('expbtn');
+  btn.className='expbtn '+(allOk?'ready':'no');
+}
+
+// ══ 导出SQL ═══════════════════════════════════════════
+function doExport(){
+  if(!curBU||!curPhase)return;
+  const data=ensureFD(curBU,curPhase);
+  const allOk=Object.values(data).every(d=>d.r&&d.g>0);
+  if(!allOk)return;
+
+  const phaseNames={pilot:'试点区域',batch1:'第一批城市',batch2:'第二批城市',batch3:'第三批城市'};
+  const buNames={consumer:'消费者事业部',foodservice:'餐饮事业部'};
+
+  let sql=`-- ================================================================
+-- 欣和SH · INFINITY OS · 业务数据填报
+-- 事业部：${buNames[curBU]}
+-- 城市阶段：${phaseNames[curPhase]}（城市清单待补充）
+-- 生成时间：${new Date().toLocaleString('zh-CN')}
+-- ================================================================
+
+`;
+  BRANDS.forEach(brand=>{
+    const skus=brand.skus.filter(s=>s.channel==='both'||s.channel===curBU);
+    if(!skus.length)return;
+    sql+=`-- ${brand.name}\n`;
+    skus.forEach(sku=>{
+      const d=data[sku.id];
+      sql+=`INSERT INTO inf_node_targets
+  (sku_id, business_unit, city_phase, r_target, grade, updated_at)
+VALUES
+  ('${sku.id}', '${curBU}', '${curPhase}', ${d.r}, ${d.g}, NOW())
+ON DUPLICATE KEY UPDATE
+  r_target=${d.r}, grade=${d.g}, updated_at=NOW();
+-- ${sku.name}：r=${d.r}件/天，年级${d.g}·${GLB[d.g]}\n\n`;
+    });
+  });
+  sql+=`-- ================================================================
+-- 注：城市清单待业务团队补充后更新
+-- 执行完成后请回复确认
+-- ================================================================`;
+
+  document.getElementById('sqlbox').textContent=sql;
+  document.getElementById('overlay').classList.add('show');
+}
+
+function doCopy(){
+  navigator.clipboard.writeText(document.getElementById('sqlbox').textContent).then(()=>{
+    const b=document.getElementById('copybtn');
+    b.textContent='✅ 已复制！发给开发团队';
+    b.style.background='var(--green)';
+    setTimeout(()=>{b.textContent='📋 复制全部';b.style.background='var(--amber)'},3000);
+  });
+}
+function closeModal(){document.getElementById('overlay').classList.remove('show')}
+</script>
+</body>
+</html>
