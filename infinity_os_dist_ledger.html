@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 经销商一本账</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;--card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;padding-bottom:60px}
+
+/* TOP */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(7,8,14,.97);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;padding:0 14px;height:52px}
+.logo{display:flex;align-items:center;gap:7px}
+.ls{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000}
+.ln{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.ln em{color:var(--amber);font-style:normal}
+.hb{background:var(--card2);border:1px solid var(--border2);border-radius:16px;
+  padding:5px 11px;font-size:11px;color:var(--text2);text-decoration:none;white-space:nowrap}
+.ck{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+
+/* 经销商选择栏 */
+.dist-bar{background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:10px 14px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;
+  position:sticky;top:52px;z-index:91}
+.dist-bar::-webkit-scrollbar{display:none}
+.dist-chip{display:flex;flex-direction:column;align-items:center;padding:8px 12px;
+  border-radius:11px;border:1px solid var(--border);background:var(--card);
+  cursor:pointer;transition:all .2s;flex-shrink:0;min-width:80px}
+.dist-chip.on{border-color:rgba(78,205,196,.4);background:var(--teal-dim)}
+.dc-name{font-size:12px;font-weight:700;margin-bottom:2px}
+.dist-chip.on .dc-name{color:var(--teal)}
+.dc-region{font-size:10px;color:var(--text3)}
+.dc-health{font-size:10px;font-family:'Space Mono',monospace;margin-top:3px}
+
+/* Tab栏 */
+.tab-bar{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);
+  position:sticky;top:104px;z-index:90}
+.tb{flex:1;padding:10px 4px;display:flex;flex-direction:column;align-items:center;
+  gap:2px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tb.on{border-bottom-color:var(--amber)}
+.tb-ic{font-size:13px}
+.tb-lbl{font-size:11px;font-weight:600;color:var(--text3)}
+.tb.on .tb-lbl{color:var(--amber)}
+.tb-sub{font-size:8px;color:var(--text3);font-family:'Space Mono',monospace}
+
+/* 页面 */
+.pg{display:none;padding:12px 14px}
+.pg.on{display:block}
+
+/* section header */
+.sec{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.09em;
+  text-transform:uppercase;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* 经销商概览卡 */
+.dist-hero{background:linear-gradient(135deg,rgba(78,205,196,.08),rgba(9,9,15,1));
+  border:1px solid rgba(78,205,196,.2);border-radius:14px;padding:16px;margin-bottom:12px;
+  position:relative;overflow:hidden}
+.dist-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--teal),transparent)}
+.dh-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.dh-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:3px}
+.dh-region{font-size:11px;color:var(--text3)}
+.dh-score{text-align:right}
+.dh-score-val{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--teal);line-height:1}
+.dh-score-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+.dh-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ds-box{background:rgba(255,255,255,.04);border-radius:9px;padding:9px 8px;text-align:center}
+.ds-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;line-height:1}
+.ds-lbl{font-size:9px;color:var(--text3);margin-top:3px;line-height:1.3}
+
+/* 铁律状态 */
+.iron-row{display:flex;gap:8px;margin-bottom:12px}
+.iron-chip{flex:1;border-radius:10px;padding:10px 8px;text-align:center;border:1px solid}
+.iron-chip.ok{background:var(--green-dim);border-color:rgba(74,222,128,.2)}
+.iron-chip.warn{background:var(--amber-dim);border-color:rgba(245,166,35,.2)}
+.iron-chip.bad{background:var(--red-dim);border-color:rgba(255,95,95,.2)}
+.ic-icon{font-size:16px;margin-bottom:4px}
+.ic-name{font-size:10px;font-weight:700;margin-bottom:2px}
+.ic-val{font-family:'Space Mono',monospace;font-size:11px}
+.ic-chip.ok .ic-name{color:var(--green)}
+.ic-chip.warn .ic-name{color:var(--amber)}
+.ic-chip.bad .ic-name{color:var(--red)}
+
+/* SKU账单 */
+.sku-bill{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.sku-row{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;cursor:pointer;transition:all .15s}
+.sku-row:hover{border-color:var(--border2)}
+.sku-row.open{border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.03)}
+.sr-main{display:flex;align-items:center;gap:10px;padding:11px 13px}
+.sr-icon{width:34px;height:34px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:15px}
+.sr-body{flex:1;min-width:0}
+.sr-name{font-size:13px;font-weight:600;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.sr-meta{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;
+  display:flex;gap:8px;flex-wrap:wrap}
+.sr-bar-wrap{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:5px}
+.sr-bar-fill{height:100%;border-radius:2px;transition:width .6s ease}
+.sr-right{text-align:right;flex-shrink:0;min-width:72px}
+.sr-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;line-height:1}
+.sr-sub{font-size:10px;margin-top:3px;font-family:'Space Mono',monospace}
+.sr-caret{font-size:12px;color:var(--text3);flex-shrink:0;transition:transform .2s}
+.sku-row.open .sr-caret{transform:rotate(90deg)}
+
+/* SKU展开详情 */
+.sr-detail{display:none;border-top:1px solid rgba(255,255,255,.04);padding:10px 13px}
+.sku-row.open .sr-detail{display:block}
+.sd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px}
+.sd-box{background:var(--bg3);border-radius:9px;padding:8px 10px;border:1px solid var(--border)}
+.sd-lbl{font-size:9px;color:var(--text3);margin-bottom:4px}
+.sd-val{font-size:13px;font-weight:700;line-height:1.2}
+
+/* 水位可视化 */
+.water-viz{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.wv-title{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:8px}
+.wv-bar-wrap{height:20px;background:rgba(255,255,255,.04);border-radius:6px;overflow:hidden;position:relative;margin-bottom:5px}
+.wv-fill{height:100%;border-radius:6px;transition:width .8s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:6px}
+.wv-fill-text{font-size:10px;font-weight:700;color:#000}
+.wv-marks{display:flex;justify-content:space-between;font-size:9px;color:var(--text3);font-family:'Space Mono',monospace}
+.wv-markers{position:absolute;top:0;bottom:0;pointer-events:none}
+.wv-marker{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.3)}
+.wv-marker-lbl{position:absolute;top:-16px;font-size:8px;color:var(--text3);transform:translateX(-50%)}
+
+/* 门店下钻 */
+.store-list{display:flex;flex-direction:column;gap:5px}
+.store-row{background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .15s}
+.store-row:hover{background:var(--card2);border-color:var(--border2)}
+.store-icon{width:30px;height:30px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:13px}
+.store-body{flex:1;min-width:0}
+.store-name{font-size:12px;font-weight:600;margin-bottom:2px;display:flex;align-items:center;gap:5px}
+.store-meta{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+.store-right{text-align:right;flex-shrink:0}
+.store-val{font-size:14px;font-weight:700;font-family:'Syne',sans-serif;color:var(--blue)}
+.store-sub{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* 财务视图 */
+.finance-card{background:var(--card);border:1px solid var(--border2);border-radius:13px;
+  padding:14px;margin-bottom:10px;position:relative;overflow:hidden}
+.finance-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.fc-amber::before{background:linear-gradient(90deg,var(--amber),transparent)}
+.fc-green::before{background:linear-gradient(90deg,var(--green),transparent)}
+.fc-red::before{background:linear-gradient(90deg,var(--red),transparent)}
+.fc-title{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.fc-rows{display:flex;flex-direction:column;gap:6px}
+.fc-row{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;
+  background:var(--bg3);border-radius:8px;font-size:12px}
+.fcl{color:var(--text2)}
+.fcr{font-weight:700;font-family:'Space Mono',monospace;font-size:11px}
+.rebate-bar{margin-top:10px;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.rebate-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--green))}
+.rebate-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px;font-family:'Space Mono',monospace}
+
+/* Omakase推单预览 */
+.omakase-card{background:linear-gradient(135deg,rgba(78,205,196,.07),rgba(9,9,15,1));
+  border:1px solid rgba(78,205,196,.2);border-radius:13px;padding:14px;margin-bottom:10px}
+.oc-title{font-size:13px;font-weight:700;color:var(--teal);margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.oc-rows{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.oc-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:9px;border:1px solid rgba(255,255,255,.05)}
+.oc-sku{flex:1;font-size:12px;font-weight:600}
+.oc-reason{font-size:10px;color:var(--text3)}
+.oc-qty{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--teal);flex-shrink:0}
+.oc-unit{font-size:10px;color:var(--text3);flex-shrink:0}
+.oc-skip{opacity:.4}
+.oc-total{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;
+  background:var(--teal-dim);border:1px solid rgba(78,205,196,.2);border-radius:9px}
+.oc-total-lbl{font-size:11px;color:var(--text2)}
+.oc-total-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--teal)}
+.oc-actions{display:flex;gap:7px;margin-top:10px}
+.btn-approve{flex:1;padding:11px;border-radius:10px;background:var(--teal);border:none;
+  font-size:13px;font-weight:700;color:#000;cursor:pointer;font-family:'Noto Sans SC',sans-serif}
+.btn-edit{padding:11px 16px;border-radius:10px;background:rgba(255,255,255,.08);
+  border:1px solid var(--border2);font-size:13px;color:var(--text2);cursor:pointer;font-family:'Noto Sans SC',sans-serif}
+
+/* 蝴蝶效应预警 */
+.alert-card{background:var(--red-dim);border:1px solid rgba(255,95,95,.25);
+  border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;gap:10px;align-items:flex-start}
+.alert-ic{font-size:18px;flex-shrink:0;margin-top:1px}
+.alert-body{flex:1}
+.alert-title{font-size:12px;font-weight:700;color:var(--red);margin-bottom:3px}
+.alert-desc{font-size:11px;color:var(--text2);line-height:1.6}
+.alert-action{font-size:11px;color:var(--amber);margin-top:6px;font-weight:600}
+
+/* tag */
+.tag{font-size:9px;padding:1px 6px;border-radius:5px;font-weight:600;font-family:'Space Mono',monospace}
+.tg{background:var(--green-dim);color:var(--green)}
+.tw{background:var(--amber-dim);color:var(--amber)}
+.tb-tag{background:var(--red-dim);color:var(--red)}
+.tp{background:var(--blue-dim);color:var(--blue)}
+
+/* AI问答 */
+.ai-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.ai-hdr{padding:10px 13px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.07em;text-transform:uppercase}
+.cps{display:flex;gap:5px;padding:8px 12px;overflow-x:auto;scrollbar-width:none}
+.cps::-webkit-scrollbar{display:none}
+.cp{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:4px 10px;font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.cp:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-dim)}
+.ai-bubble{margin:0 12px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text2);line-height:1.65}
+.ai-resp{display:none;margin:0 12px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.ai-resp.show{display:block}
+.ai-q{font-size:10px;color:var(--text3);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ai-row{display:flex;gap:6px;padding:6px 12px 10px}
+.ai-in{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:12px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif}
+.ai-in:focus{border-color:rgba(78,205,196,.4)}
+.ai-in::placeholder{color:var(--text3)}
+.ai-btn{width:36px;height:36px;border-radius:9px;background:var(--teal);border:none;cursor:pointer;font-size:14px;flex-shrink:0;color:#000}
+.td-wrap{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:tda 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tda{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><div class="ls">∞</div><div class="ln">INFINITY <em>OS</em></div></div>
+  <a class="hb" href="index.html">⌂ 门户</a>
+  <div class="ck" id="ck"></div>
+</div>
+
+<!-- 经销商选择 -->
+<div class="dist-bar" id="distBar"></div>
+
+<!-- Tab -->
+<div class="tab-bar">
+  <div class="tb on" id="tb-sku" onclick="switchTab('sku')">
+    <span class="tb-ic">📦</span><span class="tb-lbl">SKU账单</span><span class="tb-sub">动销·库存</span>
+  </div>
+  <div class="tb" id="tb-store" onclick="switchTab('store')">
+    <span class="tb-ic">🏪</span><span class="tb-lbl">门店分布</span><span class="tb-sub">下钻到门店</span>
+  </div>
+  <div class="tb" id="tb-finance" onclick="switchTab('finance')">
+    <span class="tb-ic">💹</span><span class="tb-lbl">财务账单</span><span class="tb-sub">账期·返利</span>
+  </div>
+  <div class="tb" id="tb-order" onclick="switchTab('order')">
+    <span class="tb-ic">🍣</span><span class="tb-lbl">本周推单</span><span class="tb-sub">Omakase</span>
+  </div>
+</div>
+
+<!-- ══ SKU账单 ══ -->
+<div class="pg on" id="pg-sku">
+  <div class="dist-hero" id="distHero"></div>
+  <div id="alertArea"></div>
+  <div class="sec">SKU动销账单</div>
+  <div class="sku-bill" id="skuBill"></div>
+</div>
+
+<!-- ══ 门店分布 ══ -->
+<div class="pg" id="pg-store">
+  <div class="sec">旗下门店动销</div>
+  <div class="store-list" id="storeList"></div>
+</div>
+
+<!-- ══ 财务账单 ══ -->
+<div class="pg" id="pg-finance">
+  <div id="financeContent"></div>
+</div>
+
+<!-- ══ 本周推单 ══ -->
+<div class="pg" id="pg-order">
+  <div id="orderContent"></div>
+  <div class="ai-wrap">
+    <div class="ai-hdr">🍣 Omakase推单 · AI问答</div>
+    <div class="cps">
+      <div class="cp" onclick="askAI('这次推单的补货量是怎么计算出来的？')">推单量怎么算的</div>
+      <div class="cp" onclick="askAI('特级酱油为什么本周暂停推单？')">为什么暂停推单</div>
+      <div class="cp" onclick="askAI('我的库存消化率是多少？铁律③安全吗？')">消化率是否安全</div>
+      <div class="cp" onclick="askAI('下个月大促我应该提前备多少货？')">大促备货建议</div>
+    </div>
+    <div class="ai-bubble">你好，我是Omakase推单系统。问我任何关于补货、库存、推单计算的问题。</div>
+    <div class="ai-resp" id="aiResp"><div class="ai-q" id="aiQ"></div><div id="aiA"></div></div>
+    <div class="ai-row">
+      <input class="ai-in" id="aiIn" placeholder="问推单系统任何问题…" onkeydown="if(event.key==='Enter')askAI(this.value,this)"/>
+      <button class="ai-btn" onclick="askAI(document.getElementById('aiIn').value,document.getElementById('aiIn'))">↑</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ 数据 ══════════════════════════════════════════════
+const DISTS = [
+  {
+    id:'bc', name:'宝仓贸易', region:'浦东', score:72,
+    inflow:8400, outflow:5100, inventory:3300, digestRate:0.61,
+    iron1:true, iron2:true, iron3:false,
+    rev:142000, target:200000, ach:71, growth:+4.2,
+    creditGrade:'B', overdueDays:0, rebateEst:4200,
+    skus:[
+      {id:'zr5',name:'遵循自然500ml',icon:'🧂',grade:2,color:'#f5a623',
+       r_actual:3.8,r_target:5.5,ach:69,inflow:1200,outflow:820,inv:380,invA:2.6,digestRate:0.68,
+       ironOk:true,profit:4200,
+       stores:['bc1','bc2']},
+      {id:'hs', name:'红烧酱油系列',icon:'🍶',grade:3,color:'#60a5fa',
+       r_actual:8.1,r_target:9.0,ach:90,inflow:3600,outflow:3100,inv:500,invA:1.6,digestRate:0.86,
+       ironOk:true,profit:12400,
+       stores:['bc1','bc2','bc3']},
+      {id:'hsl',name:'红烧酱油大装',icon:'🍶',grade:3,color:'#60a5fa',
+       r_actual:5.2,r_target:6.0,ach:87,inflow:2100,outflow:1800,inv:300,invA:1.4,digestRate:0.86,
+       ironOk:true,profit:7800,
+       stores:['bc1','bc3']},
+      {id:'tj', name:'特级酱油885ml',icon:'🏅',grade:5,color:'#ff5f5f',
+       r_actual:1.8,r_target:4.0,ach:45,inflow:1500,outflow:1380,inv:120,invA:4.2,digestRate:0.51,
+       ironOk:false,profit:-1200,
+       stores:['bc1']},
+    ],
+    stores:[
+      {id:'bc1',name:'大润发金桥',cls:'S+',r:4.8,rT:5.5,ach:87,rev:42000},
+      {id:'bc2',name:'家乐福浦东',cls:'S', r:3.2,rT:4.2,ach:76,rev:31000},
+      {id:'bc3',name:'世纪联华浦东',cls:'B',r:1.8,rT:3.0,ach:60,rev:21000},
+    ]
+  },
+  {
+    id:'hp', name:'黄浦经销商', region:'黄浦', score:87,
+    inflow:6200, outflow:5400, inventory:800, digestRate:0.87,
+    iron1:true, iron2:true, iron3:true,
+    rev:124000, target:140000, ach:89, growth:+8.1,
+    creditGrade:'A', overdueDays:0, rebateEst:8680,
+    skus:[
+      {id:'zr5',name:'遵循自然500ml',icon:'🧂',grade:2,color:'#f5a623',
+       r_actual:5.2,r_target:5.5,ach:95,inflow:1500,outflow:1400,inv:100,invA:0.7,digestRate:0.93,
+       ironOk:true,profit:6800,stores:['hp1','hp2']},
+      {id:'hs', name:'红烧酱油系列',icon:'🍶',grade:3,color:'#60a5fa',
+       r_actual:8.8,r_target:9.0,ach:98,inflow:3800,outflow:3600,inv:200,invA:0.7,digestRate:0.95,
+       ironOk:true,profit:15600,stores:['hp1','hp2']},
+      {id:'hsl',name:'红烧酱油大装',icon:'🍶',grade:3,color:'#60a5fa',
+       r_actual:4.8,r_target:5.0,ach:96,inflow:900,outflow:850,inv:50,invA:0.3,digestRate:0.94,
+       ironOk:true,profit:5200,stores:['hp1']},
+      {id:'tj', name:'特级酱油885ml',icon:'🏅',grade:5,color:'#ff5f5f',
+       r_actual:2.8,r_target:3.5,ach:80,inflow:0,outflow:500,inv:450,invA:4.5,digestRate:0.82,
+       ironOk:true,profit:2200,stores:['hp1','hp2']},
+    ],
+    stores:[
+      {id:'hp1',name:'大润发五角场',cls:'S+',r:5.2,rT:5.5,ach:95,rev:48000},
+      {id:'hp2',name:'家乐福黄浦', cls:'S', r:4.1,rT:4.5,ach:91,rev:38000},
+    ]
+  },
+  {
+    id:'mh', name:'闵行经销商', region:'闵行', score:95,
+    inflow:9800, outflow:9200, inventory:600, digestRate:0.94,
+    iron1:true, iron2:true, iron3:true,
+    rev:158000, target:160000, ach:99, growth:+14.2,
+    creditGrade:'S', overdueDays:0, rebateEst:15800,
+    skus:[
+      {id:'zr5',name:'遵循自然500ml',icon:'🧂',grade:2,color:'#f5a623',
+       r_actual:5.4,r_target:5.5,ach:98,inflow:2100,outflow:2000,inv:100,invA:0.5,digestRate:0.95,
+       ironOk:true,profit:9800,stores:['mh1','mh2']},
+      {id:'hs', name:'红烧酱油系列',icon:'🍶',grade:3,color:'#60a5fa',
+       r_actual:8.9,r_target:9.0,ach:99,inflow:4800,outflow:4600,inv:200,invA:0.7,digestRate:0.96,
+       ironOk:true,profit:21200,stores:['mh1','mh2']},
+      {id:'hsl',name:'红烧酱油大装',icon:'🍶',grade:3,color:'#60a5fa',
+       r_actual:5.0,r_target:5.0,ach:100,inflow:1800,outflow:1800,inv:0,invA:0,digestRate:1.0,
+       ironOk:true,profit:8800,stores:['mh1']},
+      {id:'tj', name:'特级酱油885ml',icon:'🏅',grade:5,color:'#ff5f5f',
+       r_actual:3.2,r_target:3.5,ach:91,inflow:1100,outflow:800,inv:300,invA:2.7,digestRate:0.73,
+       ironOk:true,profit:4200,stores:['mh1','mh2']},
+    ],
+    stores:[
+      {id:'mh1',name:'大润发古美',cls:'S+',r:6.1,rT:6.5,ach:94,rev:56000},
+      {id:'mh2',name:'家乐福闵行',cls:'S', r:4.9,rT:5.0,ach:98,rev:45000},
+    ]
+  },
+];
+
+// ══ 状态 ══════════════════════════════════════════════
+let curDistId = 'bc';
+let curTab = 'sku';
+
+function getCurDist(){ return DISTS.find(d=>d.id===curDistId) }
+
+// ══ 初始化 ════════════════════════════════════════════
+function init(){
+  renderDistBar();
+  renderAll();
+}
+
+function renderDistBar(){
+  const bar = document.getElementById('distBar');
+  bar.innerHTML = DISTS.map(d=>{
+    const scoreColor = d.score>=85?'var(--green)':d.score>=65?'var(--amber)':'var(--red)';
+    return `<div class="dist-chip ${d.id===curDistId?'on':''}" onclick="selDist('${d.id}')">
+      <div class="dc-name">${d.name}</div>
+      <div class="dc-region">${d.region}</div>
+      <div class="dc-health" style="color:${scoreColor}">${d.score}分</div>
+    </div>`;
+  }).join('');
+}
+
+function selDist(id){
+  curDistId=id;
+  renderDistBar();
+  renderAll();
+}
+
+function switchTab(t){
+  curTab=t;
+  ['sku','store','finance','order'].forEach(x=>{
+    document.getElementById('tb-'+x).classList.toggle('on',x===t);
+    document.getElementById('pg-'+x).classList.toggle('on',x===t);
+  });
+}
+
+function renderAll(){
+  renderHero();
+  renderAlerts();
+  renderSkuBill();
+  renderStores();
+  renderFinance();
+  renderOrder();
+}
+
+// ══ Hero卡 ════════════════════════════════════════════
+function renderHero(){
+  const d = getCurDist();
+  const achColor = d.ach>=85?'var(--green)':d.ach>=65?'var(--amber)':'var(--red)';
+  const digestColor = d.digestRate>=0.75?'var(--green)':d.digestRate>=0.5?'var(--amber)':'var(--red)';
+  document.getElementById('distHero').innerHTML=`
+    <div class="dh-top">
+      <div>
+        <div class="dh-name">🤝 ${d.name}</div>
+        <div class="dh-region">${d.region} · 信用评级 ${d.creditGrade}</div>
+      </div>
+      <div class="dh-score">
+        <div class="dh-score-val" style="color:${achColor}">${d.ach}%</div>
+        <div class="dh-score-lbl">本月达成率</div>
+      </div>
+    </div>
+    <div class="dh-stats">
+      <div class="ds-box">
+        <div class="ds-val" style="color:var(--amber)">¥${(d.rev/10000).toFixed(1)}万</div>
+        <div class="ds-lbl">本月收入</div>
+      </div>
+      <div class="ds-box">
+        <div class="ds-val" style="color:${digestColor}">${(d.digestRate*100).toFixed(0)}%</div>
+        <div class="ds-lbl">消化率</div>
+      </div>
+      <div class="ds-box">
+        <div class="ds-val" style="color:var(--blue)">${d.stores.length}家</div>
+        <div class="ds-lbl">覆盖门店</div>
+      </div>
+      <div class="ds-box">
+        <div class="ds-val" style="color:var(--green)">+${d.growth}%</div>
+        <div class="ds-lbl">环比增长</div>
+      </div>
+    </div>
+    <div class="iron-row" style="margin-top:10px;margin-bottom:0">
+      <div class="iron-chip ${d.iron1?'ok':'bad'}">
+        <div class="ic-icon">⚡</div>
+        <div class="ic-name" style="color:${d.iron1?'var(--green)':'var(--red)'}">铁律①</div>
+        <div class="ic-val" style="color:${d.iron1?'var(--green)':'var(--red)'}">${d.iron1?'✓ 价格合规':'✗ 违规'}</div>
+      </div>
+      <div class="iron-chip ${d.iron2?'ok':'bad'}">
+        <div class="ic-icon">🚫</div>
+        <div class="ic-name" style="color:${d.iron2?'var(--green)':'var(--red)'}">铁律②</div>
+        <div class="ic-val" style="color:${d.iron2?'var(--green)':'var(--red)'}">${d.iron2?'✓ 上限合规':'✗ 违规'}</div>
+      </div>
+      <div class="iron-chip ${d.iron3?'ok':d.digestRate>=0.5?'warn':'bad'}">
+        <div class="ic-icon">📊</div>
+        <div class="ic-name" style="color:${d.iron3?'var(--green)':d.digestRate>=0.5?'var(--amber)':'var(--red)'}">铁律③</div>
+        <div class="ic-val" style="color:${d.iron3?'var(--green)':d.digestRate>=0.5?'var(--amber)':'var(--red)'}">${(d.digestRate*100).toFixed(0)}% 消化率</div>
+      </div>
+    </div>`;
+}
+
+// ══ 预警 ══════════════════════════════════════════════
+function renderAlerts(){
+  const d = getCurDist();
+  const area = document.getElementById('alertArea');
+  const alerts = [];
+  if(d.digestRate < 0.65)
+    alerts.push({title:'🦋 A类失真风险：消化率偏低',
+      desc:`本月消化率${(d.digestRate*100).toFixed(0)}%，低于健康水位75%。货在仓库里积压，本周Omakase推单已减量。`,
+      action:'建议：DOM约谈经销商，排查压货原因'});
+  d.skus.forEach(s=>{
+    if(s.invA > 3.5)
+      alerts.push({title:`⚠️ ${s.name} 库存过高`,
+        desc:`当前库存${s.invA.toFixed(1)}a，超过2a满仓标准。如不加快动销，将触发铁律③风险。`,
+        action:'建议：加强门店促销，或申请D类活动保护标记'});
+  });
+  area.innerHTML = alerts.map(a=>`
+    <div class="alert-card">
+      <div class="alert-ic">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-desc">${a.desc}</div>
+        <div class="alert-action">${a.action}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ══ SKU账单 ═══════════════════════════════════════════
+function renderSkuBill(){
+  const d = getCurDist();
+  const bill = document.getElementById('skuBill');
+  bill.innerHTML = '';
+  d.skus.forEach(sku=>{
+    const achColor = sku.ach>=85?'var(--green)':sku.ach>=65?'var(--amber)':'var(--red)';
+    const invColor = sku.invA<=2?'var(--green)':sku.invA<=3?'var(--amber)':'var(--red)';
+    const divEl = document.createElement('div');
+    divEl.className = 'sku-row';
+    divEl.id = 'sr-'+sku.id;
+
+    // 水位可视化
+    const waterPct = Math.min(100, sku.invA/4*100);
+    const waterColor = sku.invA<=2?'#4ade80':sku.invA<=3?'#f5a623':'#ff5f5f';
+    const mark1a = 25, mark2a = 50, mark3a = 75;
+
+    divEl.innerHTML = `
+    <div class="sr-main" onclick="toggleSku('${sku.id}')">
+      <div class="sr-icon" style="background:${sku.color}18;border:1px solid ${sku.color}30">${sku.icon}</div>
+      <div class="sr-body">
+        <div class="sr-name">${sku.name}
+          <span class="tag ${sku.ach>=85?'tg':sku.ach>=65?'tw':'tb-tag'}">${sku.ach}%达成</span>
+          ${!sku.ironOk?'<span class="tag tb-tag">价格异常</span>':''}
+        </div>
+        <div class="sr-meta">
+          <span>r实际${sku.r_actual}</span>
+          <span>r目标${sku.r_target}</span>
+          <span>消化${(sku.digestRate*100).toFixed(0)}%</span>
+          <span>库存${sku.invA.toFixed(1)}a</span>
+        </div>
+        <div class="sr-bar-wrap">
+          <div class="sr-bar-fill" style="width:${sku.ach}%;background:${achColor}"></div>
+        </div>
+      </div>
+      <div class="sr-right">
+        <div class="sr-val" style="color:${sku.color}">¥${(sku.profit>0?'+':'')}${(sku.profit/10000).toFixed(1)}万</div>
+        <div class="sr-sub" style="color:${sku.profit>0?'var(--green)':'var(--red)'}">
+          ${sku.profit>0?'盈利':'亏损'}
+        </div>
+      </div>
+      <div class="sr-caret">›</div>
+    </div>
+    <div class="sr-detail">
+      <div class="sd-grid">
+        <div class="sd-box">
+          <div class="sd-lbl">本月进货</div>
+          <div class="sd-val" style="color:var(--blue)">${sku.inflow}件</div>
+        </div>
+        <div class="sd-box">
+          <div class="sd-lbl">本月出货</div>
+          <div class="sd-val" style="color:var(--green)">${sku.outflow}件</div>
+        </div>
+        <div class="sd-box">
+          <div class="sd-lbl">当前库存</div>
+          <div class="sd-val" style="color:${invColor}">${sku.inv}件</div>
+        </div>
+        <div class="sd-box">
+          <div class="sd-lbl">r实际</div>
+          <div class="sd-val" style="color:${achColor}">${sku.r_actual}件/天</div>
+        </div>
+        <div class="sd-box">
+          <div class="sd-lbl">r目标</div>
+          <div class="sd-val">${sku.r_target}件/天</div>
+        </div>
+        <div class="sd-box">
+          <div class="sd-lbl">差距</div>
+          <div class="sd-val" style="color:${achColor}">${(sku.r_actual-sku.r_target).toFixed(1)}</div>
+        </div>
+      </div>
+      <div class="water-viz">
+        <div class="wv-title">库存水位（以a为单位）</div>
+        <div class="wv-bar-wrap">
+          <div class="wv-fill" style="width:${waterPct}%;background:${waterColor}">
+            <span class="wv-fill-text">${sku.invA.toFixed(1)}a</span>
+          </div>
+          <div class="wv-markers">
+            <div class="wv-marker" style="left:${mark1a}%"><span class="wv-marker-lbl">1a预警</span></div>
+            <div class="wv-marker" style="left:${mark2a}%"><span class="wv-marker-lbl">2a满仓</span></div>
+          </div>
+        </div>
+        <div class="wv-marks">
+          <span>空</span><span>1a预警</span><span>2a满仓</span><span>3a压货</span><span>4a</span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);padding:4px 2px">
+        覆盖门店：${sku.stores.join(' · ')}
+      </div>
+    </div>`;
+    bill.appendChild(divEl);
+  });
+}
+
+function toggleSku(id){
+  document.getElementById('sr-'+id).classList.toggle('open');
+}
+
+// ══ 门店列表 ══════════════════════════════════════════
+function renderStores(){
+  const d = getCurDist();
+  const list = document.getElementById('storeList');
+  list.innerHTML = d.stores.map(s=>{
+    const achColor = s.ach>=85?'var(--green)':s.ach>=65?'var(--amber)':'var(--red)';
+    const clsColor = s.cls==='S+'?'var(--amber)':s.cls==='S'?'var(--blue)':'var(--text3)';
+    return `<div class="store-row" onclick="alert('${s.name}门店详情开发中')">
+      <div class="store-icon" style="background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.2)">🏪</div>
+      <div class="store-body">
+        <div class="store-name">
+          ${s.name}
+          <span class="tag" style="background:rgba(255,255,255,.06);color:${clsColor}">${s.cls}</span>
+        </div>
+        <div class="store-meta">r=${s.r}件/天 · 目标${s.rT} · 达成${s.ach}%</div>
+      </div>
+      <div class="store-right">
+        <div class="store-val">¥${(s.rev/10000).toFixed(1)}万</div>
+        <div class="store-sub" style="color:${achColor}">${s.ach}%达成</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══ 财务账单 ══════════════════════════════════════════
+function renderFinance(){
+  const d = getCurDist();
+  const rebatePct = Math.min(100, d.ach);
+  const creditColor = d.creditGrade==='S'?'var(--green)':d.creditGrade==='A'?'var(--teal)':d.creditGrade==='B'?'var(--amber)':'var(--red)';
+  document.getElementById('financeContent').innerHTML=`
+    <div class="finance-card fc-amber">
+      <div class="fc-title">💰 本月收款状态</div>
+      <div class="fc-rows">
+        <div class="fc-row"><span class="fcl">本月目标收入</span><span class="fcr" style="color:var(--text)">¥${(d.target/10000).toFixed(1)}万</span></div>
+        <div class="fc-row"><span class="fcl">实际收入</span><span class="fcr" style="color:var(--amber)">¥${(d.rev/10000).toFixed(1)}万</span></div>
+        <div class="fc-row"><span class="fcl">达成率</span><span class="fcr" style="color:${d.ach>=85?'var(--green)':d.ach>=65?'var(--amber)':'var(--red)'}">${d.ach}%</span></div>
+        <div class="fc-row"><span class="fcl">账期状态</span><span class="fcr" style="color:var(--green)">正常·先款后货</span></div>
+        <div class="fc-row"><span class="fcl">信用评级</span><span class="fcr" style="color:${creditColor}">${d.creditGrade}级</span></div>
+      </div>
+    </div>
+
+    <div class="finance-card fc-green">
+      <div class="fc-title">🎁 本季度返利预估</div>
+      <div class="fc-rows">
+        <div class="fc-row"><span class="fcl">季度达成率</span><span class="fcr" style="color:var(--amber)">${d.ach}%</span></div>
+        <div class="fc-row"><span class="fcl">预估返利</span><span class="fcr" style="color:var(--green)">¥${d.rebateEst.toLocaleString()}</span></div>
+        <div class="fc-row"><span class="fcl">返利说明</span><span class="fcr" style="color:var(--text3);font-size:10px">80-100%标准返利·超100%额外奖励</span></div>
+        <div class="fc-row"><span class="fcl">结算时间</span><span class="fcr">季度末结算</span></div>
+      </div>
+      <div class="rebate-bar">
+        <div class="rebate-fill" style="width:${rebatePct}%"></div>
+      </div>
+      <div class="rebate-label">
+        <span>0%</span><span>80% 起返</span><span>100% 满返</span><span>超额奖励 →</span>
+      </div>
+    </div>
+
+    <div class="finance-card fc-red" style="${d.digestRate>=0.75?'opacity:.4':''}">
+      <div class="fc-title">⚠️ 铁律③ 消化率监控</div>
+      <div class="fc-rows">
+        <div class="fc-row"><span class="fcl">本月消化率</span><span class="fcr" style="color:${d.digestRate>=0.75?'var(--green)':d.digestRate>=0.5?'var(--amber)':'var(--red)'}">${(d.digestRate*100).toFixed(0)}%</span></div>
+        <div class="fc-row"><span class="fcl">安全阈值</span><span class="fcr">≥50%（连续2月触发审查）</span></div>
+        <div class="fc-row"><span class="fcl">状态</span><span class="fcr" style="color:${d.digestRate>=0.75?'var(--green)':d.digestRate>=0.5?'var(--amber)':'var(--red)'}">
+          ${d.digestRate>=0.75?'✅ 健康':d.digestRate>=0.5?'⚠️ 注意':'🔴 风险'}
+        </span></div>
+      </div>
+    </div>`;
+}
+
+// ══ Omakase推单 ════════════════════════════════════════
+function renderOrder(){
+  const d = getCurDist();
+  const orders = d.skus.map(s=>{
+    const pause = s.invA > 3.5 || !s.ironOk;
+    const qty = pause ? 0 : Math.max(0, Math.round((2*s.r_target*30 - s.inv + s.r_target*3)));
+    return {...s, pause, qty};
+  });
+  const total = orders.reduce((sum,o)=>sum+o.qty,0);
+
+  document.getElementById('orderContent').innerHTML=`
+    <div class="omakase-card">
+      <div class="oc-title">🍣 本周Omakase推单</div>
+      <div class="oc-rows">
+        ${orders.map(o=>`
+        <div class="oc-row ${o.pause?'oc-skip':''}">
+          <div>
+            <div class="oc-sku">${o.icon} ${o.name}</div>
+            <div class="oc-reason">${o.pause
+              ? (o.invA>3.5?'⏸ 库存超3.5a·暂停推单':'⏸ 价格异常·暂停推单')
+              : `水位${o.invA.toFixed(1)}a→目标2a · r=${o.r_target}件/天`}</div>
+          </div>
+          <div class="oc-qty" style="color:${o.pause?'var(--text3)':'var(--teal)'}">${o.pause?'—':o.qty}</div>
+          <div class="oc-unit">${o.pause?'暂停':'件'}</div>
+        </div>`).join('')}
+      </div>
+      <div class="oc-total">
+        <span class="oc-total-lbl">本单合计</span>
+        <span class="oc-total-val">${total}件 · 预计¥${Math.round(total*28).toLocaleString()}</span>
+      </div>
+      <div class="oc-actions">
+        <button class="btn-edit">修改数量</button>
+        <button class="btn-approve" onclick="alert('✅ 已确认接单！系统将记录您的确认。')">✅ 确认接单</button>
+      </div>
+    </div>`;
+}
+
+// ══ AI问答 ════════════════════════════════════════════
+async function askAI(q,el){
+  if(!q||!q.trim())return;
+  if(el instanceof HTMLElement)el.value='';
+  const d = getCurDist();
+  const resp=document.getElementById('aiResp');
+  const qEl=document.getElementById('aiQ');
+  const aEl=document.getElementById('aiA');
+  resp.classList.add('show');
+  qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="td-wrap"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+
+  const sys=`你是INFINITY OS的Omakase推单系统，正在为经销商「${d.name}」服务。
+当前数据：消化率${(d.digestRate*100).toFixed(0)}%，本月达成率${d.ach}%，信用评级${d.creditGrade}。
+SKU状态：${d.skus.map(s=>`${s.name}·达成${s.ach}%·库存${s.invA.toFixed(1)}a`).join('，')}
+推单原则：目标水位2a，补货量=(2a-当前库存+3天在途消耗)，消化率<65%或库存>3.5a暂停推单。
+用中文简洁回答，不超过150字，直接给出结论。`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})
+    });
+    const data=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${data.content?.map(c=>c.text||'').join('')||'—'}</div>`;
+  }catch(e){
+    aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`;
+  }
+}
+
+// 时钟
+function tick(){const n=new Date();document.getElementById('ck').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')}
+tick();setInterval(tick,1000);
+
+init();
+</script>
+</body>
+</html>
