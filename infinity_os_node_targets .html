@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>欣和SH · 业务数据填报 v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f6fa;--white:#fff;--border:#e2e5f0;--border2:#c8ccda;
+  --text:#1a1d2e;--text2:#6b7080;--text3:#9ea5b8;
+  --amber:#f5a623;--al:#fff8ee;--ab:#fde8b8;
+  --green:#22c55e;--gl:#f0fdf4;--gb:#bbf7d0;
+  --red:#ef4444;--rl:#fef2f2;--rb:#fecaca;
+  --blue:#3b82f6;--bl:#eff6ff;--bb:#bfdbfe;
+  --teal:#14b8a6;--tl:#f0fdfa;--tb:#99f6e4;
+  --purple:#8b5cf6;--pl:#f5f3ff;
+  --g1:#22c55e;--g2:#f5a623;--g3:#3b82f6;--g4:#8b5cf6;--g5:#ef4444;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;padding-bottom:120px}
+
+/* HEADER */
+.header{background:var(--white);border-bottom:1px solid var(--border);padding:12px 16px;
+  position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.06);
+  display:flex;align-items:center;justify-content:space-between}
+.hl{display:flex;align-items:center;gap:9px}
+.hs{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000}
+.ht{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.hst{font-size:10px;color:var(--text2);margin-top:1px}
+.hprog{text-align:right}
+.hpl{font-size:10px;color:var(--text2);margin-bottom:3px}
+.hpb{width:72px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-left:auto}
+.hpf{height:100%;border-radius:3px;background:var(--amber);transition:width .3s}
+.hpc{font-size:10px;color:var(--amber);font-weight:700;margin-top:2px;text-align:right}
+
+/* 说明 */
+.intro{margin:14px 14px 0;background:var(--al);border:1px solid var(--ab);border-radius:13px;padding:14px}
+.it{font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px}
+.ib{font-size:12px;color:var(--text2);line-height:1.8}
+.steps{margin-top:10px;display:flex;flex-direction:column;gap:7px}
+.step{display:flex;gap:9px;font-size:12px;color:var(--text2);align-items:flex-start}
+.sn{width:20px;height:20px;border-radius:6px;background:var(--amber);color:#000;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+
+/* 年级说明卡 */
+.grade-guide{margin:12px 14px 0;background:var(--white);border:1px solid var(--border);border-radius:13px;padding:13px}
+.gg-title{font-size:12px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.gg-rows{display:flex;flex-direction:column;gap:5px}
+.gg-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;font-size:11px}
+.gg-badge{width:52px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.gg-years{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;flex-shrink:0;min-width:60px}
+.gg-desc{color:var(--text2)}
+.gg-auto{font-size:10px;color:var(--green);margin-left:auto;background:var(--gl);border:1px solid var(--gb);padding:2px 7px;border-radius:8px;flex-shrink:0}
+
+/* STEP卡片 */
+.step-card{margin:12px 14px 0;background:var(--white);border:1px solid var(--border);border-radius:13px;padding:14px}
+.sc-title{font-size:12px;font-weight:700;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sc-num{width:20px;height:20px;border-radius:6px;background:var(--amber);color:#000;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* 事业部 */
+.bu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bu-btn{border:2px solid var(--border2);border-radius:11px;padding:13px 10px;cursor:pointer;
+  transition:all .2s;background:var(--bg);text-align:center}
+.bu-btn.on.con{border-color:var(--blue);background:var(--bl)}
+.bu-btn.on.fs{border-color:var(--teal);background:var(--tl)}
+.bu-ic{font-size:22px;margin-bottom:5px}
+.bu-nm{font-size:12px;font-weight:700;margin-bottom:3px}
+.bu-desc{font-size:10px;color:var(--text2);line-height:1.5}
+.bu-r{font-size:10px;margin-top:5px;padding:2px 8px;border-radius:7px;display:inline-block;font-weight:600}
+.con .bu-r{background:var(--bl);color:var(--blue)}
+.fs .bu-r{background:var(--tl);color:var(--teal)}
+
+/* 阶段 */
+.phase-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+@media(min-width:480px){.phase-grid{grid-template-columns:repeat(4,1fr)}}
+.ph-btn{border:1.5px solid var(--border2);border-radius:10px;padding:10px 8px;cursor:pointer;
+  transition:all .2s;background:var(--bg);text-align:center}
+.ph-btn.on{border-color:var(--amber);background:var(--al)}
+.ph-num{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text3);line-height:1}
+.ph-btn.on .ph-num{color:var(--amber)}
+.ph-name{font-size:11px;font-weight:700;color:var(--text2);margin-top:3px}
+.ph-btn.on .ph-name{color:var(--amber)}
+.ph-sub{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* 空状态 */
+.empty{margin:16px 14px 0;text-align:center;padding:30px;background:var(--white);border-radius:13px;border:1px dashed var(--border2)}
+.empty-ic{font-size:32px;margin-bottom:8px}
+.empty-t{font-size:13px;font-weight:700;margin-bottom:5px}
+.empty-s{font-size:11px;color:var(--text2)}
+
+/* 品牌组 */
+.brand-hdr{margin:16px 14px 8px;display:flex;align-items:center;gap:8px}
+.bd{width:9px;height:9px;border-radius:50%}
+.bn{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.bc{font-size:10px;color:var(--text2);background:var(--border);padding:2px 7px;border-radius:10px;margin-left:auto}
+
+/* SKU卡片 */
+.sku-card{margin:0 14px 8px;background:var(--white);border:1.5px solid var(--border);border-radius:13px;overflow:hidden;transition:border-color .2s}
+.sku-card.done{border-color:var(--gb);background:var(--gl)}
+
+.sku-top{padding:12px 14px;display:flex;align-items:center;gap:10px}
+.sku-ic{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px}
+.sku-nm{flex:1}
+.sku-name{font-size:13px;font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sku-desc{font-size:10px;color:var(--text2)}
+.tag{font-size:9px;padding:1px 6px;border-radius:5px;font-weight:600}
+.tag-both{background:#f1f5f9;color:#64748b}
+.tag-con{background:var(--bl);color:var(--blue)}
+.tag-fs{background:var(--tl);color:var(--teal)}
+.sku-badge{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:600;flex-shrink:0}
+.bd-done{background:var(--gl);color:var(--green);border:1px solid var(--gb)}
+.bd-todo{background:var(--border);color:var(--text3)}
+
+.sku-fields{padding:0 14px 13px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sku-card.done .sku-fields{border-top-color:var(--gb)}
+.fl{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px}
+.fl span{color:var(--red)}
+.fl em{font-style:normal;font-size:10px;color:var(--text3);font-weight:400;margin-left:3px}
+
+input[type=number]{width:100%;background:var(--bg);border:1.5px solid var(--border2);border-radius:9px;
+  padding:10px 11px;font-size:15px;font-family:'Noto Sans SC',sans-serif;color:var(--text);
+  outline:none;transition:all .2s;-webkit-appearance:none}
+input[type=number]:focus{border-color:var(--amber);background:var(--white);box-shadow:0 0 0 3px rgba(245,166,35,.1)}
+input[type=number].v{border-color:var(--green);background:var(--white)}
+input::placeholder{color:var(--text3)}
+.fh{font-size:10px;margin-top:4px}
+.fh-ok{color:var(--green)}
+.fh-ng{color:var(--text3)}
+
+/* 入市年份选择 */
+.year-select{width:100%;background:var(--bg);border:1.5px solid var(--border2);border-radius:9px;
+  padding:10px 11px;font-size:14px;font-family:'Noto Sans SC',sans-serif;color:var(--text);
+  outline:none;cursor:pointer;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239ea5b8' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.year-select:focus{border-color:var(--amber);background-color:var(--white);box-shadow:0 0 0 3px rgba(245,166,35,.1)}
+.year-select.v{border-color:var(--green);background-color:var(--white)}
+
+/* 年级自动显示 */
+.grade-display{margin-top:6px;padding:7px 10px;border-radius:8px;display:flex;align-items:center;gap:7px;font-size:11px;transition:all .3s}
+.gd-badge{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.gd-name{font-weight:700}
+.gd-years{color:var(--text3);font-family:'Space Mono',monospace;font-size:10px;margin-left:2px}
+.gd-auto{font-size:9px;color:var(--green);margin-left:auto}
+
+/* 汇总 */
+.sumcard{margin:14px 14px 0;background:var(--white);border:2px solid var(--border);border-radius:13px;padding:14px;display:none}
+.sumt{font-size:14px;font-weight:700;margin-bottom:10px}
+.sumrows{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.sumrow{display:flex;justify-content:space-between;align-items:center;padding:7px 11px;border-radius:8px;background:var(--bg);font-size:12px}
+.srl{font-weight:600;flex:1}
+.srr{display:flex;gap:10px;align-items:center}
+.srv{display:flex;align-items:center;gap:3px;font-size:11px}
+.srvl{color:var(--text3)}
+.srvn{font-weight:700}
+.grade-chip{font-size:10px;padding:2px 7px;border-radius:6px;color:#fff;font-weight:700}
+.warn{font-size:12px;color:var(--red);background:var(--rl);border:1px solid var(--rb);border-radius:9px;padding:9px 12px;margin-bottom:10px;display:none}
+.expbtn{width:100%;padding:15px;border-radius:11px;font-size:14px;font-weight:700;
+  font-family:'Noto Sans SC',sans-serif;border:none;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:7px}
+.expbtn.ready{background:linear-gradient(135deg,#f5a623,#ff8c3a);color:#000;box-shadow:0 4px 14px rgba(245,166,35,.3)}
+.expbtn.ready:active{transform:scale(.98)}
+.expbtn.no{background:var(--border);color:var(--text3);cursor:not-allowed}
+
+/* modal */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
+.overlay.show{display:flex}
+.modal{background:var(--white);border-radius:18px 18px 0 0;padding:16px;width:100%;max-width:760px;max-height:85vh;display:flex;flex-direction:column;gap:10px}
+.mh{display:flex;align-items:center;justify-content:space-between}
+.mht{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+.mhx{width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;font-size:16px;color:var(--text2);display:flex;align-items:center;justify-content:center}
+.minstr{font-size:12px;color:var(--text2);background:var(--bl);border:1px solid var(--bb);border-radius:9px;padding:10px 12px;line-height:1.7}
+.minstr strong{color:var(--blue)}
+.sqlbox{background:#1a1d2e;border-radius:11px;padding:13px;font-family:'Space Mono',monospace;font-size:10px;color:#4ade80;line-height:1.9;overflow-y:auto;flex:1;max-height:38vh;white-space:pre}
+.mbtns{display:flex;gap:8px}
+.mbcopy{flex:1;padding:13px;border-radius:10px;background:var(--amber);border:none;font-size:13px;font-weight:700;color:#000;cursor:pointer;font-family:'Noto Sans SC',sans-serif}
+.mbclose{padding:13px 18px;border-radius:10px;background:var(--bg);border:1px solid var(--border2);font-size:13px;color:var(--text2);cursor:pointer;font-family:'Noto Sans SC',sans-serif}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hl">
+    <div class="hs">欣</div>
+    <div><div class="ht">业务数据填报</div><div class="hst">欣和SH · INFINITY OS v3</div></div>
+  </div>
+  <div class="hprog">
+    <div class="hpl">完成进度</div>
+    <div class="hpb"><div class="hpf" id="pbar" style="width:0%"></div></div>
+    <div class="hpc" id="pcnt">0 / 0</div>
+  </div>
+</div>
+
+<div class="intro">
+  <div class="it">📋 填写说明</div>
+  <div class="ib">每个SKU填写两个信息，<strong>年级由系统自动推算</strong>，不需要手动选择。约20分钟完成全部填写。</div>
+  <div class="steps">
+    <div class="step"><div class="sn">1</div><span>选择<strong>事业部</strong>和<strong>城市进入阶段</strong></span></div>
+    <div class="step"><div class="sn">2</div><span>每个SKU填写<strong>每日目标动销量</strong>（件/天）</span></div>
+    <div class="step"><div class="sn">3</div><span>选择<strong>这个SKU进入这个城市是哪一年</strong> → 系统自动换算年级</span></div>
+    <div class="step"><div class="sn">4</div><span>全部填完后点「导出SQL」发给开发团队</span></div>
+  </div>
+</div>
+
+<!-- 年级说明 -->
+<div class="grade-guide">
+  <div class="gg-title">🎓 年级自动推算规则</div>
+  <div class="gg-rows">
+    <div class="gg-row" style="background:rgba(34,197,94,.06)">
+      <div class="gg-badge" style="background:var(--g1)">年级1</div>
+      <div class="gg-years" style="color:var(--g1)">0–1年</div>
+      <div class="gg-desc">新品·刚进入这个城市</div>
+      <div class="gg-auto">自动</div>
+    </div>
+    <div class="gg-row" style="background:rgba(245,166,35,.06)">
+      <div class="gg-badge" style="background:var(--g2)">年级2</div>
+      <div class="gg-years" style="color:var(--g2)">1–2年</div>
+      <div class="gg-desc">成长期·铺货扩展中</div>
+      <div class="gg-auto">自动</div>
+    </div>
+    <div class="gg-row" style="background:rgba(59,130,246,.06)">
+      <div class="gg-badge" style="background:var(--g3)">年级3</div>
+      <div class="gg-years" style="color:var(--g3)">2–3年</div>
+      <div class="gg-desc">成熟期·稳定动销</div>
+      <div class="gg-auto">自动</div>
+    </div>
+    <div class="gg-row" style="background:rgba(139,92,246,.06)">
+      <div class="gg-badge" style="background:var(--g4)">年级4</div>
+      <div class="gg-years" style="color:var(--g4)">3–4年</div>
+      <div class="gg-desc">特殊期·需要维护</div>
+      <div class="gg-auto">自动</div>
+    </div>
+    <div class="gg-row" style="background:rgba(239,68,68,.06)">
+      <div class="gg-badge" style="background:var(--g5)">年级5</div>
+      <div class="gg-years" style="color:var(--g5)">4年以上</div>
+      <div class="gg-desc">防御期·保住份额</div>
+      <div class="gg-auto">自动</div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 1: 事业部 -->
+<div class="step-card">
+  <div class="sc-title"><div class="sc-num">1</div>选择事业部</div>
+  <div class="bu-grid">
+    <div class="bu-btn con" id="bu-con" onclick="selBU('con')">
+      <div class="bu-ic">🛒</div>
+      <div class="bu-nm">消费者事业部</div>
+      <div class="bu-desc">零售渠道·超市/便利/电商</div>
+      <div class="bu-r">r = 零售店日出货量</div>
+    </div>
+    <div class="bu-btn fs" id="bu-fs" onclick="selBU('fs')">
+      <div class="bu-ic">🍜</div>
+      <div class="bu-nm">餐饮事业部</div>
+      <div class="bu-desc">B端渠道·餐厅/酒店/食堂</div>
+      <div class="bu-r">r = 餐厅日进货量</div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2: 城市阶段 -->
+<div class="step-card" style="margin-top:8px">
+  <div class="sc-title"><div class="sc-num">2</div>选择城市进入阶段</div>
+  <div class="phase-grid">
+    <div class="ph-btn" id="ph-pilot"  onclick="selPhase('pilot')"><div class="ph-num">试</div><div class="ph-name">试点区域</div><div class="ph-sub">验证阶段</div></div>
+    <div class="ph-btn" id="ph-batch1" onclick="selPhase('batch1')"><div class="ph-num">1</div><div class="ph-name">第一批城市</div><div class="ph-sub">已铺开</div></div>
+    <div class="ph-btn" id="ph-batch2" onclick="selPhase('batch2')"><div class="ph-num">2</div><div class="ph-name">第二批城市</div><div class="ph-sub">铺货中</div></div>
+    <div class="ph-btn" id="ph-batch3" onclick="selPhase('batch3')"><div class="ph-num">3</div><div class="ph-name">第三批城市</div><div class="ph-sub">待进入</div></div>
+  </div>
+</div>
+
+<!-- SKU列表 -->
+<div id="skuSection">
+  <div class="empty">
+    <div class="empty-ic">☝️</div>
+    <div class="empty-t">请先选择事业部和城市阶段</div>
+    <div class="empty-s">选择后显示对应SKU填写表格</div>
+  </div>
+</div>
+
+<!-- 汇总 -->
+<div class="sumcard" id="sumcard">
+  <div class="sumt">📊 填写汇总</div>
+  <div class="sumrows" id="sumrows"></div>
+  <div class="warn" id="warnmsg">⚠️ 还有未填写的SKU，请补充完整后再导出</div>
+  <button class="expbtn no" id="expbtn" onclick="doExport()">📤 导出SQL · 发给开发团队</button>
+</div>
+
+<!-- SQL Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="mh"><div class="mht">✅ 导出完成</div><button class="mhx" onclick="closeModal()">×</button></div>
+    <div class="minstr"><strong>操作：</strong>点「复制全部」，通过微信/企微发给Java开发团队，告诉他们「在MySQL执行这段代码」。</div>
+    <div class="sqlbox" id="sqlbox"></div>
+    <div class="mbtns">
+      <button class="mbcopy" id="copybtn" onclick="doCopy()">📋 复制全部</button>
+      <button class="mbclose" onclick="closeModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ 常量 ══════════════════════════════════════════════
+const CUR_YEAR = 2026;
+
+// 年份→年级推算
+function calcGrade(entryYear){
+  if(!entryYear) return 0;
+  const years = CUR_YEAR - parseInt(entryYear);
+  if(years < 1)  return 1;
+  if(years < 2)  return 2;
+  if(years < 3)  return 3;
+  if(years < 4)  return 4;
+  return 5;
+}
+const GRADE_CONFIG = {
+  1:{name:'新品',   color:'#22c55e', bg:'rgba(34,197,94,.08)',   years:'0–1年'},
+  2:{name:'成长',   color:'#f5a623', bg:'rgba(245,166,35,.08)',  years:'1–2年'},
+  3:{name:'成熟',   color:'#3b82f6', bg:'rgba(59,130,246,.08)',  years:'2–3年'},
+  4:{name:'特殊',   color:'#8b5cf6', bg:'rgba(139,92,246,.08)',  years:'3–4年'},
+  5:{name:'防御',   color:'#ef4444', bg:'rgba(239,68,68,.08)',   years:'4年以上'},
+};
+const GRADE_LABELS = ['','新品','成长','成熟','特殊','防御'];
+
+// 入市年份选项（2018-2026）
+function makeYearOptions(){
+  let opts = '<option value="">选择入市年份</option>';
+  for(let y=2018; y<=2026; y++){
+    const diff = CUR_YEAR - y;
+    const gn = calcGrade(y);
+    const gl = gn ? `→ 年级${gn}·${GRADE_LABELS[gn]}` : '';
+    opts += `<option value="${y}">${y}年进入（已${diff===0?'今年':diff+'年'}）${gl}</option>`;
+  }
+  return opts;
+}
+
+// ══ SKU数据 ════════════════════════════════════════════
+const BRANDS = [
+  {name:'六月鲜',color:'#f5a623',skus:[
+    {id:'lyx_teji_885ml',    name:'特级酱油 885ml',  icon:'🏅', desc:'旗舰SKU·高端定位',   ch:'both'},
+    {id:'lyx_ziran_500ml',   name:'遵循自然 500ml',  icon:'🧂', desc:'战略新品·核心成长',  ch:'con'},
+    {id:'lyx_ziran_1l',     name:'遵循自然 1L',     icon:'🧂', desc:'战略新品·大容量',    ch:'con'},
+    {id:'lyx_hongshao',     name:'红烧酱油系列',    icon:'🍶', desc:'现金奶牛·成熟期',    ch:'both'},
+    {id:'lyx_hongshao_xl',  name:'红烧酱油大装',    icon:'🍶', desc:'大包装·B端/家庭',    ch:'both'},
+    {id:'lyx_fs_special',   name:'餐饮专供装',      icon:'🍶', desc:'餐饮专属·大桶装',    ch:'fs'},
+  ]},
+  {name:'味达美',color:'#3b82f6',skus:[
+    {id:'wdm_main',    name:'味达美酱油（主）',icon:'🫙', desc:'大众市场·现金流', ch:'both'},
+    {id:'wdm_fresh',   name:'味达美鲜酱油',   icon:'🫙', desc:'大众升级版',      ch:'con'},
+    {id:'wdm_catering',name:'味达美餐饮装',   icon:'🫙', desc:'餐饮专属规格',    ch:'fs'},
+  ]},
+  {name:'禾然',color:'#22c55e',skus:[
+    {id:'hr_jiangyou', name:'禾然有机酱油', icon:'🌿', desc:'有机定位·战略押注', ch:'both'},
+    {id:'hr_vinegar',  name:'禾然有机醋',   icon:'🌿', desc:'有机延伸',          ch:'con'},
+  ]},
+  {name:'葱伴侣',color:'#8b5cf6',skus:[
+    {id:'cbl_main', name:'葱伴侣酱油', icon:'🧅', desc:'场景专属·葱油料理', ch:'con'},
+  ]},
+  {name:'小康',color:'#ef4444',skus:[
+    {id:'xk_main', name:'小康酱油', icon:'🏷️', desc:'防御性低价·竞品拦截', ch:'both'},
+  ]},
+];
+
+// ══ 状态 ══════════════════════════════════════════════
+let curBU=null, curPhase=null;
+const fd={}; // fd[key][skuId] = {r, entryYear}
+
+function getKey(){return curBU+'_'+curPhase}
+function ensureFD(){
+  const k=getKey();
+  if(!fd[k]){
+    fd[k]={};
+    getSkus().forEach(s=>fd[k][s.id]={r:'',entryYear:''});
+  }
+  return fd[k];
+}
+function getSkus(){
+  return BRANDS.flatMap(b=>b.skus.filter(s=>s.ch==='both'||s.ch===curBU));
+}
+
+// ══ 事业部/阶段选择 ════════════════════════════════════
+function selBU(bu){
+  curBU=bu;
+  ['con','fs'].forEach(b=>{
+    const el=document.getElementById('bu-'+b);
+    el.classList.toggle('on',b===bu);
+  });
+  render();
+}
+function selPhase(p){
+  curPhase=p;
+  ['pilot','batch1','batch2','batch3'].forEach(ph=>{
+    document.getElementById('ph-'+ph).classList.toggle('on',ph===p);
+  });
+  render();
+}
+
+// ══ 主渲染 ════════════════════════════════════════════
+function render(){
+  const sec=document.getElementById('skuSection');
+  if(!curBU||!curPhase){
+    sec.innerHTML=`<div class="empty"><div class="empty-ic">☝️</div><div class="empty-t">请先选择事业部和城市阶段</div><div class="empty-s">选择后显示对应SKU填写表格</div></div>`;
+    document.getElementById('sumcard').style.display='none';
+    return;
+  }
+  const data=ensureFD();
+  const buLabel=curBU==='con'?'零售店日出货量':'餐厅日进货量';
+  sec.innerHTML='';
+
+  BRANDS.forEach(brand=>{
+    const skus=brand.skus.filter(s=>s.ch==='both'||s.ch===curBU);
+    if(!skus.length)return;
+
+    const gh=document.createElement('div');
+    gh.className='brand-hdr';
+    gh.innerHTML=`<div class="bd" style="background:${brand.color}"></div><div class="bn" style="color:${brand.color}">${brand.name}</div><div class="bc">${skus.length}个SKU</div>`;
+    sec.appendChild(gh);
+
+    skus.forEach(sku=>{
+      const d=data[sku.id]||{r:'',entryYear:''};
+      const ok=d.r&&d.entryYear;
+      const grade=calcGrade(d.entryYear);
+      const gc=grade?GRADE_CONFIG[grade]:null;
+      const chTag=sku.ch==='both'?'<span class="tag tag-both">通用</span>':
+        sku.ch==='con'?'<span class="tag tag-con">消费者专属</span>':
+        '<span class="tag tag-fs">餐饮专属</span>';
+
+      const card=document.createElement('div');
+      card.className='sku-card'+(ok?' done':'');
+      card.id='card-'+sku.id;
+
+      const gradeHTML=grade?`
+        <div class="grade-display" style="background:${gc.bg}">
+          <div class="gd-badge" style="background:${gc.color}">年级${grade}</div>
+          <div><div class="gd-name" style="color:${gc.color}">年级${grade}·${gc.name}</div><div class="gd-years">${gc.years}</div></div>
+          <div class="gd-auto">✓ 自动推算</div>
+        </div>`:`
+        <div class="grade-display" style="background:var(--bg)">
+          <div style="font-size:11px;color:var(--text3)">选择入市年份后自动显示年级</div>
+        </div>`;
+
+      card.innerHTML=`
+      <div class="sku-top">
+        <div class="sku-ic" style="background:${brand.color}18;border:1px solid ${brand.color}30">${sku.icon}</div>
+        <div class="sku-nm">
+          <div class="sku-name">${sku.name} ${chTag}</div>
+          <div class="sku-desc">${sku.desc}</div>
+        </div>
+        <span class="sku-badge ${ok?'bd-done':'bd-todo'}">${ok?'✓ 已填':'待填写'}</span>
+      </div>
+      <div class="sku-fields">
+        <div>
+          <div class="fl">每日目标动销量<span>*</span><em>${buLabel}</em></div>
+          <input type="number" inputmode="decimal" placeholder="例：5.5" step="0.1" min="0.1"
+            value="${d.r}" class="${d.r?'v':''}"
+            oninput="setR('${sku.id}',this.value)"/>
+          <div class="fh ${d.r?'fh-ok':'fh-ng'}" id="fhr-${sku.id}">${d.r?'✓ '+d.r+'件/天':'请输入数值'}</div>
+        </div>
+        <div>
+          <div class="fl">SKU入市年份<span>*</span></div>
+          <select class="year-select ${d.entryYear?'v':''}" id="yr-${sku.id}" onchange="setYear('${sku.id}',this.value)">
+            ${makeYearOptions()}
+          </select>
+          <div id="gd-${sku.id}">${gradeHTML}</div>
+        </div>
+      </div>`;
+
+      // 设置已选年份
+      if(d.entryYear){
+        setTimeout(()=>{
+          const sel=document.getElementById('yr-'+sku.id);
+          if(sel) sel.value=d.entryYear;
+        },0);
+      }
+
+      sec.appendChild(card);
+    });
+  });
+
+  refreshProgress();
+  refreshSummary();
+}
+
+function setR(skuId,val){
+  const d=ensureFD();
+  if(d[skuId]) d[skuId].r=val;
+  const input=document.getElementById('card-'+skuId)?.querySelector('input');
+  if(input) input.className=val?'v':'';
+  const fhr=document.getElementById('fhr-'+skuId);
+  if(fhr){fhr.className='fh '+(val?'fh-ok':'fh-ng');fhr.textContent=val?'✓ '+val+'件/天':'请输入数值'}
+  updateCardStatus(skuId);
+  refreshProgress();refreshSummary();
+}
+
+function setYear(skuId,year){
+  const d=ensureFD();
+  if(d[skuId]) d[skuId].entryYear=year;
+  const sel=document.getElementById('yr-'+skuId);
+  if(sel) sel.className='year-select '+(year?'v':'');
+
+  const grade=calcGrade(year);
+  const gdEl=document.getElementById('gd-'+skuId);
+  if(gdEl){
+    if(grade){
+      const gc=GRADE_CONFIG[grade];
+      gdEl.innerHTML=`<div class="grade-display" style="background:${gc.bg}">
+        <div class="gd-badge" style="background:${gc.color}">年级${grade}</div>
+        <div><div class="gd-name" style="color:${gc.color}">年级${grade}·${gc.name}</div><div class="gd-years">${gc.years}</div></div>
+        <div class="gd-auto">✓ 自动推算</div>
+      </div>`;
+    } else {
+      gdEl.innerHTML=`<div class="grade-display" style="background:var(--bg)"><div style="font-size:11px;color:var(--text3)">选择入市年份后自动显示年级</div></div>`;
+    }
+  }
+  updateCardStatus(skuId);
+  refreshProgress();refreshSummary();
+}
+
+function updateCardStatus(skuId){
+  const d=ensureFD();
+  const ok=d[skuId]?.r&&d[skuId]?.entryYear;
+  const card=document.getElementById('card-'+skuId);
+  if(!card)return;
+  card.className='sku-card'+(ok?' done':'');
+  const badge=card.querySelector('.sku-badge');
+  if(badge){badge.className='sku-badge '+(ok?'bd-done':'bd-todo');badge.textContent=ok?'✓ 已填':'待填写'}
+}
+
+function refreshProgress(){
+  if(!curBU||!curPhase){document.getElementById('pbar').style.width='0%';document.getElementById('pcnt').textContent='0 / 0';return}
+  const d=ensureFD();
+  const total=Object.keys(d).length;
+  const filled=Object.values(d).filter(x=>x.r&&x.entryYear).length;
+  const pct=total?Math.round(filled/total*100):0;
+  document.getElementById('pbar').style.width=pct+'%';
+  document.getElementById('pcnt').textContent=filled+' / '+total;
+}
+
+function refreshSummary(){
+  if(!curBU||!curPhase){document.getElementById('sumcard').style.display='none';return}
+  document.getElementById('sumcard').style.display='block';
+  const d=ensureFD();
+  let html='',allOk=true;
+
+  BRANDS.forEach(brand=>{
+    const skus=brand.skus.filter(s=>s.ch==='both'||s.ch===curBU);
+    skus.forEach(sku=>{
+      const sd=d[sku.id]||{r:'',entryYear:''};
+      const ok=sd.r&&sd.entryYear;
+      const grade=calcGrade(sd.entryYear);
+      const gc=grade?GRADE_CONFIG[grade]:null;
+      if(!ok)allOk=false;
+      html+=`<div class="sumrow">
+        <span class="srl">${sku.icon} ${sku.name}</span>
+        <div class="srr">
+          ${sd.r
+            ?`<span class="srv"><span class="srvl">r</span><span class="srvn">${sd.r}件/天</span></span>`
+            :'<span style="font-size:10px;color:var(--red)">⚠️未填</span>'}
+          ${grade
+            ?`<span class="grade-chip" style="background:${gc.color}">${sd.entryYear}年入·年级${grade}</span>`
+            :'<span style="font-size:10px;color:var(--red)">⚠️未选</span>'}
+        </div>
+      </div>`;
+    });
+  });
+
+  document.getElementById('sumrows').innerHTML=html;
+  document.getElementById('warnmsg').style.display=allOk?'none':'block';
+  const btn=document.getElementById('expbtn');
+  btn.className='expbtn '+(allOk?'ready':'no');
+}
+
+// ══ 导出SQL ════════════════════════════════════════════
+function doExport(){
+  if(!curBU||!curPhase)return;
+  const d=ensureFD();
+  const allOk=Object.values(d).every(x=>x.r&&x.entryYear);
+  if(!allOk)return;
+
+  const phaseNames={pilot:'试点区域',batch1:'第一批城市',batch2:'第二批城市',batch3:'第三批城市'};
+  const buNames={con:'消费者事业部',fs:'餐饮事业部'};
+
+  let sql=`-- ================================================================
+-- 欣和SH · INFINITY OS · 业务数据填报 v3
+-- 事业部：${buNames[curBU]}
+-- 城市阶段：${phaseNames[curPhase]}
+-- 生成时间：${new Date().toLocaleString('zh-CN')}
+-- 当前年份：${CUR_YEAR}年（年级由系统自动推算）
+-- ================================================================\n\n`;
+
+  BRANDS.forEach(brand=>{
+    const skus=brand.skus.filter(s=>s.ch==='both'||s.ch===curBU);
+    if(!skus.length)return;
+    sql+=`-- ${brand.name}\n`;
+    skus.forEach(sku=>{
+      const sd=d[sku.id];
+      const grade=calcGrade(sd.entryYear);
+      const gc=GRADE_CONFIG[grade];
+      sql+=`INSERT INTO inf_node_targets
+  (sku_id, business_unit, city_phase, r_target, entry_year, grade, grade_label, updated_at)
+VALUES
+  ('${sku.id}', '${curBU}', '${curPhase}', ${sd.r}, ${sd.entryYear}, ${grade}, '${gc.name}', NOW())
+ON DUPLICATE KEY UPDATE
+  r_target=${sd.r}, entry_year=${sd.entryYear}, grade=${grade}, grade_label='${gc.name}', updated_at=NOW();
+-- ${sku.name}：r=${sd.r}件/天 · ${sd.entryYear}年入市 · 已${CUR_YEAR-parseInt(sd.entryYear)}年 · 年级${grade}·${gc.name}\n\n`;
+    });
+  });
+
+  sql+=`-- ================================================================
+-- 注：每年自动重新推算年级（entry_year固定，grade随当前年份变化）
+-- 城市清单待业务团队补充后更新
+-- 执行完成后请回复确认
+-- ================================================================`;
+
+  document.getElementById('sqlbox').textContent=sql;
+  document.getElementById('overlay').classList.add('show');
+}
+
+function doCopy(){
+  navigator.clipboard.writeText(document.getElementById('sqlbox').textContent).then(()=>{
+    const b=document.getElementById('copybtn');
+    b.textContent='✅ 已复制！发给开发团队';b.style.background='var(--green)';
+    setTimeout(()=>{b.textContent='📋 复制全部';b.style.background='var(--amber)'},3000);
+  });
+}
+function closeModal(){document.getElementById('overlay').classList.remove('show')}
+</script>
+</body>
+</html>
