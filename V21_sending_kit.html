@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>V21 发送工具包 · DS 专用</title>
+<style>
+:root{--bg:#f5f7fa;--card:#fff;--line:#e2e8f0;--text:#0f172a;--muted:#64748b;--dim:#94a3b8;--teal:#0d9488;--orange:#ea580c;--red:#dc2626;--green:#16a34a;--blue:#2563eb;--amber:#d97706;--purple:#7c3aed}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:20px}
+.page{max-width:900px;margin:0 auto}
+.hdr{background:linear-gradient(135deg,#0d9488,#0891b2);color:#fff;padding:28px 32px;border-radius:14px 14px 0 0}
+.hdr-t{font-size:24px;font-weight:800;margin-bottom:6px}
+.hdr-s{font-size:14px;opacity:0.9}
+.hdr-tag{display:inline-block;background:rgba(255,255,255,0.18);padding:4px 10px;border-radius:20px;font-size:11px;margin-top:10px;letter-spacing:0.05em}
+
+.toc{background:#fff;padding:18px 32px;border-bottom:1px solid var(--line)}
+.toc-t{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px}
+.toc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.toc-item{display:flex;gap:8px;font-size:13px;color:var(--text);text-decoration:none;padding:6px 10px;border-radius:6px;transition:background .15s}
+.toc-item:hover{background:#f1f5f9}
+.toc-num{color:var(--teal);font-weight:700;min-width:20px}
+
+.main{background:#fff;padding:24px 32px;border-radius:0 0 14px 14px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+
+.sec{margin-bottom:36px;scroll-margin-top:20px}
+.sec-hdr{border-left:4px solid var(--teal);padding:4px 0 4px 12px;margin-bottom:16px}
+.sec-t{font-size:18px;font-weight:800}
+.sec-s{font-size:12px;color:var(--muted);margin-top:2px}
+
+.box{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-bottom:14px;position:relative}
+.box.link{background:linear-gradient(135deg,#ecfeff,#f0fdfa);border-color:#5eead4}
+.box.wechat{background:#f0fdf4;border-color:#86efac;border-left:4px solid #16a34a}
+.box.email{background:#eff6ff;border-color:#93c5fd;border-left:4px solid #2563eb}
+.box.tip{background:#fef3c7;border-color:#fcd34d;border-left:4px solid var(--amber)}
+.box.danger{background:#fef2f2;border-color:#fca5a5;border-left:4px solid var(--red)}
+
+.box-t{font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.box-sub{font-size:11px;color:var(--muted);margin-bottom:10px}
+
+.link-url{font-family:'SF Mono',Monaco,monospace;font-size:11px;background:#fff;padding:10px 12px;border-radius:6px;border:1px solid #cbd5e1;word-break:break-all;color:var(--teal);margin:6px 0}
+.link-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;font-weight:700}
+
+.msg{background:#fff;padding:14px 16px;border-radius:8px;border:1px solid #cbd5e1;font-size:13px;line-height:1.75;white-space:pre-wrap;font-family:-apple-system,BlinkMacSystemFont,sans-serif;margin-top:8px}
+
+.btn-copy{display:inline-block;background:var(--teal);color:#fff;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;transition:all .15s;margin-top:8px}
+.btn-copy:hover{background:#0f766e;transform:translateY(-1px)}
+.btn-copy.copied{background:var(--green)}
+
+.persona{background:linear-gradient(135deg,#fff,#fafbfc);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin-bottom:16px}
+.persona-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:2px dashed var(--line)}
+.persona-name{font-size:17px;font-weight:800}
+.persona-role{display:inline-block;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;margin-left:8px}
+.persona-role.brand{background:#fef3c7;color:#92400e}
+.persona-role.sales{background:#dbeafe;color:#1e3a8a}
+.persona-role.shanghai{background:#f3e8ff;color:#6b21a8}
+.persona-role.shandong{background:#d1fae5;color:#065f46}
+.persona-focus{font-size:12px;color:var(--muted);margin-top:4px}
+
+.check-list{list-style:none;padding:0;margin:10px 0}
+.check-list li{padding:6px 0;font-size:13px;display:flex;align-items:flex-start;gap:8px}
+.check-list li::before{content:'☐';color:var(--muted);font-weight:700;flex-shrink:0}
+.check-list li.done::before{content:'✓';color:var(--green)}
+
+.tracker{width:100%;border-collapse:collapse;margin-top:12px;font-size:12px;background:#fff;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.tracker th,.tracker td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line)}
+.tracker th{background:#f1f5f9;font-weight:700;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em}
+.tracker tr:last-child td{border-bottom:none}
+
+.key-point{background:#fef2f2;border-left:3px solid var(--red);padding:10px 14px;margin:8px 0;font-size:12px;border-radius:4px;color:#7f1d1d}
+.do-not{color:var(--red);font-weight:700}
+.do{color:var(--green);font-weight:700}
+
+.phase{background:#fff;border:2px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:8px}
+.phase-t{font-weight:700;font-size:13px;margin-bottom:4px;color:var(--teal)}
+.phase-time{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em}
+
+@media print{body{background:#fff;padding:0}.page{max-width:none}.btn-copy{display:none}}
+@media (max-width:700px){.toc-grid{grid-template-columns:1fr}.main{padding:16px 20px}.hdr{padding:20px 24px}}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<!-- Header -->
+<div class="hdr">
+  <div class="hdr-t">V21 发送工具包</div>
+  <div class="hdr-s">DS 专用 · 4 人征询一键完成 · 预计总耗时 15 分钟</div>
+  <div class="hdr-tag">INFINITY OS · 欣和SH · 2亿瓶 @ 2029</div>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <div class="toc-t">📚 目录导航</div>
+  <div class="toc-grid">
+    <a href="#links" class="toc-item"><span class="toc-num">01</span>链接合集</a>
+    <a href="#brand" class="toc-item"><span class="toc-num">02</span>品牌总文案</a>
+    <a href="#sales" class="toc-item"><span class="toc-num">03</span>销售总文案</a>
+    <a href="#shanghai" class="toc-item"><span class="toc-num">04</span>上海总文案</a>
+    <a href="#shandong" class="toc-item"><span class="toc-num">05</span>山东总文案</a>
+    <a href="#tracker" class="toc-item"><span class="toc-num">06</span>反馈跟踪表</a>
+    <a href="#followup" class="toc-item"><span class="toc-num">07</span>追击话术</a>
+    <a href="#phases" class="toc-item"><span class="toc-num">08</span>3 天节奏</a>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ═══ 01. 链接 ═══ -->
+<div class="sec" id="links">
+  <div class="sec-hdr">
+    <div class="sec-t">01 · 两条关键链接</div>
+    <div class="sec-s">先验证链接能打开 · 所有文案里嵌入的都是这两条</div>
+  </div>
+  
+  <div class="box link">
+    <div class="link-label">🎯 V21.1 主工具 (发给 4 位主管)</div>
+    <div class="link-url">https://infinity-os-sh.github.io/Infinity-os-SH/infinity_os_v21_1_editable.html</div>
+    <button class="btn-copy" onclick="copyText(this,'https://infinity-os-sh.github.io/Infinity-os-SH/infinity_os_v21_1_editable.html')">📋 复制链接</button>
+  </div>
+  
+  <div class="box link">
+    <div class="link-label">📋 反馈表 (可选附加)</div>
+    <div class="link-url">https://infinity-os-sh.github.io/Infinity-os-SH/V21_feedback_form.html</div>
+    <button class="btn-copy" onclick="copyText(this,'https://infinity-os-sh.github.io/Infinity-os-SH/V21_feedback_form.html')">📋 复制链接</button>
+    <div class="box-sub" style="margin-top:10px">反馈表含结构/战略层 7 道深度题 · 适合给时间充裕的主管补充填写</div>
+  </div>
+
+  <div class="box tip">
+    <div class="box-t">💡 先自己打开一次再发</div>
+    <div style="font-size:12px;line-height:1.75">
+      发送前请 <strong>用手机 + 电脑各打开一次</strong>，确认：<br>
+      · 欢迎弹窗弹出正确<br>
+      · 身份选择可用<br>
+      · 150城表格中的数字可点击修改<br>
+      · 「📝我的修改」可导出文件<br>
+      <span class="do-not">任何一处失败都不要发</span>，告诉我我修。
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 02. 品牌总 ═══ -->
+<div class="sec" id="brand">
+  <div class="sec-hdr">
+    <div class="sec-t">02 · 品牌总主管</div>
+    <div class="sec-s">视角：品牌成立红线 · 关注 allow 标记和 A 类分类</div>
+  </div>
+
+  <div class="persona">
+    <div class="persona-hdr">
+      <div>
+        <span class="persona-name">品牌总</span>
+        <span class="persona-role brand">🎨 品牌视角</span>
+        <div class="persona-focus">只答：放大标记 / A 类城市 / 品牌成立红线</div>
+      </div>
+    </div>
+
+    <div class="box email">
+      <div class="box-t">📧 邮件版（推荐）</div>
+      <div class="box-sub">适合品牌总这种偏正式的沟通习惯</div>
+      <div class="msg" id="msg-brand-email">主题：请你 20 分钟 · V21 城市目标征询 · [请填写3天后日期] 截止
+
+X总：
+
+做了份 2亿瓶 @ 2029 的城市级推演工具 V21，想请你从品牌视角帮我拍砖。
+
+这不是终稿，是讨论底稿。其他人看数字，你是唯一能判断「品牌成立」红线的人。
+
+【链接】https://infinity-os-sh.github.io/Infinity-os-SH/infinity_os_v21_1_editable.html
+
+【你只需做 3 件事】
+1. 打开链接 → 看欢迎页 → 身份选择「🎨 品牌总主管」
+2. 去「150城目标表」页签，挑出 5 个你最不同意的：
+   · 某个标为「允许放大」的城市，放大会毁掉品牌
+   · 某个标为 A 类锚点城，品牌基础根本不配
+   · 某个应该是 A 的，被降成了 B
+3. 直接点击放大标记（允许/谨慎/不允许）切换 → 点顶部「📝我的修改」导出
+
+【时间】20 分钟以内
+【截止】[请填写3天后日期]
+【反馈】导出的 .txt 发回给我即可，微信邮件都行
+
+没回复就视为你认可当前方案，我照此推进。
+
+DS</div>
+      <button class="btn-copy" onclick="copyById(this,'msg-brand-email')">📋 复制邮件</button>
+    </div>
+
+    <div class="box wechat">
+      <div class="box-t">💬 微信版（快速触达）</div>
+      <div class="box-sub">若品牌总习惯微信先通气再看邮件</div>
+      <div class="msg" id="msg-brand-wx">X总，2亿瓶 城市推演工具 V21 做出来了，想请你从品牌红线视角拍砖。
+
+链接：https://infinity-os-sh.github.io/Infinity-os-SH/infinity_os_v21_1_editable.html
+
+打开 → 选「品牌总」身份 → 150城表 → 挑 5 个最不同意的放大标记或 A 类分类 → 直接点击修改 → 顶部「📝我的修改」导出
+
+20 分钟内，3 天截止，没回视为认可 🙏</div>
+      <button class="btn-copy" onclick="copyById(this,'msg-brand-wx')">📋 复制微信</button>
+    </div>
+
+    <div class="key-point">
+      🎯 <strong>品牌总的关键反馈点</strong>：他必须替你回答「哪些城市的放大会伤品牌」——这是整个 V21 最可能被忽视的风险，也是他的独特价值。
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 03. 销售总 ═══ -->
+<div class="sec" id="sales">
+  <div class="sec-hdr">
+    <div class="sec-t">03 · 销售总主管</div>
+    <div class="sec-s">视角：规模可达性 · 关注 CAGR 和 2029 目标合理性</div>
+  </div>
+
+  <div class="persona">
+    <div class="persona-hdr">
+      <div>
+        <span class="persona-name">销售总</span>
+        <span class="persona-role sales">💼 销售视角</span>
+        <div class="persona-focus">只答：目标数字是否做得到 / CAGR 太高 / 市场容量够不够</div>
+      </div>
+    </div>
+
+    <div class="box wechat">
+      <div class="box-t">💬 微信版（推荐）</div>
+      <div class="box-sub">销售总要的是直接、高效</div>
+      <div class="msg" id="msg-sales-wx">X总，2亿瓶 × 4年 的城市级目标推演 V21 出来了，数字合不合理你最有发言权。
+
+链接：https://infinity-os-sh.github.io/Infinity-os-SH/infinity_os_v21_1_editable.html
+
+打开 → 选「销售总」→ 150城表 → 直接点 CAGR 这一列排个序（或 2029 目标）→ 挑 5 个你觉得数字不靠谱的：
+· CAGR 超过 40% 扛不住的
+· 2029 目标虚高，市场容量不够的
+· 反而太保守，你想翻倍的
+
+点数字直接改 → 顶部「📝我的修改」导出 → 发我
+
+20 分钟以内，3 天截止。没回我就照原版推。</div>
+      <button class="btn-copy" onclick="copyById(this,'msg-sales-wx')">📋 复制微信</button>
+    </div>
+
+    <div class="box email">
+      <div class="box-t">📧 邮件版（备用）</div>
+      <div class="msg" id="msg-sales-email">主题：请你 20 分钟 · V21 销售目标拍板 · [请填写3天后日期] 截止
+
+X总：
+
+2亿瓶 @ 2029 的城市级推演工具 V21 做出来了。品牌的人看定位，你是唯一能判断「数字到底做不做得到」的人。
+
+【链接】https://infinity-os-sh.github.io/Infinity-os-SH/infinity_os_v21_1_editable.html
+
+【你只需做一件事】
+打开 → 选「💼 销售总主管」→ 进入「150城目标表」→ 按 CAGR 或 2029 目标排序 → 挑 5 个你认为数字最不靠谱的城市 → 直接点击数字修改 → 顶部「📝我的修改」导出 .txt 发给我
+
+【不需要回答的】
+· 品牌定位 → 品牌总那边
+· 战略路径 → 董事长那边
+· 你就盯一个：规模合理性
+
+【时间】20 分钟 · [请填写3天后日期] 截止 · 没回视为你认可
+
+DS</div>
+      <button class="btn-copy" onclick="copyById(this,'msg-sales-email')">📋 复制邮件</button>
+    </div>
+
+    <div class="key-point">
+      🎯 <strong>销售总的关键反馈点</strong>：他本能对「CAGR 太高」敏感，因为完不成要挨板子。让他按 CAGR 排序，他 5 分钟就能挑出最离谱的 5 个城市。
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 04. 上海总 ═══ -->
+<div class="sec" id="shanghai">
+  <div class="sec-hdr">
+    <div class="sec-t">04 · 上海总主管</div>
+    <div class="sec-s">视角：A 类锚点落地 · 关注上海+长三角整体阵型</div>
+  </div>
+
+  <div class="persona">
+    <div class="persona-hdr">
+      <div>
+        <span class="persona-name">上海总</span>
+        <span class="persona-role shanghai">🏙️ 锚点视角</span>
+        <div class="persona-focus">不是校对数字，是请他设计华东阵型</div>
+      </div>
+    </div>
+
+    <div class="box wechat">
+      <div class="box-t">💬 微信版（推荐）</div>
+      <div class="msg" id="msg-shanghai-wx">X总，上海是 2亿瓶战略的「品牌锚点城第一位」——不是按规模排，是按战略权重。上海做不成，整个高端战略失去样板。
+
+做了份城市推演 V21，想请你回答两个问题：
+
+链接：https://infinity-os-sh.github.io/Infinity-os-SH/infinity_os_v21_1_editable.html
+
+打开 → 选「🏙️ 上海总主管」→ 去「150城目标表」筛「长三角」
+
+1. 上海 2029 目标你觉得做得到吗？做不到就点数字改了
+2. 长三角 9 城里，哪 3 个最该跟上海一起跑？为什么？
+
+改完导出，加上你关于长三角阵型的一句话建议，微信给我就行。
+
+3 天内。这件事只有你能判断。</div>
+      <button class="btn-copy" onclick="copyById(this,'msg-shanghai-wx')">📋 复制微信</button>
+    </div>
+
+    <div class="box email">
+      <div class="box-t">📧 邮件版（备用）</div>
+      <div class="msg" id="msg-shanghai-email">主题：上海+长三角阵型设计 · V21 征询 · [请填写3天后日期] 截止
+
+X总：
+
+上海在 2亿瓶 @ 2029 战略里的位置不是「一个大区」，是「品牌锚点第一位」——你做的不是 KPI，是整个高端战略的样板。
+
+做了份 V21 推演工具，想请你回答的不是「数字对不对」，而是：
+
+【链接】https://infinity-os-sh.github.io/Infinity-os-SH/infinity_os_v21_1_editable.html
+
+1. 上海 2029 目标（进去看）你认为做得到吗？
+2. 长三角 9 城你认为哪 3 个最该跟跑？（不是规模排序，是战略跟跑）
+3. 华东阵型的整体节奏，V21 的安排你认可吗？
+
+【怎么操作】
+打开 → 选「上海总」→ 「150城目标表」筛大区=华东 → 直接点数字或放大标记修改 → 顶部「📝我的修改」导出
+
+【最重要的不是数字】
+是你第 2 题的答案 — 哪 3 个城市跟上海跑、为什么 — 这个决定华东能不能成盘。请务必答这一题。
+
+【时间】[请填写3天后日期] 截止
+
+DS</div>
+      <button class="btn-copy" onclick="copyById(this,'msg-shanghai-email')">📋 复制邮件</button>
+    </div>
+
+    <div class="key-point">
+      🎯 <strong>上海总的关键反馈点</strong>：不要把他当「一个大区总」，要当「华东阵型设计师」。问他「谁跟上海跑」比问「数字对不对」价值高 10 倍。
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 05. 山东总 ═══ -->
+<div class="sec" id="shandong">
+  <div class="sec-hdr">
+    <div class="sec-t">05 · 山东总主管</div>
+    <div class="sec-s">视角：B/C 类复制层 · 关注山东半岛实战可行性</div>
+  </div>
+
+  <div class="persona">
+    <div class="persona-hdr">
+      <div>
+        <span class="persona-name">山东总</span>
+        <span class="persona-role shandong">🌊 复制层视角</span>
+        <div class="persona-focus">三连问：低估 1 个 / 高估 1 个 / 最大的坑</div>
+      </div>
+    </div>
+
+    <div class="box wechat">
+      <div class="box-t">💬 微信版（推荐）</div>
+      <div class="msg" id="msg-shandong-wx">X总，山东在 2亿瓶战略里是「复制层样板」——A 类打法能不能在山东半岛落地，直接决定 B/C 类整盘能不能铺开。
+
+做了份推演 V21：
+
+https://infinity-os-sh.github.io/Infinity-os-SH/infinity_os_v21_1_editable.html
+
+打开 → 选「🌊 山东总主管」→ 150城表筛山东半岛 → 想听你三件事：
+
+1. 哪 1 个城市 V21 低估了？（直接点数字改高）
+2. 哪 1 个城市 V21 高估了？（直接点数字改低）  
+3. 从 A 类打法复制到山东半岛，最大的坑是什么？（微信直接跟我说）
+
+改完点「📝我的修改」导出，三个问题的答案我都要。
+
+3 天内。</div>
+      <button class="btn-copy" onclick="copyById(this,'msg-shandong-wx')">📋 复制微信</button>
+    </div>
+
+    <div class="box email">
+      <div class="box-t">📧 邮件版（备用）</div>
+      <div class="msg" id="msg-shandong-email">主题：山东半岛复制层评估 · V21 征询 · [请填写3天后日期] 截止
+
+X总：
+
+山东在整个 2亿瓶战略里的位置是「复制层样板」——
+· 不像上海那样做品牌锚点
+· 是验证 A 类打法能不能复制到 B/C 类
+· 济南、青岛、山东半岛整个盘子都是信号
+
+做了份 V21 推演，想听你三件事的真话：
+
+【链接】https://infinity-os-sh.github.io/Infinity-os-SH/infinity_os_v21_1_editable.html
+
+【三连问】
+1. 山东半岛哪 1 个城市 V21 低估了？为什么？
+2. 山东半岛哪 1 个城市 V21 高估了？为什么？
+3. 从 A 类打法复制到山东半岛，最大的坑是什么？
+
+【操作】
+打开 → 选「山东总」→ 「150城目标表」筛大区=华东 或城市群=山东半岛 → 直接点数字修改 → 顶部「📝我的修改」导出
+
+【最重要的是第 3 题】
+前两题 V21 改数字就能答。第 3 题要你写几句真话，写多少都行，哪怕就是一句「打法复制到山东必然遇到 X 问题」都比 5 个数字改动更有价值。
+
+【时间】[请填写3天后日期] 截止 · 没回默认认可当前方案
+
+DS</div>
+      <button class="btn-copy" onclick="copyById(this,'msg-shandong-email')">📋 复制邮件</button>
+    </div>
+
+    <div class="key-point">
+      🎯 <strong>山东总的关键反馈点</strong>：「最大的坑」是整个征询里 <strong>最高价值的回答</strong>——它能暴露 V21 没法量化的复制难题。
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 06. 跟踪表 ═══ -->
+<div class="sec" id="tracker">
+  <div class="sec-hdr">
+    <div class="sec-t">06 · 反馈跟踪表</div>
+    <div class="sec-s">4 人征询状态一览 · 每天 5 秒刷新一次心里有数</div>
+  </div>
+
+  <table class="tracker">
+    <thead><tr>
+      <th style="width:15%">主管</th>
+      <th style="width:10%">发送日</th>
+      <th style="width:12%">截止日</th>
+      <th style="width:15%">状态</th>
+      <th style="width:48%">反馈摘要</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>品牌总</strong><br><span style="font-size:10px;color:var(--muted)">🎨 定位红线</span></td>
+        <td>___月___日</td>
+        <td>___月___日</td>
+        <td>☐未发 ☐已发 ☐已读 ☐已回</td>
+        <td>关键异议：</td>
+      </tr>
+      <tr>
+        <td><strong>销售总</strong><br><span style="font-size:10px;color:var(--muted)">💼 规模可达</span></td>
+        <td>___月___日</td>
+        <td>___月___日</td>
+        <td>☐未发 ☐已发 ☐已读 ☐已回</td>
+        <td>关键异议：</td>
+      </tr>
+      <tr>
+        <td><strong>上海总</strong><br><span style="font-size:10px;color:var(--muted)">🏙️ 华东阵型</span></td>
+        <td>___月___日</td>
+        <td>___月___日</td>
+        <td>☐未发 ☐已发 ☐已读 ☐已回</td>
+        <td>关键异议：</td>
+      </tr>
+      <tr>
+        <td><strong>山东总</strong><br><span style="font-size:10px;color:var(--muted)">🌊 复制层</span></td>
+        <td>___月___日</td>
+        <td>___月___日</td>
+        <td>☐未发 ☐已发 ☐已读 ☐已回</td>
+        <td>关键异议：</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="box tip" style="margin-top:16px">
+    <div class="box-t">📊 分析三模式</div>
+    <div style="font-size:12px;line-height:1.75">
+      收到反馈后按三模式分流：<br>
+      · <strong>共识模式</strong>：4 人都指向同一城市 → V21.2 直接修<br>
+      · <strong>对立模式</strong>：两两意见相反 → 留给董事长 Demo 时当场拍板<br>
+      · <strong>单点模式</strong>：只有 1 人提 → 存档，累积到 3 人再改
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 07. 追击话术 ═══ -->
+<div class="sec" id="followup">
+  <div class="sec-hdr">
+    <div class="sec-t">07 · 3 天后追击话术</div>
+    <div class="sec-s">如果到截止日没回 · 用这份软催话术</div>
+  </div>
+
+  <div class="box wechat">
+    <div class="box-t">💬 D3 软催 · 第一次</div>
+    <div class="box-sub">截止日当天发，给对方最后一个机会</div>
+    <div class="msg" id="msg-nudge1">X总，V21 反馈今天截止 ⏰
+
+还没看到你那边的反馈，我今晚要汇总了。如果你确认「无异议」，回个 ✅ 就行，不用再看。
+
+如果还想提点意见，链接还在：
+https://infinity-os-sh.github.io/Infinity-os-SH/infinity_os_v21_1_editable.html
+
+10 分钟就能挑 3 处最不同意的改一下。</div>
+    <button class="btn-copy" onclick="copyById(this,'msg-nudge1')">📋 复制</button>
+  </div>
+
+  <div class="box wechat">
+    <div class="box-t">💬 D4 硬收口 · 最终</div>
+    <div class="box-sub">截止日次日发，明确告知已结束</div>
+    <div class="msg" id="msg-nudge2">X总，V21 征询昨天截止。没收到你的反馈我按「无异议」处理，照当前方案推进。
+
+之后任何阶段你有新想法都可以随时提。这次辛苦了 🙏</div>
+    <button class="btn-copy" onclick="copyById(this,'msg-nudge2')">📋 复制</button>
+  </div>
+
+  <div class="box danger">
+    <div class="box-t">⚠️ 关键心法：绝对不要催第三次</div>
+    <div style="font-size:12px;line-height:1.75">
+      <span class="do-not">反直觉但重要</span>：催第一次是提醒，催第二次是最后通牒，<strong>催第三次就是乞讨</strong>——会把你和 V21 的权威性一起耗掉。
+      <br><br>
+      没回 = 无异议，这是你设定的规则，<strong>你必须第一个遵守</strong>。下次他才会认真对待你的截止日。
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 08. 3 天节奏 ═══ -->
+<div class="sec" id="phases">
+  <div class="sec-hdr">
+    <div class="sec-t">08 · 3 天节奏一张图</div>
+    <div class="sec-s">从发送到汇总的完整节拍</div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-time">TODAY · 发送日</div>
+    <div class="phase-t">📤 集中发送（建议下午 3-4 点）</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.7">
+      · 上午 10 点前：发布一次仓库 commit 确认链接稳定<br>
+      · 下午 3 点：销售总（微信先行）、山东总（微信先行）<br>
+      · 下午 3:30：品牌总（邮件）、上海总（邮件）<br>
+      · 下午 4 点：自查——每人都收到了吗？已读了吗？
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-time">D+1 · 次日</div>
+    <div class="phase-t">📊 静默观察期</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.7">
+      · <span class="do-not">不要</span>催、<span class="do-not">不要</span>问进度<br>
+      · 只做一件事：打开跟踪表看有没有反馈回来<br>
+      · 如有早鸟反馈，立即认真读，但<strong>不回复细节</strong>，只简单致谢
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-time">D+2 · 第二日</div>
+    <div class="phase-t">🔍 早鸟反馈初步分析</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.7">
+      · 已收到的反馈：按三模式初步分类（共识/对立/单点）<br>
+      · 未收到的：<span class="do-not">仍不催</span>——耐心等到 D+3<br>
+      · 可以开始想 V21.2 的修正方向
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-time">D+3 · 截止日</div>
+    <div class="phase-t">⏰ 软催 + 收口</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.7">
+      · 上午 10 点：对未回复的发 D3 软催话术<br>
+      · 晚上 8 点：截止时间到<br>
+      · 晚上 8 点后：把所有反馈汇总成一份表，明天开始做 V21.2
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-time">D+4 · 次日</div>
+    <div class="phase-t">🔨 V21.2 修正版</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.7">
+      · 上午：发 D4 最终话术给未回复者（封口式致谢）<br>
+      · 下午：基于反馈汇总做 V21.2<br>
+      · 每一条采纳的反馈都要在 V21.2 里明确标注「[XX总建议]」<br>
+      · <span class="do">这是对反馈者最好的尊重</span>
+    </div>
+  </div>
+
+  <div class="phase" style="border-color:var(--teal);background:#f0fdfa">
+    <div class="phase-time" style="color:var(--teal)">D+5 或更后 · 推进期</div>
+    <div class="phase-t" style="color:var(--teal)">🚀 V21.2 定稿 → 董事长 Demo</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.7">
+      · V21.2 定稿，<strong>每个关键数字都有反馈者背书</strong><br>
+      · 这时候给董事长的 Demo，底气完全不一样——<br>
+      · <strong>不再是 "DS 一个人拍的 V21"，是 "经过 4 位总监共识的 V21.2"</strong>
+    </div>
+  </div>
+</div>
+
+</div> <!-- end main -->
+
+</div> <!-- end page -->
+
+<script>
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.classList.add('copied');
+    btn.textContent = '✓ 已复制';
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {
+    alert('请手动复制');
+  });
+}
+function copyById(btn, id) {
+  const text = document.getElementById(id).textContent;
+  copyText(btn, text);
+}
+</script>
+
+</body>
+</html>
