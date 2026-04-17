@@ -45,6 +45,38 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang 
 .g3{grid-template-columns:repeat(3,1fr)}
 .g2{grid-template-columns:repeat(2,1fr)}
 @media (max-width:900px){.g6{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:1fr} .g2{grid-template-columns:1fr}}
+/* V22.1 手机优化 */
+@media (max-width:600px) {
+  .g6,.g4,.g3,.g2 { grid-template-columns: 1fr !important; }
+  .topbar { padding: 8px 10px; flex-wrap: wrap; gap: 6px; }
+  .top-title { font-size: 13px; }
+  .top-sub { font-size: 10px; }
+  .sumbar { padding: 8px 10px; gap: 8px; flex-wrap: wrap; }
+  .sumbar-l { gap: 8px; }
+  .sumbar-item { font-size: 10px; }
+  .sumbar-item strong { font-size: 11px; }
+  .year-switch { padding: 1px; }
+  .year-btn { padding: 4px 6px; font-size: 10px; }
+  .scenario-btn { padding: 4px 6px !important; font-size: 10px !important; }
+  .tab { padding: 6px 8px; font-size: 11px; }
+  .page { padding: 10px; }
+  .card { padding: 10px; }
+  .card h3 { font-size: 12px; }
+  .table { font-size: 10px; }
+  .table th, .table td { padding: 4px 3px; }
+  /* 风险诊断详情手机优化 */
+  #riskDetail .grid { grid-template-columns: 1fr !important; }
+  /* 红线趋势手机版本简化 */
+  .yrbars { gap: 4px; }
+  .yrbar { padding: 6px 4px; }
+  .yrbar-y { font-size: 10px; }
+  .yrbar-v { font-size: 13px; }
+  /* 修改面板手机端全屏 */
+  #editPanel { max-width: 100% !important; }
+  /* SQL 模态框手机优化 */
+  #sqlModal > div { max-width: 100% !important; padding: 14px !important; }
+  #sqlModal pre, #sqlModal code { font-size: 9px !important; line-height: 1.4 !important; }
+}
 
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
 .card h3{margin:0 0 10px;font-size:14px;font-weight:700}
@@ -209,6 +241,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang 
       <div class="top-sub" id="reviewerTag">身份：<span id="reviewerName" style="color:var(--teal);font-weight:700">未选择</span> · <span id="editCount" style="color:var(--orange)">0</span> 处修改 · 当前场景：<span id="scenarioName" style="color:var(--amber);font-weight:700">主案</span></div>
     </div>
     <button class="btn primary" id="btnMyEdits" onclick="toggleEditPanel()" style="padding:6px 10px;font-size:11px">📝 我的修改</button>
+    <button class="btn" onclick="exportSQL()" style="padding:6px 10px;font-size:11px;background:rgba(78,205,196,0.1);border-color:rgba(78,205,196,0.3);color:var(--teal)">💾 导出SQL</button>
   </div>
   <div class="tabs" id="tabs">
     <div class="tab active" data-page="tree">🎯 战略推导树</div>
@@ -1833,6 +1866,128 @@ function exportEdits() {
     a2.download = `V21反馈_${safeName}_${dateStr}.json`;
     a2.click();
   }, 200);
+}
+
+// ══════════════════════════════
+// V22.1 新增：SQL 导出（→ inf_node_targets 表）
+// ══════════════════════════════
+function exportSQL() {
+  const ts = new Date().toISOString();
+  const tsStr = ts.replace('T',' ').slice(0,19);
+  const dateStr = ts.slice(0,10);
+  const scenName = SCENARIOS[scenario].name;
+  const scenFactor = SCENARIOS[scenario].factor;
+  const sqlReviewer = (reviewer || 'DS').replace(/'/g, "''");
+  
+  let sql = `-- ═══════════════════════════════════════════════════\n`;
+  sql += `-- INFINITY OS · V22 → inf_node_targets 灌入 SQL\n`;
+  sql += `-- ═══════════════════════════════════════════════════\n`;
+  sql += `-- 生成时间: ${tsStr}\n`;
+  sql += `-- 场景:     ${scenName} (factor=${scenFactor})\n`;
+  sql += `-- 终点:     ${(FINAL_TARGET*scenFactor/10000).toFixed(2)}亿瓶 @ 2029\n`;
+  sql += `-- 城市数:   ${cities.length}\n`;
+  sql += `-- 操作员:   ${sqlReviewer}\n`;
+  sql += `-- ═══════════════════════════════════════════════════\n\n`;
+  sql += `-- 注意：执行前请先备份 inf_node_targets 表\n`;
+  sql += `-- 推荐：先在测试库验证，再在生产库执行\n\n`;
+  sql += `-- ─── Step 1: 删除本场景旧数据 ───\n`;
+  sql += `DELETE FROM inf_node_targets WHERE scenario = '${scenName}' AND source = 'V22';\n\n`;
+  sql += `-- ─── Step 2: 灌入 150 城 × 5 年 = 750 条记录 ───\n`;
+  sql += `INSERT INTO inf_node_targets\n`;
+  sql += `  (city_id, city_name, province, region, cluster, tier, cls,\n`;
+  sql += `   year, target_volume_wan, contrib_pct, cagr_pct, allow_flag,\n`;
+  sql += `   risk_score, scenario, scenario_factor, source, created_by, created_at)\n`;
+  sql += `VALUES\n`;
+  
+  const lines = [];
+  cities.forEach(c => {
+    const allow = cityAllow(c);
+    const risk = computeRisk(c);
+    const cagr = cityCAGR(c).toFixed(2);
+    [2025, 2026, 2027, 2028, 2029].forEach(y => {
+      const t = cityTarget(c, y);
+      const yearTotal = FINAL_TARGET * pace[y] * scenFactor;
+      const contrib = yearTotal > 0 ? (t/yearTotal*100).toFixed(4) : '0';
+      lines.push(
+        `  ('${c.city_id}','${c.name}','${c.province}','${c.region}','${c.cluster}','${c.tier}','${c.cls}',` +
+        `${y},${t},${contrib},${cagr},'${allow}',` +
+        `${risk},'${scenName}',${scenFactor},'V22','${sqlReviewer}','${tsStr}')`
+      );
+    });
+  });
+  sql += lines.join(',\n');
+  sql += ';\n\n';
+  
+  sql += `-- ─── Step 3: 验证灌入数量 ───\n`;
+  sql += `SELECT COUNT(*) AS rows_inserted FROM inf_node_targets\n`;
+  sql += `  WHERE scenario = '${scenName}' AND source = 'V22' AND created_at >= '${tsStr}';\n`;
+  sql += `-- 预期: ${cities.length * 5} 行\n\n`;
+  
+  sql += `-- ─── Step 4: 与原 r_target 字段对齐（如已有）───\n`;
+  sql += `-- UPDATE inf_node_targets SET r_target = target_volume_wan / 365\n`;
+  sql += `--   WHERE source = 'V22' AND created_at >= '${tsStr}';\n\n`;
+  
+  sql += `-- ═══════════════════════════════════════════════════\n`;
+  sql += `-- END OF SQL · 生成于 INFINITY OS V22\n`;
+  sql += `-- ═══════════════════════════════════════════════════\n`;
+  
+  // 显示在模态框
+  showSQLModal(sql, lines.length);
+  
+  // 同时下载文件
+  const blob = new Blob([sql], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `V22_inf_node_targets_${scenName}_${dateStr}.sql`;
+  a.click();
+}
+
+function showSQLModal(sql, rowCount) {
+  // 创建/获取模态框
+  let modal = document.getElementById('sqlModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'sqlModal';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;background:rgba(11,16,32,0.95);z-index:300;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)';
+    modal.innerHTML = `
+      <div style="background:var(--panel);border:1px solid var(--teal);border-radius:14px;padding:20px;max-width:760px;width:100%;max-height:90vh;display:flex;flex-direction:column">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <div>
+            <div style="font-size:16px;font-weight:800">💾 SQL 已生成</div>
+            <div class="small muted" id="sqlStat" style="margin-top:4px"></div>
+          </div>
+          <button class="btn" onclick="document.getElementById('sqlModal').style.display='none'" style="padding:4px 10px">✕</button>
+        </div>
+        <div class="alert" style="background:rgba(255,180,84,0.08);border-color:rgba(255,180,84,0.3);font-size:11px;line-height:1.7">
+          <strong style="color:var(--orange)">⚠️ DBA 执行前必读</strong><br>
+          ① 先在<strong>测试库</strong>跑通验证<br>
+          ② 备份 <code style="background:#0b1020;padding:2px 4px;border-radius:3px">inf_node_targets</code> 表<br>
+          ③ 文件已自动下载，也可点下方"复制 SQL"
+        </div>
+        <div style="flex:1;overflow:auto;background:#0b1020;border:1px solid var(--line);border-radius:8px;padding:12px;font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1.6;white-space:pre;color:var(--text-2);margin:10px 0">
+          <code id="sqlContent"></code>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn primary" onclick="copySQL()" style="flex:1">📋 复制 SQL</button>
+          <button class="btn" onclick="document.getElementById('sqlModal').style.display='none'">关闭</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  modal.style.display = 'flex';
+  document.getElementById('sqlStat').textContent = `${rowCount} 条记录 · 场景：${SCENARIOS[scenario].name} · 已自动下载 .sql 文件`;
+  document.getElementById('sqlContent').textContent = sql;
+  modal._sqlText = sql;
+}
+
+function copySQL() {
+  const sql = document.getElementById('sqlModal')._sqlText;
+  navigator.clipboard.writeText(sql).then(() => {
+    alert('✓ SQL 已复制到剪贴板（' + sql.length + ' 字符）');
+  }).catch(() => {
+    alert('复制失败，请手动选中代码块复制');
+  });
 }
 
 // 页签切换

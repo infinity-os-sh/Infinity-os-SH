@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>V21 反馈汇总 · DS 内部</title>
+<style>
+:root {
+  --bg:#0a0d18; --panel:#11151f; --line:rgba(255,255,255,0.08);
+  --text:#e8ecf5; --muted:#8a95aa; --dim:#4a5468;
+  --teal:#4ecdc4; --amber:#f5a623; --red:#ff5f5f; --green:#4ade80; --orange:#ea580c;
+  --consensus:#4ade80; --conflict:#f5a623; --single:#60a5fa;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;line-height:1.6}
+.wrap{max-width:1100px;margin:0 auto}
+
+.hdr{padding:20px 24px;background:linear-gradient(135deg,rgba(78,205,196,0.06),rgba(245,166,35,0.04));border:1px solid rgba(78,205,196,0.2);border-radius:14px;margin-bottom:20px}
+.hdr-t{font-size:22px;font-weight:800;margin-bottom:4px}
+.hdr-t span{color:var(--teal)}
+.hdr-s{font-size:12px;color:var(--muted)}
+.tag-internal{display:inline-block;background:rgba(245,166,35,0.15);color:var(--amber);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.05em;margin-top:8px}
+
+.dropzone{background:var(--panel);border:2px dashed var(--line);border-radius:14px;padding:40px 20px;text-align:center;margin-bottom:20px;transition:all 0.2s;cursor:pointer}
+.dropzone:hover,.dropzone.dragover{border-color:var(--teal);background:rgba(78,205,196,0.05)}
+.dropzone-icon{font-size:42px;margin-bottom:10px}
+.dropzone-t{font-size:15px;font-weight:600;margin-bottom:4px}
+.dropzone-s{font-size:12px;color:var(--muted)}
+.dropzone input{display:none}
+
+.uploaded-list{margin-bottom:20px}
+.up-item{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.up-item-l{font-size:13px}
+.up-item-l strong{color:var(--teal)}
+.up-item-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.up-item-del{background:rgba(255,95,95,0.1);border:1px solid rgba(255,95,95,0.3);color:var(--red);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer}
+
+.btn-action{background:var(--teal);color:#0a0d18;border:none;padding:14px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;width:100%;font-family:inherit;transition:all 0.15s}
+.btn-action:hover{background:#3eb8b0;transform:translateY(-1px)}
+.btn-action:disabled{background:var(--dim);color:var(--muted);cursor:not-allowed;transform:none}
+
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.sum-box{padding:16px;border-radius:10px;text-align:center}
+.sum-consensus{background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.3)}
+.sum-conflict{background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.3)}
+.sum-single{background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3)}
+.sum-num{font-size:30px;font-weight:800}
+.sum-num.c-consensus{color:var(--consensus)}
+.sum-num.c-conflict{color:var(--conflict)}
+.sum-num.c-single{color:var(--single)}
+.sum-lbl{font-size:11px;color:var(--muted);margin-top:4px}
+
+.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:14px}
+.section h3{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section h3 .badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700}
+.b-consensus{background:rgba(74,222,128,0.15);color:var(--consensus)}
+.b-conflict{background:rgba(245,166,35,0.15);color:var(--conflict)}
+.b-single{background:rgba(96,165,250,0.15);color:var(--single)}
+
+.feedback-row{padding:12px 14px;background:rgba(0,0,0,0.2);border:1px solid var(--line);border-radius:8px;margin-bottom:8px;font-size:12px}
+.fb-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;flex-wrap:wrap;gap:6px}
+.fb-city{font-weight:700;font-size:13px}
+.fb-priority{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700}
+.p-high{background:rgba(255,95,95,0.15);color:var(--red)}
+.p-mid{background:rgba(245,166,35,0.15);color:var(--orange)}
+.p-low{background:rgba(96,165,250,0.15);color:var(--single)}
+.fb-changes{font-size:11px;color:var(--muted);margin-top:4px}
+.fb-change{display:inline-block;margin-right:10px;padding:1px 6px;background:rgba(0,0,0,0.3);border-radius:3px}
+.fb-change strong{color:var(--text)}
+.fb-by{font-size:10px;color:var(--dim);margin-top:6px;font-family:'Courier New',monospace}
+.fb-by-tag{display:inline-block;padding:1px 5px;background:rgba(78,205,196,0.1);color:var(--teal);border-radius:3px;margin-right:4px}
+
+.empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:13px}
+
+.export-row{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+.btn{background:var(--panel);border:1px solid var(--line);color:var(--text);padding:10px 16px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;flex:1;min-width:120px}
+.btn:hover{border-color:var(--teal)}
+.btn.primary{background:var(--teal);color:#0a0d18;border:none;font-weight:700}
+
+.help{background:rgba(96,165,250,0.04);border:1px solid rgba(96,165,250,0.2);border-radius:10px;padding:12px 14px;font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+.help strong{color:var(--single)}
+
+.mini-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+.mini-table th{background:rgba(0,0,0,0.3);color:var(--muted);font-weight:600;padding:6px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.05em}
+.mini-table td{padding:6px 8px;border-bottom:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<div class="hdr">
+  <div class="hdr-t">📊 V21 反馈汇总 <span>· 自动化合并</span></div>
+  <div class="hdr-s">把 4 位主管的 .json 反馈拖进来 · 自动分类「共识 / 对立 / 单点」</div>
+  <span class="tag-internal">DS 内部工具 · 不对外</span>
+</div>
+
+<div class="help">
+  💡 <strong>使用方法</strong>：4 位主管在 V21.1 里点「📝我的修改 → 📤导出我的修改」会下载 2 个文件（.txt 和 .json）。<br>
+  把所有 .json 文件 <strong>拖进下方区域</strong>（或点击选择），系统自动汇总、找规律。
+</div>
+
+<label class="dropzone" id="dropzone">
+  <input type="file" id="fileInput" multiple accept=".json">
+  <div class="dropzone-icon">📥</div>
+  <div class="dropzone-t">拖入或点击选择反馈 JSON 文件</div>
+  <div class="dropzone-s">支持多选 · 仅接受 V21.1 导出的 .json</div>
+</label>
+
+<div id="uploadedList" class="uploaded-list"></div>
+
+<button class="btn-action" id="btnAnalyze" disabled onclick="analyze()">🔍 开始汇总分析</button>
+
+<div id="resultZone" style="margin-top:24px;display:none">
+  <!-- 摘要 -->
+  <div class="summary">
+    <div class="sum-box sum-consensus">
+      <div class="sum-num c-consensus" id="sumConsensus">0</div>
+      <div class="sum-lbl">共识修改 · 4人都改的</div>
+    </div>
+    <div class="sum-box sum-conflict">
+      <div class="sum-num c-conflict" id="sumConflict">0</div>
+      <div class="sum-lbl">对立分歧 · 改向相反的</div>
+    </div>
+    <div class="sum-box sum-single">
+      <div class="sum-num c-single" id="sumSingle">0</div>
+      <div class="sum-lbl">单点意见 · 仅1人提</div>
+    </div>
+  </div>
+  
+  <!-- 共识 -->
+  <div class="section" id="secConsensus">
+    <h3>✅ 共识修改 <span class="badge b-consensus">必改 · V21.2 强制</span></h3>
+    <div class="empty">暂无</div>
+  </div>
+  
+  <!-- 对立 -->
+  <div class="section" id="secConflict">
+    <h3>⚠️ 对立分歧 <span class="badge b-conflict">需董事长拍板</span></h3>
+    <div class="empty">暂无</div>
+  </div>
+  
+  <!-- 单点 -->
+  <div class="section" id="secSingle">
+    <h3>🔵 单点意见 <span class="badge b-single">存档 · 累积≥3再动</span></h3>
+    <div class="empty">暂无</div>
+  </div>
+  
+  <!-- 行动 -->
+  <div class="section">
+    <h3>📋 输出</h3>
+    <div class="export-row">
+      <button class="btn primary" onclick="exportV212List()">📤 导出 V21.2 修订清单</button>
+      <button class="btn" onclick="exportSummaryReport()">📊 导出汇总报告 (TXT)</button>
+      <button class="btn" onclick="resetAll()" style="background:rgba(255,95,95,0.08);border-color:rgba(255,95,95,0.2);color:var(--red);flex:0 0 auto">🗑 重置</button>
+    </div>
+  </div>
+  
+</div>
+
+<div style="text-align:center;color:var(--dim);font-size:10px;margin-top:30px;font-family:'JetBrains Mono',monospace;letter-spacing:0.1em">
+  V21 · FEEDBACK MERGER · DS · 2026
+</div>
+
+</div>
+
+<script>
+let uploadedFeedbacks = []; // {filename, reviewer, exported_at, edits[]}
+let analysisResult = null;
+
+// ─── 拖拽 ───
+const dz = document.getElementById('dropzone');
+const fi = document.getElementById('fileInput');
+
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+fi.addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(files) {
+  Array.from(files).forEach(file => {
+    if (!file.name.endsWith('.json')) {
+      alert(`❌ ${file.name} 不是 JSON 文件，已跳过`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.reviewer || !data.edits) {
+          alert(`❌ ${file.name} 不是有效的 V21 反馈文件，已跳过`);
+          return;
+        }
+        // 去重（同 reviewer 后导入会替换）
+        uploadedFeedbacks = uploadedFeedbacks.filter(f => f.reviewer !== data.reviewer);
+        uploadedFeedbacks.push({
+          filename: file.name,
+          reviewer: data.reviewer,
+          exported_at: data.exported_at,
+          edit_count: data.edit_count,
+          edits: data.edits
+        });
+        renderUploaded();
+      } catch(e) {
+        alert(`❌ ${file.name} 解析失败: ${e.message}`);
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+function renderUploaded() {
+  const box = document.getElementById('uploadedList');
+  if (uploadedFeedbacks.length === 0) {
+    box.innerHTML = '';
+    document.getElementById('btnAnalyze').disabled = true;
+    return;
+  }
+  box.innerHTML = uploadedFeedbacks.map((f, i) => {
+    const t = new Date(f.exported_at);
+    const ts = `${t.getMonth()+1}/${t.getDate()} ${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`;
+    return `<div class="up-item">
+      <div class="up-item-l">
+        <strong>${f.reviewer}</strong> · ${f.edit_count} 处修改
+        <div class="up-item-meta">${f.filename} · ${ts}</div>
+      </div>
+      <button class="up-item-del" onclick="removeFile(${i})">移除</button>
+    </div>`;
+  }).join('');
+  document.getElementById('btnAnalyze').disabled = false;
+}
+
+function removeFile(idx) {
+  uploadedFeedbacks.splice(idx, 1);
+  renderUploaded();
+}
+
+function resetAll() {
+  if (!confirm('清空所有数据？')) return;
+  uploadedFeedbacks = [];
+  analysisResult = null;
+  renderUploaded();
+  document.getElementById('resultZone').style.display = 'none';
+}
+
+// ─── 分析 ───
+function analyze() {
+  // 把所有反馈按 city + field 聚合
+  const cityFieldMap = {}; // {city_id||field: [{reviewer, old, new}]}
+  uploadedFeedbacks.forEach(f => {
+    f.edits.forEach(e => {
+      const key = `${e.city_id}||${e.field}`;
+      if (!cityFieldMap[key]) cityFieldMap[key] = { city_id: e.city_id, city_name: e.city_name, field: e.field, items: [] };
+      cityFieldMap[key].items.push({
+        reviewer: f.reviewer,
+        old: e.old,
+        new: e.new,
+        time: e.time
+      });
+    });
+  });
+  
+  const consensus = []; // ≥2人改了同一个 field
+  const conflict = [];  // ≥2人改了同一field但方向不同
+  const single = [];    // 仅1人改
+  
+  Object.values(cityFieldMap).forEach(g => {
+    if (g.items.length === 1) {
+      single.push(g);
+    } else {
+      // 看方向
+      const newVals = g.items.map(i => i.new);
+      const allSame = newVals.every(v => v === newVals[0]);
+      
+      if (allSame) {
+        // 同向 = 共识
+        consensus.push({ ...g, suggested: newVals[0], type: 'same_target' });
+      } else if (g.field === 'target_2029') {
+        // 数字字段，看趋势是否一致
+        const olds = g.items.map(i => parseFloat(i.old));
+        const news = g.items.map(i => parseFloat(i.new));
+        const directions = news.map((n,i) => n > olds[i] ? 'up' : n < olds[i] ? 'down' : 'same');
+        const allUp = directions.every(d => d === 'up');
+        const allDown = directions.every(d => d === 'down');
+        if (allUp || allDown) {
+          // 方向一致但数值不同 = 弱共识
+          const avg = Math.round(news.reduce((a,b)=>a+b,0) / news.length);
+          consensus.push({ ...g, suggested: avg, type: 'same_direction', direction: allUp?'up':'down' });
+        } else {
+          // 方向不一致 = 对立
+          conflict.push({ ...g });
+        }
+      } else {
+        // 非数值字段不同 = 对立
+        conflict.push({ ...g });
+      }
+    }
+  });
+  
+  analysisResult = { consensus, conflict, single };
+  renderResult();
+}
+
+// ─── 渲染结果 ───
+function renderResult() {
+  document.getElementById('resultZone').style.display = 'block';
+  const { consensus, conflict, single } = analysisResult;
+  
+  document.getElementById('sumConsensus').textContent = consensus.length;
+  document.getElementById('sumConflict').textContent = conflict.length;
+  document.getElementById('sumSingle').textContent = single.length;
+  
+  // 共识
+  renderSection('secConsensus', consensus, 'consensus');
+  renderSection('secConflict', conflict, 'conflict');
+  renderSection('secSingle', single, 'single');
+}
+
+function renderSection(secId, items, type) {
+  const sec = document.getElementById(secId);
+  const head = sec.querySelector('h3');
+  const oldBody = sec.querySelectorAll(':scope > div, :scope > .empty');
+  oldBody.forEach(n => n.remove());
+  
+  if (items.length === 0) {
+    sec.innerHTML += '<div class="empty">暂无</div>';
+    return;
+  }
+  
+  const fragment = document.createElement('div');
+  
+  // 排序：共识按数量倒序，对立按城市名，单点按 reviewer 分组
+  if (type === 'consensus') {
+    items.sort((a,b) => b.items.length - a.items.length);
+  }
+  
+  items.forEach(g => {
+    const fieldName = g.field === 'target_2029' ? '2029目标' : g.field === 'allow' ? '放大标记' : g.field;
+    let priorityHtml = '';
+    let suggestion = '';
+    
+    if (type === 'consensus') {
+      if (g.items.length >= 3) priorityHtml = '<span class="fb-priority p-high">高优先级 · '+g.items.length+'人</span>';
+      else priorityHtml = '<span class="fb-priority p-mid">中优先级 · '+g.items.length+'人</span>';
+      
+      if (g.type === 'same_target') {
+        suggestion = `<div style="margin-top:6px;padding:6px 10px;background:rgba(74,222,128,0.1);border-radius:5px;font-size:11px"><strong style="color:var(--consensus)">→ 建议改为：${g.suggested}</strong>（${g.items.length}人一致）</div>`;
+      } else if (g.type === 'same_direction') {
+        suggestion = `<div style="margin-top:6px;padding:6px 10px;background:rgba(245,166,35,0.08);border-radius:5px;font-size:11px"><strong style="color:var(--conflict)">→ 建议改为：${g.suggested}</strong>（${g.items.length}人均认为应${g.direction==='up'?'调高':'调低'}，取均值）</div>`;
+      }
+    } else if (type === 'conflict') {
+      priorityHtml = '<span class="fb-priority p-mid">需拍板</span>';
+    } else {
+      priorityHtml = '<span class="fb-priority p-low">单点</span>';
+    }
+    
+    const changeHtml = g.items.map(i => 
+      `<span class="fb-change"><span class="fb-by-tag">${i.reviewer}</span>${i.old} → <strong>${i.new}</strong></span>`
+    ).join('');
+    
+    const row = document.createElement('div');
+    row.className = 'feedback-row';
+    row.innerHTML = `
+      <div class="fb-head">
+        <div>
+          <span class="fb-city">${g.city_name}</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:6px">${fieldName}</span>
+        </div>
+        ${priorityHtml}
+      </div>
+      <div class="fb-changes">${changeHtml}</div>
+      ${suggestion}
+    `;
+    fragment.appendChild(row);
+  });
+  
+  sec.appendChild(fragment);
+}
+
+// ─── 导出 ───
+function exportV212List() {
+  if (!analysisResult) return;
+  const { consensus, conflict, single } = analysisResult;
+  
+  let txt = `╔════════════════════════════════════════╗\n`;
+  txt += `║  V21.2 修订清单 · 基于 4 主管反馈      ║\n`;
+  txt += `╚════════════════════════════════════════╝\n\n`;
+  txt += `生成时间: ${new Date().toLocaleString('zh-CN')}\n`;
+  txt += `参与反馈: ${uploadedFeedbacks.length} 人\n`;
+  txt += `  · ${uploadedFeedbacks.map(f=>f.reviewer).join(', ')}\n\n`;
+  
+  txt += `═════════════════════════════════════════\n`;
+  txt += `【A 类】共识修改 · ${consensus.length} 处 · 必改\n`;
+  txt += `═════════════════════════════════════════\n\n`;
+  if (consensus.length === 0) txt += `暂无\n\n`;
+  consensus.forEach((g, i) => {
+    const fieldName = g.field === 'target_2029' ? '2029目标' : g.field === 'allow' ? '放大标记' : g.field;
+    txt += `[A${i+1}] ${g.city_name} · ${fieldName}\n`;
+    txt += `      建议值: ${g.suggested}\n`;
+    txt += `      支持人: ${g.items.map(i=>i.reviewer).join(' / ')}\n`;
+    g.items.forEach(it => txt += `        · ${it.reviewer}: ${it.old} → ${it.new}\n`);
+    txt += `\n`;
+  });
+  
+  txt += `═════════════════════════════════════════\n`;
+  txt += `【B 类】对立分歧 · ${conflict.length} 处 · 需董事长拍板\n`;
+  txt += `═════════════════════════════════════════\n\n`;
+  if (conflict.length === 0) txt += `暂无\n\n`;
+  conflict.forEach((g, i) => {
+    const fieldName = g.field === 'target_2029' ? '2029目标' : g.field === 'allow' ? '放大标记' : g.field;
+    txt += `[B${i+1}] ${g.city_name} · ${fieldName}\n`;
+    g.items.forEach(it => txt += `      · ${it.reviewer}: ${it.old} → ${it.new}\n`);
+    txt += `\n`;
+  });
+  
+  txt += `═════════════════════════════════════════\n`;
+  txt += `【C 类】单点意见 · ${single.length} 处 · 存档\n`;
+  txt += `═════════════════════════════════════════\n\n`;
+  if (single.length === 0) txt += `暂无\n\n`;
+  single.forEach((g, i) => {
+    const fieldName = g.field === 'target_2029' ? '2029目标' : g.field === 'allow' ? '放大标记' : g.field;
+    const it = g.items[0];
+    txt += `[C${i+1}] ${g.city_name} · ${fieldName} · ${it.reviewer}: ${it.old} → ${it.new}\n`;
+  });
+  txt += `\n═════════════════════════════════════════\n`;
+  txt += `END · DS · INFINITY OS V21.2 修订准备\n`;
+  
+  download(txt, `V21.2_修订清单_${new Date().toISOString().slice(0,10)}.txt`);
+}
+
+function exportSummaryReport() {
+  if (!analysisResult) return;
+  const { consensus, conflict, single } = analysisResult;
+  
+  let txt = `V21 反馈汇总报告\n`;
+  txt += `生成时间: ${new Date().toLocaleString('zh-CN')}\n`;
+  txt += `\n=== 总体 ===\n`;
+  txt += `共识修改: ${consensus.length} 处\n`;
+  txt += `对立分歧: ${conflict.length} 处\n`;
+  txt += `单点意见: ${single.length} 处\n`;
+  txt += `参与反馈: ${uploadedFeedbacks.length} 人 (${uploadedFeedbacks.map(f=>f.reviewer).join(', ')})\n`;
+  txt += `\n=== 各人贡献 ===\n`;
+  uploadedFeedbacks.forEach(f => {
+    txt += `${f.reviewer}: ${f.edit_count} 处修改\n`;
+  });
+  txt += `\n=== 高优先级共识 (≥3人) ===\n`;
+  consensus.filter(c => c.items.length >= 3).forEach(g => {
+    txt += `· ${g.city_name} · ${g.field}: 建议改为 ${g.suggested}\n`;
+  });
+  
+  download(txt, `V21_汇总报告_${new Date().toISOString().slice(0,10)}.txt`);
+}
+
+function download(text, filename) {
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+</script>
+</body>
+</html>
