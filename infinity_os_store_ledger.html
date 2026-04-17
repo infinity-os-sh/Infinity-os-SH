@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 占流门店一本账</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;--card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.08);
+  --orange:#fb923c;--orange-dim:rgba(251,146,60,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;padding-bottom:60px}
+
+.topbar{position:sticky;top:0;z-index:100;background:rgba(7,8,14,.97);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;padding:0 14px;height:52px}
+.logo{display:flex;align-items:center;gap:7px}
+.ls{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000}
+.ln{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.ln em{color:var(--amber);font-style:normal}
+.hb{background:var(--card2);border:1px solid var(--border2);border-radius:16px;
+  padding:5px 11px;font-size:11px;color:var(--text2);text-decoration:none;white-space:nowrap}
+.ck{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+
+/* 筛选栏 */
+.filter-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 14px;
+  position:sticky;top:52px;z-index:91;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.filter-bar::-webkit-scrollbar{display:none}
+.fb-pill{padding:6px 12px;border-radius:20px;border:1px solid var(--border);
+  background:var(--card);font-size:11px;font-weight:600;color:var(--text3);
+  cursor:pointer;transition:all .2s;flex-shrink:0;white-space:nowrap}
+.fb-pill.on{background:var(--amber-dim);border-color:rgba(245,166,35,.3);color:var(--amber)}
+.fb-sep{width:1px;background:var(--border);flex-shrink:0;margin:2px 0}
+
+/* Tab */
+.tab-bar{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);
+  position:sticky;top:98px;z-index:90}
+.tb{flex:1;padding:10px 4px;display:flex;flex-direction:column;align-items:center;
+  gap:2px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tb.on{border-bottom-color:var(--blue)}
+.tb-ic{font-size:13px}
+.tb-lbl{font-size:11px;font-weight:600;color:var(--text3)}
+.tb.on .tb-lbl{color:var(--blue)}
+.tb-sub{font-size:8px;color:var(--text3);font-family:'Space Mono',monospace}
+
+/* 页面 */
+.pg{display:none;padding:12px 14px}
+.pg.on{display:block}
+
+/* section */
+.sec{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.09em;
+  text-transform:uppercase;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* 门店总览卡 */
+.store-hero{background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(9,9,15,1));
+  border:1px solid rgba(96,165,250,.2);border-radius:14px;padding:16px;margin-bottom:12px;
+  position:relative;overflow:hidden}
+.store-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--blue),transparent)}
+.sh-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.sh-left{}
+.sh-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:3px}
+.sh-meta{font-size:11px;color:var(--text3);display:flex;gap:8px;flex-wrap:wrap}
+.sh-cls{font-size:11px;padding:3px 9px;border-radius:8px;font-weight:700;margin-bottom:4px;display:inline-block}
+.cls-sp{background:rgba(245,166,35,.15);color:var(--amber);border:1px solid rgba(245,166,35,.3)}
+.cls-s{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(96,165,250,.3)}
+.cls-b{background:rgba(255,255,255,.06);color:var(--text2);border:1px solid var(--border2)}
+.sh-score{text-align:right}
+.sh-val{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--blue);line-height:1}
+.sh-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+.sh-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ss-box{background:rgba(255,255,255,.04);border-radius:9px;padding:9px 8px;text-align:center}
+.ss-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;line-height:1}
+.ss-lbl{font-size:9px;color:var(--text3);margin-top:3px;line-height:1.3}
+
+/* 门店列表 */
+.store-list-wrap{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.store-card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;cursor:pointer;transition:all .15s}
+.store-card:hover{border-color:var(--border2)}
+.store-card.active{border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.03)}
+.sc-main{display:flex;align-items:center;gap:10px;padding:11px 13px}
+.sc-icon{width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  background:var(--blue-dim);border:1px solid rgba(96,165,250,.2)}
+.sc-body{flex:1;min-width:0}
+.sc-name{font-size:13px;font-weight:600;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.sc-meta{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;display:flex;gap:8px;flex-wrap:wrap}
+.sc-bar-wrap{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:5px}
+.sc-bar-fill{height:100%;border-radius:2px}
+.sc-right{text-align:right;flex-shrink:0;min-width:68px}
+.sc-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--blue);line-height:1}
+.sc-sub{font-size:10px;margin-top:3px;font-family:'Space Mono',monospace}
+.sc-caret{font-size:12px;color:var(--text3);flex-shrink:0;transition:transform .2s}
+.store-card.active .sc-caret{transform:rotate(90deg)}
+
+/* 门店SKU展开 */
+.sc-sku-list{display:none;border-top:1px solid rgba(255,255,255,.04);padding:10px 12px;
+  display:flex;flex-direction:column;gap:5px}
+.store-card.active .sc-sku-list{display:flex}
+.sku-mini{display:flex;align-items:center;gap:8px;padding:7px 10px;
+  background:var(--bg3);border-radius:9px;border:1px solid var(--border)}
+.sm-icon{font-size:13px;flex-shrink:0}
+.sm-name{font-size:11px;font-weight:600;flex:1}
+.sm-bar{width:60px;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;flex-shrink:0}
+.sm-fill{height:100%;border-radius:2px}
+.sm-ach{font-size:11px;font-family:'Space Mono',monospace;font-weight:700;flex-shrink:0;min-width:34px;text-align:right}
+.sm-water{font-size:10px;color:var(--text3);flex-shrink:0;min-width:36px;text-align:right}
+
+/* 陈列视图 */
+.shelf-view{background:var(--card);border:1px solid var(--border2);border-radius:14px;
+  padding:14px;margin-bottom:12px}
+.sv-title{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.shelf-diagram{background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:12px;overflow-x:auto}
+.shelf-row{display:flex;gap:4px;margin-bottom:4px;min-width:320px}
+.shelf-row-label{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;
+  width:40px;flex-shrink:0;display:flex;align-items:center}
+.shelf-slot{flex:1;height:36px;border-radius:5px;display:flex;align-items:center;
+  justify-content:center;font-size:9px;font-weight:700;text-align:center;
+  border:1px solid rgba(255,255,255,.08);line-height:1.3;cursor:default}
+.slot-our{background:rgba(245,166,35,.2);color:var(--amber);border-color:rgba(245,166,35,.3)}
+.slot-comp{background:rgba(255,95,95,.12);color:var(--red);border-color:rgba(255,95,95,.2)}
+.slot-empty{background:rgba(255,255,255,.03);color:var(--text3)}
+.slot-gold{background:rgba(245,166,35,.3);color:var(--amber);border-color:rgba(245,166,35,.5);
+  box-shadow:0 0 8px rgba(245,166,35,.2)}
+.shelf-legend{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.sl-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3)}
+.sl-dot{width:10px;height:10px;border-radius:3px}
+
+/* 巡访记录 */
+.visit-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.visit-item{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:12px 13px}
+.vi-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.vi-date{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+.vi-staff{font-size:11px;font-weight:600;color:var(--blue)}
+.vi-body{font-size:12px;color:var(--text2);line-height:1.6}
+.vi-tags{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
+.vi-tag{font-size:10px;padding:2px 8px;border-radius:6px}
+.vt-ok{background:var(--green-dim);color:var(--green)}
+.vt-warn{background:var(--amber-dim);color:var(--amber)}
+.vt-issue{background:var(--red-dim);color:var(--red)}
+
+/* 频次提醒 */
+.freq-banner{background:var(--amber-dim);border:1px solid rgba(245,166,35,.2);
+  border-radius:11px;padding:12px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:center}
+.fb-ic{font-size:20px;flex-shrink:0}
+.fb-body{flex:1}
+.fb-title{font-size:12px;font-weight:700;color:var(--amber);margin-bottom:2px}
+.fb-desc{font-size:11px;color:var(--text2);line-height:1.5}
+.fb-btn{padding:6px 12px;border-radius:9px;background:var(--amber);border:none;
+  font-size:11px;font-weight:700;color:#000;cursor:pointer;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+
+/* PRISM卡 */
+.prism-card{background:var(--card);border:1px solid var(--border2);border-radius:13px;
+  padding:14px;margin-bottom:12px}
+.pc-title{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.prism-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+.pg-box{background:var(--bg3);border-radius:9px;padding:9px 11px;border:1px solid var(--border)}
+.pg-lbl{font-size:10px;color:var(--text3);margin-bottom:4px}
+.pg-val{font-size:14px;font-weight:700}
+.comm-list{display:flex;flex-direction:column;gap:5px}
+.comm-row{display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:var(--bg3);border-radius:9px;border:1px solid var(--border);font-size:12px}
+.cr-name{flex:1;font-weight:600}
+.cr-hh{font-size:10px;color:var(--text3)}
+.cr-pen{font-family:'Space Mono',monospace;font-size:11px;flex-shrink:0}
+.cr-prism{font-size:10px;padding:2px 6px;border-radius:5px;background:var(--purple-dim);color:var(--purple);flex-shrink:0}
+
+/* AI问答 */
+.ai-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.ai-hdr{padding:10px 13px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.07em;text-transform:uppercase}
+.cps{display:flex;gap:5px;padding:8px 12px;overflow-x:auto;scrollbar-width:none}
+.cps::-webkit-scrollbar{display:none}
+.cp{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:4px 10px;font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0}
+.cp:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-dim)}
+.ai-bubble{margin:0 12px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text2);line-height:1.65}
+.ai-resp{display:none;margin:0 12px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.ai-resp.show{display:block}
+.ai-q{font-size:10px;color:var(--text3);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ai-row{display:flex;gap:6px;padding:6px 12px 10px}
+.ai-in{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:12px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif}
+.ai-in:focus{border-color:rgba(96,165,250,.4)}
+.ai-in::placeholder{color:var(--text3)}
+.ai-btn{width:36px;height:36px;border-radius:9px;background:var(--blue);border:none;cursor:pointer;font-size:14px;flex-shrink:0;color:#000}
+.td-wrap{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--blue);animation:tda 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tda{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+.tag{font-size:9px;padding:1px 6px;border-radius:5px;font-weight:600;font-family:'Space Mono',monospace}
+.tg{background:var(--green-dim);color:var(--green)}
+.tw{background:var(--amber-dim);color:var(--amber)}
+.tr{background:var(--red-dim);color:var(--red)}
+.tb-t{background:var(--blue-dim);color:var(--blue)}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><div class="ls">∞</div><div class="ln">INFINITY <em>OS</em></div></div>
+  <a class="hb" href="index.html">⌂ 门户</a>
+  <div class="ck" id="ck"></div>
+</div>
+
+<!-- 筛选栏 -->
+<div class="filter-bar">
+  <div class="fb-pill on" onclick="setFilter('all',this)">全部门店</div>
+  <div class="fb-pill" onclick="setFilter('sp',this)">🌟 S+级</div>
+  <div class="fb-pill" onclick="setFilter('s',this)">⭐ S级</div>
+  <div class="fb-sep"></div>
+  <div class="fb-pill" onclick="setFilter('warn',this)">⚠️ 需关注</div>
+  <div class="fb-pill" onclick="setFilter('overdue',this)">🔴 超期未访</div>
+</div>
+
+<!-- Tab -->
+<div class="tab-bar">
+  <div class="tb on" id="tb-list" onclick="switchTab('list')">
+    <span class="tb-ic">🏪</span><span class="tb-lbl">门店列表</span><span class="tb-sub">SKU·水位</span>
+  </div>
+  <div class="tb" id="tb-shelf" onclick="switchTab('shelf')">
+    <span class="tb-ic">📦</span><span class="tb-lbl">货架陈列</span><span class="tb-sub">占位·竞品</span>
+  </div>
+  <div class="tb" id="tb-visit" onclick="switchTab('visit')">
+    <span class="tb-ic">📋</span><span class="tb-lbl">巡访记录</span><span class="tb-sub">频次·异常</span>
+  </div>
+  <div class="tb" id="tb-prism" onclick="switchTab('prism')">
+    <span class="tb-ic">◈</span><span class="tb-lbl">PRISM选点</span><span class="tb-sub">小区·渗透率</span>
+  </div>
+</div>
+
+<!-- ══ 门店列表 ══ -->
+<div class="pg on" id="pg-list">
+  <div class="sec">占流重点门店 <span style="font-size:10px;color:var(--text2);font-weight:400;text-transform:none;letter-spacing:0">· S+/S级门店统一管理</span></div>
+  <div class="store-list-wrap" id="storeListWrap"></div>
+</div>
+
+<!-- ══ 货架陈列 ══ -->
+<div class="pg" id="pg-shelf">
+  <div class="sec">货架陈列视图</div>
+  <div style="margin-bottom:10px">
+    <select id="shelfStoreSelect" onchange="renderShelf()" style="width:100%;background:var(--card);border:1px solid var(--border2);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif">
+    </select>
+  </div>
+  <div id="shelfContent"></div>
+</div>
+
+<!-- ══ 巡访记录 ══ -->
+<div class="pg" id="pg-visit">
+  <div id="visitContent"></div>
+</div>
+
+<!-- ══ PRISM选点 ══ -->
+<div class="pg" id="pg-prism">
+  <div id="prismContent"></div>
+  <div class="ai-wrap">
+    <div class="ai-hdr">◈ PRISM选点 · AI分析</div>
+    <div class="cps">
+      <div class="cp" onclick="askAI('哪个小区的PRISM分最高但渗透率最低，值得重点投入？')">找潜力小区</div>
+      <div class="cp" onclick="askAI('大润发金桥店周边小区的渗透率如何，有没有提升空间？')">金桥店周边分析</div>
+      <div class="cp" onclick="askAI('S+门店的消费者流失风险有多高？')">流失风险</div>
+    </div>
+    <div class="ai-bubble">你好，我是PRISM精准选点系统。问我任何关于小区选点、消费者渗透率、流失风险的问题。</div>
+    <div class="ai-resp" id="aiResp"><div class="ai-q" id="aiQ"></div><div id="aiA"></div></div>
+    <div class="ai-row">
+      <input class="ai-in" id="aiIn" placeholder="问PRISM系统任何问题…" onkeydown="if(event.key==='Enter')askAI(this.value,this)"/>
+      <button class="ai-btn" onclick="askAI(document.getElementById('aiIn').value,document.getElementById('aiIn'))">↑</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ 数据 ══════════════════════════════════════════════
+const STORES = [
+  {
+    id:'bc-dl', name:'大润发金桥', cls:'S+', dist:'宝仓贸易', region:'浦东',
+    r:4.8, rT:5.5, ach:87, rev:42000, growth:+6.2,
+    lastVisit:'2026-04-12', visitFreq:'3次/周', visitOverdue:false,
+    shelfPct:42, goldPos:true, compPct:28,
+    skus:[
+      {id:'zr5',name:'遵循自然500ml',icon:'🧂',color:'#f5a623',ach:82,inv:1.4,r:3.2,rT:4.0},
+      {id:'hs', name:'红烧酱油系列',icon:'🍶',color:'#60a5fa',ach:94,inv:1.8,r:8.1,rT:8.6},
+      {id:'hsl',name:'红烧大装',     icon:'🍶',color:'#60a5fa',ach:88,inv:1.6,r:4.2,rT:4.8},
+      {id:'tj', name:'特级酱油',     icon:'🏅',color:'#ff5f5f',ach:55,inv:3.2,r:1.2,rT:2.2},
+    ],
+    comms:[
+      {id:'cm1',name:'仁恒河滨城',hh:1200,pen:1.2,prism:83},
+      {id:'cm2',name:'东方曼哈顿',hh:980, pen:0.9,prism:74},
+    ],
+    visits:[
+      {date:'2026-04-14',staff:'DSR李明',note:'货架补货完成，黄金位维持，竞品占位减少1格',tags:['ok','ok']},
+      {date:'2026-04-12',staff:'DSR李明',note:'遵循自然库存低于1a，已申请紧急补货',tags:['warn']},
+      {date:'2026-04-10',staff:'DOM王磊',note:'季度陈列检查，整体合规，特级酱油动销偏弱',tags:['ok','warn']},
+    ]
+  },
+  {
+    id:'bc-jl', name:'家乐福浦东', cls:'S', dist:'宝仓贸易', region:'浦东',
+    r:3.2, rT:4.2, ach:76, rev:31000, growth:+3.1,
+    lastVisit:'2026-04-11', visitFreq:'2次/周', visitOverdue:false,
+    shelfPct:35, goldPos:false, compPct:38,
+    skus:[
+      {id:'zr5',name:'遵循自然500ml',icon:'🧂',color:'#f5a623',ach:74,inv:1.1,r:2.8,rT:3.8},
+      {id:'hs', name:'红烧酱油系列',icon:'🍶',color:'#60a5fa',ach:82,inv:1.5,r:6.8,rT:8.3},
+      {id:'hsl',name:'红烧大装',     icon:'🍶',color:'#60a5fa',ach:79,inv:1.3,r:3.6,rT:4.6},
+    ],
+    comms:[
+      {id:'cm3',name:'碧云国际社区',hh:860,pen:0.8,prism:71},
+    ],
+    visits:[
+      {date:'2026-04-11',staff:'DSR李明',note:'黄金位被竞品占据，需要申请陈列费谈判',tags:['issue']},
+      {date:'2026-04-09',staff:'DSR李明',note:'正常巡检，货架整洁，补货及时',tags:['ok']},
+    ]
+  },
+  {
+    id:'hp-dl', name:'大润发五角场', cls:'S+', dist:'黄浦经销商', region:'黄浦',
+    r:5.2, rT:5.5, ach:95, rev:48000, growth:+11.4,
+    lastVisit:'2026-04-13', visitFreq:'3次/周', visitOverdue:false,
+    shelfPct:46, goldPos:true, compPct:24,
+    skus:[
+      {id:'zr5',name:'遵循自然500ml',icon:'🧂',color:'#f5a623',ach:96,inv:1.9,r:4.8,rT:5.0},
+      {id:'hs', name:'红烧酱油系列',icon:'🍶',color:'#60a5fa',ach:98,inv:1.7,r:8.4,rT:8.6},
+      {id:'hsl',name:'红烧大装',     icon:'🍶',color:'#60a5fa',ach:94,inv:1.4,r:4.6,rT:4.9},
+      {id:'tj', name:'特级酱油',     icon:'🏅',color:'#ff5f5f',ach:82,inv:2.1,r:2.6,rT:3.2},
+    ],
+    comms:[
+      {id:'cm5',name:'联洋花园',  hh:1400,pen:2.1,prism:91},
+      {id:'cm6',name:'太平桥',    hh:520, pen:1.8,prism:86},
+    ],
+    visits:[
+      {date:'2026-04-13',staff:'DSR张伟',note:'本周第三次巡检，遵循自然新品活动执行到位，消费者互动36人',tags:['ok','ok']},
+      {date:'2026-04-11',staff:'DSR张伟',note:'货架占比46%，黄金位稳定，特级酱油新增1个端架',tags:['ok']},
+    ]
+  },
+  {
+    id:'mh-dl', name:'大润发古美', cls:'S+', dist:'闵行经销商', region:'闵行',
+    r:6.1, rT:6.5, ach:94, rev:56000, growth:+15.1,
+    lastVisit:'2026-04-14', visitFreq:'3次/周', visitOverdue:false,
+    shelfPct:48, goldPos:true, compPct:22,
+    skus:[
+      {id:'zr5',name:'遵循自然500ml',icon:'🧂',color:'#f5a623',ach:96,inv:1.8,r:5.2,rT:5.4},
+      {id:'hs', name:'红烧酱油系列',icon:'🍶',color:'#60a5fa',ach:98,inv:1.6,r:9.1,rT:9.3},
+      {id:'hsl',name:'红烧大装',     icon:'🍶',color:'#60a5fa',ach:96,inv:1.5,r:4.9,rT:5.1},
+      {id:'tj', name:'特级酱油',     icon:'🏅',color:'#ff5f5f',ach:88,inv:2.4,r:3.0,rT:3.4},
+    ],
+    comms:[
+      {id:'cm10',name:'古美尚城', hh:1600,pen:2.6,prism:93},
+      {id:'cm11',name:'七宝清华苑',hh:1100,pen:2.2,prism:89},
+    ],
+    visits:[
+      {date:'2026-04-14',staff:'DSR王芳',note:'遵循自然本周动销超预期，消费者互动42人，新增会员8人',tags:['ok','ok']},
+      {date:'2026-04-12',staff:'美顾陈静',note:'周末活动执行，消费者体验样品发放120份，转化率18%',tags:['ok','ok']},
+    ]
+  },
+  {
+    id:'bc-xlh', name:'世纪联华浦东', cls:'B', dist:'宝仓贸易', region:'浦东',
+    r:1.8, rT:3.0, ach:60, rev:21000, growth:-1.2,
+    lastVisit:'2026-04-08', visitFreq:'1次/周', visitOverdue:true,
+    shelfPct:28, goldPos:false, compPct:45,
+    skus:[
+      {id:'zr5',name:'遵循自然500ml',icon:'🧂',color:'#f5a623',ach:52,inv:0.8,r:1.4,rT:2.7},
+      {id:'hs', name:'红烧酱油系列',icon:'🍶',color:'#60a5fa',ach:68,inv:1.1,r:4.2,rT:6.2},
+    ],
+    comms:[
+      {id:'cm4',name:'金桥碧云小区',hh:640,pen:0.4,prism:52},
+    ],
+    visits:[
+      {date:'2026-04-08',staff:'DSR李明',note:'货架整理，遵循自然缺货，已提交补货申请',tags:['warn','issue']},
+    ]
+  },
+];
+
+// ══ 状态 ══════════════════════════════════════════════
+let curFilter='all';
+let curTab='list';
+let activeStoreId=null;
+
+function getFilteredStores(){
+  switch(curFilter){
+    case 'sp': return STORES.filter(s=>s.cls==='S+');
+    case 's':  return STORES.filter(s=>s.cls==='S');
+    case 'warn': return STORES.filter(s=>s.ach<75||s.skus.some(sk=>sk.inv<1));
+    case 'overdue': return STORES.filter(s=>s.visitOverdue);
+    default: return STORES;
+  }
+}
+
+function setFilter(f,el){
+  curFilter=f;
+  document.querySelectorAll('.fb-pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  renderList();
+}
+
+function switchTab(t){
+  curTab=t;
+  ['list','shelf','visit','prism'].forEach(x=>{
+    document.getElementById('tb-'+x).classList.toggle('on',x===t);
+    document.getElementById('pg-'+x).classList.toggle('on',x===t);
+  });
+  if(t==='shelf') renderShelf();
+  if(t==='visit') renderVisit();
+  if(t==='prism') renderPrism();
+}
+
+// ══ 门店列表 ══════════════════════════════════════════
+function renderList(){
+  const stores = getFilteredStores();
+  const wrap = document.getElementById('storeListWrap');
+  wrap.innerHTML='';
+
+  stores.forEach(store=>{
+    const achColor = store.ach>=85?'var(--green)':store.ach>=65?'var(--amber)':'var(--red)';
+    const clsCss = store.cls==='S+'?'cls-sp':store.cls==='S'?'cls-s':'cls-b';
+    const isActive = store.id===activeStoreId;
+
+    const card = document.createElement('div');
+    card.className = 'store-card'+(isActive?' active':'');
+    card.id = 'sc-'+store.id;
+
+    const skuRows = store.skus.map(sku=>{
+      const sc = sku.ach>=85?'var(--green)':sku.ach>=65?'var(--amber)':'var(--red)';
+      const wc = sku.inv<=1?'var(--red)':sku.inv<=2?'var(--green)':'var(--orange)';
+      return `<div class="sku-mini">
+        <span class="sm-icon">${sku.icon}</span>
+        <span class="sm-name">${sku.name}</span>
+        <div class="sm-bar"><div class="sm-fill" style="width:${sku.ach}%;background:${sc}"></div></div>
+        <span class="sm-ach" style="color:${sc}">${sku.ach}%</span>
+        <span class="sm-water" style="color:${wc}">${sku.inv}a</span>
+      </div>`;
+    }).join('');
+
+    card.innerHTML=`
+    <div class="sc-main" onclick="toggleStore('${store.id}')">
+      <div class="sc-icon">🏪</div>
+      <div class="sc-body">
+        <div class="sc-name">
+          ${store.name}
+          <span class="sh-cls ${clsCss}">${store.cls}</span>
+          ${store.visitOverdue?'<span class="tag tr">超期未访</span>':''}
+        </div>
+        <div class="sc-meta">
+          <span>r=${store.r}件/天</span>
+          <span>目标${store.rT}</span>
+          <span>货架${store.shelfPct}%</span>
+          <span>上次巡访${store.lastVisit}</span>
+        </div>
+        <div class="sc-bar-wrap">
+          <div class="sc-bar-fill" style="width:${store.ach}%;background:${achColor}"></div>
+        </div>
+      </div>
+      <div class="sc-right">
+        <div class="sc-val">¥${(store.rev/10000).toFixed(1)}万</div>
+        <div class="sc-sub" style="color:${achColor}">${store.ach}%达成</div>
+      </div>
+      <div class="sc-caret">›</div>
+    </div>
+    <div class="sc-sku-list">
+      <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:5px;padding:0 2px">
+        SKU达成率 · 库存水位(a)
+      </div>
+      ${skuRows}
+    </div>`;
+    wrap.appendChild(card);
+  });
+}
+
+function toggleStore(id){
+  activeStoreId = activeStoreId===id ? null : id;
+  renderList();
+}
+
+// ══ 货架陈列 ══════════════════════════════════════════
+function renderShelf(){
+  const sel = document.getElementById('shelfStoreSelect');
+  if(!sel.children.length){
+    sel.innerHTML = STORES.map(s=>`<option value="${s.id}">${s.name}（${s.cls}级）</option>`).join('');
+  }
+  const store = STORES.find(s=>s.id===sel.value)||STORES[0];
+
+  // 生成货架图 - 3层 × 8格
+  const layers = [
+    {label:'上层', slots:['海天生抽','海天生抽','李锦记','遵循自然','遵循自然','空位','海天老抽','李锦记']},
+    {label:'黄金位',slots:['红烧酱油','红烧酱油','红烧酱油','红烧大装','红烧大装','特级酱油','海天生抽','李锦记']},
+    {label:'下层', slots:['海天生抽','海天生抽','海天生抽','红烧酱油','红烧大装','空位','李锦记','海天老抽']},
+  ];
+
+  const ourBrands = ['遵循自然','红烧酱油','红烧大装','特级酱油'];
+
+  const shelfHTML = layers.map((layer,li)=>`
+    <div class="shelf-row">
+      <div class="shelf-row-label">${layer.label}</div>
+      ${layer.slots.map(slot=>{
+        const isOur = ourBrands.some(b=>slot.includes(b.split('')[0])||ourBrands.includes(slot));
+        const isGold = li===1;
+        const isEmpty = slot==='空位';
+        const isOurBrand = ourBrands.includes(slot)||slot.includes('遵循')||slot.includes('红烧')||slot.includes('特级');
+        let cls = isOurBrand?(isGold?'slot-gold':'slot-our'):isEmpty?'slot-empty':'slot-comp';
+        return `<div class="shelf-slot ${cls}">${slot.replace('酱油','').replace('生抽','').replace('老抽','').substring(0,4)}</div>`;
+      }).join('')}
+    </div>`).join('');
+
+  document.getElementById('shelfContent').innerHTML=`
+    <div class="shelf-view">
+      <div class="sv-title">🏪 ${store.name} · 货架占位图</div>
+      <div class="shelf-diagram">${shelfHTML}</div>
+      <div class="shelf-legend">
+        <div class="sl-item"><div class="sl-dot" style="background:rgba(245,166,35,.4)"></div>六月鲜（普通位）</div>
+        <div class="sl-item"><div class="sl-dot" style="background:rgba(245,166,35,.6)"></div>六月鲜（黄金位）</div>
+        <div class="sl-item"><div class="sl-dot" style="background:rgba(255,95,95,.3)"></div>竞品</div>
+        <div class="sl-item"><div class="sl-dot" style="background:rgba(255,255,255,.06)"></div>空位</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${store.shelfPct>=40?'var(--green)':'var(--amber)'}">${store.shelfPct}%</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">货架占比</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${store.goldPos?'var(--amber)':'var(--red)'}">
+          ${store.goldPos?'✓ 有':'✗ 无'}
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">黄金位</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${store.compPct<=30?'var(--green)':'var(--amber)'}">${store.compPct}%</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">竞品占比</div>
+      </div>
+    </div>`;
+}
+
+// ══ 巡访记录 ══════════════════════════════════════════
+function renderVisit(){
+  const today = new Date('2026-04-17');
+  const content = document.getElementById('visitContent');
+
+  // 频次提醒
+  const overdueStores = STORES.filter(s=>s.visitOverdue);
+  const spOverdue = STORES.filter(s=>s.cls==='S+'&&s.lastVisit<'2026-04-15');
+
+  let html = '';
+  if(overdueStores.length||spOverdue.length){
+    html += `<div class="freq-banner">
+      <div class="fb-ic">⏰</div>
+      <div class="fb-body">
+        <div class="fb-title">巡访频次提醒</div>
+        <div class="fb-desc">
+          ${overdueStores.map(s=>`${s.name}（${s.cls}）已超${s.visitFreq}巡访周期`).join('，')}
+        </div>
+      </div>
+      <button class="fb-btn" onclick="alert('已发送巡访提醒给DSR')">提醒DSR</button>
+    </div>`;
+  }
+
+  // 频次标准说明
+  html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:11px;padding:12px 14px;margin-bottom:12px;font-size:11px;color:var(--text2);line-height:1.8">
+    <strong style="color:var(--text)">巡访频次标准：</strong><br>
+    S+ 门店 = 3次/周（周一·周三·周五）<br>
+    S &nbsp;门店 = 2次/周（周一·周四）<br>
+    B &nbsp;门店 = 1次/周（周三）
+  </div>`;
+
+  // 所有门店的巡访记录合并按时间排序
+  const allVisits = STORES.flatMap(s=>
+    s.visits.map(v=>({...v, storeName:s.name, storeCls:s.cls}))
+  ).sort((a,b)=>b.date.localeCompare(a.date));
+
+  html += `<div class="sec">最近巡访记录</div>
+  <div class="visit-list">
+    ${allVisits.map(v=>`
+    <div class="visit-item">
+      <div class="vi-top">
+        <span class="vi-date">${v.date} · ${v.storeName}（${v.storeCls}）</span>
+        <span class="vi-staff">${v.staff}</span>
+      </div>
+      <div class="vi-body">${v.note}</div>
+      <div class="vi-tags">
+        ${v.tags.map(t=>`<span class="vi-tag ${t==='ok'?'vt-ok':t==='warn'?'vt-warn':'vt-issue'}">${t==='ok'?'✓ 正常':t==='warn'?'⚠️ 注意':'⚠️ 问题'}</span>`).join('')}
+      </div>
+    </div>`).join('')}
+  </div>`;
+
+  content.innerHTML = html;
+}
+
+// ══ PRISM选点 ══════════════════════════════════════════
+function renderPrism(){
+  const allComms = STORES.flatMap(s=>s.comms.map(c=>({...c,storeName:s.name,storeCls:s.cls})));
+  const sorted = [...allComms].sort((a,b)=>b.prism-a.prism);
+
+  document.getElementById('prismContent').innerHTML=`
+    <div class="prism-card">
+      <div class="pc-title">◈ PRISM精准选点 · 小区质量排名</div>
+      <div class="prism-grid">
+        <div class="pg-box">
+          <div class="pg-lbl">覆盖小区数</div>
+          <div class="pg-val" style="color:var(--purple)">${allComms.length}个</div>
+        </div>
+        <div class="pg-box">
+          <div class="pg-lbl">平均PRISM分</div>
+          <div class="pg-val" style="color:var(--purple)">${Math.round(allComms.reduce((s,c)=>s+c.prism,0)/allComms.length)}分</div>
+        </div>
+        <div class="pg-box">
+          <div class="pg-lbl">高分小区(≥85)</div>
+          <div class="pg-val" style="color:var(--green)">${allComms.filter(c=>c.prism>=85).length}个</div>
+        </div>
+        <div class="pg-box">
+          <div class="pg-lbl">总覆盖户数</div>
+          <div class="pg-val" style="color:var(--amber)">${(allComms.reduce((s,c)=>s+c.hh,0)/10000).toFixed(1)}万户</div>
+        </div>
+      </div>
+      <div class="sec" style="margin-bottom:8px">小区排名（按PRISM分）</div>
+      <div class="comm-list">
+        ${sorted.map((c,i)=>{
+          const penColor = c.pen>=2?'var(--green)':c.pen>=1?'var(--amber)':'var(--red)';
+          return `<div class="comm-row">
+            <span style="font-size:11px;color:var(--text3);width:20px;flex-shrink:0">${i+1}</span>
+            <span class="cr-name">${c.name}</span>
+            <span class="cr-hh">${c.hh}户</span>
+            <span class="cr-pen" style="color:${penColor}">渗透${c.pen}%</span>
+            <span class="cr-prism">PRISM ${c.prism}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+// ══ AI问答 ════════════════════════════════════════════
+async function askAI(q,el){
+  if(!q||!q.trim())return;
+  if(el instanceof HTMLElement)el.value='';
+  const resp=document.getElementById('aiResp');
+  const qEl=document.getElementById('aiQ');
+  const aEl=document.getElementById('aiA');
+  resp.classList.add('show');
+  qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="td-wrap"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+
+  const allComms = STORES.flatMap(s=>s.comms.map(c=>({...c,storeName:s.name})));
+  const sys=`你是INFINITY OS的PRISM精准选点系统，负责分析门店周边小区的消费潜力。
+当前覆盖${STORES.length}家S+/S级门店，${allComms.length}个周边小区。
+高分小区：${allComms.filter(c=>c.prism>=85).map(c=>c.name+'(PRISM'+c.prism+'·渗透'+c.pen+'%)').join('，')}。
+门店动销：${STORES.map(s=>s.name+'达成'+s.ach+'%').join('，')}。
+用中文简洁回答，不超过150字，直接给出结论和建议。`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})
+    });
+    const data=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${data.content?.map(c=>c.text||'').join('')||'—'}</div>`;
+  }catch(e){
+    aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`;
+  }
+}
+
+// 时钟
+function tick(){const n=new Date();document.getElementById('ck').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')}
+tick();setInterval(tick,1000);
+
+// 初始化货架选择器
+document.getElementById('shelfStoreSelect').innerHTML = STORES.map(s=>`<option value="${s.id}">${s.name}（${s.cls}级）</option>`).join('');
+
+renderList();
+renderPrism();
+</script>
+</body>
+</html>
