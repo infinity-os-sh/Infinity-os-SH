@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 味达美指挥中台</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #09090f;
+  --bg2: #0e1018;
+  --bg3: #13161f;
+  --card: #141820;
+  --card2: #1a2030;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8ecf5;
+  --text2: #8a95aa;
+  --text3: #4a5468;
+  /* 味达美主色：使用稍偏红的橙，区别于六月鲜的金黄橙，呼应大众/餐饮/温暖烟火气的定位 */
+  --amber: #e85d4a;
+  --amber2: #ff7a5e;
+  --amber-dim: rgba(232,93,74,0.1);
+  --teal: #4ecdc4;
+  --teal-dim: rgba(78,205,196,0.1);
+  --red: #ff5f5f;
+  --red-dim: rgba(255,95,95,0.1);
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.1);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96,165,250,0.1);
+  --purple: #a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(9,9,15,0.92);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:52px;
+}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-sym{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,#e85d4a,#c4422e);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#fff;
+  box-shadow:0 3px 12px rgba(232,93,74,0.35);
+}
+.logo-text{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.05em}
+.logo-text span{color:var(--amber)}
+.logo-brand{font-size:11px;color:var(--text3);margin-left:4px}
+
+/* Brand selector (for future merge - currently shows current brand only) */
+.brand-pill{
+  display:flex;align-items:center;gap:4px;
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:20px;padding:4px 10px;font-size:10px;color:var(--text2);
+  font-family:'Space Mono',monospace;
+}
+.brand-pill-dot{width:6px;height:6px;border-radius:50%;background:var(--amber)}
+
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);flex:1;justify-content:center}
+.bc-sep{color:var(--text3);opacity:0.5}
+.bc-link{cursor:pointer;transition:color 0.2s}
+.bc-link:hover{color:var(--text2)}
+.bc-cur{color:var(--text2)}
+
+.topbar-right{display:flex;align-items:center;gap:8px}
+.clock{font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)}
+.back-pill{
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text2);
+  cursor:pointer;transition:all 0.2s;white-space:nowrap;display:flex;align-items:center;gap:4px;
+}
+.back-pill:hover{background:var(--card);color:var(--text)}
+
+/* ── SCREENS ── */
+.screen{display:none;animation:fadeUp 0.22s ease}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── HOME ── */
+.home-hero{
+  padding:24px 16px 16px;
+  text-align:center;
+}
+.home-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin-bottom:4px}
+.home-title span{color:var(--amber)}
+.home-sub{font-size:12px;color:var(--text3);font-family:'Space Mono',monospace}
+.home-positioning{
+  display:inline-block;margin-top:8px;padding:4px 10px;
+  background:rgba(232,93,74,0.08);border:1px solid rgba(232,93,74,0.2);
+  border-radius:12px;font-size:10px;color:var(--amber);letter-spacing:0.05em;
+}
+
+.stats-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  padding:0 16px 16px;
+}
+.stat-box{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:12px 8px;text-align:center;
+}
+.stat-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1}
+.stat-lbl{font-size:10px;color:var(--text3);margin-top:3px;line-height:1.3}
+.c-amber{color:var(--amber)} .c-teal{color:var(--teal)} .c-green{color:var(--green)} .c-red{color:var(--red)}
+
+/* Category cards on home */
+.cat-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:10px;
+  padding:0 16px 12px;
+}
+@media(min-width:600px){.cat-grid{grid-template-columns:repeat(3,1fr)}}
+
+.cat-card{
+  border-radius:16px;padding:18px 16px 14px;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s;
+  position:relative;overflow:hidden;min-height:130px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  border:1px solid rgba(255,255,255,0.05);
+}
+.cat-card:active{transform:scale(0.97)}
+.cat-card::after{
+  content:'›';position:absolute;bottom:14px;right:14px;
+  font-size:18px;opacity:0.3;
+}
+
+.cat-icon{font-size:26px;margin-bottom:8px;display:block}
+.cat-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:3px}
+.cat-sub{font-size:10px;opacity:0.6;line-height:1.4;margin-bottom:8px}
+.cat-score{font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
+.cat-score-lbl{font-size:9px;opacity:0.5;margin-left:2px}
+
+/* Gradient backgrounds - 味达美色调更温暖偏红，区别于六月鲜 */
+.gc-commander{background:linear-gradient(135deg,#2e1a1a 0%,#3e2116 50%,#60342f 100%)}
+.gc-lianheng{background:linear-gradient(135deg,#2a1814 0%,#38221b 50%,#321f16 100%)}
+.gc-system{background:linear-gradient(135deg,#1a0a2e 0%,#2d1b4e 50%,#1f1235 100%)}
+.gc-shelf{background:linear-gradient(135deg,#1a120a 0%,#2d1f0e 50%,#1a1505 100%)}
+.gc-consumer{background:linear-gradient(135deg,#0a1a12 0%,#0e2818 50%,#061a10 100%)}
+.gc-hezong{background:linear-gradient(135deg,#2a1010 0%,#3d1818 50%,#2a0e0e 100%)}
+.gc-brand{background:linear-gradient(135deg,#0a1020 0%,#111928 50%,#0a1520 100%)}
+
+/* Home sections */
+.home-section{padding:0 16px 14px}
+.sec-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px}
+
+.brain-banner{
+  background:linear-gradient(135deg,rgba(232,93,74,0.07) 0%,rgba(78,205,196,0.05) 100%);
+  border:1px solid rgba(232,93,74,0.18);border-radius:14px;
+  padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;
+  transition:border-color 0.2s;
+}
+.brain-banner:hover{border-color:rgba(232,93,74,0.35)}
+.brain-banner-icon{font-size:28px;flex-shrink:0}
+.brain-banner-title{font-size:14px;font-weight:700;margin-bottom:2px}
+.brain-banner-sub{font-size:11px;color:var(--text3);line-height:1.4}
+.brain-banner-cta{font-size:11px;color:var(--amber);margin-top:6px}
+
+.qince-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:14px;margin-bottom:10px;position:relative;overflow:hidden;
+}
+.qince-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--green),var(--amber),var(--red))}
+.qince-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.qince-ttl{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+.qince-tag{font-size:10px;background:var(--amber-dim);color:var(--amber);border:1px solid rgba(232,93,74,0.2);padding:2px 8px;border-radius:10px;font-family:'Space Mono',monospace}
+.qince-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.qince-col-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;line-height:1}
+.qince-col-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+.qince-bar{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:5px}
+.qince-fill{height:100%;border-radius:2px}
+.qince-action{font-size:10px;color:var(--text3);margin-top:10px;padding-top:8px;border-top:1px solid var(--border);line-height:1.5}
+.qince-action strong{color:var(--amber)}
+
+/* Data source marker for unverified values */
+.ds-tag{
+  display:inline-block;font-size:9px;padding:1px 5px;border-radius:6px;
+  font-family:'Space Mono',monospace;letter-spacing:0.03em;margin-left:4px;vertical-align:middle;
+}
+.ds-kantar{background:rgba(96,165,250,0.1);color:var(--blue);border:1px solid rgba(96,165,250,0.2)}
+.ds-todo{background:rgba(255,95,95,0.1);color:var(--red);border:1px solid rgba(255,95,95,0.2)}
+
+/* ── CATEGORY SCREEN ── */
+.cat-screen-hdr{padding:16px 16px 8px;display:flex;align-items:center;gap:10px}
+.cat-big-icon{font-size:28px}
+.cat-hdr-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:700}
+.cat-hdr-sub{font-size:11px;color:var(--text3)}
+
+.agent-list{padding:0 16px;display:flex;flex-direction:column;gap:6px}
+.agent-row{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:12px 14px;display:flex;align-items:center;gap:12px;
+  cursor:pointer;transition:all 0.18s;
+}
+.agent-row:hover,.agent-row:active{background:var(--card2);border-color:var(--border2);transform:translateX(2px)}
+.agent-emoji{
+  width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+}
+.agent-info{flex:1;min-width:0}
+.agent-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.agent-tag{font-size:10px;color:var(--amber);margin-bottom:3px}
+.agent-desc{font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-score-col{flex-shrink:0;text-align:right}
+.agent-score{font-family:'Syne',sans-serif;font-size:20px;font-weight:800}
+.agent-milestone{font-size:10px;color:var(--text3);margin-top:1px}
+.score-bar{width:40px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-top:4px;margin-left:auto}
+.score-fill{height:100%;border-radius:2px;background:var(--amber)}
+
+/* ── AGENT DETAIL ── */
+.detail-wrap{padding:12px 16px 32px;display:flex;flex-direction:column;gap:10px}
+
+.detail-hero{
+  border-radius:16px;padding:18px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#141820 0%,#1a2030 100%);
+  border:1px solid var(--border2);
+}
+.detail-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),transparent)}
+.detail-hero-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.detail-score-big{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--amber);line-height:1}
+.detail-score-lbl{font-size:10px;color:var(--text3)}
+.detail-emoji{font-size:32px;margin-bottom:8px;display:block}
+.detail-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px}
+.detail-sub{font-size:12px;color:var(--amber);margin-bottom:8px}
+.detail-desc{font-size:12px;color:var(--text2);line-height:1.65}
+.detail-progress{
+  height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-top:12px;
+}
+.detail-progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--amber2))}
+
+.section-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+.section-hdr{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.section-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.milestone-row{display:flex;gap:4px;margin-bottom:8px}
+.ms-step{
+  flex:1;border-radius:8px;padding:7px 4px;text-align:center;
+  font-size:9px;font-weight:600;line-height:1.2;
+  border:1px solid rgba(255,255,255,0.06);color:var(--text3);background:rgba(255,255,255,0.03);
+  transition:all 0.2s;
+}
+.ms-step.done{background:rgba(255,255,255,0.06);color:var(--text2);border-color:rgba(255,255,255,0.1)}
+.ms-step.done::before{content:'✓ ';color:var(--green)}
+.ms-step.current{border-color:var(--amber);color:var(--amber);background:rgba(232,93,74,0.1);font-weight:700}
+.ms-step.current-red{border-color:var(--red);color:var(--red);background:rgba(255,95,95,0.1);font-weight:700}
+.ms-step.current-purple{border-color:var(--purple);color:var(--purple);background:rgba(167,139,250,0.1);font-weight:700}
+.ms-step.current-teal{border-color:var(--teal);color:var(--teal);background:rgba(78,205,196,0.1);font-weight:700}
+.ms-hint{font-size:11px;color:var(--amber)}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.kpi-box{background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--border)}
+.kpi-label{font-size:10px;color:var(--text3);margin-bottom:4px}
+.kpi-val{font-size:15px;font-weight:700;line-height:1.2}
+.kpi-val.good{color:var(--green)}
+.kpi-val.warn{color:var(--amber)}
+.kpi-val.bad{color:var(--red)}
+.kpi-box.bad-bg{background:rgba(255,95,95,0.04);border-color:rgba(255,95,95,0.12)}
+.kpi-box.good-bg{background:rgba(74,222,128,0.04);border-color:rgba(74,222,128,0.12)}
+
+.gap-list{display:flex;flex-direction:column;gap:8px}
+.gap-title{font-size:12px;font-weight:700;color:var(--red);margin-bottom:8px}
+.gap-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text2);line-height:1.5}
+.gap-dot{width:6px;height:6px;border-radius:50%;border:1.5px solid var(--red);flex-shrink:0;margin-top:5px}
+
+.chat-section{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.chat-hdr{padding:12px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.chat-agent-name{color:var(--amber);font-size:12px}
+.chat-presets{display:flex;gap:6px;padding:10px 12px;overflow-x:auto;scrollbar-width:none}
+.chat-presets::-webkit-scrollbar{display:none}
+.preset-chip{
+  background:var(--bg3);border:1px solid var(--border);border-radius:20px;
+  padding:5px 11px;font-size:11px;color:var(--text2);white-space:nowrap;
+  cursor:pointer;transition:all 0.15s;flex-shrink:0;
+  font-family:'Noto Sans SC',sans-serif;
+}
+.preset-chip:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+
+.chat-bubble{margin:0 12px 10px;background:var(--bg3);border-radius:12px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.6;border:1px solid var(--border)}
+.chat-input-row{display:flex;gap:6px;padding:8px 12px 12px}
+.chat-input{
+  flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:9px 12px;font-size:12px;color:var(--text);font-family:'Noto Sans SC',sans-serif;outline:none;
+}
+.chat-input:focus{border-color:var(--amber)}
+.chat-input::placeholder{color:var(--text3)}
+.chat-send{
+  width:38px;height:38px;border-radius:10px;background:var(--amber);border:none;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;
+  transition:all 0.15s;flex-shrink:0;
+}
+.chat-send:hover{background:var(--amber2);transform:scale(1.05)}
+.chat-response{display:none;margin:0 12px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.chat-response.show{display:block}
+.chat-q-echo{font-size:10px;color:var(--text3);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.thinking{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:td 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* ── BRAIN SCREEN ── */
+.brain-screen{padding:16px}
+.brain-hdr{
+  background:linear-gradient(135deg,rgba(232,93,74,0.07),rgba(78,205,196,0.04));
+  border:1px solid rgba(232,93,74,0.18);border-radius:16px;
+  padding:20px;text-align:center;margin-bottom:14px;
+}
+.brain-icon{font-size:40px;margin-bottom:8px}
+.brain-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px}
+.brain-sub{font-size:12px;color:var(--text3)}
+.brain-input-row{display:flex;gap:8px;margin-bottom:14px}
+.brain-input{
+  flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:12px 14px;font-size:13px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif;
+}
+.brain-input:focus{border-color:var(--amber)}
+.brain-input::placeholder{color:var(--text3)}
+.brain-send{
+  width:46px;height:46px;border-radius:12px;background:var(--amber);border:none;
+  display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;cursor:pointer;
+  transition:all 0.2s;flex-shrink:0;
+}
+.brain-send:hover{background:var(--amber2)}
+.brain-response{display:none;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;color:var(--text2);line-height:1.7}
+.brain-response.show{display:block}
+.brain-q-echo{font-size:11px;color:var(--text3);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.qq-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.qq-btn{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;font-size:12px;color:var(--text2);text-align:left;cursor:pointer;
+  display:flex;align-items:center;gap:8px;transition:all 0.15s;font-family:'Noto Sans SC',sans-serif;
+}
+.qq-btn:hover{border-color:var(--amber);color:var(--text);background:var(--amber-dim)}
+.qq-em{font-size:14px;flex-shrink:0}
+
+.kb-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:8px}
+.kb-hdr{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background 0.15s}
+.kb-hdr:hover{background:rgba(255,255,255,0.02)}
+.kb-hdr-l{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+.kb-arrow{color:var(--text3);font-size:12px;transition:transform 0.2s}
+.kb-card.open .kb-arrow{transform:rotate(180deg)}
+.kb-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}
+.kb-card.open .kb-body{display:block}
+.kb-text{font-size:12px;color:var(--text2);line-height:1.7;padding-top:12px}
+.kb-tbl{width:100%;border-collapse:collapse;margin-top:10px;font-size:11px}
+.kb-tbl th{background:rgba(255,255,255,0.04);color:var(--text3);padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600}
+.kb-tbl td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text2)}
+.kb-tbl tr:last-child td{border:none}
+.win{color:var(--green);font-weight:600}.gap-t{color:var(--red);font-weight:600}.par{color:var(--amber);font-weight:600}
+
+.pb{padding-bottom:20px}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-row">
+    <div class="logo-sym">∞</div>
+    <div>
+      <div class="logo-text">INFINITY <span>OS</span></div>
+    </div>
+    <div class="brand-pill"><div class="brand-pill-dot"></div><span id="brandLabel">味达美</span></div>
+  </div>
+  <div class="breadcrumb" id="breadcrumb"></div>
+  <div class="topbar-right">
+    <div class="clock" id="clock"></div>
+    <div class="back-pill" id="backBtn" onclick="goBack()" style="display:none">← 返回</div>
+  </div>
+</div>
+
+<!-- ══ HOME ══ -->
+<div class="screen active" id="screen-home">
+  <div class="home-hero">
+    <div class="home-title">味达美 <span>指挥中台</span></div>
+    <div class="home-sub">欣和SH · 大众首选 · 24个Agent</div>
+    <div class="home-positioning">餐饮基本盘 × 北方家庭渗透 × 现金牛防守</div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-box"><div class="stat-val c-amber">24</div><div class="stat-lbl">AGENT总数</div></div>
+    <div class="stat-box"><div class="stat-val c-teal">48<span style="font-size:12px">/100</span></div><div class="stat-lbl">平均成熟度</div></div>
+    <div class="stat-box"><div class="stat-val c-green" id="statMarket">2.3%</div><div class="stat-lbl">欧睿市占<span class="ds-tag ds-kantar">Kantar</span></div></div>
+    <div class="stat-box"><div class="stat-val c-red">9项</div><div class="stat-lbl">缺口待开发</div></div>
+  </div>
+
+  <div class="cat-grid">
+    <div class="cat-card gc-commander" onclick="showCat('commander')">
+      <span class="cat-icon">⚡</span>
+      <div>
+        <div class="cat-name">总指挥</div>
+        <div class="cat-sub">1个Agent · 全链调度总中枢</div>
+        <div><span class="cat-score c-amber">62</span><span class="cat-score-lbl">平均分</span></div>
+      </div>
+    </div>
+    <div class="cat-card gc-lianheng" onclick="showCat('lianheng')">
+      <span class="cat-icon">🔗</span>
+      <div>
+        <div class="cat-name">连横</div>
+        <div class="cat-sub">6个Agent · IPO0-13端到端闭环</div>
+        <div><span class="cat-score c-amber">60</span><span class="cat-score-lbl">平均分</span></div>
+      </div>
+    </div>
+    <div class="cat-card gc-system" onclick="showCat('system')">
+      <span class="cat-icon">⚙️</span>
+      <div>
+        <div class="cat-name">系统Agent</div>
+        <div class="cat-sub">4个Agent · 蝴蝶效应·推单·校准·激励</div>
+        <div><span class="cat-score c-amber">60</span><span class="cat-score-lbl">平均分</span></div>
+      </div>
+    </div>
+    <div class="cat-card gc-shelf" onclick="showCat('shelf')">
+      <span class="cat-icon">📷</span>
+      <div>
+        <div class="cat-name">货架识别</div>
+        <div class="cat-sub">3个Agent · 自训模型·勤策替代路线A</div>
+        <div><span class="cat-score c-red">27</span><span class="cat-score-lbl">平均分</span></div>
+      </div>
+    </div>
+    <div class="cat-card gc-consumer" onclick="showCat('consumer')">
+      <span class="cat-icon">◈</span>
+      <div>
+        <div class="cat-name">消费者</div>
+        <div class="cat-sub">1个Agent · PRISM北方家庭聚焦</div>
+        <div><span class="cat-score c-amber">55</span><span class="cat-score-lbl">平均分</span></div>
+      </div>
+    </div>
+    <div class="cat-card gc-hezong" onclick="showCat('hezong')">
+      <span class="cat-icon">📡</span>
+      <div>
+        <div class="cat-name">合纵7棒</div>
+        <div class="cat-sub">7个Agent · 大卖场·社区·餐饮B端为主</div>
+        <div><span class="cat-score c-red">40</span><span class="cat-score-lbl">平均分</span></div>
+      </div>
+    </div>
+    <div class="cat-card gc-brand" onclick="showCat('brand')">
+      <span class="cat-icon">🎭</span>
+      <div>
+        <div class="cat-name">品牌</div>
+        <div class="cat-sub">2个Agent · 味达美AI顾问·厨界顾问</div>
+        <div><span class="cat-score c-amber">50</span><span class="cat-score-lbl">平均分</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-section">
+    <div class="brain-banner" onclick="showScreen('brain')">
+      <div class="brain-banner-icon">🧠</div>
+      <div class="brain-banner-text">
+        <div class="brain-banner-title">味达美 AI 战略大脑</div>
+        <div class="brain-banner-sub">基于味达美大众首选定位+北方基本盘+餐饮B端优势+Kantar数据·问任何经营问题</div>
+        <div class="brain-banner-cta">点击进入对话 →</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-section">
+    <div class="qince-card">
+      <div class="qince-top">
+        <div class="qince-ttl">⚔️ 味达美竞争定位</div>
+        <div class="qince-tag">CR5末位防守</div>
+      </div>
+      <div class="qince-cols">
+        <div class="qince-col">
+          <div class="qince-col-val c-green">#4</div>
+          <div class="qince-col-lbl">酱油市场排名</div>
+          <div class="qince-bar"><div class="qince-fill" style="width:60%;background:var(--green)"></div></div>
+        </div>
+        <div class="qince-col">
+          <div class="qince-col-val c-amber">40.2%</div>
+          <div class="qince-col-lbl">餐饮渠道占比</div>
+          <div class="qince-bar"><div class="qince-fill" style="width:80%;background:var(--amber)"></div></div>
+        </div>
+        <div class="qince-col">
+          <div class="qince-col-val c-red">↓Q1</div>
+          <div class="qince-col-lbl">份额同比下降</div>
+          <div class="qince-bar"><div class="qince-fill" style="width:35%;background:var(--red)"></div></div>
+        </div>
+      </div>
+      <div class="qince-action">战略警报：<strong>2025Q1欣和酱油份额同比下降（海天/千禾上升），千禾零添加+海天价格战双面夹击。味达美必须守住餐饮B端基本盘+加速零添加跟进。</strong></div>
+    </div>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══ BRAIN SCREEN ══ -->
+<div class="screen" id="screen-brain">
+  <div class="brain-screen">
+    <div class="brain-hdr">
+      <div class="brain-icon">🧠</div>
+      <div class="brain-title">味达美 AI 战略大脑</div>
+      <div class="brain-sub">大众首选·餐饮基本盘·北方根据地·防守型现金牛</div>
+    </div>
+    <div class="brain-input-row">
+      <input class="brain-input" id="brainInput" placeholder="问味达美战略大脑任何问题…" />
+      <button class="brain-send" onclick="sendBrain()">→</button>
+    </div>
+    <div class="brain-response" id="brainResp">
+      <div class="brain-q-echo" id="brainQ"></div>
+      <div id="brainA"></div>
+    </div>
+    <div class="sec-title" style="margin-bottom:8px">快捷提问</div>
+    <div class="qq-grid">
+      <button class="qq-btn" onclick="askBrain('味达美在CR5中排第4，2025Q1份额下降，主要失守在哪里？怎么守住？')"><span class="qq-em">⚔️</span>CR5防守战：失守点与反击路径</button>
+      <button class="qq-btn" onclick="askBrain('味达美与六月鲜的战略分工是什么？两者在渠道和价格上如何不打架？')"><span class="qq-em">🎯</span>味达美vs六月鲜：品牌分工</button>
+      <button class="qq-btn" onclick="askBrain('千禾零添加在抢味达美市场，味达美零添加初榨原酿生抽如何反击？')"><span class="qq-em">🥊</span>零添加反击：千禾vs味达美</button>
+      <button class="qq-btn" onclick="askBrain('餐饮B端是味达美基本盘，如何用厨师AIQL+菜单绑定率锁死餐厅？')"><span class="qq-em">🍜</span>餐饮B端：厨师锁定策略</button>
+      <button class="qq-btn" onclick="askBrain('味达美北方根据地（河北/山东）如何防守地产品牌反扑？')"><span class="qq-em">🗺️</span>北方根据地：地产品牌防御</button>
+      <button class="qq-btn" onclick="askBrain('大众品牌价格战风险高，蝴蝶效应C类窜货对味达美威胁多大？')"><span class="qq-em">🦋</span>窜货风险：C类失真防御</button>
+    </div>
+    <div class="sec-title" style="margin-bottom:8px">知识库</div>
+    <div class="kb-card" id="kb1">
+      <div class="kb-hdr" onclick="toggleKB('kb1')">
+        <div class="kb-hdr-l">⚔️ 味达美 vs CR5 竞争定位</div>
+        <div class="kb-arrow">▼</div>
+      </div>
+      <div class="kb-body">
+        <div class="kb-text">
+          <strong>2025Q1 中国酱油市场 CR5 格局（马上赢数据）：</strong>
+        </div>
+        <table class="kb-tbl">
+          <thead><tr><th>品牌</th><th>定位</th><th>核心渠道</th><th>Q1动向</th></tr></thead>
+          <tbody>
+            <tr><td>海天</td><td>全渠道龙头</td><td>餐饮+家庭全覆盖</td><td class="win">份额同比↑</td></tr>
+            <tr><td>千禾</td><td>零添加</td><td>家庭高端+电商</td><td class="win">份额同比↑</td></tr>
+            <tr><td>中炬高新(厨邦)</td><td>华南+天然鲜</td><td>家庭</td><td class="gap-t">份额↓</td></tr>
+            <tr><td><strong>欣和(味达美)</strong></td><td><strong>大众+北方+餐饮B端</strong></td><td><strong>餐饮+商超</strong></td><td class="gap-t"><strong>份额↓【警报】</strong></td></tr>
+            <tr><td>李锦记</td><td>中高端+全球</td><td>家庭+海外</td><td class="gap-t">份额↓</td></tr>
+          </tbody>
+        </table>
+        <div class="kb-text" style="margin-top:10px">
+          <strong>味达美防守优先级：</strong><br>
+          ① 餐饮B端基本盘（40.2%渠道占比·最难被撼动）<br>
+          ② 北方家庭渗透（河北/山东根据地）<br>
+          ③ 零添加初榨原酿生抽跟进千禾<br>
+          ④ 反制海天价格战（不降价损毛利，靠品类细分）
+        </div>
+      </div>
+    </div>
+    <div class="kb-card" id="kb2">
+      <div class="kb-hdr" onclick="toggleKB('kb2')">
+        <div class="kb-hdr-l">🎯 味达美 vs 六月鲜 品牌分工</div>
+        <div class="kb-arrow">▼</div>
+      </div>
+      <div class="kb-body">
+        <div class="kb-text">
+          <strong>欣和五品牌矩阵中两个主力品牌的战略分工：</strong>
+        </div>
+        <table class="kb-tbl">
+          <thead><tr><th>维度</th><th>六月鲜</th><th>味达美</th></tr></thead>
+          <tbody>
+            <tr><td>战略角色</td><td class="par">北极星·进攻</td><td class="win">现金牛·防守</td></tr>
+            <tr><td>价格带</td><td>¥17+ 高端</td><td>¥11-13 大众 <span class="ds-tag ds-kantar">Kantar</span></td></tr>
+            <tr><td>渠道重心</td><td>S+/S门店·山姆</td><td>大卖场·社区超市·餐饮B端</td></tr>
+            <tr><td>消费场景</td><td>家庭精致烹饪</td><td>日常+餐厅后厨</td></tr>
+            <tr><td>区域策略</td><td>一线/新一线进攻</td><td>北方根据地防守+下沉</td></tr>
+            <tr><td>竞品</td><td>海天有机·李锦记薄盐</td><td>海天基础款·千禾零添加</td></tr>
+            <tr><td>合纵7棒重点</td><td>小红书→抖音（种草起点）</td><td><strong>大卖场→社区→餐饮</strong></td></tr>
+            <tr><td>蝴蝶效应重点</td><td>A类压货+B类促销</td><td><strong>C类窜货/乱价</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="kb-card" id="kb3">
+      <div class="kb-hdr" onclick="toggleKB('kb3')">
+        <div class="kb-hdr-l">💓 味达美库存心跳参数（vs六月鲜）</div>
+        <div class="kb-arrow">▼</div>
+      </div>
+      <div class="kb-body">
+        <div class="kb-text">
+          <strong>基本单位：心跳单元 a（沿用六月鲜方法论，参数不同）</strong><br>
+          <span class="ds-tag ds-todo">待校准</span> 以下参数为初始估计，需业务团队 + SAP Step 2 真实数据校准<br><br>
+          <strong>味达美周转特征：快周转·高频次</strong><br>
+          - 零售层 T ≈ 5-10 天（六月鲜 T ≈ 7-14 天）<br>
+          - 经销商 T ≈ 20-25 天（六月鲜 T ≈ 30 天）<br>
+          - 价格敏感度高·周转快·促销频次高<br><br>
+          <strong>三层水位设计（沿用）：</strong><br>
+          零售层：3a满→2a预警 · 经销商：2a满→1a预警 · 分销商：严格1a<br><br>
+          <strong>价格底线【待校准】：</strong><br>
+          - 500ml装 ≈ ¥10（对比六月鲜¥17）<br>
+          - 低于此线触发C类窜货预警<br><br>
+          <strong>六级拜访频次（调整）：</strong><br>
+          大卖场KA：S+ 3次/周（餐饮旺季提频至4次/周）<br>
+          社区超市：S/A 2次/周<br>
+          餐饮B端：独立频次（按菜单绑定等级）
+        </div>
+      </div>
+    </div>
+    <div class="pb"></div>
+  </div>
+</div>
+
+<!-- ══ CATEGORY SCREENS ══ -->
+<div class="screen" id="screen-cat">
+  <div class="cat-screen-hdr">
+    <div class="cat-big-icon" id="catIcon"></div>
+    <div>
+      <div class="cat-hdr-name" id="catName"></div>
+      <div class="cat-hdr-sub" id="catSub"></div>
+    </div>
+  </div>
+  <div class="agent-list" id="agentList"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══ AGENT DETAIL SCREEN ══ -->
+<div class="screen" id="screen-detail">
+  <div class="detail-wrap" id="detailWrap"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// BRAND NAMESPACE - 为未来合并六月鲜/味达美预留结构
+// 当前激活：味达美 (wdm)
+// ════════════════════════════════════════════════
+const CURRENT_BRAND = 'wdm';
+
+// Clock
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clock').textContent=
+    now.getHours().toString().padStart(2,'0')+':'+
+    now.getMinutes().toString().padStart(2,'0')+':'+
+    now.getSeconds().toString().padStart(2,'0');
+}
+updateClock();setInterval(updateClock,1000);
+
+const navStack=[];
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.getElementById('backBtn').style.display=navStack.length>0?'flex':'none';
+  updateBreadcrumb(id);
+  window.scrollTo(0,0);
+}
+function goBack(){
+  if(navStack.length===0){showScreen('home');return}
+  const prev=navStack.pop();
+  if(prev.type==='home'){showScreen('home');return}
+  if(prev.type==='cat'){showCat(prev.id,true);return}
+  showScreen('home');
+}
+function updateBreadcrumb(id){
+  const bc=document.getElementById('breadcrumb');
+  if(id==='home'){bc.innerHTML='';return}
+  if(id==='brain'){bc.innerHTML='<span class="bc-link" onclick="pushHome()">首页</span><span class="bc-sep">›</span><span class="bc-cur">战略大脑</span>';return}
+  if(id==='cat'){
+    const nm=document.getElementById('catName').textContent;
+    bc.innerHTML=`<span class="bc-link" onclick="pushHome()">首页</span><span class="bc-sep">›</span><span class="bc-cur">${nm}</span>`;return;
+  }
+}
+function pushHome(){navStack.length=0;showScreen('home')}
+
+// ════════════════════════════════════════════════
+// CATS - 分类（各品牌共享结构，可复用）
+// ════════════════════════════════════════════════
+const CATS_ALL = {
+  wdm: {
+    commander:{icon:'⚡',name:'总指挥',sub:'1个Agent · 全链调度总中枢',agents:['AIO总指挥']},
+    lianheng:{icon:'🔗',name:'连横',sub:'6个Agent · IPO0-13端到端闭环',agents:['生产供应','经销商全链','二批商','零售门店','消费者深度','餐饮渠道']},
+    system:{icon:'⚙️',name:'系统Agent',sub:'4个Agent · 蝴蝶效应·推单·校准·激励',agents:['蝴蝶效应','无菜单推单','A值校准','Uber激励']},
+    shelf:{icon:'📷',name:'货架识别',sub:'3个Agent · 自训模型·勤策替代路线A',agents:['货架识别','库存上报','价签识别']},
+    consumer:{icon:'◈',name:'消费者',sub:'1个Agent · PRISM北方家庭聚焦',agents:['PRISM精准选点']},
+    hezong:{icon:'📡',name:'合纵7棒',sub:'7个Agent · 大卖场·社区·餐饮B端为主',agents:['大卖场棒','社区超市棒','餐饮爆发棒','电商转化棒','O2O即时棒','抖音短视频棒','小红书种草棒']},
+    brand:{icon:'🎭',name:'品牌',sub:'2个Agent · 味达美AI顾问·厨界顾问',agents:['味达美品牌AI顾问','厨界顾问']}
+  }
+  // 预留: liuyue: {...}  // 未来合并六月鲜
+};
+
+// ════════════════════════════════════════════════
+// AGENTS - 味达美 Agent 数据
+// 参数来源标记：
+//   【Kantar】= 有公开数据依据
+//   【待校准】= 业务团队填写或SAP Step 2完成后校准
+//   【继承】= 沿用六月鲜的方法论/算法（不变）
+// ════════════════════════════════════════════════
+const AGENTS_ALL = {
+  wdm: {
+    'AIO总指挥':{
+      emoji:'⚡',emojiColor:'rgba(59,130,246,0.2)',
+      tag:'Commander·味达美专属',score:62,milestone:3,
+      desc:'味达美版全链调度·大众品牌防守逻辑·优先保餐饮B端+北方家庭渗透·实时监控千禾零添加/海天价格战两大威胁',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',
+      hint:'当前阶段：AI对话 → 下一步：真实数据',
+      kpis:[
+        {l:'差距检测',v:'实时',s:'good',bg:'good-bg'},{l:'竞品监控',v:'千禾/海天',s:'good',bg:'good-bg'},
+        {l:'真实数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'六月鲜协同',v:'待建',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['接入SAP/CRM真实数据·与六月鲜指挥中台数据联通（避免渠道冲突）','千禾零添加动态监控+自动反击策略','海天价格战预警+毛利保护自动建议'],
+      presets:['今天餐饮B端哪些客户差距最大？','千禾本周有新动作吗？','味达美vs六月鲜渠道冲突有吗？'],
+      chatIntro:'你好，我是味达美的AIO总指挥Agent。大众品牌防守+餐饮基本盘是我的核心职责。'
+    },
+    '生产供应':{
+      emoji:'🏭',emojiColor:'rgba(74,222,128,0.15)',
+      tag:'IPO0-1·规模化低成本',score:58,milestone:3,
+      desc:'味达美规模化生产·产能利用率优先·成本敏感·大众品牌低价竞争下的成本护城河·山东烟台主基地',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',
+      hint:'当前阶段：AI对话 → 下一步：真实数据',
+      kpis:[
+        {l:'产能利用率',v:'【待校准】',s:'warn',bg:''},{l:'单位成本',v:'【待校准】',s:'warn',bg:''},
+        {l:'MES对接',v:'待建',s:'bad',bg:'bad-bg'},{l:'成本预警',v:'待建',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['工厂MES系统API对接','原料成本波动自动预警（大豆/小麦期货联动）','价格战下的动态成本-售价平衡模型'],
+      presets:['味达美本月产能利用率？','大豆涨价会影响我们定价吗？','规模化优势能撑得住海天价格战吗？'],
+      chatIntro:'你好，我是味达美生产供应Agent。规模+成本是大众品牌的护城河。'
+    },
+    '经销商全链':{
+      emoji:'🤝',emojiColor:'rgba(232,93,74,0.15)',
+      tag:'IPO2-4·快周转·密网络',score:65,milestone:3,
+      desc:'味达美经销商网络更密·周转更快·北方根据地深耕·心跳单元a快速迭代·水位严格1.5a预警(比六月鲜激进)·P1/P2并存但P2餐饮权重更高',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',
+      hint:'当前阶段：AI对话 → 下一步：真实数据',
+      kpis:[
+        {l:'心跳公式',v:'✅继承',s:'good',bg:'good-bg'},{l:'北方密度',v:'S+级',s:'good',bg:'good-bg'},
+        {l:'ERP对接',v:'待接入',s:'bad',bg:'bad-bg'},{l:'P2权重',v:'60%餐饮',s:'warn',bg:''}
+      ],
+      gaps:['ERP系统实时数据接入（与六月鲜共用数据湖）','北方经销商密网络健康度评分（区别于六月鲜一线城市打法）','快周转品类T值重新校准（味达美T<六月鲜T）'],
+      presets:['北方经销商本周库存水位如何？','P2餐饮经销商占比是多少？','哪些经销商同时代理味达美和六月鲜会有冲突？'],
+      chatIntro:'你好，我是味达美经销商全链Agent。快周转+密网络是我的特点。'
+    },
+    '二批商':{
+      emoji:'🚚',emojiColor:'rgba(96,165,250,0.15)',
+      tag:'IPO5-7·P2餐饮主战场',score:62,milestone:3,
+      desc:'味达美P2二批商权重远高于六月鲜·餐饮占40.2%下游·价格底线¥10-11严守·C类窜货/乱价风险高发·B端餐厅直供+C端批发双路径',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',
+      hint:'当前阶段：AI对话 → 下一步：真实数据',
+      kpis:[
+        {l:'底价',v:'¥10【待校准】',s:'warn',bg:''},{l:'窜货风险',v:'高',s:'bad',bg:'bad-bg'},
+        {l:'B端餐厅数',v:'【待填】',s:'warn',bg:''},{l:'乱价预警',v:'待联通',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['二批商端进销存数据接入·高频次采集（价格敏感品类）','价签识别联动乱价预警·味达美特别迫切（需A23优先）','B端餐饮客户CRM打通+菜单绑定状态跟踪'],
+      presets:['底价以下乱价门店有多少？','B端重点餐厅本月采购量？','窜货高危区域在哪里？'],
+      chatIntro:'你好，我是味达美二批商Agent。P2餐饮是基本盘，价格底线是生命线。'
+    },
+    '零售门店':{
+      emoji:'🏪',emojiColor:'rgba(167,139,252,0.15)',
+      tag:'IPO8-10·大卖场为主',score:63,milestone:3,
+      desc:'味达美零售重心在大卖场+社区超市·区别于六月鲜的S+精品店·六级分类按大卖场规模调整·T值更短(快周转)·陈列位要求更低但覆盖宽度第一',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',
+      hint:'当前阶段：AI对话 → 下一步：真实数据',
+      kpis:[
+        {l:'六级分类',v:'✅调整',s:'good',bg:'good-bg'},{l:'大卖场覆盖',v:'【待填】',s:'warn',bg:''},
+        {l:'POS实时',v:'待接入',s:'bad',bg:'bad-bg'},{l:'社区覆盖',v:'【待填】',s:'warn',bg:''}
+      ],
+      gaps:['大卖场POS实时数据接入','社区超市门店数据库建立（味达美下沉主战场）','覆盖宽度优先的巡店路线算法（区别六月鲜深度服务型）'],
+      presets:['大卖场本周铺货率？','社区超市覆盖数量？','哪些门店需要紧急补货？'],
+      chatIntro:'你好，我是味达美零售门店Agent。覆盖宽度是大众品牌的生命线。'
+    },
+    '消费者深度':{
+      emoji:'👥',emojiColor:'rgba(78,205,196,0.15)',
+      tag:'IPO11-13·北方家庭',score:58,milestone:2,
+      desc:'味达美北方家庭渗透率重点追踪·河北/山东/东北基本盘·大众家庭月复购预期·零添加版本升级通路·与千禾消费者画像重叠度监控',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+      hint:'当前阶段：框架 → 下一步：AI对话',
+      kpis:[
+        {l:'北方渗透率',v:'【Kantar待】',s:'warn',bg:''},{l:'复购周期',v:'≈45天【估】',s:'warn',bg:''},
+        {l:'千禾重叠',v:'待测量',s:'bad',bg:'bad-bg'},{l:'流失预警',v:'待建',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['Kantar数据完整接入·北方家庭渗透率精确测量','千禾零添加抢走的用户画像识别','从味达美升级到六月鲜的用户通路跟踪（品牌阶梯）'],
+      presets:['味达美北方家庭渗透率？','被千禾抢走的用户是什么画像？','有多少用户从味达美升级到六月鲜？'],
+      chatIntro:'你好，我是味达美消费者深度Agent。北方家庭是味达美的根据地。'
+    },
+    '餐饮渠道':{
+      emoji:'🍜',emojiColor:'rgba(232,93,74,0.15)',
+      tag:'B端·味达美基本盘',score:65,milestone:3,
+      desc:'★味达美的王牌Agent★·餐饮渠道占酱油下游40.2%·味达美在此渠道权重高于任何其他品牌·厨师AIQL+菜单绑定率+大客户锁定·北方中餐厅精准深耕',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',
+      hint:'当前阶段：AI对话 → 下一步：真实数据',
+      kpis:[
+        {l:'餐厅分级',v:'已建模',s:'good',bg:'good-bg'},{l:'菜单绑定率',v:'【待测量】',s:'warn',bg:''},
+        {l:'厨师AIQL',v:'框架就绪',s:'warn',bg:''},{l:'大客户CRM',v:'部分已建',s:'warn',bg:''}
+      ],
+      gaps:['B端餐饮客户数据库·味达美优先级最高','厨师AIQL评分模型·北方中餐厨师重点','菜单绑定率追踪系统·从单品到菜单项级别'],
+      presets:['北方重点餐厅本月进货情况？','厨师AIQL排名？','哪些连锁餐厅菜单绑定率最高？'],
+      chatIntro:'你好，我是味达美餐饮渠道Agent。这是味达美的王牌战场，40%渠道占比。'
+    },
+    '蝴蝶效应':{
+      emoji:'🦋',emojiColor:'rgba(255,95,95,0.15)',
+      tag:'C类窜货重点监控',score:60,milestone:3,
+      desc:'★味达美重点=C类窜货/乱价★·大众品牌价格敏感·渠道扁平·经销商跨区域调货风险高·全链A/B/C三类失真检测继承·但C类权重+1级优先级',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current-red',
+      hint:'当前阶段：AI对话 → 下一步：真实数据',
+      kpis:[
+        {l:'传导计算',v:'✅继承',s:'good',bg:'good-bg'},{l:'C类权重',v:'+1级',s:'warn',bg:''},
+        {l:'实时数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'跨区域检测',v:'待建',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['实时数据流接入·味达美必须优先于六月鲜','跨区域调货自动检测（大众品牌特别需要）','价签识别联动C类窜货预警（A23完成后立即接入）'],
+      presets:['今天有哪些C类窜货风险？','哪些区域价格异常？','经销商跨区调货有无异常？'],
+      chatIntro:'你好，我是味达美蝴蝶效应Agent。C类窜货/乱价是味达美最大风险。'
+    },
+    '无菜单推单':{
+      emoji:'🍣',emojiColor:'rgba(232,93,74,0.15)',
+      tag:'Omakase·快周转版',score:60,milestone:3,
+      desc:'味达美版推单·快周转算法·推单频次比六月鲜高·SKU组合考虑餐饮B端+家庭KA双场景·促销季自动加大推量',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',
+      hint:'当前阶段：AI对话 → 下一步：真实数据',
+      kpis:[
+        {l:'推单算法',v:'✅继承',s:'good',bg:'good-bg'},{l:'快周转调优',v:'已调整',s:'good',bg:'good-bg'},
+        {l:'经销商接单',v:'待建',s:'bad',bg:'bad-bg'},{l:'促销联动',v:'待建',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['经销商系统API自动接单','大促期间推单量动态放大（味达美促销频次更高）','餐饮B端专属推单逻辑（500ml vs 1.8L商用装区分）'],
+      presets:['今天哪些餐饮经销商需要推单？','大促期间推单量怎么调整？','商用1.8L装推单独立计算吗？'],
+      chatIntro:'你好，我是味达美无菜单推单Agent。快周转+促销频次是我的特点。'
+    },
+    'A值校准':{
+      emoji:'🎯',emojiColor:'rgba(74,222,128,0.15)',
+      tag:'快周转a值校准',score:65,milestone:3,
+      desc:'味达美a值校准特别重要·快周转意味着a值波动大·价格战会大幅扰动真实r值·双路径P1零售/P2餐饮分别校准·季节性(北方冬季进补旺季)显著',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current-teal',
+      hint:'当前阶段：AI对话 → 下一步：真实数据',
+      kpis:[
+        {l:'校准算法',v:'✅继承',s:'good',bg:'good-bg'},{l:'季节模型',v:'冬季高',s:'warn',bg:''},
+        {l:'真实数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'价格扰动',v:'待排除',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['真实销售数据接入后首次完整r校准','北方冬季(10月-2月)季节性a值峰值模型','海天价格战期间剔除扰动校准机制'],
+      presets:['冬季a值峰值是夏季的多少倍？','海天促销期我们的r值是否失真？','餐饮B端a值与家庭a值差异？'],
+      chatIntro:'你好，我是味达美A值校准Agent。快周转+价格敏感让校准尤其重要。'
+    },
+    'Uber激励':{
+      emoji:'🚗',emojiColor:'rgba(232,93,74,0.18)',
+      tag:'美顾+餐饮业务员双端',score:58,milestone:3,
+      desc:'味达美Uber激励双端运行·家庭渠道美顾(同六月鲜)+餐饮业务员(味达美特有)·CB粘性计算+AIQL追踪·餐饮业务员KPI含厨师关系分',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',
+      hint:'当前阶段：AI对话 → 下一步：真实数据',
+      kpis:[
+        {l:'CB公式',v:'✅继承',s:'good',bg:'good-bg'},{l:'AIQL追踪',v:'✅继承',s:'good',bg:'good-bg'},
+        {l:'餐饮业务员',v:'新增KPI',s:'warn',bg:''},{l:'SFA整合',v:'待对接',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['餐饮业务员端任务系统开发（味达美特有·六月鲜无）','厨师关系分数化建模','即时到账支付接口（与六月鲜共用）'],
+      presets:['餐饮业务员今天应该做什么任务？','厨师关系分最高的业务员是谁？','CB分最低的餐厅是哪些？'],
+      chatIntro:'你好，我是味达美Uber激励Agent。家庭美顾+餐饮业务员双端运营。'
+    },
+    '货架识别':{
+      emoji:'📷',emojiColor:'rgba(232,93,74,0.18)',
+      tag:'与六月鲜共用·路线A',score:45,milestone:2,
+      desc:'★跨品牌共用Agent★·识别模型与六月鲜共享训练数据池(加速积累)·味达美SKU种类多(基础款+零添加+商用装)需要细分识别·勤策过渡+自训最终替代',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+      hint:'当前阶段：框架 → 下一步：AI对话',
+      kpis:[
+        {l:'勤策精度',v:'<3%继承',s:'good',bg:'good-bg'},{l:'千问精度',v:'76-88%',s:'warn',bg:''},
+        {l:'训练数据',v:'跨品牌共享',s:'good',bg:'good-bg'},{l:'味达美SKU识别',v:'待扩充',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['SFA训练数据管道Java代码上线（与六月鲜共用·2.5天）','味达美SKU图像样本快速积累（基础款/零添加/商用装）','味达美+六月鲜组合识别（同一货架同时出现）'],
+      presets:['味达美SKU识别精度？','跨品牌训练数据有多少了？','什么时候能替代勤策？'],
+      chatIntro:'你好，我是货架识别Agent。味达美与六月鲜共用训练数据池。'
+    },
+    '库存上报':{
+      emoji:'📦',emojiColor:'rgba(255,95,95,0.15)',
+      tag:'缺口·与六月鲜共用',score:20,milestone:1,
+      desc:'★跨品牌共用Agent★·SFA库存上报页面开发·业务员同时上报味达美+六月鲜(一次拍摄)·对味达美快周转预警特别重要·当前完全缺失',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:0,msStyle:'current-red',
+      hint:'当前阶段：概念 → 下一步：框架',
+      kpis:[
+        {l:'心跳算法',v:'✅已有',s:'good',bg:'good-bg'},{l:'SFA页面',v:'待开发',s:'bad',bg:'bad-bg'},
+        {l:'多品牌上报',v:'设计中',s:'warn',bg:''},{l:'水位计算',v:'待联通',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['SFA新增库存上报页面·一次拍摄多品牌同时上报','对接心跳公式实时计算3a/2a/1a水位','近效期预警（味达美快周转·近效期风险高于六月鲜）'],
+      presets:['页面什么时候开发完？','一次上报能覆盖味达美+六月鲜吗？','近效期商品有多少？'],
+      chatIntro:'你好，我是库存上报Agent。味达美与六月鲜共用这个页面。'
+    },
+    '价签识别':{
+      emoji:'🏷️',emojiColor:'rgba(255,95,95,0.15)',
+      tag:'★味达美最迫切★',score:18,milestone:1,
+      desc:'★味达美优先级高于六月鲜★·大众品牌价格战+C类窜货=价签识别是生命线·竞品(海天/千禾)价签必监控·底价¥10以下触发红色警报·基于千问VL开发',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:0,msStyle:'current-red',
+      hint:'当前阶段：概念 → 下一步：框架（味达美优先）',
+      kpis:[
+        {l:'千问OCR',v:'可调用',s:'good',bg:'good-bg'},{l:'味达美优先级',v:'最高',s:'good',bg:'good-bg'},
+        {l:'竞品价格库',v:'待建',s:'bad',bg:'bad-bg'},{l:'乱价预警',v:'待建',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['基于千问VL开发价签识别prompt·味达美SKU优先训练','建立海天/千禾/李锦记竞品价格基准数据库','与A03二批商Agent联动C类窜货预警（味达美最高优先级）'],
+      presets:['海天现在零售价是多少？','有没有门店低于¥10在卖？','千禾零添加价格动态？'],
+      chatIntro:'你好，我是价签识别Agent。味达美优先级最高·价格战+窜货双防线。'
+    },
+    'PRISM精准选点':{
+      emoji:'◈',emojiColor:'rgba(167,139,252,0.15)',
+      tag:'北方家庭聚焦',score:55,milestone:2,
+      desc:'味达美版PRISM·聚焦北方大众家庭小区·区别六月鲜的一线高端小区·河北/山东/东北老工业基地社区·下沉城市社区店布点',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current-purple',
+      hint:'当前阶段：框架 → 下一步：AI对话',
+      kpis:[
+        {l:'选点算法',v:'✅继承',s:'good',bg:'good-bg'},{l:'北方聚焦',v:'已调整',s:'good',bg:'good-bg'},
+        {l:'下沉城市库',v:'待建',s:'bad',bg:'bad-bg'},{l:'效果回收',v:'待建',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['下沉城市小区数据库建立（与六月鲜一线库区别）','北方大众家庭画像Stage Gate模型','共创活动效果自动回收'],
+      presets:['石家庄哪些小区值得做共创？','北方下沉城市社区店布点建议？','PRISM如何避免与六月鲜打架？'],
+      chatIntro:'你好，我是味达美PRISM Agent。北方大众家庭是核心选点。'
+    },
+    '大卖场棒':{
+      emoji:'🏢',emojiColor:'rgba(232,93,74,0.18)',
+      tag:'合纵第1棒·味达美主力',score:55,milestone:2,
+      desc:'★味达美合纵第1棒★(六月鲜排第6)·沃尔玛/家乐福/大润发/北方永辉·味达美大众品牌的陈列宽度战·堆头/端架/黄金位全力争取·KA客户管理',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+      hint:'当前阶段：框架 → 下一步：AI对话',
+      kpis:[
+        {l:'KA覆盖',v:'主要覆盖',s:'good',bg:'good-bg'},{l:'陈列面',v:'重点争取',s:'warn',bg:''},
+        {l:'POS数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'账期管控',v:'手动',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['大卖场POS数据接入·与零售门店Agent联动','陈列位AI识别+自动考核','KA账期自动预警（大众品牌账期压力大）'],
+      presets:['重点KA本月销售情况？','陈列位占比多少？','哪些大卖场需要紧急跟进？'],
+      chatIntro:'你好，我是大卖场棒Agent。味达美合纵第1棒·宽度是生命线。'
+    },
+    '社区超市棒':{
+      emoji:'🏘️',emojiColor:'rgba(74,222,128,0.12)',
+      tag:'合纵第2棒·下沉主力',score:48,milestone:2,
+      desc:'★味达美合纵第2棒★(六月鲜排第7)·社区生鲜超市/邻里中心/下沉市场·高频消费场景·味达美家庭基本盘·区别于六月鲜的山姆精品路线',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+      hint:'当前阶段：框架 → 下一步：AI对话',
+      kpis:[
+        {l:'社区门店数',v:'【待填】',s:'warn',bg:''},{l:'下沉城市',v:'重点部署',s:'warn',bg:''},
+        {l:'高频复购',v:'待测量',s:'bad',bg:'bad-bg'},{l:'社区数据',v:'待建',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['社区超市门店数据库·与六月鲜山姆数据区分开','下沉市场渠道策略制定（味达美重点）','社区场景500ml主流装优化'],
+      presets:['社区渠道覆盖门店数？','下沉市场渗透率？','社区超市补货频次建议？'],
+      chatIntro:'你好，我是社区超市棒Agent。味达美合纵第2棒·家庭日常。'
+    },
+    '餐饮爆发棒':{
+      emoji:'🍜',emojiColor:'rgba(245,166,35,0.15)',
+      tag:'合纵第3棒·餐饮直供',score:52,milestone:2,
+      desc:'★味达美独有棒★(六月鲜无此棒)·餐饮B端直供渠道·配合餐饮渠道Agent+二批商Agent·商用1.8L装专属·厨师培训·连锁餐厅签约·北方中餐主阵地',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+      hint:'当前阶段：框架 → 下一步：AI对话',
+      kpis:[
+        {l:'商用装SKU',v:'已有',s:'good',bg:'good-bg'},{l:'连锁签约',v:'【待填】',s:'warn',bg:''},
+        {l:'厨师培训',v:'部分',s:'warn',bg:''},{l:'餐饮数据',v:'待接入',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['餐饮B端客户管理系统建立','连锁餐厅菜单绑定率追踪','厨师AIQL培训+认证体系'],
+      presets:['北方连锁餐厅签约情况？','商用1.8L装销售占比？','厨师培训效果如何？'],
+      chatIntro:'你好，我是餐饮爆发棒Agent。这是味达美独有的战略棒。'
+    },
+    '电商转化棒':{
+      emoji:'🛒',emojiColor:'rgba(245,166,35,0.12)',
+      tag:'合纵第4棒·线上防守',score:40,milestone:2,
+      desc:'味达美电商相对弱(千禾电商强势)·天猫/京东/拼多多·防守型策略·大促节奏·下沉价格战·对抗千禾零添加线上抢跑',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+      hint:'当前阶段：框架 → 下一步：AI对话',
+      kpis:[
+        {l:'SKU矩阵',v:'已建',s:'good',bg:'good-bg'},{l:'搜索排名',v:'落后千禾',s:'bad',bg:'bad-bg'},
+        {l:'大促节奏',v:'手动',s:'warn',bg:''},{l:'电商数据',v:'待接入',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['电商平台数据API接入','搜索排名优化（对抗千禾）','拼多多下沉市场专属SKU'],
+      presets:['天猫味达美vs千禾排名？','大促备货建议？','拼多多渠道策略？'],
+      chatIntro:'你好，我是电商转化棒Agent。线上对千禾的防守战。'
+    },
+    'O2O即时棒':{
+      emoji:'⚡',emojiColor:'rgba(78,205,196,0.12)',
+      tag:'合纵第5棒·即时零售',score:32,milestone:2,
+      desc:'味达美O2O即时零售·美团/饿了么/京东到家·30分钟配送·味达美家庭应急场景·比六月鲜更适合高频补货',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+      hint:'当前阶段：框架 → 下一步：AI对话',
+      kpis:[
+        {l:'平台覆盖',v:'3个',s:'warn',bg:''},{l:'前置仓',v:'待规划',s:'bad',bg:'bad-bg'},
+        {l:'实时订单',v:'待接入',s:'bad',bg:'bad-bg'},{l:'配送时效',v:'待测量',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['O2O平台数据统一接入','前置仓库存联动心跳系统','即时需求预测（味达美高频场景）'],
+      presets:['美团味达美销量？','即时零售覆盖门店？','哪些区域O2O潜力最大？'],
+      chatIntro:'你好，我是O2O即时棒Agent。家庭应急场景很适合味达美。'
+    },
+    '抖音短视频棒':{
+      emoji:'🎵',emojiColor:'rgba(74,222,128,0.12)',
+      tag:'合纵第6棒·内容补强',score:35,milestone:2,
+      desc:'味达美抖音内容补强·与六月鲜差异化·厨师达人+烹饪教学·区别六月鲜的生活方式种草·下沉人群+中老年厨房场景',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+      hint:'当前阶段：框架 → 下一步：AI对话',
+      kpis:[
+        {l:'脚本模板',v:'已建',s:'good',bg:'good-bg'},{l:'厨师达人',v:'待建',s:'bad',bg:'bad-bg'},
+        {l:'投放ROI',v:'待测量',s:'bad',bg:'bad-bg'},{l:'下沉人群',v:'待建',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['厨师类达人匹配系统','下沉/中老年人群精准投放','直播话术本地化'],
+      presets:['抖音投放策略？','厨师达人合作优先级？','下沉市场抖音效果？'],
+      chatIntro:'你好，我是抖音短视频棒Agent。味达美走厨师路线。'
+    },
+    '小红书种草棒':{
+      emoji:'📕',emojiColor:'rgba(255,95,95,0.12)',
+      tag:'合纵第7棒·辅助棒',score:30,milestone:1,
+      desc:'味达美小红书权重较低(六月鲜第1棒)·味达美主要做家常菜教学+妈妈人群·不与六月鲜的精致生活方式冲突·辅助角色',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:0,msStyle:'current',
+      hint:'当前阶段：概念 → 下一步：框架',
+      kpis:[
+        {l:'内容策划',v:'起步中',s:'warn',bg:''},{l:'KOC匹配',v:'待建',s:'bad',bg:'bad-bg'},
+        {l:'与六月鲜区分',v:'策略制定',s:'warn',bg:''},{l:'归因',v:'待建',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['味达美专属KOC（妈妈人群）','家常菜教学内容库','与六月鲜内容边界划定(避免内耗)'],
+      presets:['味达美小红书和六月鲜如何区分？','家常菜内容怎么做？','妈妈人群KOC合作？'],
+      chatIntro:'你好，我是小红书种草棒Agent。味达美做家常菜教学路线。'
+    },
+    '味达美品牌AI顾问':{
+      emoji:'💎',emojiColor:'rgba(232,93,74,0.15)',
+      tag:'大众首选定位守护',score:55,milestone:3,
+      desc:'味达美品牌AI顾问·锁定"大众首选"定位·零添加初榨原酿生抽跟进千禾·防止向高端漂移(那是六月鲜的地盘)·防止向低端塌陷(那是小康的地盘)',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',
+      hint:'当前阶段：AI对话 → 下一步：真实数据',
+      kpis:[
+        {l:'品牌定位',v:'大众锁定',s:'good',bg:'good-bg'},{l:'与六月鲜边界',v:'价格¥17',s:'good',bg:'good-bg'},
+        {l:'品牌健康度',v:'【Kantar待】',s:'warn',bg:''},{l:'零添加跟进',v:'进行中',s:'warn',bg:''}
+      ],
+      gaps:['品牌健康度Kantar数据实时接入','千禾零添加对比监控','价格带漂移自动预警（上漂=抢六月鲜/下塌=抢小康）'],
+      presets:['味达美当前品牌健康度？','零添加产品追上千禾了吗？','味达美有没有出现价格漂移？'],
+      chatIntro:'你好，我是味达美品牌AI顾问。守住大众首选定位是我的唯一使命。'
+    },
+    '厨界顾问':{
+      emoji:'👨‍🍳',emojiColor:'rgba(245,166,35,0.15)',
+      tag:'餐饮厨师专属·味达美特色',score:45,milestone:2,
+      desc:'★味达美独有Agent★(六月鲜对应是鲜生顾问)·厨界交流会延伸·北方中餐厨师网络·厨师KOL·菜谱库+调味教程·从厨师口碑反向锁定餐饮C端消费者',
+      ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+      hint:'当前阶段：框架 → 下一步：AI对话',
+      kpis:[
+        {l:'厨师网络',v:'历史沉淀',s:'good',bg:'good-bg'},{l:'菜谱库',v:'建设中',s:'warn',bg:''},
+        {l:'厨师KOL',v:'待建',s:'bad',bg:'bad-bg'},{l:'口碑传导',v:'待建',s:'bad',bg:'bad-bg'}
+      ],
+      gaps:['厨师KOL合作网络（北方中餐重点）','菜谱内容生成工具·味达美专属风格','厨界交流会数字化（原线下资产数字化）'],
+      presets:['北方厨师对味达美的口碑？','厨师KOL合作优先级？','哪些菜谱带动味达美销售？'],
+      chatIntro:'你好，我是味达美厨界顾问。厨师网络是味达美的独特资产。'
+    }
+  }
+};
+
+// 便捷别名（当前品牌的AGENTS和CATS）
+const AGENTS = AGENTS_ALL[CURRENT_BRAND];
+const CATS = CATS_ALL[CURRENT_BRAND];
+
+let currentCatId='';
+let currentAgentName='';
+
+function showCat(catId,isBack=false){
+  if(!isBack) navStack.push({type:'home'});
+  currentCatId=catId;
+  const cat=CATS[catId];
+  document.getElementById('catIcon').textContent=cat.icon;
+  document.getElementById('catName').textContent=cat.name;
+  document.getElementById('catSub').textContent=cat.sub;
+  const list=document.getElementById('agentList');
+  list.innerHTML='';
+  cat.agents.forEach(name=>{
+    const a=AGENTS[name];if(!a)return;
+    const pct=Math.min(100,a.score);
+    const sc=a.score>=65?'var(--green)':a.score>=45?'var(--amber)':'var(--red)';
+    const row=document.createElement('div');
+    row.className='agent-row';
+    row.innerHTML=`
+      <div class="agent-emoji" style="background:${a.emojiColor}">${a.emoji}</div>
+      <div class="agent-info">
+        <div class="agent-name">${name}</div>
+        <div class="agent-tag">${a.tag}</div>
+        <div class="agent-desc">${a.desc}</div>
+      </div>
+      <div class="agent-score-col">
+        <div class="agent-score" style="color:${sc}">${a.score}</div>
+        <div class="agent-milestone">M${a.milestone}/5</div>
+        <div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${sc}"></div></div>
+      </div>`;
+    row.onclick=()=>showAgentDetail(name);
+    list.appendChild(row);
+  });
+  document.getElementById('backBtn').style.display='flex';
+  showScreen('cat');
+  document.getElementById('breadcrumb').innerHTML=
+    `<span class="bc-link" onclick="pushHome()">首页</span><span class="bc-sep">›</span><span class="bc-cur">${cat.name}</span>`;
+}
+
+function showAgentDetail(name,isBack=false){
+  if(!isBack) navStack.push({type:'cat',id:currentCatId});
+  currentAgentName=name;
+  const a=AGENTS[name];if(!a)return;
+  const sc=a.score>=65?'var(--green)':a.score>=45?'var(--amber)':'var(--red)';
+  const pct=Math.min(100,a.score);
+
+  let msHtml='<div class="milestone-row">';
+  a.ms.forEach((m,i)=>{
+    let cls='ms-step';
+    if(i<a.msCur) cls+=' done';
+    else if(i===a.msCur) cls+=` ${a.msStyle}`;
+    msHtml+=`<div class="${cls}">${m}</div>`;
+  });
+  msHtml+='</div>';
+  msHtml+=`<div class="ms-hint">${a.hint}</div>`;
+
+  let kpiHtml='<div class="kpi-grid">';
+  a.kpis.forEach(k=>{
+    kpiHtml+=`<div class="kpi-box ${k.bg||''}"><div class="kpi-label">${k.l}</div><div class="kpi-val ${k.s}">${k.v}</div></div>`;
+  });
+  kpiHtml+='</div>';
+
+  let gapsHtml=`<div class="gap-title">距离完整体还差（${a.gaps.length}项）</div><div class="gap-list">`;
+  a.gaps.forEach(g=>gapsHtml+=`<div class="gap-item"><div class="gap-dot"></div><span>${g}</span></div>`);
+  gapsHtml+='</div>';
+
+  let presetsHtml='<div class="chat-presets">';
+  a.presets.forEach(p=>presetsHtml+=`<div class="preset-chip" onclick="sendAgentChat('${p.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}',this)">${p}</div>`);
+  presetsHtml+='</div>';
+
+  const html=`
+    <div class="detail-hero">
+      <div class="detail-hero-top">
+        <div>
+          <span class="detail-emoji">${a.emoji}</span>
+          <div class="detail-name">${name}</div>
+          <div class="detail-sub">${a.tag}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="detail-score-big" style="color:${sc}">${a.score}</div>
+          <div class="detail-score-lbl">成熟度评分</div>
+        </div>
+      </div>
+      <div class="detail-desc">${a.desc}</div>
+      <div class="detail-progress"><div class="detail-progress-fill" style="width:${pct}%"></div></div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-hdr">里程碑进度 · M${a.milestone}/5 · 还差${5-a.milestone}步到完整体</div>
+      ${msHtml}
+    </div>
+
+    <div class="section-card">
+      <div class="section-hdr">关键指标</div>
+      ${kpiHtml}
+    </div>
+
+    <div class="section-card">
+      <div class="section-hdr">缺口</div>
+      ${gapsHtml}
+    </div>
+
+    <div class="chat-section">
+      <div class="chat-hdr">AI对话 · <span class="chat-agent-name">${a.emoji} ${name}</span></div>
+      ${presetsHtml}
+      <div class="chat-bubble" id="chatBubble-${name.replace(/\s/g,'_')}">${a.chatIntro}</div>
+      <div class="chat-response" id="chatResp-${name.replace(/\s/g,'_')}">
+        <div class="chat-q-echo" id="chatQ-${name.replace(/\s/g,'_')}"></div>
+        <div id="chatA-${name.replace(/\s/g,'_')}"></div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chatInput-${name.replace(/\s/g,'_')}" placeholder="问${name}…" onkeydown="if(event.key==='Enter')sendAgentChat(this.value,'${name.replace(/'/g,"\\'")}',null,this)" />
+        <button class="chat-send" onclick="sendAgentChat(document.getElementById('chatInput-${name.replace(/\s/g,'_')}').value,'${name.replace(/'/g,"\\'")}',null,document.getElementById('chatInput-${name.replace(/\s/g,'_')}'))">↑</button>
+      </div>
+    </div>`;
+
+  document.getElementById('detailWrap').innerHTML=html;
+  showScreen('detail');
+  const cat=CATS[currentCatId];
+  document.getElementById('breadcrumb').innerHTML=
+    `<span class="bc-link" onclick="pushHome()">首页</span>
+     <span class="bc-sep">›</span>
+     <span class="bc-link" onclick="navStack.push({type:'home'});showCat('${currentCatId}')">${cat?.name||''}</span>
+     <span class="bc-sep">›</span>
+     <span class="bc-cur">${name}</span>`;
+}
+
+// ── Agent-specific chat ──
+async function sendAgentChat(q,agentName,chipEl,inputEl){
+  if(!q||!q.trim())return;
+  const key=agentName.replace(/\s/g,'_');
+  const resp=document.getElementById('chatResp-'+key);
+  const qEl=document.getElementById('chatQ-'+key);
+  const aEl=document.getElementById('chatA-'+key);
+  if(!resp)return;
+  resp.classList.add('show');
+  qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  if(inputEl&&inputEl.tagName==='INPUT') inputEl.value='';
+
+  const a=AGENTS[agentName];
+  const sys=`你是欣和SH INFINITY OS【味达美】品牌的「${agentName}」Agent（${a?.tag||''}）。
+味达美品牌定位：大众首选·餐饮基本盘(占下游40.2%)·北方根据地(河北/山东)·现金牛防守型。
+核心威胁：千禾零添加抢家庭份额·海天价格战压规模。
+与六月鲜区别：价格带¥11-13(六月鲜¥17+)·渠道重心大卖场+社区+餐饮(六月鲜S+精品店)·合纵第1棒是大卖场(六月鲜是小红书)。
+你的职责：${a?.desc||''}
+关键指标：${a?.kpis?.map(k=>k.l+'='+k.v).join('·')||''}
+当前缺口：${a?.gaps?.join('、')||''}
+用中文简洁回答，不超过200字，直接给出要点。如果涉及数字，标注来源(【Kantar】/【待校准】/【继承】)。`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:sys,messages:[{role:'user',content:q}]})
+    });
+    const d=await r.json();
+    const txt=d.content?.map(c=>c.text||'').join('')||'暂时无法获取回答。';
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${txt}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`}
+}
+
+// ── Brain chat ──
+async function sendBrain(){
+  const input=document.getElementById('brainInput');
+  const q=input.value.trim();if(!q)return;
+  await askBrain(q);
+}
+async function askBrain(q){
+  document.getElementById('brainInput').value=q;
+  const resp=document.getElementById('brainResp');
+  const qEl=document.getElementById('brainQ');
+  const aEl=document.getElementById('brainA');
+  resp.classList.add('show');
+  qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  const sys=`你是欣和SH INFINITY OS【味达美】战略大脑。
+味达美品牌定位：大众首选·现金牛·防守型·酱油CR5第4位·2025Q1份额同比下降(警报)·餐饮渠道占下游40.2%基本盘·北方根据地(河北/山东)·价格带¥11-13·与六月鲜形成"高端+大众"品牌矩阵。
+核心威胁：千禾零添加(家庭)+海天价格战(全渠道)。
+核心资产：厨界网络/北方经销商密网络/餐饮B端占比高。
+精通：纵横框架(7渠道×IPO0-13=98交叉点)、库存心跳v2.0(心跳单元a·三层水位)、24个Agent体系、勤策替代路线A、Kantar公开数据。
+合纵7棒对味达美的优先级：大卖场>社区超市>餐饮B端>电商>O2O>抖音>小红书。
+用中文回答，清晰结构化，不超过300字。如果涉及数字，标注来源(【Kantar】/【待校准】/【继承】)。`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:sys,messages:[{role:'user',content:q}]})
+    });
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'无法获取回答。'}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red)">⚠️ ${e.message}</div>`}
+  document.getElementById('brainInput').value='';
+}
+
+document.getElementById('brainInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendBrain()});
+
+function toggleKB(id){document.getElementById(id).classList.toggle('open')}
+
+showScreen('home');
+document.getElementById('breadcrumb').innerHTML='';
+</script>
+</body>
+</html>
