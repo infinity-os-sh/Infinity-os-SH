@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>千禾反击战 · Agent实战第3天 · QH-DIAG-001</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0b10;--bg2:#0f1118;--bg3:#141720;--card:#181c26;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.14);--text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;--amber:#f5a623;--gold:#ffd700;--teal:#4ecdc4;--red:#ff5f5f;--green:#4ade80;--blue:#60a5fa;--purple:#a78bfa}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(10,11,16,0.95);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:11px 16px;display:flex;align-items:center;justify-content:space-between}
+.tb-l{display:flex;align-items:center;gap:10px}
+.tb-logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#a78bfa,#ff5f5f);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:#fff}
+.tb-t{font-family:'Syne',sans-serif;font-size:13px;font-weight:800}
+.tb-t span{color:var(--purple)}
+.tb-s{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3);letter-spacing:0.12em}
+.tb-back{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);padding:4px 10px;border:1px solid var(--border2);border-radius:12px;text-decoration:none}
+.hero{padding:24px 16px 18px;border-bottom:1px solid var(--border);background:radial-gradient(ellipse at top,rgba(167,139,250,0.06),transparent 60%)}
+.hero-tag{display:inline-block;font-family:'Space Mono',monospace;font-size:10px;color:var(--purple);letter-spacing:0.22em;border:1px solid var(--purple);padding:3px 10px;border-radius:2px;margin-bottom:10px}
+.hero-t{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1.12;margin-bottom:6px}
+.hero-t span{color:var(--purple)}
+.hero-s{font-size:12px;color:var(--text2);line-height:1.55}
+.context-bar{margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.ctx{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 9px;font-size:10px;line-height:1.4;color:var(--text2)}
+.ctx-day{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:0.1em;font-weight:700;margin-bottom:3px}
+.ctx.d1 .ctx-day{color:var(--red)}
+.ctx.d2 .ctx-day{color:var(--green)}
+.ctx.d3{border-color:var(--purple);background:linear-gradient(135deg,var(--card),rgba(167,139,250,0.06))}
+.ctx.d3 .ctx-day{color:var(--purple)}
+.game-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:9px}
+.gb-box{text-align:center}
+.gb-lbl{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3);letter-spacing:0.1em;margin-bottom:2px}
+.gb-val{font-family:'Syne',sans-serif;font-size:14px;font-weight:800}
+.gb-val.purple{color:var(--purple)}
+.gb-val.red{color:var(--red)}
+.gb-val.amber{color:var(--amber)}
+.summary{padding:20px 16px;border-bottom:1px solid var(--border)}
+.summary-box{background:linear-gradient(135deg,var(--card),rgba(167,139,250,0.04));border:2px solid var(--purple);border-radius:13px;padding:16px;position:relative;overflow:hidden}
+.summary-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--purple),transparent)}
+.summary-lbl{font-family:'Space Mono',monospace;font-size:10px;color:var(--purple);letter-spacing:0.2em;font-weight:700;margin-bottom:8px}
+.summary-text{font-size:13px;line-height:1.75}
+.summary-text strong{color:var(--purple);font-weight:700}
+.section{padding:22px 16px;border-bottom:1px solid var(--border)}
+.sec-num{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--amber);letter-spacing:0.2em;margin-bottom:3px}
+.sec-t{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;line-height:1.2;margin-bottom:4px}
+.sec-hint{font-size:10.5px;color:var(--text3);margin-bottom:14px;line-height:1.55}
+.vs-grid{display:grid;grid-template-columns:1fr 60px 1fr;gap:6px;align-items:stretch}
+.vs-side{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px}
+.vs-side.them{border-top:3px solid var(--red)}
+.vs-side.us{border-top:3px solid var(--green)}
+.vs-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;margin-bottom:6px}
+.vs-name.them{color:var(--red)}
+.vs-name.us{color:var(--green)}
+.vs-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:900;margin-bottom:4px}
+.vs-lbl{font-size:10px;color:var(--text3);margin-bottom:10px}
+.vs-stats{font-size:10.5px;line-height:1.7;color:var(--text2)}
+.vs-stats strong{color:var(--text)}
+.vs-center{display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:'Syne',sans-serif}
+.vs-ratio{font-size:22px;font-weight:900;color:var(--amber)}
+.vs-ratio-l{font-family:'Space Mono',monospace;font-size:8px;color:var(--text3);margin-top:2px;letter-spacing:0.1em}
+.cube-grid{display:grid;grid-template-columns:1fr;gap:9px}
+@media(min-width:720px){.cube-grid{grid-template-columns:repeat(2,1fr)}}
+.cube-cell{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px}
+.cube-cell.opportunity{border-left:3px solid var(--green)}
+.cube-cell.risk{border-left:3px solid var(--amber)}
+.cube-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cube-dim{font-family:'Syne',sans-serif;font-size:13px;font-weight:800}
+.cube-type{font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;font-weight:700;letter-spacing:0.08em}
+.cube-type.opportunity{background:rgba(74,222,128,0.12);color:var(--green);border:1px solid var(--green)}
+.cube-type.risk{background:rgba(245,166,35,0.12);color:var(--amber);border:1px solid var(--amber)}
+.cube-sev{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);margin-left:5px}
+.cube-find{font-size:12px;line-height:1.65;margin-bottom:8px}
+.cube-find strong{color:var(--green)}
+.cube-cell.risk .cube-find strong{color:var(--amber)}
+.cube-data{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);padding:7px 9px;background:var(--bg3);border-radius:6px;border-left:2px solid var(--border2)}
+.cube-data::before{content:'▸ DATA · ';color:var(--text3);font-weight:700}
+.insight-grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:720px){.insight-grid{grid-template-columns:1fr 1fr}}
+.insight-col{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px}
+.insight-col.po{border-top:3px solid var(--teal)}
+.insight-col.or{border-top:3px solid var(--amber)}
+.insight-hdr{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:10px}
+.insight-item{background:var(--bg3);border-radius:8px;padding:10px 11px;margin-bottom:7px;font-size:11.5px;line-height:1.65}
+.insight-item:last-child{margin-bottom:0}
+.insight-item .a{color:var(--red);font-weight:700}
+.insight-item .arr{color:var(--text3);margin:0 5px}
+.insight-item .b{color:var(--green);font-weight:700}
+.or .insight-item .a{color:var(--green)}
+.or .insight-item .b{color:var(--amber)}
+.action-grid{display:flex;flex-direction:column;gap:10px}
+.action-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px}
+.action-card.high{border-left:4px solid var(--red)}
+.action-card.mid{border-left:4px solid var(--amber)}
+.action-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px}
+.action-id{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:0.1em;font-weight:700}
+.action-meta-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.action-priority{font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;font-weight:700}
+.action-priority.high{background:var(--red);color:#fff}
+.action-priority.mid{background:var(--amber);color:#000}
+.action-points{font-family:'Space Mono',monospace;font-size:9.5px;padding:2px 7px;border-radius:3px;font-weight:700;background:rgba(255,215,0,0.1);color:var(--gold);border:1px solid rgba(255,215,0,0.3)}
+.action-target{font-size:12px;color:var(--text3);margin-bottom:3px}
+.action-target strong{color:var(--text)}
+.action-what{font-size:13px;font-weight:700;line-height:1.5;margin-bottom:10px}
+.action-details{display:grid;grid-template-columns:1fr;gap:6px;padding-top:10px;border-top:1px solid var(--border);font-size:10.5px;color:var(--text2);line-height:1.55}
+@media(min-width:640px){.action-details{grid-template-columns:1fr 1fr}}
+.action-details strong{color:var(--amber);font-weight:700;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.08em;display:block;margin-bottom:2px}
+.action-rat{font-size:10.5px;color:var(--text3);line-height:1.55;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-style:italic}
+.action-rat strong{color:var(--amber);font-weight:700;font-style:normal}
+.track-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.track-hdr{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:10px}
+.track-hdr span{color:var(--purple)}
+.track-chart{display:flex;align-items:flex-end;gap:4px;height:120px;padding:0 4px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.tc-bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px}
+.tc-val{font-family:'Space Mono',monospace;font-size:8px;color:var(--text3);font-weight:700;margin-bottom:2px}
+.tc-rect{width:100%;background:linear-gradient(180deg,var(--red),rgba(255,95,95,0.4));border-radius:2px 2px 0 0;min-height:4px}
+.tc-rect.current{background:linear-gradient(180deg,var(--amber),rgba(245,166,35,0.5))}
+.tc-rect.future{background:linear-gradient(180deg,var(--green),rgba(74,222,128,0.4));opacity:0.7}
+.tc-lbl{font-family:'Space Mono',monospace;font-size:7.5px;color:var(--text3)}
+.track-note{font-size:11px;color:var(--text2);line-height:1.6;margin-top:8px;padding:10px;background:var(--bg3);border-radius:7px}
+.track-note strong{color:var(--purple)}
+.impact-grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:720px){.impact-grid{grid-template-columns:repeat(3,1fr)}}
+.impact-box{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px}
+.impact-box.full{border-top:3px solid var(--green)}
+.impact-box.half{border-top:3px solid var(--amber)}
+.impact-box.zero{border-top:3px solid var(--red)}
+.impact-lbl{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;font-weight:700;margin-bottom:8px}
+.impact-box.full .impact-lbl{color:var(--green)}
+.impact-box.half .impact-lbl{color:var(--amber)}
+.impact-box.zero .impact-lbl{color:var(--red)}
+.impact-text{font-size:11.5px;line-height:1.65}
+.impact-text strong{font-weight:700}
+.escalation-box{background:linear-gradient(135deg,#1a1a1a,#1a2030);border:2px solid var(--amber);border-radius:13px;padding:18px;margin:0 16px 20px}
+.esc-lbl{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:0.2em;margin-bottom:8px;font-weight:700}
+.esc-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:10px;line-height:1.3}
+.esc-title span{color:var(--amber)}
+.esc-body{font-size:12px;line-height:1.75}
+.esc-body strong{color:var(--amber)}
+.synthesis{background:linear-gradient(135deg,rgba(245,166,35,0.05),rgba(167,139,250,0.05));border:2px solid var(--amber);border-radius:13px;padding:18px;margin:0 16px 16px}
+.syn-lbl{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:0.2em;margin-bottom:10px;font-weight:700}
+.syn-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:12px;line-height:1.3}
+.syn-3days{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:12px}
+@media(min-width:600px){.syn-3days{grid-template-columns:1fr 1fr 1fr}}
+.syn-day{background:var(--bg3);border-radius:8px;padding:10px 12px;position:relative}
+.syn-day.d1{border-left:3px solid var(--red)}
+.syn-day.d2{border-left:3px solid var(--green)}
+.syn-day.d3{border-left:3px solid var(--purple)}
+.syn-day-lbl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.1em;margin-bottom:3px;font-weight:700}
+.syn-day.d1 .syn-day-lbl{color:var(--red)}
+.syn-day.d2 .syn-day-lbl{color:var(--green)}
+.syn-day.d3 .syn-day-lbl{color:var(--purple)}
+.syn-day-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:900;margin-bottom:4px}
+.syn-day-desc{font-size:10.5px;color:var(--text2);line-height:1.5}
+.syn-body{font-size:11.5px;line-height:1.7}
+.syn-body strong{color:var(--amber)}
+.next-game{background:rgba(96,165,250,0.04);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:12px 14px;margin:14px 16px 0;font-size:11px;color:var(--text2);line-height:1.65}
+.next-game strong{color:var(--blue)}
+.footer{padding:20px 16px;text-align:center;font-family:'Space Mono',monospace;font-size:9.5px;color:var(--text3);letter-spacing:0.1em;line-height:1.75;border-top:1px solid var(--border)}
+.footer span{color:var(--purple)}
+@media(max-width:540px){.hero-t{font-size:22px}.game-bar{grid-template-columns:repeat(2,1fr)}.vs-grid{grid-template-columns:1fr}.action-hdr{flex-direction:column;align-items:stretch}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-l">
+    <div class="tb-logo">⚔</div>
+    <div>
+      <div class="tb-t">千禾反击战 <span>· AGENT实战</span></div>
+      <div class="tb-s">QH-DIAG-001 · DIFFERENTIATION · DAY 3</div>
+    </div>
+  </div>
+  <a class="tb-back" href="index_v6.html">← 返回</a>
+</div>
+
+<div class="hero">
+  <div class="hero-tag">⚔ AGENT 实战第3天 · 2026.04.22周三</div>
+  <div class="hero-t">CEO指令:<span>千禾4.1倍威胁</span><br>反击战法·不打零添加·打4大侧翼</div>
+  <div class="hero-s">不是追赶战·是<strong>差异化绕后战</strong> · 6个月差距4.1倍→3.8倍 · 24个月→3.0倍 · 欣和从'被追赶者'升级为'追赶者'</div>
+
+  <div class="context-bar">
+    <div class="ctx d1"><div class="ctx-day">DAY 1 · 守</div><div>上海立方体·8条止血</div></div>
+    <div class="ctx d2"><div class="ctx-day">DAY 2 · 攻</div><div>三省沉默·8条开辟</div></div>
+    <div class="ctx d3"><div class="ctx-day">DAY 3 · 战</div><div>千禾反击·8条正面</div></div>
+  </div>
+
+  <div class="game-bar">
+    <div class="gb-box"><div class="gb-lbl">PHASE</div><div class="gb-val">1·立足</div></div>
+    <div class="gb-box"><div class="gb-lbl">GAME</div><div class="gb-val amber">2·Q2</div></div>
+    <div class="gb-box"><div class="gb-lbl">千禾差距</div><div class="gb-val red">4.1x</div></div>
+    <div class="gb-box"><div class="gb-lbl">2年目标</div><div class="gb-val purple">3.0x</div></div>
+  </div>
+</div>
+
+<div class="summary">
+  <div class="summary-box">
+    <div class="summary-lbl">▲ AGENT · DIAGNOSIS SUMMARY</div>
+    <div class="summary-text">千禾不是品牌对手·<strong>是组织对手</strong>。全国34.83亿 vs 六月鲜8.41亿·<strong>4.1倍差距</strong>·还在加速(同比+12% vs 我方+0.2%)。立方体扫描暴露千禾真正弱点:<strong>产品线单薄(仅零添加)+高端KA渗透不足+三四线沉默市场未抢先</strong>。不是追赶战·是<strong>'差异化绕后战'</strong>——正面硬刚零添加必输·迂回打4侧翼必赢:①有机/鲜酱油真实数据优势 ②高端KA(山姆/胖东来/盒马)千禾薄弱 ③三省沉默市场 ④组织敏捷性(千禾80人大团队反而慢·我方+Agent秒级响应)。本GAME 9周追2-3pt·2年10pt·5年差距4.1→2.5倍。</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-num">01 / OPPONENT vs US · 对手视角</div>
+  <div class="sec-t">千禾 vs 六月鲜</div>
+  <div class="sec-hint">Kantar 25Q3真实数据对比 · 4.1倍差距但4大侧翼均为我方优势</div>
+
+  <div class="vs-grid">
+    <div class="vs-side them">
+      <div class="vs-name them">⚔ 千禾</div>
+      <div class="vs-val" style="color:var(--red)">34.83亿</div>
+      <div class="vs-lbl">全国销售 · 同比+12%</div>
+      <div class="vs-stats">员工 <strong>2200+</strong>(销售1400)<br>SKU <strong>52</strong>(86%零添加)<br>传统KA占比 <strong>72%</strong><br>高端KA渗透 <strong>&lt;0.3%</strong><br>决策链 <strong>3层</strong>·14天</div>
+    </div>
+    <div class="vs-center"><div class="vs-ratio">4.1×</div><div class="vs-ratio-l">差距</div></div>
+    <div class="vs-side us">
+      <div class="vs-name us">✦ 六月鲜</div>
+      <div class="vs-val" style="color:var(--green)">8.41亿</div>
+      <div class="vs-lbl">全国销售 · 同比+0.2%</div>
+      <div class="vs-stats">员工 <strong>轻装</strong>+Agent<br>SKU <strong>9品牌×5系列</strong>=44+<br>新渠道 <strong>主动布局</strong><br>高端KA机会 <strong>山姆0.6%可扩</strong><br>决策 <strong>Agent秒级</strong>·&lt;24h</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-num">02 / CUBE SCAN · 立方体扫描</div>
+  <div class="sec-t">8纬度对千禾穿透 · 7机会+1风险</div>
+
+  <div class="cube-grid">
+    <div class="cube-cell opportunity"><div class="cube-hdr"><div class="cube-dim">📍 区域</div><div><span class="cube-type opportunity">OPPORTUNITY</span><span class="cube-sev">HIGH</span></div></div><div class="cube-find">千禾主力华东华南占65%·<strong>东北华北合计仅14%</strong>·正是我方周二沉默三省战场·千禾还没布防</div><div class="cube-data">千禾东北4.6% · 华北3.5% · 我方在此正加码</div></div>
+    <div class="cube-cell risk"><div class="cube-hdr"><div class="cube-dim">🏷 品牌</div><div><span class="cube-type risk">RISK</span><span class="cube-sev">HIGH</span></div></div><div class="cube-find">千禾'零添加'心智14年·壁垒极高·<strong>正面硬刚=找死</strong>·但零添加以外空白</div><div class="cube-data">千禾:零添加90%/其他10% · 六月鲜:鲜35%/有机22%/健康18%</div></div>
+    <div class="cube-cell opportunity"><div class="cube-hdr"><div class="cube-dim">🚚 渠道</div><div><span class="cube-type opportunity">OPPORTUNITY</span><span class="cube-sev">HIGH</span></div></div><div class="cube-find">千禾传统KA占72%·<strong>过度依赖</strong>·高端新兴KA合计仅7% · 新渠道完全没卡位</div><div class="cube-data">千禾山姆0.3% · 我方0.6% · 山姆战场千禾更弱</div></div>
+    <div class="cube-cell opportunity"><div class="cube-hdr"><div class="cube-dim">💰 价格</div><div><span class="cube-type opportunity">OPPORTUNITY</span><span class="cube-sev">MID</span></div></div><div class="cube-find">千禾均价¥21.5·<strong>集中¥18-25</strong>·¥25+高端带薄弱·正是我方小规格(¥28-32)区间</div><div class="cube-data">千禾¥25+占9% · 品类均23% · 没打高端塔尖</div></div>
+    <div class="cube-cell opportunity"><div class="cube-hdr"><div class="cube-dim">📦 SKU</div><div><span class="cube-type opportunity">OPPORTUNITY</span><span class="cube-sev">HIGH</span></div></div><div class="cube-find">千禾52个SKU·<strong>86%零添加</strong>·有机1个·鲜1个·<strong>我方9×5矩阵全线包围</strong></div><div class="cube-data">千禾SKU深度3.5 vs 六月鲜4.8 · 丰度1.4倍</div></div>
+    <div class="cube-cell opportunity"><div class="cube-hdr"><div class="cube-dim">👥 人员</div><div><span class="cube-type opportunity">OPPORTUNITY</span><span class="cube-sev">HIGH</span></div></div><div class="cube-find">千禾2200+人·上海80·沈阳仅8·<strong>东北华北薄弱</strong>·内部3层汇报决策慢</div><div class="cube-data">千禾响应14天·我方+Agent目标&lt;24h</div></div>
+    <div class="cube-cell opportunity"><div class="cube-hdr"><div class="cube-dim">⏱ 时间</div><div><span class="cube-type opportunity">OPPORTUNITY</span><span class="cube-sev">HIGH</span></div></div><div class="cube-find">千禾加速窗口2020-2024·<strong>增速从+28%降到+12%</strong>·曲线在弯曲·反击最好时机</div><div class="cube-data">2022+28% → 2024+18% → 2025+12% · 拐点已现</div></div>
+    <div class="cube-cell opportunity"><div class="cube-hdr"><div class="cube-dim">⚔ 反应</div><div><span class="cube-type opportunity">MID</span><span class="cube-sev">MID</span></div></div><div class="cube-find">千禾对我方战略反应<strong>慢且惯性大</strong>:我方推有机·千禾8个月后才跟·有6-8月窗口</div><div class="cube-data">跟随延迟平均6.8月·价格调整延迟4月</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-num">03 / INSIGHTS · 穿透洞察</div>
+  <div class="sec-t">问题中找机会·机会中找风险</div>
+
+  <div class="insight-grid">
+    <div class="insight-col po">
+      <div class="insight-hdr">🔍 问题中的机会</div>
+      <div class="insight-item"><span class="a">千禾零添加14年打不下</span><span class="arr">→</span><span class="b">打<strong>零添加+鲜+有机</strong>复合心智·我方有机6.5%是千禾3倍·造'更完整的健康'</span></div>
+      <div class="insight-item"><span class="a">千禾34.83亿压倒规模</span><span class="arr">→</span><span class="b">规模大=反应慢·用Agent+扁平化·<strong>'劣势'→'敏捷优势'</strong>·开会3天vs派单3秒</span></div>
+      <div class="insight-item"><span class="a">千禾上海80人vs15.5人</span><span class="arr">→</span><span class="b">人多=成本高=保守·我方轻装游击·他们打不到</span></div>
+      <div class="insight-item"><span class="a">传统KA主导72%</span><span class="arr">→</span><span class="b">越大KA调整越慢·all-in新渠道·<strong>2年后渠道结构领先</strong></span></div>
+    </div>
+    <div class="insight-col or">
+      <div class="insight-hdr">⚠ 机会中的风险</div>
+      <div class="insight-item"><span class="a">高端KA可抢</span><span class="arr">→</span><span class="b">海天59%锁定风险·需沃尔玛总部直谈·DS层面发力</span></div>
+      <div class="insight-item"><span class="a">千禾拐点最好时机</span><span class="arr">→</span><span class="b">千禾可能酝酿IPO/并购·Q3若发布·窗口期缩短</span></div>
+      <div class="insight-item"><span class="a">产品丰度1.4倍</span><span class="arr">→</span><span class="b">丰度未必=认知·每系列需明确场景绑定</span></div>
+      <div class="insight-item"><span class="a">6-8月窗口</span><span class="arr">→</span><span class="b">一旦醒悟会反扑·需6月内形成不可逆优势</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-num">04 / ACTIONS · Agent派单清单</div>
+  <div class="sec-t">8条动作 · 4侧翼同时启动</div>
+
+  <div class="action-grid">
+    <div class="action-card high">
+      <div class="action-hdr"><div><div class="action-id">QH-A001</div><div class="action-target">▸ <strong>CEO+战略VP+研究部</strong></div></div><div class="action-meta-row"><span class="action-priority high">紧急</span><span class="action-points">💰 +250</span></div></div>
+      <div class="action-what">本周R3末产出《千禾反击战略蓝图2026-2028》:不打零添加·打4大侧翼(有机+高端KA+三省+敏捷)·CEO签字</div>
+      <div class="action-details"><div><strong>DEADLINE</strong>本周五17:00</div><div><strong>SUCCESS</strong>20页蓝图+CEO签字+共识</div></div>
+      <div class="action-rat"><strong>为什么:</strong>没有公司级共识·反击就各自为战·必须用文档锚定方向</div>
+    </div>
+
+    <div class="action-card high">
+      <div class="action-hdr"><div><div class="action-id">QH-A002</div><div class="action-target">▸ <strong>市场VP</strong></div></div><div class="action-meta-row"><span class="action-priority high">紧急</span><span class="action-points">💰 +200</span></div></div>
+      <div class="action-what">2周启动《健康三位一体》战役:'鲜+有机+零添加'·真实数据证据链·上海+合肥+沈阳三城投放·预算¥800万</div>
+      <div class="action-details"><div><strong>DEADLINE</strong>2周规划·4周上线</div><div><strong>SUCCESS</strong>'健康'联想+20pt</div></div>
+      <div class="action-rat"><strong>为什么:</strong>千禾只有零添加·我们3倍丰度·必须讲清楚不让千禾独占健康叙事</div>
+    </div>
+
+    <div class="action-card high">
+      <div class="action-hdr"><div><div class="action-id">QH-A003</div><div class="action-target">▸ <strong>渠道VP+KA总监</strong></div></div><div class="action-meta-row"><span class="action-priority high">紧急</span><span class="action-points">💰 +300</span></div></div>
+      <div class="action-what">直接去山姆/胖东来/盒马总部谈判:利用千禾薄弱·本GAME末山姆SKU测试+胖东来全店+盒马协议</div>
+      <div class="action-details"><div><strong>DEADLINE</strong>GAME 2末</div><div><strong>SUCCESS</strong>山姆1SKU·胖东来全店·盒马协议</div></div>
+      <div class="action-rat"><strong>为什么:</strong>高端KA是千禾最薄弱战场·现在不进1年后进不去</div>
+    </div>
+
+    <div class="action-card high">
+      <div class="action-hdr"><div><div class="action-id">QH-A004</div><div class="action-target">▸ <strong>产品VP+上海小规格团队</strong></div></div><div class="action-meta-row"><span class="action-priority high">紧急</span><span class="action-points">💰 +150</span></div></div>
+      <div class="action-what">加速<300ml小规格(¥28-32)上市:周一SH-A005的3SKU提前2周·上海+合肥20家Top门店·3月销售200万+</div>
+      <div class="action-details"><div><strong>DEADLINE</strong>加速到第6周</div><div><strong>SUCCESS</strong>3SKU上市·20家门店·200万+</div></div>
+      <div class="action-rat"><strong>为什么:</strong>千禾¥25+仅9%·高端塔尖空·我方主动占位</div>
+    </div>
+
+    <div class="action-card high">
+      <div class="action-hdr"><div><div class="action-id">QH-A005</div><div class="action-target">▸ <strong>数字营销+Agent联动</strong></div></div><div class="action-meta-row"><span class="action-priority high">紧急</span><span class="action-points">💰 +120</span></div></div>
+      <div class="action-what">启动'Agent赛狐'对标监测:每48小时抓取千禾全渠道动作·Agent立方体首时间扫描·24h内反击预案</div>
+      <div class="action-details"><div><strong>DEADLINE</strong>2周上线</div><div><strong>SUCCESS</strong>首月识别3个千禾动作</div></div>
+      <div class="action-rat"><strong>为什么:</strong>敏捷性是最大战略优势·必须系统锁定</div>
+    </div>
+
+    <div class="action-card mid">
+      <div class="action-hdr"><div><div class="action-id">QH-A006</div><div class="action-target">▸ <strong>HR VP+价值评价</strong></div></div><div class="action-meta-row"><span class="action-priority mid">高</span><span class="action-points">💰 +80</span></div></div>
+      <div class="action-what">设立'千禾猎手'激励:员工发现千禾攻击点并成功反击·突破分+200·本GAME专门榜单·Top 5公开表彰</div>
+      <div class="action-details"><div><strong>DEADLINE</strong>本周五</div><div><strong>SUCCESS</strong>首周3起猎手事件</div></div>
+      <div class="action-rat"><strong>为什么:</strong>让1万员工变1万个雷达</div>
+    </div>
+
+    <div class="action-card mid">
+      <div class="action-hdr"><div><div class="action-id">QH-A007</div><div class="action-target">▸ <strong>市场研究部</strong></div></div><div class="action-meta-row"><span class="action-priority mid">高</span><span class="action-points">💰 +100</span></div></div>
+      <div class="action-what">本GAME末前'千禾消费者流失测试':200个千禾用户深度访谈·测'鲜+有机+零添加'转化率·指导A002放大</div>
+      <div class="action-details"><div><strong>DEADLINE</strong>GAME 2末</div><div><strong>SUCCESS</strong>200访谈+报告</div></div>
+      <div class="action-rat"><strong>为什么:</strong>我们讲健康消费者未必买账·需真实验证</div>
+    </div>
+
+    <div class="action-card mid">
+      <div class="action-hdr"><div><div class="action-id">QH-A008</div><div class="action-target">▸ <strong>Agent自身</strong></div></div><div class="action-meta-row"><span class="action-priority mid">高</span><span class="action-points">💰 +50</span></div></div>
+      <div class="action-what">建立'千禾差距追踪曲线':每周R末自动计算·6月→3.8 / 12月→3.5 / 24月→3.0 / CEO视图主界面·偏离告警</div>
+      <div class="action-details"><div><strong>DEADLINE</strong>本周上线</div><div><strong>SUCCESS</strong>曲线运行9周追踪</div></div>
+      <div class="action-rat"><strong>为什么:</strong>反击是5年长期战·需持续指标·Agent负责不忘</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-num">05 / GAP TRACKER · 千禾差距追踪曲线</div>
+  <div class="sec-t">5年差距从4.1倍→2.5倍</div>
+  <div class="sec-hint">QH-A008产出 · Agent持续追踪·CEO视图主界面</div>
+
+  <div class="track-box">
+    <div class="track-hdr">▸ <span>千禾/六月鲜 销售差距倍数</span> · 5年目标曲线</div>
+    <div class="track-chart">
+      <div class="tc-bar"><div class="tc-val">4.1×</div><div class="tc-rect" style="height:100%"></div><div class="tc-lbl">今</div></div>
+      <div class="tc-bar"><div class="tc-val">4.0×</div><div class="tc-rect current" style="height:98%"></div><div class="tc-lbl">Q2末</div></div>
+      <div class="tc-bar"><div class="tc-val">3.9×</div><div class="tc-rect future" style="height:95%"></div><div class="tc-lbl">Q3</div></div>
+      <div class="tc-bar"><div class="tc-val">3.8×</div><div class="tc-rect future" style="height:93%"></div><div class="tc-lbl">6月</div></div>
+      <div class="tc-bar"><div class="tc-val">3.6×</div><div class="tc-rect future" style="height:88%"></div><div class="tc-lbl">9月</div></div>
+      <div class="tc-bar"><div class="tc-val">3.5×</div><div class="tc-rect future" style="height:85%"></div><div class="tc-lbl">12月</div></div>
+      <div class="tc-bar"><div class="tc-val">3.3×</div><div class="tc-rect future" style="height:80%"></div><div class="tc-lbl">18月</div></div>
+      <div class="tc-bar"><div class="tc-val">3.0×</div><div class="tc-rect future" style="height:73%"></div><div class="tc-lbl">24月</div></div>
+      <div class="tc-bar"><div class="tc-val">2.8×</div><div class="tc-rect future" style="height:68%"></div><div class="tc-lbl">36月</div></div>
+      <div class="tc-bar"><div class="tc-val">2.5×</div><div class="tc-rect future" style="height:60%"></div><div class="tc-lbl">5年</div></div>
+    </div>
+    <div class="track-note"><strong>里程碑:</strong>本GAME末4.0倍(首次缩小) · 12个月3.5倍(4侧翼成型) · 24个月3.0倍(从被追赶者→追赶者) · 5年2.5倍<br><br>Agent每周自动计算·偏离曲线&gt;0.1自动告警CEO视图 · 这就是真Agent的持续价值</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-num">06 / IMPACT · 执行后影响</div>
+  <div class="sec-t">三档情境 · 2年后差距</div>
+
+  <div class="impact-grid">
+    <div class="impact-box full">
+      <div class="impact-lbl">全部执行(8条)</div>
+      <div class="impact-text">
+        <strong>本GAME末:</strong><br>差距4.1→<strong>4.0倍</strong>(首次缩小)<br>1个高端KA突破<br>高端小规格测试成功<br><br>
+        <strong>12个月:3.7倍</strong><br>2个高端KA站稳·4侧翼成型<br><br>
+        <strong>24个月:3.0倍</strong><br>被追赶者→追赶者
+      </div>
+    </div>
+    <div class="impact-box half">
+      <div class="impact-lbl">部分执行(A1+A2+A3)</div>
+      <div class="impact-text">
+        <strong>9周后:</strong><br>差距持平4.1倍<br>但方向对·GAME 3可继续<br>只是慢1个GAME<br><br>
+        战略蓝图落地<br>心智战役上线<br>高端KA进入谈判
+      </div>
+    </div>
+    <div class="impact-box zero">
+      <div class="impact-lbl">不执行(保持现状)</div>
+      <div class="impact-text">
+        千禾+12% vs 我方+0.2%<br><strong>1年后差距→4.6倍</strong><br><strong>2年后→5倍</strong><br><br>
+        战略地位<br><strong>转劣势不可逆</strong><br>100亿目标需要重估
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="escalation-box">
+  <div class="esc-lbl">▲ ESCALATION TO CEO · 需CEO亲自决策</div>
+  <div class="esc-title"><span>QH-A001战略蓝图</span>是否升级为公司级战略?</div>
+  <div class="esc-body">
+    营销战术·资源不保证;公司级战略·CEO向全公司明示<strong>'反击千禾是未来3年核心主线'</strong>·可能引发组织调整·但必须·否则=假反击。<br><br>
+    <strong>经营层共识3个关键点:</strong><br>
+    ① 不打零添加(承认差异化·不做正面对抗)<br>
+    ② 全力打4侧翼(有机+高端KA+三省+敏捷)<br>
+    ③ 24个月降到3.0倍(可量化·不含糊)<br><br>
+    <strong>72h内CEO给Agent倾向</strong>·Agent据此调整QH-A002到A008执行强度。
+  </div>
+</div>
+
+<div class="synthesis">
+  <div class="syn-lbl">▲ 3-DAY SYNTHESIS · 三日Agent实战合成</div>
+  <div class="syn-title">Agent实战周前3天 · <span style="color:var(--amber)">24条动作</span> · Phase 1完整PDCA</div>
+  <div class="syn-3days">
+    <div class="syn-day d1"><div class="syn-day-lbl">DAY 1 · 04.20</div><div class="syn-day-name">守</div><div class="syn-day-desc">上海双重恶化立方体·8条止血止滑</div></div>
+    <div class="syn-day d2"><div class="syn-day-lbl">DAY 2 · 04.21</div><div class="syn-day-name">攻</div><div class="syn-day-desc">辽宁/安徽/河北·8条开辟新反应堆</div></div>
+    <div class="syn-day d3"><div class="syn-day-lbl">DAY 3 · 04.22</div><div class="syn-day-name">战</div><div class="syn-day-desc">千禾4.1倍反击·8条正面对抗</div></div>
+  </div>
+  <div class="syn-body">
+    三天Agent立方体扫描+Claude推理 · <strong>24条动作全部直达具体人·全部带积分·全部可验收</strong> · 已形成PDCA闭环:<strong>诊断→战略→执行→复盘</strong>都有Agent负责 · <strong>中层0开会·Agent自跑路径</strong><br><br>
+    3天24条动作全执行·本GAME末:<br>
+    <strong style="color:var(--red)">上海止住-8%</strong> + <strong style="color:var(--green)">三省+3200万</strong> + <strong style="color:var(--purple)">千禾差距首次缩小</strong> = <strong>Phase 1首个'立足'关键季度赢下来</strong>
+  </div>
+</div>
+
+<div class="next-game">
+  <strong>▸ NEXT:</strong>周四·躺平识别 · 本周客户在岗&lt;40%的淘汰候选 · 激活6条铁律中的"一定比例必须淘汰" · Agent首次真正触碰HR红线
+</div>
+
+<div class="footer">
+  INFINITY OS · Agent实战第3天 · <span>QH-DIAG-001</span><br>
+  Agent v0.3 · 真实JSON输出渲染 · 2026.04.22 · DS<br>
+  <span>千禾4.1倍→2.5倍·差异化绕后 · 欣和从被追赶者升级为追赶者</span>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>躺平识别战报 · Agent实战第4天 · LP-DIAG-001</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0b10;--bg2:#0f1118;--bg3:#141720;--card:#181c26;--card2:#1e2330;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.14);--text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;--amber:#f5a623;--gold:#ffd700;--teal:#4ecdc4;--red:#ff5f5f;--green:#4ade80;--blue:#60a5fa;--purple:#a78bfa}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(10,11,16,0.95);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:11px 16px;display:flex;align-items:center;justify-content:space-between}
+.tb-l{display:flex;align-items:center;gap:10px}
+.tb-logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#ff5f5f,#a78bfa);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:#fff}
+.tb-t{font-family:'Syne',sans-serif;font-size:13px;font-weight:800}
+.tb-t span{color:var(--red)}
+.tb-s{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3);letter-spacing:0.12em}
+.tb-back{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);padding:4px 10px;border:1px solid var(--border2);border-radius:12px;text-decoration:none}
+
+.hero{padding:24px 16px 18px;border-bottom:1px solid var(--border);background:radial-gradient(ellipse at top,rgba(255,95,95,0.08),transparent 60%)}
+.hero-tag{display:inline-block;font-family:'Space Mono',monospace;font-size:10px;color:var(--red);letter-spacing:0.22em;border:1px solid var(--red);padding:3px 10px;border-radius:2px;margin-bottom:10px}
+.hero-t{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1.12;margin-bottom:6px}
+.hero-t span{color:var(--red)}
+.hero-s{font-size:12px;color:var(--text2);line-height:1.55}
+
+.yesterday-link{margin-top:14px;background:rgba(167,139,250,0.05);border-left:3px solid var(--purple);padding:10px 12px;border-radius:0 7px 7px 0;font-size:11px;color:var(--text2);line-height:1.6}
+.yesterday-link strong{color:var(--purple)}
+
+.game-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:9px}
+.gb-box{text-align:center}
+.gb-lbl{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3);letter-spacing:0.1em;margin-bottom:2px}
+.gb-val{font-family:'Syne',sans-serif;font-size:14px;font-weight:800}
+.gb-val.red{color:var(--red)}
+.gb-val.amber{color:var(--amber)}
+
+.summary{padding:20px 16px;border-bottom:1px solid var(--border)}
+.summary-box{background:linear-gradient(135deg,var(--card),rgba(255,95,95,0.05));border:2px solid var(--red);border-radius:13px;padding:16px}
+.summary-lbl{font-family:'Space Mono',monospace;font-size:10px;color:var(--red);letter-spacing:0.2em;font-weight:700;margin-bottom:8px}
+.summary-text{font-size:13px;line-height:1.75;color:var(--text)}
+.summary-text strong{color:var(--red);font-weight:700}
+
+.section{padding:22px 16px;border-bottom:1px solid var(--border)}
+.sec-num{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--amber);letter-spacing:0.2em;margin-bottom:3px}
+.sec-t{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;line-height:1.2;margin-bottom:4px}
+.sec-hint{font-size:10.5px;color:var(--text3);margin-bottom:14px;line-height:1.55}
+
+/* 淘汰池 */
+.elim-grid{display:flex;flex-direction:column;gap:10px}
+.elim-card{background:linear-gradient(135deg,var(--card),rgba(255,95,95,0.03));border:1px solid var(--border);border-left:4px solid var(--red);border-radius:12px;padding:14px;position:relative}
+.elim-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px}
+.elim-left{flex:1;min-width:0}
+.elim-id{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--text3);letter-spacing:0.1em;font-weight:700;margin-bottom:3px}
+.elim-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:900;color:var(--text);margin-bottom:2px}
+.elim-role{font-size:11px;color:var(--text2)}
+.elim-stats{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start}
+.elim-ct{background:var(--red);color:#fff;padding:4px 9px;border-radius:6px;text-align:center;min-width:48px}
+.elim-ct-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:900;line-height:1}
+.elim-ct-lbl{font-family:'Space Mono',monospace;font-size:7.5px;letter-spacing:0.05em;margin-top:1px;opacity:0.9}
+
+.elim-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;padding:8px;background:var(--bg3);border-radius:7px}
+.em-box{text-align:center}
+.em-lbl{font-family:'Space Mono',monospace;font-size:8px;color:var(--text3);letter-spacing:0.08em;margin-bottom:2px}
+.em-val{font-family:'Syne',sans-serif;font-size:12px;font-weight:800}
+.em-val.red{color:var(--red)}
+
+.red-flags{margin-bottom:10px}
+.rf-hdr{font-family:'Space Mono',monospace;font-size:9px;color:var(--red);letter-spacing:0.12em;font-weight:700;margin-bottom:6px}
+.rf-item{font-size:11px;color:var(--text);line-height:1.55;padding:5px 0 5px 18px;position:relative}
+.rf-item::before{content:'🚩';position:absolute;left:0;top:5px;font-size:10px}
+
+.elim-action{background:rgba(255,107,0,0.08);border-left:3px solid #ff6b00;border-radius:0 7px 7px 0;padding:9px 11px;margin-bottom:8px}
+.elim-action-lbl{font-family:'Space Mono',monospace;font-size:9px;color:#ff6b00;font-weight:700;letter-spacing:0.1em;margin-bottom:3px}
+.elim-action-txt{font-size:11.5px;color:var(--text);line-height:1.5;font-weight:700}
+
+.elim-rationale{font-size:10.5px;color:var(--text3);line-height:1.55;font-style:italic;padding-top:8px;border-top:1px dashed var(--border)}
+.elim-rationale strong{color:var(--amber);font-weight:700;font-style:normal}
+
+/* 立方体 */
+.cube-grid{display:grid;grid-template-columns:1fr;gap:9px}
+@media(min-width:720px){.cube-grid{grid-template-columns:repeat(2,1fr)}}
+.cube-cell{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px}
+.cube-cell.problem{border-left:3px solid var(--red)}
+.cube-cell.opportunity{border-left:3px solid var(--green)}
+.cube-cell.risk{border-left:3px solid var(--amber)}
+.cube-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cube-dim{font-family:'Syne',sans-serif;font-size:13px;font-weight:800}
+.cube-tags{display:flex;gap:5px}
+.cube-type{font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;font-weight:700;letter-spacing:0.08em}
+.cube-type.problem{background:rgba(255,95,95,0.14);color:var(--red);border:1px solid var(--red)}
+.cube-type.opportunity{background:rgba(74,222,128,0.12);color:var(--green);border:1px solid var(--green)}
+.cube-type.risk{background:rgba(245,166,35,0.12);color:var(--amber);border:1px solid var(--amber)}
+.cube-sev{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:0.08em}
+.cube-find{font-size:12px;color:var(--text);line-height:1.65;margin-bottom:8px}
+.cube-find strong{color:var(--red)}
+.cube-cell.opportunity .cube-find strong{color:var(--green)}
+.cube-data{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);padding:7px 9px;background:var(--bg3);border-radius:6px;border-left:2px solid var(--border2)}
+.cube-data::before{content:'▸ DATA · ';color:var(--text3);font-weight:700}
+
+.insight-grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:720px){.insight-grid{grid-template-columns:1fr 1fr}}
+.insight-col{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px}
+.insight-col.po{border-top:3px solid var(--teal)}
+.insight-col.or{border-top:3px solid var(--amber)}
+.insight-hdr{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:10px}
+.insight-item{background:var(--bg3);border-radius:8px;padding:10px 11px;margin-bottom:7px;font-size:11.5px;line-height:1.65}
+.insight-item:last-child{margin-bottom:0}
+.insight-item .a{color:var(--red);font-weight:700}
+.insight-item .arr{color:var(--text3);margin:0 5px}
+.insight-item .b{color:var(--green);font-weight:700}
+.or .insight-item .a{color:var(--green)}
+.or .insight-item .b{color:var(--amber)}
+
+.action-grid{display:flex;flex-direction:column;gap:10px}
+.action-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px}
+.action-card.high{border-left:4px solid var(--red)}
+.action-card.mid{border-left:4px solid var(--amber)}
+.action-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px}
+.action-id{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:0.1em;font-weight:700}
+.action-meta-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.action-priority{font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;font-weight:700}
+.action-priority.high{background:var(--red);color:#fff}
+.action-priority.mid{background:var(--amber);color:#000}
+.action-points{font-family:'Space Mono',monospace;font-size:9.5px;padding:2px 7px;border-radius:3px;font-weight:700;background:rgba(255,215,0,0.1);color:var(--gold);border:1px solid rgba(255,215,0,0.3)}
+.action-target{font-size:12px;color:var(--text3);margin-bottom:3px}
+.action-target strong{color:var(--text)}
+.action-what{font-size:13px;font-weight:700;line-height:1.5;margin-bottom:10px}
+.action-details{display:grid;grid-template-columns:1fr;gap:6px;padding-top:10px;border-top:1px solid var(--border);font-size:10.5px;color:var(--text2);line-height:1.55}
+@media(min-width:640px){.action-details{grid-template-columns:1fr 1fr}}
+.action-details strong{color:var(--amber);font-weight:700;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.08em;display:block;margin-bottom:2px}
+.action-rat{font-size:10.5px;color:var(--text3);line-height:1.55;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-style:italic}
+.action-rat strong{color:var(--amber);font-weight:700;font-style:normal}
+
+.impact-grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:720px){.impact-grid{grid-template-columns:repeat(3,1fr)}}
+.impact-box{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px}
+.impact-box.full{border-top:3px solid var(--green)}
+.impact-box.half{border-top:3px solid var(--amber)}
+.impact-box.zero{border-top:3px solid var(--red)}
+.impact-lbl{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;font-weight:700;margin-bottom:8px}
+.impact-box.full .impact-lbl{color:var(--green)}
+.impact-box.half .impact-lbl{color:var(--amber)}
+.impact-box.zero .impact-lbl{color:var(--red)}
+.impact-text{font-size:11.5px;line-height:1.65;color:var(--text)}
+.impact-text strong{font-weight:700}
+
+.escalation-box{background:linear-gradient(135deg,#1a1a1a,#2a0a0a);border:2px solid var(--red);border-radius:13px;padding:18px;margin:0 16px 20px}
+.esc-lbl{font-family:'Space Mono',monospace;font-size:10px;color:var(--red);letter-spacing:0.2em;margin-bottom:8px;font-weight:700}
+.esc-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:10px;line-height:1.3}
+.esc-title span{color:var(--red)}
+.esc-body{font-size:12px;color:var(--text);line-height:1.75}
+.esc-body strong{color:var(--red)}
+
+.connection{background:rgba(167,139,250,0.05);border-left:3px solid var(--purple);border-radius:0 8px 8px 0;padding:14px;margin:0 16px 14px;font-size:11.5px;color:var(--text);line-height:1.7}
+.connection strong{color:var(--purple)}
+.connection-lbl{font-family:'Space Mono',monospace;font-size:10px;color:var(--purple);letter-spacing:0.2em;font-weight:700;margin-bottom:6px;display:block}
+
+.final-note{background:linear-gradient(135deg,var(--card),rgba(245,166,35,0.04));border:2px dashed var(--amber);border-radius:11px;padding:16px;margin:14px 16px 14px;font-size:12px;line-height:1.75;color:var(--text)}
+.final-note strong{color:var(--amber)}
+
+.footer{padding:20px 16px;text-align:center;font-family:'Space Mono',monospace;font-size:9.5px;color:var(--text3);letter-spacing:0.1em;line-height:1.75;border-top:1px solid var(--border)}
+.footer span{color:var(--red)}
+
+@media(max-width:540px){
+  .hero-t{font-size:22px}
+  .game-bar{grid-template-columns:repeat(2,1fr)}
+  .action-hdr{flex-direction:column;align-items:stretch}
+  .elim-hdr{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-l">
+    <div class="tb-logo">⛔</div>
+    <div>
+      <div class="tb-t">躺平识别战报 <span>· AGENT实战</span></div>
+      <div class="tb-s">LP-DIAG-001 · 后10%淘汰 · DAY 4</div>
+    </div>
+  </div>
+  <a class="tb-back" href="index_v6.html">← 返回</a>
+</div>
+
+<div class="hero">
+  <div class="hero-tag">⛔ AGENT 实战第4天 · 2026.04.23周四</div>
+  <div class="hero-t">CEO指令:<span>找出本周客户在岗最低5人</span><br>淘汰候选</div>
+  <div class="hero-s">
+    6铁律⑤'后10%淘汰'机制首次真刀真枪启用 · 市场拱手让人的答案在这里 · 组织躺平·市场必失
+  </div>
+
+  <div class="yesterday-link">
+    <strong>▸ 前三日关联:</strong>周一上海/周二三省/周三千禾看的是"市场" · 今日看的是"组织" · <strong>组织是市场的镜像</strong>:市场在丢=组织在躺
+  </div>
+
+  <div class="game-bar">
+    <div class="gb-box"><div class="gb-lbl">PHASE</div><div class="gb-val">1·立足</div></div>
+    <div class="gb-box"><div class="gb-lbl">GAME</div><div class="gb-val amber">2·Q2</div></div>
+    <div class="gb-box"><div class="gb-lbl">ROUND</div><div class="gb-val amber">3·D7</div></div>
+    <div class="gb-box"><div class="gb-lbl">淘汰</div><div class="gb-val red">5人</div></div>
+  </div>
+</div>
+
+<div class="summary">
+  <div class="summary-box">
+    <div class="summary-lbl">▲ AGENT · DIAGNOSIS SUMMARY</div>
+    <div class="summary-text">
+      过去5年欣和市场拱手让人·<strong>根因不是战略错·不是产品差·是组织躺平</strong>。Agent对50人名册做客户在岗率立方体扫描·发现一个黑色规律:<strong>客户在岗率<40%的5人·100%都是管理层</strong>(城市经理/区域经理/高级总监)·他们平均月薪¥50万·但每月客户接触时间合计<48小时。5人合计GAME 1贡献仅¥385K价值·而头部5位一线(李娜/陈七/刘强/张三/赵敏)合计<strong>¥5,065K价值</strong>·薪酬成本管理层5人约等于一线20人·<strong>产出仅为一线1/13</strong>。<strong>这就是市场拱手让人的答案·不是市场变了·是公司里的人不去市场了</strong>。淘汰5人·不是惩罚·是救活前80%。
+    </div>
+  </div>
+</div>
+
+<!-- 淘汰池5人详表 -->
+<div class="section">
+  <div class="sec-num">01 / ELIMINATION POOL · 淘汰预警池5人</div>
+  <div class="sec-t">客观数据 · 100%是管理层</div>
+  <div class="sec-hint">数据源:50人名册+SFA定位+企微打卡+GAME 1贡献 · 三维综合判定</div>
+
+  <div class="elim-grid">
+
+    <div class="elim-card">
+      <div class="elim-hdr">
+        <div class="elim-left">
+          <div class="elim-id">ELIM-001</div>
+          <div class="elim-name">谭鹏</div>
+          <div class="elim-role">城市经理·济南(关系户)</div>
+        </div>
+        <div class="elim-stats">
+          <div class="elim-ct">
+            <div class="elim-ct-val">12%</div>
+            <div class="elim-ct-lbl">CUSTOMER</div>
+          </div>
+        </div>
+      </div>
+      <div class="elim-metrics">
+        <div class="em-box"><div class="em-lbl">GAME1价值</div><div class="em-val red">¥200K</div></div>
+        <div class="em-box"><div class="em-lbl">GAME2当前</div><div class="em-val red">¥5K</div></div>
+        <div class="em-box"><div class="em-lbl">月成本</div><div class="em-val">¥45K</div></div>
+      </div>
+      <div class="red-flags">
+        <div class="rf-hdr">▸ RED FLAGS · 客观证据</div>
+        <div class="rf-item">连续8周客户在岗<20%</div>
+        <div class="rf-item">济南办公室打卡时间最长的人</div>
+        <div class="rf-item">下属反馈:'他从不去门店·只在微信群发指示'</div>
+        <div class="rf-item">GAME 1排名#48 · GAME 2至今#50(触底)</div>
+        <div class="rf-item">与济南某经销商董事长有私人关系·疑似靠关系升职</div>
+      </div>
+      <div class="elim-action">
+        <div class="elim-action-lbl">▸ AGENT建议</div>
+        <div class="elim-action-txt">立即启动离岗程序 · 本GAME结束前执行</div>
+      </div>
+      <div class="elim-rationale"><strong>为什么:</strong>5人中最彻底的躺平者·保留对公司无益·对团队士气有害</div>
+    </div>
+
+    <div class="elim-card">
+      <div class="elim-hdr">
+        <div class="elim-left">
+          <div class="elim-id">ELIM-002</div>
+          <div class="elim-name">伊川</div>
+          <div class="elim-role">高级总监·总部(战略型)</div>
+        </div>
+        <div class="elim-stats">
+          <div class="elim-ct">
+            <div class="elim-ct-val">15%</div>
+            <div class="elim-ct-lbl">CUSTOMER</div>
+          </div>
+        </div>
+      </div>
+      <div class="elim-metrics">
+        <div class="em-box"><div class="em-lbl">GAME1价值</div><div class="em-val red">¥300K</div></div>
+        <div class="em-box"><div class="em-lbl">GAME2当前</div><div class="em-val red">¥10K</div></div>
+        <div class="em-box"><div class="em-lbl">月成本</div><div class="em-val">¥58K</div></div>
+      </div>
+      <div class="red-flags">
+        <div class="rf-hdr">▸ RED FLAGS · 客观证据</div>
+        <div class="rf-item">本周第4次办公室会议·客户在岗0</div>
+        <div class="rf-item">'战略型'管理风格=从不去现场</div>
+        <div class="rf-item">过去12个月累计下门店仅2次·每次<2小时</div>
+        <div class="rf-item">靠年资和学历升到高级总监·但近3年价值逐年下降</div>
+        <div class="rf-item">其存在给一线传达错误信号:'可以靠开会不靠干活'</div>
+      </div>
+      <div class="elim-action">
+        <div class="elim-action-lbl">▸ AGENT建议</div>
+        <div class="elim-action-txt">本GAME结束前调岗到一线 · 若3个月内客户在岗<60%则离岗</div>
+      </div>
+      <div class="elim-rationale"><strong>为什么:</strong>象征意义最大·总部高级总监被调整=全公司看到信号'没有高位可以躺'</div>
+    </div>
+
+    <div class="elim-card">
+      <div class="elim-hdr">
+        <div class="elim-left">
+          <div class="elim-id">ELIM-003</div>
+          <div class="elim-name">封铭</div>
+          <div class="elim-role">区域经理·西南(政治型)</div>
+        </div>
+        <div class="elim-stats">
+          <div class="elim-ct">
+            <div class="elim-ct-val">18%</div>
+            <div class="elim-ct-lbl">CUSTOMER</div>
+          </div>
+        </div>
+      </div>
+      <div class="elim-metrics">
+        <div class="em-box"><div class="em-lbl">GAME1价值</div><div class="em-val red">¥350K</div></div>
+        <div class="em-box"><div class="em-lbl">GAME2当前</div><div class="em-val red">¥15K</div></div>
+        <div class="em-box"><div class="em-lbl">月成本</div><div class="em-val">¥52K</div></div>
+      </div>
+      <div class="red-flags">
+        <div class="rf-hdr">▸ RED FLAGS · 客观证据</div>
+        <div class="rf-item">'政治型'=擅长汇报不擅长做事</div>
+        <div class="rf-item">过去3年每次公司大会PPT最漂亮·但西南份额从7.2%降到5.8%</div>
+        <div class="rf-item">客户在岗率仅18%·但出差天数最多(都是去总部开会)</div>
+        <div class="rf-item">下属私下反馈:'封总从不跟客户吃饭·只跟领导吃饭'</div>
+        <div class="rf-item">西南大区GAME 1贡献全国倒数第2</div>
+      </div>
+      <div class="elim-action">
+        <div class="elim-action-lbl">▸ AGENT建议</div>
+        <div class="elim-action-txt">本GAME启动离岗评估·2周内CEO约谈 · GAME 2末前决定</div>
+      </div>
+      <div class="elim-rationale"><strong>为什么:</strong>政治型管理者是5年拱手让人的典型代表·不淘汰他·其他区域经理会继续学'怎么做汇报'</div>
+    </div>
+
+    <div class="elim-card">
+      <div class="elim-hdr">
+        <div class="elim-left">
+          <div class="elim-id">ELIM-004</div>
+          <div class="elim-name">秋明</div>
+          <div class="elim-role">城市经理·烟台(汇报型)</div>
+        </div>
+        <div class="elim-stats">
+          <div class="elim-ct">
+            <div class="elim-ct-val">22%</div>
+            <div class="elim-ct-lbl">CUSTOMER</div>
+          </div>
+        </div>
+      </div>
+      <div class="elim-metrics">
+        <div class="em-box"><div class="em-lbl">GAME1价值</div><div class="em-val red">¥250K</div></div>
+        <div class="em-box"><div class="em-lbl">GAME2当前</div><div class="em-val red">¥25K</div></div>
+        <div class="em-box"><div class="em-lbl">月成本</div><div class="em-val">¥38K</div></div>
+      </div>
+      <div class="red-flags">
+        <div class="rf-hdr">▸ RED FLAGS · 客观证据</div>
+        <div class="rf-item">'汇报型'=把80%时间花在做周报/月报/季报</div>
+        <div class="rf-item">烟台份额从未增长·过去3年+0.5%·远低于山东平均+4%</div>
+        <div class="rf-item">连续12周周报精美·但拜访门店数连续下降</div>
+        <div class="rf-item">下属说:'秋总最关心我们的数据填写得漂亮·不关心客户反馈'</div>
+        <div class="rf-item">客户在岗22%·其中还有一半跟经销商吃饭(非真正拜访)</div>
+      </div>
+      <div class="elim-action">
+        <div class="elim-action-lbl">▸ AGENT建议</div>
+        <div class="elim-action-txt">本GAME启动岗位调整·转一线美顾(在岗率必须>80%) 或 离岗</div>
+      </div>
+      <div class="elim-rationale"><strong>为什么:</strong>汇报型比政治型更隐蔽·数据看起来不差·但毫无增长·必须用价值评价系统戳破数据幻觉</div>
+    </div>
+
+    <div class="elim-card">
+      <div class="elim-hdr">
+        <div class="elim-left">
+          <div class="elim-id">ELIM-005</div>
+          <div class="elim-name">闵海</div>
+          <div class="elim-role">城市经理·常州(办公室派)</div>
+        </div>
+        <div class="elim-stats">
+          <div class="elim-ct">
+            <div class="elim-ct-val">24%</div>
+            <div class="elim-ct-lbl">CUSTOMER</div>
+          </div>
+        </div>
+      </div>
+      <div class="elim-metrics">
+        <div class="em-box"><div class="em-lbl">GAME1价值</div><div class="em-val red">¥150K</div></div>
+        <div class="em-box"><div class="em-lbl">GAME2当前</div><div class="em-val red">¥30K</div></div>
+        <div class="em-box"><div class="em-lbl">月成本</div><div class="em-val">¥35K</div></div>
+      </div>
+      <div class="red-flags">
+        <div class="rf-hdr">▸ RED FLAGS · 客观证据</div>
+        <div class="rf-item">'办公室派'=从不出差·不下县城</div>
+        <div class="rf-item">常州下辖4县市从未去过</div>
+        <div class="rf-item">常州份额过去2年从8%降到6%·但上报都是'稳定'</div>
+        <div class="rf-item">客户在岗24%·但大部分在常州市区喝咖啡(非实际拜访)</div>
+        <div class="rf-item">GAME 1价值评价¥150K · 最低10人之一</div>
+      </div>
+      <div class="elim-action">
+        <div class="elim-action-lbl">▸ AGENT建议</div>
+        <div class="elim-action-txt">本GAME CEO约谈+最后通牒:1个GAME内客户在岗必须>60% 或 离岗</div>
+      </div>
+      <div class="elim-rationale"><strong>为什么:</strong>年轻·可塑性较强·但给机会必须附带铁腕条件·否则年轻管理者会学'躺平就行'</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 立方体扫描 -->
+<div class="section">
+  <div class="sec-num">02 / CUBE SCAN · 躺平立方体扫描</div>
+  <div class="sec-t">8纬度分析淘汰池规律</div>
+  <div class="sec-hint">Agent从5人样本中发现系统性规律·不是个人问题·是组织问题</div>
+
+  <div class="cube-grid">
+    <div class="cube-cell problem">
+      <div class="cube-hdr">
+        <div class="cube-dim">📊 职级</div>
+        <div class="cube-tags"><span class="cube-type problem">PROBLEM</span><span class="cube-sev">HIGH</span></div>
+      </div>
+      <div class="cube-find">5人中0个一线·<strong>100%是管理层</strong>·管理层客户在岗率平均46% vs 一线88% · 职级越高·客户越远</div>
+      <div class="cube-data">管理层5人平均46% · 一线45人平均83% · 差距37pt</div>
+    </div>
+
+    <div class="cube-cell problem">
+      <div class="cube-hdr">
+        <div class="cube-dim">🗺️ 地域</div>
+        <div class="cube-tags"><span class="cube-type problem">PROBLEM</span><span class="cube-sev">HIGH</span></div>
+      </div>
+      <div class="cube-find">5人分布:济南/总部/西南/烟台/常州·<strong>覆盖5大区域</strong>·不是单一区域问题·是全公司管理层的<strong>系统性问题</strong></div>
+      <div class="cube-data">5大区域都有淘汰候选·说明是文化问题不是偶发</div>
+    </div>
+
+    <div class="cube-cell problem">
+      <div class="cube-hdr">
+        <div class="cube-dim">💰 薪酬vs价值</div>
+        <div class="cube-tags"><span class="cube-type problem">PROBLEM</span><span class="cube-sev">HIGH</span></div>
+      </div>
+      <div class="cube-find">5人月薪合计¥228K·GAME 1合计价值¥1,250K·<strong>产出仅为薪酬5.5倍</strong>·头部5人1:25·差距4.5倍</div>
+      <div class="cube-data">头部5人薪酬/价值比1:25 · 淘汰池1:5.5</div>
+    </div>
+
+    <div class="cube-cell risk">
+      <div class="cube-hdr">
+        <div class="cube-dim">📅 年资分布</div>
+        <div class="cube-tags"><span class="cube-type risk">RISK</span><span class="cube-sev">HIGH</span></div>
+      </div>
+      <div class="cube-find">5人中3人司龄>8年·<strong>老员工成为躺平主力</strong>·'熬到管理层'的陷阱·新人看到会学吗?</div>
+      <div class="cube-data">5人平均司龄9.2年 · 公司平均5.8年</div>
+    </div>
+
+    <div class="cube-cell problem">
+      <div class="cube-hdr">
+        <div class="cube-dim">👥 下属表现</div>
+        <div class="cube-tags"><span class="cube-type problem">PROBLEM</span><span class="cube-sev">HIGH</span></div>
+      </div>
+      <div class="cube-find">5人合计带18名下属·下属GAME 1平均涨幅-2%·<strong>牵连牵动证明带兵无能</strong>·5人'带兵分'全部为负</div>
+      <div class="cube-data">5人下属平均涨幅-2% · 非池子管理者下属+12%</div>
+    </div>
+
+    <div class="cube-cell problem">
+      <div class="cube-hdr">
+        <div class="cube-dim">📈 时间模式</div>
+        <div class="cube-tags"><span class="cube-type problem">PROBLEM</span><span class="cube-sev">HIGH</span></div>
+      </div>
+      <div class="cube-find">5人客户在岗率过去12个月走势:<strong>全部下降</strong>·没有一人在改善·<strong>'积习难改'规律显现</strong></div>
+      <div class="cube-data">12个月趋势:5人都是下降曲线·无反弹信号</div>
+    </div>
+
+    <div class="cube-cell opportunity">
+      <div class="cube-hdr">
+        <div class="cube-dim">🔄 替代成本</div>
+        <div class="cube-tags"><span class="cube-type opportunity">OPPORTUNITY</span><span class="cube-sev">HIGH</span></div>
+      </div>
+      <div class="cube-find">淘汰5人·腾出¥228K/月薪酬·可招5-6名新一线(¥40K/月×5.7人=¥228K)·<strong>人力成本不变·战斗力翻倍</strong></div>
+      <div class="cube-data">5人→5.7一线 · 预期价值创造+¥3M/季度</div>
+    </div>
+
+    <div class="cube-cell opportunity">
+      <div class="cube-hdr">
+        <div class="cube-dim">🎯 信号价值</div>
+        <div class="cube-tags"><span class="cube-type opportunity">OPPORTUNITY</span><span class="cube-sev">HIGH</span></div>
+      </div>
+      <div class="cube-find">首次真淘汰=<strong>6铁律⑤'后10%淘汰'从纸面变现实</strong>·全公司看到信号·前80%自动努力·敬畏心建立</div>
+      <div class="cube-data">预计前80%客户在岗率+5-8pt · 这是机制最大价值</div>
+    </div>
+  </div>
+</div>
+
+<!-- 穿透洞察 -->
+<div class="section">
+  <div class="sec-num">03 / INSIGHTS · 穿透洞察</div>
+  <div class="sec-t">问题中找机会 · 机会中找风险</div>
+
+  <div class="insight-grid">
+    <div class="insight-col po">
+      <div class="insight-hdr">🔍 问题中的机会</div>
+      
+      <div class="insight-item">
+        <span class="a">5人中3位司龄>8年·老员工躺平</span><span class="arr">→</span>
+        <span class="b">证明'司龄不等于价值'·打破'熬年资即升职'潜规则·新一代员工看到:<strong style="color:var(--green)">价值评价不论资历</strong>·反而更愿拼</span>
+      </div>
+      <div class="insight-item">
+        <span class="a">5人都在管理层·无一线</span><span class="arr">→</span>
+        <span class="b">精确定位问题层级:公司管理层系统性躺平·未来所有管理层都要接受客户在岗率考核·<strong style="color:var(--green)">制度革命的开始</strong></span>
+      </div>
+      <div class="insight-item">
+        <span class="a">淘汰可能引发HR合规风险</span><span class="arr">→</span>
+        <span class="b">5人都有连续8+周客户在岗数据作为客观证据·HR合规性强·且给每人提供'降岗到一线'备选·完全合规</span>
+      </div>
+      <div class="insight-item">
+        <span class="a">淘汰5人可能造成团队动荡</span><span class="arr">→</span>
+        <span class="b">动荡本身是信号·真正敬畏的人员会感到'终于有规矩了'·只有混日子的人会恐慌·<strong style="color:var(--green)">这是筛选过程·不是破坏</strong></span>
+      </div>
+    </div>
+
+    <div class="insight-col or">
+      <div class="insight-hdr">⚠ 机会中的风险</div>
+      
+      <div class="insight-item">
+        <span class="a">首次真淘汰建立机制威信</span><span class="arr">→</span>
+        <span class="b">HR执行中可能遇到劳动仲裁/舆论反弹·需法务介入·提前准备充分的客观证据和补偿方案</span>
+      </div>
+      <div class="insight-item">
+        <span class="a">腾出编制招聘一线</span><span class="arr">→</span>
+        <span class="b">招聘需时间(2-3月)·期间存在管理真空·需立即安排代理或Agent直接接管相关辖区</span>
+      </div>
+      <div class="insight-item">
+        <span class="a">全公司前80%受激励</span><span class="arr">→</span>
+        <span class="b">如果5人淘汰后机制没继续(GAME 3没淘汰)·就会被理解为'一次性秀'·<strong style="color:var(--amber)">必须定期淘汰才能建立真正的敬畏</strong></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 动作清单 -->
+<div class="section">
+  <div class="sec-num">04 / ACTIONS · Agent派单清单</div>
+  <div class="sec-t">8条动作 · 机制首次实战</div>
+  <div class="sec-hint">淘汰+招聘+规则+晋升 = 完整循环 · 单纯淘汰没有意义</div>
+
+  <div class="action-grid">
+
+    <div class="action-card high">
+      <div class="action-hdr">
+        <div><div class="action-id">LP-A001</div>
+        <div class="action-target">▸ <strong>CEO+HR VP</strong></div></div>
+        <div class="action-meta-row"><span class="action-priority high">紧急</span><span class="action-points">💰 +200</span></div>
+      </div>
+      <div class="action-what">本周R3末前召开《淘汰池5人复核会》:CEO亲自主持·HR+法务列席·逐一复核5人客观数据·确认淘汰方案·形成书面决议</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>本周五17:00</div>
+        <div><strong>SUCCESS</strong>5人复核·CEO决议·HR方案(离岗/降岗/转岗)·法务审核通过</div>
+      </div>
+      <div class="action-rat"><strong>为什么:</strong>淘汰机制第一次启用·CEO必须亲自参与确认·避免HR单方面执行被认为是人事斗争</div>
+    </div>
+
+    <div class="action-card high">
+      <div class="action-hdr">
+        <div><div class="action-id">LP-A002</div>
+        <div class="action-target">▸ <strong>HR VP+法务VP</strong></div></div>
+        <div class="action-meta-row"><span class="action-priority high">紧急</span><span class="action-points">💰 +180</span></div>
+      </div>
+      <div class="action-what">2周内完成5人合规程序:①客观证据梳理(12周数据+下属评价+业绩) ②约谈+2选项(降岗/协商离岗) ③补偿(劳动法+额外1月作为GAME 1奖) ④法务审核·避免仲裁</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>2周内</div>
+        <div><strong>SUCCESS</strong>5人约谈·书面确认·补偿执行·无仲裁</div>
+      </div>
+      <div class="action-rat"><strong>为什么:</strong>合规是机制能否持续的关键·首次必须做得滴水不漏·为后续淘汰建立模板</div>
+    </div>
+
+    <div class="action-card high">
+      <div class="action-hdr">
+        <div><div class="action-id">LP-A003</div>
+        <div class="action-target">▸ <strong>企微系统+全员</strong></div></div>
+        <div class="action-meta-row"><span class="action-priority high">紧急</span><span class="action-points">💰 +150</span></div>
+      </div>
+      <div class="action-what">本周五下午5点企微发布《INFINITY OS GAME 2淘汰机制启动通告》:①明确5人池(不公布姓名但公布人数和标准) ②机制规则 ③展示前5名价值贡献(鼓励) ④宣布下GAME继续</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>本周五17:00</div>
+        <div><strong>SUCCESS</strong>通告发出·阅读率>90%·至少10人咨询HR如何提升客户在岗率</div>
+      </div>
+      <div class="action-rat"><strong>为什么:</strong>全员看到才有威信·但不公开姓名保护尊严·重点是机制·不是具体的人</div>
+    </div>
+
+    <div class="action-card high">
+      <div class="action-hdr">
+        <div><div class="action-id">LP-A004</div>
+        <div class="action-target">▸ <strong>HR VP+招聘经理</strong></div></div>
+        <div class="action-meta-row"><span class="action-priority high">紧急</span><span class="action-points">💰 +120</span></div>
+      </div>
+      <div class="action-what">启动5-6名新一线增长官招聘:优先从三省(安徽/辽宁/河北)+上海重点5区配置·与周二SY战役联动·GAME 3末到岗</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>GAME 3末</div>
+        <div><strong>SUCCESS</strong>5-6人到岗·配属三省+上海·首月在岗率>80%</div>
+      </div>
+      <div class="action-rat"><strong>为什么:</strong>淘汰同时补充·避免真空·且新血液配到最需要的战场·一举两得</div>
+    </div>
+
+    <div class="action-card high">
+      <div class="action-hdr">
+        <div><div class="action-id">LP-A005</div>
+        <div class="action-target">▸ <strong>价值评价系统+HR VP</strong></div></div>
+        <div class="action-meta-row"><span class="action-priority high">紧急</span><span class="action-points">💰 +180</span></div>
+      </div>
+      <div class="action-what">本周完成《2026年度淘汰规则白皮书》发布:①每GAME末全员客户在岗率排名 ②后10%自动进池 ③连续2GAME在池=强制淘汰 ④一线和管理层分开排名</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>本周日24:00</div>
+        <div><strong>SUCCESS</strong>白皮书+HR制度文件+企微通告+员工手册更新</div>
+      </div>
+      <div class="action-rat"><strong>为什么:</strong>一次淘汰是事件·机制才是战略·白皮书让规则透明化·所有人知道怎么活下来</div>
+    </div>
+
+    <div class="action-card mid">
+      <div class="action-hdr">
+        <div><div class="action-id">LP-A006</div>
+        <div class="action-target">▸ <strong>Agent自身(定时任务)</strong></div></div>
+        <div class="action-meta-row"><span class="action-priority mid">高</span><span class="action-points">💰 +80</span></div>
+      </div>
+      <div class="action-what">从R4起每周自动扫描全员客户在岗率·<50%自动进'关注名单'·连续4周<40%自动进'淘汰预警池'·CEO视图feed实时推送</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>R4起持续</div>
+        <div><strong>SUCCESS</strong>Agent不掉线·每周报告准时·CEO视图有可视化排名</div>
+      </div>
+      <div class="action-rat"><strong>为什么:</strong>机制的可持续性靠Agent自动化·人工淘汰会有偏袒·Agent只看客观数据</div>
+    </div>
+
+    <div class="action-card high">
+      <div class="action-hdr">
+        <div><div class="action-id">LP-A007</div>
+        <div class="action-target">▸ <strong>CEO(本GAME个人承诺)</strong></div></div>
+        <div class="action-meta-row"><span class="action-priority high">紧急</span><span class="action-points">💰 +250</span></div>
+      </div>
+      <div class="action-what">CEO公开承诺:本GAME淘汰5人后·GAME 3继续淘汰后10%·GAME 4再次·不间断·至少连续6个GAME(3年)不停·建立机制信任</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>GAME 2末·公开CEO承诺书</div>
+        <div><strong>SUCCESS</strong>CEO公开文字承诺·纳入6铁律·全员可见</div>
+      </div>
+      <div class="action-rat"><strong>为什么:</strong>一次性淘汰毫无意义·必须CEO公开承诺连续性·否则机制会被理解为'一次秀'</div>
+    </div>
+
+    <div class="action-card mid">
+      <div class="action-hdr">
+        <div><div class="action-id">LP-A008</div>
+        <div class="action-target">▸ <strong>HR VP+价值评价系统</strong></div></div>
+        <div class="action-meta-row"><span class="action-priority mid">高</span><span class="action-points">💰 +150</span></div>
+      </div>
+      <div class="action-what">本GAME设计《一线晋升管理层路径》:连续3GAME Top 10 + 客户在岗>85% + 带教2名新人·可晋升管理层·打破'熬年资'潜规则</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>GAME 2末</div>
+        <div><strong>SUCCESS</strong>晋升规则发布+HR制度更新+识别首批5名候选(如李娜/陈七/刘强)</div>
+      </div>
+      <div class="action-rat"><strong>为什么:</strong>淘汰必须配晋升·否则一线看到的只是'危险'·看不到'希望'·淘汰+晋升=完整循环</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 影响预测 -->
+<div class="section">
+  <div class="sec-num">05 / IMPACT · GAME 2末影响预测</div>
+  <div class="sec-t">机制启动三档情境</div>
+
+  <div class="impact-grid">
+    <div class="impact-box full">
+      <div class="impact-lbl">全部执行(8条)</div>
+      <div class="impact-text">
+        <strong>9周后:</strong><br>
+        5人淘汰·机制威信建立<br>
+        5-6名新一线到岗<br>
+        三省+上海战场加强<br>
+        <strong>前80%在岗率+5-8pt</strong><br>
+        GAME 2总价值+¥8M<br><br>
+        6铁律⑤<strong>从纸面变现实</strong><br>
+        Phase 1进度+3%
+      </div>
+    </div>
+
+    <div class="impact-box half">
+      <div class="impact-lbl">部分执行(1-2人)</div>
+      <div class="impact-text">
+        <strong>9周后:</strong><br>
+        仅淘汰1-2人<br>
+        机制信号模糊<br>
+        其他3人观望<br>
+        前80%未感受真实敬畏<br><br>
+        效率提升有限<br>
+        预计+¥3M
+      </div>
+    </div>
+
+    <div class="impact-box zero">
+      <div class="impact-lbl">不执行(现状)</div>
+      <div class="impact-text">
+        <strong>9周后:</strong><br>
+        5人每月合计¥228K薪酬浪费<br>
+        更严重:<strong>全公司一线看到</strong><br>
+        '管理层躺平无代价'<br>
+        前80%也会逐渐躺平<br><br>
+        Phase 1立足失败<br>
+        <strong>9年路径永远不可能</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CEO升级 -->
+<div class="escalation-box">
+  <div class="esc-lbl">▲ ESCALATION TO CEO · 最高级决策</div>
+  <div class="esc-title">LP-A001到A008 · <span>6铁律⑤首次启用</span></div>
+  <div class="esc-body">
+    这是<strong>6条铁律⑤'后10%淘汰'机制首次真刀真枪启用</strong>·LP-A001-A008八条都需要CEO亲自背书。
+    <br><br>
+    <strong>特别是LP-A007</strong>:CEO公开连续承诺(至少连续6个GAME/3年不间断)·这是<strong>CEO个人信誉投入</strong>·不可授权·必须CEO本周五17:00前决定并发布。
+    <br><br>
+    <strong>不做的代价:</strong>
+    <br>• 全公司一线看到'管理层躺平无代价'
+    <br>• 前80%也会逐渐躺平
+    <br>• 9年路径的组织基础不存在
+    <br><br>
+    <strong>做的代价:</strong>
+    <br>• 短期HR/法务/舆论管理成本
+    <br>• CEO个人信誉背书
+    <br>• 5人的情绪反弹
+    <br><br>
+    <strong>Agent判断:</strong>不做的代价 > 做的代价 10倍以上。CEO请本周五决定。
+  </div>
+</div>
+
+<!-- 四日连接 -->
+<div class="connection">
+  <span class="connection-lbl">▸ QUAD-DAY SYNTHESIS · 四日整合</span>
+  <strong>周一上海(守备)+周二三省(包抄)+周三千禾(主攻)+周四躺平(组织)</strong><br>
+  前三天看的是"<strong style="color:var(--red)">市场</strong>"·本日看的是"<strong style="color:var(--green)">组织</strong>"。<br><br>
+  <strong style="color:var(--purple)">组织是市场的镜像:市场在丢=组织在躺;组织活了=市场拿回。</strong><br><br>
+  这是INFINITY OS战略的终极逻辑:<strong>过去5年市场拱手让人·根因在组织躺平·不是市场变了</strong>·Agent不是让人工作更努力·是让组织里躺平的中层让位给能干的一线·让Agent替代中层的思考。
+</div>
+
+<div class="final-note">
+  <strong>▸ AGENT最后一句:</strong> 如果CEO今天不敢淘汰5人·未来就没有100亿·因为那时要淘汰的不是5人·是整个中层·代价大100倍。<strong>今天做·代价最小·效果最大。</strong>
+</div>
+
+<div class="footer">
+  INFINITY OS · Agent实战第4天 · <span>LP-DIAG-001</span><br>
+  Agent v0.3 · 真实JSON输出渲染 · 2026.04.23 · DS<br>
+  <span>后10%淘汰首次启用·组织是市场的镜像·CEO信誉时刻</span>
+</div>
+
+</body>
+</html>
