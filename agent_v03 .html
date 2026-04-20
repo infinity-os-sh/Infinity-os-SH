@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INFINITY OS · Agent v0.3 · GAME竞技场</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06070b;--bg2:#0a0c12;--bg3:#10131c;
+  --card:#141823;--card2:#1c2130;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.14);
+  --text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;
+  --amber:#f5a623;--gold:#ffd700;--teal:#4ecdc4;--red:#ff5f5f;
+  --green:#4ade80;--blue:#60a5fa;--purple:#a78bfa;--pink:#f472b6;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+
+.topbar{position:sticky;top:0;z-index:100;background:rgba(6,7,11,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:9px 13px;display:flex;align-items:center;justify-content:space-between}
+.tb-l{display:flex;align-items:center;gap:8px}
+.tb-logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#f5a623,#ff5f5f,#a78bfa);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:900;font-size:13px;color:#000;box-shadow:0 0 18px rgba(245,166,35,0.3)}
+.tb-t{font-family:'Syne',sans-serif;font-size:12.5px;font-weight:800}
+.tb-t span{color:var(--amber)}
+.tb-s{font-family:'Space Mono',monospace;font-size:8px;color:var(--text3);letter-spacing:0.13em}
+.tb-pulse{display:flex;align-items:center;gap:5px;font-family:'Space Mono',monospace;font-size:9px;color:var(--green);padding:3px 8px;border:1px solid var(--green);border-radius:11px;background:rgba(74,222,128,0.06)}
+.pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(74,222,128,0.6)}50%{opacity:0.4;box-shadow:0 0 0 6px rgba(74,222,128,0)}}
+
+.tabs{display:flex;gap:3px;padding:7px 13px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:5px 10px;font-size:10.5px;font-family:'Syne',sans-serif;font-weight:700;background:var(--card);border:1px solid var(--border);border-radius:13px;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all 0.15s}
+.tab.active{background:var(--amber);color:#000;border-color:var(--amber)}
+
+.panel{display:none;animation:fade 0.25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+
+.section-hdr{display:flex;justify-content:space-between;align-items:flex-end;padding:13px 13px 9px}
+.section-num{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--amber);letter-spacing:0.18em;margin-bottom:3px}
+.section-t{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;line-height:1.2}
+.section-meta{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3)}
+.section-hint{font-size:10px;color:var(--text3);padding:0 13px 11px;line-height:1.5}
+
+/* ═══ PANEL 0: CEO视图 ═══ */
+.ceo-hero{padding:16px 13px 14px;background:radial-gradient(ellipse at top,rgba(245,166,35,0.07),transparent 60%);border-bottom:1px solid var(--border)}
+.ceo-tag{display:inline-block;font-family:'Space Mono',monospace;font-size:8.5px;color:var(--amber);letter-spacing:0.2em;border:1px solid var(--amber);padding:2px 8px;margin-bottom:8px}
+.ceo-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1.15;margin-bottom:4px}
+.ceo-title span{color:var(--amber)}
+.ceo-sub{font-size:10.5px;color:var(--text2);line-height:1.5;margin-bottom:12px}
+
+.ceo-kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:11px}
+.kpi-box{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px 7px;text-align:center}
+.kpi-box.warn{border-color:var(--red);background:linear-gradient(180deg,var(--card),rgba(255,95,95,0.05))}
+.kpi-box.good{border-color:var(--green);background:linear-gradient(180deg,var(--card),rgba(74,222,128,0.05))}
+.kpi-lbl{font-family:'Space Mono',monospace;font-size:8px;color:var(--text3);letter-spacing:0.1em;margin-bottom:3px;text-transform:uppercase}
+.kpi-val{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;line-height:1;margin-bottom:2px}
+.kpi-val.red{color:var(--red)}
+.kpi-val.amber{color:var(--amber)}
+.kpi-val.green{color:var(--green)}
+.kpi-sub{font-size:8.5px;color:var(--text2);line-height:1.35}
+
+.ceo-input-row{background:var(--card);border:1px solid var(--amber);border-radius:10px;padding:9px;display:flex;gap:6px;align-items:center;box-shadow:0 0 16px rgba(245,166,35,0.08)}
+.ceo-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);font-weight:700;letter-spacing:0.1em;white-space:nowrap}
+.ceo-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:11.5px;color:var(--text);font-family:'Noto Sans SC',sans-serif;outline:none}
+.ceo-input:focus{border-color:var(--amber)}
+.ceo-go{width:34px;height:34px;border-radius:6px;background:var(--amber);border:none;color:#000;font-size:15px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ceo-go:disabled{background:var(--text3);cursor:not-allowed}
+.preset-row{display:flex;gap:5px;margin-top:6px;overflow-x:auto;scrollbar-width:none}
+.preset-row::-webkit-scrollbar{display:none}
+.preset-chip{flex-shrink:0;background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:3px 8px;font-size:9.5px;color:var(--text2);cursor:pointer;white-space:nowrap}
+.preset-chip:hover{border-color:var(--amber);color:var(--amber)}
+
+.agent-feed{padding:12px 13px;background:var(--bg2);border-top:1px solid var(--border);min-height:240px;max-height:60vh;overflow-y:auto}
+.agent-feed::-webkit-scrollbar{width:3px}
+.agent-feed::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.feed-empty{text-align:center;color:var(--text3);font-size:10.5px;padding:26px 16px;font-style:italic;line-height:1.6}
+.feed-event{margin-bottom:11px;animation:slideIn 0.3s ease;padding-left:22px;position:relative}
+@keyframes slideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.feed-event::before{position:absolute;left:0;top:1px;font-size:12px}
+.feed-event.signal::before{content:'📥'}
+.feed-event.scan::before{content:'🔍'}
+.feed-event.find::before{content:'⚡'}
+.feed-event.dispatch::before{content:'📡'}
+.feed-event.complete::before{content:'✅'}
+.feed-event.alert::before{content:'⚠️'}
+.feed-event.game::before{content:'🏅'}
+.feed-event.value::before{content:'💰'}
+.feed-time{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3);margin-bottom:2px}
+.feed-text{font-size:11px;color:var(--text);line-height:1.5}
+.feed-text strong{color:var(--amber)}
+.feed-text em{color:var(--green);font-style:normal}
+.feed-text code{background:var(--bg3);padding:1px 4px;border-radius:3px;font-family:'Space Mono',monospace;font-size:9.5px;color:var(--teal)}
+
+.thinking-now{display:flex;align-items:center;gap:7px;padding:8px 10px;background:rgba(245,166,35,0.06);border:1px dashed var(--amber);border-radius:6px;margin:7px 0}
+.thinking-dots{display:flex;gap:3px}
+.tdot{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:tdotanim 1.2s infinite}
+.tdot:nth-child(2){animation-delay:0.15s}.tdot:nth-child(3){animation-delay:0.3s}
+@keyframes tdotanim{0%,100%{opacity:0.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+.thinking-label{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--amber)}
+
+.dispatch-list{padding:0 13px 13px}
+.task-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 10px;margin-bottom:5px;border-left:3px solid var(--pink);animation:slideIn 0.3s ease}
+.task-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.task-id{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3)}
+.task-priority{font-family:'Space Mono',monospace;font-size:8.5px;padding:2px 5px;border-radius:3px;font-weight:700}
+.task-priority.high{background:var(--red);color:#fff}
+.task-priority.mid{background:var(--amber);color:#000}
+.task-priority.low{background:var(--text3);color:#000}
+.task-target{font-size:11px;font-weight:700;margin-bottom:3px}
+.task-target span{color:var(--pink)}
+.task-action{font-size:10px;color:var(--text2);line-height:1.5;margin-bottom:4px}
+.task-meta{display:flex;gap:8px;font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3);flex-wrap:wrap}
+.task-meta strong{color:var(--green)}
+
+/* ═══ PANEL 1: GAME竞技场 ═══ */
+.game-hero{background:linear-gradient(135deg,#0a0a18,rgba(245,166,35,0.06));border-bottom:1px solid var(--border);padding:16px 13px 14px;position:relative;overflow:hidden}
+.game-hero::before{content:'';position:absolute;top:-40%;right:-20%;width:70%;height:180%;background:radial-gradient(circle,rgba(255,215,0,0.08),transparent 65%);pointer-events:none}
+.game-tag{display:inline-block;font-family:'Space Mono',monospace;font-size:8.5px;color:var(--gold);letter-spacing:0.2em;border:1px solid var(--gold);padding:2px 8px;margin-bottom:8px;background:rgba(255,215,0,0.05)}
+.game-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:900;line-height:1.1;margin-bottom:6px;position:relative}
+.game-title span{color:var(--gold);text-shadow:0 0 12px rgba(255,215,0,0.4)}
+.game-sub{font-size:10.5px;color:var(--text2);line-height:1.5;margin-bottom:12px;position:relative}
+
+/* 9年时间轴 */
+.timeline-9y{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px}
+.timeline-hdr{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--amber);letter-spacing:0.1em;font-weight:700;margin-bottom:10px}
+.timeline-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:5px}
+.phase-block{padding:8px 6px;border-radius:7px;text-align:center;background:var(--bg3);border:1px solid var(--border)}
+.phase-block.current{background:linear-gradient(135deg,rgba(245,166,35,0.15),rgba(245,166,35,0.04));border-color:var(--amber)}
+.phase-block.done{background:rgba(74,222,128,0.05);border-color:rgba(74,222,128,0.2)}
+.phase-block.future{opacity:0.5}
+.phase-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--text3);letter-spacing:0.1em;margin-bottom:3px}
+.phase-block.current .phase-label{color:var(--amber)}
+.phase-name{font-family:'Syne',sans-serif;font-size:11px;font-weight:800;margin-bottom:2px}
+.phase-range{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text2);margin-bottom:3px}
+.phase-rev{font-size:9.5px;color:var(--text);font-weight:600}
+.phase-block.current .phase-rev{color:var(--amber)}
+
+.game-strip{display:flex;gap:2px;margin-top:10px;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.game-strip::-webkit-scrollbar{display:none}
+.game-slot{flex-shrink:0;min-width:42px;padding:5px 3px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:5px;font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3)}
+.game-slot.done{background:rgba(74,222,128,0.06);border-color:rgba(74,222,128,0.2);color:var(--green)}
+.game-slot.current{background:var(--amber);color:#000;border-color:var(--amber);font-weight:900}
+.game-slot-num{font-size:10px;font-weight:700;display:block;margin-bottom:1px}
+.game-slot-date{font-size:7.5px}
+
+/* 当前GAME进度 */
+.current-game{background:linear-gradient(135deg,var(--card),rgba(255,215,0,0.04));border:1px solid var(--gold);border-radius:11px;padding:14px;margin:0 13px 14px;position:relative;overflow:hidden}
+.current-game::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.cg-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.cg-left{}
+.cg-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:2px}
+.cg-name span{color:var(--gold)}
+.cg-sub{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:0.05em}
+.cg-right{text-align:right}
+.cg-days{font-family:'Syne',sans-serif;font-size:24px;font-weight:900;color:var(--amber);line-height:1}
+.cg-days-lbl{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3)}
+
+.round-strip{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:9px}
+.round-box{aspect-ratio:1;border-radius:4px;background:var(--bg3);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:8px;color:var(--text3);position:relative}
+.round-box.done{background:rgba(74,222,128,0.08);border-color:rgba(74,222,128,0.25);color:var(--green)}
+.round-box.current{background:var(--amber);color:#000;border-color:var(--amber);font-weight:900}
+.round-box.current::after{content:'';position:absolute;top:-3px;left:-3px;right:-3px;bottom:-3px;border:1px solid var(--amber);border-radius:6px;animation:roundPulse 1.5s infinite}
+@keyframes roundPulse{0%,100%{opacity:0.8}50%{opacity:0.3}}
+.round-box.future{opacity:0.35}
+
+.round-legend{display:flex;gap:8px;margin-top:8px;font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3);justify-content:center}
+.legend-item{display:flex;align-items:center;gap:4px}
+.legend-dot{width:8px;height:8px;border-radius:2px}
+
+/* 价值卡 · CEO top全员 */
+.value-section{padding:13px}
+.value-hdr{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.value-hdr span.amber{color:var(--amber)}
+.value-hdr small{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3);font-weight:normal}
+
+.top-values{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.vp-row{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 10px;display:grid;grid-template-columns:26px 1fr auto;gap:9px;align-items:center}
+.vp-row.gold{border-color:var(--gold);background:linear-gradient(135deg,var(--card),rgba(255,215,0,0.04))}
+.vp-row.silver{border-color:#b8bcc2}
+.vp-row.bronze{border-color:#cd7f32}
+.vp-rank{font-family:'Syne',sans-serif;font-size:16px;font-weight:900;color:var(--text3);text-align:center}
+.vp-row.gold .vp-rank{color:var(--gold)}
+.vp-row.silver .vp-rank{color:#b8bcc2}
+.vp-row.bronze .vp-rank{color:#cd7f32}
+.vp-info{min-width:0}
+.vp-name{font-size:12px;font-weight:700;margin-bottom:1px}
+.vp-role{font-size:9.5px;color:var(--text3);font-family:'Space Mono',monospace}
+.vp-price{text-align:right}
+.vp-price-v{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--gold);line-height:1}
+.vp-price-d{font-family:'Space Mono',monospace;font-size:9px;color:var(--green);margin-top:1px}
+.vp-price-d.down{color:var(--red)}
+
+/* 我的价值卡 */
+.my-value-card{background:linear-gradient(135deg,#0a0a18,rgba(255,215,0,0.05));border:2px solid var(--gold);border-radius:12px;padding:14px;margin-bottom:14px;position:relative;overflow:hidden}
+.my-value-card::before{content:'';position:absolute;top:-20%;left:-10%;width:50%;height:140%;background:radial-gradient(circle,rgba(255,215,0,0.15),transparent 60%);pointer-events:none}
+.mv-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:0.2em;font-weight:700;margin-bottom:6px;position:relative}
+.mv-name{font-size:13px;font-weight:800;margin-bottom:10px;position:relative}
+.mv-name small{font-size:9.5px;color:var(--text3);font-weight:normal;font-family:'Space Mono',monospace}
+
+.mv-price-block{text-align:center;padding:12px 0 10px;border-bottom:1px solid rgba(255,215,0,0.15);margin-bottom:12px;position:relative}
+.mv-price-lbl{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:0.1em;margin-bottom:4px}
+.mv-price-val{font-family:'Syne',sans-serif;font-size:36px;font-weight:900;color:var(--gold);line-height:1;text-shadow:0 0 15px rgba(255,215,0,0.3)}
+.mv-price-chg{font-family:'Space Mono',monospace;font-size:10px;color:var(--green);margin-top:4px}
+
+.mv-components{position:relative;margin-bottom:12px}
+.mv-comp-hdr{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:0.1em;margin-bottom:6px;font-weight:700}
+.mv-comp-row{display:grid;grid-template-columns:90px 1fr auto;gap:8px;align-items:center;padding:4px 0;font-size:10.5px}
+.mv-comp-name{color:var(--text2)}
+.mv-comp-bar{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.mv-comp-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--gold));border-radius:3px;transition:width 0.8s ease}
+.mv-comp-val{font-family:'Space Mono',monospace;font-size:10px;color:var(--gold);font-weight:700;text-align:right}
+
+.mv-predict{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;position:relative;margin-bottom:12px}
+.pred-box{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 6px;text-align:center}
+.pred-box.opt{border-color:rgba(74,222,128,0.3)}
+.pred-box.mid{border-color:rgba(245,166,35,0.3)}
+.pred-box.pes{border-color:rgba(255,95,95,0.3)}
+.pred-lbl{font-family:'Space Mono',monospace;font-size:8px;color:var(--text3);letter-spacing:0.1em;margin-bottom:3px}
+.pred-box.opt .pred-lbl{color:var(--green)}
+.pred-box.mid .pred-lbl{color:var(--amber)}
+.pred-box.pes .pred-lbl{color:var(--red)}
+.pred-v{font-family:'Syne',sans-serif;font-size:13px;font-weight:800}
+.pred-box.opt .pred-v{color:var(--green)}
+.pred-box.mid .pred-v{color:var(--amber)}
+.pred-box.pes .pred-v{color:var(--red)}
+.pred-note{font-size:8.5px;color:var(--text3);margin-top:2px;line-height:1.3}
+
+.mv-advice{background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.25);border-radius:8px;padding:9px 10px;position:relative;font-size:11px;color:var(--text);line-height:1.55}
+.mv-advice strong{color:var(--blue)}
+.mv-advice em{color:var(--amber);font-style:normal}
+
+/* 9年价值路径图 */
+.path-section{padding:0 13px 13px}
+.path-chart{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:14px}
+.path-hdr{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--amber);letter-spacing:0.1em;margin-bottom:10px;font-weight:700}
+.path-row{display:flex;align-items:flex-end;gap:2px;height:80px;padding:0 4px;border-bottom:1px solid var(--border)}
+.path-bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;align-items:center}
+.path-bar-rect{width:100%;background:linear-gradient(180deg,var(--amber),rgba(245,166,35,0.4));border-radius:2px 2px 0 0;min-height:2px;transition:height 0.5s ease}
+.path-bar-rect.current{background:linear-gradient(180deg,var(--gold),var(--amber));box-shadow:0 0 8px rgba(255,215,0,0.5)}
+.path-bar-rect.future{background:linear-gradient(180deg,rgba(245,166,35,0.25),rgba(245,166,35,0.08))}
+.path-bar-label{font-family:'Space Mono',monospace;font-size:7.5px;color:var(--text3);margin-top:3px}
+
+/* ═══ 通用 ═══ */
+.footer{padding:13px;text-align:center;font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:0.1em;line-height:1.7;border-top:1px solid var(--border)}
+.footer span{color:var(--amber)}
+
+@media(max-width:520px){
+  .ceo-kpi{grid-template-columns:repeat(3,1fr);gap:5px}
+  .kpi-val{font-size:17px}
+  .timeline-row{grid-template-columns:1fr}
+  .mv-price-val{font-size:28px}
+  .round-strip{grid-template-columns:repeat(12,1fr);gap:2px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-l">
+    <div class="tb-logo">∞</div>
+    <div>
+      <div class="tb-t">INFINITY <span>OS</span> · v0.3</div>
+      <div class="tb-s">GAME CENTER · 9Y · 18 GAMES · 216 ROUNDS</div>
+    </div>
+  </div>
+  <div class="tb-pulse"><div class="pulse-dot"></div>GAME LIVE</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab(0,this)">🧠 CEO视图</button>
+  <button class="tab" onclick="switchTab(1,this)">🏅 GAME竞技场</button>
+  <button class="tab" onclick="switchTab(2,this)">💰 价值评价</button>
+  <button class="tab" onclick="switchTab(3,this)">🔄 客户循环</button>
+</div>
+
+<!-- ════════ PANEL 0: CEO视图 ════════ -->
+<div class="panel active" id="panel-0">
+  <div class="ceo-hero">
+    <div class="ceo-tag">▸ CEO COCKPIT · 大脑驾驶舱</div>
+    <div class="ceo-title">GAME 2 进行中 · <span>第3周第4天</span></div>
+    <div class="ceo-sub">9年大战役·当前第1年第2场 · 你只看这些 · Agent处理其余</div>
+    
+    <div class="ceo-kpi">
+      <div class="kpi-box warn">
+        <div class="kpi-lbl">GAME剩余</div>
+        <div class="kpi-val amber">58<span style="font-size:11px">天</span></div>
+        <div class="kpi-sub">R4-R12剩9周<br>赛季关闭前</div>
+      </div>
+      <div class="kpi-box warn">
+        <div class="kpi-lbl">战略偏离</div>
+        <div class="kpi-val red">12%</div>
+        <div class="kpi-sub">上海下滑驱动<br>可本季追回</div>
+      </div>
+      <div class="kpi-box good">
+        <div class="kpi-lbl">全员客户化</div>
+        <div class="kpi-val green">62%</div>
+        <div class="kpi-sub">目标85%<br>本周+3%</div>
+      </div>
+    </div>
+
+    <div class="ceo-input-row">
+      <div class="ceo-label">CEO ▸</div>
+      <input type="text" id="ceoInput" class="ceo-input" placeholder="战略指令·Agent自跑路径..." />
+      <button class="ceo-go" onclick="ceoCommand()" id="ceoBtn">▶</button>
+    </div>
+    <div class="preset-row">
+      <div class="preset-chip" onclick="ceoQuick('本GAME还剩9周·如何追回战略偏离的12%')">🏅 追回偏离</div>
+      <div class="preset-chip" onclick="ceoQuick('上海连续下滑·48小时立方体诊断+动作')">⚠ 上海下滑</div>
+      <div class="preset-chip" onclick="ceoQuick('辽宁安徽在涨·本GAME剩余时间如何扩大')">📈 沉默省份</div>
+      <div class="preset-chip" onclick="ceoQuick('本GAME价值涨幅Top 5的人在做对什么')">💰 学习Top</div>
+      <div class="preset-chip" onclick="ceoQuick('找出本周客户在岗最低5人·淘汰候选')">🔍 躺平识别</div>
+    </div>
+  </div>
+
+  <div class="section-hdr">
+    <div>
+      <div class="section-num">▸ AGENT LIVE FEED</div>
+      <div class="section-t">Agent正在处理什么</div>
+    </div>
+    <div class="section-meta" id="feedMeta">空闲</div>
+  </div>
+  <div class="agent-feed" id="agentFeed">
+    <div class="feed-empty">
+      ▼ Agent待命 · GAME 2 R3 Day 4 ▼<br><br>
+      24/7后台扫描 · 一线信号触发 · CEO指令触发 · 所有决策实时显示
+    </div>
+  </div>
+
+  <div class="section-hdr">
+    <div>
+      <div class="section-num">▸ DISPATCHED TASKS</div>
+      <div class="section-t">Agent派出的任务</div>
+    </div>
+    <div class="section-meta" id="dispatchMeta">无任务</div>
+  </div>
+  <div class="dispatch-list" id="dispatchList">
+    <div style="text-align:center;color:var(--text3);font-size:10px;padding:12px;font-style:italic;background:var(--bg3);border-radius:7px;margin:0 0 13px;">Agent扫描后会在这里直接派任务到一线</div>
+  </div>
+</div>
+
+<!-- ════════ PANEL 1: GAME竞技场 ════════ -->
+<div class="panel" id="panel-1">
+  <div class="game-hero">
+    <div class="game-tag">▸ GAME CENTER · 9年18场比赛</div>
+    <div class="game-title">欣和SH <span>9年大战役</span></div>
+    <div class="game-sub">2026-2034 · 3个三年阶段 · 18场GAME · 216回合ROUND · 每场都是价值重估</div>
+  </div>
+
+  <!-- 9年3阶段 -->
+  <div style="padding:13px;">
+    <div class="timeline-9y">
+      <div class="timeline-hdr">▸ 9Y · 3 PHASES · 3个三年阶段</div>
+      <div class="timeline-row">
+        <div class="phase-block current">
+          <div class="phase-label">PHASE 1 · 当前</div>
+          <div class="phase-name">立足·站稳</div>
+          <div class="phase-range">2026-2028</div>
+          <div class="phase-rev">8亿 → 20亿</div>
+        </div>
+        <div class="phase-block future">
+          <div class="phase-label">PHASE 2</div>
+          <div class="phase-name">势能·扩张</div>
+          <div class="phase-range">2029-2031</div>
+          <div class="phase-rev">20亿 → 50亿</div>
+        </div>
+        <div class="phase-block future">
+          <div class="phase-label">PHASE 3</div>
+          <div class="phase-name">收割·称王</div>
+          <div class="phase-range">2032-2034</div>
+          <div class="phase-rev">50亿 → 100亿</div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:0.1em;font-weight:700;margin-bottom:6px">▸ 18 GAMES · 每半年1场</div>
+      <div class="game-strip" id="gameStrip"></div>
+    </div>
+
+    <!-- 当前GAME -->
+    <div class="current-game" style="margin:0 0 14px">
+      <div class="cg-hdr">
+        <div class="cg-left">
+          <div class="cg-name">GAME 2 · <span>2026 上半场</span></div>
+          <div class="cg-sub">2026.04.01 → 2026.06.30 · 12周赛季</div>
+        </div>
+        <div class="cg-right">
+          <div class="cg-days">58</div>
+          <div class="cg-days-lbl">天 · 剩余</div>
+        </div>
+      </div>
+
+      <div style="font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3);letter-spacing:0.1em;margin-bottom:5px">▸ 12 ROUNDS · 进度</div>
+      <div class="round-strip">
+        <div class="round-box done"><span>R1</span></div>
+        <div class="round-box done"><span>R2</span></div>
+        <div class="round-box current"><span>R3</span><span>D4</span></div>
+        <div class="round-box future"><span>R4</span></div>
+        <div class="round-box future"><span>R5</span></div>
+        <div class="round-box future"><span>R6</span></div>
+        <div class="round-box future"><span>R7</span></div>
+        <div class="round-box future"><span>R8</span></div>
+        <div class="round-box future"><span>R9</span></div>
+        <div class="round-box future"><span>R10</span></div>
+        <div class="round-box future"><span>R11</span></div>
+        <div class="round-box future"><span>R12</span></div>
+      </div>
+      <div class="round-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(74,222,128,0.3)"></div>已完成</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>当前R3</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--bg3)"></div>未来9周</div>
+      </div>
+    </div>
+
+    <!-- Top 10 价值榜 -->
+    <div class="value-section" style="padding:0">
+      <div class="value-hdr">
+        <span>🏆 <span class="amber">GAME 2 价值榜</span> · Top 10</span>
+        <small>实时 · 全员可见</small>
+      </div>
+      <div class="top-values" id="topValues"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ PANEL 2: 价值评价 ════════ -->
+<div class="panel" id="panel-2">
+  <div class="section-hdr">
+    <div>
+      <div class="section-num">▸ VALUE CENTER · 价值评价</div>
+      <div class="section-t">职业运动员式估值</div>
+    </div>
+    <div class="section-meta">GAME 2 进行中</div>
+  </div>
+  <div class="section-hint">每场GAME结束全员相互价值评价·公式透明·不论资历·全员可见·价值是相互创造的·可一场逆转</div>
+
+  <div class="value-section">
+    <!-- 我的价值 -->
+    <div class="my-value-card">
+      <div class="mv-label">▸ MY VALUE · 我的价值(相互创造)</div>
+      <div class="mv-name">王五 <small>· 增长官·上海陆家嘴</small></div>
+      
+      <div class="mv-price-block">
+        <div class="mv-price-lbl">GAME 2 当前实时价值</div>
+        <div class="mv-price-val">¥ 680K</div>
+        <div class="mv-price-chg">↑ +31% vs GAME 1 (¥520K)</div>
+      </div>
+
+      <div class="mv-components">
+        <div class="mv-comp-hdr">▸ 价值构成 · 你为公司/客户/同事创造了什么</div>
+        <div class="mv-comp-row">
+          <div class="mv-comp-name">基础分</div>
+          <div class="mv-comp-bar"><div class="mv-comp-fill" style="width:100%"></div></div>
+          <div class="mv-comp-val">¥ 300K</div>
+        </div>
+        <div class="mv-comp-row">
+          <div class="mv-comp-name">精准分</div>
+          <div class="mv-comp-bar"><div class="mv-comp-fill" style="width:60%"></div></div>
+          <div class="mv-comp-val">¥ 180K</div>
+        </div>
+        <div class="mv-comp-row">
+          <div class="mv-comp-name">速度分</div>
+          <div class="mv-comp-bar"><div class="mv-comp-fill" style="width:33%"></div></div>
+          <div class="mv-comp-val">¥ 100K</div>
+        </div>
+        <div class="mv-comp-row">
+          <div class="mv-comp-name">突破分</div>
+          <div class="mv-comp-bar"><div class="mv-comp-fill" style="width:33%"></div></div>
+          <div class="mv-comp-val">¥ 100K</div>
+        </div>
+      </div>
+
+      <div class="mv-comp-hdr" style="margin-bottom:6px">▸ GAME结束预测</div>
+      <div class="mv-predict">
+        <div class="pred-box opt">
+          <div class="pred-lbl">乐观</div>
+          <div class="pred-v">¥ 820K</div>
+          <div class="pred-note">保持前3名</div>
+        </div>
+        <div class="pred-box mid">
+          <div class="pred-lbl">中性</div>
+          <div class="pred-v">¥ 680K</div>
+          <div class="pred-note">保持位次</div>
+        </div>
+        <div class="pred-box pes">
+          <div class="pred-lbl">悲观</div>
+          <div class="pred-v">¥ 540K</div>
+          <div class="pred-note">跌出前10</div>
+        </div>
+      </div>
+
+      <div class="mv-advice">
+        <strong>💡 Agent涨值建议</strong>:<br>
+        你距离¥820K还差 <em>140K</em> · 相当于 <em>220积分</em><br>
+        本周可以:完成3个待办任务(+90分) + 2次客户信号上报(+60分) + 陆家嘴KA周巡(+80分) = <em>+230分 · 锁定Top 3</em>
+      </div>
+    </div>
+
+    <!-- 9年价值路径图 -->
+    <div class="path-chart">
+      <div class="path-hdr">▸ 9Y VALUE PATH · 我的9年价值轨迹(18场GAME)</div>
+      <div class="path-row" id="valuePath"></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-family:'Space Mono',monospace;font-size:8px;color:var(--text3)">
+        <span>2026</span><span>2028</span><span>2031</span><span>2034</span>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--text2);line-height:1.5;padding:8px;background:var(--bg3);border-radius:6px">
+        <strong style="color:var(--gold)">如果保持当前进度</strong>:9年后价值预计 <strong style="color:var(--gold)">¥ 2.8M</strong> · 职业运动员式成长 · 每场GAME都是重估机会
+      </div>
+    </div>
+
+    <!-- 全员价值榜 -->
+    <div class="value-hdr" style="margin-bottom:8px">
+      <span>📊 <span class="amber">全员价值榜</span> · 全体透明</span>
+      <small>50人 · 本GAME实时</small>
+    </div>
+    <div class="top-values" id="fullValues"></div>
+  </div>
+</div>
+
+<!-- ════════ PANEL 3: 客户循环 ════════ -->
+<div class="panel" id="panel-3">
+  <div class="section-hdr">
+    <div>
+      <div class="section-num">▸ HIGH-SPEED LOOP</div>
+      <div class="section-t">客户 ↔ 人 ↔ Agent</div>
+    </div>
+    <div class="section-meta">秒级闭环</div>
+  </div>
+  <div class="section-hint">一线发现信号→秒级输入Agent→立方体扫描→秒级派单回相关人员·信号源+积分涨价值</div>
+
+  <div style="padding:13px">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:13px">
+      <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:0.12em;font-weight:700;margin-bottom:10px">▸ 5步高速循环</div>
+      <div id="loopDiagram">
+        <div class="loop-row" id="loopL1" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:var(--bg3);border-radius:7px;transition:all 0.3s"><div style="width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;background:var(--card2)">🌐</div><div style="flex:1"><div style="font-size:11.5px;font-weight:700">客户层</div><div style="font-size:9px;color:var(--text3)">门店/经销商/消费者 · 信号源头</div></div></div>
+        <div style="color:var(--text3);text-align:center;font-family:'Space Mono',monospace;font-size:10px;margin:-2px 0" id="loopA1">↓ 一线人员看到 ↓</div>
+        <div class="loop-row" id="loopL2" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:var(--bg3);border-radius:7px;transition:all 0.3s"><div style="width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;background:var(--card2)">👤</div><div style="flex:1"><div style="font-size:11.5px;font-weight:700">一线人员</div><div style="font-size:9px;color:var(--text3)">秒级拍照/语音/录入(+积分涨价值)</div></div></div>
+        <div style="color:var(--text3);text-align:center;font-family:'Space Mono',monospace;font-size:10px;margin:-2px 0" id="loopA2">↓ 企微API推送 ↓</div>
+        <div class="loop-row" id="loopL3" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:var(--bg3);border-radius:7px;transition:all 0.3s"><div style="width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;background:var(--card2)">🧠</div><div style="flex:1"><div style="font-size:11.5px;font-weight:700">Agent立方体扫描</div><div style="font-size:9px;color:var(--text3)">8纬度交叉 · 问题→机会→风险→任务</div></div></div>
+        <div style="color:var(--text3);text-align:center;font-family:'Space Mono',monospace;font-size:10px;margin:-2px 0" id="loopA3">↓ 任务派单 ↓</div>
+        <div class="loop-row" id="loopL4" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:var(--bg3);border-radius:7px;transition:all 0.3s"><div style="width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;background:var(--card2)">📡</div><div style="flex:1"><div style="font-size:11.5px;font-weight:700">所有相关人员</div><div style="font-size:9px;color:var(--text3)">同区域同事 · 上级知会 · 总部专项</div></div></div>
+        <div style="color:var(--text3);text-align:center;font-family:'Space Mono',monospace;font-size:10px;margin:-2px 0" id="loopA4">↑ 执行+反馈 ↑</div>
+        <div class="loop-row" id="loopL5" style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg3);border-radius:7px;transition:all 0.3s"><div style="width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;background:var(--card2)">✅</div><div style="flex:1"><div style="font-size:11.5px;font-weight:700">回到客户</div><div style="font-size:9px;color:var(--text3)">全员客户化执行 · 循环关闭</div></div></div>
+      </div>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-size:16px">📥</span>
+        <span style="font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700">一线信号注入</span>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;font-size:10.5px;color:var(--text2);margin-bottom:6px">
+        <span style="color:var(--text3)">从:</span>
+        <select id="signalFrom" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:10.5px;color:var(--text);font-family:'Noto Sans SC',sans-serif;flex:1;outline:none">
+          <option>美顾·张三·上海徐汇某门店</option>
+          <option>DSR·李四·苏州工业园区</option>
+          <option>增长官·王五·上海陆家嘴</option>
+          <option>经销商·赵六·辽宁沈阳</option>
+          <option>美顾·陈七·安徽合肥</option>
+        </select>
+      </div>
+      <textarea id="signalText" style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:11px;color:var(--text);font-family:'Noto Sans SC',sans-serif;outline:none;resize:vertical;min-height:60px;width:100%" placeholder="输入一线观察到的信号..."></textarea>
+      <button style="width:100%;padding:9px;background:var(--green);border:none;border-radius:7px;color:#000;font-size:12px;font-weight:700;cursor:pointer;margin-top:6px" onclick="injectSignal()" id="signalBtn">📥 秒级注入Agent</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px">
+        <div class="signal-preset" onclick="presetSignal(0)" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px;font-size:10px;color:var(--text2);cursor:pointer;line-height:1.4">千禾徐汇店半价促销3天·客流被分走</div>
+        <div class="signal-preset" onclick="presetSignal(1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px;font-size:10px;color:var(--text2);cursor:pointer;line-height:1.4">沈阳客户问能不能进鲜酱油</div>
+        <div class="signal-preset" onclick="presetSignal(2)" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px;font-size:10px;color:var(--text2);cursor:pointer;line-height:1.4">陆家嘴超市陈列被千禾挤边缘</div>
+        <div class="signal-preset" onclick="presetSignal(3)" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px;font-size:10px;color:var(--text2);cursor:pointer;line-height:1.4">合肥鲜酱油500ml卖断货补不上</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  INFINITY OS · Agent v0.3 · <span>GAME CENTER 启用</span><br>
+  DS · 2026.04.19 · 9年×18GAME×216ROUND · 职业运动员式价值评价系统<br>
+  <span>战略=执行 · 精准+速度 · 价值是相互创造的·每场都是价值评价</span>
+</div>
+
+<script>
+const KNOWLEDGE = {
+  strategy: '六月鲜2033年100亿·25%份额·9年3阶段(立足→势能→收割)。当前GAME 2(2026 Q2)剩58天·R3第4天·战略偏离12%',
+  paths: '核心11省30-35%(45-50亿) + 非核心15%(20-25亿) + 市场扩张25-30亿 = 90-105亿',
+  kantar: {
+    上海: '⚠双重恶化:销售-18.2%·KA渗透-6.68pt·均价-4.9%',
+    沉默: '安徽+1.67·辽宁+0.94·河北+0.74 · 真实增长引擎',
+    千禾: '全国34.83亿vs六月鲜8.41亿·差距4.1倍',
+    KA: '山姆+96%/胖东来+77%·欣和山姆仅0.6%',
+    江苏: '江苏3亿占全国36%'
+  },
+  game: '职业运动员式价值评价系统:每场GAME结束相互价值评价·价值=基础+精准+速度+突破·价值是相互创造的·公开透明·可一场逆转·后10%淘汰'
+};
+
+// ═══ 50人价值数据 ═══
+const VALUES = [
+  {n:'王五',r:'增长官·上海陆家嘴',v:680,chg:'+31%',rank:8,tc:62,sc:78},
+  {n:'李娜',r:'美顾·上海静安',v:1240,chg:'+48%',rank:1,tc:94,sc:95},
+  {n:'陈七',r:'美顾·安徽合肥',v:1080,chg:'+62%',rank:2,tc:91,sc:88},
+  {n:'刘强',r:'增长官·苏州',v:920,chg:'+28%',rank:3,tc:90,sc:85},
+  {n:'张三',r:'美顾·上海徐汇',v:850,chg:'+18%',rank:4,tc:92,sc:80},
+  {n:'赵敏',r:'DSR·上海浦东',v:820,chg:'+22%',rank:5,tc:89,sc:82},
+  {n:'孙琪',r:'美顾·辽宁沈阳',v:780,chg:'+45%',rank:6,tc:88,sc:75},
+  {n:'周志',r:'增长官·杭州',v:740,chg:'+15%',rank:7,tc:87,sc:72},
+  {n:'吴芳',r:'美顾·上海长宁',v:720,chg:'+11%',rank:9,tc:86,sc:70},
+  {n:'郑宇',r:'DSR·苏州工业园',v:700,chg:'+18%',rank:10,tc:85,sc:68},
+  {n:'黄莹',r:'美顾·安徽芜湖',v:650,chg:'+25%',rank:11,tc:84,sc:65},
+  {n:'蔡明',r:'美顾·辽宁大连',v:620,chg:'+33%',rank:12,tc:83,sc:62},
+  {n:'许伟',r:'增长官·南京',v:580,chg:'+8%',rank:13,tc:82,sc:60},
+  {n:'秦丽',r:'DSR·杭州西湖',v:560,chg:'+5%',rank:14,tc:82,sc:58},
+  {n:'葛洪',r:'美顾·上海杨浦',v:540,chg:'+12%',rank:15,tc:81,sc:56},
+  {n:'罗欣',r:'美顾·浙江宁波',v:520,chg:'+18%',rank:16,tc:81,sc:55},
+  {n:'郭涛',r:'增长官·宁波',v:500,chg:'+2%',rank:17,tc:80,sc:52},
+  {n:'高建',r:'DSR·上海闵行',v:480,chg:'-2%',rank:18,tc:78,sc:50},
+  {n:'梁莉',r:'美顾·江苏南通',v:460,chg:'+5%',rank:19,tc:76,sc:48},
+  {n:'宋飞',r:'美顾·安徽蚌埠',v:440,chg:'+22%',rank:20,tc:74,sc:45},
+  {n:'闵海',r:'城市经理·常州(办公室派)',v:140,chg:'-45%',rank:46,tc:24,sc:8,elim:1},
+  {n:'秋明',r:'城市经理·烟台(汇报型)',v:120,chg:'-52%',rank:47,tc:22,sc:7,elim:1},
+  {n:'封铭',r:'区域经理·西南(政治型)',v:100,chg:'-60%',rank:48,tc:18,sc:6,elim:1},
+  {n:'伊川',r:'高级总监·总部(战略型)',v:80,chg:'-68%',rank:49,tc:15,sc:4,elim:1},
+  {n:'谭鹏',r:'城市经理·济南(关系户)',v:50,chg:'-75%',rank:50,tc:12,sc:3,elim:1},
+];
+
+// 渲染GAME strip - 18场GAME
+function renderGameStrip() {
+  const strip = document.getElementById('gameStrip');
+  const games = [];
+  for(let y = 2026; y <= 2034; y++) {
+    games.push({num: 2*(y-2026)+1, year: y, half: 'H1'});
+    games.push({num: 2*(y-2026)+2, year: y, half: 'H2'});
+  }
+  strip.innerHTML = games.map(g => {
+    const cls = g.num < 2 ? 'done' : (g.num === 2 ? 'current' : '');
+    return `<div class="game-slot ${cls}"><span class="game-slot-num">G${g.num}</span><span class="game-slot-date">${g.year.toString().slice(2)}${g.half}</span></div>`;
+  }).join('');
+}
+
+// 渲染Top 10价值
+function renderTopValues() {
+  const top10 = VALUES.slice(0,10);
+  const html = top10.map((p,i) => {
+    let cls = '';
+    let icon = '';
+    if(i === 0) { cls = 'gold'; icon = '🥇'; }
+    else if(i === 1) { cls = 'silver'; icon = '🥈'; }
+    else if(i === 2) { cls = 'bronze'; icon = '🥉'; }
+    const dChg = p.chg.startsWith('+') ? '' : 'down';
+    return `<div class="vp-row ${cls}">
+      <div class="vp-rank">${icon || '#'+p.rank}</div>
+      <div class="vp-info">
+        <div class="vp-name">${p.n}</div>
+        <div class="vp-role">${p.r}</div>
+      </div>
+      <div class="vp-price">
+        <div class="vp-price-v">¥${p.v}K</div>
+        <div class="vp-price-d ${dChg}">${p.chg}</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('topValues').innerHTML = html;
+}
+
+// 渲染全员价值
+function renderFullValues() {
+  const html = VALUES.map(p => {
+    let cls = '';
+    if(p.rank <= 3) cls = p.rank === 1 ? 'gold' : (p.rank === 2 ? 'silver' : 'bronze');
+    if(p.elim) cls = '';
+    const dChg = p.chg.startsWith('+') ? '' : 'down';
+    const border = p.elim ? 'border-color:var(--red);background:linear-gradient(135deg,var(--card),rgba(255,95,95,0.04))' : '';
+    return `<div class="vp-row ${cls}" style="${border}">
+      <div class="vp-rank" style="${p.elim?'color:var(--red)':''}">${p.elim ? '⛔' : '#'+p.rank}</div>
+      <div class="vp-info">
+        <div class="vp-name">${p.n}</div>
+        <div class="vp-role">${p.r}</div>
+      </div>
+      <div class="vp-price">
+        <div class="vp-price-v" style="${p.elim?'color:var(--red)':''}">¥${p.v}K</div>
+        <div class="vp-price-d ${dChg}">${p.chg}</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('fullValues').innerHTML = html;
+}
+
+// 渲染9年价值路径(18个bar)
+function renderValuePath() {
+  const path = document.getElementById('valuePath');
+  const data = [
+    520,680,  // 2026 - 2个GAME
+    750,850,  // 2027
+    980,1120, // 2028 (Phase1结束)
+    1280,1450,// 2029
+    1600,1780,// 2030
+    1950,2100,// 2031 (Phase2结束)
+    2280,2420,// 2032
+    2580,2680,// 2033
+    2750,2820 // 2034 (Phase3结束)
+  ];
+  const max = Math.max(...data);
+  path.innerHTML = data.map((v,i) => {
+    const h = (v/max*100);
+    let cls = 'future';
+    if(i === 0) cls = '';
+    if(i === 1) cls = 'current';
+    const lbl = (i % 2 === 0) ? `G${i+1}` : '';
+    return `<div class="path-bar">
+      <div class="path-bar-rect ${cls}" style="height:${h}%"></div>
+      <div class="path-bar-label">${lbl}</div>
+    </div>`;
+  }).join('');
+}
+
+renderGameStrip();
+renderTopValues();
+renderFullValues();
+renderValuePath();
+
+// ═══ Tab切换 ═══
+function switchTab(idx, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + idx).classList.add('active');
+}
+
+// ═══ CEO feed ═══
+function addFeedEvent(type, text) {
+  const feed = document.getElementById('agentFeed');
+  const empty = feed.querySelector('.feed-empty');
+  if(empty) empty.remove();
+  const now = new Date();
+  const t = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+  const el = document.createElement('div');
+  el.className = `feed-event ${type}`;
+  el.innerHTML = `<div class="feed-time">${t}</div><div class="feed-text">${text}</div>`;
+  feed.appendChild(el);
+  feed.scrollTop = feed.scrollHeight;
+}
+function showThinking(label) {
+  removeThinking();
+  const feed = document.getElementById('agentFeed');
+  const el = document.createElement('div');
+  el.id = 'thinkingNow';
+  el.className = 'thinking-now';
+  el.innerHTML = `<div class="thinking-dots"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div><div class="thinking-label">${label}</div>`;
+  feed.appendChild(el);
+  feed.scrollTop = feed.scrollHeight;
+}
+function removeThinking() {
+  const el = document.getElementById('thinkingNow');
+  if(el) el.remove();
+}
+function addTask(target, action, priority='mid', meta={}) {
+  const list = document.getElementById('dispatchList');
+  const empty = list.querySelector('div[style*="text-align:center"]');
+  if(empty) empty.remove();
+  const id = 'TSK-' + Date.now().toString().slice(-6);
+  const card = document.createElement('div');
+  card.className = 'task-card';
+  card.innerHTML = `
+    <div class="task-hdr">
+      <span class="task-id">${id}</span>
+      <span class="task-priority ${priority}">${priority === 'high' ? '紧急' : priority === 'mid' ? '高' : '中'}</span>
+    </div>
+    <div class="task-target">▸ <span>${target}</span></div>
+    <div class="task-action">${action}</div>
+    <div class="task-meta">
+      <span>⏱ ${meta.deadline || '24h'}</span>
+      <span>📡 ${meta.channel || '企微推送'}</span>
+      <span>💰 <strong>+${meta.points || '50'}分</strong></span>
+    </div>
+  `;
+  list.insertBefore(card, list.firstChild);
+}
+
+let isCEORunning = false;
+async function ceoCommand() {
+  if(isCEORunning) return;
+  const input = document.getElementById('ceoInput').value.trim();
+  if(!input) return alert('请输入指令');
+  isCEORunning = true;
+  document.getElementById('ceoBtn').disabled = true;
+  document.getElementById('feedMeta').textContent = 'Agent处理中...';
+  addFeedEvent('signal', `<strong>CEO指令</strong>:"${input}"`);
+  await sleep(300);
+  showThinking('Agent立方体扫描+推理...');
+
+  const sys = `你是INFINITY OS真Agent · 替代中层 · 直接对CEO负责。
+
+【当前比赛状态】
+9年大战役 · PHASE 1(立足·站稳 2026-2028) · GAME 2(2026 Q2) · ROUND 3 第4天 · 剩余9周
+战略偏离12% · 全员客户化62%
+
+【6条铁律】
+① Agent替代思考层 ② 人全员下沉客户 ③ 躺平=不去客户那里
+④ 客户↔人↔Agent高速循环 ⑤ 后10%必须淘汰 ⑥ 拿回5年丢的市场
+
+【价值评价系统】
+${KNOWLEDGE.game}
+当前GAME价值榜:#1李娜¥1240K #2陈七¥1080K #3刘强¥920K ... 底部淘汰池5人平均¥98K
+
+【知识背景】
+${KNOWLEDGE.strategy}
+Kantar:上海${KNOWLEDGE.kantar.上海} · 沉默省份${KNOWLEDGE.kantar.沉默} · 千禾${KNOWLEDGE.kantar.千禾}
+
+【输出严格JSON】
+{
+  "events":[
+    {"type":"scan","text":"立方体扫描·定位...(用<strong>)"},
+    {"type":"find","text":"问题:... 机会:... 风险:..."},
+    {"type":"game","text":"GAME 2 涉及:..."},
+    {"type":"alert","text":"立即动作..."}
+  ],
+  "tasks":[
+    {"target":"派给谁","action":"干什么","priority":"high|mid|low","deadline":"时间","success":"标准","points":数字}
+  ]
+}
+
+至少3-4个事件·3-5个任务·每个任务标注完成后积分(+20到+100)。`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:2200, system:sys,
+        messages:[{role:'user',content:`CEO指令:${input}\n\nAgent立刻处理·输出JSON。`}]
+      })
+    });
+    const data = await resp.json();
+    let raw = data.content?.map(c=>c.text||'').join('') || '';
+    raw = raw.replace(/```json|```/g,'').trim();
+    let result;
+    try { result = JSON.parse(raw); }
+    catch(e) {
+      const m = raw.match(/\{[\s\S]*\}/);
+      if(m) result = JSON.parse(m[0]);
+      else throw new Error('JSON解析失败');
+    }
+    removeThinking();
+    for(const ev of result.events) {
+      await sleep(500);
+      addFeedEvent(ev.type || 'find', ev.text);
+    }
+    await sleep(400);
+    addFeedEvent('dispatch', `<strong>📡 派单</strong> · ${result.tasks.length}条任务 · 完成后自动加积分涨价值`);
+    for(const task of result.tasks) {
+      await sleep(300);
+      addTask(task.target, task.action, task.priority, {
+        deadline: task.deadline, success: task.success,
+        channel: '企微推送', points: task.points || 50
+      });
+    }
+    document.getElementById('dispatchMeta').textContent = `✓ ${result.tasks.length} 个任务`;
+    await sleep(300);
+    addFeedEvent('complete', `<strong>✅ 闭环</strong> · 中层0干预 · <em>GAME 2 R3积分流入·相关人员价值正在刷新</em>`);
+    document.getElementById('feedMeta').textContent = '✓ 完成';
+  } catch(e) {
+    removeThinking();
+    addFeedEvent('alert', `<strong>⚠ 异常</strong>:${e.message}`);
+    console.error(e);
+  } finally {
+    isCEORunning = false;
+    document.getElementById('ceoBtn').disabled = false;
+    document.getElementById('ceoInput').value = '';
+  }
+}
+function ceoQuick(text) {
+  document.getElementById('ceoInput').value = text;
+  ceoCommand();
+}
+
+// ═══ 客户循环信号注入 ═══
+const PRESETS = [
+  '千禾上海徐汇店做半价促销已持续3天·我们客流被分走',
+  '沈阳老客户主动问能不能进六月鲜鲜酱油',
+  '陆家嘴某高端超市说六月鲜陈列被千禾挤边缘',
+  '合肥经销商反馈鲜酱油500ml卖断货补不上'
+];
+function presetSignal(idx) {
+  document.getElementById('signalText').value = PRESETS[idx];
+}
+
+const LOOPIDS = ['loopL1','loopL2','loopL3','loopL4','loopL5'];
+function activateLoop(idx) {
+  LOOPIDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.background = 'var(--bg3)';
+  });
+  if(idx >= 0 && idx < 5) {
+    const el = document.getElementById(LOOPIDS[idx]);
+    if(el) {
+      el.style.background = 'rgba(245,166,35,0.08)';
+      el.style.border = '1px solid var(--amber)';
+      el.style.transform = 'translateX(4px)';
+    }
+  }
+}
+function resetLoop() {
+  LOOPIDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) {
+      el.style.background = 'var(--bg3)';
+      el.style.border = '';
+      el.style.transform = '';
+    }
+  });
+}
+
+let isSignalRunning = false;
+async function injectSignal() {
+  if(isSignalRunning) return;
+  const text = document.getElementById('signalText').value.trim();
+  const from = document.getElementById('signalFrom').value;
+  if(!text) return alert('请输入信号');
+  isSignalRunning = true;
+  document.getElementById('signalBtn').disabled = true;
+  switchTab(0, document.querySelectorAll('.tab')[0]);
+  
+  addFeedEvent('signal', `<strong>📥 一线信号</strong> · <em>${from}</em>:"${text}"`);
+  activateLoop(0);
+  await sleep(400);
+  activateLoop(1);
+  addFeedEvent('value', `<strong>💰 ${from.split('·')[1]||'一线'}</strong>因上报信号·GAME 2积分<em>+30</em>·价值预计涨¥15K`);
+  await sleep(400);
+  activateLoop(2);
+  showThinking('Agent立方体+Claude推理...');
+
+  const sys = `你是INFINITY OS真Agent · 收到一线客户现场信号 · 立即处理。
+
+【当前GAME】
+PHASE 1 · GAME 2(2026 Q2) · R3 第4天 · 剩余9周 · 每个任务完成产生积分·涨价值
+
+【信号】
+来源:${from}
+内容:${text}
+
+【知识】
+${KNOWLEDGE.strategy}
+Kantar:上海${KNOWLEDGE.kantar.上海}/沉默${KNOWLEDGE.kantar.沉默}/千禾${KNOWLEDGE.kantar.千禾}
+
+【输出JSON】
+{
+  "events":[
+    {"type":"scan","text":"<strong>立方体扫描</strong>:...(用<strong>)"},
+    {"type":"find","text":"问题:... 机会:... 风险:..."},
+    {"type":"value","text":"<strong>GAME 2影响</strong>:对排名/价值影响..."},
+    {"type":"alert","text":"动作建议..."}
+  ],
+  "tasks":[
+    {"target":"派给谁(具体人/角色)","action":"干什么","priority":"high|mid|low","deadline":"24h内","success":"标准","points":数字}
+  ]
+}
+
+3-5个任务·派一线/区域/总部三层·每任务+积分。`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:2000, system:sys,
+        messages:[{role:'user',content:'Agent立刻处理·输出JSON。'}]
+      })
+    });
+    const data = await resp.json();
+    let raw = data.content?.map(c=>c.text||'').join('') || '';
+    raw = raw.replace(/```json|```/g,'').trim();
+    let result;
+    try { result = JSON.parse(raw); }
+    catch(e) {
+      const m = raw.match(/\{[\s\S]*\}/);
+      if(m) result = JSON.parse(m[0]);
+      else throw new Error('JSON解析失败');
+    }
+    removeThinking();
+    for(const ev of result.events) {
+      await sleep(450);
+      addFeedEvent(ev.type || 'find', ev.text);
+    }
+    activateLoop(3);
+    await sleep(400);
+    addFeedEvent('dispatch', `<strong>📡 派单</strong> · ${result.tasks.length}条任务·相关人员手机到`);
+    for(const task of result.tasks) {
+      await sleep(300);
+      addTask(task.target, task.action, task.priority, {
+        deadline: task.deadline, success: task.success,
+        channel: '企微推送', points: task.points || 50
+      });
+    }
+    document.getElementById('dispatchMeta').textContent = `✓ ${result.tasks.length} 个任务`;
+    activateLoop(4);
+    await sleep(400);
+    addFeedEvent('complete', `<strong>✅ 循环闭合</strong> · 信号源<em>${from.split('·')[1]||'人员'}</em>·GAME 2积分已更新·价值刷新`);
+    document.getElementById('feedMeta').textContent = '✓ 循环完成';
+    setTimeout(resetLoop, 3000);
+  } catch(e) {
+    removeThinking();
+    addFeedEvent('alert', `<strong>⚠ 异常</strong>:${e.message}`);
+    console.error(e);
+  } finally {
+    isSignalRunning = false;
+    document.getElementById('signalBtn').disabled = false;
+    document.getElementById('signalText').value = '';
+  }
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+document.getElementById('ceoInput').addEventListener('keydown', e => { if(e.key==='Enter') ceoCommand(); });
+
+// 24/7后台模拟
+setInterval(() => {
+  if(Math.random() < 0.3) {
+    const events = [
+      {t:'game', x:'<strong>GAME 2 R3-D4 积分更新</strong> · #1李娜+85 · #8王五+45 · 底部池−15'},
+      {t:'value', x:'<strong>价值刷新</strong> · 陈七从¥980K→¥1080K(+10%) · 跻身前3'},
+      {t:'scan', x:'<strong>定时扫描</strong> · 立方体7个红点持续监控 · 淘汰池5人无改善'},
+      {t:'alert', x:'<strong>价格预警</strong> · 上海某门店扫到¥17.20 · 距RED01仅0.20'}
+    ];
+    const e = events[Math.floor(Math.random()*events.length)];
+    addFeedEvent(e.t, e.x);
+  }
+}, 30000);
+
+// 入场
+setTimeout(() => addFeedEvent('game', '<strong>GAME 2 实时</strong> · ROUND 3 Day 4 · 剩余9周·58天 · 价值榜更新中'), 500);
+setTimeout(() => addFeedEvent('value', '<strong>价值动态</strong> · 本周涨幅Top 3:陈七+62% · 孙琪+45% · 李娜+48%'), 1500);
+setTimeout(() => addFeedEvent('alert', '<strong>Agent待命</strong> · 输入指令或注入客户信号 · 一切进入GAME 2积分'), 2500);
+</script>
+</body>
+</html>
