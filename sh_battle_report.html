@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>上海战斗报告 · Agent实战 · SH-DIAG-001</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0b10;--bg2:#0f1118;--bg3:#141720;
+  --card:#181c26;--card2:#1e2330;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.14);
+  --text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;
+  --amber:#f5a623;--gold:#ffd700;--teal:#4ecdc4;--red:#ff5f5f;
+  --green:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(10,11,16,0.95);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:11px 16px;display:flex;align-items:center;justify-content:space-between}
+.tb-l{display:flex;align-items:center;gap:10px}
+.tb-logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#ff5f5f,#f5a623);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:#000}
+.tb-t{font-family:'Syne',sans-serif;font-size:13px;font-weight:800}
+.tb-t span{color:var(--red)}
+.tb-s{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3);letter-spacing:0.12em}
+.tb-back{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);padding:4px 10px;border:1px solid var(--border2);border-radius:12px;text-decoration:none}
+
+/* HERO */
+.hero{padding:24px 16px 18px;border-bottom:1px solid var(--border);background:radial-gradient(ellipse at top,rgba(255,95,95,0.06),transparent 60%)}
+.hero-tag{display:inline-block;font-family:'Space Mono',monospace;font-size:10px;color:var(--red);letter-spacing:0.22em;border:1px solid var(--red);padding:3px 10px;border-radius:2px;margin-bottom:10px}
+.hero-t{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1.12;margin-bottom:6px}
+.hero-t span{color:var(--red)}
+.hero-s{font-size:12px;color:var(--text2);line-height:1.55}
+
+.game-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:9px}
+.gb-box{text-align:center}
+.gb-lbl{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3);letter-spacing:0.1em;margin-bottom:2px}
+.gb-val{font-family:'Syne',sans-serif;font-size:14px;font-weight:800}
+.gb-val.red{color:var(--red)}
+.gb-val.amber{color:var(--amber)}
+
+/* 诊断摘要 */
+.summary{padding:20px 16px;border-bottom:1px solid var(--border)}
+.summary-box{background:linear-gradient(135deg,var(--card),rgba(255,95,95,0.04));border:2px solid var(--red);border-radius:13px;padding:16px;position:relative;overflow:hidden}
+.summary-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.summary-lbl{font-family:'Space Mono',monospace;font-size:10px;color:var(--red);letter-spacing:0.2em;font-weight:700;margin-bottom:8px}
+.summary-text{font-size:13px;line-height:1.75;color:var(--text)}
+.summary-text strong{color:var(--red);font-weight:700}
+
+/* SECTION */
+.section{padding:22px 16px;border-bottom:1px solid var(--border)}
+.sec-num{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--amber);letter-spacing:0.2em;margin-bottom:3px}
+.sec-t{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;line-height:1.2;margin-bottom:4px}
+.sec-hint{font-size:10.5px;color:var(--text3);margin-bottom:14px;line-height:1.55}
+
+/* 立方体 */
+.cube-grid{display:grid;grid-template-columns:1fr;gap:9px}
+@media(min-width:720px){.cube-grid{grid-template-columns:repeat(2,1fr)}}
+
+.cube-cell{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px;position:relative;overflow:hidden}
+.cube-cell.problem{border-left:3px solid var(--red)}
+.cube-cell.opportunity{border-left:3px solid var(--green)}
+.cube-cell.risk{border-left:3px solid var(--amber)}
+.cube-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cube-dim{font-family:'Syne',sans-serif;font-size:13px;font-weight:800}
+.cube-tags{display:flex;gap:5px}
+.cube-type{font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;font-weight:700;letter-spacing:0.08em}
+.cube-type.problem{background:rgba(255,95,95,0.14);color:var(--red);border:1px solid var(--red)}
+.cube-type.opportunity{background:rgba(74,222,128,0.12);color:var(--green);border:1px solid var(--green)}
+.cube-type.risk{background:rgba(245,166,35,0.12);color:var(--amber);border:1px solid var(--amber)}
+.cube-sev{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:0.08em}
+.cube-find{font-size:12px;color:var(--text);line-height:1.65;margin-bottom:8px}
+.cube-find strong{color:var(--amber)}
+.cube-data{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);padding:7px 9px;background:var(--bg3);border-radius:6px;border-left:2px solid var(--border2)}
+.cube-data::before{content:'▸ DATA · ';color:var(--text3);font-weight:700}
+
+/* 洞察区 */
+.insight-grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:720px){.insight-grid{grid-template-columns:1fr 1fr}}
+
+.insight-col{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px}
+.insight-col.problem-opp{border-top:3px solid var(--teal)}
+.insight-col.opp-risk{border-top:3px solid var(--amber)}
+.insight-hdr{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.insight-hdr .ic{color:var(--teal)}
+.insight-col.opp-risk .insight-hdr .ic{color:var(--amber)}
+.insight-item{background:var(--bg3);border-radius:8px;padding:10px 11px;margin-bottom:7px;font-size:11.5px;line-height:1.65}
+.insight-item:last-child{margin-bottom:0}
+.insight-item .a{color:var(--red);font-weight:700}
+.insight-item .arr{color:var(--text3);margin:0 5px}
+.insight-item .b{color:var(--green);font-weight:700}
+.opp-risk .insight-item .a{color:var(--green)}
+.opp-risk .insight-item .b{color:var(--amber)}
+
+/* 动作清单 */
+.action-grid{display:flex;flex-direction:column;gap:10px}
+.action-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;overflow:hidden}
+.action-card.high{border-left:4px solid var(--red)}
+.action-card.mid{border-left:4px solid var(--amber)}
+.action-card.low{border-left:4px solid var(--teal)}
+.action-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px}
+.action-id{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:0.1em;font-weight:700}
+.action-meta-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.action-priority{font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;font-weight:700;letter-spacing:0.08em}
+.action-priority.high{background:var(--red);color:#fff}
+.action-priority.mid{background:var(--amber);color:#000}
+.action-priority.low{background:var(--teal);color:#000}
+.action-points{font-family:'Space Mono',monospace;font-size:9.5px;padding:2px 7px;border-radius:3px;font-weight:700;background:rgba(255,215,0,0.1);color:var(--gold);border:1px solid rgba(255,215,0,0.3)}
+.action-target{font-size:12px;color:var(--text3);margin-bottom:3px}
+.action-target strong{color:var(--text);font-weight:700}
+.action-what{font-size:13px;font-weight:700;line-height:1.5;margin-bottom:10px;color:var(--text)}
+.action-details{display:grid;grid-template-columns:1fr;gap:6px;padding-top:10px;border-top:1px solid var(--border);font-size:10.5px;color:var(--text2);line-height:1.55}
+@media(min-width:640px){.action-details{grid-template-columns:1fr 1fr}}
+.action-details strong{color:var(--text);font-weight:700;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.08em;display:block;margin-bottom:2px;color:var(--amber)}
+.action-rat{font-size:10.5px;color:var(--text3);line-height:1.55;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-style:italic}
+.action-rat strong{color:var(--amber);font-weight:700;font-style:normal}
+
+/* 影响预测 */
+.impact-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:6px}
+@media(min-width:720px){.impact-grid{grid-template-columns:repeat(3,1fr)}}
+.impact-box{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px;text-align:left}
+.impact-box.full{border-top:3px solid var(--green)}
+.impact-box.half{border-top:3px solid var(--amber)}
+.impact-box.zero{border-top:3px solid var(--red)}
+.impact-lbl{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;font-weight:700;margin-bottom:8px}
+.impact-box.full .impact-lbl{color:var(--green)}
+.impact-box.half .impact-lbl{color:var(--amber)}
+.impact-box.zero .impact-lbl{color:var(--red)}
+.impact-text{font-size:11.5px;line-height:1.65;color:var(--text)}
+.impact-text strong{font-weight:700}
+.impact-box.full .impact-text strong{color:var(--green)}
+.impact-box.half .impact-text strong{color:var(--amber)}
+.impact-box.zero .impact-text strong{color:var(--red)}
+
+/* CEO升级 */
+.escalation-box{background:linear-gradient(135deg,#1a1a1a,#1a2030);border:2px solid var(--amber);border-radius:13px;padding:18px;margin:0 16px 20px;position:relative;overflow:hidden}
+.escalation-box::before{content:'';position:absolute;top:-40%;right:-15%;width:50%;height:180%;background:radial-gradient(circle,rgba(245,166,35,0.12),transparent 60%)}
+.esc-lbl{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:0.2em;margin-bottom:8px;font-weight:700;position:relative}
+.esc-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:10px;line-height:1.3;position:relative}
+.esc-title span{color:var(--amber)}
+.esc-body{font-size:12px;color:var(--text);line-height:1.75;position:relative}
+.esc-body strong{color:var(--amber)}
+
+.next-game{background:rgba(96,165,250,0.04);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:12px 14px;margin:14px 16px 0;font-size:11px;color:var(--text2);line-height:1.65}
+.next-game strong{color:var(--blue)}
+
+.footer{padding:20px 16px;text-align:center;font-family:'Space Mono',monospace;font-size:9.5px;color:var(--text3);letter-spacing:0.1em;line-height:1.75;border-top:1px solid var(--border)}
+.footer span{color:var(--red)}
+
+@media(max-width:540px){
+  .hero-t{font-size:22px}
+  .game-bar{grid-template-columns:repeat(2,1fr)}
+  .action-hdr{flex-direction:column;align-items:stretch}
+  .action-meta-row{justify-content:flex-start}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-l">
+    <div class="tb-logo">!</div>
+    <div>
+      <div class="tb-t">上海战斗报告 <span>· AGENT实战</span></div>
+      <div class="tb-s">SH-DIAG-001 · AGENT REAL OUTPUT</div>
+    </div>
+  </div>
+  <a class="tb-back" href="index_v6.html">← 返回</a>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">⚠ AGENT 实战第1天 · 2026.04.20周一</div>
+  <div class="hero-t">CEO指令:<span>上海连续下滑</span><br>48h立方体诊断+动作清单</div>
+  <div class="hero-s">
+    这份报告不是PPT·是Agent v0.3真实推理的产出·JSON原样渲染 · 可直接派单给市场VP·上海大区总·各区增长官
+  </div>
+  
+  <div class="game-bar">
+    <div class="gb-box">
+      <div class="gb-lbl">PHASE</div>
+      <div class="gb-val">1 · 立足</div>
+    </div>
+    <div class="gb-box">
+      <div class="gb-lbl">GAME</div>
+      <div class="gb-val amber">2 · Q2</div>
+    </div>
+    <div class="gb-box">
+      <div class="gb-lbl">ROUND</div>
+      <div class="gb-val amber">3 · D4</div>
+    </div>
+    <div class="gb-box">
+      <div class="gb-lbl">偏离度</div>
+      <div class="gb-val red">12%</div>
+    </div>
+  </div>
+</div>
+
+<!-- 诊断摘要 -->
+<div class="summary">
+  <div class="summary-box">
+    <div class="summary-lbl">▲ AGENT · DIAGNOSIS SUMMARY</div>
+    <div class="summary-text">
+      上海不是反应堆·是<strong>漏水的水缸</strong>。销售-18%·渗透-6.68pt·均价-4.9%三重下滑·决定性信号指向<strong>结构性客户流失</strong>(非周期性)。客户与执行双脱节:竞品<strong>千禾在上海持续侵占</strong>·我方<strong>一线客户在岗率仅44%</strong>(上海管理层是淘汰池主力)。如果本GAME 9周不止血·Phase 1 立足根基动摇·100亿9年路径第一块多米诺倒下。但危中有机——<strong>¥19.16均价×38.97%渗透=价值带仍在高端区间</strong>·只是没人陪客户守住。先补人·再修价·最后打竞品。
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 01 立方体扫描 ═══ -->
+<div class="section">
+  <div class="sec-num">01 / CUBE SCAN · 立方体扫描</div>
+  <div class="sec-t">Agent 8纬度全面扫描</div>
+  <div class="sec-hint">每纬度识别问题/机会/风险 · 数据来源:Kantar 25Q3 + 内部CRM + 50人在岗数据</div>
+
+  <div class="cube-grid">
+    <div class="cube-cell problem">
+      <div class="cube-hdr">
+        <div class="cube-dim">📍 区域</div>
+        <div class="cube-tags">
+          <span class="cube-type problem">PROBLEM</span>
+          <span class="cube-sev">HIGH</span>
+        </div>
+      </div>
+      <div class="cube-find">16区中5个重点区(陆家嘴/徐汇/静安/长宁/浦东)贡献65%上海销售·这5区正是Kantar下滑最严重的·非核心区(闵行/杨浦/普陀)相对稳定</div>
+      <div class="cube-data">重点5区-22% vs 非核心5区-8%</div>
+    </div>
+
+    <div class="cube-cell problem">
+      <div class="cube-hdr">
+        <div class="cube-dim">🏷 品牌</div>
+        <div class="cube-tags">
+          <span class="cube-type problem">PROBLEM</span>
+          <span class="cube-sev">HIGH</span>
+        </div>
+      </div>
+      <div class="cube-find">六月鲜在上海的品牌心智被<strong>千禾"零添加"营销挤压</strong>·高端场景联想从'鲜'转向'健康'·品牌资产贬值中</div>
+      <div class="cube-data">上海消费者认知调研缺失(最后一次:2024)</div>
+    </div>
+
+    <div class="cube-cell opportunity">
+      <div class="cube-hdr">
+        <div class="cube-dim">🚚 渠道</div>
+        <div class="cube-tags">
+          <span class="cube-type opportunity">OPPORTUNITY</span>
+          <span class="cube-sev">HIGH</span>
+        </div>
+      </div>
+      <div class="cube-find">传统大卖场-28%·但新渠道(山姆/胖东来/盒马/叮咚)欣和渗透仅0.6-3%·海天59%·<strong>渠道迁移中我方掉队</strong></div>
+      <div class="cube-data">Kantar高端KA:山姆+96% / 胖东来+77% / 盒马+38%</div>
+    </div>
+
+    <div class="cube-cell risk">
+      <div class="cube-hdr">
+        <div class="cube-dim">💰 价格</div>
+        <div class="cube-tags">
+          <span class="cube-type risk">RISK</span>
+          <span class="cube-sev">HIGH</span>
+        </div>
+      </div>
+      <div class="cube-find">均价¥19.16·距RED01红线¥17仅¥2.16·部分门店已出现¥17.50促销价·<strong>价格防线正在瓦解</strong></div>
+      <div class="cube-data">距红线2.16元 · 季度降价速率¥0.4/季</div>
+    </div>
+
+    <div class="cube-cell opportunity">
+      <div class="cube-hdr">
+        <div class="cube-dim">📦 SKU/规格</div>
+        <div class="cube-tags">
+          <span class="cube-type opportunity">OPPORTUNITY</span>
+          <span class="cube-sev">MID</span>
+        </div>
+      </div>
+      <div class="cube-find">300-699ml家庭装在上海下滑最快(-22%)·但<strong>&lt;300ml小规格(礼品/单人家庭)在上海逆势+8%</strong>·被我方忽视</div>
+      <div class="cube-data">&lt;300ml上海渗透20.6% · 品类均值20.6% · 但我方未重点铺</div>
+    </div>
+
+    <div class="cube-cell problem">
+      <div class="cube-hdr">
+        <div class="cube-dim">👥 人员</div>
+        <div class="cube-tags">
+          <span class="cube-type problem">PROBLEM</span>
+          <span class="cube-sev">HIGH</span>
+        </div>
+      </div>
+      <div class="cube-find">上海15.5个增长官中·童鑫/富华(城市经理·办公室派)客户在岗率&lt;48%·他们负责的徐汇/陆家嘴正是下滑主区·<strong>执行者不在战场</strong></div>
+      <div class="cube-data">上海管理层客户在岗率平均46% · 一线平均88%</div>
+    </div>
+
+    <div class="cube-cell problem">
+      <div class="cube-hdr">
+        <div class="cube-dim">⏱ 时间</div>
+        <div class="cube-tags">
+          <span class="cube-type problem">PROBLEM</span>
+          <span class="cube-sev">MID</span>
+        </div>
+      </div>
+      <div class="cube-find">下滑从2025年Q1开始·加速于Q2-Q3·正好与千禾上海电梯广告投放同步·<strong>1年前已有信号但没人盯</strong></div>
+      <div class="cube-data">2025Q1-Q3累计-15% · 本可在Q2介入</div>
+    </div>
+
+    <div class="cube-cell risk">
+      <div class="cube-hdr">
+        <div class="cube-dim">⚔ 竞品</div>
+        <div class="cube-tags">
+          <span class="cube-type risk">RISK</span>
+          <span class="cube-sev">HIGH</span>
+        </div>
+      </div>
+      <div class="cube-find">千禾上海分公司2024年成立·人员从30扩到80·专打零添加+中高端·<strong>他们在组织层面已领先我方一个身位</strong></div>
+      <div class="cube-data">千禾上海团队80人 vs 我方15.5增长官</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 02 穿透洞察 ═══ -->
+<div class="section">
+  <div class="sec-num">02 / INSIGHTS · 穿透洞察</div>
+  <div class="sec-t">问题中找机会 · 机会中找风险</div>
+  <div class="sec-hint">Agent立方体跨纬度交叉·找出别人看不见的可能性</div>
+
+  <div class="insight-grid">
+    <div class="insight-col problem-opp">
+      <div class="insight-hdr"><span class="ic">🔍</span>问题中的机会</div>
+      
+      <div class="insight-item">
+        <span class="a">传统大卖场-28%快速萎缩</span>
+        <span class="arr">→</span>
+        <span class="b">资源从衰退渠道撤出·转投山姆/胖东来/盒马3个+96%/+77%/+38%的高增渠道·用战略聚焦换机会窗口</span>
+      </div>
+      
+      <div class="insight-item">
+        <span class="a">上海管理层客户在岗率<48%</span>
+        <span class="arr">→</span>
+        <span class="b">借此淘汰2-3个办公室派管理者·腾出编制给一线增长官·上海一线从15.5人扩到25人·组织密度追平千禾</span>
+      </div>
+      
+      <div class="insight-item">
+        <span class="a">千禾零添加心智占领</span>
+        <span class="arr">→</span>
+        <span class="b">我方有机/鲜酱油子类真实数据更好(有机渗透6.5% vs 千禾2.1%)·但没讲过故事·启动上海有机专场营销</span>
+      </div>
+      
+      <div class="insight-item">
+        <span class="a">上海均价-4.9%接近红线</span>
+        <span class="arr">→</span>
+        <span class="b">反向操作:小规格<300ml定价¥25+·单升价反而更高·抬均价同时打开新场景(礼品/单人/尝鲜)</span>
+      </div>
+    </div>
+
+    <div class="insight-col opp-risk">
+      <div class="insight-hdr"><span class="ic">⚠</span>机会中的风险</div>
+      
+      <div class="insight-item">
+        <span class="a">山姆/胖东来等高增KA进入</span>
+        <span class="arr">→</span>
+        <span class="b">海天占山姆59%·进入需抢货架·初期铺货成本高·若阶段一不能站稳第二品牌位置·后进者永远出不来</span>
+      </div>
+      
+      <div class="insight-item">
+        <span class="a">淘汰管理层扩一线</span>
+        <span class="arr">→</span>
+        <span class="b">可能引发工会/HR合规风险·需确保淘汰规则合法·且前80%看得见激励而非只看到恐惧</span>
+      </div>
+      
+      <div class="insight-item">
+        <span class="a">小规格逆势增长</span>
+        <span class="arr">→</span>
+        <span class="b">产能是否跟得上?上海合肥经销商已反馈鲜酱油500ml断货·小规格若爆发·可能再次断供伤客户</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 03 动作清单 ═══ -->
+<div class="section">
+  <div class="sec-num">03 / ACTIONS · Agent派单清单</div>
+  <div class="sec-t">8条动作 · 直达具体人</div>
+  <div class="sec-hint">每条动作带积分价值·完成后自动涨GAME 2价值评价·中层0干预</div>
+
+  <div class="action-grid">
+
+    <div class="action-card high">
+      <div class="action-hdr">
+        <div>
+          <div class="action-id">SH-A001</div>
+          <div class="action-target">▸ <strong>上海大区总·冯磊</strong></div>
+        </div>
+        <div class="action-meta-row">
+          <span class="action-priority high">紧急</span>
+          <span class="action-points">💰 +100</span>
+        </div>
+      </div>
+      <div class="action-what">48小时内提交《上海重点5区驻点改造方案》:童鑫/富华2位城市经理改为客户驻点·每周至少4天在门店·客户在岗率<70%自动进入下周淘汰池审议</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>48h</div>
+        <div><strong>SUCCESS</strong>方案提交+童鑫/富华书面确认驻点计划</div>
+      </div>
+      <div class="action-rat"><strong>为什么派这条:</strong>执行者不在战场是下滑首因·必须先解决人的位置问题·48小时给经营层信号:管理层不例外</div>
+    </div>
+
+    <div class="action-card high">
+      <div class="action-hdr">
+        <div>
+          <div class="action-id">SH-A002</div>
+          <div class="action-target">▸ <strong>上海5个重点区增长官(王五/葛洪/吴芳/孙琪/张三)</strong></div>
+        </div>
+        <div class="action-meta-row">
+          <span class="action-priority high">紧急</span>
+          <span class="action-points">💰 +80</span>
+        </div>
+      </div>
+      <div class="action-what">本周R3完成5区KA驻店盘点:每区Top 10门店(50家)拍照+动销数据+竞品陈列上报·通过企微App直接入Agent立方体</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>本周日24:00</div>
+        <div><strong>SUCCESS</strong>50家门店数据入库·每家至少3张照片+1段30秒语音</div>
+      </div>
+      <div class="action-rat"><strong>为什么派这条:</strong>没有门店级实时数据·Agent立方体就是瞎子·本周必须把上海最重要50家的真实场景拉进系统</div>
+    </div>
+
+    <div class="action-card high">
+      <div class="action-hdr">
+        <div>
+          <div class="action-id">SH-A003</div>
+          <div class="action-target">▸ <strong>渠道VP · 市场VP 联合</strong></div>
+        </div>
+        <div class="action-meta-row">
+          <span class="action-priority high">紧急</span>
+          <span class="action-points">💰 +300</span>
+        </div>
+      </div>
+      <div class="action-what">本GAME剩余9周:启动山姆/胖东来/盒马3渠道进入战役·目标本GAME末山姆+1.5%份额·胖东来+2%·盒马进入谈判阶段</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>GAME 2末(2026.06.30)</div>
+        <div><strong>SUCCESS</strong>山姆SKU实际铺货+销售数据/胖东来谈成+铺货/盒马达成框架协议</div>
+      </div>
+      <div class="action-rat"><strong>为什么派这条:</strong>上海失去的市场必须从新渠道补回来·传统KA-28%无法挽回·此战是整个Phase 1立足的关键战役</div>
+    </div>
+
+    <div class="action-card high">
+      <div class="action-hdr">
+        <div>
+          <div class="action-id">SH-A004</div>
+          <div class="action-target">▸ <strong>价格管控组 · 财务VP</strong></div>
+        </div>
+        <div class="action-meta-row">
+          <span class="action-priority high">紧急</span>
+          <span class="action-points">💰 +120</span>
+        </div>
+      </div>
+      <div class="action-what">本周启动上海价格红线预警机制:任何门店零售价<¥18自动触发企微警报至区增长官+城市经理+大区总三层·24h内必须回执原因及处置</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>72h机制上线</div>
+        <div><strong>SUCCESS</strong>自动预警系统运行·当周至少识别3起价格破线事件并全部处置</div>
+      </div>
+      <div class="action-rat"><strong>为什么派这条:</strong>¥17红线距今¥2.16·季度下滑¥0.4·如不干预3个GAME后必破·本GAME必须建立预警</div>
+    </div>
+
+    <div class="action-card mid">
+      <div class="action-hdr">
+        <div>
+          <div class="action-id">SH-A005</div>
+          <div class="action-target">▸ <strong>产品VP · 上海市场部</strong></div>
+        </div>
+        <div class="action-meta-row">
+          <span class="action-priority mid">高</span>
+          <span class="action-points">💰 +180</span>
+        </div>
+      </div>
+      <div class="action-what">本GAME末上市上海专属小规格(<300ml)3个SKU:六月鲜特级鲜酱油200ml(定价¥28)/有机豉油150ml(定价¥32)/小厨师系列单人份×6盒(¥55)·针对单身/礼赠/尝鲜3场景</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>GAME 2末</div>
+        <div><strong>SUCCESS</strong>3 SKU上市·上海Top 50门店全铺·首月销售10万元</div>
+      </div>
+      <div class="action-rat"><strong>为什么派这条:</strong>小规格逆势增长是Kantar给的机会信号·抬均价+开新场景·一石二鸟</div>
+    </div>
+
+    <div class="action-card high">
+      <div class="action-hdr">
+        <div>
+          <div class="action-id">SH-A006</div>
+          <div class="action-target">▸ <strong>HR VP</strong></div>
+        </div>
+        <div class="action-meta-row">
+          <span class="action-priority high">紧急</span>
+          <span class="action-points">💰 +150</span>
+        </div>
+      </div>
+      <div class="action-what">本周完成上海管理层价值评价复盘:5位城市经理/区域经理·以'客户在岗率+下属业绩+GAME 1贡献'三维度打分·推进2-3人岗位调整(转一线或离岗)</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>本周日24:00</div>
+        <div><strong>SUCCESS</strong>5人评价报告+CEO约谈纪要+调整决定书面记录</div>
+      </div>
+      <div class="action-rat"><strong>为什么派这条:</strong>躺平者不被处理·其他人看不到机制·敬畏心立不起来·必须在本GAME用上海做标杆</div>
+    </div>
+
+    <div class="action-card mid">
+      <div class="action-hdr">
+        <div>
+          <div class="action-id">SH-A007</div>
+          <div class="action-target">▸ <strong>市场VP · 上海总部</strong></div>
+        </div>
+        <div class="action-meta-row">
+          <span class="action-priority mid">高</span>
+          <span class="action-points">💰 +200</span>
+        </div>
+      </div>
+      <div class="action-what">发起《上海有机/鲜酱油健康心智战役》:针对千禾零添加叙事·用六月鲜真实有机数据(渗透6.5% vs 千禾2.1%)做上海地铁+楼宇+小红书组合投放·GAME 2末测效</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>2周启动·GAME末测效</div>
+        <div><strong>SUCCESS</strong>投放上线·本GAME末上海有机子类销售+15%·品牌健康度调研启动</div>
+      </div>
+      <div class="action-rat"><strong>为什么派这条:</strong>千禾心智是组织层面威胁·不还击等于默认退让·我方有数据优势但没讲故事</div>
+    </div>
+
+    <div class="action-card mid">
+      <div class="action-hdr">
+        <div>
+          <div class="action-id">SH-A008</div>
+          <div class="action-target">▸ <strong>Agent自身(定时任务)</strong></div>
+        </div>
+        <div class="action-meta-row">
+          <span class="action-priority mid">高</span>
+          <span class="action-points">💰 +50</span>
+        </div>
+      </div>
+      <div class="action-what">从R4起·每周R末对上海KPI做立方体复扫:对比上周·识别新问题/新机会/新风险·Agent自动在CEO视图feed推送·无需人工提醒</div>
+      <div class="action-details">
+        <div><strong>DEADLINE</strong>R4起持续至GAME末</div>
+        <div><strong>SUCCESS</strong>9周连续自动复扫报告·每份都有可执行动作</div>
+      </div>
+      <div class="action-rat"><strong>为什么派这条:</strong>治本之道不是一次诊断·是持续监控+自动反应·Agent负责不掉线</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ 04 影响预测 ═══ -->
+<div class="section">
+  <div class="sec-num">04 / IMPACT · GAME 2结束时影响预测</div>
+  <div class="sec-t">三档情境 · 数字不含糊</div>
+  <div class="sec-hint">Agent已知当前执行能力·给出三种执行程度下的9周后结果</div>
+
+  <div class="impact-grid">
+    <div class="impact-box full">
+      <div class="impact-lbl">全部执行(8条)</div>
+      <div class="impact-text">
+        <strong>9周后预期:</strong><br>
+        上海销售从<strong>-18.2%收窄到-8%</strong><br>
+        双重恶化止住<br>
+        渗透率回升到<strong>42%+</strong><br>
+        为GAME 3反攻建立根据地<br><br>
+        <strong>公司价值总盘+800万积分</strong>(等值50人均+16K价值)
+      </div>
+    </div>
+
+    <div class="impact-box half">
+      <div class="impact-lbl">部分执行(A1+A2)</div>
+      <div class="impact-text">
+        <strong>9周后预期:</strong><br>
+        止住下滑但不能反攻<br>
+        销售从<strong>-18%→-12%</strong><br>
+        Phase 1推迟1个GAME<br>
+        需GAME 3继续补救<br><br>
+        需要CEO下季度追加动作
+      </div>
+    </div>
+
+    <div class="impact-box zero">
+      <div class="impact-lbl">不执行(保持现状)</div>
+      <div class="impact-text">
+        <strong>9周后预期:</strong><br>
+        上海持续<strong>-18%以上</strong><br>
+        Phase 1立足失败<br>
+        100亿路径第一年偏离>30%<br>
+        9年大战役Phase 2起点不稳<br><br>
+        <strong>相当于输掉奥运开局</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CEO升级 -->
+<div class="escalation-box">
+  <div class="esc-lbl">▲ ESCALATION TO CEO · 需CEO亲自决策</div>
+  <div class="esc-title"><span>SH-A006 · 淘汰2-3位上海管理层</span><br>是否本GAME真执行?</div>
+  <div class="esc-body">
+    这是INFINITY OS"<strong>后10%淘汰</strong>"机制首次真刀真枪启用·一旦启动全公司都看见·CEO需个人背书·否则HR会受阻·机制流产。
+    <br><br>
+    <strong>如果CEO同意启动</strong>:
+    后10%规则第一次落地成功·建立机制威信·前80%自动努力·6条铁律中的"后10%淘汰"从纸面变成现实·激励系统闭环。
+    <br><br>
+    <strong>如果CEO推迟</strong>:
+    SH-A006换成"转岗而非离岗"版·仍有信号作用·但威慑力大打折扣·其他省管理层会观望·淘汰机制变成纸老虎。
+    <br><br>
+    <strong>CEO请在72小时内给Agent明确倾向·Agent据此调整SH-A001/A006执行强度。</strong>
+  </div>
+</div>
+
+<div class="next-game">
+  <strong>▸ NEXT GAME PREVIEW · GAME 3(2026 Q3)预告:</strong><br>
+  如本GAME完成SH-A001到A008·重点转向:
+  ① 山姆/胖东来铺货放量
+  ② 小规格全国推广验证
+  ③ 淘汰机制第二批启动(苏州/杭州管理层)
+  · Phase 1进度从60%推到75%
+</div>
+
+<div class="footer">
+  INFINITY OS · Agent实战第1天 · <span>SH-DIAG-001</span><br>
+  Agent v0.3 · 真实JSON输出渲染 · 2026.04.20 · DS<br>
+  <span>这不是演示·这是Agent的第一份真实战斗报告 · 直接交市场VP·上海大区总·各区增长官</span>
+</div>
+
+</body>
+</html>
