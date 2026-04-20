@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 味达美 · 餐饮侧</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08090d;--bg2:#0d0f15;--bg3:#11141c;
+  --card:#141820;--card2:#1a1f2b;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;
+  /* 餐饮主色：冷钢青·后厨专业感·区别于消费者版的暖金橙 */
+  --teal:#4ecdc4;--teal2:#7ee8e0;--teal-dim:rgba(78,205,196,0.1);
+  --amber:#f5a623;--red:#ff5f5f;--green:#4ade80;
+  --blue:#60a5fa;--purple:#a78bfa;
+  --wp:#a78bfa;--ri:#4ecdc4;--bht:#60a5fa;
+  /* F侧专属：餐饮自建数据源标识 */
+  --self:#ff8c42;--self-dim:rgba(255,140,66,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+
+.topbar{position:sticky;top:0;z-index:100;background:rgba(8,9,13,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-sym{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#4ecdc4,#2a8a84);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000;box-shadow:0 3px 12px rgba(78,205,196,0.3)}
+.logo-text{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.05em}
+.logo-text span{color:var(--teal)}
+.brand-pill{display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:10px;color:var(--text2);font-family:'Space Mono',monospace}
+.brand-pill-dot{width:6px;height:6px;border-radius:50%;background:var(--teal)}
+.side-pill{background:rgba(78,205,196,0.15);color:var(--teal);border:1px solid rgba(78,205,196,0.3);padding:2px 8px;border-radius:10px;font-size:10px;font-family:'Space Mono',monospace;letter-spacing:0.05em;font-weight:700}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);flex:1;justify-content:center}
+.bc-sep{color:var(--text3);opacity:0.5}
+.bc-link{cursor:pointer;transition:color 0.2s}
+.bc-link:hover{color:var(--text2)}
+.bc-cur{color:var(--text2)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.clock{font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)}
+.back-pill{background:var(--card2);border:1px solid var(--border2);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text2);cursor:pointer;transition:all 0.2s;white-space:nowrap;display:flex;align-items:center;gap:4px}
+.back-pill:hover{background:var(--card);color:var(--text)}
+
+.screen{display:none;animation:fadeUp 0.22s ease}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.home-hero{padding:24px 16px 16px;text-align:center}
+.home-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin-bottom:4px}
+.home-title span{color:var(--teal)}
+.home-sub{font-size:12px;color:var(--text3);font-family:'Space Mono',monospace}
+.home-positioning{display:inline-block;margin-top:8px;padding:4px 10px;background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.2);border-radius:12px;font-size:10px;color:var(--teal);letter-spacing:0.05em}
+
+.three-step-banner{margin:14px 16px 0;padding:10px 14px;background:linear-gradient(90deg,rgba(245,166,35,0.04) 0%,rgba(78,205,196,0.08) 50%,rgba(167,139,250,0.04) 100%);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:8px;font-size:11px}
+.step-badge{padding:2px 8px;border-radius:8px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700}
+.step-badge-done{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,0.3)}
+.step-badge-current{background:rgba(78,205,196,0.2);color:var(--teal);border:1px solid var(--teal)}
+.step-badge-pending{background:rgba(255,255,255,0.05);color:var(--text3)}
+.step-text{color:var(--text3);font-size:11px;flex:1}
+
+/* Critical warning banner for F-side's unique challenge */
+.kantar-blind-warn{
+  margin:12px 16px 0;padding:12px 14px;
+  background:linear-gradient(135deg,rgba(255,95,95,0.08),rgba(255,140,66,0.04));
+  border:1px solid rgba(255,95,95,0.25);border-radius:12px;
+}
+.kbw-title{font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.kbw-body{font-size:11px;color:var(--text2);line-height:1.6}
+.kbw-body strong{color:var(--self)}
+
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:16px}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center}
+.stat-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1}
+.stat-lbl{font-size:10px;color:var(--text3);margin-top:3px;line-height:1.3}
+.c-amber{color:var(--amber)} .c-teal{color:var(--teal)} .c-green{color:var(--green)} .c-red{color:var(--red)} .c-purple{color:var(--purple)} .c-self{color:var(--self)}
+
+.cat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 16px 12px}
+@media(min-width:600px){.cat-grid{grid-template-columns:repeat(3,1fr)}}
+.cat-card{border-radius:16px;padding:18px 16px 14px;cursor:pointer;transition:transform 0.2s;position:relative;overflow:hidden;min-height:130px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid rgba(255,255,255,0.05)}
+.cat-card:active{transform:scale(0.97)}
+.cat-card::after{content:'›';position:absolute;bottom:14px;right:14px;font-size:18px;opacity:0.3}
+.cat-icon{font-size:26px;margin-bottom:8px;display:block}
+.cat-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:3px}
+.cat-sub{font-size:10px;opacity:0.6;line-height:1.4;margin-bottom:8px}
+.cat-score{font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
+.cat-score-lbl{font-size:9px;opacity:0.5;margin-left:2px}
+.cat-badge{position:absolute;top:10px;right:10px;font-size:9px;padding:2px 6px;border-radius:8px;font-family:'Space Mono',monospace}
+.cat-badge.shared{background:rgba(167,139,250,0.2);color:var(--purple);border:1px solid rgba(167,139,250,0.3)}
+.cat-badge.blind{background:rgba(255,95,95,0.2);color:var(--red);border:1px solid rgba(255,95,95,0.3)}
+
+/* 餐饮主题配色 - 冷色系·钢青/深蓝 */
+.gc-shared{background:linear-gradient(135deg,#181428 0%,#241e45 50%,#1a1530 100%)}
+.gc-lianheng-f{background:linear-gradient(135deg,#0a1f1d 0%,#0f302d 50%,#0a201e 100%)}
+.gc-paths{background:linear-gradient(135deg,#0a1822 0%,#12283a 50%,#0c1c2a 100%)}
+.gc-chef{background:linear-gradient(135deg,#1a1108 0%,#2a1a0c 50%,#1a0f05 100%)}
+.gc-bd{background:linear-gradient(135deg,#0f1a1d 0%,#152629 50%,#0d1a1e 100%)}
+
+.home-section{padding:0 16px 14px}
+.sec-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px}
+
+.brain-banner{background:linear-gradient(135deg,rgba(78,205,196,0.07) 0%,rgba(255,140,66,0.04) 100%);border:1px solid rgba(78,205,196,0.18);border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color 0.2s}
+.brain-banner:hover{border-color:rgba(78,205,196,0.35)}
+.brain-banner-icon{font-size:28px;flex-shrink:0}
+.brain-banner-title{font-size:14px;font-weight:700;margin-bottom:2px}
+.brain-banner-sub{font-size:11px;color:var(--text3);line-height:1.4}
+.brain-banner-cta{font-size:11px;color:var(--teal);margin-top:6px}
+
+.link-banner{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all 0.15s}
+.link-banner:hover{background:var(--card2);border-color:var(--border2)}
+.link-banner-c{border-left:3px solid var(--amber)}
+.link-banner-icon{font-size:22px;flex-shrink:0;opacity:0.85}
+.link-banner-title{font-size:13px;font-weight:700;margin-bottom:2px;color:var(--amber)}
+.link-banner-sub{font-size:10px;color:var(--text3);line-height:1.5}
+.link-banner-arrow{margin-left:auto;color:var(--text3);font-size:18px}
+
+.fusion-banner{background:linear-gradient(135deg,rgba(167,139,250,0.06),rgba(78,205,196,0.04));border:1px dashed rgba(167,139,250,0.25);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px}
+.fusion-banner-icon{font-size:24px;flex-shrink:0;opacity:0.7}
+.fusion-banner-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:2px}
+.fusion-banner-sub{font-size:10px;color:var(--text3);line-height:1.5}
+.fusion-status{font-size:9px;padding:2px 7px;border-radius:8px;background:rgba(255,255,255,0.05);color:var(--text3);font-family:'Space Mono',monospace;margin-left:auto;flex-shrink:0}
+
+/* Data source tags */
+.ds-tag{display:inline-block;font-size:9px;padding:1px 5px;border-radius:6px;font-family:'Space Mono',monospace;letter-spacing:0.03em;margin-left:4px;vertical-align:middle}
+.ds-wp{background:rgba(167,139,250,0.12);color:var(--wp);border:1px solid rgba(167,139,250,0.25)}
+.ds-ri{background:rgba(78,205,196,0.12);color:var(--ri);border:1px solid rgba(78,205,196,0.25)}
+.ds-bht{background:rgba(96,165,250,0.12);color:var(--bht);border:1px solid rgba(96,165,250,0.25)}
+.ds-sap{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,0.25)}
+.ds-hx{background:rgba(245,166,35,0.1);color:var(--amber);border:1px solid rgba(245,166,35,0.25)}
+.ds-self{background:rgba(255,140,66,0.12);color:var(--self);border:1px solid rgba(255,140,66,0.3);font-weight:700}
+.ds-shared{background:rgba(167,139,250,0.12);color:var(--purple);border:1px solid rgba(167,139,250,0.3)}
+.ds-todo{background:rgba(255,95,95,0.1);color:var(--red);border:1px solid rgba(255,95,95,0.2)}
+
+/* Category screen */
+.cat-screen-hdr{padding:16px 16px 8px;display:flex;align-items:center;gap:10px}
+.cat-big-icon{font-size:28px}
+.cat-hdr-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:700}
+.cat-hdr-sub{font-size:11px;color:var(--text3)}
+
+.agent-list{padding:0 16px;display:flex;flex-direction:column;gap:6px}
+.agent-row{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all 0.18s;position:relative}
+.agent-row:hover,.agent-row:active{background:var(--card2);border-color:var(--border2);transform:translateX(2px)}
+.agent-row.shared{border-left:3px solid var(--purple)}
+.agent-row.self-built{border-left:3px solid var(--self)}
+.agent-emoji{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.agent-info{flex:1;min-width:0}
+.agent-name{font-size:14px;font-weight:600;margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.agent-shared-dot{font-size:9px;padding:1px 5px;border-radius:5px;background:rgba(167,139,250,0.15);color:var(--purple);font-family:'Space Mono',monospace;font-weight:400}
+.agent-self-dot{font-size:9px;padding:1px 5px;border-radius:5px;background:rgba(255,140,66,0.15);color:var(--self);font-family:'Space Mono',monospace;font-weight:400}
+.agent-tag{font-size:10px;color:var(--teal);margin-bottom:3px}
+.agent-desc{font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-score-col{flex-shrink:0;text-align:right}
+.agent-score{font-family:'Syne',sans-serif;font-size:20px;font-weight:800}
+.agent-milestone{font-size:10px;color:var(--text3);margin-top:1px}
+.score-bar{width:40px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-top:4px;margin-left:auto}
+.score-fill{height:100%;border-radius:2px;background:var(--teal)}
+
+/* Agent detail */
+.detail-wrap{padding:12px 16px 32px;display:flex;flex-direction:column;gap:10px}
+.detail-hero{border-radius:16px;padding:18px;position:relative;overflow:hidden;background:linear-gradient(135deg,#141820 0%,#1a1f2b 100%);border:1px solid var(--border2)}
+.detail-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),transparent)}
+.detail-hero.shared::before{background:linear-gradient(90deg,var(--purple),var(--teal))}
+.detail-hero.self-built::before{background:linear-gradient(90deg,var(--self),var(--teal))}
+.detail-hero-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.detail-score-big{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--teal);line-height:1}
+.detail-score-lbl{font-size:10px;color:var(--text3)}
+.detail-emoji{font-size:32px;margin-bottom:8px;display:block}
+.detail-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.detail-sub{font-size:12px;color:var(--teal);margin-bottom:8px}
+.detail-desc{font-size:12px;color:var(--text2);line-height:1.65}
+.detail-progress{height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-top:12px}
+.detail-progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--teal),var(--teal2))}
+
+.shared-notice{margin-top:10px;padding:8px 10px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);border-radius:8px;font-size:11px;color:var(--text2);line-height:1.5}
+.shared-notice strong{color:var(--purple)}
+.self-notice{margin-top:10px;padding:8px 10px;background:rgba(255,140,66,0.08);border:1px solid rgba(255,140,66,0.2);border-radius:8px;font-size:11px;color:var(--text2);line-height:1.5}
+.self-notice strong{color:var(--self)}
+
+.section-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+.section-hdr{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.section-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.milestone-row{display:flex;gap:4px;margin-bottom:8px}
+.ms-step{flex:1;border-radius:8px;padding:7px 4px;text-align:center;font-size:9px;font-weight:600;line-height:1.2;border:1px solid rgba(255,255,255,0.06);color:var(--text3);background:rgba(255,255,255,0.03);transition:all 0.2s}
+.ms-step.done{background:rgba(255,255,255,0.06);color:var(--text2);border-color:rgba(255,255,255,0.1)}
+.ms-step.done::before{content:'✓ ';color:var(--green)}
+.ms-step.current{border-color:var(--teal);color:var(--teal);background:rgba(78,205,196,0.1);font-weight:700}
+.ms-step.current-red{border-color:var(--red);color:var(--red);background:rgba(255,95,95,0.1);font-weight:700}
+.ms-step.current-self{border-color:var(--self);color:var(--self);background:rgba(255,140,66,0.1);font-weight:700}
+.ms-hint{font-size:11px;color:var(--teal)}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.kpi-box{background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--border)}
+.kpi-label{font-size:10px;color:var(--text3);margin-bottom:4px}
+.kpi-val{font-size:14px;font-weight:700;line-height:1.2}
+.kpi-val.good{color:var(--green)}.kpi-val.warn{color:var(--amber)}.kpi-val.bad{color:var(--red)}
+.kpi-box.bad-bg{background:rgba(255,95,95,0.04);border-color:rgba(255,95,95,0.12)}
+.kpi-box.good-bg{background:rgba(74,222,128,0.04);border-color:rgba(74,222,128,0.12)}
+
+.gap-list{display:flex;flex-direction:column;gap:8px}
+.gap-title{font-size:12px;font-weight:700;color:var(--red);margin-bottom:8px}
+.gap-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text2);line-height:1.5}
+.gap-dot{width:6px;height:6px;border-radius:50%;border:1.5px solid var(--red);flex-shrink:0;margin-top:5px}
+
+.chat-section{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.chat-hdr{padding:12px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.chat-agent-name{color:var(--teal);font-size:12px}
+.chat-presets{display:flex;gap:6px;padding:10px 12px;overflow-x:auto;scrollbar-width:none}
+.chat-presets::-webkit-scrollbar{display:none}
+.preset-chip{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;transition:all 0.15s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.preset-chip:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-dim)}
+.chat-bubble{margin:0 12px 10px;background:var(--bg3);border-radius:12px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.6;border:1px solid var(--border)}
+.chat-input-row{display:flex;gap:6px;padding:8px 12px 12px}
+.chat-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text);font-family:'Noto Sans SC',sans-serif;outline:none}
+.chat-input:focus{border-color:var(--teal)}
+.chat-input::placeholder{color:var(--text3)}
+.chat-send{width:38px;height:38px;border-radius:10px;background:var(--teal);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#000;transition:all 0.15s;flex-shrink:0;font-weight:700}
+.chat-send:hover{background:var(--teal2)}
+.chat-response{display:none;margin:0 12px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.chat-response.show{display:block}
+.chat-q-echo{font-size:10px;color:var(--text3);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.thinking{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:td 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* Brain */
+.brain-screen{padding:16px}
+.brain-hdr{background:linear-gradient(135deg,rgba(78,205,196,0.07),rgba(255,140,66,0.04));border:1px solid rgba(78,205,196,0.18);border-radius:16px;padding:20px;text-align:center;margin-bottom:14px}
+.brain-icon{font-size:40px;margin-bottom:8px}
+.brain-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px}
+.brain-sub{font-size:12px;color:var(--text3)}
+.brain-input-row{display:flex;gap:8px;margin-bottom:14px}
+.brain-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif}
+.brain-input:focus{border-color:var(--teal)}
+.brain-input::placeholder{color:var(--text3)}
+.brain-send{width:46px;height:46px;border-radius:12px;background:var(--teal);border:none;display:flex;align-items:center;justify-content:center;font-size:18px;color:#000;cursor:pointer;transition:all 0.2s;flex-shrink:0;font-weight:700}
+.brain-send:hover{background:var(--teal2)}
+.brain-response{display:none;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;color:var(--text2);line-height:1.7}
+.brain-response.show{display:block}
+.brain-q-echo{font-size:11px;color:var(--text3);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.qq-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.qq-btn{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text2);text-align:left;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.15s;font-family:'Noto Sans SC',sans-serif}
+.qq-btn:hover{border-color:var(--teal);color:var(--text);background:var(--teal-dim)}
+.qq-em{font-size:14px;flex-shrink:0}
+
+.kb-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:8px}
+.kb-hdr{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background 0.15s}
+.kb-hdr:hover{background:rgba(255,255,255,0.02)}
+.kb-hdr-l{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+.kb-arrow{color:var(--text3);font-size:12px;transition:transform 0.2s}
+.kb-card.open .kb-arrow{transform:rotate(180deg)}
+.kb-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}
+.kb-card.open .kb-body{display:block}
+.kb-text{font-size:12px;color:var(--text2);line-height:1.7;padding-top:12px}
+.kb-tbl{width:100%;border-collapse:collapse;margin-top:10px;font-size:11px}
+.kb-tbl th{background:rgba(255,255,255,0.04);color:var(--text3);padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600}
+.kb-tbl td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text2)}
+.kb-tbl tr:last-child td{border:none}
+.win{color:var(--green);font-weight:600}.gap-t{color:var(--red);font-weight:600}.par{color:var(--teal);font-weight:600}.self-t{color:var(--self);font-weight:600}
+
+.pb{padding-bottom:20px}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-row">
+    <div class="logo-sym">∞</div>
+    <div><div class="logo-text">INFINITY <span>OS</span></div></div>
+    <div class="brand-pill"><div class="brand-pill-dot"></div><span>味达美</span></div>
+    <div class="side-pill">FOODSERVICE</div>
+  </div>
+  <div class="breadcrumb" id="breadcrumb"></div>
+  <div class="topbar-right">
+    <div class="clock" id="clock"></div>
+    <div class="back-pill" id="backBtn" onclick="goBack()" style="display:none">← 返回</div>
+  </div>
+</div>
+
+<!-- ══ HOME ══ -->
+<div class="screen active" id="screen-home">
+  <div class="home-hero">
+    <div class="home-title">味达美 · <span>餐饮侧</span></div>
+    <div class="home-sub">Step 2 / 3 · B端基本盘 · 19个Agent</div>
+    <div class="home-positioning">40%下游渠道占比 × 厨界传承 × SAP+汉询+自建驱动</div>
+  </div>
+
+  <div class="three-step-banner">
+    <span class="step-badge step-badge-done">✓ Step 1 · 消费者</span>
+    <span class="step-badge step-badge-current">Step 2 · 当前</span>
+    <span class="step-badge step-badge-pending">Step 3 · 融合</span>
+    <span class="step-text">三步战略：消费者 → 餐饮 → 1+1&gt;2 融合</span>
+  </div>
+
+  <div class="kantar-blind-warn">
+    <div class="kbw-title">⚠️ 核心挑战：Kantar 零覆盖 · F侧独特难题</div>
+    <div class="kbw-body">餐饮B端（味达美40%基本盘）在 Kantar 三条线中<strong>完全盲区</strong>。所有数据必须从 SAP ECC + 汉询SFA + <strong>自建数据库</strong>合成。<strong>这是 F 侧比 C 侧难 5 倍的根源</strong>，也是 Step 2 的核心工作量所在。</div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-box"><div class="stat-val c-teal">19</div><div class="stat-lbl">F侧Agent</div></div>
+    <div class="stat-box"><div class="stat-val c-purple">5</div><div class="stat-lbl">架构共享<span class="ds-tag ds-shared">SHARED</span></div></div>
+    <div class="stat-box"><div class="stat-val c-self">9</div><div class="stat-lbl">需自建数据<span class="ds-tag ds-self">SELF</span></div></div>
+    <div class="stat-box"><div class="stat-val c-amber">40.2%</div><div class="stat-lbl">下游渠道占比</div></div>
+  </div>
+
+  <div class="cat-grid">
+    <div class="cat-card gc-shared" onclick="showCat('shared')">
+      <div class="cat-badge shared">SHARED</div>
+      <span class="cat-icon">🧬</span>
+      <div>
+        <div class="cat-name">架构共享层</div>
+        <div class="cat-sub">5个Agent · 与消费者侧共用机制</div>
+        <div><span class="cat-score c-purple">58</span><span class="cat-score-lbl">平均分</span></div>
+      </div>
+    </div>
+    <div class="cat-card gc-lianheng-f" onclick="showCat('lianheng')">
+      <span class="cat-icon">🔗</span>
+      <div>
+        <div class="cat-name">连横·餐饮链路</div>
+        <div class="cat-sub">5个Agent · B端IPO闭环</div>
+        <div><span class="cat-score c-teal">52</span><span class="cat-score-lbl">平均分</span></div>
+      </div>
+    </div>
+    <div class="cat-card gc-paths" onclick="showCat('paths')">
+      <span class="cat-icon">🛣️</span>
+      <div>
+        <div class="cat-name">餐饮4路径</div>
+        <div class="cat-sub">4个Agent · 连锁/单店/二批/OEM</div>
+        <div><span class="cat-score c-teal">45</span><span class="cat-score-lbl">平均分</span></div>
+      </div>
+    </div>
+    <div class="cat-card gc-chef" onclick="showCat('chef')">
+      <div class="cat-badge blind">BLIND</div>
+      <span class="cat-icon">👨‍🍳</span>
+      <div>
+        <div class="cat-name">厨师·餐饮专属</div>
+        <div class="cat-sub">4个Agent · 菜单/AIQL/CRM/培训</div>
+        <div><span class="cat-score c-red">32</span><span class="cat-score-lbl">平均分</span></div>
+      </div>
+    </div>
+    <div class="cat-card gc-bd" onclick="showCat('bd')">
+      <span class="cat-icon">🚗</span>
+      <div>
+        <div class="cat-name">F侧独有</div>
+        <div class="cat-sub">1个Agent · BD业务员激励</div>
+        <div><span class="cat-score c-amber">48</span><span class="cat-score-lbl">分数</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-section">
+    <div class="brain-banner" onclick="showScreen('brain')">
+      <div class="brain-banner-icon">🧠</div>
+      <div class="brain-banner-text">
+        <div class="brain-banner-title">味达美 餐饮战略大脑</div>
+        <div class="brain-banner-sub">SAP+汉询+自建数据源·餐饮B端经营决策·Step 2专属</div>
+        <div class="brain-banner-cta">点击进入对话 →</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-section">
+    <div class="link-banner link-banner-c">
+      <div class="link-banner-icon">🏠</div>
+      <div>
+        <div class="link-banner-title">Step 1 · 消费者侧</div>
+        <div class="link-banner-sub">已完成·20个Agent·Kantar三线驱动</div>
+      </div>
+      <div class="link-banner-arrow">→</div>
+    </div>
+  </div>
+
+  <div class="home-section">
+    <div class="fusion-banner">
+      <div class="fusion-banner-icon">🔗</div>
+      <div>
+        <div class="fusion-banner-title">Step 3 · 1+1&gt;2 融合指挥台</div>
+        <div class="fusion-banner-sub">Step 2完成后启动·跨侧6类信号仪表盘</div>
+      </div>
+      <div class="fusion-status">待启动</div>
+    </div>
+  </div>
+
+  <div class="pb"></div>
+</div>
+
+<!-- ══ BRAIN ══ -->
+<div class="screen" id="screen-brain">
+  <div class="brain-screen">
+    <div class="brain-hdr">
+      <div class="brain-icon">🧠</div>
+      <div class="brain-title">味达美 · 餐饮战略大脑</div>
+      <div class="brain-sub">B端基本盘·SAP+汉询+自建驱动·Step 2专属</div>
+    </div>
+    <div class="brain-input-row">
+      <input class="brain-input" id="brainInput" placeholder="问餐饮战略大脑任何问题…" />
+      <button class="brain-send" onclick="sendBrain()">→</button>
+    </div>
+    <div class="brain-response" id="brainResp">
+      <div class="brain-q-echo" id="brainQ"></div>
+      <div id="brainA"></div>
+    </div>
+    <div class="sec-title" style="margin-bottom:8px">快捷提问</div>
+    <div class="qq-grid">
+      <button class="qq-btn" onclick="askBrain('F侧19个Agent中哪3个最优先？为什么？')"><span class="qq-em">🎯</span>F侧Top 3 优先推进</button>
+      <button class="qq-btn" onclick="askBrain('Kantar不覆盖餐饮·自建数据库从哪里开始？厨师AIQL/菜单绑定率/连锁CRM优先级？')"><span class="qq-em">🏗️</span>自建数据库启动路径</button>
+      <button class="qq-btn" onclick="askBrain('北方中餐厨师网络是味达美的历史资产·如何数字化变成Agent可用的数据？')"><span class="qq-em">👨‍🍳</span>厨界传承数字化</button>
+      <button class="qq-btn" onclick="askBrain('餐饮4路径（连锁/单店/二批/OEM）哪条路径现金流最好？哪条潜力最大？')"><span class="qq-em">🛣️</span>4路径资源分配</button>
+      <button class="qq-btn" onclick="askBrain('F侧共享层5个Agent的参数与C侧有何差异？双输入机制如何运作？')"><span class="qq-em">🧬</span>共享层F侧参数</button>
+      <button class="qq-btn" onclick="askBrain('F侧独立运行能支撑多少经营决策？Step 3融合前的能力边界？')"><span class="qq-em">⚠️</span>F侧独立能力边界</button>
+    </div>
+    <div class="sec-title" style="margin-bottom:8px">知识库</div>
+
+    <div class="kb-card" id="kb1">
+      <div class="kb-hdr" onclick="toggleKB('kb1')">
+        <div class="kb-hdr-l">⚠️ F侧为什么比C侧难5倍</div>
+        <div class="kb-arrow">▼</div>
+      </div>
+      <div class="kb-body">
+        <div class="kb-text">
+          <strong>核心原因：数据基础从零开始</strong>
+        </div>
+        <table class="kb-tbl">
+          <thead><tr><th>维度</th><th>C侧(消费者)</th><th>F侧(餐饮)</th></tr></thead>
+          <tbody>
+            <tr><td>Kantar覆盖</td><td class="win">✅ 三线全覆盖</td><td class="gap-t">❌ 完全盲区</td></tr>
+            <tr><td>SAP数据</td><td>P1家庭经销商</td><td>P2二批+连锁总部</td></tr>
+            <tr><td>POS/拜访</td><td>汉询SFA零售端</td><td>汉询SFA餐饮端(较弱)</td></tr>
+            <tr><td>消费者画像</td><td>Worldpanel成熟</td><td class="self-t">自建·从零</td></tr>
+            <tr><td>品牌健康度</td><td>BHT成熟</td><td class="self-t">自建厨师口碑</td></tr>
+            <tr><td>价格监测</td><td>Retail Index</td><td class="self-t">自建批发价库</td></tr>
+            <tr><td>关键人物</td><td>家庭主妇(难触达)</td><td class="self-t">厨师/采购(可触达但需建关系)</td></tr>
+          </tbody>
+        </table>
+        <div class="kb-text" style="margin-top:10px">
+          <strong>F侧19个Agent中11个需要自建数据</strong>。这不是写代码的难度，是<strong>数据积累的时间难度</strong>——厨师KOL网络、菜谱库、菜单绑定率这些需要业务团队长期跑出来，不是Java后端能生成的。
+        </div>
+      </div>
+    </div>
+
+    <div class="kb-card" id="kb2">
+      <div class="kb-hdr" onclick="toggleKB('kb2')">
+        <div class="kb-hdr-l">🛣️ 餐饮4路径的战略分工</div>
+        <div class="kb-arrow">▼</div>
+      </div>
+      <div class="kb-body">
+        <table class="kb-tbl">
+          <thead><tr><th>路径</th><th>特征</th><th>味达美策略</th><th>关键Agent</th></tr></thead>
+          <tbody>
+            <tr><td><strong>连锁总部</strong></td><td>集中签约·规模化</td><td>海底捞/真功夫/味千等·战略客户锁定</td><td>连锁总部CRM</td></tr>
+            <tr><td><strong>单店直供</strong></td><td>厨师决策·分散</td><td>北方中餐厨师关系·厨界传承</td><td>厨师AIQL+菜单绑定</td></tr>
+            <tr><td><strong>二批批发</strong></td><td>价格敏感·窜货高危</td><td>P2路径·底价¥10严守</td><td>二批商(共享层)</td></tr>
+            <tr><td><strong>食品加工OEM</strong></td><td>大宗·低毛利</td><td>防御型·产能消化</td><td>生产调度</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="kb-card" id="kb3">
+      <div class="kb-hdr" onclick="toggleKB('kb3')">
+        <div class="kb-hdr-l">🧬 共享层F侧参数说明</div>
+        <div class="kb-arrow">▼</div>
+      </div>
+      <div class="kb-body">
+        <div class="kb-text">
+          <strong>5个共享Agent的F侧输入：</strong>
+        </div>
+        <table class="kb-tbl">
+          <thead><tr><th>Agent</th><th>F侧输入源</th><th>F侧独特参数</th></tr></thead>
+          <tbody>
+            <tr><td>AIO总指挥</td><td>F侧KPI+SAP+自建</td><td>餐饮4路径调度优先级</td></tr>
+            <tr><td>蝴蝶效应</td><td>二批窜货+跨区调货</td><td>F侧C类窜货权重×1.5</td></tr>
+            <tr><td>A值校准</td><td>餐厅月耗自建</td><td>T=菜单绑定周期</td></tr>
+            <tr><td>无菜单推单</td><td>P2二批+连锁总部</td><td>商用1.8L装专属</td></tr>
+            <tr><td>品牌AI顾问</td><td>厨师口碑自建</td><td>AIQL厨师评分体系</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="kb-card" id="kb4">
+      <div class="kb-hdr" onclick="toggleKB('kb4')">
+        <div class="kb-hdr-l">👨‍🍳 厨界传承数字化路径</div>
+        <div class="kb-arrow">▼</div>
+      </div>
+      <div class="kb-body">
+        <div class="kb-text">
+          <strong>味达美的历史独特资产：厨界交流会（线下）</strong><br>
+          欣和依靠厨界交流会启动消费者+架构分销渠道·扎根石家庄·味达美以此在河北市场切入。这是一笔<strong>沉淀在销售团队头脑里的关系资产</strong>，但是——<br><br>
+          <strong>当前问题</strong>：这些关系<strong>没有数字化</strong>，不在任何数据库里。销售员离职=资产流失。<br><br>
+          <strong>F侧的战略任务</strong>：用4个餐饮专属Agent（菜单绑定率/厨师AIQL/连锁CRM/厨师培训）把散落在人头里的关系数字化成可查询、可分析、可传承的数据资产。<br><br>
+          <strong>这是Step 2最大的业务价值</strong>——不是技术价值，是组织价值：让厨界传承从"某个老销售的人情"变成"公司的数据资产"。
+        </div>
+      </div>
+    </div>
+
+    <div class="pb"></div>
+  </div>
+</div>
+
+<!-- ══ CATEGORY ══ -->
+<div class="screen" id="screen-cat">
+  <div class="cat-screen-hdr">
+    <div class="cat-big-icon" id="catIcon"></div>
+    <div>
+      <div class="cat-hdr-name" id="catName"></div>
+      <div class="cat-hdr-sub" id="catSub"></div>
+    </div>
+  </div>
+  <div class="agent-list" id="agentList"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- ══ AGENT DETAIL ══ -->
+<div class="screen" id="screen-detail">
+  <div class="detail-wrap" id="detailWrap"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// BRAND + SIDE NAMESPACE  (CURRENT_SIDE='F')
+// ════════════════════════════════════════════════
+const CURRENT_BRAND='wdm';
+const CURRENT_SIDE='F';
+
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clock').textContent=
+    now.getHours().toString().padStart(2,'0')+':'+
+    now.getMinutes().toString().padStart(2,'0')+':'+
+    now.getSeconds().toString().padStart(2,'0');
+}
+updateClock();setInterval(updateClock,1000);
+
+const navStack=[];
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.getElementById('backBtn').style.display=navStack.length>0?'flex':'none';
+  updateBreadcrumb(id);
+  window.scrollTo(0,0);
+}
+function goBack(){
+  if(navStack.length===0){showScreen('home');return}
+  const prev=navStack.pop();
+  if(prev.type==='home'){showScreen('home');return}
+  if(prev.type==='cat'){showCat(prev.id,true);return}
+  showScreen('home');
+}
+function updateBreadcrumb(id){
+  const bc=document.getElementById('breadcrumb');
+  if(id==='home'){bc.innerHTML='';return}
+  if(id==='brain'){bc.innerHTML='<span class="bc-link" onclick="pushHome()">首页</span><span class="bc-sep">›</span><span class="bc-cur">战略大脑</span>';return}
+  if(id==='cat'){
+    const nm=document.getElementById('catName').textContent;
+    bc.innerHTML=`<span class="bc-link" onclick="pushHome()">首页</span><span class="bc-sep">›</span><span class="bc-cur">${nm}</span>`;return;
+  }
+}
+function pushHome(){navStack.length=0;showScreen('home')}
+
+// ════════════════════════════════════════════════
+// CATS - 餐饮侧5大类·19 Agent
+// ════════════════════════════════════════════════
+const CATS={
+  shared:{icon:'🧬',name:'架构共享层',sub:'5个Agent · 与消费者侧共用机制',agents:['AIO总指挥','蝴蝶效应','A值校准','无菜单推单','品牌AI顾问']},
+  lianheng:{icon:'🔗',name:'连横·餐饮链路',sub:'5个Agent · B端IPO闭环',agents:['生产供应·商用装','二批商P2','餐厅采购','厨师端','餐厅顾客']},
+  paths:{icon:'🛣️',name:'餐饮4路径',sub:'4个Agent · 连锁/单店/二批/OEM',agents:['连锁总部CRM','单店直供','二批批发','食品加工OEM']},
+  chef:{icon:'👨‍🍳',name:'厨师·餐饮专属',sub:'4个Agent · 全部自建数据',agents:['菜单绑定率','厨师AIQL','厨师培训认证','菜谱数字化']},
+  bd:{icon:'🚗',name:'F侧独有',sub:'1个Agent · BD业务员激励',agents:['Uber激励·BD版']}
+};
+
+// ════════════════════════════════════════════════
+// AGENTS - 餐饮侧19个Agent
+// ════════════════════════════════════════════════
+const AGENTS={
+  // ───── 架构共享层 (5) ─────
+  'AIO总指挥':{
+    emoji:'⚡',emojiColor:'rgba(59,130,246,0.2)',shared:true,
+    tag:'Commander·F侧视角',score:58,milestone:3,
+    desc:'味达美F侧全链调度·餐饮4路径资源分配·厨师关系优先级·连锁总部签约推进·Step 3将与C侧合并调度',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',
+    hint:'当前阶段：AI对话 → 下一步：真实数据',
+    kpis:[
+      {l:'F侧差距检测',v:'实时',s:'good',bg:'good-bg'},{l:'4路径调度',v:'✅已建',s:'good',bg:'good-bg'},
+      {l:'SAP数据',v:'待接入',s:'bad',bg:'bad-bg'},{l:'C侧联动',v:'Step 3',s:'warn',bg:''}
+    ],
+    gaps:['SAP ECC 6.0 P2二批+连锁订单数据接入','汉询SFA餐饮端拜访数据T+1接入','Step 3 C+F同时调度·资源动态分配算法'],
+    presets:['今天F侧哪条路径差距最大？','连锁签约进度？','厨师关系这周重点？'],
+    chatIntro:'你好，我是味达美F侧AIO总指挥。餐饮B端基本盘是我的职责。C侧联动等Step 3融合。'
+  },
+  '蝴蝶效应':{
+    emoji:'🦋',emojiColor:'rgba(255,95,95,0.15)',shared:true,
+    tag:'F侧·二批窜货·权重+50%',score:62,milestone:3,
+    desc:'F侧蝴蝶效应·C类窜货权重比C侧高50%·二批商跨区调货是最大风险·数据源=SAP订单流+自建价格库',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current-red',
+    hint:'当前阶段：AI对话 → 下一步：真实数据',
+    kpis:[
+      {l:'F侧传导算法',v:'✅已建',s:'good',bg:'good-bg'},{l:'C类权重',v:'+50%',s:'warn',bg:''},
+      {l:'SAP订单流',v:'待接入',s:'bad',bg:'bad-bg'},{l:'自建价格库',v:'待建',s:'bad',bg:'bad-bg'}
+    ],
+    gaps:['SAP经销商订单流接入·跨区调货自动检测','自建批发价格库·覆盖味达美+海天+千禾商用装','Step 3与C侧融合·识别餐饮倒流零售完整窜货链'],
+    presets:['今天二批商有异常调货吗？','哪些区域价格异常？','连锁总部价vs二批价差距？'],
+    chatIntro:'你好，我是F侧蝴蝶效应Agent。二批窜货是F侧最大风险。'
+  },
+  'A值校准':{
+    emoji:'🎯',emojiColor:'rgba(74,222,128,0.15)',shared:true,
+    tag:'F侧·餐厅月耗a值',score:55,milestone:2,
+    desc:'F侧A值校准·T=菜单绑定周期(非复购周期)·餐厅月耗取决于菜单绑定状态+餐厅翻台率·数据源=汉询拜访+自建菜单绑定',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+    hint:'当前阶段：框架 → 下一步：AI对话',
+    kpis:[
+      {l:'F侧校准算法',v:'待调整',s:'warn',bg:''},{l:'餐厅月耗 [自建]',v:'模型待建',s:'bad',bg:'bad-bg'},
+      {l:'菜单绑定T值',v:'待校准',s:'warn',bg:''},{l:'翻台率联动',v:'待建',s:'bad',bg:'bad-bg'}
+    ],
+    gaps:['餐厅月耗a值模型·区别家庭复购a值·T=菜单绑定周期','汉询SFA餐饮拜访数据接入·提取月度消耗','翻台率×菜单绑定率=真实需求预测'],
+    presets:['重点餐厅月耗多少？','菜单绑定周期是多少？','翻台率异常的餐厅？'],
+    chatIntro:'你好，我是F侧A值校准Agent。餐厅a值模型和家庭完全不同。'
+  },
+  '无菜单推单':{
+    emoji:'🍣',emojiColor:'rgba(245,166,35,0.15)',shared:true,
+    tag:'F侧·P2二批+连锁',score:52,milestone:2,
+    desc:'F侧推单算法·针对P2二批商+连锁总部·商用1.8L装专属·推单节奏考虑餐饮旺季(春节/国庆/暑假)',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+    hint:'当前阶段：框架 → 下一步：AI对话',
+    kpis:[
+      {l:'F侧推单算法',v:'待调整',s:'warn',bg:''},{l:'商用装SKU',v:'已梳理',s:'good',bg:'good-bg'},
+      {l:'二批API',v:'待对接',s:'bad',bg:'bad-bg'},{l:'旺季模型',v:'待建',s:'bad',bg:'bad-bg'}
+    ],
+    gaps:['P2二批商系统API对接·自动推单','连锁总部合同期推单提醒','餐饮旺季(春节/国庆)推单量放大系数'],
+    presets:['今天哪些二批需要推单？','连锁合同到期提醒？','春节备货量建议？'],
+    chatIntro:'你好，我是F侧无菜单推单Agent。商用装+餐饮旺季是我的特点。'
+  },
+  '品牌AI顾问':{
+    emoji:'💎',emojiColor:'rgba(78,205,196,0.15)',shared:true,
+    tag:'F侧·厨师口碑守护',score:50,milestone:2,
+    desc:'F侧品牌AI顾问·厨师口碑=F侧品牌健康度·数据源=自建厨师调研+AIQL评分·与C侧BHT家庭品牌健康度对应',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+    hint:'当前阶段：框架 → 下一步：AI对话',
+    kpis:[
+      {l:'厨师口碑 [自建]',v:'调研模型待建',s:'bad',bg:'bad-bg'},{l:'AIQL评分',v:'框架就绪',s:'warn',bg:''},
+      {l:'北方厨师池',v:'【历史沉淀】',s:'warn',bg:''},{l:'C侧BHT联动',v:'Step 3',s:'warn',bg:''}
+    ],
+    gaps:['自建厨师调研问卷·季度推送至重点厨师','AIQL评分模型上线·北方中餐厨师优先','Step 3与C侧BHT联动·识别厨师→家庭传导链'],
+    presets:['北方厨师对味达美的口碑？','厨师AIQL排名？','厨师维度vs家庭BHT一致吗？'],
+    chatIntro:'你好，我是F侧品牌AI顾问。厨师口碑是F侧品牌健康度。'
+  },
+
+  // ───── 连横·餐饮链路 (5) ─────
+  '生产供应·商用装':{
+    emoji:'🏭',emojiColor:'rgba(74,222,128,0.15)',
+    tag:'IPO0-1·商用大桶装',score:52,milestone:2,
+    desc:'味达美商用装（1.8L·5L·大桶）产能调度·与家庭装共享工厂但产线不同·毛利较低但规模大·旺季排产压力',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+    hint:'当前阶段：框架 → 下一步：AI对话',
+    kpis:[
+      {l:'商用装产能',v:'【待校准】',s:'warn',bg:''},{l:'毛利率',v:'【待校准】',s:'warn',bg:''},
+      {l:'MES对接',v:'待建',s:'bad',bg:'bad-bg'},{l:'C/F产线切换',v:'待建',s:'bad',bg:'bad-bg'}
+    ],
+    gaps:['MES系统商用装产能数据接入','家庭装vs商用装产线优化调度','餐饮旺季(春节前2月)产能爬坡'],
+    presets:['商用装本月产能利用率？','春节旺季备货充足吗？','家庭装vs商用装产线如何调度？'],
+    chatIntro:'你好，我是商用装生产供应Agent。大桶装的产能和毛利是F侧护城河。'
+  },
+  '二批商P2':{
+    emoji:'🚚',emojiColor:'rgba(96,165,250,0.15)',
+    tag:'IPO5-7·F侧核心路径',score:58,milestone:3,
+    desc:'★F侧核心Agent★·P2二批商是味达美餐饮基本盘的血管·价格底线¥10严守·C类窜货高危·B端直供+C端批发双路径',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:2,msStyle:'current',
+    hint:'当前阶段：AI对话 → 下一步：真实数据',
+    kpis:[
+      {l:'底价 [自建]',v:'¥10【待校准】',s:'warn',bg:''},{l:'窜货风险 [SAP]',v:'跨区监测',s:'warn',bg:''},
+      {l:'B端餐厅数 [自建]',v:'【待填】',s:'warn',bg:''},{l:'进销存 [SAP]',v:'待接入',s:'bad',bg:'bad-bg'}
+    ],
+    gaps:['SAP二批商订单/库存数据接入','自建B端餐饮客户数据库','价签识别(共用C侧A23)联动乱价预警'],
+    presets:['底价以下二批有多少？','B端重点餐厅本月采购？','窜货高危区域？'],
+    chatIntro:'你好，我是P2二批商Agent。F侧的核心血管·价格底线=生命线。'
+  },
+  '餐厅采购':{
+    emoji:'🍜',emojiColor:'rgba(245,166,35,0.12)',selfBuilt:true,
+    tag:'IPO8b·餐厅采购决策',score:48,milestone:2,
+    desc:'餐厅采购决策链·连锁总部集中采购 vs 单店老板个人决策·数据源=汉询餐饮拜访+自建餐厅分级',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current-self',
+    hint:'当前阶段：框架 → 下一步：AI对话',
+    kpis:[
+      {l:'餐厅分级 [自建]',v:'✅已建模',s:'good',bg:'good-bg'},{l:'采购决策链 [自建]',v:'待映射',s:'warn',bg:''},
+      {l:'汉询餐饮拜访',v:'待加强',s:'bad',bg:'bad-bg'},{l:'连锁vs单店占比',v:'【待填】',s:'warn',bg:''}
+    ],
+    gaps:['汉询SFA餐饮业务员拜访页面升级·采集采购决策信息','自建餐厅采购决策链数据库（谁拍板/预算谁定/付款谁批）','连锁总部 vs 单店 采购方式差异建模'],
+    presets:['北方连锁采购决策人画像？','单店老板采购频次？','哪类餐厅采购决策最快？'],
+    chatIntro:'你好，我是餐厅采购Agent。连锁vs单店决策链完全不同。'
+  },
+  '厨师端':{
+    emoji:'👨‍🍳',emojiColor:'rgba(255,140,66,0.15)',selfBuilt:true,
+    tag:'IPO9b·核心节点·菜单绑定',score:45,milestone:2,
+    desc:'★味达美历史资产Agent★·北方中餐厨师网络·菜单绑定=锁定通路·厨界交流会沉淀·全靠自建数据',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current-self',
+    hint:'当前阶段：框架 → 下一步：AI对话',
+    kpis:[
+      {l:'厨师网络 [自建]',v:'历史沉淀',s:'good',bg:'good-bg'},{l:'菜单绑定率 [自建]',v:'待测量',s:'warn',bg:''},
+      {l:'厨师KOL [自建]',v:'待建',s:'bad',bg:'bad-bg'},{l:'厨师流失 [自建]',v:'待追踪',s:'bad',bg:'bad-bg'}
+    ],
+    gaps:['厨师关系数字化（从销售头脑到数据库）','菜单绑定率量化追踪','厨师跳槽流失率监测（重点厨师离职=绑定餐厅流失）'],
+    presets:['重点厨师菜单绑定状态？','哪些厨师最近跳槽？','北方厨师培训覆盖率？'],
+    chatIntro:'你好，我是厨师端Agent。味达美历史资产全在这里。'
+  },
+  '餐厅顾客':{
+    emoji:'🍽️',emojiColor:'rgba(78,205,196,0.12)',selfBuilt:true,
+    tag:'IPO11b·最终消费',score:35,milestone:1,
+    desc:'餐厅顾客消费行为·通过点菜数据/翻台率/菜单热度反推味达美消耗·Step 3与C侧融合时可识别"餐厅→家庭回流"',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:0,msStyle:'current-self',
+    hint:'当前阶段：概念 → 下一步：框架',
+    kpis:[
+      {l:'点菜数据 [自建]',v:'待接入',s:'bad',bg:'bad-bg'},{l:'翻台率 [自建]',v:'待接入',s:'bad',bg:'bad-bg'},
+      {l:'菜单热度 [自建]',v:'待建',s:'bad',bg:'bad-bg'},{l:'C侧回流',v:'Step 3',s:'warn',bg:''}
+    ],
+    gaps:['与大众点评/美团商家版合作·点菜数据脱敏接入','翻台率×菜品热度反推味达美消耗','Step 3餐厅→家庭回流跟踪（顾客从餐厅吃到→回家买）'],
+    presets:['哪些菜品带动味达美消耗？','高翻台餐厅vs低翻台采购差异？','餐厅消费到家庭回购的比例？'],
+    chatIntro:'你好，我是餐厅顾客Agent。Step 3融合后才能看清完整链路。'
+  },
+
+  // ───── 餐饮4路径 (4) ─────
+  '连锁总部CRM':{
+    emoji:'🏢',emojiColor:'rgba(96,165,250,0.15)',selfBuilt:true,
+    tag:'路径1·连锁总部签约',score:55,milestone:2,
+    desc:'连锁餐饮总部CRM·海底捞/真功夫/味千/紫光园等战略客户锁定·合同管理+采购节奏+独家/非独家状态·自建系统',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current-self',
+    hint:'当前阶段：框架 → 下一步：AI对话',
+    kpis:[
+      {l:'连锁签约 [自建]',v:'【待填数量】',s:'warn',bg:''},{l:'合同管理 [自建]',v:'部分已建',s:'warn',bg:''},
+      {l:'SAP订单对接',v:'待接入',s:'bad',bg:'bad-bg'},{l:'独家状态',v:'待管理',s:'bad',bg:'bad-bg'}
+    ],
+    gaps:['连锁总部CRM系统建设·合同/采购周期/决策人完整记录','SAP大客户订单与CRM打通','独家条款/排他协议到期预警'],
+    presets:['北方重点连锁签约情况？','本季度到期合同？','哪些连锁有流失风险？'],
+    chatIntro:'你好，我是连锁总部CRM Agent。战略大客户锁定是F侧压舱石。'
+  },
+  '单店直供':{
+    emoji:'🏪',emojiColor:'rgba(245,166,35,0.12)',selfBuilt:true,
+    tag:'路径2·单店厨师决策',score:42,milestone:2,
+    desc:'单店餐厅直供·北方中餐小店为主·厨师/老板决策·散点分布·依赖汉询SFA餐饮业务员拜访+厨师端联动',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current-self',
+    hint:'当前阶段：框架 → 下一步：AI对话',
+    kpis:[
+      {l:'单店覆盖 [汉询]',v:'【待填】',s:'warn',bg:''},{l:'厨师决策率',v:'待测量',s:'bad',bg:'bad-bg'},
+      {l:'拜访密度',v:'待评估',s:'bad',bg:'bad-bg'},{l:'复购周期',v:'待测量',s:'bad',bg:'bad-bg'}
+    ],
+    gaps:['汉询SFA餐饮端拜访路线优化','单店餐厅关系分级（S+/S/A/B/C/D）','与厨师端Agent联动·厨师关系驱动单店订单'],
+    presets:['北方单店覆盖数量？','单店拜访路线优化建议？','哪些单店流失风险高？'],
+    chatIntro:'你好，我是单店直供Agent。北方中餐小店是味达美的毛细血管。'
+  },
+  '二批批发':{
+    emoji:'📦',emojiColor:'rgba(167,139,252,0.12)',
+    tag:'路径3·二批规模批发',score:48,milestone:2,
+    desc:'二批商批发路径·覆盖单店直供无法到达的小店·价格敏感·窜货高危·与二批商P2 Agent密切联动',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+    hint:'当前阶段：框架 → 下一步：AI对话',
+    kpis:[
+      {l:'二批覆盖区域',v:'✅已建',s:'good',bg:'good-bg'},{l:'批发量 [SAP]',v:'待接入',s:'bad',bg:'bad-bg'},
+      {l:'价格监控',v:'需价签识别',s:'warn',bg:''},{l:'窜货检测',v:'规则已建',s:'good',bg:'good-bg'}
+    ],
+    gaps:['SAP二批批发订单数据接入','C侧价签识别(A23)完成后联动F侧批发价监控','二批服务单店的终端覆盖密度分析'],
+    presets:['二批批发量本月同比？','哪些区域批发价异常？','二批覆盖的下游单店数？'],
+    chatIntro:'你好，我是二批批发Agent。与二批商P2Agent联动。'
+  },
+  '食品加工OEM':{
+    emoji:'🏭',emojiColor:'rgba(78,205,196,0.12)',
+    tag:'路径4·大宗防御型',score:38,milestone:1,
+    desc:'食品加工厂OEM大宗采购·方便面/速冻食品/预制菜等·毛利低但产能消化·防御型业务·数据简单',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:0,msStyle:'current',
+    hint:'当前阶段：概念 → 下一步：框架',
+    kpis:[
+      {l:'OEM客户数',v:'【待填】',s:'warn',bg:''},{l:'月度采购量',v:'待接入',s:'bad',bg:'bad-bg'},
+      {l:'毛利率',v:'防御型低',s:'warn',bg:''},{l:'合同续签',v:'手动',s:'bad',bg:'bad-bg'}
+    ],
+    gaps:['OEM客户合同管理系统','产能消化优先级规则（家庭装优先>商用装>OEM）','预制菜赛道新客户拓展（增长机会）'],
+    presets:['OEM本月订单？','预制菜客户机会？','产能消化情况？'],
+    chatIntro:'你好，我是OEM Agent。防御型业务·产能消化为主。'
+  },
+
+  // ───── 厨师·餐饮专属 (4) - 全部self-built ─────
+  '菜单绑定率':{
+    emoji:'🍳',emojiColor:'rgba(255,140,66,0.18)',selfBuilt:true,
+    tag:'F侧最关键指标',score:32,milestone:1,
+    desc:'★F侧锁客核心指标★·餐厅菜单中使用味达美的菜品比例·绑定越高切换成本越高·数据全自建·需要汉询SFA+厨师端合作采集',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:0,msStyle:'current-self',
+    hint:'当前阶段：概念 → 下一步：框架',
+    kpis:[
+      {l:'绑定率定义',v:'✅已定',s:'good',bg:'good-bg'},{l:'采集方法',v:'设计中',s:'warn',bg:''},
+      {l:'汉询页面',v:'待开发',s:'bad',bg:'bad-bg'},{l:'重点餐厅数据',v:'0',s:'bad',bg:'bad-bg'}
+    ],
+    gaps:['菜单绑定率定义与测量方法标准化','汉询SFA新增菜单绑定采集页面','重点餐厅菜单数字化（拍照识别+人工核对）'],
+    presets:['菜单绑定率如何精确测量？','哪些重点餐厅已有数据？','绑定率提升空间？'],
+    chatIntro:'你好，我是菜单绑定率Agent。F侧最关键指标·但数据全要自建。'
+  },
+  '厨师AIQL':{
+    emoji:'⭐',emojiColor:'rgba(255,140,66,0.18)',selfBuilt:true,
+    tag:'厨师质量评分',score:30,milestone:1,
+    desc:'厨师AIQL评分体系·A=菜单绑定/I=影响力(KOL级别)/Q=质量(使用稳定性)/L=忠诚(使用时长)·北方中餐厨师优先·自建',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:0,msStyle:'current-self',
+    hint:'当前阶段：概念 → 下一步：框架',
+    kpis:[
+      {l:'AIQL算法',v:'✅已定义',s:'good',bg:'good-bg'},{l:'厨师画像库',v:'待建',s:'bad',bg:'bad-bg'},
+      {l:'数据采集',v:'汉询待升级',s:'bad',bg:'bad-bg'},{l:'评分试点',v:'待启动',s:'bad',bg:'bad-bg'}
+    ],
+    gaps:['厨师画像库建设·每个厨师一个档案','汉询SFA厨师关系页面开发','AIQL评分试点·北方中餐先跑通'],
+    presets:['AIQL Top 10厨师是谁？','KOL级别厨师有多少？','厨师忠诚度分布？'],
+    chatIntro:'你好，我是厨师AIQL Agent。厨师质量量化评分是F侧硬仗。'
+  },
+  '厨师培训认证':{
+    emoji:'🎓',emojiColor:'rgba(255,140,66,0.15)',selfBuilt:true,
+    tag:'厨界传承数字化',score:35,milestone:2,
+    desc:'味达美厨界交流会延伸·线上+线下厨师培训·菜品研发+调味技巧+品牌故事·认证体系·绑定厨师终身·历史资产数字化',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current-self',
+    hint:'当前阶段：框架 → 下一步：AI对话',
+    kpis:[
+      {l:'培训内容库',v:'部分已建',s:'warn',bg:''},{l:'认证体系 [自建]',v:'设计中',s:'warn',bg:''},
+      {l:'在线平台',v:'待开发',s:'bad',bg:'bad-bg'},{l:'年度培训厨师',v:'【待填】',s:'warn',bg:''}
+    ],
+    gaps:['厨界交流会线下资产数字化（录像/讲义/案例）','在线厨师培训平台开发·小程序形式','味达美认证厨师体系·绑定终身'],
+    presets:['本季度培训厨师数？','认证厨师复购率？','在线平台建设进度？'],
+    chatIntro:'你好，我是厨师培训认证Agent。厨界传承从人情到数据资产。'
+  },
+  '菜谱数字化':{
+    emoji:'📖',emojiColor:'rgba(255,140,66,0.15)',selfBuilt:true,
+    tag:'菜谱库·厨师内容',score:28,milestone:1,
+    desc:'味达美菜谱库·北方中餐经典+创新·带动销售+厨师引用+家庭学做(Step 3 C+F协同)·自建内容资产',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:0,msStyle:'current-self',
+    hint:'当前阶段：概念 → 下一步：框架',
+    kpis:[
+      {l:'菜谱数量',v:'【待填】',s:'warn',bg:''},{l:'内容分级',v:'待建',s:'bad',bg:'bad-bg'},
+      {l:'AI生成工具',v:'待开发',s:'bad',bg:'bad-bg'},{l:'销售转化 [自建]',v:'待测量',s:'bad',bg:'bad-bg'}
+    ],
+    gaps:['菜谱库梳理·北方中餐经典菜谱优先','AI菜谱生成工具（基于现有菜谱变种）','Step 3与C侧抖音/小红书打通·同一菜谱B端+C端分发'],
+    presets:['北方招牌菜菜谱清单？','哪些菜谱带动销售最好？','菜谱AI工具进度？'],
+    chatIntro:'你好，我是菜谱数字化Agent。内容资产·Step 3可双向分发。'
+  },
+
+  // ───── F侧独有 (1) ─────
+  'Uber激励·BD版':{
+    emoji:'🚗',emojiColor:'rgba(78,205,196,0.18)',
+    tag:'F侧·餐饮BD业务员',score:48,milestone:2,
+    desc:'F侧独有·餐饮BD业务员激励·KPI含厨师关系分+菜单绑定推进+新连锁开发·自动派单+CB粘性+AIQL联动·区别C侧美顾版',
+    ms:['概念','框架','AI对话','真实数据','完整体'],msCur:1,msStyle:'current',
+    hint:'当前阶段：框架 → 下一步：AI对话',
+    kpis:[
+      {l:'CB算法',v:'✅继承C侧',s:'good',bg:'good-bg'},{l:'BD KPI体系',v:'待建',s:'bad',bg:'bad-bg'},
+      {l:'厨师关系分',v:'需AIQL联动',s:'warn',bg:''},{l:'SFA整合',v:'待对接',s:'bad',bg:'bad-bg'}
+    ],
+    gaps:['BD业务员端任务系统开发·区别美顾任务','厨师关系分+菜单绑定推进=核心KPI','汉询SFA餐饮业务员端升级'],
+    presets:['BD业务员今天任务？','厨师关系Top BD？','新连锁开发进度？'],
+    chatIntro:'你好，我是BD版Uber激励Agent。F侧餐饮业务员专属·C侧美顾独立。'
+  }
+};
+
+let currentCatId='';
+let currentAgentName='';
+
+function showCat(catId,isBack=false){
+  if(!isBack) navStack.push({type:'home'});
+  currentCatId=catId;
+  const cat=CATS[catId];
+  document.getElementById('catIcon').textContent=cat.icon;
+  document.getElementById('catName').textContent=cat.name;
+  document.getElementById('catSub').textContent=cat.sub;
+  const list=document.getElementById('agentList');
+  list.innerHTML='';
+  cat.agents.forEach(name=>{
+    const a=AGENTS[name];if(!a)return;
+    const pct=Math.min(100,a.score);
+    const sc=a.score>=65?'var(--green)':a.score>=45?'var(--teal)':'var(--red)';
+    let rowCls='agent-row';
+    if(a.shared) rowCls+=' shared';
+    else if(a.selfBuilt) rowCls+=' self-built';
+    const badge=a.shared?'<span class="agent-shared-dot">SHARED</span>':(a.selfBuilt?'<span class="agent-self-dot">SELF-BUILT</span>':'');
+    const row=document.createElement('div');
+    row.className=rowCls;
+    row.innerHTML=`
+      <div class="agent-emoji" style="background:${a.emojiColor}">${a.emoji}</div>
+      <div class="agent-info">
+        <div class="agent-name">${name}${badge}</div>
+        <div class="agent-tag">${a.tag}</div>
+        <div class="agent-desc">${a.desc}</div>
+      </div>
+      <div class="agent-score-col">
+        <div class="agent-score" style="color:${sc}">${a.score}</div>
+        <div class="agent-milestone">M${a.milestone}/5</div>
+        <div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${sc}"></div></div>
+      </div>`;
+    row.onclick=()=>showAgentDetail(name);
+    list.appendChild(row);
+  });
+  document.getElementById('backBtn').style.display='flex';
+  showScreen('cat');
+  document.getElementById('breadcrumb').innerHTML=`<span class="bc-link" onclick="pushHome()">首页</span><span class="bc-sep">›</span><span class="bc-cur">${cat.name}</span>`;
+}
+
+function showAgentDetail(name,isBack=false){
+  if(!isBack) navStack.push({type:'cat',id:currentCatId});
+  currentAgentName=name;
+  const a=AGENTS[name];if(!a)return;
+  const sc=a.score>=65?'var(--green)':a.score>=45?'var(--teal)':'var(--red)';
+  const pct=Math.min(100,a.score);
+
+  let msHtml='<div class="milestone-row">';
+  a.ms.forEach((m,i)=>{
+    let cls='ms-step';
+    if(i<a.msCur) cls+=' done';
+    else if(i===a.msCur) cls+=` ${a.msStyle}`;
+    msHtml+=`<div class="${cls}">${m}</div>`;
+  });
+  msHtml+='</div>';
+  msHtml+=`<div class="ms-hint">${a.hint}</div>`;
+
+  let kpiHtml='<div class="kpi-grid">';
+  a.kpis.forEach(k=>{kpiHtml+=`<div class="kpi-box ${k.bg||''}"><div class="kpi-label">${k.l}</div><div class="kpi-val ${k.s}">${k.v}</div></div>`});
+  kpiHtml+='</div>';
+
+  let gapsHtml=`<div class="gap-title">距离完整体还差（${a.gaps.length}项）</div><div class="gap-list">`;
+  a.gaps.forEach(g=>gapsHtml+=`<div class="gap-item"><div class="gap-dot"></div><span>${g}</span></div>`);
+  gapsHtml+='</div>';
+
+  let presetsHtml='<div class="chat-presets">';
+  a.presets.forEach(p=>presetsHtml+=`<div class="preset-chip" onclick="sendAgentChat('${p.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}',this)">${p}</div>`);
+  presetsHtml+='</div>';
+
+  let heroCls='detail-hero';
+  if(a.shared) heroCls+=' shared';
+  else if(a.selfBuilt) heroCls+=' self-built';
+
+  let notice='';
+  if(a.shared){
+    notice=`<div class="shared-notice"><strong>🧬 架构共享层 Agent</strong>：此 Agent 同时为C侧和F侧服务。当前页面显示F侧(餐饮)视角。Step 3 融合时将同时接收双侧数据流。</div>`;
+  }else if(a.selfBuilt){
+    notice=`<div class="self-notice"><strong>🏗️ 自建数据 Agent</strong>：此 Agent 的数据 Kantar 不覆盖·必须从SAP/汉询/自建数据库合成。数据积累的时间成本是主要挑战。</div>`;
+  }
+
+  const badge=a.shared?'<span class="agent-shared-dot">SHARED</span>':(a.selfBuilt?'<span class="agent-self-dot">SELF-BUILT</span>':'');
+
+  const html=`
+    <div class="${heroCls}">
+      <div class="detail-hero-top">
+        <div>
+          <span class="detail-emoji">${a.emoji}</span>
+          <div class="detail-name">${name}${badge}</div>
+          <div class="detail-sub">${a.tag}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="detail-score-big" style="color:${sc}">${a.score}</div>
+          <div class="detail-score-lbl">成熟度评分</div>
+        </div>
+      </div>
+      <div class="detail-desc">${a.desc}</div>
+      <div class="detail-progress"><div class="detail-progress-fill" style="width:${pct}%"></div></div>
+      ${notice}
+    </div>
+    <div class="section-card">
+      <div class="section-hdr">里程碑进度 · M${a.milestone}/5 · 还差${5-a.milestone}步到完整体</div>
+      ${msHtml}
+    </div>
+    <div class="section-card">
+      <div class="section-hdr">关键指标</div>
+      ${kpiHtml}
+    </div>
+    <div class="section-card">
+      <div class="section-hdr">缺口</div>
+      ${gapsHtml}
+    </div>
+    <div class="chat-section">
+      <div class="chat-hdr">AI对话 · <span class="chat-agent-name">${a.emoji} ${name}</span></div>
+      ${presetsHtml}
+      <div class="chat-bubble">${a.chatIntro}</div>
+      <div class="chat-response" id="chatResp-${name.replace(/\s/g,'_')}">
+        <div class="chat-q-echo" id="chatQ-${name.replace(/\s/g,'_')}"></div>
+        <div id="chatA-${name.replace(/\s/g,'_')}"></div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chatInput-${name.replace(/\s/g,'_')}" placeholder="问${name}…" onkeydown="if(event.key==='Enter')sendAgentChat(this.value,'${name.replace(/'/g,"\\'")}',null,this)" />
+        <button class="chat-send" onclick="sendAgentChat(document.getElementById('chatInput-${name.replace(/\s/g,'_')}').value,'${name.replace(/'/g,"\\'")}',null,document.getElementById('chatInput-${name.replace(/\s/g,'_')}'))">↑</button>
+      </div>
+    </div>`;
+
+  document.getElementById('detailWrap').innerHTML=html;
+  showScreen('detail');
+  const cat=CATS[currentCatId];
+  document.getElementById('breadcrumb').innerHTML=`<span class="bc-link" onclick="pushHome()">首页</span><span class="bc-sep">›</span><span class="bc-link" onclick="navStack.push({type:'home'});showCat('${currentCatId}')">${cat?.name||''}</span><span class="bc-sep">›</span><span class="bc-cur">${name}</span>`;
+}
+
+async function sendAgentChat(q,agentName,chipEl,inputEl){
+  if(!q||!q.trim())return;
+  const key=agentName.replace(/\s/g,'_');
+  const resp=document.getElementById('chatResp-'+key);
+  const qEl=document.getElementById('chatQ-'+key);
+  const aEl=document.getElementById('chatA-'+key);
+  if(!resp)return;
+  resp.classList.add('show');
+  qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  if(inputEl&&inputEl.tagName==='INPUT') inputEl.value='';
+
+  const a=AGENTS[agentName];
+  let typeNote='';
+  if(a?.shared) typeNote='⚠️ 此Agent为架构共享层·C侧和F侧共用算法。当前对话针对F侧(餐饮)视角。C侧家庭逻辑见消费者版本。';
+  else if(a?.selfBuilt) typeNote='⚠️ 此Agent的数据全部自建·Kantar不覆盖·依赖SAP+汉询+自建数据库。';
+
+  const sys=`你是欣和SH INFINITY OS【味达美·餐饮侧(Step 2)】的「${agentName}」Agent（${a?.tag||''}）。
+${typeNote}
+味达美餐饮侧定位：40%下游渠道基本盘·北方中餐厨界传承·CR5第4位但餐饮B端比家庭强·Kantar完全盲区。
+核心数据源：SAP ECC 6.0(订单/连锁/二批)·汉询SFA(餐饮拜访)·自建数据库(厨师/菜单/餐厅CRM)。
+F侧4路径：连锁总部/单店直供/二批批发/食品加工OEM·各自战略不同。
+F侧最核心独有指标：菜单绑定率·厨师AIQL评分·连锁总部签约数。
+你的职责：${a?.desc||''}
+关键指标：${a?.kpis?.map(k=>k.l+'='+k.v).join('·')||''}
+当前缺口：${a?.gaps?.join('、')||''}
+用中文简洁回答·不超过200字·直接给要点·涉及数字必须标注来源[SAP/汉询/自建/待校准]。`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})
+    });
+    const d=await r.json();
+    const txt=d.content?.map(c=>c.text||'').join('')||'暂时无法获取回答。';
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${txt}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`}
+}
+
+async function sendBrain(){
+  const input=document.getElementById('brainInput');
+  const q=input.value.trim();if(!q)return;
+  await askBrain(q);
+}
+async function askBrain(q){
+  document.getElementById('brainInput').value=q;
+  const resp=document.getElementById('brainResp');
+  const qEl=document.getElementById('brainQ');
+  const aEl=document.getElementById('brainA');
+  resp.classList.add('show');
+  qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  const sys=`你是欣和SH INFINITY OS【味达美·餐饮侧战略大脑·Step 2】。
+三步战略状态：Step 1完成(C侧20 Agent·Kantar三线)·Step 2进行中(F侧19 Agent·自建数据)·Step 3锁定(融合)。
+味达美F侧定位：40%下游渠道基本盘·北方中餐厨界传承·CR5第4位但餐饮强于家庭·Kantar完全盲区。
+F侧独特挑战：11/19个Agent需要自建数据·从零开始积累。
+F侧数据源：SAP ECC(连锁订单+二批订单)·汉询SFA(餐饮业务员拜访)·自建(厨师CRM/菜单绑定/餐厅关系)。
+F侧4路径：连锁总部(海底捞等战略客户)/单店直供(北方中餐)/二批批发(下沉覆盖)/食品加工OEM(防御产能)。
+F侧核心独有指标：菜单绑定率·厨师AIQL·连锁签约数。
+F侧19 Agent分5大类：架构共享层5+连横餐饮链路5+4路径4+厨师专属4+BD激励1。
+共享层5个Agent(AIO/蝴蝶效应/A值校准/无菜单推单/品牌AI顾问)与C侧共用算法·F侧输入参数不同。
+用中文回答·清晰结构化·不超过300字·涉及数字必须标注来源[SAP/汉询/自建/待校准]。`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})
+    });
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'无法获取回答。'}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red)">⚠️ ${e.message}</div>`}
+  document.getElementById('brainInput').value='';
+}
+document.getElementById('brainInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendBrain()});
+function toggleKB(id){document.getElementById(id).classList.toggle('open')}
+showScreen('home');
+document.getElementById('breadcrumb').innerHTML='';
+</script>
+</body>
+</html>
