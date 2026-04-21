@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent学习累积机制 · LEARNING-001</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0b10;--bg3:#141720;--card:#181c26;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.14);--text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;--amber:#f5a623;--gold:#ffd700;--red:#ff5f5f;--green:#4ade80;--blue:#60a5fa;--purple:#a78bfa;--teal:#4ecdc4}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(10,11,16,0.95);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:11px 16px;display:flex;align-items:center;gap:10px}
+.tb-logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#4ecdc4,#a78bfa);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:14px}
+.tb-t{font-family:'Syne',sans-serif;font-size:13px;font-weight:800}
+.tb-t span{color:var(--teal)}
+.tb-s{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--text3);letter-spacing:0.12em}
+.hero{padding:24px 16px 18px;border-bottom:1px solid var(--border);background:radial-gradient(ellipse at top,rgba(78,205,196,0.06),transparent 60%)}
+.hero-tag{display:inline-block;font-family:'Space Mono',monospace;font-size:10px;color:var(--teal);letter-spacing:0.22em;border:1px solid var(--teal);padding:3px 10px;border-radius:2px;margin-bottom:10px}
+.hero-t{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;line-height:1.15;margin-bottom:6px}
+.hero-t span{color:var(--teal)}
+.hero-s{font-size:12px;color:var(--text2);line-height:1.55}
+
+.intro-box{margin-top:14px;background:var(--card);border:2px solid var(--gold);border-radius:11px;padding:13px;font-size:12px;color:var(--text);line-height:1.7}
+.intro-box strong{color:var(--gold)}
+
+.section{padding:22px 16px;border-bottom:1px solid var(--border)}
+.sec-num{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--amber);letter-spacing:0.2em;margin-bottom:3px}
+.sec-t{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;line-height:1.2;margin-bottom:4px}
+.sec-hint{font-size:10.5px;color:var(--text3);margin-bottom:14px;line-height:1.55}
+
+.loop-card{background:var(--card);border:2px solid var(--teal);border-radius:11px;padding:14px;margin-bottom:14px}
+.loop-t{font-family:'Space Mono',monospace;font-size:10px;color:var(--teal);letter-spacing:0.1em;font-weight:700;margin-bottom:10px}
+.loop-step{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:8px 0;border-bottom:1px dashed var(--border);font-size:11.5px;line-height:1.6}
+.loop-step:last-child{border:none}
+.loop-num{font-family:'Syne',sans-serif;font-size:18px;font-weight:900;color:var(--teal);line-height:1}
+.loop-text{color:var(--text2)}
+.loop-text strong{color:var(--text)}
+
+.formula-box{background:#0d1117;border:1px solid var(--border2);border-radius:7px;padding:11px 13px;font-family:'Space Mono',monospace;font-size:11px;color:#a5d6ff;line-height:1.7;margin-top:6px;white-space:pre-wrap}
+
+.rule-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px;margin-bottom:10px;border-left:4px solid var(--purple)}
+.rule-card.ru1{border-left-color:var(--green)}
+.rule-card.ru2{border-left-color:var(--amber)}
+.rule-card.ru3{border-left-color:var(--red)}
+.rule-card.ru4{border-left-color:var(--blue)}
+.rule-card.ru5{border-left-color:var(--purple)}
+.rule-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.rule-num{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:0.08em;font-weight:700}
+.rule-tag{font-family:'Space Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;font-weight:700;letter-spacing:0.08em;background:var(--bg3);color:var(--text2)}
+.rule-t{font-size:13.5px;font-weight:700;margin-bottom:5px}
+.rule-cond{background:rgba(96,165,250,0.05);border-left:3px solid var(--blue);padding:7px 10px;border-radius:0 5px 5px 0;font-size:11px;color:var(--text);line-height:1.55;margin-bottom:5px}
+.rule-cond strong{color:var(--blue);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.08em;display:block;margin-bottom:2px;font-weight:700}
+.rule-act{background:rgba(74,222,128,0.04);border-left:3px solid var(--green);padding:7px 10px;border-radius:0 5px 5px 0;font-size:11px;color:var(--text);line-height:1.55}
+.rule-act strong{color:var(--green);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.08em;display:block;margin-bottom:2px;font-weight:700}
+
+.timeline-card{background:var(--card);border:2px solid var(--purple);border-radius:11px;padding:14px;margin-bottom:14px}
+.tl-row{display:grid;grid-template-columns:60px 90px 1fr;gap:10px;padding:7px 0;border-bottom:1px dashed var(--border);font-size:11.5px;line-height:1.55}
+.tl-row:last-child{border:none}
+.tl-week{font-family:'Space Mono',monospace;font-size:10px;color:var(--gold);font-weight:700}
+.tl-stage{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);font-weight:700}
+.tl-detail{color:var(--text2)}
+.tl-detail strong{color:var(--text)}
+
+.summary-box{background:linear-gradient(135deg,rgba(78,205,196,0.06),rgba(167,139,250,0.04));border:2px solid var(--teal);border-radius:12px;padding:16px;margin:0 16px 16px}
+.sb-t{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--teal);margin-bottom:10px}
+.sb-body{font-size:12px;line-height:1.75;color:var(--text)}
+.sb-body strong{color:var(--teal)}
+
+.footer{padding:20px 16px;text-align:center;font-family:'Space Mono',monospace;font-size:9.5px;color:var(--text3);letter-spacing:0.1em;line-height:1.75;border-top:1px solid var(--border)}
+.footer span{color:var(--teal)}
+@media(max-width:540px){.hero-t{font-size:21px}.tl-row{grid-template-columns:45px 75px 1fr;gap:8px;font-size:10.5px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-logo">L+</div>
+  <div>
+    <div class="tb-t">Agent学习累积机制 <span>· LEARNING-001</span></div>
+    <div class="tb-s">FROM Agent · Layer 3.5的关键设计</div>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-tag">◆ Agent越用越准的核心机制</div>
+  <div class="hero-t">学习累积机制<br><span>越用越准·越用越省事</span></div>
+  <div class="hero-s">
+    没有学习机制·Agent第6周还是第1周的水平 · 有学习机制·Agent第6周比第3周准30% · DS手动审核越来越少 · 真正释放生产力
+  </div>
+
+  <div class="intro-box">
+    <strong>▸ 核心理念:</strong>Agent的智能不是"出生时多聪明"·而是<strong>"用得越多·学得越多·错得越少"</strong> · 这就是INFINITY OS区别于普通规则系统的本质
+  </div>
+</div>
+
+<!-- 闭环 -->
+<div class="section">
+  <div class="sec-num">01 / FEEDBACK LOOP · 学习闭环</div>
+  <div class="sec-t">5步循环·Agent每天都在学</div>
+
+  <div class="loop-card">
+    <div class="loop-t">▸ Agent学习的5步闭环</div>
+    <div class="loop-step">
+      <div class="loop-num">1</div>
+      <div class="loop-text"><strong>判断·Agent给出建议</strong><br>"建议补货1000瓶·置信度85分·原因A/B/C"</div>
+    </div>
+    <div class="loop-step">
+      <div class="loop-num">2</div>
+      <div class="loop-text"><strong>执行·人工确认+实际操作</strong><br>销售经理批准 → 经销商实际进货1000瓶</div>
+    </div>
+    <div class="loop-step">
+      <div class="loop-num">3</div>
+      <div class="loop-text"><strong>结果·1周后真实数据回流</strong><br>实际卖了多少·剩多少·有没有压货</div>
+    </div>
+    <div class="loop-step">
+      <div class="loop-num">4</div>
+      <div class="loop-text"><strong>评分·outcome_score自动计算(0-100)</strong><br>预测准 = 高分 · 预测偏 = 低分</div>
+    </div>
+    <div class="loop-step">
+      <div class="loop-num">5</div>
+      <div class="loop-text"><strong>调整·Agent置信度自动升降</strong><br>累积10次高分 → 同类决策置信度+5 · 反之-5</div>
+    </div>
+  </div>
+</div>
+
+<!-- outcome_score计算 -->
+<div class="section">
+  <div class="sec-num">02 / SCORING · outcome_score计算公式</div>
+  <div class="sec-t">怎么判断Agent推单准不准</div>
+
+  <div class="rule-card ru1">
+    <div class="rule-hdr"><div class="rule-num">RULE · 推单评分</div><div class="rule-tag">Omakase</div></div>
+    <div class="rule-t">推单后1周·自动评分</div>
+    <div class="formula-box">outcome_score = 100 - |实际销售 - Agent预测| / Agent预测 × 100
+
+例:Agent预测补1000瓶
+  实际1周卖了:
+    900瓶 → score = 100 - |900-1000|/1000 × 100 = 90 (优秀)
+    700瓶 → score = 100 - |700-1000|/1000 × 100 = 70 (合格)
+    400瓶 → score = 100 - |400-1000|/1000 × 100 = 40 (差·学习)
+    1100瓶 → score = 100 - |1100-1000|/1000 × 100 = 90 (优秀)</div>
+  </div>
+
+  <div class="rule-card ru2">
+    <div class="rule-hdr"><div class="rule-num">RULE · 失真评分</div><div class="rule-tag">蝴蝶效应</div></div>
+    <div class="rule-t">预警准不准·要看人工反馈</div>
+    <div class="formula-box">outcome_score = 
+  IF 销售经理确认"是真问题" → 100
+  IF 销售经理标记"误报" → 0
+  IF 销售经理"未处理" → 50 (中性)
+
+例:蝴蝶效应Agent报A类压货预警
+  销售经理点"已确认·确实压货" → score = 100
+  销售经理点"误报·只是促销前备货" → score = 0
+  销售经理7天没看 → score = 50</div>
+  </div>
+
+  <div class="rule-card ru3">
+    <div class="rule-hdr"><div class="rule-num">RULE · 校准评分</div><div class="rule-tag">A值校准</div></div>
+    <div class="rule-t">a值校准准不准·下周对账</div>
+    <div class="formula-box">outcome_score = 
+  100 - |本周实际a - 上周校准的a| / 上周校准的a × 100
+
+例:上周校准节点X的a值=50瓶/天
+  本周实际a值算出来:
+    52瓶/天 → score = 96 (准)
+    65瓶/天 → score = 70 (有偏)
+    100瓶/天 → score = 0 (大偏·学习)</div>
+  </div>
+</div>
+
+<!-- 置信度调整 -->
+<div class="section">
+  <div class="sec-num">03 / CONFIDENCE · 置信度自动调整规则</div>
+  <div class="sec-t">高分→升·低分→降</div>
+
+  <div class="rule-card ru4">
+    <div class="rule-hdr"><div class="rule-num">CONFIDENCE RULE 1</div><div class="rule-tag">向上调整</div></div>
+    <div class="rule-t">连续10次outcome_score>=80 → 置信度+5</div>
+    <div class="rule-cond">
+      <strong>▸ 触发条件</strong>
+      同一类决策(如"上海KA门店补货推单") · 最近10次平均outcome>=80 · 自动升级置信度
+    </div>
+    <div class="rule-act">
+      <strong>▸ 效果</strong>
+      该类决策默认置信度+5(从80→85) · 当置信度>=90时·自动批准·不需要人工
+    </div>
+  </div>
+
+  <div class="rule-card ru4">
+    <div class="rule-hdr"><div class="rule-num">CONFIDENCE RULE 2</div><div class="rule-tag">向下调整</div></div>
+    <div class="rule-t">连续3次outcome_score<=40 → 置信度-10</div>
+    <div class="rule-cond">
+      <strong>▸ 触发条件</strong>
+      同一类决策连续3次拉胯 · 立刻拉低置信度·防止继续犯错
+    </div>
+    <div class="rule-act">
+      <strong>▸ 效果</strong>
+      该类决策默认置信度-10(从80→70) · 同时触发"复盘工单"·DS+Tech Lead分析根因
+    </div>
+  </div>
+
+  <div class="rule-card ru4">
+    <div class="rule-hdr"><div class="rule-num">CONFIDENCE RULE 3</div><div class="rule-tag">异常熔断</div></div>
+    <div class="rule-t">单次outcome_score=0 → 同类决策暂停24h</div>
+    <div class="rule-cond">
+      <strong>▸ 触发条件</strong>
+      推单完全失败(score=0)·或人工标记"重大误报" · 立刻熔断
+    </div>
+    <div class="rule-act">
+      <strong>▸ 效果</strong>
+      该类决策24小时不再推送 · DS+Tech Lead必须复盘后才能恢复
+    </div>
+  </div>
+</div>
+
+<!-- 学习样本 -->
+<div class="section">
+  <div class="sec-num">04 / SAMPLES · 学习样本累积阈值</div>
+  <div class="sec-t">DS提过的"500样本"门槛</div>
+
+  <div class="rule-card ru5">
+    <div class="rule-hdr"><div class="rule-num">SAMPLE THRESHOLD</div><div class="rule-tag">规则解锁</div></div>
+    <div class="rule-t">不同样本量·解锁不同能力</div>
+    <div class="formula-box">样本数 < 50    → Agent全部决策必须人工确认
+样本数 50-200 → 高置信度(>=90)的决策可自动·其余人工
+样本数 200-500→ 中置信度(>=75)的决策可自动·低置信度推送
+样本数 >= 500 → Agent进入"自主区间"·只推关键决策给DS
+
+8周项目预估样本累积:
+  Week 1-2:0样本(尚未上线)
+  Week 3-4:~50样本(上线初期)
+  Week 5-6:~200样本(全量推单后)
+  Week 7-8:~500样本 → 进入自主区间</div>
+  </div>
+</div>
+
+<!-- 学习日志 -->
+<div class="section">
+  <div class="sec-num">05 / LOG TABLE · 学习日志表设计</div>
+  <div class="sec-t">inf_learning_log · 一切学习都要落表</div>
+
+  <div class="formula-box">CREATE TABLE `inf_learning_log` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT,
+  `action_id` BIGINT UNSIGNED NOT NULL,
+  `agent_type` VARCHAR(32) NOT NULL,
+  `decision_category` VARCHAR(64) NOT NULL,
+  
+  `predicted_value` DECIMAL(10,2),
+  `actual_value` DECIMAL(10,2),
+  `outcome_score` TINYINT NOT NULL,
+  
+  `confidence_before` TINYINT,
+  `confidence_after` TINYINT,
+  `reason` TEXT,
+  
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `feedback_at` DATETIME,
+  
+  PRIMARY KEY (`id`),
+  KEY `idx_agent_category` (`agent_type`, `decision_category`),
+  KEY `idx_score` (`outcome_score`)
+);</div>
+</div>
+
+<!-- 8周路径 -->
+<div class="section">
+  <div class="sec-num">06 / TIMELINE · 8周学习成长路径</div>
+  <div class="sec-t">Agent从"Day 1笨蛋"到"Week 8专家"</div>
+
+  <div class="timeline-card">
+    <div class="tl-row"><div class="tl-week">W1-2</div><div class="tl-stage">出生期</div><div class="tl-detail">Agent上线·所有决策都要人工确认 · DS亲自看每一条</div></div>
+    <div class="tl-row"><div class="tl-week">W3-4</div><div class="tl-stage">学步期</div><div class="tl-detail">前50样本累积 · Agent开始有outcome数据 · 第1次置信度调整</div></div>
+    <div class="tl-row"><div class="tl-week">W5</div><div class="tl-stage">少年期</div><div class="tl-detail">~200样本 · 高置信度决策(>=90)自动批准 · DS审核量减半</div></div>
+    <div class="tl-row"><div class="tl-week">W6</div><div class="tl-stage">青年期</div><div class="tl-detail">第1次熔断或重大调整 · 经历真实业务波动·学到关键经验</div></div>
+    <div class="tl-row"><div class="tl-week">W7</div><div class="tl-stage">成年期</div><div class="tl-detail">~500样本 · Agent进入自主区间 · DS只看关键决策(<5%)</div></div>
+    <div class="tl-row"><div class="tl-week">W8</div><div class="tl-stage">专家期</div><div class="tl-detail"><strong>Layer 3.5达成</strong>·Agent准确率>85% · 真正帮DS节省时间</div></div>
+  </div>
+</div>
+
+<!-- 总结 -->
+<div class="summary-box">
+  <div class="sb-t">▸ 学习机制 · INFINITY OS的智能源泉</div>
+  <div class="sb-body">
+    没有学习机制 → Agent永远是Day 1的水平·5周后还是5周前的笨蛋<br><br>
+    有学习机制 → Agent第6周比第3周准30% · 第8周自主决策>50%<br><br>
+    <strong>这是Layer 3和Layer 3.5的分水岭:</strong><br>
+    Layer 3 = Agent能跑·但每次都要DS确认<br>
+    Layer 3.5 = Agent越跑越准·DS越来越自由<br><br>
+    <strong style="color:var(--teal)">8周后·DS不再是"INFINITY OS的操作员"<br>
+    是INFINITY OS的"战略家" · Agent处理80%细节·DS只做20%关键决策</strong><br><br>
+    这就是DS最初想要的"AI转型"<br><br>
+    <strong>学习机制 = INFINITY OS活下去的本能</strong>
+  </div>
+</div>
+
+<div class="footer">
+  INFINITY OS · 学习累积机制 · <span>LEARNING-001</span><br>
+  Agent · Layer 3.5的关键设计 · 2026.04.21<br>
+  <span>5步闭环 · 3个评分公式 · 3条置信度规则 · 1张日志表</span>
+</div>
+
+</body>
+</html>
