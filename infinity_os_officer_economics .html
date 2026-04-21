@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>增长官单位经济模型 · INFINITY OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0b10;
+  --bg2: #0f1118;
+  --bg3: #141720;
+  --card: #181c26;
+  --card2: #1e2330;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8ecf5;
+  --text2: #8a95aa;
+  --text3: #4a5468;
+  --amber: #f5a623;
+  --amber2: #ffc85e;
+  --teal: #4ecdc4;
+  --red: #ff5f5f;
+  --green: #4ade80;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh}
+
+/* ═══ TOPBAR ═══ */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(10,11,16,0.95);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:12px 18px;display:flex;align-items:center;justify-content:space-between;
+}
+.tb-left{display:flex;align-items:center;gap:12px}
+.tb-logo{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,#4ade80,#f5a623);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:#000;
+}
+.tb-t{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.tb-s{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:0.1em}
+.tb-back{
+  font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);
+  padding:4px 10px;border:1px solid var(--border2);border-radius:12px;cursor:pointer;text-decoration:none;
+}
+.tb-back:hover{color:var(--green);border-color:var(--green)}
+
+/* ═══ HERO ═══ */
+.hero{padding:26px 18px 22px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.hero-tag{
+  display:inline-block;font-family:'Space Mono',monospace;font-size:10px;
+  color:var(--green);letter-spacing:0.2em;
+  border:1px solid var(--green);padding:3px 10px;border-radius:2px;margin-bottom:12px;
+}
+.hero-t{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1.15;margin-bottom:6px}
+.hero-t span{color:var(--green)}
+.hero-s{font-size:12px;color:var(--text2);line-height:1.6}
+.hero-q{
+  margin-top:14px;background:rgba(74,222,128,0.05);border-left:3px solid var(--green);
+  padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;color:var(--text2);line-height:1.7;
+}
+.hero-q strong{color:var(--green)}
+
+/* ═══ SUMMARY ═══ */
+.summary{
+  padding:22px 18px;background:var(--bg2);border-bottom:1px solid var(--border);
+}
+.sm-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:0.2em;margin-bottom:14px}
+.sm-hero-box{
+  background:linear-gradient(135deg,rgba(74,222,128,0.08),rgba(245,166,35,0.04));
+  border:1px solid rgba(74,222,128,0.25);border-radius:14px;padding:18px;
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+  margin-bottom:12px;
+}
+.sm-hero-l{flex:1}
+.sm-hero-l-lbl{font-size:11px;color:var(--text3);margin-bottom:4px}
+.sm-hero-l-val{font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:var(--green);line-height:1;letter-spacing:-0.02em}
+.sm-hero-l-sub{font-size:11px;color:var(--text2);margin-top:6px}
+.sm-hero-r{text-align:right}
+.sm-hero-verdict{
+  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;
+  padding:6px 12px;border-radius:16px;font-weight:700;
+  background:rgba(74,222,128,0.15);color:var(--green);border:1px solid rgba(74,222,128,0.4);
+  white-space:nowrap;
+}
+.sm-hero-verdict.warn{background:rgba(245,166,35,0.15);color:var(--amber);border-color:rgba(245,166,35,0.4)}
+.sm-hero-verdict.bad{background:rgba(255,95,95,0.15);color:var(--red);border-color:rgba(255,95,95,0.4)}
+
+.sm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sm-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+.sm-box-lbl{font-size:10px;color:var(--text3);margin-bottom:4px}
+.sm-box-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1}
+.sm-box-val.teal{color:var(--teal)}
+.sm-box-val.blue{color:var(--blue)}
+.sm-box-val.amber{color:var(--amber)}
+.sm-box-sub{font-size:9px;color:var(--text3);margin-top:4px;font-family:'Space Mono',monospace}
+
+/* ═══ SECTION ═══ */
+.section{padding:24px 18px;border-bottom:1px solid var(--border)}
+.sec-hdr{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
+.sec-num{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:0.2em;margin-bottom:4px}
+.sec-t{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;line-height:1.2}
+.sec-meta{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:0.1em}
+.sec-hint{font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.55}
+
+/* ═══ 投入端 (COST) ═══ */
+.flow-container{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:768px){.flow-container{grid-template-columns:1fr 1fr}}
+
+.side-card{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;
+  position:relative;
+}
+.side-card.cost::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--red);border-radius:12px 12px 0 0}
+.side-card.revenue::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--green);border-radius:12px 12px 0 0}
+.side-title{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.side-icon{font-size:18px}
+.side-ttl{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+.side-tag{
+  margin-left:auto;font-family:'Space Mono',monospace;font-size:9px;
+  padding:2px 6px;border-radius:3px;letter-spacing:0.1em;
+}
+.side-tag.cost{background:rgba(255,95,95,0.12);color:var(--red);border:1px solid rgba(255,95,95,0.3)}
+.side-tag.revenue{background:rgba(74,222,128,0.12);color:var(--green);border:1px solid rgba(74,222,128,0.3)}
+
+.line-item{
+  display:grid;grid-template-columns:1fr auto;gap:10px;
+  padding:9px 0;border-bottom:1px dashed var(--border);
+  font-size:12px;align-items:center;
+}
+.line-item:last-child{border-bottom:none}
+.li-label{color:var(--text2);line-height:1.4}
+.li-label-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.li-value{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--text)}
+.li-value.big{color:var(--amber);font-size:14px}
+.line-total{
+  margin-top:8px;padding:10px 0 0;border-top:2px solid var(--border2);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.lt-lbl{font-size:12px;font-weight:700;color:var(--text)}
+.lt-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1}
+.lt-val.red{color:var(--red)}
+.lt-val.green{color:var(--green)}
+
+/* ═══ 调参区 ═══ */
+.sim-card{
+  background:linear-gradient(135deg,var(--card) 0%,rgba(167,139,250,0.04) 100%);
+  border:1px solid rgba(167,139,250,0.25);border-radius:14px;padding:18px;
+}
+.sim-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.sim-icon{font-size:16px}
+.sim-ttl{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--purple)}
+.sim-hint{font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.55}
+
+.slider-group{display:flex;flex-direction:column;gap:16px}
+.slider-row{}
+.sr-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sr-lbl{font-size:12px;color:var(--text2)}
+.sr-val{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--purple)}
+.sr-slider{
+  -webkit-appearance:none;appearance:none;width:100%;height:5px;
+  background:rgba(167,139,250,0.15);border-radius:3px;outline:none;cursor:pointer;
+}
+.sr-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;
+  background:var(--purple);cursor:pointer;box-shadow:0 2px 8px rgba(167,139,250,0.4);
+}
+.sr-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--purple);cursor:pointer;border:none}
+.sr-range{display:flex;justify-content:space-between;margin-top:4px;font-family:'Space Mono',monospace;font-size:9px;color:var(--text3)}
+
+/* ═══ 场景对比 ═══ */
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sc-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 10px;
+  text-align:center;position:relative;
+}
+.sc-card.bear::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--red);border-radius:10px 10px 0 0}
+.sc-card.base::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--amber);border-radius:10px 10px 0 0}
+.sc-card.bull::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--green);border-radius:10px 10px 0 0}
+.sc-lbl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;margin-bottom:4px}
+.sc-lbl.bear{color:var(--red)}
+.sc-lbl.base{color:var(--amber)}
+.sc-lbl.bull{color:var(--green)}
+.sc-ttl{font-size:11px;font-weight:600;margin-bottom:8px;color:var(--text2)}
+.sc-roi{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1;margin-bottom:3px}
+.sc-roi.bear{color:var(--red)}
+.sc-roi.base{color:var(--amber)}
+.sc-roi.bull{color:var(--green)}
+.sc-sub{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace}
+
+/* ═══ 决策矩阵 ═══ */
+.decision-matrix{display:flex;flex-direction:column;gap:8px}
+.dm-row{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;display:flex;align-items:center;gap:12px;
+}
+.dm-row.green{border-left:3px solid var(--green);background:rgba(74,222,128,0.04)}
+.dm-row.amber{border-left:3px solid var(--amber);background:rgba(245,166,35,0.04)}
+.dm-row.red{border-left:3px solid var(--red);background:rgba(255,95,95,0.04)}
+.dm-range{
+  font-family:'Space Mono',monospace;font-weight:700;font-size:14px;
+  flex-shrink:0;min-width:80px;
+}
+.dm-range.green{color:var(--green)}
+.dm-range.amber{color:var(--amber)}
+.dm-range.red{color:var(--red)}
+.dm-action{flex:1;font-size:12px;color:var(--text2);line-height:1.55}
+.dm-action strong{color:var(--text)}
+
+/* ═══ 阶段复制经济 ═══ */
+.stage-card{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;
+  margin-bottom:10px;
+}
+.stage-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.stage-phase{
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;
+  padding:3px 8px;border-radius:3px;
+  background:rgba(245,166,35,0.1);color:var(--amber);border:1px solid rgba(245,166,35,0.3);
+}
+.stage-years{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+
+.stage-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sg-box{}
+.sg-lbl{font-size:9px;color:var(--text3);margin-bottom:3px;font-family:'Space Mono',monospace;letter-spacing:0.05em}
+.sg-val{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;line-height:1}
+.sg-val.amber{color:var(--amber)}
+.sg-val.teal{color:var(--teal)}
+.sg-val.green{color:var(--green)}
+
+.stage-verdict{
+  margin-top:10px;padding-top:10px;border-top:1px solid var(--border);
+  font-size:11px;color:var(--text2);line-height:1.6;
+}
+.stage-verdict strong{color:var(--amber)}
+
+/* ═══ 风险警示 ═══ */
+.risk-panel{
+  background:rgba(255,95,95,0.04);border:1px solid rgba(255,95,95,0.2);border-radius:12px;
+  padding:14px;margin-top:10px;
+}
+.risk-t{font-size:13px;font-weight:700;color:var(--red);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.risk-list{display:flex;flex-direction:column;gap:6px}
+.risk-item{font-size:11px;color:var(--text2);line-height:1.55;padding-left:14px;position:relative}
+.risk-item::before{content:'!';position:absolute;left:0;top:0;color:var(--red);font-weight:700}
+.risk-item strong{color:var(--text)}
+
+/* ═══ FOOTER ═══ */
+.footer{padding:22px 18px;text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:0.1em;line-height:1.8}
+.footer span{color:var(--green)}
+
+@media(max-width:520px){
+  .hero-t{font-size:22px}
+  .sm-hero-l-val{font-size:32px}
+  .sm-grid{grid-template-columns:1fr 1fr}
+  .sm-box:last-child{grid-column:span 2}
+  .stage-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-logo">$</div>
+    <div>
+      <div class="tb-t">增长官单位经济模型</div>
+      <div class="tb-s">UNIT ECONOMICS · v0.1</div>
+    </div>
+  </div>
+  <a class="tb-back" href="index_v4.html">← 返回</a>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">UNIT ECONOMICS · 单位经济模型</div>
+  <div class="hero-t">1个增长官 · <span>1年值多少钱</span></div>
+  <div class="hero-s">
+    阶段二50城复制的唯一依据 · 上海5个增长官跑通后可外推 · 每季度校准会复盘
+  </div>
+  <div class="hero-q">
+    <strong>核心问题：</strong>如果1个增长官的年化ROI < 1:2.5·那阶段二扩招150人就是烧钱。这个模型必须在2027年底前被真实数据证实·否则阶段二延期。
+  </div>
+</div>
+
+<!-- ═══ SUMMARY 结论总览 ═══ -->
+<div class="summary">
+  <div class="sm-label">▸ BOTTOM LINE · 结论</div>
+
+  <div class="sm-hero-box">
+    <div class="sm-hero-l">
+      <div class="sm-hero-l-lbl">年化 ROI · 基准场景</div>
+      <div class="sm-hero-l-val">1 : <span id="roiValue">3.8</span></div>
+      <div class="sm-hero-l-sub">每投入 ¥1 创造 ¥<span id="roiCents">3.8</span> 增量销售</div>
+    </div>
+    <div class="sm-hero-r">
+      <div class="sm-hero-verdict" id="verdict">✓ 可复制</div>
+    </div>
+  </div>
+
+  <div class="sm-grid">
+    <div class="sm-box">
+      <div class="sm-box-lbl">年化投入</div>
+      <div class="sm-box-val amber" id="costDisplay">¥68万</div>
+      <div class="sm-box-sub">1 OFFICER / YEAR</div>
+    </div>
+    <div class="sm-box">
+      <div class="sm-box-lbl">年化增量销售</div>
+      <div class="sm-box-val teal" id="salesDisplay">¥260万</div>
+      <div class="sm-box-sub">INCREMENTAL SALES</div>
+    </div>
+    <div class="sm-box">
+      <div class="sm-box-lbl">回本周期</div>
+      <div class="sm-box-val blue" id="paybackDisplay">9.4月</div>
+      <div class="sm-box-sub">PAYBACK PERIOD</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ① 收支结构 ═══ -->
+<div class="section">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-num">01 / P&amp;L BREAKDOWN</div>
+      <div class="sec-t">1个增长官的完整收支结构</div>
+    </div>
+    <div class="sec-meta">年化基准</div>
+  </div>
+  <div class="sec-hint">基于上海黄浦增长官3个月真实数据外推·每一项后续会被SAP Step 2真实数据校准</div>
+
+  <div class="flow-container">
+    <!-- 投入 -->
+    <div class="side-card cost">
+      <div class="side-title">
+        <span class="side-icon">💸</span>
+        <span class="side-ttl">投入端 · COST</span>
+        <span class="side-tag cost">ANNUAL</span>
+      </div>
+      <div class="line-item">
+        <div>
+          <div class="li-label">基本工资+绩效</div>
+          <div class="li-label-sub">月薪¥2.5万·含社保+年终</div>
+        </div>
+        <div class="li-value">¥38万</div>
+      </div>
+      <div class="line-item">
+        <div>
+          <div class="li-label">出差+交通补贴</div>
+          <div class="li-label-sub">日均10家门店拜访燃油/地铁</div>
+        </div>
+        <div class="li-value">¥3.6万</div>
+      </div>
+      <div class="line-item">
+        <div>
+          <div class="li-label">分摊美顾团队</div>
+          <div class="li-label-sub">每区56人·增长官分摊部分</div>
+        </div>
+        <div class="li-value">¥12万</div>
+      </div>
+      <div class="line-item">
+        <div>
+          <div class="li-label">陈列+物料+样品</div>
+          <div class="li-label-sub">促销物料·样品·堆头</div>
+        </div>
+        <div class="li-value">¥8万</div>
+      </div>
+      <div class="line-item">
+        <div>
+          <div class="li-label">培训+系统+OA</div>
+          <div class="li-label-sub">INFINITY OS账号·黄埔班分摊</div>
+        </div>
+        <div class="li-value">¥2.4万</div>
+      </div>
+      <div class="line-item">
+        <div>
+          <div class="li-label">分摊城市经理+总部</div>
+          <div class="li-label-sub">向上管理+职能分摊</div>
+        </div>
+        <div class="li-value">¥4万</div>
+      </div>
+      <div class="line-total">
+        <span class="lt-lbl">总投入 · TOTAL COST</span>
+        <span class="lt-val red">¥68万</span>
+      </div>
+    </div>
+
+    <!-- 产出 -->
+    <div class="side-card revenue">
+      <div class="side-title">
+        <span class="side-icon">💰</span>
+        <span class="side-ttl">产出端 · REVENUE</span>
+        <span class="side-tag revenue">INCREMENTAL</span>
+      </div>
+      <div class="line-item">
+        <div>
+          <div class="li-label">S+门店增量 · 60家</div>
+          <div class="li-label-sub">3次/周覆盖·年化提升¥3万/店</div>
+        </div>
+        <div class="li-value big">¥180万</div>
+      </div>
+      <div class="line-item">
+        <div>
+          <div class="li-label">S门店增量 · 80家</div>
+          <div class="li-label-sub">2次/周·年化提升¥0.8万/店</div>
+        </div>
+        <div class="li-value">¥64万</div>
+      </div>
+      <div class="line-item">
+        <div>
+          <div class="li-label">新拓店贡献 · 20家</div>
+          <div class="li-label-sub">新增S+/S·年化¥0.5万/店</div>
+        </div>
+        <div class="li-value">¥10万</div>
+      </div>
+      <div class="line-item">
+        <div>
+          <div class="li-label">窜货拦截+乱价处置</div>
+          <div class="li-label-sub">守住价格底线·保护毛利</div>
+        </div>
+        <div class="li-value">¥3万</div>
+      </div>
+      <div class="line-item">
+        <div>
+          <div class="li-label">经销商健康度提升</div>
+          <div class="li-label-sub">CB分上升带来稳定补货</div>
+        </div>
+        <div class="li-value">¥3万</div>
+      </div>
+      <div class="line-total">
+        <span class="lt-lbl">增量销售 · TOTAL REVENUE</span>
+        <span class="lt-val green">¥260万</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ② 敏感度分析 ═══ -->
+<div class="section">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-num">02 / SENSITIVITY</div>
+      <div class="sec-t">敏感度分析 · 拖动参数查看ROI变化</div>
+    </div>
+    <div class="sec-meta">INTERACTIVE</div>
+  </div>
+
+  <div class="sim-card">
+    <div class="sim-hdr">
+      <span class="sim-icon">🎛</span>
+      <span class="sim-ttl">调参模拟器</span>
+    </div>
+    <div class="sim-hint">
+      调整核心变量看ROI如何变化·理解哪个变量最敏感·哪里是阶段二扩张的真正瓶颈
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-row">
+        <div class="sr-top">
+          <span class="sr-lbl">S+门店数量 · 1增长官负责</span>
+          <span class="sr-val" id="sPlusVal">60 家</span>
+        </div>
+        <input type="range" class="sr-slider" id="sPlus" min="30" max="100" value="60" step="5">
+        <div class="sr-range"><span>30家</span><span>65家 基准</span><span>100家</span></div>
+      </div>
+
+      <div class="slider-row">
+        <div class="sr-top">
+          <span class="sr-lbl">S+单店年化增量</span>
+          <span class="sr-val" id="liftVal">¥3.0 万</span>
+        </div>
+        <input type="range" class="sr-slider" id="lift" min="15" max="60" value="30" step="1">
+        <div class="sr-range"><span>¥1.5万</span><span>¥3万 基准</span><span>¥6万</span></div>
+      </div>
+
+      <div class="slider-row">
+        <div class="sr-top">
+          <span class="sr-lbl">增长官年化总成本</span>
+          <span class="sr-val" id="costVal">¥68 万</span>
+        </div>
+        <input type="range" class="sr-slider" id="cost" min="50" max="100" value="68" step="1">
+        <div class="sr-range"><span>¥50万</span><span>¥68万 基准</span><span>¥100万</span></div>
+      </div>
+
+      <div class="slider-row">
+        <div class="sr-top">
+          <span class="sr-lbl">目标ROI下限 · 红线</span>
+          <span class="sr-val" id="targetVal">1 : 2.5</span>
+        </div>
+        <input type="range" class="sr-slider" id="target" min="15" max="50" value="25" step="1">
+        <div class="sr-range"><span>1:1.5</span><span>1:2.5 红线</span><span>1:5.0</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ③ 三场景 ═══ -->
+<div class="section">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-num">03 / THREE SCENARIOS</div>
+      <div class="sec-t">悲观·基准·乐观 三场景推演</div>
+    </div>
+    <div class="sec-meta">2027.Q4 判断</div>
+  </div>
+
+  <div class="scenario-grid">
+    <div class="sc-card bear">
+      <div class="sc-lbl bear">BEAR · 悲观</div>
+      <div class="sc-ttl">S+少/增量低/成本高</div>
+      <div class="sc-roi bear">1:1.8</div>
+      <div class="sc-sub">暂停扩招</div>
+    </div>
+    <div class="sc-card base">
+      <div class="sc-lbl base">BASE · 基准</div>
+      <div class="sc-ttl">上海实际跑通</div>
+      <div class="sc-roi base">1:3.8</div>
+      <div class="sc-sub">启动复制</div>
+    </div>
+    <div class="sc-card bull">
+      <div class="sc-lbl bull">BULL · 乐观</div>
+      <div class="sc-ttl">心智建立势能溢出</div>
+      <div class="sc-roi bull">1:5.4</div>
+      <div class="sc-sub">激进扩张</div>
+    </div>
+  </div>
+
+  <div class="risk-panel" style="margin-top:14px">
+    <div class="risk-t">⚠ 悲观场景触发条件(全部命中即悲观)</div>
+    <div class="risk-list">
+      <div class="risk-item">竞品大规模价格战·六月鲜守RED 01导致短期销量压力·<strong>单店增量低于¥1.8万</strong></div>
+      <div class="risk-item">人才招聘困难·增长官薪资被迫上浮20%·<strong>年化成本突破¥82万</strong></div>
+      <div class="risk-item">S+门店资源被竞品锁定·1增长官可管数量降到<strong>40家以下</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ④ 决策矩阵 ═══ -->
+<div class="section">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-num">04 / DECISION MATRIX</div>
+      <div class="sec-t">ROI决策矩阵 · 什么数字触发什么动作</div>
+    </div>
+    <div class="sec-meta">红线规则</div>
+  </div>
+
+  <div class="decision-matrix">
+    <div class="dm-row green">
+      <div class="dm-range green">1 : ≥3.5</div>
+      <div class="dm-action"><strong>启动复制·加速扩张</strong> · 单位经济模型成立·阶段二可按原计划50城扩招150人·INFINITY OS层级需同步升级</div>
+    </div>
+    <div class="dm-row green">
+      <div class="dm-range green">1 : 3.0-3.5</div>
+      <div class="dm-action"><strong>启动复制·审慎扩张</strong> · 模型成立但非最优·先扩到Wave 01的15城验证·后续看真实数据决定</div>
+    </div>
+    <div class="dm-row amber">
+      <div class="dm-range amber">1 : 2.5-3.0</div>
+      <div class="dm-action"><strong>暂缓+优化</strong> · 扩张不停但节奏放慢·增长官黄埔班加强培训·找出上海Top 2增长官经验复制</div>
+    </div>
+    <div class="dm-row amber">
+      <div class="dm-range amber">1 : 2.0-2.5</div>
+      <div class="dm-action"><strong>暂停扩招·深度诊断</strong> · 触发辅导流程·3个月内必须提升·否则压缩阶段二规模</div>
+    </div>
+    <div class="dm-row red">
+      <div class="dm-range red">1 : &lt;2.0</div>
+      <div class="dm-action"><strong>全面暂停+战略重新评估</strong> · 模型不成立·阶段二延期至2029·触发经营层校准会紧急决议·考虑战略目标修正</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ⑤ 阶段复制经济 ═══ -->
+<div class="section">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-num">05 / PHASE ECONOMICS</div>
+      <div class="sec-t">四阶段的增长官经济</div>
+    </div>
+    <div class="sec-meta">2026 → 2033</div>
+  </div>
+
+  <div class="stage-card">
+    <div class="stage-top">
+      <span class="stage-phase">PHASE 1 · 立足战</span>
+      <span class="stage-years">2026-2027</span>
+    </div>
+    <div class="stage-grid">
+      <div class="sg-box"><div class="sg-lbl">团队</div><div class="sg-val amber">15</div></div>
+      <div class="sg-box"><div class="sg-lbl">年化成本</div><div class="sg-val">¥1,020万</div></div>
+      <div class="sg-box"><div class="sg-lbl">年化增量</div><div class="sg-val teal">¥3,900万</div></div>
+      <div class="sg-box"><div class="sg-lbl">累计ROI</div><div class="sg-val green">1:3.8</div></div>
+    </div>
+    <div class="stage-verdict">上海反应堆阶段·<strong>15增长官全部在上海+华东辐射</strong>·这个阶段的ROI数据将作为阶段二扩张的判断依据</div>
+  </div>
+
+  <div class="stage-card">
+    <div class="stage-top">
+      <span class="stage-phase">PHASE 2 · 根据战</span>
+      <span class="stage-years">2028-2029</span>
+    </div>
+    <div class="stage-grid">
+      <div class="sg-box"><div class="sg-lbl">团队</div><div class="sg-val amber">150</div></div>
+      <div class="sg-box"><div class="sg-lbl">年化成本</div><div class="sg-val">¥1.02亿</div></div>
+      <div class="sg-box"><div class="sg-lbl">年化增量</div><div class="sg-val teal">¥3.9亿</div></div>
+      <div class="sg-box"><div class="sg-lbl">累计ROI</div><div class="sg-val green">1:3.8</div></div>
+    </div>
+    <div class="stage-verdict">50城×3增长官平均·<strong>组织扩张3倍</strong>·最大风险：单位经济稀释(新人ROI < 上海老人)</div>
+  </div>
+
+  <div class="stage-card">
+    <div class="stage-top">
+      <span class="stage-phase">PHASE 3 · 势能战</span>
+      <span class="stage-years">2030-2032</span>
+    </div>
+    <div class="stage-grid">
+      <div class="sg-box"><div class="sg-lbl">团队</div><div class="sg-val amber">500</div></div>
+      <div class="sg-box"><div class="sg-lbl">年化成本</div><div class="sg-val">¥3.4亿</div></div>
+      <div class="sg-box"><div class="sg-lbl">年化增量</div><div class="sg-val teal">¥13亿</div></div>
+      <div class="sg-box"><div class="sg-lbl">累计ROI</div><div class="sg-val green">1:3.8</div></div>
+    </div>
+    <div class="stage-verdict">150城×3+ · <strong>品牌势能溢出开始</strong> · 增长官单位经济可能因心智建立而自然提升到1:4.5+</div>
+  </div>
+
+  <div class="stage-card">
+    <div class="stage-top">
+      <span class="stage-phase">PHASE 4 · 收割战</span>
+      <span class="stage-years">2033</span>
+    </div>
+    <div class="stage-grid">
+      <div class="sg-box"><div class="sg-lbl">团队</div><div class="sg-val amber">500</div></div>
+      <div class="sg-box"><div class="sg-lbl">年化成本</div><div class="sg-val">¥3.4亿</div></div>
+      <div class="sg-box"><div class="sg-lbl">年化增量</div><div class="sg-val teal">¥20亿</div></div>
+      <div class="sg-box"><div class="sg-lbl">累计ROI</div><div class="sg-val green">1:5.9</div></div>
+    </div>
+    <div class="stage-verdict">团队不再扩·<strong>势能时代:单位经济大幅改善</strong>·同样500人产生更大增量·这是安全第一品牌的标志</div>
+  </div>
+</div>
+
+<!-- ═══ ⑥ 校准机制 ═══ -->
+<div class="section">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-num">06 / CALIBRATION</div>
+      <div class="sec-t">校准机制 · 模型如何保持真实</div>
+    </div>
+    <div class="sec-meta">每季度</div>
+  </div>
+
+  <div class="sec-hint" style="margin-bottom:14px">
+    模型的风险不是"算错"·是"假设过时"·必须有一个机制定期把真实数据灌进来
+  </div>
+
+  <div class="scenario-grid" style="grid-template-columns:1fr">
+    <div class="stage-card" style="margin:0">
+      <div class="stage-top">
+        <span class="stage-phase" style="background:rgba(167,139,250,0.1);color:var(--purple);border-color:rgba(167,139,250,0.3)">EVERY QUARTER · 季度校准</span>
+        <span class="stage-years">战略目标动态校准会</span>
+      </div>
+      <div class="stage-verdict" style="border-top:none;padding-top:0;margin-top:0">
+        <strong>每季度校准会必查5项：</strong><br>
+        ① 上次会议ROI预测 vs 本季度真实ROI · 偏差>20%必须分析<br>
+        ② S+门店实际覆盖数(模型假设60) · 上海整体平均<br>
+        ③ S+单店真实增量(模型假设¥3万) · 来自SAP真实销售数据<br>
+        ④ 增长官真实年化总成本(模型假设¥68万) · 含隐性成本<br>
+        ⑤ 单位经济模型版本号(当前v0.1) · 累计校准次数
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  INFINITY OS · 增长官单位经济模型 · <span>v0.1</span><br>
+  签发：DS · 2026.04.19 · Layer 1.3 · 基于上海黄浦增长官3个月真实数据外推<br>
+  每季度校准会刷新 · 2027.Q4阶段一收官前模型必须v1.0锁定
+</div>
+
+<script>
+// 参数敏感度计算引擎
+const sliders = {
+  sPlus: document.getElementById('sPlus'),
+  lift: document.getElementById('lift'),  // 0.1万 unit
+  cost: document.getElementById('cost'),
+  target: document.getElementById('target'), // 0.1x unit
+};
+
+const displays = {
+  sPlus: document.getElementById('sPlusVal'),
+  lift: document.getElementById('liftVal'),
+  cost: document.getElementById('costVal'),
+  target: document.getElementById('targetVal'),
+  roi: document.getElementById('roiValue'),
+  roiCents: document.getElementById('roiCents'),
+  cost2: document.getElementById('costDisplay'),
+  sales: document.getElementById('salesDisplay'),
+  payback: document.getElementById('paybackDisplay'),
+  verdict: document.getElementById('verdict'),
+};
+
+function calc() {
+  const sPlus = parseInt(sliders.sPlus.value);
+  const lift = parseInt(sliders.lift.value) / 10;  // 万
+  const cost = parseInt(sliders.cost.value);  // 万
+  const target = parseInt(sliders.target.value) / 10;  // ROI倍数
+  
+  // 产出: S+门店 × 单店增量 + 其他固定贡献(80万约)
+  const sPlusRev = sPlus * lift;
+  const totalRev = sPlusRev + 80; // S店+新拓+窜货+经销商 约80万
+  
+  const roi = totalRev / cost;
+  const payback = (cost / totalRev) * 12;
+  
+  // 显示
+  displays.sPlus.textContent = sPlus + ' 家';
+  displays.lift.textContent = '¥' + lift.toFixed(1) + ' 万';
+  displays.cost.textContent = '¥' + cost + ' 万';
+  displays.target.textContent = '1 : ' + target.toFixed(1);
+  
+  displays.roi.textContent = roi.toFixed(1);
+  displays.roiCents.textContent = roi.toFixed(1);
+  displays.cost2.textContent = '¥' + cost + '万';
+  displays.sales.textContent = '¥' + totalRev.toFixed(0) + '万';
+  displays.payback.textContent = payback.toFixed(1) + '月';
+  
+  // 判定
+  const v = displays.verdict;
+  if (roi >= target + 1) {
+    v.textContent = '✓ 可复制·加速';
+    v.className = 'sm-hero-verdict';
+  } else if (roi >= target) {
+    v.textContent = '✓ 可复制';
+    v.className = 'sm-hero-verdict';
+  } else if (roi >= target - 0.5) {
+    v.textContent = '⚠ 审慎扩张';
+    v.className = 'sm-hero-verdict warn';
+  } else {
+    v.textContent = '✗ 暂停扩招';
+    v.className = 'sm-hero-verdict bad';
+  }
+  
+  // 根据ROI改变主数字颜色
+  const roiEl = document.querySelector('.sm-hero-l-val');
+  if (roi >= target + 1) roiEl.style.color = 'var(--green)';
+  else if (roi >= target) roiEl.style.color = 'var(--green)';
+  else if (roi >= target - 0.5) roiEl.style.color = 'var(--amber)';
+  else roiEl.style.color = 'var(--red)';
+}
+
+Object.values(sliders).forEach(s => s.addEventListener('input', calc));
+calc();
+</script>
+</body>
+</html>

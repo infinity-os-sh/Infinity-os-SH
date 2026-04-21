@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAP Step 2解锁倒推清单 · INFINITY OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0b10;
+  --bg2: #0f1118;
+  --bg3: #141720;
+  --card: #181c26;
+  --card2: #1e2330;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8ecf5;
+  --text2: #8a95aa;
+  --text3: #4a5468;
+  --amber: #f5a623;
+  --teal: #4ecdc4;
+  --red: #ff5f5f;
+  --green: #4ade80;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh}
+
+/* ═══ TOPBAR ═══ */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(10,11,16,0.95);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:12px 18px;display:flex;align-items:center;justify-content:space-between;
+}
+.tb-left{display:flex;align-items:center;gap:12px}
+.tb-logo{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,#ff5f5f,#f5a623);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:#000;
+}
+.tb-t{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.tb-s{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:0.1em}
+.tb-back{font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);padding:4px 10px;border:1px solid var(--border2);border-radius:12px;cursor:pointer;text-decoration:none}
+.tb-back:hover{color:var(--red);border-color:var(--red)}
+
+/* ═══ HERO ═══ */
+.hero{padding:26px 18px 22px;border-bottom:1px solid var(--border);position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(255,95,95,0.03),var(--bg) 60%)}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.hero-tag{
+  display:inline-block;font-family:'Space Mono',monospace;font-size:10px;
+  color:var(--red);letter-spacing:0.2em;
+  border:1px solid var(--red);padding:3px 10px;border-radius:2px;margin-bottom:12px;
+}
+.hero-t{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1.15;margin-bottom:6px}
+.hero-t span{color:var(--red)}
+.hero-s{font-size:12px;color:var(--text2);line-height:1.6}
+.hero-problem{
+  margin-top:14px;background:rgba(255,95,95,0.05);border-left:3px solid var(--red);
+  padding:12px 14px;border-radius:0 8px 8px 0;font-size:12px;color:var(--text2);line-height:1.7;
+}
+.hero-problem strong{color:var(--red)}
+
+/* ═══ COUNTDOWN ═══ */
+.countdown{
+  padding:20px 18px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:18px;
+}
+.cd-label{flex:1}
+.cd-lbl{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:0.15em;margin-bottom:4px}
+.cd-title{font-size:14px;font-weight:700;margin-bottom:2px}
+.cd-sub{font-size:11px;color:var(--text3)}
+.cd-days{text-align:right;flex-shrink:0}
+.cd-d-val{font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:var(--red);line-height:1}
+.cd-d-lbl{font-size:10px;color:var(--text3);margin-top:2px;font-family:'Space Mono',monospace}
+
+/* ═══ SECTION ═══ */
+.section{padding:24px 18px;border-bottom:1px solid var(--border)}
+.sec-hdr{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
+.sec-num{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:0.2em;margin-bottom:4px}
+.sec-t{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;line-height:1.2}
+.sec-meta{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:0.1em}
+.sec-hint{font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6}
+
+/* ═══ 影响面 ═══ */
+.impact-grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:680px){.impact-grid{grid-template-columns:repeat(2,1fr)}}
+
+.impact-card{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;
+  border-left:3px solid var(--red);
+  position:relative;
+}
+.impact-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.impact-icon{
+  width:34px;height:34px;border-radius:8px;
+  background:rgba(255,95,95,0.1);display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+.impact-name{font-size:13px;font-weight:700}
+.impact-chip{
+  margin-left:auto;font-family:'Space Mono',monospace;font-size:9px;
+  padding:2px 6px;border-radius:3px;letter-spacing:0.1em;
+  background:rgba(255,95,95,0.12);color:var(--red);border:1px solid rgba(255,95,95,0.3);
+}
+.impact-desc{font-size:11px;color:var(--text2);line-height:1.6}
+.impact-desc strong{color:var(--red)}
+
+/* ═══ 倒推时间轴 ═══ */
+.timeline{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:18px;position:relative;
+}
+.tl-spine{
+  position:absolute;left:82px;top:18px;bottom:18px;width:2px;
+  background:linear-gradient(180deg,var(--red),var(--amber),var(--green));
+}
+.tl-step{
+  display:grid;grid-template-columns:70px 1fr;gap:14px;padding:12px 0;
+  position:relative;
+}
+.tl-step:first-child{padding-top:0}
+.tl-step:last-child{padding-bottom:0}
+.tl-day{
+  font-family:'Space Mono',monospace;font-weight:700;font-size:13px;
+  text-align:right;padding-right:8px;padding-top:8px;
+}
+.tl-day.d-red{color:var(--red)}
+.tl-day.d-amber{color:var(--amber)}
+.tl-day.d-green{color:var(--green)}
+.tl-day .sub{display:block;font-size:9px;color:var(--text3);margin-top:2px;font-weight:400}
+
+.tl-marker{
+  position:absolute;left:76px;top:14px;width:14px;height:14px;border-radius:50%;
+  background:var(--bg);border:3px solid var(--red);z-index:2;
+}
+.tl-step.amber .tl-marker{border-color:var(--amber)}
+.tl-step.green .tl-marker{border-color:var(--green)}
+.tl-step.done .tl-marker{border-color:var(--green);background:var(--green)}
+
+.tl-body{padding-top:4px}
+.tl-title{font-size:13px;font-weight:700;margin-bottom:4px;line-height:1.4}
+.tl-owner{
+  display:inline-block;font-family:'Space Mono',monospace;font-size:9px;
+  padding:2px 6px;border-radius:3px;margin-bottom:6px;letter-spacing:0.1em;
+}
+.tl-owner.ds{background:rgba(245,166,35,0.12);color:var(--amber);border:1px solid rgba(245,166,35,0.3)}
+.tl-owner.biz{background:rgba(96,165,250,0.12);color:var(--blue);border:1px solid rgba(96,165,250,0.3)}
+.tl-owner.dba{background:rgba(167,139,250,0.12);color:var(--purple);border:1px solid rgba(167,139,250,0.3)}
+.tl-owner.os{background:rgba(78,205,196,0.12);color:var(--teal);border:1px solid rgba(78,205,196,0.3)}
+.tl-owner.ceo{background:rgba(255,95,95,0.12);color:var(--red);border:1px solid rgba(255,95,95,0.3)}
+
+.tl-items{display:flex;flex-direction:column;gap:4px;margin-top:5px}
+.tl-item{
+  font-size:11px;color:var(--text2);line-height:1.55;padding-left:14px;position:relative;
+}
+.tl-item::before{content:'';position:absolute;left:2px;top:7px;width:4px;height:4px;border-radius:50%;background:var(--text3)}
+.tl-item strong{color:var(--text)}
+
+.tl-verify{
+  margin-top:6px;padding:6px 10px;background:var(--bg3);border-radius:6px;
+  font-family:'Space Mono',monospace;font-size:10px;color:var(--green);border:1px solid var(--border);
+}
+.tl-verify::before{content:'✓ 验收标准：';color:var(--text3);margin-right:4px}
+
+/* ═══ 关键人 ═══ */
+.rolecards{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:720px){.rolecards{grid-template-columns:repeat(2,1fr)}}
+
+.rolecard{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;
+  position:relative;
+}
+.rc-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.rc-avatar{
+  width:42px;height:42px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:16px;font-weight:800;flex-shrink:0;
+}
+.rc-avatar.ds{background:rgba(245,166,35,0.15);color:var(--amber);border:1px solid rgba(245,166,35,0.3)}
+.rc-avatar.biz{background:rgba(96,165,250,0.15);color:var(--blue);border:1px solid rgba(96,165,250,0.3)}
+.rc-avatar.dba{background:rgba(167,139,250,0.15);color:var(--purple);border:1px solid rgba(167,139,250,0.3)}
+.rc-avatar.os{background:rgba(78,205,196,0.15);color:var(--teal);border:1px solid rgba(78,205,196,0.3)}
+.rc-avatar.ceo{background:rgba(255,95,95,0.15);color:var(--red);border:1px solid rgba(255,95,95,0.3)}
+
+.rc-info{flex:1;min-width:0}
+.rc-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:2px}
+.rc-role{font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:0.1em}
+.rc-deliverables{
+  font-size:11px;color:var(--text2);line-height:1.6;
+  padding-top:8px;border-top:1px dashed var(--border);
+}
+.rc-deliverables strong{color:var(--text)}
+.rc-d-label{font-size:10px;color:var(--text3);margin-bottom:4px;font-family:'Space Mono',monospace;letter-spacing:0.05em}
+
+/* ═══ 阻塞处理 ═══ */
+.block-panel{
+  background:rgba(255,95,95,0.04);border:1px solid rgba(255,95,95,0.2);
+  border-left:3px solid var(--red);border-radius:10px;padding:14px;margin-bottom:10px;
+}
+.block-q{font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px;line-height:1.5}
+.block-q::before{content:'Q · ';font-family:'Space Mono',monospace;color:var(--red);opacity:0.7}
+.block-a{font-size:11px;color:var(--text2);line-height:1.7}
+.block-a::before{content:'A · ';font-family:'Space Mono',monospace;color:var(--green);font-weight:700}
+.block-a strong{color:var(--text)}
+
+/* ═══ 每日播报 ═══ */
+.daily-alert{
+  background:linear-gradient(135deg,rgba(245,166,35,0.08),rgba(255,95,95,0.04));
+  border:1px solid rgba(245,166,35,0.3);border-radius:14px;padding:16px;
+}
+.da-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.da-pulse{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.da-ttl{font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:0.15em;font-weight:700}
+.da-content{font-size:12px;color:var(--text);line-height:1.7}
+.da-content strong{color:var(--amber)}
+
+/* ═══ FOOTER ═══ */
+.footer{padding:22px 18px;text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:0.1em;line-height:1.8}
+.footer span{color:var(--red)}
+
+@media(max-width:520px){
+  .hero-t{font-size:22px}
+  .cd-d-val{font-size:32px}
+  .tl-spine{left:58px}
+  .tl-marker{left:52px}
+  .tl-step{grid-template-columns:50px 1fr;gap:8px}
+  .tl-day{font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-logo">!</div>
+    <div>
+      <div class="tb-t">SAP Step 2 解锁倒推</div>
+      <div class="tb-s">UNBLOCK-001 · CRITICAL PATH</div>
+    </div>
+  </div>
+  <a class="tb-back" href="index_v4.html">← 返回</a>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">CRITICAL BLOCKER · 关键阻塞</div>
+  <div class="hero-t">当前最大<span>物理阻塞</span></div>
+  <div class="hero-s">
+    经营层闭环 / 单位经济模型 / 五大缺口 / 战略目标动态校准会 · 全部等待SAP Step 2解锁
+  </div>
+  <div class="hero-problem">
+    <strong>两个月的症结：</strong>业务团队填表+DBA执行SQL看起来是10天的工作量·但从2个月前说到现在还没动。
+    原因不是工作量·是<strong>没有拆解到"今天具体谁做什么"</strong>。
+    这份倒推清单把它从"承诺"变成"动作"。
+  </div>
+</div>
+
+<!-- COUNTDOWN -->
+<div class="countdown">
+  <div class="cd-label">
+    <div class="cd-lbl">COUNTDOWN · 解锁倒计时</div>
+    <div class="cd-title">SAP Step 2 首条真实数据进入INFINITY OS</div>
+    <div class="cd-sub">2026.07.01 · Q3 校准会前解锁</div>
+  </div>
+  <div class="cd-days">
+    <div class="cd-d-val">72</div>
+    <div class="cd-d-lbl">天后</div>
+  </div>
+</div>
+
+<!-- ═══ ① 阻塞影响面 ═══ -->
+<div class="section">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-num">01 / IMPACT</div>
+      <div class="sec-t">这个阻塞影响了什么</div>
+    </div>
+    <div class="sec-meta">全链路卡点</div>
+  </div>
+  <div class="sec-hint">SAP Step 2不是一个孤立的技术任务·它是整个经营层闭环的数据地基·不解锁则以下所有都停留在"假设"</div>
+
+  <div class="impact-grid">
+    <div class="impact-card">
+      <div class="impact-top">
+        <div class="impact-icon">🎯</div>
+        <div class="impact-name">单位经济模型</div>
+        <div class="impact-chip">HOLD</div>
+      </div>
+      <div class="impact-desc">
+        当前1:3.8是<strong>外推值不是真值</strong>·阶段二扩招¥1.02亿投入缺依据·E项模型停在v0.1无法校准
+      </div>
+    </div>
+
+    <div class="impact-card">
+      <div class="impact-top">
+        <div class="impact-icon">💓</div>
+        <div class="impact-name">A值校准Agent</div>
+        <div class="impact-chip">HOLD</div>
+      </div>
+      <div class="impact-desc">
+        心跳单元a无法用真实销售数据校准·<strong>全链水位计算基于模拟值</strong>·蝴蝶效应A/B/C三类失真检测不可信
+      </div>
+    </div>
+
+    <div class="impact-card">
+      <div class="impact-top">
+        <div class="impact-icon">⚙</div>
+        <div class="impact-name">战略目标动态校准会</div>
+        <div class="impact-chip">HOLD</div>
+      </div>
+      <div class="impact-desc">
+        Q3校准会第一段"三角对账"的<strong>微观数据源失效</strong>·CFO和CEO看到的数字不可信·会议变成讨论会
+      </div>
+    </div>
+
+    <div class="impact-card">
+      <div class="impact-top">
+        <div class="impact-icon">🔬</div>
+        <div class="impact-name">INFINITY OS层级</div>
+        <div class="impact-chip">HOLD</div>
+      </div>
+      <div class="impact-desc">
+        <strong>Layer 1.3 → Layer 2 必须跨越这一关</strong>·否则对外沟通只能标注估算·RED 03诚实标注红线持续受压
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ② 倒推时间轴 ═══ -->
+<div class="section">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-num">02 / REVERSE TIMELINE</div>
+      <div class="sec-t">从2026.07.01倒推·每个T-N日具体谁做什么</div>
+    </div>
+    <div class="sec-meta">72 天分解</div>
+  </div>
+  <div class="sec-hint">最终交付日=2026.07.01(Q3校准会前一周)·反向推到今天·每个节点都有责任人+具体动作+验收标准</div>
+
+  <div class="timeline">
+    <!-- T-0 终点 -->
+    <div class="tl-step green done">
+      <div class="tl-day d-green">T+0<span class="sub">07.01</span></div>
+      <div class="tl-marker"></div>
+      <div class="tl-body">
+        <div class="tl-title">✓ SAP Step 2首条真实数据进入INFINITY OS</div>
+        <span class="tl-owner os">@ OS-TEAM</span>
+        <div class="tl-items">
+          <div class="tl-item">Hologres表开始接收实时销售数据·MaxCompute历史回填完成</div>
+          <div class="tl-item">A值校准Agent首次用真实数据运行·输出上海16区基线r值</div>
+          <div class="tl-item">单位经济模型v0.1用真实数据校准·输出v0.2</div>
+        </div>
+        <div class="tl-verify">真实数据在上海作战指挥室上实时可见 · 数据延迟<24小时</div>
+      </div>
+    </div>
+
+    <!-- T-5 -->
+    <div class="tl-step amber">
+      <div class="tl-day d-amber">T-5<span class="sub">06.26</span></div>
+      <div class="tl-marker"></div>
+      <div class="tl-body">
+        <div class="tl-title">OS团队压测+验证</div>
+        <span class="tl-owner os">@ OS-TEAM</span>
+        <div class="tl-items">
+          <div class="tl-item">Hologres实时流压测·模拟50城数据量×3倍冗余</div>
+          <div class="tl-item">A值校准Agent接入真实数据·对比估算值偏差报告</div>
+          <div class="tl-item">企微API真实推送联调·1名增长官首次收到真实数据预警</div>
+        </div>
+        <div class="tl-verify">压测报告通过 · 偏差<20% · 增长官确认收到推送</div>
+      </div>
+    </div>
+
+    <!-- T-12 -->
+    <div class="tl-step amber">
+      <div class="tl-day d-amber">T-12<span class="sub">06.19</span></div>
+      <div class="tl-marker"></div>
+      <div class="tl-body">
+        <div class="tl-title">DBA执行SQL·数据管道正式启动</div>
+        <span class="tl-owner dba">@ DBA</span>
+        <div class="tl-items">
+          <div class="tl-item">DBA在生产环境执行node_targets SQL(约200行)</div>
+          <div class="tl-item">SAP ECC → Hologres实时流启用(每15分钟刷新)</div>
+          <div class="tl-item">MaxCompute回填历史12个月数据(约322张表)</div>
+        </div>
+        <div class="tl-verify">数据管道Status=Running · 首批记录进入inf_performance表</div>
+      </div>
+    </div>
+
+    <!-- T-20 -->
+    <div class="tl-step amber">
+      <div class="tl-day d-amber">T-20<span class="sub">06.11</span></div>
+      <div class="tl-marker"></div>
+      <div class="tl-body">
+        <div class="tl-title">DBA预演+CEO最终批准</div>
+        <span class="tl-owner ceo">@ CEO</span>
+        <div class="tl-items">
+          <div class="tl-item">DBA在UAT环境完整预演SQL执行·产出日志</div>
+          <div class="tl-item">CEO审阅预演日志+数据治理报告·签字批准生产执行</div>
+          <div class="tl-item">正式与IT安全团队提交生产变更申请</div>
+        </div>
+        <div class="tl-verify">CEO签字+生产变更申请编号</div>
+      </div>
+    </div>
+
+    <!-- T-30 -->
+    <div class="tl-step red">
+      <div class="tl-day d-red">T-30<span class="sub">06.01</span></div>
+      <div class="tl-marker"></div>
+      <div class="tl-body">
+        <div class="tl-title">业务团队完成node_targets最后一行</div>
+        <span class="tl-owner biz">@ BIZ</span>
+        <div class="tl-items">
+          <div class="tl-item">上海16区×5品牌×主要SKU的r_target全部录入</div>
+          <div class="tl-item">每个SKU分级(A/B/C/D)确认</div>
+          <div class="tl-item">导出infinity_os_node_targets SQL文件提交DBA</div>
+        </div>
+        <div class="tl-verify">SQL文件预估行数≥800行·包含全部上海SKU</div>
+      </div>
+    </div>
+
+    <!-- T-45 -->
+    <div class="tl-step red">
+      <div class="tl-day d-red">T-45<span class="sub">05.17</span></div>
+      <div class="tl-marker"></div>
+      <div class="tl-body">
+        <div class="tl-title">业务团队首批50%填写+DS抽检</div>
+        <span class="tl-owner biz">@ BIZ</span>
+        <div class="tl-items">
+          <div class="tl-item">浦东·静安·徐汇·黄浦·长宁5重点区填写完成</div>
+          <div class="tl-item">DS随机抽取10条数据·增长官现场确认真实性</div>
+          <div class="tl-item">第一次业务团队-DS-OS三方周会正式化</div>
+        </div>
+        <div class="tl-verify">抽检命中率≥90% · 5重点区全量数据入库</div>
+      </div>
+    </div>
+
+    <!-- T-60 -->
+    <div class="tl-step red">
+      <div class="tl-day d-red">T-60<span class="sub">05.02</span></div>
+      <div class="tl-marker"></div>
+      <div class="tl-body">
+        <div class="tl-title">业务团队培训+启动填写</div>
+        <span class="tl-owner biz">@ BIZ</span>
+        <div class="tl-items">
+          <div class="tl-item">2小时培训会·DS讲解node_targets表意义+填写规则</div>
+          <div class="tl-item">分配16区填写责任人·每区1-2名业务代表</div>
+          <div class="tl-item">启动每日15分钟站会·DS主持·业务团队必到</div>
+        </div>
+        <div class="tl-verify">16区责任人全部到岗 · 站会机制运行</div>
+      </div>
+    </div>
+
+    <!-- T-72 今天 -->
+    <div class="tl-step red">
+      <div class="tl-day d-red">T-72<span class="sub">TODAY</span></div>
+      <div class="tl-marker" style="box-shadow:0 0 12px var(--red)"></div>
+      <div class="tl-body">
+        <div class="tl-title">DS启动会议+确认责任人</div>
+        <span class="tl-owner ds">@ DS</span>
+        <div class="tl-items">
+          <div class="tl-item"><strong>本周内</strong>召集CEO+业务VP+IT负责人+DBA四方会议</div>
+          <div class="tl-item">发布本倒推清单UNBLOCK-001·签字确认</div>
+          <div class="tl-item">指定业务VP为业务侧Ownership持有人·IT负责人为技术侧Ownership持有人</div>
+        </div>
+        <div class="tl-verify">四方签字清单 · 责任人到岗 · 每日站会开始</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ③ 4个关键人 ═══ -->
+<div class="section">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-num">03 / KEY PEOPLE</div>
+      <div class="sec-t">4位关键责任人 · 各自交付物清单</div>
+    </div>
+    <div class="sec-meta">ACCOUNTABILITY</div>
+  </div>
+
+  <div class="rolecards">
+    <div class="rolecard">
+      <div class="rc-top">
+        <div class="rc-avatar ds">DS</div>
+        <div class="rc-info">
+          <div class="rc-name">DS · 战略架构(本清单Owner)</div>
+          <div class="rc-role">COORDINATION · 协调</div>
+        </div>
+      </div>
+      <div class="rc-d-label">交付物</div>
+      <div class="rc-deliverables">
+        <strong>本周</strong>:UNBLOCK-001发布+四方签字 · <strong>T-60</strong>:2小时业务培训主讲 ·
+        <strong>T-45</strong>:业务数据抽检执行 · <strong>每日</strong>:15分钟站会主持 ·
+        <strong>T-20</strong>:向CEO提交预演日志+治理报告
+      </div>
+    </div>
+
+    <div class="rolecard">
+      <div class="rc-top">
+        <div class="rc-avatar biz">BIZ</div>
+        <div class="rc-info">
+          <div class="rc-name">业务VP · 业务侧Ownership</div>
+          <div class="rc-role">DATA ENTRY · 数据录入</div>
+        </div>
+      </div>
+      <div class="rc-d-label">交付物</div>
+      <div class="rc-deliverables">
+        <strong>T-60</strong>:指定16区业务责任人到岗 ·
+        <strong>T-45</strong>:5重点区node_targets全量填写 ·
+        <strong>T-30</strong>:16区全部填写完成+SQL导出 ·
+        <strong>每日站会</strong>:汇报填写进度+阻塞
+      </div>
+    </div>
+
+    <div class="rolecard">
+      <div class="rc-top">
+        <div class="rc-avatar dba">IT</div>
+        <div class="rc-info">
+          <div class="rc-name">IT负责人+DBA · 技术侧Ownership</div>
+          <div class="rc-role">EXECUTION · 执行</div>
+        </div>
+      </div>
+      <div class="rc-d-label">交付物</div>
+      <div class="rc-deliverables">
+        <strong>T-30</strong>:接收SQL文件+UAT环境准备 ·
+        <strong>T-20</strong>:UAT预演+日志产出 ·
+        <strong>T-12</strong>:生产执行SQL·数据管道启动 ·
+        <strong>T-5</strong>:技术联调配合OS团队压测
+      </div>
+    </div>
+
+    <div class="rolecard">
+      <div class="rc-top">
+        <div class="rc-avatar ceo">CEO</div>
+        <div class="rc-info">
+          <div class="rc-name">CEO · 最终决策</div>
+          <div class="rc-role">APPROVAL · 审批</div>
+        </div>
+      </div>
+      <div class="rc-d-label">交付物</div>
+      <div class="rc-deliverables">
+        <strong>本周</strong>:四方会议签字启动 ·
+        <strong>T-20</strong>:审阅预演日志+治理报告·签字批准生产执行 ·
+        <strong>T-0</strong>:Q3校准会前确认首条真实数据 ·
+        <strong>例外处理</strong>:任何阻塞升级优先级必须CEO 48小时内回应
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ④ 阻塞处理预案 ═══ -->
+<div class="section">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-num">04 / UNBLOCK PROTOCOL</div>
+      <div class="sec-t">阻塞处理预案 · 最常见5个"卡住"场景</div>
+    </div>
+    <div class="sec-meta">SOP</div>
+  </div>
+  <div class="sec-hint">两个月没动不是因为难·是因为遇到以下场景没有标准处理方式·这5个预案把每个场景的"卡点"拍清楚</div>
+
+  <div class="block-panel">
+    <div class="block-q">业务团队说"我们不确定每个SKU的r_target应该填多少"·要等市场部数据才能填</div>
+    <div class="block-a">
+      <strong>标准答案：</strong>不等。每个SKU的当前r值已在系统(历史数据)·用历史平均值×(1+5%)作为初始r_target填入·后续每月真实数据校准。<strong>原则：先填再改·不是先想清楚再填。</strong>
+    </div>
+  </div>
+
+  <div class="block-panel">
+    <div class="block-q">IT说"生产变更需要走完整变更流程·至少4周·可能赶不上7月"</div>
+    <div class="block-a">
+      <strong>标准答案：</strong>DS今天即启动变更申请(T-72即提交变更编号)·变更审批和业务填写并行·T-30前完成变更审批·T-12执行。变更审批不是T-30才开始的事。<strong>原则：关键路径并行·不是串行。</strong>
+    </div>
+  </div>
+
+  <div class="block-panel">
+    <div class="block-q">业务责任人说"我同时负责5个项目·没有时间填表"</div>
+    <div class="block-a">
+      <strong>标准答案：</strong>业务VP直接指定·不是请求。填表时间估算：16区×20SKU×每条1分钟=320分钟=5-6小时总工作量。分5天·每天<strong>1小时承诺</strong>即可完成。<strong>原则：换算成小时·不是工作量。</strong>
+    </div>
+  </div>
+
+  <div class="block-panel">
+    <div class="block-q">DBA说"SQL可能导致线上性能波动·需要窗口期·但窗口期要排期"</div>
+    <div class="block-a">
+      <strong>标准答案：</strong>T-20向IT要周六凌晨2:00的标准维护窗口·INSERT语句对性能影响小于1%·不需要特殊停机。<strong>原则：具体到时间·不是"等排期"。</strong>
+    </div>
+  </div>
+
+  <div class="block-panel">
+    <div class="block-q">数据治理说"SAP数据涉及财务+销售+客户·需要多部门数据授权·流程复杂"</div>
+    <div class="block-a">
+      <strong>标准答案：</strong>node_targets是聚合数据·不是明细数据·治理风险极低。DS今天即向CEO提交<strong>一页纸授权请求</strong>·CEO一次性授权全部所需字段。<strong>原则：一次授权·不是逐个申请。</strong>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ⑤ 每日播报 ═══ -->
+<div class="section">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-num">05 / DAILY STATUS</div>
+      <div class="sec-t">每日15分钟站会 · 播报机制</div>
+    </div>
+    <div class="sec-meta">T-60 STARTS</div>
+  </div>
+
+  <div class="daily-alert">
+    <div class="da-top">
+      <div class="da-pulse"></div>
+      <div class="da-ttl">DAILY STANDUP · 每日9:00</div>
+    </div>
+    <div class="da-content">
+      T-60 开始 · 每个工作日上午9:00 · 15分钟 · 参会人:<strong>DS主持 + 业务VP + IT负责人</strong> · 三个问题:
+      <br><br>
+      <strong>Q1:</strong> 昨天完成了什么(进度数据)<br>
+      <strong>Q2:</strong> 今天要完成什么(具体动作)<br>
+      <strong>Q3:</strong> 有什么阻塞(需要CEO介入的写明)<br>
+      <br>
+      播报结果每日企微群公告·战略路径仪表盘自动更新 UNBLOCK-001 进度条。
+      <strong>连续3天无进度推送CEO升级处理。</strong>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  INFINITY OS · SAP Step 2 解锁倒推清单 · <span>UNBLOCK-001</span><br>
+  签发:DS · 2026.04.19 · Layer 1.3 · 与Q3校准会刚性绑定<br>
+  本清单是当前经营层闭环的第1个阻塞点·不解锁则闭环不闭环
+</div>
+
+</body>
+</html>
