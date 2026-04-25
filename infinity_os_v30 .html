@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 合伙人制 V1.2 · 欣和SH</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#07080c;--ink2:#0c0e14;--ink3:#12151e;
+  --card:#161b24;--card2:#1c2230;
+  --border:rgba(255,255,255,.05);--border2:rgba(255,255,255,.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#363d50;
+  --gold:#c9922a;--gold2:#e8b84b;--gold3:#f5d07a;
+  --gold-dim:rgba(201,146,42,.08);--gold-glow:rgba(201,146,42,.18);
+  --gold-border:rgba(201,146,42,.3);
+  --teal:#3abfb8;--teal-dim:rgba(58,191,184,.08);
+  --green:#35b06a;--green-dim:rgba(53,176,106,.08);
+  --red:#d94f4f;--red-dim:rgba(217,79,79,.08);
+  --blue:#4485cc;--blue-dim:rgba(68,133,204,.08);
+  --purple:#8b6ee0;--purple-dim:rgba(139,110,224,.08);
+  --rose:#d4507a;--rose-dim:rgba(212,80,122,.08);
+  --silver:#8a9ab0;--silver-dim:rgba(138,154,176,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{background:var(--ink);color:var(--text);font-family:'Noto Sans SC',sans-serif}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;overflow:hidden}
+.screen.on{display:flex;animation:fi .28s ease}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ 角色选择屏 ══ */
+#s-role{justify-content:center;align-items:center;padding:16px;
+  background:radial-gradient(ellipse at 20% 20%,rgba(201,146,42,.05) 0%,transparent 60%),
+             radial-gradient(ellipse at 80% 80%,rgba(58,191,184,.03) 0%,transparent 60%),var(--ink)}
+.role-wrap{width:100%;max-width:560px}
+.role-top{text-align:center;margin-bottom:22px}
+.r-sym{width:54px;height:54px;border-radius:14px;margin:0 auto 12px;
+  background:linear-gradient(135deg,var(--gold),#b8760f);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--ink);
+  box-shadow:0 8px 28px rgba(201,146,42,.28)}
+.r-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--text);letter-spacing:.04em;margin-bottom:2px}
+.r-sub{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;letter-spacing:.07em;margin-bottom:8px}
+.r-star{font-size:12px;color:var(--gold2);margin-bottom:4px}
+.r-star span{font-family:'Space Mono',monospace;font-weight:700}
+
+.role-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+@media(min-width:460px){.role-grid{grid-template-columns:repeat(3,1fr);gap:10px}}
+.rc{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:16px 12px;cursor:pointer;transition:all .22s;text-align:center;
+  position:relative;overflow:hidden}
+.rc:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.rc:active{transform:scale(.97)}
+/* deep partner gold border */
+.rc.deep{border-color:var(--gold-border);background:linear-gradient(135deg,var(--card),rgba(201,146,42,.04))}
+.rc.deep::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--gold),transparent)}
+.rc-badge{position:absolute;top:7px;right:8px;font-size:9px;font-weight:700;
+  padding:1px 6px;border-radius:8px;letter-spacing:.04em}
+.badge-deep{background:var(--gold);color:var(--ink)}
+.badge-std{background:rgba(255,255,255,.08);color:var(--text3)}
+.rc-icon{font-size:24px;margin-bottom:7px;display:block}
+.rc-name{font-size:12px;font-weight:700;margin-bottom:3px}
+.rc-desc{font-size:10px;color:var(--text3);line-height:1.5}
+
+/* ══ 通用仪表板元素 ══ */
+.topbar{background:rgba(7,8,12,.96);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 15px;height:52px;flex-shrink:0}
+.tb-l{display:flex;align-items:center;gap:9px}
+.tb-sym{width:30px;height:30px;border-radius:7px;
+  background:linear-gradient(135deg,var(--gold),#b8760f);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:700;color:var(--ink)}
+.tb-name{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;
+  color:var(--text);letter-spacing:.03em}
+.tb-r{display:flex;align-items:center;gap:7px}
+.tb-pill{font-size:10px;background:var(--gold-dim);border:1px solid var(--gold-border);
+  color:var(--gold2);padding:3px 9px;border-radius:12px;cursor:pointer;transition:all .2s}
+.tb-pill:hover{background:var(--gold-glow)}
+.tb-clock{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+
+.wb{display:flex;justify-content:space-between;align-items:flex-start;
+  padding:11px 15px 6px;flex-shrink:0}
+.wb-l{}
+.wb-greet{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;
+  color:var(--text);line-height:1.3}
+.wb-date{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px}
+.wb-badge{font-size:10px;padding:3px 9px;border-radius:10px;font-weight:700;flex-shrink:0}
+.wb-deep{background:var(--gold);color:var(--ink)}
+.wb-std{background:rgba(255,255,255,.07);color:var(--silver)}
+
+.body{flex:1;overflow-y:auto;padding:10px 15px 60px}
+.body::-webkit-scrollbar{width:3px}
+.body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:2px}
+
+/* 北极星进度 */
+.star-bar{background:linear-gradient(135deg,rgba(201,146,42,.08),rgba(7,8,12,0));
+  border:1px solid var(--gold-border);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.sb-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.sb-title{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:var(--gold2)}
+.sb-pct{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--gold)}
+.sb-track{height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-bottom:5px}
+.sb-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.sb-bot{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+
+/* 双向承诺卡 */
+.pact-card{background:var(--card);border:1px solid var(--border);border-radius:13px;
+  overflow:hidden;margin-bottom:10px}
+.pact-hdr{display:flex;border-bottom:1px solid var(--border)}
+.pact-col{flex:1;padding:10px 12px}
+.pact-col:first-child{border-right:1px solid var(--border)}
+.pact-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.07em;
+  text-transform:uppercase;margin-bottom:7px}
+.pact-item{display:flex;align-items:flex-start;gap:6px;font-size:11px;
+  color:var(--text2);margin-bottom:5px;line-height:1.4}
+.pact-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:8px;margin-top:1px}
+.dot-ok{background:var(--green-dim);color:var(--green);border:1px solid rgba(53,176,106,.2)}
+.dot-pend{background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-border)}
+.dot-no{background:var(--red-dim);color:var(--red);border:1px solid rgba(217,79,79,.2)}
+
+/* sec 标题 */
+.sec{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.09em;
+  text-transform:uppercase;display:flex;align-items:center;gap:7px;
+  margin-bottom:8px;margin-top:14px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* 核心数字 */
+.core-row{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:2px}
+.core-box{background:var(--card);border:1px solid var(--border);border-radius:11px;
+  padding:11px 8px;text-align:center}
+.cv{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;line-height:1}
+.cl{font-size:9px;color:var(--text3);margin-top:4px;line-height:1.3}
+.ct{font-size:10px;font-weight:700;margin-top:3px;font-family:'Space Mono',monospace}
+.up{color:var(--green)}.dn{color:var(--red)}.wn{color:var(--gold)}
+
+/* 待办 */
+.todo{display:flex;align-items:center;gap:9px;padding:9px 12px;
+  border-radius:10px;margin-bottom:6px;transition:all .15s}
+.t-urg{background:var(--red-dim);border:1px solid rgba(217,79,79,.2)}
+.t-nrm{background:var(--gold-dim);border:1px solid var(--gold-border)}
+.t-inf{background:var(--blue-dim);border:1px solid rgba(68,133,204,.2)}
+.t-ic{font-size:17px;flex-shrink:0}
+.t-b{flex:1;min-width:0}
+.t-title{font-size:12px;font-weight:700;margin-bottom:1px}
+.t-urg .t-title{color:var(--red)}.t-nrm .t-title{color:var(--gold2)}.t-inf .t-title{color:var(--blue)}
+.t-desc{font-size:10px;color:var(--text3)}
+.tbtn{padding:5px 11px;border-radius:16px;font-size:11px;font-weight:700;
+  border:none;cursor:pointer;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.b-r{background:var(--red);color:#fff}.b-g{background:var(--gold);color:var(--ink)}
+.b-b{background:var(--blue);color:#fff}.b-t{background:var(--teal);color:var(--ink)}
+.b-gr{background:var(--green);color:#fff}
+
+/* 模块网格 */
+.mod-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:4px}
+.mc{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:13px 12px;cursor:pointer;transition:all .2s;
+  display:flex;flex-direction:column;min-height:88px;position:relative;overflow:hidden}
+.mc:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.mc:active{transform:scale(.97)}
+.mc-top{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.mc-ic{font-size:17px}.mc-lbl{font-size:12px;font-weight:700}
+.mc-desc{font-size:10px;color:var(--text3);line-height:1.5;flex:1}
+.mc-arr{position:absolute;bottom:9px;right:11px;font-size:13px;color:var(--text3)}
+
+/* Layer 1.3 & 路线图 */
+.layer-card{background:var(--card);border:1px solid var(--gold-border);
+  border-radius:13px;padding:14px;margin-bottom:10px;
+  position:relative;overflow:hidden}
+.layer-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--gold),transparent)}
+.layer-title{font-size:13px;font-weight:700;color:var(--gold2);margin-bottom:10px;
+  display:flex;align-items:center;gap:7px}
+.layer-status{display:flex;align-items:center;gap:8px;background:rgba(201,146,42,.06);
+  border:1px solid var(--gold-border);border-radius:9px;padding:9px 12px;margin-bottom:8px}
+.ls-num{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--gold);flex-shrink:0;line-height:1}
+.ls-body{}
+.ls-name{font-size:12px;font-weight:700;color:var(--gold2);margin-bottom:2px}
+.ls-desc{font-size:11px;color:var(--text2)}
+.roadmap{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.rm-step{background:var(--ink3);border-radius:9px;padding:9px 10px;border:1px solid var(--border)}
+.rm-step.current{border-color:var(--gold-border);background:var(--gold-dim)}
+.rm-ph{font-size:10px;font-weight:700;margin-bottom:3px;font-family:'Space Mono',monospace}
+.rm-step.current .rm-ph{color:var(--gold)}
+.rm-name{font-size:11px;font-weight:600;margin-bottom:3px}
+.rm-step.current .rm-name{color:var(--gold2)}
+.rm-desc{font-size:10px;color:var(--text3);line-height:1.5}
+
+/* vs 勤策 */
+.qince-bar{background:var(--card);border:1px solid var(--border);
+  border-radius:13px;padding:14px;margin-bottom:10px;
+  position:relative;overflow:hidden}
+.qince-bar::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--green),var(--gold),var(--red))}
+.qb-title{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.qb-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.qb-col{text-align:center}
+.qb-val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;line-height:1}
+.qb-lbl{font-size:10px;color:var(--text3);margin-top:3px}
+.qb-bar{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:5px}
+.qb-fill{height:100%;border-radius:2px}
+
+/* AI Agent */
+.ai-wrap{background:var(--card);border:1px solid var(--border);
+  border-radius:13px;overflow:hidden;margin-top:14px;margin-bottom:4px}
+.ai-hdr{padding:10px 13px;border-bottom:1px solid var(--border);
+  font-size:11px;font-weight:700;color:var(--text3);
+  letter-spacing:.07em;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.ai-role{color:var(--gold2);font-size:12px}
+.cps{display:flex;gap:5px;padding:8px 12px;overflow-x:auto;scrollbar-width:none}
+.cps::-webkit-scrollbar{display:none}
+.cp{background:var(--ink3);border:1px solid var(--border);border-radius:14px;
+  padding:4px 10px;font-size:11px;color:var(--text2);white-space:nowrap;
+  cursor:pointer;transition:all .15s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.cp:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+.ai-bub{margin:0 12px 8px;background:var(--ink3);border:1px solid var(--border);
+  border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text2);line-height:1.65}
+.ai-resp{display:none;margin:0 12px 8px;background:var(--ink2);
+  border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.ai-resp.on{display:block}
+.ai-qe{font-size:10px;color:var(--text3);margin-bottom:6px;
+  padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ai-row{display:flex;gap:6px;padding:6px 12px 10px}
+.ai-in{flex:1;background:var(--ink3);border:1px solid var(--border);border-radius:9px;
+  padding:8px 11px;font-size:12px;color:var(--text);outline:none;
+  font-family:'Noto Sans SC',sans-serif}
+.ai-in:focus{border-color:var(--gold-border)}
+.ai-in::placeholder{color:var(--text3)}
+.ai-btn{width:36px;height:36px;border-radius:9px;background:var(--gold);
+  border:none;cursor:pointer;font-size:14px;flex-shrink:0;
+  color:var(--ink);font-weight:700}
+.td-w{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:tda 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tda{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* 会员消费者特殊 */
+.member-level{background:linear-gradient(135deg,rgba(201,146,42,.15),rgba(201,146,42,.05));
+  border:1px solid var(--gold-border);border-radius:12px;padding:14px;
+  text-align:center;margin-bottom:10px}
+.ml-crown{font-size:32px;margin-bottom:6px}
+.ml-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--gold2);margin-bottom:3px}
+.ml-sub{font-size:11px;color:var(--text3)}
+.ml-pts{font-family:'Space Mono',monospace;font-size:24px;font-weight:700;color:var(--gold);margin-top:8px}
+
+/* 底部全模块入口（管理层） */
+.all-mods{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:10px}
+.am-card{background:var(--ink3);border:1px solid var(--border);border-radius:10px;
+  padding:9px 11px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:8px}
+.am-card:hover{border-color:var(--border2);background:var(--card)}
+.am-ic{font-size:14px;flex-shrink:0}
+.am-body{flex:1;min-width:0}
+.am-name{font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.am-cat{font-size:9px;color:var(--text3)}
+.am-arr{font-size:11px;color:var(--text3);flex-shrink:0}
+</style>
+</head>
+<body>
+
+<!-- ══ 角色选择 ══ -->
+<div class="screen on" id="s-role">
+  <div class="role-wrap">
+    <div class="role-top">
+      <div class="r-sym">∞</div>
+      <div class="r-title">INFINITY OS</div>
+      <div class="r-sub">合伙人制 V1.2 · 欣和SH</div>
+      <div class="r-star">北极星：<span>2亿瓶 · ¥40亿</span> · 2029年</div>
+    </div>
+    <div class="role-grid" id="roleGrid"></div>
+  </div>
+</div>
+
+<!-- ══ 仪表板（动态生成）══ -->
+<div class="screen" id="s-dash">
+  <div class="topbar">
+    <div class="tb-l">
+      <div class="tb-sym">∞</div>
+      <div class="tb-name" id="tb-name">INFINITY OS</div>
+    </div>
+    <div class="tb-r">
+      <div class="tb-pill" onclick="chg()" id="tb-pill">角色 ▾</div>
+      <div class="tb-clock" id="tb-ck"></div>
+    </div>
+  </div>
+  <div class="wb">
+    <div>
+      <div class="wb-greet" id="wb-greet"></div>
+      <div class="wb-date" id="wb-date"></div>
+    </div>
+    <div class="wb-badge" id="wb-badge"></div>
+  </div>
+  <div class="body" id="dash-body"></div>
+</div>
+
+<script>
+// ══ 配置数据 ══════════════════════════════════════════
+const BASE = 'https://infinity-os-sh.github.io/Infinity-os-SH/';
+
+const ROLES = {
+  mgmt:{
+    name:'管理层', icon:'🏢', color:'var(--gold)', deep:true,
+    badge:'深度合伙·战略层', greeting:'全局视角·战略协调',
+    alert:{text:'⚠ 2条系统预警', cls:'wb-deep'},
+    northStar:{pct:34, label:'全国2亿瓶目标进度', contrib:'本月全国动销≈680万瓶'},
+    pact:{
+      mine:['ok:制定并守护合伙人协议','ok:提供系统·资源·人才','ok:透明资源承诺可视化','pend:完成Phase 2数据接入'],
+      partner:['ok:欣和 → 所有合伙方','ok:INFINITY OS全栈数字化','ok:SPD深度合伙模式','pend:Agent真实决策闭环']
+    },
+    core:[
+      {v:'71%', l:'全国动销达成率', t:'目标100%', c:'wn'},
+      {v:'+4.2%', l:'环比增长', t:'↑ 良好', c:'up'},
+      {v:'2条', l:'蝴蝶效应预警', t:'需处置', c:'dn'},
+    ],
+    todos:[
+      {cls:'t-urg', ic:'🦋', title:'浦东A类压货预警', desc:'宝仓贸易消化率61%·库存超3.5a', btn:'处置', bcls:'b-r', url:'infinity_os_agent_spec_02.html'},
+      {cls:'t-nrm', ic:'🍣', title:'本周Omakase推单审批', desc:'3个经销商·合计¥84,200·今日到期', btn:'审批', bcls:'b-g', url:'infinity_os_agent_spec_03.html'},
+      {cls:'t-inf', ic:'🎯', title:'遵循自然目标规则申请', desc:'B2超额触发上调·需管理层确认', btn:'审批', bcls:'b-b', url:'infinity_os_target_rules.html'},
+    ],
+    mods:[
+      {ic:'📊', lbl:'晨报中台', desc:'全国每日动销·节点健康', url:'infinity_os_v81.html', c:'var(--gold)'},
+      {ic:'🔍', lbl:'多维分析', desc:'SKU×城市×渠道下钻', url:'infinity_os_drilldown.html', c:'var(--teal)'},
+      {ic:'🦋', lbl:'蝴蝶效应', desc:'A/B/C/D失真全链检测', url:'infinity_os_agent_spec_02.html', c:'var(--red)'},
+      {ic:'💹', lbl:'财务视图', desc:'P&L·费用率·返利', url:'infinity_os_v84.html', c:'var(--gold2)'},
+    ],
+    ai:{
+      intro:'基于INFINITY OS合伙人制V1.2，帮您定位关键问题和行动优先级。',
+      qs:['今天最需要我处理的3件事','全国达成率71%差距在哪里','遵循自然500ml本月表现','宝仓贸易预警多严重'],
+      sys:'你是欣和SH管理层AI。INFINITY OS合伙人制V1.2：Autonomy×Alignment，两种轨道，深度合伙占20%拿80%资源。全国达成71%，蝴蝶效应2条预警，SPD试点进行中，北极星2亿瓶/4B RMB。直接给结论和行动，≤150字。'
+    },
+    showLayer:true, showAllMods:true
+  },
+  dom:{
+    name:'城市经理/DOM', icon:'📍', color:'var(--teal)', deep:false,
+    badge:'合伙人·执行层', greeting:'区域业绩·团队管理',
+    alert:{text:'⏰ 3家超期未访', cls:'wb-std'},
+    northStar:{pct:34, label:'我的区域对北极星的贡献', contrib:'区域本月动销≈48万瓶'},
+    pact:{
+      mine:['ok:区域动销达成率目标85%','ok:团队巡访频次达标','pend:消化率提升到75%','no:宝仓贸易库存处置'],
+      partner:['ok:INFINITY OS·DOM一本账','ok:系统预警实时推送','ok:Agent推单支持','pend:派驻经理到位（SPD）']
+    },
+    core:[
+      {v:'71%', l:'区域达成率', t:'目标85%', c:'wn'},
+      {v:'3家', l:'S+门店在轨', t:'正常', c:'up'},
+      {v:'61%', l:'消化率', t:'⚠ 注意', c:'dn'},
+    ],
+    todos:[
+      {cls:'t-urg', ic:'📦', title:'宝仓贸易库存处置', desc:'特级酱油4.2a·72小时内必须行动', btn:'处理', bcls:'b-r', url:'infinity_os_dist_ledger.html'},
+      {cls:'t-nrm', ic:'🏪', title:'世纪联华超期未访', desc:'上次2026-04-08·已超B级标准', btn:'安排', bcls:'b-g', url:'infinity_os_store_ledger.html'},
+    ],
+    mods:[
+      {ic:'📊', lbl:'DOM一本账', desc:'团队业绩·区域数据', url:'infinity_os_dom.html', c:'var(--teal)'},
+      {ic:'🏪', lbl:'占流门店', desc:'S+/S级·货架·巡访', url:'infinity_os_store_ledger.html', c:'var(--gold2)'},
+      {ic:'🤝', lbl:'经销商账单', desc:'库存水位·Omakase', url:'infinity_os_dist_ledger.html', c:'var(--purple)'},
+      {ic:'🦋', lbl:'蝴蝶效应', desc:'区域失真·预警响应', url:'infinity_os_agent_spec_02.html', c:'var(--red)'},
+    ],
+    ai:{
+      intro:'帮您分析区域重点和今日行动建议。',
+      qs:['今天区域最紧急3件事','宝仓贸易库存怎么处置','如何提升DSR达成率'],
+      sys:'你是欣和SH城市经理AI。区域达成71%，宝仓贸易消化率61%（铁律③警告），3家门店超期未访，S+门店全部在轨。合伙人制：城市经理对辖区DSR有连带责任。给具体行动建议，≤150字。'
+    }
+  },
+  dsr:{
+    name:'业务员 DSR', icon:'🧑‍💼', color:'var(--blue)', deep:false,
+    badge:'合伙人·一线执行', greeting:'今日门店巡访',
+    alert:{text:'📍 今日5家门店', cls:'wb-std'},
+    northStar:{pct:34, label:'我的动销对北极星的贡献', contrib:'本月个人动销≈12,000件'},
+    pact:{
+      mine:['ok:铺货率≥90%','ok:巡访频次S+3次/周','pend:动销达成率目标100%','ok:货架合规上报'],
+      partner:['ok:一本账透明薪酬计算','ok:SFA数字化工具','ok:Omakase补货建议','pend:CB分激励提升']
+    },
+    core:[
+      {v:'82%', l:'本月达成率', t:'目标100%', c:'wn'},
+      {v:'5/7', l:'本周巡访完成', t:'进行中', c:'up'},
+      {v:'90%', l:'铺货率', t:'✓达标', c:'up'},
+    ],
+    todos:[
+      {cls:'t-urg', ic:'⭐', title:'大润发金桥（S+）·上午', desc:'遵循自然1.1a偏低·需补货申请', btn:'紧急', bcls:'b-r', url:'infinity_os_store_ledger.html'},
+      {cls:'t-nrm', ic:'🏪', title:'家乐福浦东（S）·下午', desc:'黄金位被竞品占据·陈列整改', btn:'待访', bcls:'b-g', url:'infinity_os_store_ledger.html'},
+      {cls:'t-inf', ic:'🏪', title:'世纪联华+全家×2·下午', desc:'常规巡检·货架整理', btn:'计划', bcls:'b-b', url:'infinity_os_store_ledger.html'},
+    ],
+    mods:[
+      {ic:'🏪', lbl:'门店列表', desc:'我的门店·货架·巡访', url:'infinity_os_store_ledger.html', c:'var(--teal)'},
+      {ic:'📋', lbl:'我的一本账', desc:'本月薪酬·达成明细', url:'infinity_os_v82.html', c:'var(--gold)'},
+    ],
+    ai:{
+      intro:'帮您规划今日拜访和处理门店问题。',
+      qs:['大润发金桥缺货怎么处理','黄金位被竞品占据怎么谈','铺货率哪个SKU最差'],
+      sys:'你是欣和SH业务员AI。今日：大润发金桥（S+·遵循自然缺货），家乐福浦东（黄金位被占），世纪联华+2便利店。达成率82%，铺货率90%。合伙人制：欣和承诺给你工具和透明薪酬，你承诺铺货率和巡访达标。给实用建议，≤150字。'
+    }
+  },
+  ba:{
+    name:'美顾 BA', icon:'💄', color:'var(--rose)', deep:false,
+    badge:'合伙人·消费者触点', greeting:'消费者互动·CB分',
+    alert:{text:'⭐ CB分 88', cls:'wb-deep'},
+    northStar:{pct:34, label:'我服务的消费者对北极星的贡献', contrib:'本月互动≈340人·转化≈61人'},
+    pact:{
+      mine:['ok:消费者互动≥30人/天','ok:CB分目标≥80','ok:货架照片上报','pend:会员转化率≥20%'],
+      partner:['ok:绩效补贴50%（欣和）','ok:产品知识培训','ok:SFA任务系统','pend:消费者会员体系']
+    },
+    core:[
+      {v:'88', l:'顾客关系分', t:'↑ 优秀', c:'up'},
+      {v:'18%', l:'消费者转化率', t:'↑ 达标', c:'up'},
+      {v:'¥7,040', l:'本月预计薪酬', t:'含绩效', c:'wn'},
+    ],
+    todos:[
+      {cls:'t-nrm', ic:'👥', title:'大润发金桥·消费者互动', desc:'目标30人·样品发放·转化记录', btn:'开始', bcls:'b-g', url:'infinity_os_store_ledger.html'},
+      {cls:'t-inf', ic:'📸', title:'货架照片上报', desc:'今日巡检结束后拍照提交', btn:'待做', bcls:'b-b', url:'infinity_os_store_ledger.html'},
+    ],
+    mods:[
+      {ic:'🏪', lbl:'门店货架', desc:'陈列·黄金位·竞品', url:'infinity_os_store_ledger.html', c:'var(--rose)'},
+      {ic:'📋', lbl:'我的薪酬账单', desc:'CB分·绩效·本月合计', url:'infinity_os_v82.html', c:'var(--gold)'},
+    ],
+    ai:{
+      intro:'帮您提升消费者互动质量和CB分。',
+      qs:['如何提高消费者转化率','CB分88还能怎么提高','遵循自然怎么向消费者介绍'],
+      sys:'你是欣和SH美顾AI。CB分88，转化率18%，货架占比42%有黄金位。今日大润发金桥目标30人互动。合伙人制：美顾是消费者触点，欣和承诺绩效补贴，美顾承诺CB分和互动质量。给消费者互动建议，≤150字。'
+    }
+  },
+  dist:{
+    name:'经销商老板', icon:'🤝', color:'var(--purple)', deep:true,
+    badge:'深度合伙·SPD模式', greeting:'SPD战略伙伴经销',
+    alert:{text:'⚠ 3件待决策', cls:'wb-deep'},
+    northStar:{pct:34, label:'我的区域对北极星的贡献', contrib:'区域本月动销≈142,000件'},
+    pact:{
+      mine:['ok:仓储+本地关系网络','ok:DSR基本工资承担','pend:Q2促销配套¥25,000','ok:库存消化率目标75%'],
+      partner:['ok:派驻经理全额（¥18,000/月）','ok:INFINITY OS系统授权','pend:市场活动费¥25,000（等待配套）','ok:DSR绩效补贴30%']
+    },
+    core:[
+      {v:'¥1.3万', l:'本月净利润预测', t:'↑ 良好', c:'up'},
+      {v:'19%', l:'年化ROI', t:'↑ 达标', c:'up'},
+      {v:'72', l:'团队健康度', t:'关注', c:'wn'},
+    ],
+    todos:[
+      {cls:'t-urg', ic:'🍣', title:'本周补货推单待确认', desc:'系统推荐313件·预计¥28,400·24小时内', btn:'确认', bcls:'b-r', url:'infinity_os_spd_boss.html'},
+      {cls:'t-nrm', ic:'💰', title:'Q2促销配套资金', desc:'到位后欣和¥25,000自动解锁', btn:'处理', bcls:'b-g', url:'infinity_os_spd_boss.html'},
+      {cls:'t-inf', ic:'📊', title:'本月P&L查看', desc:'毛利润¥43,400·净利润¥13,000', btn:'查看', bcls:'b-b', url:'infinity_os_spd_boss.html'},
+    ],
+    mods:[
+      {ic:'📊', lbl:'SPD老板仪表板', desc:'完整经营·ROI·P&L', url:'infinity_os_spd_boss.html', c:'var(--purple)'},
+      {ic:'📦', lbl:'SKU账单', desc:'动销·库存水位·推单', url:'infinity_os_dist_ledger.html', c:'var(--teal)'},
+      {ic:'📝', lbl:'合约协议', desc:'SPD协议·资源承诺', url:'infinity_os_contracts.html', c:'var(--gold)'},
+      {ic:'🏪', lbl:'门店分布', desc:'旗下门店·动销追踪', url:'infinity_os_store_ledger.html', c:'var(--blue)'},
+    ],
+    ai:{
+      intro:'您好。我是您的SPD经营顾问，帮您算清楚每一笔账，优化合伙收益。',
+      qs:['本月净利润为何未达目标','特级酱油库存太多怎么办','SPD深度合伙对我有什么价值','配套资金到位后利润提升多少'],
+      sys:'你是欣和SH SPD经销商顾问。宝仓贸易：净利润¥13,000（预测），消化率61%（铁律③警告），特级酱油4.2a过高，推单313件待确认，促销配套¥25,000未到位。合伙人制：深度合伙人享有荣耀和稀缺资源，Autonomy×Alignment最大化。给经营建议，≤150字。'
+    }
+  },
+  brand:{
+    name:'品牌/产品', icon:'🎭', color:'var(--green)', deep:false,
+    badge:'合伙人·品牌守护', greeting:'SKU管理·目标填报',
+    alert:{text:'📦 Q2填报待完成', cls:'wb-std'},
+    northStar:{pct:34, label:'我管理的SKU对北极星的贡献', contrib:'六月鲜本月全系≈380万件'},
+    pact:{
+      mine:['ok:SKU年级和r_target填报','ok:品牌活动D类标记','pend:遵循自然1L填报待完成','ok:产品经理合约签署'],
+      partner:['ok:INFINITY OS品牌分析工具','ok:目标规则引擎','ok:多维SKU下钻','pend:品牌AIQL实时追踪']
+    },
+    core:[
+      {v:'5', l:'管理SKU数', t:'六月鲜品牌', c:'wn'},
+      {v:'3/5', l:'Q2填报完成', t:'还差2个', c:'dn'},
+      {v:'1', l:'待签合约', t:'需处理', c:'dn'},
+    ],
+    todos:[
+      {cls:'t-nrm', ic:'📊', title:'遵循自然1L·Q2目标填报', desc:'r_target和入市年份待填写', btn:'填报', bcls:'b-g', url:'infinity_os_node_targets.html'},
+      {cls:'t-inf', ic:'📝', title:'产品经理合约签署', desc:'一本账合约待本人签署', btn:'签署', bcls:'b-b', url:'infinity_os_contracts_sign.html'},
+    ],
+    mods:[
+      {ic:'🎯', lbl:'目标填报', desc:'r_target·年级自动推算', url:'infinity_os_node_targets.html', c:'var(--green)'},
+      {ic:'📊', lbl:'SKU多维分析', desc:'动销·城市·渠道下钻', url:'infinity_os_drilldown.html', c:'var(--teal)'},
+      {ic:'📝', lbl:'合约签署', desc:'在线签名·22角色', url:'infinity_os_contracts_sign.html', c:'var(--gold)'},
+      {ic:'⚙️', lbl:'目标规则引擎', desc:'A/B/C规则·自动化', url:'infinity_os_target_rules.html', c:'var(--purple)'},
+    ],
+    ai:{
+      intro:'帮您分析SKU表现和品牌数据，优化目标设定。',
+      qs:['遵循自然500ml的r_target应该设多少','六月鲜品牌AIQL今季表现','新品应该选哪些城市先进入'],
+      sys:'你是欣和SH品牌产品AI。六月鲜5个SKU，Q2填报3/5完成，待签合约1个，遵循自然500ml战略新品，特级酱油年级5库存偏高。合伙人制：品牌是Alignment的关键载体，AIQL是合伙人评分标准之一。给品牌SKU建议，≤150字。'
+    }
+  },
+  member:{
+    name:'会员消费者', icon:'⭐', color:'var(--gold)', deep:true,
+    badge:'忠诚合伙人·战略目标', greeting:'六月鲜品牌大使',
+    alert:{text:'🎁 会员专属权益', cls:'wb-deep'},
+    northStar:{pct:34, label:'1000万会员目标进度', contrib:'您已推荐3位朋友·贡献3瓶/推荐'},
+    pact:{
+      mine:['ok:持续选择六月鲜','ok:口碑传播给朋友','ok:参与社区共创活动','pend:邀请达到5位朋友'],
+      partner:['ok:品质保证·严格标准','ok:PRISM社区专属活动','ok:会员积分权益','pend:会员专属价格体系']
+    },
+    core:[
+      {v:'金', l:'会员等级', t:'积分2,840', c:'wn'},
+      {v:'3人', l:'我的推荐贡献', t:'感谢您的传播', c:'up'},
+      {v:'18月', l:'使用六月鲜时长', t:'忠诚合伙人', c:'up'},
+    ],
+    todos:[
+      {cls:'t-nrm', ic:'🎪', title:'仁恒河滨城·品鉴活动', desc:'本周六10:00·六月鲜新品体验', btn:'报名', bcls:'b-g', url:'#'},
+      {cls:'t-inf', ic:'👥', title:'邀请好友成为会员', desc:'再邀请2位朋友即可升级铂金会员', btn:'邀请', bcls:'b-b', url:'#'},
+    ],
+    mods:[
+      {ic:'🏠', lbl:'我的会员中心', desc:'积分·等级·权益', url:'#', c:'var(--gold)'},
+      {ic:'🗺️', lbl:'附近PRISM活动', desc:'小区品鉴·共创活动', url:'#', c:'var(--teal)'},
+    ],
+    ai:{
+      intro:'您好！欢迎来到六月鲜会员中心，我来帮您了解会员权益和活动信息。',
+      qs:['我现在有哪些会员权益','附近有什么六月鲜活动','如何升级铂金会员'],
+      sys:'你是六月鲜会员AI助手。该会员：金卡·积分2840·使用18个月·推荐3人。合伙人制：会员是忠诚合伙人，1000万会员是北极星之一。欣和承诺：品质·活动·权益。给亲切友好的会员服务建议，≤120字。'
+    }
+  }
+};
+
+// 全部模块清单（管理层用）
+const ALL_MODS = [
+  {ic:'📊',name:'晨报中台',cat:'每日运营',url:'infinity_os_v81.html'},
+  {ic:'🔍',name:'多维分析',cat:'数据分析',url:'infinity_os_drilldown.html'},
+  {ic:'📦',name:'节点下钻',cat:'数据分析',url:'infinity_os_v8.html'},
+  {ic:'💹',name:'财务视图',cat:'财务',url:'infinity_os_v84.html'},
+  {ic:'🦋',name:'蝴蝶效应+PRISM',cat:'Agent',url:'infinity_os_v83.html'},
+  {ic:'🎯',name:'A值校准规格',cat:'Agent规格',url:'infinity_os_agent_spec_01.html'},
+  {ic:'🦋',name:'蝴蝶效应规格',cat:'Agent规格',url:'infinity_os_agent_spec_02.html'},
+  {ic:'🍣',name:'Omakase推单规格',cat:'Agent规格',url:'infinity_os_agent_spec_03.html'},
+  {ic:'⚡',name:'真正Agent理想态',cat:'Agent规格',url:'infinity_os_true_agent_ui.html'},
+  {ic:'📋',name:'DOM三层一本账',cat:'管理',url:'infinity_os_dom.html'},
+  {ic:'🤝',name:'经销商一本账',cat:'管理',url:'infinity_os_dist_ledger.html'},
+  {ic:'🏪',name:'占流门店一本账',cat:'管理',url:'infinity_os_store_ledger.html'},
+  {ic:'👑',name:'SPD老板仪表板',cat:'SPD',url:'infinity_os_spd_boss.html'},
+  {ic:'📝',name:'合约说明',cat:'合约',url:'infinity_os_contracts.html'},
+  {ic:'✍️',name:'在线合约签署',cat:'合约',url:'infinity_os_contracts_sign.html'},
+  {ic:'🎯',name:'业务目标填报',cat:'数据填报',url:'infinity_os_node_targets.html'},
+  {ic:'⚙️',name:'目标规则引擎',cat:'数据填报',url:'infinity_os_target_rules.html'},
+  {ic:'⚡',name:'指挥中台·24Agent',cat:'全局',url:'INFINITY_OS_B_v3.html'},
+  {ic:'🗄️',name:'Universal Node Schema',cat:'技术',url:'infinity_os_universal_node_schema.html'},
+  {ic:'📊',name:'一本账',cat:'管理',url:'infinity_os_v82.html'},
+];
+
+// ══ 状态 ══════════════════════════════════════════════
+let curRole = localStorage.getItem('ios30_role') || null;
+
+// ══ 角色选择 ══════════════════════════════════════════
+function initRoleGrid() {
+  const g = document.getElementById('roleGrid');
+  Object.entries(ROLES).forEach(([k, r]) => {
+    const d = document.createElement('div');
+    d.className = `rc${r.deep?' deep':''}`;
+    d.onclick = () => selectRole(k);
+    d.innerHTML = `
+      <span class="rc-badge ${r.deep?'badge-deep':'badge-std'}">${r.deep?'深度合伙':'标准合伙'}</span>
+      <span class="rc-icon">${r.icon}</span>
+      <div class="rc-name" style="color:${r.color}">${r.name}</div>
+      <div class="rc-desc">${r.badge}</div>`;
+    g.appendChild(d);
+  });
+}
+
+function selectRole(k) {
+  localStorage.setItem('ios30_role', k);
+  curRole = k;
+  renderDash(k);
+}
+function chg() {
+  localStorage.removeItem('ios30_role');
+  curRole = null;
+  document.getElementById('s-dash').classList.remove('on');
+  document.getElementById('s-role').classList.add('on');
+}
+function go(url) { if(url && url!=='#') window.location.href=url; }
+
+// ══ 渲染仪表板 ══════════════════════════════════════
+function renderDash(k) {
+  const r = ROLES[k];
+  const now = new Date();
+  const h = now.getHours();
+  const greet = h<12?'早安':h<18?'下午好':'晚上好';
+  const days = ['周日','周一','周二','周三','周四','周五','周六'];
+  const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 · ${days[now.getDay()]}`;
+
+  document.getElementById('tb-name').textContent = 'INFINITY OS';
+  document.getElementById('tb-pill').textContent = `${r.icon} ${r.name} ▾`;
+  document.getElementById('wb-greet').textContent = `${greet} · ${r.greeting}`;
+  document.getElementById('wb-date').textContent = dateStr;
+  const badge = document.getElementById('wb-badge');
+  badge.textContent = r.badge;
+  badge.className = `wb-badge ${r.deep?'wb-deep':'wb-std'}`;
+
+  // 会员特殊处理
+  const body = document.getElementById('dash-body');
+  let html = '';
+
+  if(k === 'member') {
+    html += `<div class="member-level">
+      <div class="ml-crown">👑</div>
+      <div class="ml-title">金卡会员</div>
+      <div class="ml-sub">六月鲜忠诚合伙人 · 第${Math.floor(Math.random()*1000+1000)}号</div>
+      <div class="ml-pts">2,840积分</div>
+    </div>`;
+  }
+
+  // 北极星
+  html += `<div class="star-bar">
+    <div class="sb-top">
+      <div class="sb-title">🌟 北极星 · ${r.northStar.label}</div>
+      <div class="sb-pct">${r.northStar.pct}%</div>
+    </div>
+    <div class="sb-track"><div class="sb-fill" style="width:${r.northStar.pct}%"></div></div>
+    <div class="sb-bot"><span>0</span><span>${r.northStar.contrib}</span><span>目标</span></div>
+  </div>`;
+
+  // 双向承诺
+  html += `<div class="pact-card">
+    <div class="pact-hdr">
+      <div class="pact-col">
+        <div class="pact-label">我的承诺</div>
+        ${r.pact.mine.map(i=>{const[s,t]=i.split(':');return`<div class="pact-item"><div class="pact-dot ${s==='ok'?'dot-ok':s==='pend'?'dot-pend':'dot-no'}">${s==='ok'?'✓':s==='pend'?'⏳':'✗'}</div><span>${t}</span></div>`}).join('')}
+      </div>
+      <div class="pact-col">
+        <div class="pact-label">欣和的承诺</div>
+        ${r.pact.partner.map(i=>{const[s,t]=i.split(':');return`<div class="pact-item"><div class="pact-dot ${s==='ok'?'dot-ok':s==='pend'?'dot-pend':'dot-no'}">${s==='ok'?'✓':s==='pend'?'⏳':'✗'}</div><span>${t}</span></div>`}).join('')}
+      </div>
+    </div>
+  </div>`;
+
+  // 核心数字
+  html += `<div class="core-row">${r.core.map(c=>`
+    <div class="core-box">
+      <div class="cv ${c.c}" style="${c.c==='up'?'color:var(--green)':c.c==='dn'?'color:var(--red)':c.c==='wn'?'color:var(--gold)':'color:'+r.color}">${c.v}</div>
+      <div class="cl">${c.l}</div>
+      <div class="ct ${c.c}">${c.t}</div>
+    </div>`).join('')}</div>`;
+
+  // 待办
+  if(r.todos.length) {
+    html += `<div class="sec">今日行动</div>`;
+    html += r.todos.map(t=>`
+      <div class="todo ${t.cls}">
+        <span class="t-ic">${t.ic}</span>
+        <div class="t-b">
+          <div class="t-title">${t.title}</div>
+          <div class="t-desc">${t.desc}</div>
+        </div>
+        <button class="tbtn ${t.bcls}" onclick="go('${t.url}')">${t.btn}</button>
+      </div>`).join('');
+  }
+
+  // Layer 1.3（管理层）
+  if(r.showLayer) {
+    html += `<div class="sec">系统真实状态</div>
+    <div class="layer-card">
+      <div class="layer-title">🔬 INFINITY OS · 诚实标注</div>
+      <div class="layer-status">
+        <div class="ls-num">1.3</div>
+        <div class="ls-body">
+          <div class="ls-name">Layer 1.3 · 架构正确的展示系统</div>
+          <div class="ls-desc">所有数据模拟·AI对话真实·推单算法已建·代码已完成·差的是部署和真实数据接入</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+        <div style="background:var(--green-dim);border:1px solid rgba(53,176,106,.25);border-radius:10px;padding:10px 11px">
+          <div style="font-size:9px;font-weight:700;color:var(--green);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px">L2 · 合伙人协议层</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:3px">✅ 代码已完成</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px">授权边界引擎·权限控制<br>标准合伙/深度合伙边界</div>
+          <div style="font-size:10px;color:var(--green);cursor:pointer;text-decoration:underline" onclick="go('auth-boundary-v1.zip')">⬇ auth-boundary-v1.zip</div>
+        </div>
+        <div style="background:var(--green-dim);border:1px solid rgba(53,176,106,.25);border-radius:10px;padding:10px 11px">
+          <div style="font-size:9px;font-weight:700;color:var(--green);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px">L4 · Orchestration层</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:3px">✅ 代码已完成</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px">感知·路由·执行·反馈<br>5个Java服务文件</div>
+          <div style="font-size:10px;color:var(--green);cursor:pointer;text-decoration:underline" onclick="go('tool-layer-v2.zip')">⬇ tool-layer-v2.zip</div>
+        </div>
+        <div style="background:var(--green-dim);border:1px solid rgba(53,176,106,.25);border-radius:10px;padding:10px 11px">
+          <div style="font-size:9px;font-weight:700;color:var(--green);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px">L6 · Memory层</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:3px">✅ 代码已完成</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px">四层记忆·17张表·4视图<br>含inf_learning_log</div>
+          <div style="font-size:10px;color:var(--green);cursor:pointer;text-decoration:underline" onclick="go('memory-all-layers-v1.zip')">⬇ memory-all-layers-v1.zip</div>
+        </div>
+      </div>
+
+      <div style="background:var(--amber-dim);border:1px solid var(--gold-border);border-radius:9px;padding:9px 12px;margin-bottom:10px;font-size:11px;color:var(--text2)">
+        ⚡ <strong style="color:var(--gold2)">关键认知：</strong>距离真正Agent，差的不是设计和代码——差的只是<strong style="color:var(--gold2)">部署 + 真实数据接入</strong>。Java团队可直接下载上方代码包开始部署。
+      </div>
+
+      <div class="roadmap">
+        <div class="rm-step current"><div class="rm-ph">Phase 1 · 进行中</div><div class="rm-name">数据地基</div><div class="rm-desc">SAP Step2解锁·汉询/Dcloud接入·业务填报</div></div>
+        <div class="rm-step"><div class="rm-ph">Phase 2 · 下一步</div><div class="rm-name">部署+接入真实数据</div><div class="rm-desc">L2/L4/L6代码部署·汉询r_actual接入·企微推送</div></div>
+        <div class="rm-step"><div class="rm-ph">Phase 3</div><div class="rm-name">推单闭环</div><div class="rm-desc">Omakase真实推单·学习日志写入·反馈积累</div></div>
+        <div class="rm-step"><div class="rm-ph">Phase 4</div><div class="rm-name">全面扩张</div><div class="rm-desc">一本账结算·CB分实时·价签识别</div></div>
+      </div>
+    </div>`;
+
+    // vs勤策
+    html += `<div class="sec">vs勤策替代进度</div>
+    <div class="qince-bar">
+      <div class="qb-title">⚔️ INFINITY OS vs 勤策SFA</div>
+      <div class="qb-cols">
+        <div class="qb-col"><div class="qb-val" style="color:var(--green)">8项</div><div class="qb-lbl">已超越</div><div class="qb-bar"><div class="qb-fill" style="width:32%;background:var(--green)"></div></div></div>
+        <div class="qb-col"><div class="qb-val" style="color:var(--gold)">10项</div><div class="qb-lbl">完善中</div><div class="qb-bar"><div class="qb-fill" style="width:40%;background:var(--gold)"></div></div></div>
+        <div class="qb-col"><div class="qb-val" style="color:var(--red)">7项</div><div class="qb-lbl">缺口待建</div><div class="qb-bar"><div class="qb-fill" style="width:28%;background:var(--red)"></div></div></div>
+      </div>
+    </div>`;
+  }
+
+  // 模块入口
+  html += `<div class="sec">快速进入</div>
+  <div class="mod-grid">${r.mods.map(m=>`
+    <div class="mc" onclick="go('${m.url}')">
+      <div class="mc-top"><span class="mc-ic">${m.ic}</span><span class="mc-lbl" style="color:${m.c}">${m.lbl}</span></div>
+      <div class="mc-desc">${m.desc}</div>
+      <span class="mc-arr">›</span>
+    </div>`).join('')}</div>`;
+
+  // 全模块入口（管理层）
+  if(r.showAllMods) {
+    html += `<div class="sec">全部模块（${ALL_MODS.length}个）</div>
+    <div class="all-mods">${ALL_MODS.map(m=>`
+      <div class="am-card" onclick="go('${m.url}')">
+        <span class="am-ic">${m.ic}</span>
+        <div class="am-body"><div class="am-name">${m.name}</div><div class="am-cat">${m.cat}</div></div>
+        <span class="am-arr">›</span>
+      </div>`).join('')}</div>`;
+  }
+
+  // AI Agent
+  html += `<div class="ai-wrap">
+    <div class="ai-hdr">🤖 AI合伙人顾问 · <span class="ai-role">${r.name}</span></div>
+    <div class="cps">${r.ai.qs.map(q=>`<div class="cp" onclick="askAI('${q}','${k}')">${q}</div>`).join('')}</div>
+    <div class="ai-bub">${r.ai.intro}</div>
+    <div class="ai-resp" id="ai-resp-${k}"><div class="ai-qe" id="ai-q-${k}"></div><div id="ai-a-${k}"></div></div>
+    <div class="ai-row">
+      <input class="ai-in" id="ai-in-${k}" placeholder="问任何问题…" onkeydown="if(event.key==='Enter')askAI(this.value,'${k}',this)"/>
+      <button class="ai-btn" onclick="askAI(document.getElementById('ai-in-${k}').value,'${k}',document.getElementById('ai-in-${k}'))">↑</button>
+    </div>
+  </div>`;
+
+  body.innerHTML = html;
+  body.scrollTop = 0;
+  document.getElementById('s-role').classList.remove('on');
+  document.getElementById('s-dash').classList.add('on');
+}
+
+// ══ AI ═══════════════════════════════════════════════
+async function askAI(q, role, el) {
+  if(!q||!q.trim()) return;
+  if(el instanceof HTMLElement && el.tagName==='INPUT') el.value='';
+  const resp = document.getElementById('ai-resp-'+role);
+  const qEl = document.getElementById('ai-q-'+role);
+  const aEl = document.getElementById('ai-a-'+role);
+  if(!resp) return;
+  resp.classList.add('on');
+  qEl.textContent = '❓ ' + q;
+  aEl.innerHTML = '<div class="td-w"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        system: ROLES[role]?.ai?.sys || '你是欣和SH INFINITY OS合伙人制AI助手，中文简洁回答，≤150字。',
+        messages:[{role:'user', content:q}]
+      })
+    });
+    const d = await r.json();
+    aEl.innerHTML = `<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'—'}</div>`;
+  } catch(e) {
+    aEl.innerHTML = `<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`;
+  }
+}
+
+// ══ 时钟 ══════════════════════════════════════════════
+function tick() {
+  const n = new Date();
+  const t = n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+  const el = document.getElementById('tb-ck');
+  if(el) el.textContent = t;
+}
+tick(); setInterval(tick, 1000);
+
+// ══ 初始化 ════════════════════════════════════════════
+initRoleGrid();
+if(curRole && ROLES[curRole]) {
+  renderDash(curRole);
+} else {
+  document.getElementById('s-role').classList.add('on');
+}
+</script>
+</body>
+</html>
