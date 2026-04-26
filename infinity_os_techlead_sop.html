@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INFINITY OS · Tech Lead SOP · 四大部署手册</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;--card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;padding-bottom:60px}
+
+/* TOP */
+.hero{
+  background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(78,205,196,0.04));
+  border-bottom:1px solid var(--border2);
+  padding:28px 20px 24px;
+}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--amber-dim);border:1px solid rgba(245,166,35,0.25);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--amber);font-family:'Space Mono',monospace;margin-bottom:12px}
+.hero-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:6px}
+.hero-title em{color:var(--amber);font-style:normal}
+.hero-sub{font-size:12px;color:var(--text2);line-height:1.6;max-width:500px}
+.hero-meta{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+.hm{font-size:10px;font-family:'Space Mono',monospace;color:var(--text3)}
+.hm strong{color:var(--teal)}
+
+/* NAV */
+.sop-nav{
+  display:flex;overflow-x:auto;scrollbar-width:none;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:0 16px;position:sticky;top:0;z-index:50;
+}
+.sop-nav::-webkit-scrollbar{display:none}
+.snav{flex-shrink:0;padding:12px 14px;font-size:12px;font-weight:700;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.snav:hover{color:var(--text2)}
+.snav.on{border-bottom-color:var(--amber);color:var(--amber)}
+
+/* BODY */
+.sop-body{padding:0 16px;max-width:800px;margin:0 auto}
+
+/* SOP SECTION */
+.sop-section{display:none;padding-top:20px}
+.sop-section.on{display:block}
+
+.sop-header{
+  background:var(--card);border:1px solid var(--border2);border-radius:16px;
+  padding:18px 20px;margin-bottom:16px;position:relative;overflow:hidden;
+}
+.sop-header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.s1 .sop-header::before{background:linear-gradient(90deg,var(--blue),var(--teal))}
+.s2 .sop-header::before{background:linear-gradient(90deg,var(--amber),var(--amber2))}
+.s3 .sop-header::before{background:linear-gradient(90deg,var(--green),var(--teal))}
+.s4 .sop-header::before{background:linear-gradient(90deg,var(--purple),var(--blue))}
+.sop-num{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:4px}
+.sop-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px}
+.sop-desc{font-size:12px;color:var(--text2);line-height:1.6}
+.sop-meta{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.sm-chip{font-size:10px;font-family:'Space Mono',monospace;padding:3px 9px;border-radius:10px;border:1px solid;background:transparent}
+.sm-time{color:var(--amber);border-color:rgba(245,166,35,0.3)}
+.sm-owner{color:var(--teal);border-color:rgba(78,205,196,0.3)}
+.sm-dep{color:var(--red);border-color:rgba(255,95,95,0.3)}
+
+/* PHASE */
+.phase{margin-bottom:14px}
+.phase-hdr{
+  display:flex;align-items:center;gap:10px;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px 10px 0 0;padding:10px 14px;cursor:pointer;
+}
+.phase-hdr:hover{background:rgba(255,255,255,0.03)}
+.ph-num{
+  width:28px;height:28px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#000;
+}
+.ph-info{flex:1}
+.ph-title{font-size:13px;font-weight:700;margin-bottom:1px}
+.ph-sub{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+.ph-arrow{font-size:12px;color:var(--text3);transition:transform .2s}
+.phase.open .ph-arrow{transform:rotate(180deg)}
+.phase-body{
+  background:var(--card);border:1px solid var(--border);
+  border-top:none;border-radius:0 0 10px 10px;
+  display:none;
+}
+.phase.open .phase-body{display:block}
+
+/* STEPS */
+.step-list{padding:8px}
+.step{
+  display:flex;gap:10px;padding:10px 10px;
+  border-radius:8px;margin-bottom:4px;
+  transition:background .15s;
+}
+.step:hover{background:rgba(255,255,255,0.02)}
+.step:last-child{margin-bottom:0}
+.step-num{
+  width:22px;height:22px;border-radius:6px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Mono',monospace;font-size:10px;font-weight:700;
+  background:rgba(255,255,255,0.05);color:var(--text3);
+}
+.step-content{flex:1}
+.step-title{font-size:12px;font-weight:600;margin-bottom:4px;line-height:1.4}
+.step-desc{font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:6px}
+.step-code{
+  background:var(--bg);border:1px solid var(--border);border-radius:6px;
+  padding:8px 10px;font-family:'Space Mono',monospace;font-size:10px;
+  color:var(--teal);line-height:1.7;overflow-x:auto;white-space:pre;
+  margin-bottom:4px;
+}
+.step-warn{
+  background:var(--red-dim);border:1px solid rgba(255,95,95,0.2);
+  border-radius:6px;padding:6px 10px;font-size:11px;color:var(--red);
+  margin-bottom:4px;
+}
+.step-note{
+  background:var(--amber-dim);border:1px solid rgba(245,166,35,0.2);
+  border-radius:6px;padding:6px 10px;font-size:11px;color:var(--amber);
+  margin-bottom:4px;
+}
+.step-ok{
+  background:var(--green-dim);border:1px solid rgba(74,222,128,0.2);
+  border-radius:6px;padding:6px 10px;font-size:11px;color:var(--green);
+  margin-bottom:4px;
+}
+
+/* CHECKPOINT */
+.checkpoint{
+  background:var(--bg2);border:1px solid var(--border2);border-radius:10px;
+  padding:12px 14px;margin-bottom:14px;
+}
+.cp-title{font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;letter-spacing:.06em;text-transform:uppercase}
+.cp-item{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text2);
+  padding:4px 0;border-bottom:1px solid var(--border)}
+.cp-item:last-child{border:none}
+.cp-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:16px 0}
+
+/* COLOR CODES */
+.c1{background:#1a3a5c} .c2{background:#3a2800} .c3{background:#0d3a1a} .c4{background:#2a1a40}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">⚙️ TECH LEAD SOP · V1.0</div>
+  <div class="hero-title">INFINITY OS <em>部署手册</em></div>
+  <div class="hero-sub">四个核心SOP · 每步可执行 · Tech Lead入职即用。按顺序执行：①服务器部署 → ②数据接入 → ③企微推送 → ④SFA配置</div>
+  <div class="hero-meta">
+    <span class="hm">责任人：<strong>Tech Lead</strong></span>
+    <span class="hm">版本：<strong>2026-04-27</strong></span>
+    <span class="hm">状态：<strong>立即可执行</strong></span>
+  </div>
+</div>
+
+<div class="sop-nav">
+  <div class="snav on" onclick="showSOP(1)">① 服务器部署</div>
+  <div class="snav" onclick="showSOP(2)">② 数据接入</div>
+  <div class="snav" onclick="showSOP(3)">③ 企微推送</div>
+  <div class="snav" onclick="showSOP(4)">④ SFA配置</div>
+</div>
+
+<div class="sop-body">
+
+<!-- ══ SOP 1 ══ -->
+<div class="sop-section s1 on" id="sop-1">
+  <div class="sop-header">
+    <div class="sop-num">SOP-01</div>
+    <div class="sop-title">把已有代码 → 部署到真实服务器</div>
+    <div class="sop-desc">将 GitHub 仓库中的 Spring Boot Java 代码部署到阿里云服务器，实现24小时持续运行。完成后系统从「展示原型」变成「真实后端」。</div>
+    <div class="sop-meta">
+      <span class="sm-chip sm-time">⏱ 预计3-5天</span>
+      <span class="sm-chip sm-owner">👤 Tech Lead主导</span>
+      <span class="sm-chip sm-dep">⚠️ 前置：IT给服务器权限</span>
+    </div>
+  </div>
+
+  <!-- Phase 1 -->
+  <div class="phase open" id="p1-1">
+    <div class="phase-hdr" onclick="togglePhase('p1-1')">
+      <div class="ph-num c1">1</div>
+      <div class="ph-info">
+        <div class="ph-title">环境准备</div>
+        <div class="ph-sub">服务器·JDK·MySQL·Redis · 1天</div>
+      </div>
+      <div class="ph-arrow">▼</div>
+    </div>
+    <div class="phase-body">
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">确认服务器规格</div>
+            <div class="step-desc">向IT申请阿里云ECS服务器。最低要求：4核CPU / 8G内存 / 100G SSD。操作系统：Ubuntu 22.04 LTS。</div>
+            <div class="step-code">SSH登录测试：
+ssh root@{服务器IP}
+uname -a  # 确认系统版本
+nproc     # 确认CPU核数
+free -h   # 确认内存</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">安装 Java 17（JDK）</div>
+            <div class="step-desc">INFINITY OS后端使用Java 17，必须是17不能低版本。</div>
+            <div class="step-code">apt update && apt upgrade -y
+apt install -y openjdk-17-jdk
+java -version
+# 应输出：openjdk version "17.x.x"</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">安装 MySQL 8.0</div>
+            <div class="step-desc">数据库，存储inf_nodes、inf_heartbeat等五张核心表。</div>
+            <div class="step-code">apt install -y mysql-server
+systemctl start mysql
+systemctl enable mysql
+mysql_secure_installation  # 按提示设置root密码
+
+# 创建专用数据库和用户
+mysql -u root -p
+CREATE DATABASE infinity_os CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'ios_user'@'localhost' IDENTIFIED BY '{强密码}';
+GRANT ALL PRIVILEGES ON infinity_os.* TO 'ios_user'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">安装 Redis 7</div>
+            <div class="step-desc">用于缓存和消息队列，Agent推送任务走Redis。</div>
+            <div class="step-code">apt install -y redis-server
+systemctl start redis
+systemctl enable redis
+redis-cli ping  # 应输出：PONG</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <div class="step-title">安装 Maven（构建工具）</div>
+            <div class="step-code">apt install -y maven
+mvn -version
+# 应输出：Apache Maven 3.x.x</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="phase" id="p1-2">
+    <div class="phase-hdr" onclick="togglePhase('p1-2')">
+      <div class="ph-num c1">2</div>
+      <div class="ph-info">
+        <div class="ph-title">拉取代码 · 建表 · 配置</div>
+        <div class="ph-sub">从GitHub获取代码·执行SQL建表·填写配置 · 半天</div>
+      </div>
+      <div class="ph-arrow">▼</div>
+    </div>
+    <div class="phase-body">
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">从 GitHub 拉取代码</div>
+            <div class="step-code">apt install -y git
+cd /opt
+git clone https://github.com/infinity-os-sh/Infinity-os-SH.git
+cd Infinity-os-SH
+ls  # 确认文件存在</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">执行数据库建表SQL</div>
+            <div class="step-desc">仓库中的 mysql_5tables_complete.sql 包含五张核心表的完整建表语句。</div>
+            <div class="step-code">mysql -u ios_user -p infinity_os < mysql_5tables_complete.sql
+
+# 验证建表成功
+mysql -u ios_user -p infinity_os -e "SHOW TABLES;"
+# 应看到：
+# inf_nodes
+# inf_heartbeat
+# inf_alerts
+# inf_actions
+# inf_node_targets</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">配置 application.yml</div>
+            <div class="step-desc">在Spring Boot项目中找到 src/main/resources/application.yml，填写以下配置。</div>
+            <div class="step-code">spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/infinity_os?useSSL=false&serverTimezone=Asia/Shanghai
+    username: ios_user
+    password: {刚才设置的密码}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: localhost
+    port: 6379
+
+# Anthropic Claude API
+anthropic:
+  api-key: {从DS获取Claude API Key}
+  model: claude-sonnet-4-20250514
+
+# 企微Webhook（第三步填）
+wechat:
+  webhook-url: {暂时留空，SOP③填}
+
+server:
+  port: 8080</div>
+            <div class="step-warn">⚠️ API Key 不能提交到 GitHub，加入 .gitignore 或用环境变量传入</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">编译打包</div>
+            <div class="step-code">cd /opt/Infinity-os-SH
+mvn clean package -DskipTests
+ls target/
+# 应看到：infinity-os-1.0.0.jar 或类似名称</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="phase" id="p1-3">
+    <div class="phase-hdr" onclick="togglePhase('p1-3')">
+      <div class="ph-num c1">3</div>
+      <div class="ph-info">
+        <div class="ph-title">启动服务 · 配置守护进程</div>
+        <div class="ph-sub">让程序24小时不停 · 自动重启 · 1天</div>
+      </div>
+      <div class="ph-arrow">▼</div>
+    </div>
+    <div class="phase-body">
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">创建 Systemd 服务（让程序永久运行）</div>
+            <div class="step-code">nano /etc/systemd/system/infinity-os.service
+
+# 写入以下内容：
+[Unit]
+Description=INFINITY OS Spring Boot Service
+After=network.target mysql.service redis.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/Infinity-os-SH
+ExecStart=/usr/bin/java -jar target/infinity-os-1.0.0.jar
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/infinity-os.log
+StandardError=append:/var/log/infinity-os-error.log
+
+[Install]
+WantedBy=multi-user.target</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">启动并验证服务</div>
+            <div class="step-code">systemctl daemon-reload
+systemctl enable infinity-os
+systemctl start infinity-os
+systemctl status infinity-os
+# 应看到：Active: active (running)
+
+# 查看日志
+tail -f /var/log/infinity-os.log</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">测试API是否正常</div>
+            <div class="step-code"># 在服务器上测试
+curl http://localhost:8080/api/health
+# 应返回：{"status":"ok","timestamp":"..."}
+
+# 开放防火墙端口（如需外网访问）
+ufw allow 8080/tcp</div>
+            <div class="step-ok">✅ 返回 status:ok 表示服务器部署成功，后端24小时运行中</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">配置自动更新脚本</div>
+            <div class="step-desc">每次代码有更新，执行一键重部署。</div>
+            <div class="step-code">nano /opt/deploy.sh
+
+#!/bin/bash
+cd /opt/Infinity-os-SH
+git pull origin main
+mvn clean package -DskipTests
+systemctl restart infinity-os
+echo "部署完成：$(date)"
+
+chmod +x /opt/deploy.sh
+# 以后更新代码只需运行：
+bash /opt/deploy.sh</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="checkpoint">
+    <div class="cp-title">✅ SOP-01 完成检查点</div>
+    <div class="cp-item"><div class="cp-dot"></div>服务器 SSH 可登录</div>
+    <div class="cp-item"><div class="cp-dot"></div>MySQL 5张表已建立</div>
+    <div class="cp-item"><div class="cp-dot"></div>curl localhost:8080/api/health 返回 ok</div>
+    <div class="cp-item"><div class="cp-dot"></div>systemctl status infinity-os 显示 active running</div>
+    <div class="cp-item"><div class="cp-dot"></div>重启服务器后程序自动启动</div>
+  </div>
+</div>
+
+<!-- ══ SOP 2 ══ -->
+<div class="sop-section s2" id="sop-2">
+  <div class="sop-header">
+    <div class="sop-num">SOP-02</div>
+    <div class="sop-title">把已有数据表 → 接入真实数据</div>
+    <div class="sop-desc">将阿里云数据湖（汉询·Dcloud·SAP）的真实数据流入 INFINITY OS 的五张MySQL表。完成后系统从「模拟数据」变成「真实数据驱动」。</div>
+    <div class="sop-meta">
+      <span class="sm-chip sm-time">⏱ 预计2-3周</span>
+      <span class="sm-chip sm-owner">👤 Tech Lead + IT郭工</span>
+      <span class="sm-chip sm-dep">⚠️ 前置：SOP-01完成 + IT给Hologres账号</span>
+    </div>
+  </div>
+
+  <!-- Phase 1 -->
+  <div class="phase open" id="p2-1">
+    <div class="phase-hdr" onclick="togglePhase('p2-1')">
+      <div class="ph-num c2">1</div>
+      <div class="ph-info">
+        <div class="ph-title">获取数据湖访问权限</div>
+        <div class="ph-sub">Hologres账号·字段确认 · 2-3天（等IT）</div>
+      </div>
+      <div class="ph-arrow">▼</div>
+    </div>
+    <div class="phase-body">
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">向 IT 申请 Hologres 只读账号</div>
+            <div class="step-desc">发邮件给 IT 郭工，说明需要以下访问权限（只读，不需要写权限）：</div>
+            <div class="step-code">需要的数据源（优先级排序）：
+1. 汉询系统 → rixiao 表（日销字段）→ r_actual 来源
+2. Dcloud EPP → wm_stock_matnr 表 → 经销商实时库存
+3. SAP BSID → 应收账款（如已接入数据湖）
+
+申请格式：
+收件人：IT郭工
+主题：Hologres只读账号申请 - INFINITY OS接入
+内容：需要为INFINITY OS后端创建只读账号，
+     访问数据湖中汉询和Dcloud的相关表。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">收到账号后测试连接</div>
+            <div class="step-desc">Hologres使用PostgreSQL驱动连接。</div>
+            <div class="step-code"># 测试连接（在服务器上）
+psql -h {Hologres地址} -p 80 -U {账号} -d {数据库名}
+
+# 查看汉询表结构
+\d rixiao
+# 找到：distributor_id, sku_id, sale_date, qty_sold 等字段
+
+# 查看Dcloud库存表
+\d wm_stock_matnr
+# 找到：distributor_id, sku_id, stock_qty, update_time 等字段</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">确认关键字段映射关系</div>
+            <div class="step-desc">这是整个接入最关键的一步，必须和业务团队确认字段含义。</div>
+            <div class="step-code">字段映射表（需与业务确认）：
+
+汉询 → inf_heartbeat:
+  rixiao.distributor_id → node_id（先从经销商层开始）
+  rixiao.sale_date      → heartbeat_date
+  rixiao.qty_sold       → r_actual（日出货量 = r值来源）
+
+Dcloud → inf_heartbeat:
+  wm_stock_matnr.stock_qty → inventory_units（库存瓶数）
+  wm_stock_matnr.update_time → sync_time
+
+inf_nodes（需要业务团队填写）:
+  node_id    → 每个经销商/门店的唯一ID
+  r_target   → 在 infinity_os_node_targets.html 已填报
+  grade      → 年级1-5（业务团队已填）</div>
+            <div class="step-note">📌 业务团队填 r_target 和 grade 是解锁数据接入的钥匙，必须先完成</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="phase" id="p2-2">
+    <div class="phase-hdr" onclick="togglePhase('p2-2')">
+      <div class="ph-num c2">2</div>
+      <div class="ph-info">
+        <div class="ph-title">写 ETL 数据管道</div>
+        <div class="ph-sub">定时从数据湖抽数据写入MySQL五张表 · 3-5天</div>
+      </div>
+      <div class="ph-arrow">▼</div>
+    </div>
+    <div class="phase-body">
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">在 Spring Boot 中添加 Hologres 数据源配置</div>
+            <div class="step-code"># application.yml 新增：
+spring:
+  datasource:
+    # 原有MySQL（主库）
+    primary:
+      url: jdbc:mysql://localhost:3306/infinity_os
+      username: ios_user
+      password: {密码}
+    # 新增Hologres只读（数据湖）
+    hologres:
+      url: jdbc:postgresql://{Hologres地址}:80/{数据库}
+      username: {账号}
+      password: {密码}
+      driver-class-name: org.postgresql.Driver</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">写 r_actual 同步任务（最优先）</div>
+            <div class="step-desc">每天凌晨2点从汉询同步前一天的销售数据，计算每个节点的r_actual。</div>
+            <div class="step-code">// HeartbeatSyncScheduler.java
+@Scheduled(cron = "0 0 2 * * ?") // 每天凌晨2点
+public void syncRActual() {
+    // 1. 从Hologres读昨天的汉询数据
+    String sql = """
+        SELECT distributor_id, sku_id, SUM(qty_sold) as total_qty
+        FROM rixiao
+        WHERE sale_date = CURRENT_DATE - 1
+        GROUP BY distributor_id, sku_id
+        """;
+    List<Map> rows = hologresJdbc.queryForList(sql);
+    
+    // 2. 写入 inf_heartbeat
+    for (Map row : rows) {
+        InfHeartbeat hb = new InfHeartbeat();
+        hb.setNodeId(row.get("distributor_id").toString());
+        hb.setSkuId(row.get("sku_id").toString());
+        hb.setRActual((Double) row.get("total_qty"));
+        hb.setHeartbeatDate(LocalDate.now().minusDays(1));
+        heartbeatRepo.save(hb);
+    }
+    log.info("[ETL] r_actual同步完成：{}条", rows.size());
+}</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">写库存同步任务</div>
+            <div class="step-desc">每天同步一次Dcloud库存数据到inf_heartbeat。</div>
+            <div class="step-code">@Scheduled(cron = "0 30 2 * * ?") // 凌晨2:30
+public void syncInventory() {
+    String sql = """
+        SELECT distributor_id, sku_id, stock_qty
+        FROM wm_stock_matnr
+        WHERE update_time >= CURRENT_DATE - 1
+        """;
+    List<Map> rows = hologresJdbc.queryForList(sql);
+    
+    for (Map row : rows) {
+        // 更新 inf_heartbeat 的 inventory_units 字段
+        heartbeatRepo.updateInventory(
+            row.get("distributor_id").toString(),
+            row.get("sku_id").toString(),
+            (Integer) row.get("stock_qty")
+        );
+    }
+    log.info("[ETL] 库存同步完成：{}条", rows.size());
+}</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">导入业务团队填报的 r_target 和 grade</div>
+            <div class="step-desc">从 infinity_os_node_targets.html 导出的SQL直接执行。</div>
+            <div class="step-code"># 业务团队从 node_targets 页面导出SQL后：
+mysql -u ios_user -p infinity_os < node_targets_export.sql
+
+# 验证
+SELECT node_id, r_target, grade FROM inf_node_targets LIMIT 10;</div>
+            <div class="step-note">📌 这条必须在ETL跑之前完成，否则a值计算无法进行</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="phase" id="p2-3">
+    <div class="phase-hdr" onclick="togglePhase('p2-3')">
+      <div class="ph-num c2">3</div>
+      <div class="ph-info">
+        <div class="ph-title">验证数据质量</div>
+        <div class="ph-sub">跑第一轮检验·找异常·修正 · 3-5天</div>
+      </div>
+      <div class="ph-arrow">▼</div>
+    </div>
+    <div class="phase-body">
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">运行数据质量检查SQL</div>
+            <div class="step-code">-- 检查1：有没有 r_actual 为0的异常节点
+SELECT node_id, COUNT(*) as zero_days
+FROM inf_heartbeat
+WHERE r_actual = 0
+GROUP BY node_id
+HAVING zero_days > 3;
+
+-- 检查2：库存是否有异常高值（可能压货）
+SELECT node_id, inventory_units, r_actual,
+       inventory_units/r_actual as water_level
+FROM inf_heartbeat
+WHERE heartbeat_date = CURDATE() - 1
+ORDER BY water_level DESC
+LIMIT 20;
+
+-- 检查3：节点数量是否合理
+SELECT COUNT(DISTINCT node_id) FROM inf_heartbeat;
+-- 应该接近实际经销商数量</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">与业务团队交叉验证</div>
+            <div class="step-desc">取5个已知的经销商，对比系统数据和业务员手工记录，误差应在10%以内。</div>
+            <div class="step-code">-- 查询指定经销商的数据
+SELECT hb.node_id, n.node_name, hb.r_actual, hb.inventory_units,
+       t.r_target, t.grade
+FROM inf_heartbeat hb
+JOIN inf_nodes n ON hb.node_id = n.node_id
+JOIN inf_node_targets t ON hb.node_id = t.node_id
+WHERE hb.heartbeat_date = CURDATE() - 1
+AND hb.node_id IN ('BC001','HP001','CN001'); -- 替换为真实ID</div>
+            <div class="step-ok">✅ 误差&lt;10% 且节点数量正确 = 数据接入成功，Agent可以开始使用真实数据</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="checkpoint">
+    <div class="cp-title">✅ SOP-02 完成检查点</div>
+    <div class="cp-item"><div class="cp-dot"></div>Hologres只读账号已获取并测试连通</div>
+    <div class="cp-item"><div class="cp-dot"></div>业务团队的r_target和grade已导入inf_node_targets</div>
+    <div class="cp-item"><div class="cp-dot"></div>每天凌晨ETL自动运行，inf_heartbeat有T+1数据</div>
+    <div class="cp-item"><div class="cp-dot"></div>数据质量检查：5个经销商误差&lt;10%</div>
+    <div class="cp-item"><div class="cp-dot"></div>水位计算公式 inventory/r_actual 返回合理结果</div>
+  </div>
+</div>
+
+<!-- ══ SOP 3 ══ -->
+<div class="sop-section s3" id="sop-3">
+  <div class="sop-header">
+    <div class="sop-num">SOP-03</div>
+    <div class="sop-title">把已有企微配置 → 推送真实消息</div>
+    <div class="sop-desc">将 INFINITY OS 的蝴蝶效应预警、Omakase推单建议通过企业微信机器人推送给对应的城市经理和经销商。完成后Agent第一次真正「说话」。</div>
+    <div class="sop-meta">
+      <span class="sm-chip sm-time">⏱ 预计3-5天</span>
+      <span class="sm-chip sm-owner">👤 Tech Lead + 企微管理员</span>
+      <span class="sm-chip sm-dep">⚠️ 前置：SOP-01完成 + 企微管理员权限</span>
+    </div>
+  </div>
+
+  <div class="phase open" id="p3-1">
+    <div class="phase-hdr" onclick="togglePhase('p3-1')">
+      <div class="ph-num c3">1</div>
+      <div class="ph-info">
+        <div class="ph-title">创建企微机器人 Webhook</div>
+        <div class="ph-sub">5分钟可完成，不需要开发</div>
+      </div>
+      <div class="ph-arrow">▼</div>
+    </div>
+    <div class="phase-body">
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">在企微群里添加机器人</div>
+            <div class="step-desc">建议先创建一个测试群「INFINITY OS 预警测试」，成员包含 Tech Lead 和 DS。</div>
+            <div class="step-code">操作步骤：
+1. 打开企业微信，进入目标群聊
+2. 点击右上角「···」
+3. 找到「群机器人」→「添加机器人」
+4. 选「自定义机器人」
+5. 名称填：INFINITY OS 预警助手
+6. 点击确认后，复制 Webhook 地址
+
+Webhook格式：
+https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">测试 Webhook 是否可用</div>
+            <div class="step-code"># 在服务器上测试（替换YOUR_KEY）
+curl -X POST \
+  "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "msgtype": "text",
+    "text": {
+      "content": "✅ INFINITY OS 推送测试成功！"
+    }
+  }'
+
+# 企微群里应该立即收到消息</div>
+            <div class="step-ok">✅ 企微群收到消息 = Webhook 可用</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">将 Webhook 填入 application.yml</div>
+            <div class="step-code">wechat:
+  webhook-url: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY
+
+  # 可以配置多个群（不同场景）
+  webhooks:
+    alert-group: {预警群的key}    # 预警通知
+    order-group: {推单群的key}    # 推单审批
+    daily-group: {晨报群的key}    # 每日晨报</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase" id="p3-2">
+    <div class="phase-hdr" onclick="togglePhase('p3-2')">
+      <div class="ph-num c3">2</div>
+      <div class="ph-info">
+        <div class="ph-title">接入蝴蝶效应预警推送</div>
+        <div class="ph-sub">Agent检测到失真 → 自动推企微 · 2天</div>
+      </div>
+      <div class="ph-arrow">▼</div>
+    </div>
+    <div class="phase-body">
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">写企微推送服务类</div>
+            <div class="step-code">// WechatNotifyService.java
+@Service
+public class WechatNotifyService {
+    @Value("${wechat.webhooks.alert-group}")
+    private String alertWebhook;
+    
+    // 推送A类压货预警
+    public void sendPressureAlert(String distName, 
+                                   double waterLevel, 
+                                   String suggestion) {
+        String msg = String.format("""
+            🦋【蝴蝶效应·A类压货预警】
+            
+            经销商：%s
+            当前水位：%.1fa（正常2a满仓）
+            判断：库存过高·存在压货风险
+            
+            建议行动：%s
+            
+            → 请城市经理48小时内处置
+            → 点击查看详情：%s
+            """, distName, waterLevel, suggestion,
+            "https://infinity-os-sh.github.io/Infinity-os-SH/infinity_os_v30.html");
+        
+        sendToGroup(alertWebhook, msg);
+    }
+    
+    private void sendToGroup(String webhook, String content) {
+        Map<String, Object> body = Map.of(
+            "msgtype", "text",
+            "text", Map.of("content", content)
+        );
+        restTemplate.postForObject(webhook, body, String.class);
+    }
+}</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">在蝴蝶效应检测逻辑中调用推送</div>
+            <div class="step-code">// ButterflyEffectService.java（现有文件中添加）
+public void runDetection() {
+    List<InfHeartbeat> nodes = heartbeatRepo.findLatest();
+    
+    for (InfHeartbeat hb : nodes) {
+        double waterLevel = hb.getInventoryUnits() / 
+                           (hb.getRActual() * 30); // a值
+        
+        // A类：压货检测（水位 > 3.5a）
+        if (waterLevel > 3.5) {
+            // 写入 inf_alerts 表
+            InfAlert alert = new InfAlert();
+            alert.setType("A_PRESSURE");
+            alert.setNodeId(hb.getNodeId());
+            alert.setSeverity("HIGH");
+            alertRepo.save(alert);
+            
+            // 推送企微
+            wechatNotifyService.sendPressureAlert(
+                hb.getNodeName(), waterLevel,
+                "建议立即协商促销消化库存"
+            );
+        }
+    }
+}</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">配置每周一07:00自动运行（对应Agent Spec顺序）</div>
+            <div class="step-code">// 蝴蝶效应Agent：每周一07:00运行（A值校准后）
+@Scheduled(cron = "0 0 7 ? * MON")
+public void weeklyButterflyDetection() {
+    log.info("[蝴蝶效应Agent] 周一07:00开始全链扫描");
+    runDetection();
+    log.info("[蝴蝶效应Agent] 扫描完成，预警已推送企微");
+}</div>
+            <div class="step-ok">✅ 周一早上企微收到第一条真实预警 = SOP-03第一个里程碑</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase" id="p3-3">
+    <div class="phase-hdr" onclick="togglePhase('p3-3')">
+      <div class="ph-num c3">3</div>
+      <div class="ph-info">
+        <div class="ph-title">接入 Omakase 推单推送</div>
+        <div class="ph-sub">推单建议 → 企微 → 人确认 → 系统记录 · 2天</div>
+      </div>
+      <div class="ph-arrow">▼</div>
+    </div>
+    <div class="phase-body">
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">推单消息格式（含确认按钮）</div>
+            <div class="step-code">// 推单消息格式（Markdown格式更清晰）
+public void sendOrderSuggestion(String distName,
+                                  List<OrderItem> items,
+                                  String orderId) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("🍣【Omakase推单建议】\n\n");
+    sb.append("经销商：").append(distName).append("\n");
+    sb.append("推单编号：").append(orderId).append("\n\n");
+    sb.append("推荐补货清单：\n");
+    
+    double total = 0;
+    for (OrderItem item : items) {
+        sb.append(String.format("  · %s × %d箱 = ¥%.0f\n",
+            item.getSkuName(), item.getQty(), item.getAmount()));
+        total += item.getAmount();
+    }
+    sb.append(String.format("\n合计：¥%.0f\n", total));
+    sb.append("\n请在24小时内确认：\n");
+    sb.append("回复「确认-").append(orderId).append("」= 同意补货\n");
+    sb.append("回复「调整-").append(orderId).append("」= 需要修改");
+    
+    sendToGroup(orderWebhook, sb.toString());
+}</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">记录人工确认结果到 inf_actions 表</div>
+            <div class="step-code">// 暂时用手动录入方式记录（后期接企微回调）
+// POST /api/actions/confirm
+@PostMapping("/actions/confirm")
+public ResponseEntity confirm(@RequestBody ConfirmRequest req) {
+    InfAction action = new InfAction();
+    action.setOrderId(req.getOrderId());
+    action.setStatus("CONFIRMED"); // 或 "ADJUSTED" / "REJECTED"
+    action.setConfirmedBy(req.getUserId());
+    action.setConfirmedAt(LocalDateTime.now());
+    actionRepo.save(action);
+    
+    // 写入学习日志
+    learningLogRepo.save(new InfLearningLog(
+        "OMAKASE", req.getOrderId(), req.getStatus(), 
+        req.getReason()));
+    
+    return ResponseEntity.ok("已记录");
+}</div>
+            <div class="step-note">📌 人工确认的每条记录都写入inf_learning_log，这是系统学习的数据来源</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="checkpoint">
+    <div class="cp-title">✅ SOP-03 完成检查点</div>
+    <div class="cp-item"><div class="cp-dot"></div>企微群收到测试消息</div>
+    <div class="cp-item"><div class="cp-dot"></div>周一07:00蝴蝶效应预警自动推送</div>
+    <div class="cp-item"><div class="cp-dot"></div>周一08:00Omakase推单建议自动推送</div>
+    <div class="cp-item"><div class="cp-dot"></div>人工确认结果写入inf_actions表</div>
+    <div class="cp-item"><div class="cp-dot"></div>inf_learning_log有第一条学习记录</div>
+  </div>
+</div>
+
+<!-- ══ SOP 4 ══ -->
+<div class="sop-section s4" id="sop-4">
+  <div class="sop-header">
+    <div class="sop-num">SOP-04</div>
+    <div class="sop-title">把已有 SFA 配置 → 推送真实消息</div>
+    <div class="sop-desc">将 INFINITY OS 与现有SFA系统（勤策/自建）打通，实现：库存上报数据自动流入系统、业务员和美顾的任务通过SFA派发、货架照片自动进入训练数据管道。</div>
+    <div class="sop-meta">
+      <span class="sm-chip sm-time">⏱ 预计2-4周</span>
+      <span class="sm-chip sm-owner">👤 Tech Lead + SFA供应商</span>
+      <span class="sm-chip sm-dep">⚠️ 前置：SOP-01完成 + 获取SFA API文档</span>
+    </div>
+  </div>
+
+  <div class="phase open" id="p4-1">
+    <div class="phase-hdr" onclick="togglePhase('p4-1')">
+      <div class="ph-num c4">1</div>
+      <div class="ph-info">
+        <div class="ph-title">获取 SFA 系统 API 权限</div>
+        <div class="ph-sub">向勤策/SFA供应商申请API · 1-3天</div>
+      </div>
+      <div class="ph-arrow">▼</div>
+    </div>
+    <div class="phase-body">
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">向 SFA 供应商申请以下 API</div>
+            <div class="step-code">需要申请的API（优先级排序）：
+
+① 库存上报接口（最高优先）
+  - 业务员在SFA填写货架量+仓库量
+  - 通过Webhook推送到INFINITY OS
+  - 或：INFINITY OS定时拉取SFA数据
+
+② 任务派发接口（次优先）
+  - INFINITY OS计算好任务后
+  - 推送到SFA的任务模块
+  - 业务员/美顾在SFA里看到今日任务
+
+③ 拜访记录接口
+  - 业务员完成拜访后SFA记录
+  - 同步到inf_actions作为执行确认
+
+④ 货架照片接口
+  - 业务员拍的货架照片
+  - 通过API发给INFINITY OS
+  - 存入货架识别训练数据库</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">如果 SFA 不提供 API（备用方案）</div>
+            <div class="step-desc">部分SFA系统没有开放API，使用以下替代方案。</div>
+            <div class="step-code">备用方案A：数据库直连（如有权限）
+  - 请IT开通SFA数据库只读账号
+  - INFINITY OS定时读SFA的库存/拜访表
+  - 与汉询Hologres接入方式相同
+
+备用方案B：Excel/CSV文件交换
+  - SFA导出 → 放到共享目录
+  - INFINITY OS定时读取目录新文件
+  - 解析写入inf_heartbeat
+  - （过渡方案，3个月内替换）
+
+备用方案C：人工录入页面
+  - 使用已有的 44库存上报_INFINITY_OS.html
+  - 业务员直接在该页面填写
+  - 提交后写入数据库
+  - （最简单，立即可用）</div>
+            <div class="step-note">📌 备用方案C（人工录入页面）已经做好，Tech Lead可立即部署到SFA页面内嵌，无需等待API</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase" id="p4-2">
+    <div class="phase-hdr" onclick="togglePhase('p4-2')">
+      <div class="ph-num c4">2</div>
+      <div class="ph-info">
+        <div class="ph-title">实现库存上报数据接入</div>
+        <div class="ph-sub">最高优先级·这是r_actual的来源 · 3-5天</div>
+      </div>
+      <div class="ph-arrow">▼</div>
+    </div>
+    <div class="phase-body">
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">建立库存上报接收接口</div>
+            <div class="step-desc">INFINITY OS提供一个接口，SFA调用它来推送库存数据。</div>
+            <div class="step-code">// InventoryReportController.java
+@RestController
+@RequestMapping("/api/inventory")
+public class InventoryReportController {
+    
+    // SFA调用此接口推送库存数据
+    @PostMapping("/report")
+    public ResponseEntity report(@RequestBody InventoryReportDTO dto,
+                                   @RequestHeader("X-SFA-Token") String token) {
+        // 验证token
+        if (!tokenService.validate(token)) {
+            return ResponseEntity.status(401).build();
+        }
+        
+        // 写入 inf_heartbeat
+        InfHeartbeat hb = new InfHeartbeat();
+        hb.setNodeId(dto.getStoreId());
+        hb.setSkuId(dto.getSkuId());
+        hb.setInventoryShelf(dto.getShelfQty());   // 货架量
+        hb.setInventoryWarehouse(dto.getWarehouseQty()); // 仓库量
+        hb.setInventoryUnits(dto.getShelfQty() + dto.getWarehouseQty());
+        hb.setReportedBy(dto.getDsrId());
+        hb.setHeartbeatDate(LocalDate.now());
+        heartbeatRepo.save(hb);
+        
+        return ResponseEntity.ok(Map.of("status","ok","id",hb.getId()));
+    }
+}          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">货架照片接收接口（训练数据管道）</div>
+            <div class="step-code">// ShelfPhotoController.java
+@PostMapping("/shelf-photo")
+public ResponseEntity receivePhoto(
+        @RequestParam("storeId") String storeId,
+        @RequestParam("dsrId") String dsrId,
+        @RequestParam("file") MultipartFile photo) {
+    
+    // 1. 存储照片到OSS
+    String ossUrl = ossService.upload(photo, 
+        "shelf/" + LocalDate.now() + "/" + storeId);
+    
+    // 2. 写入训练数据库（待标注队列）
+    ShelfTrainingData data = new ShelfTrainingData();
+    data.setStoreId(storeId);
+    data.setDsrId(dsrId);
+    data.setPhotoUrl(ossUrl);
+    data.setStatus("PENDING_LABEL"); // 待标注
+    trainingDataRepo.save(data);
+    
+    // 3. 触发千问VL识别（异步）
+    asyncService.runShelfRecognition(data.getId());
+    
+    return ResponseEntity.ok(Map.of("status","ok","photoId",data.getId()));
+}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase" id="p4-3">
+    <div class="phase-hdr" onclick="togglePhase('p4-3')">
+      <div class="ph-num c4">3</div>
+      <div class="ph-info">
+        <div class="ph-title">实现任务派发到 SFA</div>
+        <div class="ph-sub">Agent计算好任务 → 业务员/美顾SFA看到 · 3-5天</div>
+      </div>
+      <div class="ph-arrow">▼</div>
+    </div>
+    <div class="phase-body">
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">从 INFINITY OS 向 SFA 推送今日任务</div>
+            <div class="step-code">// SfaTaskPushService.java
+@Scheduled(cron = "0 30 6 * * MON-FRI") // 工作日早上6:30
+public void pushDailyTasks() {
+    // 1. 获取今日需要拜访的门店（水位低/超期未访）
+    List<StoreTask> tasks = taskEngine.computeTodayTasks();
+    
+    for (StoreTask task : tasks) {
+        // 2. 调用SFA任务派发API
+        SfaTaskRequest req = new SfaTaskRequest();
+        req.setDsrId(task.getDsrId());
+        req.setStoreId(task.getStoreId());
+        req.setTaskType(task.getType()); // VISIT/RESTOCK/DISPLAY
+        req.setPriority(task.getPriority()); // HIGH/NORMAL
+        req.setNote(task.getNote()); // "遵循自然500ml库存1.1a偏低"
+        req.setDeadline(LocalDate.now());
+        
+        sfaApiClient.createTask(req);
+        
+        // 3. 同时记录到 inf_actions（待执行）
+        InfAction action = new InfAction();
+        action.setType("TASK_DISPATCH");
+        action.setTargetId(task.getStoreId());
+        action.setAssignedTo(task.getDsrId());
+        action.setStatus("DISPATCHED");
+        actionRepo.save(action);
+    }
+    log.info("[任务派发] 今日共派发{}个任务", tasks.size());
+}</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">接收 SFA 任务完成回调</div>
+            <div class="step-code">// 业务员在SFA完成任务后，SFA调用此接口
+@PostMapping("/api/tasks/complete")
+public ResponseEntity taskComplete(@RequestBody TaskCompleteDTO dto) {
+    // 更新 inf_actions 状态
+    actionRepo.updateStatus(dto.getTaskId(), "COMPLETED");
+    
+    // 写学习日志
+    learningLogRepo.save(new InfLearningLog(
+        "TASK", dto.getTaskId(), "COMPLETED",
+        dto.getDsrNote()  // 业务员填的完成备注
+    ));
+    
+    // 如果是库存上报任务，触发重新计算水位
+    if ("RESTOCK".equals(dto.getTaskType())) {
+        waterLevelService.recalculate(dto.getStoreId());
+    }
+    
+    return ResponseEntity.ok("已记录");
+}</div>
+            <div class="step-ok">✅ 任务派发→执行→回调→学习 完整闭环打通 = SOP-04完成</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="checkpoint">
+    <div class="cp-title">✅ SOP-04 完成检查点</div>
+    <div class="cp-item"><div class="cp-dot"></div>业务员在SFA填库存，inf_heartbeat有数据</div>
+    <div class="cp-item"><div class="cp-dot"></div>货架照片自动进入训练数据库</div>
+    <div class="cp-item"><div class="cp-dot"></div>每天早上6:30今日任务自动推到SFA</div>
+    <div class="cp-item"><div class="cp-dot"></div>任务完成后SFA回调，inf_actions状态更新</div>
+    <div class="cp-item"><div class="cp-dot"></div>inf_learning_log持续积累真实反馈</div>
+  </div>
+</div>
+
+</div><!-- end sop-body -->
+
+<script>
+function showSOP(n) {
+  document.querySelectorAll('.sop-section').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.snav').forEach(s=>s.classList.remove('on'));
+  document.getElementById('sop-'+n).classList.add('on');
+  document.querySelectorAll('.snav')[n-1].classList.add('on');
+  window.scrollTo(0,100);
+}
+
+function togglePhase(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// 时钟
+function tick(){
+  const n=new Date();
+  document.title='INFINITY OS · Tech Lead SOP · '+
+    n.getHours().toString().padStart(2,'0')+':'+
+    n.getMinutes().toString().padStart(2,'0');
+}
+tick();setInterval(tick,1000);
+</script>
+</body>
+</html>
