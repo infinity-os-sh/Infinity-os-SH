@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 管理层一本账</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080e;--bg2:#0b0d15;--bg3:#10131c;--card:#13161f;--card2:#181c28;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.10);
+  --text:#dde3f0;--text2:#7a8499;--text3:#3d4457;
+  --amber:#f5a623;--amber-dim:rgba(245,166,35,0.08);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.08);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.08);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.08);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh}
+
+.topbar{position:sticky;top:0;z-index:100;background:rgba(7,8,14,.97);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;padding:0 14px;height:52px;gap:8px}
+.logo{display:flex;align-items:center;gap:7px}
+.ls{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000}
+.ln{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.ln em{color:var(--amber);font-style:normal}
+.ver{font-size:9px;font-family:'Space Mono',monospace;color:var(--purple);
+  background:var(--purple-dim);border:1px solid rgba(167,139,250,.2);padding:2px 7px;border-radius:10px}
+.hb{background:var(--card2);border:1px solid var(--border2);border-radius:16px;
+  padding:5px 11px;font-size:11px;color:var(--text2);text-decoration:none;white-space:nowrap}
+.ck{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+
+/* 层级 */
+.lvbar{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);
+  position:sticky;top:52px;z-index:91}
+.lvb{flex:1;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;
+  cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .2s}
+.lvb.on{border-bottom-color:var(--purple)}
+.lvb-ic{font-size:13px}
+.lvb-lbl{font-size:11px;font-weight:600;color:var(--text3)}
+.lvb.on .lvb-lbl{color:var(--purple)}
+.lvb-sub{font-size:8px;color:var(--text3);font-family:'Space Mono',monospace}
+
+/* 入口 */
+.ebbar{display:flex;background:var(--bg3);border-bottom:1px solid var(--border);
+  position:sticky;top:97px;z-index:90}
+.ebb{flex:1;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:1px;
+  cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .2s}
+.ebb.on{border-bottom-color:var(--amber)}
+.ebb-ic{font-size:12px}
+.ebb-lbl{font-size:10px;font-weight:600;color:var(--text3)}
+.ebb.on .ebb-lbl{color:var(--amber)}
+
+/* person bar */
+.pbar{background:var(--bg);border-bottom:1px solid var(--border);padding:8px 14px;
+  display:flex;align-items:center;gap:7px;overflow-x:auto;scrollbar-width:none;
+  position:sticky;top:141px;z-index:89}
+.pbar::-webkit-scrollbar{display:none}
+.pc{background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:4px 11px;font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.pc.on{background:var(--purple-dim);border-color:rgba(167,139,250,.35);color:var(--purple)}
+.pl{font-size:10px;color:var(--text3);flex-shrink:0}
+
+/* screen */
+.sc{display:none;padding:0 0 80px}
+.sc.on{display:block;animation:fu .2s ease}
+@keyframes fu{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* person head */
+.ph{padding:14px;display:flex;align-items:flex-start;justify-content:space-between}
+.ph-role{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.ph-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:2px}
+.ph-reg{font-size:11px;color:var(--text3)}
+.ph-r{text-align:right}
+.ph-earn{font-family:'Syne',sans-serif;font-size:26px;font-weight:800}
+.ph-max{font-size:10px;color:var(--text3);margin-top:2px}
+.ph-vs{font-size:10px;margin-top:4px;padding:3px 8px;border-radius:7px;display:inline-block}
+.vu{background:var(--green-dim);color:var(--green)}
+.vd{background:var(--red-dim);color:var(--red)}
+
+/* SKU行 */
+.sl{padding:0 14px;display:flex;flex-direction:column;gap:6px}
+.sr{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden;cursor:pointer;transition:all .15s}
+.sr:hover{border-color:var(--border2)}
+.sr.exp{border-color:rgba(245,166,35,.25)}
+.sr-main{padding:12px 14px;display:flex;align-items:center;gap:10px}
+.sg{width:32px;height:32px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:10px;font-weight:800}
+.g1{background:rgba(74,222,128,.15);color:var(--green)}
+.g2{background:rgba(245,166,35,.15);color:var(--amber)}
+.g3{background:rgba(96,165,250,.15);color:var(--blue)}
+.g4{background:rgba(167,139,250,.15);color:var(--purple)}
+.g5{background:rgba(255,95,95,.15);color:var(--red)}
+.si{flex:1;min-width:0}
+.si-name{font-size:13px;font-weight:600;margin-bottom:3px}
+.si-sub{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+.si-bar{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:5px}
+.si-fill{height:100%;border-radius:2px;transition:width .6s ease}
+.srt{text-align:right;flex-shrink:0;min-width:76px}
+.srt-ach{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;line-height:1}
+.srt-cp{font-size:10px;margin-top:3px;font-family:'Space Mono',monospace}
+.srt-gp{font-size:10px;margin-top:2px}
+
+/* ── 三层下钻 ── */
+.drill{display:none;border-top:1px solid var(--border);background:rgba(255,255,255,.01)}
+.sr.exp .drill{display:block}
+
+/* 下钻 Tab */
+.dtabs{display:flex;border-bottom:1px solid var(--border)}
+.dtab{flex:1;padding:8px 4px;text-align:center;font-size:11px;font-weight:600;
+  color:var(--text3);cursor:pointer;border:none;background:none;
+  border-bottom:2px solid transparent;transition:all .15s}
+.dtab.on{color:var(--amber);border-bottom-color:var(--amber)}
+
+/* 下钻内容 */
+.dpanel{display:none;padding:10px 12px}
+.dpanel.on{display:block}
+
+/* 经销商行 */
+.dist-row{display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:var(--card);border:1px solid var(--border);border-radius:9px;margin-bottom:5px;
+  cursor:pointer;transition:all .15s}
+.dist-row:hover{background:var(--card2)}
+.dist-rank{width:20px;height:20px;border-radius:5px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:'Space Mono',monospace}
+.rk1{background:rgba(245,166,35,.2);color:var(--amber)}
+.rk2{background:rgba(255,255,255,.07);color:var(--text2)}
+.rk3{background:rgba(78,205,196,.1);color:var(--teal)}
+.rkn{background:rgba(255,255,255,.03);color:var(--text3)}
+.dist-info{flex:1}
+.dist-name{font-size:12px;font-weight:600;margin-bottom:1px}
+.dist-meta{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+.dist-bw{width:50px;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.dist-bf{height:100%;border-radius:2px}
+.dist-ach{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;width:34px;text-align:right}
+.dist-comp{font-size:10px;font-family:'Space Mono',monospace;width:50px;text-align:right}
+
+/* DSR行 */
+.dsr-row{display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:var(--card);border:1px solid var(--border);border-radius:9px;margin-bottom:5px}
+.dsr-avatar{width:28px;height:28px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+  background:var(--teal-dim);border:1px solid rgba(78,205,196,.2)}
+.dsr-info{flex:1}
+.dsr-name{font-size:12px;font-weight:600;margin-bottom:2px}
+.dsr-region{font-size:10px;color:var(--text3)}
+.dsr-stores{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+.dsr-bw{width:50px;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:4px}
+.dsr-bf{height:100%;border-radius:2px}
+.dsr-right{text-align:right;flex-shrink:0}
+.dsr-ach{font-family:'Space Mono',monospace;font-size:12px;font-weight:700}
+.dsr-inc{font-size:10px;font-family:'Space Mono',monospace;margin-top:2px}
+
+/* 美顾行 */
+.ba-row{display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:var(--card);border:1px solid var(--border);border-radius:9px;margin-bottom:5px}
+.ba-avatar{width:28px;height:28px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+  background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.2)}
+.ba-info{flex:1}
+.ba-name{font-size:12px;font-weight:600;margin-bottom:2px}
+.ba-store{font-size:10px;color:var(--text3)}
+.ba-tasks{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+.ba-bw{width:50px;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:4px}
+.ba-bf{height:100%;border-radius:2px}
+.ba-right{text-align:right;flex-shrink:0}
+.ba-ach{font-family:'Space Mono',monospace;font-size:12px;font-weight:700}
+.ba-inc{font-size:10px;font-family:'Space Mono',monospace;margin-top:2px}
+
+.drill-summary{margin-top:8px;padding:8px 10px;background:rgba(245,166,35,.05);
+  border:1px solid rgba(245,166,35,.15);border-radius:9px;font-size:11px;color:var(--text2)}
+
+/* 人员账单行 */
+.bsec{padding:0 14px}
+.btitle{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.09em;text-transform:uppercase;
+  display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.btitle::after{content:'';flex:1;height:1px;background:var(--border)}
+.br{background:var(--card);border-left:3px solid;border-radius:0 12px 12px 0;
+  padding:11px 14px;margin-bottom:6px;cursor:pointer;transition:all .15s;display:flex;align-items:stretch;gap:10px}
+.br:hover{background:var(--card2)}
+.br.bx{border-color:var(--amber)!important}
+.brl{flex:1;min-width:0}
+.brl-sku{font-size:13px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.brl-tg{display:flex;gap:10px;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;flex-wrap:wrap}
+.brl-pg{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:6px}
+.brl-pf{height:100%;border-radius:2px;transition:width .7s ease}
+.brr{text-align:right;flex-shrink:0;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;min-width:76px}
+.brr-ach{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;line-height:1}
+.brr-cp{font-family:'Space Mono',monospace;font-size:11px;margin-top:3px}
+.brr-gp{font-size:10px;margin-top:2px;font-family:'Space Mono',monospace}
+
+/* bill展开 */
+.bd{display:none;margin:0 14px 6px;padding:10px 12px;background:var(--bg3);
+  border:1px solid var(--border);border-radius:0 0 12px 12px;border-top:none;margin-top:-6px}
+.bd.show{display:block}
+
+/* 账单汇总 */
+.bsum{margin:10px 14px 0;padding:14px;background:var(--card);border:1px solid var(--border2);border-radius:14px}
+.bsr{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:7px}
+.bsr-l{color:var(--text2)}
+.bsr-v{font-family:'Space Mono',monospace;font-weight:700}
+.bdiv{height:1px;background:var(--border2);margin:4px 0 10px}
+.btot{display:flex;justify-content:space-between;align-items:center;padding:12px;
+  background:linear-gradient(135deg,rgba(167,139,250,.08),rgba(9,9,15,1));
+  border:1px solid rgba(167,139,250,.2);border-radius:10px}
+.btot-l{font-size:13px;font-weight:700}
+.btot-v{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--purple)}
+
+/* 排名 */
+.rl{display:flex;flex-direction:column;gap:6px;padding:0 14px}
+.rr{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:10px 13px;display:flex;align-items:center;gap:9px}
+.rr.me{border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.04)}
+.rr-n{width:24px;height:24px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700}
+.n1{background:rgba(245,166,35,.2);color:var(--amber)}
+.n2{background:rgba(255,255,255,.08);color:var(--text2)}
+.n3{background:rgba(78,205,196,.12);color:var(--teal)}
+.nn{background:rgba(255,255,255,.04);color:var(--text3)}
+.nme{background:rgba(167,139,250,.15);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
+.rr-inf{flex:1;min-width:0}
+.rr-nm{font-size:12px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:6px}
+.metag{font-size:9px;background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.2);padding:1px 6px;border-radius:6px;font-family:'Space Mono',monospace}
+.rr-bw{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.rr-bf{height:100%;border-radius:2px}
+.rr-rt{text-align:right;flex-shrink:0}
+.rr-inc{font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
+.rr-sb{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px}
+
+/* AI */
+.aiw{margin:10px 14px 0;background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.aih{padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.07em;text-transform:uppercase}
+.cps{display:flex;gap:5px;padding:8px 12px;overflow-x:auto;scrollbar-width:none}
+.cps::-webkit-scrollbar{display:none}
+.cp{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:4px 10px;font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;font-family:'Noto Sans SC',sans-serif}
+.cp:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+.ab{margin:0 12px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text2);line-height:1.65}
+.ar{display:none;margin:0 12px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7}
+.ar.show{display:block}
+.aq{font-size:10px;color:var(--text3);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.airw{display:flex;gap:6px;padding:6px 12px 10px}
+.ain{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:12px;color:var(--text);outline:none;font-family:'Noto Sans SC',sans-serif}
+.ain:focus{border-color:rgba(245,166,35,.4)}
+.ain::placeholder{color:var(--text3)}
+.asb{width:36px;height:36px;border-radius:9px;background:var(--amber);border:none;cursor:pointer;font-size:14px;flex-shrink:0}
+.td-wrap{display:flex;gap:4px;align-items:center}
+.td{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:tda 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tda{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+.sp{padding:12px 14px 6px}
+.sec{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.09em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><div class="ls">∞</div><div class="ln">INFINITY <em>OS</em></div><div class="ver">管理层</div></div>
+  <a class="hb" href="index.html">⌂ 门户</a>
+  <div class="ck" id="ck"></div>
+</div>
+
+<div class="lvbar">
+  <button class="lvb on" id="lv-dom" onclick="switchLv('dom')">
+    <span class="lvb-ic">🏢</span><span class="lvb-lbl">DOM</span><span class="lvb-sub">区域主管</span>
+  </button>
+  <button class="lvb" id="lv-city" onclick="switchLv('city')">
+    <span class="lvb-ic">🌆</span><span class="lvb-lbl">城市经理</span><span class="lvb-sub">管多DOM</span>
+  </button>
+  <button class="lvb" id="lv-region" onclick="switchLv('region')">
+    <span class="lvb-ic">🗺️</span><span class="lvb-lbl">大区总</span><span class="lvb-sub">管多城市</span>
+  </button>
+</div>
+
+<div class="ebbar">
+  <button class="ebb on" id="eb-sku" onclick="switchEb('sku')">
+    <span class="ebb-ic">📦</span><span class="ebb-lbl">SKU账单</span>
+  </button>
+  <button class="ebb" id="eb-person" onclick="switchEb('person')">
+    <span class="ebb-ic">🏢</span><span class="ebb-lbl" id="ebLbl">DOM账单</span>
+  </button>
+  <button class="ebb" id="eb-rank" onclick="switchEb('rank')">
+    <span class="ebb-ic">📊</span><span class="ebb-lbl">关系对比</span>
+  </button>
+</div>
+
+<div class="pbar" id="pbar"></div>
+
+<!-- SKU账单 -->
+<div class="sc on" id="sc-sku">
+  <div style="padding:14px 14px 8px;display:flex;justify-content:space-between;align-items:flex-start">
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700" id="skuTitle">六月鲜 · DOM · 王磊</div>
+      <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px" id="skuSub"></div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--purple)" id="skuEarned">—</div>
+      <div style="font-size:10px;color:var(--text3)" id="skuMax"></div>
+    </div>
+  </div>
+  <div class="sl" id="sl"></div>
+  <div style="margin:10px 14px 0;padding:14px;background:linear-gradient(135deg,rgba(167,139,250,.07),rgba(9,9,15,1));border:1px solid rgba(167,139,250,.2);border-radius:14px" id="sf"></div>
+  <div class="aiw">
+    <div class="aih">📦 SKU账单 Agent</div>
+    <div class="cps">
+      <div class="cp" onclick="ask('sku','哪个SKU在哪个经销商差距最大？对应哪个DSR执行不力？')">经销商×DSR差距定位</div>
+      <div class="cp" onclick="ask('sku','美顾覆盖的门店动销和没有美顾的门店差多少？')">美顾价值量化</div>
+      <div class="cp" onclick="ask('sku','如果所有SKU达成80%，本月薪酬是多少？')">80%场景测算</div>
+    </div>
+    <div class="ab" id="skuAb">你好，我是SKU账单 Agent。每行是一个SKU，点开可以看经销商、DSR、美顾三层执行情况。</div>
+    <div class="ar" id="skuAr"><div class="aq" id="skuAq"></div><div id="skuAa"></div></div>
+    <div class="airw">
+      <input class="ain" id="skuIn" placeholder="问SKU账单问题…" onkeydown="if(event.key==='Enter')ask('sku',this.value,this)"/>
+      <button class="asb" onclick="ask('sku',document.getElementById('skuIn').value,document.getElementById('skuIn'))">↑</button>
+    </div>
+  </div>
+</div>
+
+<!-- 人员账单 -->
+<div class="sc" id="sc-person">
+  <div class="ph" id="ph"></div>
+  <div class="bsec">
+    <div class="btitle">本月账单明细</div>
+    <div id="brows"></div>
+  </div>
+  <div class="bsum" id="bsum"></div>
+  <div class="aiw">
+    <div class="aih" id="personAiH">🏢 DOM账单 Agent</div>
+    <div class="cps">
+      <div class="cp" onclick="ask('person','哪个SKU最值得我重点推？')">最值得投入</div>
+      <div class="cp" onclick="ask('person','哪个经销商拖了我的薪酬后腿？')">谁拖后腿</div>
+      <div class="cp" onclick="ask('person','哪个DSR或美顾的表现最突出？')">亮点人员</div>
+    </div>
+    <div class="ab" id="personAb">你好，我是账单 Agent。</div>
+    <div class="ar" id="personAr"><div class="aq" id="personAq"></div><div id="personAa"></div></div>
+    <div class="airw">
+      <input class="ain" id="personIn" placeholder="问账单问题…" onkeydown="if(event.key==='Enter')ask('person',this.value,this)"/>
+      <button class="asb" onclick="ask('person',document.getElementById('personIn').value,document.getElementById('personIn'))">↑</button>
+    </div>
+  </div>
+</div>
+
+<!-- 关系对比 -->
+<div class="sc" id="sc-rank">
+  <div style="padding:14px 14px 8px">
+    <div style="background:var(--card2);border:1px solid rgba(167,139,250,.12);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.8" id="rankConcept"></div>
+  </div>
+  <div class="sp"><div class="sec" id="rt1">排名</div></div>
+  <div class="rl" id="rl1"></div>
+  <div class="sp" id="rt2wrap" style="margin-top:8px"><div class="sec" id="rt2"></div></div>
+  <div class="rl" id="rl2"></div>
+  <div class="aiw">
+    <div class="aih">📊 关系对比 Agent</div>
+    <div class="cps">
+      <div class="cp" onclick="ask('rank','我要超越第1名，哪个SKU最值得发力？')">超越条件</div>
+      <div class="cp" onclick="ask('rank','第1名和我的差距根本来自哪里？')">差距根源</div>
+    </div>
+    <div class="ab">你好，我是关系对比 Agent。</div>
+    <div class="ar" id="rankAr"><div class="aq" id="rankAq"></div><div id="rankAa"></div></div>
+    <div class="airw">
+      <input class="ain" id="rankIn" placeholder="问关系对比…" onkeydown="if(event.key==='Enter')ask('rank',this.value,this)"/>
+      <button class="asb" onclick="ask('rank',document.getElementById('rankIn').value,document.getElementById('rankIn'))">↑</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function tick(){const n=new Date();document.getElementById('ck').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')}
+tick();setInterval(tick,1000);
+
+// ══ 数据 ══════════════════════════════════════════════
+// DOM下的完整人员树
+const DOM_PERSONS = [
+  {
+    id:'wl', name:'王磊', region:'上海DOM', base:15000, pool:20000,
+    dists:[
+      {
+        id:'bc', name:'宝仓贸易', region:'浦东', ach:72,
+        dsrs:[
+          {name:'张伟', region:'浦东东区', stores:'大润发金桥+家乐福浦东+4家', ach:78},
+          {name:'陈强', region:'浦东西区', stores:'联华+罗森+3家',              ach:68},
+        ],
+        bas:[
+          {name:'美顾A·林晓',  store:'大润发金桥',   tasks:'月24次巡检', ach:92},
+          {name:'美顾B·王芳',  store:'家乐福浦东',   tasks:'月24次巡检', ach:85},
+        ],
+      },
+      {
+        id:'hp', name:'黄浦经销商', region:'黄浦', ach:87,
+        dsrs:[
+          {name:'李娜', region:'黄浦全区', stores:'大润发五角场+家乐福+3家', ach:87},
+        ],
+        bas:[
+          {name:'美顾C·赵雨',  store:'大润发五角场', tasks:'月24次巡检', ach:88},
+        ],
+      },
+      {
+        id:'cn', name:'长宁经销商', region:'长宁', ach:91,
+        dsrs:[
+          {name:'王磊Jr', region:'长宁全区', stores:'家乐福中山公园+大润发+3家', ach:91},
+        ],
+        bas:[
+          {name:'美顾D·孙丽',  store:'家乐福中山公园', tasks:'月24次巡检', ach:95},
+        ],
+      },
+      {
+        id:'bs', name:'宝山经销商', region:'宝山', ach:74,
+        dsrs:[
+          {name:'刘芳', region:'宝山全区', stores:'家乐福宝山+大润发+3家', ach:74},
+        ],
+        bas:[
+          {name:'美顾E·吴婷',  store:'家乐福宝山', tasks:'月20次巡检', ach:76},
+        ],
+      },
+      {
+        id:'mh', name:'闵行经销商', region:'闵行', ach:95,
+        dsrs:[
+          {name:'陈勇', region:'闵行全区', stores:'大润发古美+家乐福+4家', ach:95},
+        ],
+        bas:[
+          {name:'美顾F·周颖',  store:'大润发古美', tasks:'月24次巡检', ach:97},
+          {name:'美顾G·徐静',  store:'家乐福闵行', tasks:'月20次巡检', ach:90},
+        ],
+      },
+    ],
+  },
+  {
+    id:'zs', name:'张三', region:'北京DOM', base:15000, pool:20000,
+    dists:[
+      {id:'cy',name:'朝阳经销商',region:'朝阳',ach:82,dsrs:[{name:'周明',region:'朝阳',stores:'华润万家+物美+3家',ach:82}],bas:[{name:'美顾H·刘蕊',store:'华润万家朝阳',tasks:'月20次巡检',ach:83}]},
+      {id:'hd',name:'海淀经销商',region:'海淀',ach:76,dsrs:[{name:'吴刚',region:'海淀',stores:'家乐福海淀+超市发+3家',ach:76}],bas:[{name:'美顾I·张敏',store:'家乐福海淀',tasks:'月20次巡检',ach:78}]},
+    ],
+  },
+];
+
+const LV={
+  dom:{
+    label:'DOM·区域主管', plabel:'DOM账单',
+    persons: DOM_PERSONS,
+    avg:28500, coeff:1.5, subLabel:'经销商',
+    r1:[{n:'李四',r:'广州',v:33400},{n:'王磊',r:'上海',v:31200,me:true},{n:'张三',r:'北京',v:28600},{n:'赵六',r:'成都',v:26800},{n:'钱七',r:'武汉',v:23100}],
+    r2:[{n:'华南城市经理',r:'广深',v:68000},{n:'华东城市经理',r:'沪宁杭',v:63200},{n:'华北城市经理',r:'京津',v:58800}],
+    rt1:'上海·DOM月收入排名', rt2:'华东·城市经理月收入排名',
+    rc:'DOM的收入差距来自各SKU在<strong style="color:var(--purple)">经销商→DSR→美顾</strong>三层执行的聚合达成率。',
+  },
+  city:{
+    label:'城市经理', plabel:'城市经理账单',
+    persons:[
+      {id:'hd',name:'黄东',region:'华东城市经理',base:25000,pool:38000,
+       dists:[{id:'d1',name:'上海DOM·王磊',region:'上海',ach:88,dsrs:[{name:'5名DSR',region:'上海',stores:'共90家门店',ach:88}],bas:[{name:'7名美顾',store:'S+门店',tasks:'覆盖率92%',ach:90}]},{id:'d2',name:'南京DOM',region:'南京',ach:79,dsrs:[{name:'3名DSR',region:'南京',stores:'共48家门店',ach:79}],bas:[{name:'3名美顾',store:'S+门店',tasks:'覆盖率85%',ach:82}]},{id:'d3',name:'杭州DOM',region:'杭州',ach:84,dsrs:[{name:'4名DSR',region:'杭州',stores:'共60家门店',ach:84}],bas:[{name:'4名美顾',store:'S+门店',tasks:'覆盖率88%',ach:86}]}]},
+    ],
+    avg:52000, coeff:1.2, subLabel:'DOM',
+    r1:[{n:'何南',r:'华南',v:56800},{n:'黄东',r:'华东',v:52400,me:true},{n:'周西',r:'华北',v:48900},{n:'吴中',r:'华中',v:44200}],
+    r2:[{n:'南区大区总',r:'南方',v:112000},{n:'东区大区总',r:'东部',v:108000},{n:'北区大区总',r:'北方',v:104000}],
+    rt1:'全国·城市经理月收入排名', rt2:'全国·大区总月收入排名',
+    rc:'城市经理的账单 = 所有DOM账单的聚合，DOM下的<strong style="color:var(--purple)">DSR和美顾的执行质量</strong>最终都传导到这里。',
+  },
+  region:{
+    label:'大区总经理', plabel:'大区总账单',
+    persons:[
+      {id:'nq',name:'南区总',region:'华南大区',base:40000,pool:68000,
+       dists:[{id:'r1',name:'华南城市经理',region:'广深',ach:91,dsrs:[{name:'18名DSR',region:'华南',stores:'共310家门店',ach:91}],bas:[{name:'24名美顾',store:'S+门店',tasks:'覆盖率94%',ach:93}]},{id:'r2',name:'华东城市经理',region:'沪宁杭',ach:87,dsrs:[{name:'15名DSR',region:'华东',stores:'共260家门店',ach:87}],bas:[{name:'20名美顾',store:'S+门店',tasks:'覆盖率91%',ach:89}]}]},
+    ],
+    avg:88000, coeff:1.0, subLabel:'城市经理',
+    r1:[{n:'南区总',r:'华南',v:96400,me:true},{n:'北区总',r:'华北',v:89200},{n:'东区总',r:'华东',v:84600},{n:'西区总',r:'西部',v:78200}],
+    r2:[],
+    rt1:'全国·大区总月收入排名', rt2:'',
+    rc:'大区总账单 = 所有城市经理账单的聚合。<strong style="color:var(--purple)">数百名DSR和美顾的日常执行</strong>，最终聚合成这一张账单。',
+  },
+};
+
+const SKUS=[
+  {id:'zr5',name:'遵循自然 500ml',grade:1,color:'var(--green)', cw:20},
+  {id:'zr1',name:'遵循自然 1L',   grade:2,color:'var(--amber)', cw:20},
+  {id:'hs', name:'红烧酱油系列',  grade:3,color:'var(--blue)',  cw:20},
+  {id:'hsl',name:'红烧酱油大装',  grade:4,color:'var(--purple)',cw:20},
+  {id:'tj', name:'特级酱油 885ml',grade:5,color:'var(--red)',   cw:20},
+];
+const BASE_P=[[8000,15000,32000,42000,50000],[25600,48000,102400,134400,160000],[78400,147000,313600,411600,490000]];
+const BASE_A=[0.62,0.77,0.92,0.85,0.60];
+
+let curLv='dom', curPi=0, curEb='sku', cachedSkus=[];
+
+function genSkus(lvk,pi){
+  const lv=LV[lvk]; const p=lv.persons[pi];
+  const li={'dom':0,'city':1,'region':2}[lvk];
+  return SKUS.map((t,i)=>{
+    const pt=BASE_P[li][i];
+    const compMax=Math.round(p.pool*t.cw/100);
+    return {...t, profitTarget:pt, profitActual:Math.round(pt*BASE_A[i]), compMax};
+  });
+}
+function calcC(sku,lvk){
+  return Math.round(sku.compMax*Math.min((sku.profitActual/sku.profitTarget)*LV[lvk].coeff,2.0));
+}
+
+// ── 切换 ─────────────────────────────────────────────
+function switchLv(lv){
+  curLv=lv; curPi=0;
+  Object.keys(LV).forEach(k=>document.getElementById('lv-'+k).classList.toggle('on',k===lv));
+  const pl=LV[lv].plabel;
+  document.getElementById('ebLbl').textContent=pl;
+  document.getElementById('personAiH').textContent='🏢 '+pl+' Agent';
+  renderPbar(); renderAll();
+}
+function switchEb(e){
+  curEb=e;
+  ['sku','person','rank'].forEach(x=>{
+    document.getElementById('eb-'+x).classList.toggle('on',x===e);
+    document.getElementById('sc-'+x).classList.toggle('on',x===e);
+  });
+  window.scrollTo(0,141);
+}
+function renderPbar(){
+  const bar=document.getElementById('pbar');
+  bar.innerHTML='<span class="pl">查看：</span>';
+  LV[curLv].persons.forEach((p,i)=>{
+    const d=document.createElement('div');
+    d.className='pc'+(i===curPi?' on':'');
+    d.textContent=p.name+'·'+p.region;
+    d.onclick=()=>{curPi=i;renderPbar();renderAll()};
+    bar.appendChild(d);
+  });
+}
+
+function renderAll(){
+  const lv=LV[curLv]; const p=lv.persons[curPi];
+  cachedSkus=genSkus(curLv,curPi);
+  const inc=cachedSkus.reduce((s,sk)=>s+calcC(sk,curLv),0);
+  const total=p.base+inc;
+  renderSkuLedger(lv,p,total);
+  renderBillLedger(lv,p,total,inc);
+  renderRank();
+}
+
+// ── SKU账单 + 三层下钻 ───────────────────────────────
+function renderSkuLedger(lv,p,total){
+  document.getElementById('skuTitle').textContent=`六月鲜 · ${lv.label} · ${p.name}`;
+  document.getElementById('skuSub').textContent=`5个SKU · ${p.dists.length}个${lv.subLabel} · ${p.dists.reduce((s,d)=>s+d.dsrs.length,0)}名DSR · ${p.dists.reduce((s,d)=>s+d.bas.length,0)}名美顾 · 2026年4月`;
+  document.getElementById('skuEarned').textContent='¥'+total.toLocaleString();
+  document.getElementById('skuMax').textContent='满额 ¥'+(p.base+cachedSkus.reduce((s,sk)=>s+sk.compMax,0)).toLocaleString();
+
+  const sl=document.getElementById('sl');
+  sl.innerHTML='';
+  cachedSkus.forEach((sku,si)=>{
+    const earned=calcC(sku,curLv);
+    const pa=(sku.profitActual/sku.profitTarget*100).toFixed(0);
+    const pct=Math.min(100,parseInt(pa));
+    const ac=pct>=85?'var(--green)':pct>=65?'var(--amber)':'var(--red)';
+    const gap=sku.compMax-earned;
+    const uid=`${sku.id}-${si}`;
+
+    const div=document.createElement('div');
+    div.className='sr';
+    div.innerHTML=`
+    <div class="sr-main" onclick="toggleSr(this.parentElement,'${uid}')">
+      <div class="sg g${sku.grade}">年级${sku.grade}</div>
+      <div class="si">
+        <div class="si-name">${sku.name}</div>
+        <div class="si-sub">利润达成 ${pa}% · 权重${sku.cw}%</div>
+        <div class="si-bar"><div class="si-fill" style="width:${pct}%;background:${ac}"></div></div>
+      </div>
+      <div class="srt">
+        <div class="srt-ach" style="color:${ac}">${pa}%</div>
+        <div class="srt-cp" style="color:${ac}">+¥${earned.toLocaleString()}</div>
+        <div class="srt-gp" style="color:${gap>0?'var(--red)':'var(--green)'}">${gap>0?'差¥'+gap.toLocaleString():'✓满额'}</div>
+      </div>
+    </div>
+    <div class="drill" id="drill-${uid}">
+      <!-- 三层 Tab -->
+      <div class="dtabs">
+        <button class="dtab on" id="dt-dist-${uid}" onclick="switchDtab('${uid}','dist')">🤝 经销商 ${p.dists.length}个</button>
+        <button class="dtab" id="dt-dsr-${uid}" onclick="switchDtab('${uid}','dsr')">👔 DSR ${p.dists.reduce((s,d)=>s+d.dsrs.length,0)}名</button>
+        <button class="dtab" id="dt-ba-${uid}" onclick="switchDtab('${uid}','ba')">✨ 美顾 ${p.dists.reduce((s,d)=>s+d.bas.length,0)}名</button>
+      </div>
+
+      <!-- 经销商层 -->
+      <div class="dpanel on" id="dp-dist-${uid}">
+        ${p.dists.map((d,i)=>{
+          const rc=i===0?'rk1':i===1?'rk2':i===2?'rk3':'rkn';
+          const dc=d.ach>=85?'var(--green)':d.ach>=65?'var(--amber)':'var(--red)';
+          const distComp=Math.round(earned/p.dists.length*(d.ach/100)/p.dists.reduce((s,x)=>s+x.ach/100,0)*p.dists.length);
+          return `<div class="dist-row">
+            <div class="dist-rank ${rc}">${i+1}</div>
+            <div class="dist-info">
+              <div class="dist-name">${d.name}</div>
+              <div class="dist-meta">${d.region} · ${d.dsrs.length}名DSR · ${d.bas.length}名美顾</div>
+            </div>
+            <div class="dist-bw"><div class="dist-bf" style="width:${d.ach}%;background:${dc}"></div></div>
+            <div class="dist-ach" style="color:${dc}">${d.ach}%</div>
+            <div class="dist-comp" style="color:${dc}">¥${distComp.toLocaleString()}</div>
+          </div>`;
+        }).join('')}
+        <div class="drill-summary">
+          📊 经销商聚合达成率：<strong style="color:var(--amber)">${(p.dists.reduce((s,d)=>s+d.ach,0)/p.dists.length).toFixed(0)}%</strong> · 
+          最高：${[...p.dists].sort((a,b)=>b.ach-a.ach)[0].name} ${[...p.dists].sort((a,b)=>b.ach-a.ach)[0].ach}% · 
+          最低：${[...p.dists].sort((a,b)=>a.ach-b.ach)[0].name} ${[...p.dists].sort((a,b)=>a.ach-b.ach)[0].ach}%
+        </div>
+      </div>
+
+      <!-- DSR层 -->
+      <div class="dpanel" id="dp-dsr-${uid}">
+        ${p.dists.flatMap(d=>d.dsrs.map(dsr=>({...dsr,dist:d.name}))).sort((a,b)=>b.ach-a.ach).map((dsr,i)=>{
+          const dc=dsr.ach>=85?'var(--green)':dsr.ach>=65?'var(--amber)':'var(--red)';
+          return `<div class="dsr-row">
+            <div class="dsr-avatar">👔</div>
+            <div class="dsr-info">
+              <div class="dsr-name">${dsr.name} <span style="font-size:10px;color:var(--text3)">${dsr.region}</span></div>
+              <div class="dsr-stores">${dsr.dist} · ${dsr.stores}</div>
+              <div class="dsr-bw"><div class="dsr-bf" style="width:${dsr.ach}%;background:${dc}"></div></div>
+            </div>
+            <div class="dsr-right">
+              <div class="dsr-ach" style="color:${dc}">${dsr.ach}%</div>
+              <div class="dsr-inc" style="color:${dc}">r达成</div>
+            </div>
+          </div>`;
+        }).join('')}
+        <div class="drill-summary">
+          👔 DSR聚合达成率：<strong style="color:var(--amber)">${(p.dists.flatMap(d=>d.dsrs).reduce((s,d)=>s+d.ach,0)/p.dists.flatMap(d=>d.dsrs).length).toFixed(0)}%</strong> · 
+          共${p.dists.flatMap(d=>d.dsrs).length}名DSR参与执行
+        </div>
+      </div>
+
+      <!-- 美顾层 -->
+      <div class="dpanel" id="dp-ba-${uid}">
+        ${p.dists.flatMap(d=>d.bas.map(ba=>({...ba,dist:d.name}))).sort((a,b)=>b.ach-a.ach).map((ba,i)=>{
+          const dc=ba.ach>=85?'var(--green)':ba.ach>=65?'var(--amber)':'var(--red)';
+          return `<div class="ba-row">
+            <div class="ba-avatar">✨</div>
+            <div class="ba-info">
+              <div class="ba-name">${ba.name} <span style="font-size:10px;color:var(--text3)">${ba.dist}</span></div>
+              <div class="ba-store">${ba.store}</div>
+              <div class="ba-tasks">${ba.tasks}</div>
+              <div class="ba-bw"><div class="ba-bf" style="width:${ba.ach}%;background:${dc}"></div></div>
+            </div>
+            <div class="ba-right">
+              <div class="ba-ach" style="color:${dc}">${ba.ach}%</div>
+              <div class="ba-inc" style="color:${dc}">任务达成</div>
+            </div>
+          </div>`;
+        }).join('')}
+        <div class="drill-summary">
+          ✨ 美顾聚合达成率：<strong style="color:var(--amber)">${(p.dists.flatMap(d=>d.bas).reduce((s,b)=>s+b.ach,0)/p.dists.flatMap(d=>d.bas).length).toFixed(0)}%</strong> · 
+          共${p.dists.flatMap(d=>d.bas).length}名美顾 · 覆盖${p.dists.flatMap(d=>d.bas).length}家S+门店
+        </div>
+      </div>
+    </div>`;
+    sl.appendChild(div);
+  });
+
+  const worst=[...cachedSkus].sort((a,b)=>(b.compMax-calcC(b,curLv))-(a.compMax-calcC(a,curLv)))[0];
+  const tgap=cachedSkus.reduce((s,sk)=>s+(sk.compMax-calcC(sk,curLv)),0);
+  document.getElementById('sf').innerHTML=`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <span style="font-size:13px;font-weight:700">账单汇总</span>
+    <span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--purple)">¥${total.toLocaleString()}</span>
+  </div>
+  <div style="font-size:11px;color:var(--text2);line-height:1.7;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:10px">
+    <strong style="color:var(--amber)">差距 ¥${tgap.toLocaleString()} 可追回</strong>：最大缺口「${worst.name}」薪酬风险 ¥${(worst.compMax-calcC(worst,curLv)).toLocaleString()}。点开SKU行查看是哪个经销商/DSR/美顾拖后腿。
+  </div>`;
+}
+
+function toggleSr(row,uid){
+  row.classList.toggle('exp');
+  document.getElementById('drill-'+uid).style.display=row.classList.contains('exp')?'block':'none';
+}
+function switchDtab(uid,tab){
+  ['dist','dsr','ba'].forEach(t=>{
+    document.getElementById('dt-'+t+'-'+uid)?.classList.toggle('on',t===tab);
+    document.getElementById('dp-'+t+'-'+uid)?.classList.toggle('on',t===tab);
+  });
+}
+
+// ── 人员账单 ──────────────────────────────────────────
+function renderBillLedger(lv,p,total,inc){
+  const rc={dom:'var(--teal)',city:'var(--blue)',region:'var(--purple)'}[curLv];
+  const diff=total-lv.avg;
+  const maxInc=cachedSkus.reduce((s,sk)=>s+sk.compMax,0);
+
+  document.getElementById('personAb').textContent=`你好，我是${p.name}的账单 Agent。每行是一个SKU，点开看在哪个${lv.subLabel}、哪个DSR、哪个美顾执行如何。`;
+
+  document.getElementById('ph').innerHTML=`
+  <div>
+    <div class="ph-role" style="color:${rc}">${lv.label}</div>
+    <div class="ph-name">${p.name}</div>
+    <div class="ph-reg">${p.region} · ${p.dists?.length||0}个${lv.subLabel} · ${p.dists?.reduce((s,d)=>s+(d.dsrs?.length||0),0)||0}名DSR · ${p.dists?.reduce((s,d)=>s+(d.bas?.length||0),0)||0}名美顾</div>
+  </div>
+  <div class="ph-r">
+    <div class="ph-earn" style="color:${rc}">¥${total.toLocaleString()}</div>
+    <div class="ph-max">满额 ¥${(p.base+maxInc).toLocaleString()}</div>
+    <div class="ph-vs ${diff>=0?'vu':'vd'}">${diff>=0?'↑高于':'↓低于'}均值 ¥${Math.abs(diff).toLocaleString()}</div>
+  </div>`;
+
+  const brows=document.getElementById('brows');
+  brows.innerHTML='';
+  cachedSkus.forEach(sku=>{
+    const earned=calcC(sku,curLv);
+    const pa=(sku.profitActual/sku.profitTarget*100).toFixed(0);
+    const gap=sku.compMax-earned;
+    const pct=Math.min(100,parseInt(pa));
+    const ac=pct>=85?'var(--green)':pct>=65?'var(--amber)':'var(--red)';
+
+    const allDsrs=p.dists?.flatMap(d=>d.dsrs)||[];
+    const allBas=p.dists?.flatMap(d=>d.bas)||[];
+    const worstDist=p.dists?[...p.dists].sort((a,b)=>a.ach-b.ach)[0]:null;
+    const bestDsr=allDsrs.length?[...allDsrs].sort((a,b)=>b.ach-a.ach)[0]:null;
+
+    const row=document.createElement('div');
+    row.className='br'; row.style.borderColor=sku.color;
+    row.innerHTML=`
+    <div class="brl" onclick="toggleBd('bd-b-${sku.id}',this.closest('.br'))">
+      <div class="brl-sku">
+        <span style="width:10px;height:10px;border-radius:3px;background:${sku.color};display:inline-block;flex-shrink:0"></span>
+        ${sku.name}
+        <span style="background:rgba(255,255,255,.05);padding:1px 6px;border-radius:6px;font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">年级${sku.grade}</span>
+      </div>
+      <div class="brl-tg"><span>利润目标 ¥${(sku.profitTarget/1000).toFixed(0)}K</span><span>权重 ${sku.cw}%</span></div>
+      <div class="brl-pg"><div class="brl-pf" style="width:${pct}%;background:${ac}"></div></div>
+    </div>
+    <div class="brr" onclick="toggleBd('bd-b-${sku.id}',this.closest('.br'))">
+      <div class="brr-ach" style="color:${ac}">${pa}%</div>
+      <div class="brr-cp" style="color:${ac}">+¥${earned.toLocaleString()}</div>
+      <div class="brr-gp" style="color:${gap>0?'var(--red)':'var(--green)'}">${gap>0?'差¥'+gap.toLocaleString():'✓'}</div>
+    </div>`;
+    brows.appendChild(row);
+
+    const detail=document.createElement('div');
+    detail.className='bd'; detail.id='bd-b-'+sku.id;
+    detail.innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px">
+      ${p.dists?.map(d=>{
+        const dc=d.ach>=85?'var(--green)':d.ach>=65?'var(--amber)':'var(--red)';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--card);border:1px solid var(--border);border-radius:9px;font-size:11px">
+          <span style="flex:1;font-weight:600">🤝 ${d.name}</span>
+          <span style="color:var(--text3);font-size:10px">${d.dsrs.length}DSR+${d.bas.length}美顾</span>
+          <span style="font-family:'Space Mono',monospace;font-weight:700;color:${dc}">${d.ach}%</span>
+        </div>`;
+      }).join('')||''}
+    </div>
+    <div style="background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.15);border-radius:9px;padding:9px;font-size:11px;color:var(--text2)">
+      ${worstDist?`💡 <strong style="color:var(--amber)">最弱：${worstDist.name} ${worstDist.ach}%</strong>`:''}
+      ${bestDsr?` · 最强DSR：<strong style="color:var(--green)">${bestDsr.name} ${bestDsr.ach}%</strong>`:''}
+    </div>`;
+    brows.appendChild(detail);
+  });
+
+  document.getElementById('bsum').innerHTML=`
+  <div class="bsr"><span class="bsr-l">基础月薪</span><span class="bsr-v">¥${p.base.toLocaleString()}</span></div>
+  <div class="bsr"><span class="bsr-l">动销激励（5个SKU）</span><span class="bsr-v" style="color:var(--green)">+¥${inc.toLocaleString()}</span></div>
+  <div class="bsr"><span class="bsr-l">激励满额上限</span><span class="bsr-v" style="color:var(--text3)">¥${maxInc.toLocaleString()}</span></div>
+  <div class="bsr"><span class="bsr-l">已达成比例</span><span class="bsr-v" style="color:var(--amber)">${(inc/maxInc*100).toFixed(0)}%</span></div>
+  <div class="bdiv"></div>
+  <div class="btot"><div class="btot-l">本月到手</div><div class="btot-v">¥${(p.base+inc).toLocaleString()}</div></div>`;
+}
+function toggleBd(id,row){const d=document.getElementById(id);const s=d.classList.toggle('show');row.classList.toggle('bx',s)}
+
+// ── 关系排名 ──────────────────────────────────────────
+function renderRank(){
+  const lv=LV[curLv];
+  document.getElementById('rankConcept').innerHTML=lv.rc;
+  document.getElementById('rt1').textContent=lv.rt1;
+  renderOneRank(lv.r1,'rl1');
+  if(lv.r2.length>0){
+    document.getElementById('rt2').textContent=lv.rt2;
+    document.getElementById('rt2wrap').style.display='block';
+    renderOneRank(lv.r2,'rl2');
+  }else{
+    document.getElementById('rt2wrap').style.display='none';
+    document.getElementById('rl2').innerHTML='';
+  }
+}
+function renderOneRank(data,elId){
+  const self=data.find(d=>d.me)||data[1];
+  const maxV=data[0].v;
+  document.getElementById(elId).innerHTML=data.map((d,i)=>{
+    const nc=i===0?'n1':i===1?'n2':i===2?'n3':d.me?'nme':'nn';
+    const nt=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'';
+    const bc=d.me?'var(--purple)':i<=2?'var(--green)':'var(--blue)';
+    const diff=d.v-(self?.v||0);
+    return `<div class="rr ${d.me?'me':''}">
+      <div class="rr-n ${nc}">${nt}</div>
+      <div class="rr-inf">
+        <div class="rr-nm">${d.n}<span style="font-size:9px;color:var(--text3);margin-left:4px">${d.r||''}</span>${d.me?'<span class="metag">你</span>':''}${!d.me&&diff!==0?`<span style="font-size:10px;font-family:'Space Mono',monospace;color:${diff>0?'var(--green)':'var(--red)'}">  ${diff>0?'↑+':'↓'}¥${Math.abs(diff).toLocaleString()}</span>`:''}</div>
+        <div class="rr-bw"><div class="rr-bf" style="width:${Math.round(d.v/maxV*100)}%;background:${bc}50;border-right:2px solid ${bc}"></div></div>
+      </div>
+      <div class="rr-rt">
+        <div class="rr-inc" style="color:${d.me?'var(--purple)':bc}">¥${d.v.toLocaleString()}</div>
+        <div class="rr-sb">达成 ${d.ra||'—'}%</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── AI ────────────────────────────────────────────────
+async function callC(sys,q,aEl){
+  aEl.innerHTML='<div class="td-wrap"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})});
+    const d=await r.json();
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${d.content?.map(c=>c.text||'').join('')||'—'}</div>`;
+  }catch(e){aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`}
+}
+function getSys(){
+  const lv=LV[curLv]; const p=lv.persons[curPi];
+  const inc=cachedSkus.reduce((s,sk)=>s+calcC(sk,curLv),0);
+  const dsrs=p.dists?.flatMap(d=>d.dsrs)||[];
+  const bas=p.dists?.flatMap(d=>d.bas)||[];
+  return `你是INFINITY OS ${lv.label}账单Agent。当前：${p.name}（${p.region}）。
+下属：${p.dists?.map(d=>`${d.name}达成${d.ach}%`).join('、')||''}。
+DSR：${dsrs.map(d=>`${d.name}${d.ach}%`).join('、')||''}。
+美顾：${bas.map(b=>`${b.name}${b.ach}%`).join('、')||''}。
+SKU：${cachedSkus.map(s=>`${s.name}达成${(s.profitActual/s.profitTarget*100).toFixed(0)}%已挣¥${calcC(s,curLv)}`).join('、')}。
+合计¥${p.base+inc}。中文简洁含数字不超过150字。`;
+}
+async function ask(type,q,el){
+  if(!q||!q.trim())return;
+  if(el instanceof HTMLElement)el.value='';
+  document.getElementById(type+'Ar').classList.add('show');
+  document.getElementById(type+'Aq').textContent='❓ '+q;
+  await callC(getSys(),q,document.getElementById(type+'Aa'));
+}
+
+renderPbar(); renderAll();
+</script>
+</body>
+</html>
