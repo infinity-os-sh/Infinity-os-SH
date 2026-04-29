@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>工厂 MES + 仓储 WMS · Agent 入口 · INFINITY OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf8f3;
+  --bg-card: #ffffff;
+  --bg-soft: #f5f3ed;
+  --bg-warm: #fdf9ed;
+  --line: #e8e4d8;
+  --line-2: #d4cfbd;
+  --text: #1a1a20;
+  --text-2: #4a4a52;
+  --text-3: #8a8a90;
+  --text-4: #b4b0a4;
+  --amber: #b8862e;
+  --amber-2: #d4a946;
+  --amber-bg: #fdf6e3;
+  --amber-line: rgba(184,134,46,0.3);
+  --teal: #3a7a6e;
+  --teal-bg: rgba(58,122,110,0.08);
+  --green: #5f8c63;
+  --green-bg: rgba(95,140,99,0.1);
+  --red: #a84a3e;
+  --red-bg: rgba(168,74,62,0.08);
+  --blue: #4a6a8a;
+  --blue-bg: rgba(74,106,138,0.08);
+  --purple: #7c5fa6;
+  --purple-bg: rgba(124,95,166,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:14px;
+  line-height:1.7;
+  min-height:100vh;
+}
+
+/* TOPBAR */
+.topbar{
+  position:sticky;top:0;z-index:200;
+  background:rgba(250,248,243,0.96);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--amber-line);
+  padding:14px 24px;
+}
+.tb-row{display:flex;align-items:center;justify-content:space-between;gap:14px;max-width:1200px;margin:0 auto}
+.tb-logo{display:flex;align-items:center;gap:14px}
+.tb-sym{
+  width:42px;height:42px;border-radius:10px;
+  background:linear-gradient(135deg,#b8862e,#d4a946);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;
+  font-weight:700;font-size:22px;font-style:italic;color:#fff;
+}
+.tb-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:22px;font-weight:600;letter-spacing:0.02em;
+}
+.tb-name em{color:var(--amber);font-style:italic}
+.tb-tag{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  color:var(--text-3);letter-spacing:0.2em;text-transform:uppercase;
+  margin-top:2px;
+}
+.tb-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:480px){
+  .tb-row{flex-wrap:wrap;gap:10px}
+  .tb-actions{width:100%;justify-content:flex-start}
+  .role-switch{padding:5px 10px;font-size:10px}
+  .role-switch .label-full{display:none}
+  .role-switch .label-short{display:inline}
+  .tb-clock{display:none}
+}
+.label-short{display:none}
+.role-switch{
+  background:var(--bg-soft);
+  border:1px solid var(--line-2);
+  border-radius:18px;padding:6px 14px;
+  font-size:11px;color:var(--text-2);
+  cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;gap:6px;
+  transition:all 0.15s;
+}
+.role-switch.active{
+  background:var(--amber);
+  color:#fff;border-color:var(--amber);
+}
+.tb-clock{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-3)}
+
+/* MAIN */
+.main{
+  max-width:1200px;
+  margin:0 auto;
+  padding:24px;
+}
+
+/* 角色切换横幅 */
+.role-banner{
+  background:linear-gradient(135deg,var(--bg-card) 0%,var(--bg-warm) 100%);
+  border:1px solid var(--amber-line);
+  border-radius:14px;
+  padding:18px 24px;
+  margin-bottom:18px;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:all 0.3s ease;
+}
+.role-info{display:flex;align-items:center;gap:14px}
+.role-avatar{
+  width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--amber-2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;color:#fff;flex-shrink:0;
+}
+.role-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px;font-weight:600;
+}
+.role-name em{color:var(--amber);font-style:italic}
+.role-meta{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;color:var(--text-3);
+  letter-spacing:0.1em;text-transform:uppercase;
+}
+.role-status{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;color:var(--green);
+  display:flex;align-items:center;gap:6px;
+}
+.role-status::before{
+  content:'';width:7px;height:7px;border-radius:50%;
+  background:var(--green);animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* Tab */
+.nav-tabs{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:5px;margin-bottom:24px;
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:14px;padding:6px;
+}
+@media(max-width:780px){.nav-tabs{grid-template-columns:repeat(3,1fr)}}
+.nav-tab{
+  padding:12px 8px;text-align:center;
+  border-radius:10px;cursor:pointer;
+  transition:all 0.15s;border:1px solid transparent;
+  font-family:inherit;
+}
+.nav-tab:hover{background:var(--bg-soft)}
+.nav-tab.active{background:var(--amber-bg);border-color:var(--amber)}
+.nav-tab-icon{font-size:18px;display:block;margin-bottom:4px}
+.nav-tab-name{font-size:11px;font-weight:600;color:var(--text-2)}
+.nav-tab.active .nav-tab-name{color:var(--amber)}
+.nav-tab-sub{font-size:9px;color:var(--text-3);margin-top:2px;font-family:'JetBrains Mono',monospace;letter-spacing:0.05em}
+
+/* View */
+.view{display:none}
+.view.active{display:block;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* Section */
+.section{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:20px 24px;
+  margin-bottom:18px;
+}
+.sec-hdr{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:14px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--line);
+}
+.sec-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600}
+.sec-title em{color:var(--amber);font-style:italic}
+.sec-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;color:var(--text-3);
+  letter-spacing:0.15em;text-transform:uppercase;
+}
+
+/* 简报 */
+.briefing{
+  background:linear-gradient(135deg,var(--bg-card) 0%,var(--bg-warm) 100%);
+  border:1px solid var(--amber-line);
+  border-radius:16px;
+  padding:24px 28px;
+  margin-bottom:18px;
+  position:relative;overflow:hidden;
+}
+.briefing::before{
+  content:'';position:absolute;
+  top:-100px;right:-100px;width:300px;height:300px;
+  background:radial-gradient(circle,rgba(184,134,46,0.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.brief-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:relative}
+.brief-title-block{display:flex;align-items:center;gap:12px}
+.brief-icon{
+  width:42px;height:42px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--amber-2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;color:#fff;flex-shrink:0;
+}
+.brief-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600}
+.brief-title em{color:var(--amber);font-style:italic}
+.brief-meta{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.15em;text-transform:uppercase}
+.brief-content{font-size:14px;color:var(--text);line-height:1.85;position:relative}
+.brief-content p{margin-bottom:10px}
+.brief-content strong{color:var(--amber);font-weight:600}
+
+/* KPI 网格 */
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+@media(max-width:780px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi-card{
+  background:var(--bg-soft);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:14px 12px;text-align:center;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.kpi-card:hover{transform:translateY(-2px);border-color:var(--amber-line)}
+.kpi-val{
+  font-family:'Cormorant Garamond',serif;
+  font-size:26px;font-weight:700;font-style:italic;
+  color:var(--amber);line-height:1;margin-bottom:4px;
+}
+.kpi-val.good{color:var(--green)}
+.kpi-val.warn{color:var(--amber)}
+.kpi-val.bad{color:var(--red)}
+.kpi-trend{font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:600;margin-bottom:3px}
+.kpi-trend.up{color:var(--green)}
+.kpi-trend.down{color:var(--red)}
+.kpi-lbl{font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:0.05em;text-transform:uppercase}
+
+/* 议题卡片 */
+.issues-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:14px;
+}
+@media(max-width:780px){.issues-grid{grid-template-columns:1fr}}
+.issue-card{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:12px 14px;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.issue-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.05)}
+.issue-card.alert{border-left:3px solid var(--red)}
+.issue-card.warn{border-left:3px solid var(--amber)}
+.issue-card.good{border-left:3px solid var(--green)}
+.issue-tag-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.issue-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;font-weight:700}
+.issue-card.alert .issue-tag{color:var(--red)}
+.issue-card.warn .issue-tag{color:var(--amber)}
+.issue-card.good .issue-tag{color:var(--green)}
+.issue-time{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3)}
+.issue-title{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;margin-bottom:3px}
+.issue-desc{font-size:11px;color:var(--text-3);line-height:1.5}
+
+/* 大脑对话 */
+.brain-box{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:20px 24px;
+}
+.brain-input-wrap{
+  display:flex;gap:10px;
+  background:var(--bg-soft);
+  border:2px solid var(--line);
+  border-radius:14px;
+  padding:6px 6px 6px 18px;
+  transition:border-color 0.15s;
+}
+.brain-input-wrap:focus-within{border-color:var(--amber)}
+.brain-input{
+  flex:1;background:transparent;border:none;
+  padding:11px 0;font-size:14px;color:var(--text);
+  outline:none;font-family:inherit;
+}
+.brain-input::placeholder{color:var(--text-4)}
+.brain-send{
+  width:42px;height:42px;border-radius:10px;
+  background:var(--amber);border:none;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;color:#fff;flex-shrink:0;
+  transition:all 0.15s;
+}
+.brain-send:hover{background:var(--amber-2);transform:scale(1.05)}
+
+.scenarios{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.scenarios-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:0.15em;
+  text-transform:uppercase;color:var(--text-3);margin-bottom:10px;
+}
+.scenarios-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:8px;
+}
+@media(min-width:780px){.scenarios-grid{grid-template-columns:repeat(3,1fr)}}
+.scenario-btn{
+  background:var(--bg-soft);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:12px 14px;text-align:left;
+  cursor:pointer;font-family:inherit;
+  display:flex;align-items:flex-start;gap:8px;
+  transition:all 0.15s;
+}
+.scenario-btn:hover{border-color:var(--amber);background:var(--amber-bg);transform:translateY(-1px)}
+.scenario-icon{font-size:18px;flex-shrink:0;line-height:1;margin-top:1px}
+.scenario-text{flex:1;min-width:0}
+.scenario-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;line-height:1.3}
+.scenario-desc{font-size:10px;color:var(--text-3);line-height:1.4}
+
+/* 对话区 */
+.conversation{display:none;margin-top:18px}
+.conversation.has-content{display:block}
+.conv-clear{display:flex;justify-content:flex-end;margin-bottom:10px}
+.refresh-btn{
+  background:transparent;border:1px solid var(--line);
+  color:var(--text-3);
+  border-radius:14px;padding:4px 10px;
+  font-size:10px;font-family:'JetBrains Mono',monospace;
+  letter-spacing:0.05em;cursor:pointer;transition:all 0.15s;
+}
+.refresh-btn:hover{border-color:var(--amber);color:var(--amber)}
+
+.conv-msg{margin-bottom:14px;animation:slideUp 0.3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.msg-user{display:flex;justify-content:flex-end}
+.msg-user-bubble{
+  background:var(--amber);color:#fff;
+  padding:10px 16px;border-radius:18px 18px 4px 18px;
+  font-size:13px;max-width:75%;line-height:1.5;
+}
+.msg-ai{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-left:3px solid var(--amber);
+  border-radius:12px;
+  padding:16px 20px;
+}
+.msg-ai-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.msg-ai-hdr-l{display:flex;align-items:center;gap:8px}
+.msg-ai-avatar{
+  width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--amber-2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;color:#fff;flex-shrink:0;
+}
+.msg-ai-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.15em;color:var(--text-3);text-transform:uppercase}
+.msg-ai-tag{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);font-style:italic}
+.msg-ai-content{font-size:13px;color:var(--text);line-height:1.75;white-space:pre-wrap}
+.msg-ai-content strong{color:var(--amber)}
+.choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.choice-btn{
+  background:var(--amber-bg);
+  border:1px solid var(--amber);
+  border-radius:8px;padding:7px 14px;
+  font-size:11px;color:var(--amber);
+  cursor:pointer;font-weight:600;
+  font-family:inherit;transition:all 0.15s;
+}
+.choice-btn:hover{background:var(--amber);color:#fff}
+.thinking{display:flex;gap:5px;align-items:center;padding:8px 0}
+.td{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:td 1.2s infinite}
+.td:nth-child(2){animation-delay:0.2s}
+.td:nth-child(3){animation-delay:0.4s}
+@keyframes td{0%,80%,100%{opacity:0.2;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
+
+/* 产线/库存项 */
+.line-item{
+  background:var(--bg-soft);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:14px 18px;
+  margin-bottom:8px;
+  display:grid;
+  grid-template-columns:50px 1fr auto auto auto;
+  gap:14px;align-items:center;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.line-item:hover{border-color:var(--amber);transform:translateX(2px)}
+@media(max-width:780px){
+  .line-item{grid-template-columns:40px 1fr auto;gap:8px;padding:10px 12px}
+  .line-item .line-stat{display:none}
+  .line-item .line-status{font-size:8px;padding:3px 6px}
+}
+.line-num{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-weight:700;font-size:24px;
+  color:var(--amber);line-height:1;text-align:center;
+}
+.line-info{}
+.line-name{font-size:14px;font-weight:600;margin-bottom:3px}
+.line-meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em}
+.line-stat{text-align:right}
+.line-stat-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:2px;text-transform:uppercase}
+.line-stat-val{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;font-size:15px}
+.line-stat-val.good{color:var(--green)}
+.line-stat-val.warn{color:var(--amber)}
+.line-stat-val.bad{color:var(--red)}
+.line-status{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;font-weight:700;letter-spacing:0.1em;
+  padding:4px 10px;border-radius:8px;text-transform:uppercase;
+}
+.line-status.run{background:var(--green-bg);color:var(--green)}
+.line-status.warn{background:var(--amber-bg);color:var(--amber)}
+.line-status.stop{background:var(--red-bg);color:var(--red)}
+.line-status.maint{background:var(--blue-bg);color:var(--blue)}
+
+/* 蒸腾信号 */
+.evapo-signal{
+  background:linear-gradient(135deg,var(--green-bg),transparent);
+  border:1px solid var(--green);
+  border-left:4px solid var(--green);
+  border-radius:10px;
+  padding:14px 18px;
+  margin-bottom:14px;
+}
+.evapo-hdr{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:0.15em;
+  color:var(--green);font-weight:700;
+  text-transform:uppercase;margin-bottom:8px;
+}
+.evapo-content{font-size:13px;color:var(--text-2);line-height:1.7}
+.evapo-content strong{color:var(--green)}
+
+/* 60天排程预览 */
+.schedule-preview{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:16px 20px;overflow-x:auto;
+}
+.schedule-flow{
+  display:flex;gap:6px;
+  min-width:max-content;
+  align-items:stretch;
+}
+.schedule-day{
+  background:var(--bg-soft);
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:8px 6px;text-align:center;
+  min-width:72px;cursor:pointer;
+  transition:all 0.15s;
+}
+.schedule-day:hover{transform:translateY(-2px)}
+.schedule-day.high{background:var(--green-bg);border-color:var(--green)}
+.schedule-day.normal{background:var(--bg-soft);border-color:var(--line)}
+.schedule-day.low{background:var(--bg-card);border-color:var(--line-2)}
+.schedule-day.alert{background:var(--red-bg);border-color:var(--red)}
+.schedule-week{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px;text-transform:uppercase}
+.schedule-vol{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;font-size:13px;line-height:1}
+.schedule-day.high .schedule-vol{color:var(--green)}
+.schedule-day.alert .schedule-vol{color:var(--red)}
+.schedule-tag{font-size:9px;color:var(--text-2);margin-top:3px}
+
+/* footer */
+.ftr{
+  text-align:center;margin:32px 0 20px;padding-top:20px;
+  border-top:1px solid var(--amber-line);
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:13px;color:var(--amber);
+}
+.ftr-meta{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;color:var(--text-3);
+  letter-spacing:0.15em;text-transform:uppercase;
+  margin-top:6px;font-style:normal;
+}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.1);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-row">
+    <div class="tb-logo">
+      <div class="tb-sym">∞</div>
+      <div>
+        <div class="tb-name">INFINITY <em>OS</em> · 工厂 + 仓储</div>
+        <div class="tb-tag">V1.2 · MES + WMS · IPO 0-1 · 上游入口</div>
+      </div>
+    </div>
+    <div class="tb-actions">
+      <button class="role-switch active" data-role="mes" onclick="switchRole('mes')"><span class="label-full">🏭 工厂(MES)</span><span class="label-short">🏭 MES</span></button>
+      <button class="role-switch" data-role="wms" onclick="switchRole('wms')"><span class="label-full">📦 仓储(WMS)</span><span class="label-short">📦 WMS</span></button>
+      <button class="role-switch" onclick="openDispatch()" style="background:var(--amber);color:#fff;border-color:var(--amber)"><span class="label-full">⚡ 派任务</span><span class="label-short">⚡</span></button>
+      <div class="tb-clock" id="clock">--:--</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- 角色横幅 -->
+  <div class="role-banner" id="role-banner">
+    <div class="role-info">
+      <div class="role-avatar" id="role-avatar">🏭</div>
+      <div>
+        <div class="role-name" id="role-title">王厂长 · <em>欣和济南工厂</em></div>
+        <div class="role-meta" id="role-meta">FACTORY · IPO 0 · MES SYSTEM · 6 PRODUCTION LINES</div>
+      </div>
+    </div>
+    <div class="role-status">实时同步</div>
+  </div>
+
+  <!-- Tab -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" data-tab="brain" onclick="switchTab('brain')">
+      <span class="nav-tab-icon">🧠</span>
+      <div class="nav-tab-name">每日简报</div>
+      <div class="nav-tab-sub">BRAIN</div>
+    </div>
+    <div class="nav-tab" data-tab="lines" onclick="switchTab('lines')">
+      <span class="nav-tab-icon">⚙️</span>
+      <div class="nav-tab-name" id="tab-lines-name">产线状态</div>
+      <div class="nav-tab-sub">LINES</div>
+    </div>
+    <div class="nav-tab" data-tab="evapo" onclick="switchTab('evapo')">
+      <span class="nav-tab-icon">💧</span>
+      <div class="nav-tab-name">蒸腾信号</div>
+      <div class="nav-tab-sub">SIGNAL</div>
+    </div>
+    <div class="nav-tab" data-tab="schedule" onclick="switchTab('schedule')">
+      <span class="nav-tab-icon">📅</span>
+      <div class="nav-tab-name">60天排程</div>
+      <div class="nav-tab-sub">FORECAST</div>
+    </div>
+    <div class="nav-tab" data-tab="agents" onclick="switchTab('agents')">
+      <span class="nav-tab-icon">🤖</span>
+      <div class="nav-tab-name">Agent 矩阵</div>
+      <div class="nav-tab-sub">3 AGENTS</div>
+    </div>
+    <div class="nav-tab" data-tab="actions" onclick="switchTab('actions')">
+      <span class="nav-tab-icon">📋</span>
+      <div class="nav-tab-name">决策记录</div>
+      <div class="nav-tab-sub">ACTIONS</div>
+    </div>
+  </div>
+
+  <!-- 每日简报 -->
+  <div class="view active" id="view-brain">
+    
+    <div class="briefing">
+      <div class="brief-hdr">
+        <div class="brief-title-block">
+          <div class="brief-icon" id="brief-icon">🏭</div>
+          <div>
+            <div class="brief-title" id="brief-greeting">早上好 · 王厂长 · <em>每日简报</em></div>
+            <div class="brief-meta" id="brief-time">加载中...</div>
+          </div>
+        </div>
+      </div>
+      <div class="brief-content" id="brief-content"></div>
+      
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase">
+          🚨 今日关键议题
+        </div>
+        <button class="refresh-btn" onclick="refreshIssues()">↻ 刷新</button>
+      </div>
+      <div class="issues-grid" id="brief-issues"></div>
+    </div>
+
+    <!-- KPI -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title" id="kpi-title">工厂 <em>核心 KPI</em></div>
+        <div class="sec-tag" id="kpi-tag">MES · IPO 0</div>
+      </div>
+      <div class="kpi-grid" id="kpi-grid"></div>
+    </div>
+
+    <!-- 战略大脑 -->
+    <div class="brain-box">
+      <div class="brain-input-wrap">
+        <input class="brain-input" id="brain-input" placeholder="问 Agent 任何问题…今天产能够吗?要加班吗?库存要清吗?" onkeydown="if(event.key==='Enter')askBrain(this.value)">
+        <button class="brain-send" onclick="askBrain(document.getElementById('brain-input').value)">↑</button>
+      </div>
+      
+      <div class="scenarios">
+        <div class="scenarios-label" id="scenarios-label">— 工厂典型场景 · 一键问 Agent</div>
+        <div class="scenarios-grid" id="scenarios-grid"></div>
+      </div>
+    </div>
+
+    <div class="conversation" id="conversation"></div>
+  </div>
+
+  <!-- 产线状态 / 库位状态 -->
+  <div class="view" id="view-lines">
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title" id="lines-title">产线 <em>状态</em> · 6 条产线</div>
+        <div class="sec-tag" id="lines-tag">PRODUCTION LINES · LIVE</div>
+      </div>
+      <div id="lines-list"></div>
+    </div>
+  </div>
+
+  <!-- 蒸腾信号 -->
+  <div class="view" id="view-evapo">
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">蒸腾 <em>信号</em> · 反向需求驱动</div>
+        <div class="sec-tag">EVAPORATION · BOTTOM-UP</div>
+      </div>
+      
+      <div style="background:linear-gradient(135deg,var(--green-bg),transparent);border:1px solid var(--green);border-left:4px solid var(--green);border-radius:10px;padding:16px 20px;margin-bottom:16px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.15em;color:var(--green);font-weight:700;text-transform:uppercase;margin-bottom:8px">💧 蒸腾模型 · 上游应用</div>
+        <div style="font-size:13px;color:var(--text-2);line-height:1.7">
+          消费者真实需求自下而上传导 → 在 IPO 0-1 形成"<strong>云</strong>"<br>
+          <strong style="color:var(--green)">工厂/仓储不再按计划生产</strong> · 而是按"60天后蒸腾预测"排产/备货<br>
+          这就是反向需求驱动的<strong>终点</strong> · 也是上游决策的<strong>新基准</strong>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase">当前6个SKU扫描结果</div>
+        <button class="refresh-btn" onclick="rescanEvapo()">↻ 扫描全部 SKU</button>
+      </div>
+
+      <div id="evapo-signals"></div>
+    </div>
+  </div>
+
+  <!-- 60天排程 -->
+  <div class="view" id="view-schedule">
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">60 天 <em>排程</em> · 蒸腾预测驱动</div>
+        <div class="sec-tag">FORECAST · 8 WEEKS AHEAD</div>
+      </div>
+      
+      <div style="background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:6px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:var(--text-2)">
+        💡 排程基于 <strong style="color:var(--amber)">蒸腾趋势</strong>·非传统月度计划。每周回看蒸腾速率 → 调整下周产能/备货
+      </div>
+      
+      <!-- 排程依据透明性(MAX补充) -->
+      <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin-bottom:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:11px">
+        <div style="text-align:center;padding:6px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">基础</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--text-2);font-size:13px">过去30天蒸腾速率</div>
+        </div>
+        <div style="text-align:center;padding:6px;border-left:1px solid var(--line)">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">权重</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--text-2);font-size:13px">SKU 年级系数</div>
+        </div>
+        <div style="text-align:center;padding:6px;border-left:1px solid var(--line)">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">调整</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--text-2);font-size:13px">季节性 + 节日</div>
+        </div>
+        <div style="text-align:center;padding:6px;border-left:1px solid var(--line)">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">校验</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--text-2);font-size:13px">竞品 + 库存水位</div>
+        </div>
+      </div>
+      
+      <div class="schedule-preview">
+        <div class="schedule-flow" id="schedule-flow"></div>
+      </div>
+      
+      <div style="margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:11px">
+        <div style="background:var(--green-bg);padding:10px 14px;border-radius:6px"><strong style="color:var(--green)">高蒸腾期</strong> · 加产 + 备库存</div>
+        <div style="background:var(--bg-soft);padding:10px 14px;border-radius:6px"><strong>正常期</strong> · 标准排程</div>
+        <div style="background:var(--red-bg);padding:10px 14px;border-radius:6px"><strong style="color:var(--red)">蒸腾下滑</strong> · 减产 + 防过剩</div>
+      </div>
+    </div>
+
+    <!-- 按SKU细分 -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">按 <em>SKU</em> 细分排程 · 下周</div>
+        <div class="sec-tag">SKU BREAKDOWN · W+1</div>
+      </div>
+      <div id="sku-schedule-list"></div>
+    </div>
+  </div>
+
+  <!-- Agent 矩阵 -->
+  <div class="view" id="view-agents">
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">3 个上游 <em>Agent</em> · 决策引擎</div>
+        <div class="sec-tag">UPSTREAM AGENTS</div>
+      </div>
+      <div id="agents-list"></div>
+    </div>
+
+    <!-- 上下游联动(MAX要求) -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">和 <em>下游</em> 的联动 · 信息流双向</div>
+        <div class="sec-tag">CROSS-SYSTEM FLOW</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:10px">
+        <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:14px 18px;display:grid;grid-template-columns:140px 1fr auto;gap:14px;align-items:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600">📦 物流 ↓</div>
+          <div style="font-size:12px;color:var(--text-2)">工厂 → 仓储 → 经销商 → 二批 → 门店 → 消费者(传统供给链)</div>
+          <button class="refresh-btn" onclick="askBrain('当前从工厂到消费者的物流速度·哪些节点慢?')">查看 →</button>
+        </div>
+        <div style="background:var(--green-bg);border:1px solid var(--green);border-radius:10px;padding:14px 18px;display:grid;grid-template-columns:140px 1fr auto;gap:14px;align-items:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:var(--green)">💧 蒸腾 ↑</div>
+          <div style="font-size:12px;color:var(--text-2)">消费者真实购买 → 门店 → 经销商 → 仓储 → <strong style="color:var(--green)">工厂(我)</strong>(反向需求)</div>
+          <button class="refresh-btn" onclick="askBrain('当前蒸腾信号·从消费者到工厂的传导链路·哪里有失真?')">查看 →</button>
+        </div>
+        <div style="background:var(--amber-bg);border:1px solid var(--amber);border-radius:10px;padding:14px 18px;display:grid;grid-template-columns:140px 1fr auto;gap:14px;align-items:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:var(--amber)">🔄 联动通知</div>
+          <div style="font-size:12px;color:var(--text-2)">工厂决策 → 自动通知欣和总部+经销商总部+各深度合伙人</div>
+          <button class="refresh-btn" onclick="openDispatch()">通知下游 →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CDI统治力指数 · 动态 -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">CDI <em>统治力</em> 指数 · 5维度</div>
+        <div class="sec-tag" id="cdi-tag">CHANNEL DOMINANCE INDEX</div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)" id="cdi-grid"></div>
+    </div>
+
+    <!-- 年级系统 · 动态 -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title" id="grades-title">SKU 年级 <em>系统</em> · 排产/备货优先级</div>
+        <div class="sec-tag">GRADE × COEFFICIENT</div>
+      </div>
+      <div id="grades-list" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 决策记录 ═══════════ -->
+  <div class="view" id="view-actions">
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">决策 <em>记录</em> · 闭环管理</div>
+        <div class="sec-tag">INF_ACTIONS · UPSTREAM</div>
+      </div>
+      
+      <div class="kpi-grid" id="actions-kpi" style="margin-bottom:16px"></div>
+    </div>
+
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">最近 <em>决策</em></div>
+        <div class="sec-tag">RECENT</div>
+      </div>
+      <div id="actions-list" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 派单弹窗 ═══════════ -->
+  <div id="dispatch-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px">
+    <div style="background:var(--bg-card);border-radius:16px;padding:28px 32px;max-width:540px;width:100%;max-height:85vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line)">
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600">派 <em style="color:var(--amber);font-style:italic">任务</em> · <span id="dispatch-role-name">工厂</span></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.15em;margin-top:2px;text-transform:uppercase">DISPATCH · WRITE TO INF_ACTIONS</div>
+        </div>
+        <button onclick="closeDispatch()" style="background:none;border:none;font-size:24px;color:var(--text-3);cursor:pointer">×</button>
+      </div>
+      
+      <!-- Agent建议按钮 -->
+      <div style="background:var(--green-bg);border:1px solid var(--green);border-radius:8px;padding:12px 16px;margin-bottom:14px;cursor:pointer" onclick="agentSuggest()">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.15em;color:var(--green);font-weight:700;text-transform:uppercase;margin-bottom:4px">💡 Agent 建议(基于当前蒸腾信号+议题)</div>
+        <div id="agent-suggestion-text" style="font-size:12px;color:var(--text-2)">点击 → Agent 自动给出推荐(目标/描述/优先级·DS可采纳或修改)</div>
+      </div>
+      
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:6px;text-transform:uppercase">任务类型</div>
+          <select id="dispatch-type" style="width:100%;padding:10px 14px;background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);outline:none">
+          </select>
+        </div>
+        
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:6px;text-transform:uppercase">目标对象</div>
+          <input id="dispatch-target" type="text" placeholder="例:L3线维修班 / 华东仓 / 明发等10家深度合伙人" style="width:100%;padding:10px 14px;background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);outline:none">
+        </div>
+        
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:6px;text-transform:uppercase">任务描述</div>
+          <textarea id="dispatch-desc" rows="3" placeholder="例:L3线异响紧急检修·24小时内复工·影响今日产能" style="width:100%;padding:10px 14px;background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);outline:none;resize:vertical"></textarea>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:6px;text-transform:uppercase">优先级</div>
+            <select id="dispatch-priority" style="width:100%;padding:10px 14px;background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);outline:none">
+              <option>🚨 紧急(24小时)</option>
+              <option>⚠️ 高(3天)</option>
+              <option>○ 中(7天)</option>
+              <option>· 低(14天)</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:6px;text-transform:uppercase">渠道</div>
+            <select id="dispatch-channel" style="width:100%;padding:10px 14px;background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);outline:none">
+              <option>📱 企微推送</option>
+              <option>📧 邮件</option>
+              <option>📋 内部任务系统</option>
+              <option>🔔 多渠道</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- 成本/ROI预估 · 战略层 -->
+        <div style="background:var(--amber-bg);border:1px solid var(--amber-line);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--text-2)">
+          💰 <strong style="color:var(--amber)">成本/ROI 预估</strong> · 提交后 Agent 自动估算执行成本和预期收益(成本×ROI=净收益)
+        </div>
+      </div>
+      
+      <div style="display:flex;gap:10px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)">
+        <button onclick="closeDispatch()" style="flex:1;background:var(--bg-soft);border:1px solid var(--line);color:var(--text-2);padding:10px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">取消</button>
+        <button onclick="submitDispatch()" style="flex:2;background:var(--amber);border:none;color:#fff;padding:10px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">⚡ 立即派发</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ftr">
+    <div>—  <em>INFINITY OS</em> · MES + WMS · 第 6 件 · DS · 欣和 SH · <span id="footer-date"></span> —</div>
+    <div class="ftr-meta">⚠️ 当前为模拟数据 · 真实 MES/WMS 系统对接等 D-02 完成后接入</div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// 时间
+// ═══════════════════════════════════════
+function tick(){
+  const n = new Date();
+  document.getElementById('clock').textContent = 
+    String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+}
+tick(); setInterval(tick, 60000);
+
+function getTimeOfDay(){
+  const h = new Date().getHours();
+  if(h<11) return '早上好';
+  if(h<14) return '中午好';
+  if(h<18) return '下午好';
+  return '晚上好';
+}
+
+function getCurrentDateString(){
+  const n = new Date();
+  const wk = ['日','一','二','三','四','五','六'][n.getDay()];
+  return `${n.getFullYear()}.${String(n.getMonth()+1).padStart(2,'0')}.${String(n.getDate()).padStart(2,'0')} 周${wk} · ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+}
+
+// ═══════════════════════════════════════
+// 角色数据 · MES vs WMS
+// ═══════════════════════════════════════
+const ROLE_DATA = {
+  mes: {
+    icon: '🏭',
+    title: '王厂长 · <em>欣和济南工厂</em>',
+    meta: 'FACTORY · IPO 0 · MES SYSTEM · 6 PRODUCTION LINES',
+    briefIcon: '🏭',
+    
+    kpis: [
+      {l:'今日产能', v:'96%', s:'good', t:'+2%', td:'up'},
+      {l:'订单完成率', v:'92%', s:'good', t:'按时', td:'up'},
+      {l:'设备稼动率', v:'87%', s:'warn', t:'-3%', td:'down'},
+      {l:'良品率', v:'99.2%', s:'good', t:'+0.1%', td:'up'}
+    ],
+    
+    issues: [
+      {type:'alert', urgency:'紧急', title:'L3线设备异常',
+       desc:'L3生产线异响·良品率降至96.5%·建议立即检修',
+       time:'15分钟前',
+       ask:'L3线异响+良品率降·诊断方案?要立即停机检修吗?对今日产能影响?'},
+      {type:'good', urgency:'机会', title:'有机系列蒸腾↑14%',
+       desc:'消费者端蒸腾持续上升·建议加产·下周排产+20%',
+       time:'今早',
+       ask:'有机系列蒸腾↑14%·下周加产20%·哪条线最适合?对其他SKU影响?'},
+      {type:'warn', urgency:'关注', title:'原料W12即将到货',
+       desc:'核心原料W12周四到货·当前库存3.2天·需协调',
+       time:'昨天',
+       ask:'原料W12当前3.2天库存·周四到货·中间会断料吗?要应急方案?'}
+    ],
+    
+    scenarios: [
+      {icon:'📊', name:'今天产能够吗?', desc:'订单 vs 产能',
+       ask:'今天的订单和产能匹配吗?有没有缺口?要加班还是延期?'},
+      {icon:'🔧', name:'设备健康度?', desc:'稼动率87%',
+       ask:'设备稼动率87%·哪些线最差?要停机维护还是带病运行?'},
+      {icon:'📦', name:'原料够用几天?', desc:'W12 3.2天',
+       ask:'当前所有核心原料的库存天数?哪些紧张?要紧急补货吗?'},
+      {icon:'💧', name:'下周加产多少?', desc:'按蒸腾预测',
+       ask:'按蒸腾预测·下周需要加产多少?具体哪些SKU?哪些线产?'},
+      {icon:'⚠️', name:'L3线怎么办?', desc:'异响+良品率降',
+       ask:'L3线异响+良品率降到96.5%·完整诊断+处理方案?换线生产?'},
+      {icon:'🎯', name:'月度目标达成?', desc:'87% 当前进度',
+       ask:'本月产能目标达成87%·剩余天数能补回来吗?要加班/换线?'}
+    ]
+  },
+  
+  wms: {
+    icon: '📦',
+    title: '李经理 · <em>欣和华东仓储中心</em>',
+    meta: 'WAREHOUSE · IPO 1 · WMS SYSTEM · 12 ZONES · 18,000 PALLETS',
+    briefIcon: '📦',
+    
+    kpis: [
+      {l:'仓位利用率', v:'78%', s:'good', t:'-2%', td:'down'},
+      {l:'今日发货', v:'¥1.8亿', s:'good', t:'+8%', td:'up'},
+      {l:'订单出库率', v:'98%', s:'good', t:'+1%', td:'up'},
+      {l:'近效期占比', v:'3.2%', s:'warn', t:'+0.4%', td:'up'}
+    ],
+    
+    issues: [
+      {type:'warn', urgency:'关注', title:'A区六月鲜库存3.8a',
+       desc:'A区有机系列库存3.8a·偏高·建议优先发往明发等深度合伙人',
+       time:'30分钟前',
+       ask:'A区有机系列3.8a库存偏高·优先发往哪些经销商?Omakase推单建议?'},
+      {type:'alert', urgency:'紧急', title:'近效期SKU 380箱',
+       desc:'禾然系列剩余30天·380箱·必须本周清仓·促销/降价/调拨?',
+       time:'今早',
+       ask:'近效期禾然380箱·剩30天·清仓方案:促销/降价/调拨/直接销毁?ROI对比?'},
+      {type:'good', urgency:'机会', title:'B区腾出8000板',
+       desc:'下周B区有8000板位空出·可承接工厂超产/特殊采购',
+       time:'昨天',
+       ask:'B区下周空8000板位·承接工厂蒸腾加产订单还是其他特殊用途?'}
+    ],
+    
+    scenarios: [
+      {icon:'📦', name:'A区库存压力?', desc:'3.8a 偏高',
+       ask:'A区六月鲜库存3.8a·处理方案?优先发哪些经销商?'},
+      {icon:'⏰', name:'近效期清仓?', desc:'380箱 30天',
+       ask:'近效期禾然380箱·30天到期·促销/降价/调拨完整方案+ROI?'},
+      {icon:'🚚', name:'今天发货安排?', desc:'¥1.8亿订单',
+       ask:'今天¥1.8亿发货任务·按什么优先级?战略SKU vs 常规SKU?'},
+      {icon:'📍', name:'仓位优化?', desc:'78% 利用率',
+       ask:'仓位利用率78%·哪些区可优化?有没有死库存要清?'},
+      {icon:'💧', name:'下周备货?', desc:'按蒸腾预测',
+       ask:'按蒸腾预测·下周需要备货多少?哪些SKU重点备?哪些少备?'},
+      {icon:'🔄', name:'调拨方案?', desc:'区域间平衡',
+       ask:'华东仓 → 华南/华北调拨建议?哪些SKU区域不平衡需要调?'}
+    ]
+  }
+};
+
+let currentRole = 'mes';
+
+function switchRole(role){
+  currentRole = role;
+  document.querySelectorAll('.role-switch').forEach(b => b.classList.toggle('active', b.dataset.role === role));
+  
+  // 切角色 → 关闭弹窗(避免角色错位)
+  closeDispatch();
+  
+  // 切角色 → 清对话历史(避免角色串味)
+  conversationHistory = [];
+  const conv = document.getElementById('conversation');
+  if(conv){conv.innerHTML = ''; conv.classList.remove('has-content');}
+  
+  // 切角色 → 自动回到首页brain Tab
+  switchTab('brain');
+  
+  const data = ROLE_DATA[role];
+  document.getElementById('role-avatar').textContent = data.icon;
+  document.getElementById('role-title').innerHTML = data.title;
+  document.getElementById('role-meta').textContent = data.meta;
+  document.getElementById('brief-icon').textContent = data.briefIcon;
+  document.getElementById('brief-greeting').innerHTML = `${getTimeOfDay()} · ${data.title.split(' ·')[0]} · <em>每日简报</em>`;
+  document.getElementById('kpi-title').innerHTML = role==='mes' ? '工厂 <em>核心 KPI</em>' : '仓储 <em>核心 KPI</em>';
+  document.getElementById('kpi-tag').textContent = role==='mes' ? 'MES · IPO 0' : 'WMS · IPO 1';
+  document.getElementById('lines-title').innerHTML = role==='mes' ? '产线 <em>状态</em> · 6 条产线' : '库位 <em>状态</em> · 12 区域';
+  document.getElementById('lines-tag').textContent = role==='mes' ? 'PRODUCTION LINES · LIVE' : 'STORAGE ZONES · LIVE';
+  document.getElementById('tab-lines-name').textContent = role==='mes' ? '产线状态' : '库位状态';
+  document.getElementById('scenarios-label').textContent = role==='mes' ? '— 工厂典型场景 · 一键问 Agent' : '— 仓储典型场景 · 一键问 Agent';
+  
+  // 重新渲染
+  renderBriefing();
+  renderIssues();
+  renderKPIs();
+  renderScenarios();
+  renderLines();
+  renderEvapo();
+  renderSchedule();
+  renderAgents();
+  renderActions();
+  renderCDI();
+  renderGrades();
+  
+  // 切换提示 toast
+  showToast(`已切换 · ${data.title.split(' ·')[0]} · ${role==='mes'?'工厂(MES)':'仓储(WMS)'}`);
+}
+
+// ═══════════════════════════════════════
+// Tab 切换
+// ═══════════════════════════════════════
+function switchTab(name){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`.nav-tab[data-tab="${name}"]`)?.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name)?.classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════
+// 渲染:简报内容
+// ═══════════════════════════════════════
+function renderBriefing(){
+  const data = ROLE_DATA[currentRole];
+  document.getElementById('brief-time').textContent = `${getCurrentDateString()} · ${currentRole.toUpperCase()} · 每日简报`;
+  
+  const content = currentRole === 'mes' ? `
+    <p>今日工厂运转 <strong>整体良好</strong> · 6 条线 5 条正常 · L3 线异响需检修 · 当日产能预计达成 96%。</p>
+    <p>蒸腾信号显示 <strong>有机系列消费者端 ↑14%</strong> · 强烈推荐下周加产 20% · L1/L2 线优先承接。</p>
+    <p>原料 <strong>W12 仅剩 3.2 天库存</strong> · 周四到货 · 中间需协调备料防断供。</p>
+  ` : `
+    <p>今日仓储 <strong>运转良好</strong> · 12 区域 11 区正常 · A 区有机系列库存 3.8a 偏高 · 建议清仓。</p>
+    <p>蒸腾信号显示 <strong>下周备货应增加 18%</strong> · B 区可释放 8000 板位接收工厂加产。</p>
+    <p>近效期 <strong>禾然 380 箱 / 30 天</strong> · 必须本周处理 · 调拨/促销/降价方案待选。</p>
+  `;
+  document.getElementById('brief-content').innerHTML = content;
+}
+
+function renderIssues(){
+  const data = ROLE_DATA[currentRole];
+  const html = data.issues.map(issue => {
+    const tagIcon = issue.type==='alert' ? '🚨' : issue.type==='good' ? '🟢' : '⚠️';
+    return `
+      <div class="issue-card ${issue.type}" onclick="askBrain('${issue.ask.replace(/'/g,"\\'")}')">
+        <div class="issue-tag-row">
+          <div class="issue-tag">${tagIcon} ${issue.urgency}</div>
+          <div class="issue-time">${issue.time}</div>
+        </div>
+        <div class="issue-title">${issue.title}</div>
+        <div class="issue-desc">${issue.desc}</div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('brief-issues').innerHTML = html;
+}
+
+function refreshIssues(){
+  renderIssues();
+  const el = document.getElementById('brief-issues');
+  el.style.opacity = '0.3';
+  setTimeout(()=>el.style.opacity='1', 200);
+}
+
+function rescanEvapo(){
+  renderEvapo();
+  const el = document.getElementById('evapo-signals');
+  el.style.opacity = '0.3';
+  setTimeout(()=>el.style.opacity='1', 200);
+}
+
+function renderKPIs(){
+  const data = ROLE_DATA[currentRole];
+  const html = data.kpis.map(k => `
+    <div class="kpi-card" onclick="askBrain('${k.l} 当前 ${k.v}·分析这个指标的健康度·有什么风险或机会?')">
+      <div class="kpi-val ${k.s}">${k.v}</div>
+      <div class="kpi-trend ${k.td}">${k.td==='up'?'↑':'↓'} ${k.t}</div>
+      <div class="kpi-lbl">${k.l}</div>
+    </div>
+  `).join('');
+  document.getElementById('kpi-grid').innerHTML = html;
+}
+
+function renderScenarios(){
+  const data = ROLE_DATA[currentRole];
+  const html = data.scenarios.map(s => `
+    <button class="scenario-btn" onclick="askBrain('${s.ask.replace(/'/g,"\\'")}')">
+      <div class="scenario-icon">${s.icon}</div>
+      <div class="scenario-text">
+        <div class="scenario-name">${s.name}</div>
+        <div class="scenario-desc">${s.desc}</div>
+      </div>
+    </button>
+  `).join('');
+  document.getElementById('scenarios-grid').innerHTML = html;
+}
+
+// ═══════════════════════════════════════
+// 产线/库位列表
+// ═══════════════════════════════════════
+const LINES_DATA_MES = [
+  {num:'L1', name:'六月鲜·有机系列主线', meta:'500ml/瓶 · 优先级 P0', oeeLbl:'OEE', oeeVal:'94%', oeeCls:'good', status:'run', statusText:'运行'},
+  {num:'L2', name:'六月鲜·高端礼盒线', meta:'礼盒装 · 优先级 P1', oeeLbl:'OEE', oeeVal:'89%', oeeCls:'good', status:'run', statusText:'运行'},
+  {num:'L3', name:'禾然·零添加线', meta:'750ml/瓶 · 优先级 P1', oeeLbl:'OEE', oeeVal:'78%', oeeCls:'warn', status:'warn', statusText:'异响'},
+  {num:'L4', name:'味达美·常规线', meta:'多规格 · 优先级 P2', oeeLbl:'OEE', oeeVal:'92%', oeeCls:'good', status:'run', statusText:'运行'},
+  {num:'L5', name:'葱伴侣·场景专属', meta:'特殊配方 · 优先级 P2', oeeLbl:'OEE', oeeVal:'85%', oeeCls:'good', status:'run', statusText:'运行'},
+  {num:'L6', name:'小康·防御性低价', meta:'低价线 · 优先级 P3', oeeLbl:'OEE', oeeVal:'-', oeeCls:'', status:'maint', statusText:'保养'}
+];
+
+const LINES_DATA_WMS = [
+  {num:'A', name:'六月鲜·有机系列', meta:'2,400 板位 · 偏高', oeeLbl:'库存', oeeVal:'3.8a', oeeCls:'warn', status:'warn', statusText:'偏高'},
+  {num:'B', name:'六月鲜·高端礼盒', meta:'1,800 板位 · 正常', oeeLbl:'库存', oeeVal:'2.1a', oeeCls:'good', status:'run', statusText:'正常'},
+  {num:'C', name:'禾然·零添加', meta:'1,200 板位 · 含380箱近效期', oeeLbl:'库存', oeeVal:'1.8a', oeeCls:'good', status:'warn', statusText:'近效期'},
+  {num:'D', name:'味达美·常规', meta:'2,800 板位 · 主力', oeeLbl:'库存', oeeVal:'2.5a', oeeCls:'good', status:'run', statusText:'正常'},
+  {num:'E', name:'葱伴侣·场景', meta:'900 板位 · 平稳', oeeLbl:'库存', oeeVal:'2.3a', oeeCls:'good', status:'run', statusText:'正常'},
+  {num:'F', name:'小康·低价', meta:'1,500 板位 · 充足', oeeLbl:'库存', oeeVal:'2.0a', oeeCls:'good', status:'run', statusText:'正常'},
+  {num:'G', name:'原料 W12 区', meta:'核心原料 · 紧张', oeeLbl:'天数', oeeVal:'3.2天', oeeCls:'bad', status:'warn', statusText:'紧张'},
+  {num:'H', name:'原料 P05 区', meta:'包装材料 · 充足', oeeLbl:'天数', oeeVal:'12天', oeeCls:'good', status:'run', statusText:'充足'},
+  {num:'I', name:'退货/调拨区', meta:'临时区 · 待处理', oeeLbl:'板位', oeeVal:'120板', oeeCls:'good', status:'run', statusText:'待处理'},
+  {num:'J', name:'特殊客户专区', meta:'KA定制 · 锁定', oeeLbl:'订单', oeeVal:'85%', oeeCls:'good', status:'run', statusText:'锁定'},
+  {num:'K', name:'电商发货区', meta:'O2O+小B · 高频', oeeLbl:'板位', oeeVal:'95%', oeeCls:'good', status:'run', statusText:'高负荷'},
+  {num:'L', name:'冷链区', meta:'温控保鲜 · 新启用', oeeLbl:'温度', oeeVal:'4°C', oeeCls:'good', status:'run', statusText:'正常'}
+];
+
+function renderLines(){
+  const data = currentRole === 'mes' ? LINES_DATA_MES : LINES_DATA_WMS;
+  const ask = currentRole === 'mes' ? '产线' : '库位';
+  
+  const html = data.map(l => `
+    <div class="line-item" onclick="askBrain('${ask}${l.num} ${l.name}·当前${l.oeeLbl} ${l.oeeVal}·状态${l.statusText}·完整诊断和优化建议?')">
+      <div class="line-num">${l.num}</div>
+      <div class="line-info">
+        <div class="line-name">${l.name}</div>
+        <div class="line-meta">${l.meta}</div>
+      </div>
+      <div class="line-stat">
+        <div class="line-stat-lbl">${l.oeeLbl}</div>
+        <div class="line-stat-val ${l.oeeCls}">${l.oeeVal}</div>
+      </div>
+      <div class="line-status ${l.status}">${l.statusText}</div>
+    </div>
+  `).join('');
+  document.getElementById('lines-list').innerHTML = html;
+}
+
+// ═══════════════════════════════════════
+// 蒸腾信号
+// ═══════════════════════════════════════
+function renderEvapo(){
+  const evapoSignals = currentRole === 'mes' ? [
+    {sku:'六月鲜·有机系列', evapo:14, salesActual:12, signal:'消费者端蒸腾持续上升·下游已突破·建议下周加产 20%', action:'加产 ↑20%·L1线优先承接·额外排程10万瓶'},
+    {sku:'六月鲜·高端礼盒', evapo:8, salesActual:7, signal:'稳健蒸腾·按当前节奏即可', action:'维持当前 L2 线产能'},
+    {sku:'禾然·零添加', evapo:11, salesActual:9, signal:'蒸腾领先销售2点·渠道有断货风险·建议加产+调拨', action:'加产 ↑15%·同时调拨华东仓库存到华北'},
+    {sku:'味达美·常规', evapo:3, salesActual:5, signal:'蒸腾低于销量·有压货风险·建议减产', action:'减产 ↓10%·释放产能给有机系列'},
+    {sku:'葱伴侣·场景', evapo:6, salesActual:6, signal:'蒸腾销量平衡·稳态', action:'维持当前 L5 线产能'},
+    {sku:'小康·低价', evapo:1, salesActual:8, signal:'蒸腾远低于销量·明显压货·建议大幅减产', action:'减产 ↓30%·防止下游库存爆仓'}
+  ] : [
+    {sku:'六月鲜·有机系列', evapo:14, salesActual:12, signal:'消费者蒸腾↑·下游补货需求增加·A区库存可能不够', action:'增加备货·A区扩容 20% 或调拨 B 区资源'},
+    {sku:'六月鲜·高端礼盒', evapo:8, salesActual:7, signal:'稳健·当前2.1a健康', action:'维持当前备货水位'},
+    {sku:'禾然·零添加', evapo:11, salesActual:9, signal:'蒸腾领先·下游断货风险·清近效期同时备新货', action:'清近效期380箱·同时备新货 1.5倍'},
+    {sku:'味达美·常规', evapo:3, salesActual:5, signal:'蒸腾低·D区2.5a可能继续上升·建议减少补货', action:'减少补货·防止D区库存累积'},
+    {sku:'葱伴侣·场景', evapo:6, salesActual:6, signal:'平衡·E区维持', action:'维持当前2.3a水位'},
+    {sku:'小康·低价', evapo:1, salesActual:8, signal:'压货警报·F区库存即将爆仓·暂停补货+加速出货', action:'暂停从工厂补货·加速发往低价渠道清仓'}
+  ];
+  
+  const html = evapoSignals.map(e => {
+    const ratio = e.salesActual === 0 ? 0 : (e.evapo / e.salesActual).toFixed(2);
+    const cls = ratio >= 1.0 ? 'good' : ratio >= 0.7 ? 'warn' : 'bad';
+    const color = cls === 'good' ? 'var(--green)' : cls === 'warn' ? 'var(--amber)' : 'var(--red)';
+    const bg = cls === 'good' ? 'var(--green-bg)' : cls === 'warn' ? 'var(--amber-bg)' : 'var(--red-bg)';
+    
+    return `
+      <div style="background:var(--bg-card);border:1px solid var(--line);border-left:3px solid ${color};border-radius:10px;padding:14px 18px;margin-bottom:10px;cursor:pointer" onclick="askBrain('${e.sku}·蒸腾↑${e.evapo}%·销量↑${e.salesActual}%·真伪比${ratio}·${e.signal}·应该如何决策?')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600">${e.sku}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-top:2px">蒸腾↑${e.evapo}% · 销量↑${e.salesActual}% · 真伪比 <span style="color:${color};font-weight:700">${ratio}</span></div>
+          </div>
+          <div style="background:${bg};color:${color};padding:4px 10px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em">${ratio>=1.0?'真增长':ratio>=0.7?'平衡':'压货警示'}</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:8px">📊 ${e.signal}</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div style="flex:1;background:var(--amber-bg);padding:6px 12px;border-radius:6px;font-size:11px;color:var(--amber);font-weight:600;min-width:200px">💡 行动:${e.action}</div>
+          <button class="refresh-btn" style="background:var(--amber);color:#fff;border-color:var(--amber);font-weight:700" onclick="event.stopPropagation();dispatchEvapoAction('${e.sku.replace(/'/g,"\\'")}','${e.action.replace(/'/g,"\\'")}','${ratio>=1.0?'urgent':ratio<0.7?'urgent':'high'}')">⚡ 立即执行</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('evapo-signals').innerHTML = html;
+}
+
+// 蒸腾SKU 立即执行 · 触发派任务弹窗并预填
+function dispatchEvapoAction(sku, action, priority){
+  openDispatch();
+  setTimeout(() => {
+    // 根据角色和ratio预填
+    const isUrgent = priority === 'urgent';
+    document.getElementById('dispatch-type').value = currentRole==='mes' ? '调用 Agent · 蒸腾排程' : '调用 Agent · Omakase 推单';
+    document.getElementById('dispatch-target').value = currentRole==='mes' ? `${sku}·相关产线` : `${sku}·相关库区+经销商`;
+    document.getElementById('dispatch-desc').value = `蒸腾监测触发·${sku}·${action}·依据蒸腾vs销量真伪比`;
+    document.getElementById('dispatch-priority').value = isUrgent ? '🚨 紧急(24小时)' : '⚠️ 高(3天)';
+    document.getElementById('agent-suggestion-text').innerHTML = `<strong style="color:var(--green)">✓ 蒸腾监测自动填充:</strong> ${sku} · 已根据信号生成任务·DS可修改`;
+  }, 100);
+}
+
+// ═══════════════════════════════════════
+// 60天排程
+// ═══════════════════════════════════════
+function renderSchedule(){
+  // 8周 · 60天 · 每周一格
+  const weeks = currentRole === 'mes' ? [
+    {w:'本周', vol:'1.2万', tag:'当前', cls:'normal'},
+    {w:'W+1', vol:'1.4万', tag:'↑加产', cls:'high'},
+    {w:'W+2', vol:'1.5万', tag:'↑加产', cls:'high'},
+    {w:'W+3', vol:'1.5万', tag:'高位', cls:'high'},
+    {w:'W+4', vol:'1.3万', tag:'回落', cls:'normal'},
+    {w:'W+5', vol:'1.0万', tag:'减产', cls:'low'},
+    {w:'W+6', vol:'0.9万', tag:'低位', cls:'low'},
+    {w:'W+7', vol:'1.1万', tag:'回升', cls:'normal'}
+  ] : [
+    {w:'本周', vol:'¥1.8亿', tag:'当前', cls:'normal'},
+    {w:'W+1', vol:'¥2.1亿', tag:'↑备货', cls:'high'},
+    {w:'W+2', vol:'¥2.3亿', tag:'↑备货', cls:'high'},
+    {w:'W+3', vol:'¥2.2亿', tag:'高位', cls:'high'},
+    {w:'W+4', vol:'¥1.9亿', tag:'回落', cls:'normal'},
+    {w:'W+5', vol:'¥1.5亿', tag:'减库', cls:'low'},
+    {w:'W+6', vol:'¥1.4亿', tag:'低位', cls:'low'},
+    {w:'W+7', vol:'¥1.7亿', tag:'回升', cls:'normal'}
+  ];
+  
+  const html = weeks.map(w => `
+    <div class="schedule-day ${w.cls}" onclick="askBrain('${w.w}排程·${w.vol}·${w.tag}·这个排程基于什么蒸腾预测?有风险吗?')">
+      <div class="schedule-week">${w.w}</div>
+      <div class="schedule-vol">${w.vol}</div>
+      <div class="schedule-tag">${w.tag}</div>
+    </div>
+  `).join('');
+  document.getElementById('schedule-flow').innerHTML = html;
+  
+  // SKU细分排程
+  const skuSchedule = currentRole === 'mes' ? [
+    {sku:'六月鲜·有机系列', grade:'1年级', current:'4,200瓶', next:'5,040瓶', delta:'+20%', reason:'蒸腾↑14%', line:'L1', priority:'P0'},
+    {sku:'六月鲜·高端礼盒', grade:'2年级', current:'2,100瓶', next:'2,310瓶', delta:'+10%', reason:'节日预备', line:'L2', priority:'P1'},
+    {sku:'禾然·零添加', grade:'2年级', current:'1,800瓶', next:'2,070瓶', delta:'+15%', reason:'渠道断货+加产', line:'L3*', priority:'P1'},
+    {sku:'味达美·常规', grade:'3年级', current:'2,800瓶', next:'2,520瓶', delta:'-10%', reason:'蒸腾低于销量', line:'L4', priority:'P2'},
+    {sku:'葱伴侣·场景', grade:'3年级', current:'900瓶', next:'900瓶', delta:'0%', reason:'平稳', line:'L5', priority:'P2'},
+    {sku:'小康·防御性低价', grade:'4年级', current:'1,400瓶', next:'980瓶', delta:'-30%', reason:'压货警示·大幅减产', line:'L6', priority:'P3'}
+  ] : [
+    {sku:'六月鲜·有机系列', grade:'1年级', current:'¥4,500万', next:'¥5,400万', delta:'+20%', reason:'A区扩容备货', line:'A区', priority:'P0'},
+    {sku:'六月鲜·高端礼盒', grade:'2年级', current:'¥3,200万', next:'¥3,520万', delta:'+10%', reason:'节日季备货', line:'B区', priority:'P1'},
+    {sku:'禾然·零添加', grade:'2年级', current:'¥2,800万', next:'¥3,220万', delta:'+15%', reason:'清近效期+备新货', line:'C区', priority:'P1'},
+    {sku:'味达美·常规', grade:'3年级', current:'¥3,500万', next:'¥3,150万', delta:'-10%', reason:'减少补货', line:'D区', priority:'P2'},
+    {sku:'葱伴侣·场景', grade:'3年级', current:'¥1,500万', next:'¥1,500万', delta:'0%', reason:'平稳', line:'E区', priority:'P2'},
+    {sku:'小康·防御性低价', grade:'4年级', current:'¥2,500万', next:'¥1,750万', delta:'-30%', reason:'F区暂停补货', line:'F区', priority:'P3'}
+  ];
+  
+  const skuEl = document.getElementById('sku-schedule-list');
+  if(skuEl){
+    const skuHtml = skuSchedule.map(s => {
+      const deltaPct = parseInt(s.delta);
+      const deltaColor = deltaPct > 0 ? 'var(--green)' : deltaPct < 0 ? 'var(--red)' : 'var(--text-3)';
+      const deltaBg = deltaPct > 0 ? 'var(--green-bg)' : deltaPct < 0 ? 'var(--red-bg)' : 'var(--bg-soft)';
+      const gradeColor = s.grade==='1年级'?'var(--green)':s.grade==='2年级'?'var(--amber)':s.grade==='3年级'?'var(--blue)':'var(--text-3)';
+      
+      return `
+        <div style="background:var(--bg-soft);border:1px solid var(--line);border-left:3px solid ${gradeColor};border-radius:10px;padding:12px 16px;margin-bottom:6px;cursor:pointer;display:grid;grid-template-columns:1fr auto auto auto;gap:14px;align-items:center" onclick="askBrain('${s.sku}下周排程·从${s.current}调整到${s.next}(${s.delta})·原因${s.reason}·风险评估?')">
+          <div>
+            <div style="font-size:13px;font-weight:600">${s.sku}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-top:2px">${s.grade} · ${s.priority} · ${s.line}</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:3px">📊 ${s.reason}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);margin-bottom:2px">本周</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;font-size:13px">${s.current}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);margin-bottom:2px">下周</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--amber);font-size:13px">${s.next}</div>
+          </div>
+          <div style="background:${deltaBg};color:${deltaColor};padding:6px 12px;border-radius:8px;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;font-size:14px">${s.delta}</div>
+        </div>
+      `;
+    }).join('');
+    skuEl.innerHTML = skuHtml;
+  }
+}
+
+// ═══════════════════════════════════════
+// Agent 矩阵
+// ═══════════════════════════════════════
+function renderAgents(){
+  const agents = currentRole === 'mes' ? [
+    {name:'蒸腾排程 Agent', en:'Evaporation Schedule', desc:'基于蒸腾预测自动生成 60 天产能排程·每周日18:00回看调整·替代传统月度计划',
+     ask:'蒸腾排程Agent·下周排程依据是什么?哪些SKU加产哪些减产?'},
+    {name:'设备健康 Agent', en:'OEE Health', desc:'实时监测6条线OEE+异响+良品率·预测维护·避免突发停机',
+     ask:'设备健康Agent·L3异响后续会怎样?是否需要立即停机?'},
+    {name:'蝴蝶上游 Agent', en:'Butterfly Upstream', desc:'检测从下游传来的失真信号(压货/促销/窜货)·避免被假需求误导',
+     ask:'蝴蝶上游Agent·下游有哪些假需求信号?如何防止误判加产?'}
+  ] : [
+    {name:'Omakase 推单 Agent', en:'Omakase Replenishment', desc:'(3a-库存)×1.2·按蒸腾驱动·自动生成发往各经销商的SKU组合·避免盲目',
+     ask:'Omakase推单Agent·今天该发哪些经销商?各发什么SKU组合?'},
+    {name:'近效期 Agent', en:'Expiry Alert', desc:'实时监测SKU效期·30/60/90天分级预警·建议清仓方案(促销/降价/调拨)',
+     ask:'近效期Agent·当前所有近效期SKU清仓方案?ROI对比?'},
+    {name:'仓位优化 Agent', en:'Slot Optimization', desc:'基于蒸腾趋势+SKU周转率自动建议仓位重排·提高拣货效率',
+     ask:'仓位优化Agent·当前仓位布局有哪些可优化?省多少时间?'}
+  ];
+  
+  const html = agents.map(a => `
+    <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:8px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center" onclick="askBrain('${a.ask.replace(/'/g,"\\'")}')">
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;margin-bottom:3px">${a.name}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:5px">${a.en}</div>
+        <div style="font-size:12px;color:var(--text-2);line-height:1.5">${a.desc}</div>
+      </div>
+      <div style="background:var(--green-bg);color:var(--green);padding:4px 10px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em">✓ READY</div>
+    </div>
+  `).join('');
+  document.getElementById('agents-list').innerHTML = html;
+}
+
+// ═══════════════════════════════════════
+// 对话(真API + 跨对话记忆)
+// ═══════════════════════════════════════
+let conversationHistory = [];
+
+function clearConversation(){
+  conversationHistory = [];
+  document.getElementById('conversation').innerHTML = '';
+  document.getElementById('conversation').classList.remove('has-content');
+}
+
+async function askBrain(q){
+  if(!q || !q.trim()) return;
+  document.getElementById('brain-input').value = '';
+  
+  switchTab('brain');
+  
+  const conv = document.getElementById('conversation');
+  conv.classList.add('has-content');
+  
+  if(!document.getElementById('clear-conv-btn')){
+    const clearWrap = document.createElement('div');
+    clearWrap.className = 'conv-clear';
+    clearWrap.innerHTML = `<button id="clear-conv-btn" class="refresh-btn" onclick="clearConversation()">🗑️ 清空对话</button>`;
+    conv.appendChild(clearWrap);
+  }
+  
+  const userMsg = document.createElement('div');
+  userMsg.className = 'conv-msg';
+  userMsg.innerHTML = `<div class="msg-user"><div class="msg-user-bubble">${q}</div></div>`;
+  conv.appendChild(userMsg);
+  
+  const aiMsg = document.createElement('div');
+  aiMsg.className = 'conv-msg';
+  const tag = `${currentRole.toUpperCase()} Agent · 截至 ${new Date().toTimeString().slice(0,5)}`;
+  aiMsg.innerHTML = `
+    <div class="msg-ai">
+      <div class="msg-ai-hdr">
+        <div class="msg-ai-hdr-l">
+          <div class="msg-ai-avatar">${currentRole==='mes'?'🏭':'📦'}</div>
+          <div><div class="msg-ai-label">${currentRole==='mes'?'工厂':'仓储'} Agent · 思考中</div></div>
+        </div>
+        <div class="msg-ai-tag">${tag}</div>
+      </div>
+      <div class="msg-ai-content"><div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>
+    </div>
+  `;
+  conv.appendChild(aiMsg);
+  
+  setTimeout(() => aiMsg.scrollIntoView({behavior:'smooth', block:'center'}), 100);
+  
+  const aiContent = aiMsg.querySelector('.msg-ai-content');
+  const aiLabel = aiMsg.querySelector('.msg-ai-label');
+  
+  conversationHistory.push({role:'user', content:q});
+  await callBrain(q, aiContent, aiLabel);
+}
+
+async function callBrain(q, aiContent, aiLabel){
+  const role = currentRole;
+  const data = ROLE_DATA[role];
+  
+  const sys = role === 'mes' ? `你是欣和SH INFINITY OS V1.2 工厂(MES) Agent · 王厂长(欣和济南工厂)的副驾驶。
+
+【身份】
+- IPO 0 节点·上游·6条产线
+- 服务王厂长·决策产能/排程/设备/原料
+- 基于蒸腾模型(基础公式·非Agent)做反向需求驱动决策
+
+【今日实时数据】
+KPI: 产能96%·订单完成92%·稼动率87%·良品率99.2%
+6条线: L1六月鲜有机(P0/OEE94%/运行)·L2高端礼盒(P1/89%/运行)·L3禾然零添加(P1/78%/异响)·L4味达美(P2/92%)·L5葱伴侣(P2/85%)·L6小康(P3/保养)
+关键议题: ①L3线异响紧急 ②有机系列蒸腾↑14%加产建议 ③原料W12 3.2天紧张
+
+【蒸腾信号(下游传来)】
+- 六月鲜有机:蒸腾↑14% > 销量↑12% (真增长·建议加产)
+- 禾然零添加:蒸腾↑11% > 销量↑9% (渠道断货·加产+调拨)
+- 小康低价:蒸腾↑1% << 销量↑8% (明显压货·建议减产)
+
+【3个上游Agent】
+- 蒸腾排程Agent:基于蒸腾预测60天排程·替代月度计划
+- 设备健康Agent:OEE+异响+良品监测·预测维护
+- 蝴蝶上游Agent:检测下游假需求·避免误判加产
+
+【回答风格】
+1. 给推演+方案+选择·不是数字罗列
+2. 数字具体·责任明确
+3. 中文·≤300字
+4. 体现"按蒸腾排产"的反向需求驱动思想
+` : `你是欣和SH INFINITY OS V1.2 仓储(WMS) Agent · 李经理(华东仓储中心)的副驾驶。
+
+【身份】
+- IPO 1 节点·上游·12个区域·18000板位
+- 服务李经理·决策出库/备货/调拨/近效期
+- 基于蒸腾模型做反向需求驱动决策
+
+【今日实时数据】
+KPI: 仓位利用率78%·今日发货¥1.8亿·订单出库98%·近效期3.2%
+12区域: A区有机3.8a偏高·C区禾然含380箱近效期·G区原料W12 3.2天紧张·B区下周空8000板位
+关键议题: ①A区库存压力 ②近效期380箱必须本周清 ③下周备货建议
+
+【蒸腾信号】
+- 有机系列:蒸腾↑14% > 销量↑12% (备货扩容)
+- 禾然:蒸腾↑11% > 销量↑9% (清近效期+备新货)
+- 小康:蒸腾↑1% << 销量↑8% (暂停补货+加速清)
+
+【3个仓储Agent】
+- Omakase推单Agent:按蒸腾驱动自动算SKU组合发往各经销商
+- 近效期Agent:30/60/90天分级预警·促销/降价/调拨方案
+- 仓位优化Agent:蒸腾+周转率自动建议仓位重排
+
+【回答风格】
+1. 给推演+方案+选择
+2. 具体数字·责任明确
+3. 中文·≤300字
+4. 体现"按蒸腾备货"思想
+`;
+
+  const messages = conversationHistory.map(m => ({role:m.role, content:m.content}));
+  
+  try{
+    const r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        system:sys,
+        messages:messages
+      })
+    });
+    const d = await r.json();
+    const txt = d.content?.map(c=>c.text||'').join('') || '暂无回答';
+    
+    conversationHistory.push({role:'assistant', content:txt});
+    
+    aiLabel.textContent = `${currentRole==='mes'?'工厂':'仓储'} Agent · 真API`;
+    aiContent.innerHTML = '<div style="white-space:pre-wrap">' + txt + '</div>';
+    
+    const btnRow = document.createElement('div');
+    btnRow.className = 'choices';
+    btnRow.innerHTML = `
+      <button class="choice-btn" onclick="askBrain('为什么这么判断?推理依据')">为什么?</button>
+      <button class="choice-btn" onclick="askBrain('给我3个候选方案对比')">3个候选</button>
+      <button class="choice-btn" onclick="askBrain('如果情况变了(原料涨价/订单激增)·结论怎么变?')">如果变了?</button>
+    `;
+    aiContent.appendChild(btnRow);
+    
+  }catch(e){
+    aiContent.innerHTML = `<div style="color:var(--red);font-size:12px">⚠️ API错误·${e.message}</div>`;
+    aiLabel.textContent = 'Agent · 错误·已降级';
+    conversationHistory.pop();
+  }
+}
+
+// ═══════════════════════════════════════
+// CDI 5维度(动态·按角色)
+// ═══════════════════════════════════════
+function renderCDI(){
+  const cdiEl = document.getElementById('cdi-grid');
+  if(!cdiEl) return;
+  
+  const data = currentRole === 'mes' ? [
+    {dim:'产品力', val:94, trend:'+2', s:'good', ask:'CDI产品力94·良品率99.2%和海天/李锦记对比?'},
+    {dim:'服务力', val:89, trend:'+1', s:'good', ask:'CDI服务力89·订单按时交付92%·改善路径?'},
+    {dim:'资源力', val:87, trend:'+0', s:'warn', ask:'CDI资源力87·6条产线·扩产计划?'},
+    {dim:'系统力', val:91, trend:'+3', s:'good', ask:'CDI系统力91·MES数字化·下一步AI升级?'},
+    {dim:'综合', val:90, trend:'综合', s:'good', ask:'CDI工厂综合90·哪些维度还可提升?'}
+  ] : [
+    {dim:'产品力', val:92, trend:'+1', s:'good', ask:'CDI产品力92·库存质量与商品保鲜度·改善?'},
+    {dim:'服务力', val:98, trend:'+2', s:'good', ask:'CDI服务力98·订单出库率·业内顶尖?'},
+    {dim:'资源力', val:78, trend:'-2', s:'warn', ask:'CDI资源力78·仓位利用率·要不要扩仓?'},
+    {dim:'系统力', val:91, trend:'+3', s:'good', ask:'CDI系统力91·WMS数字化升级路径?'},
+    {dim:'综合', val:90, trend:'综合', s:'good', ask:'CDI仓储综合90·下一步重点提升哪个维度?'}
+  ];
+  
+  cdiEl.innerHTML = data.map(c => `
+    <div class="kpi-card" onclick="askBrain('${c.ask.replace(/'/g,"\\'")}')">
+      <div class="kpi-val ${c.s}">${c.val}</div>
+      <div class="kpi-trend up">${c.trend}</div>
+      <div class="kpi-lbl">${c.dim}</div>
+    </div>
+  `).join('');
+  
+  document.getElementById('cdi-tag').textContent = currentRole==='mes' ? 'CDI · FACTORY VIEW' : 'CDI · WAREHOUSE VIEW';
+}
+
+// ═══════════════════════════════════════
+// 年级系统(动态·按角色)
+// ═══════════════════════════════════════
+function renderGrades(){
+  const el = document.getElementById('grades-list');
+  if(!el) return;
+  
+  document.getElementById('grades-title').innerHTML = currentRole==='mes' ? 'SKU 年级 <em>系统</em> · 排产优先级' : 'SKU 年级 <em>系统</em> · 备货优先级';
+  
+  const data = currentRole === 'mes' ? [
+    {grade:'1', sku:'六月鲜·有机系列 · 战略SKU', desc:'系数 ×2.0 · L1线优先排产', tag:'蒸腾↑14%', color:'green', cls:'green-bg'},
+    {grade:'2', sku:'高端礼盒 · 禾然零添加', desc:'系数 ×1.5 · L2/L3线·节日季加权', tag:'蒸腾↑8-11%', color:'amber', cls:'amber-bg'},
+    {grade:'3', sku:'味达美·常规 · 葱伴侣·场景', desc:'系数 ×1.0 · L4/L5标准排产', tag:'稳定', color:'blue', cls:'blue-bg'},
+    {grade:'4', sku:'小康·防御性低价', desc:'系数 ×0.7 · L6减产 · 防御', tag:'压货警示·减30%', color:'text-3', cls:'bg-soft'}
+  ] : [
+    {grade:'1', sku:'六月鲜·有机系列 · 战略SKU', desc:'系数 ×2.0 · A区扩容备货', tag:'蒸腾↑14%·扩备', color:'green', cls:'green-bg'},
+    {grade:'2', sku:'高端礼盒 · 禾然零添加', desc:'系数 ×1.5 · B/C区·节日加备', tag:'清近效期+备新货', color:'amber', cls:'amber-bg'},
+    {grade:'3', sku:'味达美·常规 · 葱伴侣·场景', desc:'系数 ×1.0 · D/E区标准', tag:'稳定', color:'blue', cls:'blue-bg'},
+    {grade:'4', sku:'小康·防御性低价', desc:'系数 ×0.7 · F区暂停补货+加速清仓', tag:'压货警示·减30%', color:'text-3', cls:'bg-soft'}
+  ];
+  
+  el.innerHTML = data.map(g => {
+    const colorVar = g.color === 'text-3' ? 'var(--text-3)' : `var(--${g.color})`;
+    const bgVar = g.cls === 'bg-soft' ? 'var(--bg-soft)' : `var(--${g.cls})`;
+    const borderVar = g.color === 'text-3' ? 'var(--line)' : colorVar;
+    const tagColor = g.tag.includes('警示') ? 'var(--red)' : colorVar;
+    
+    return `
+      <div style="background:${bgVar};border:1px solid ${borderVar};border-left:4px solid ${colorVar};border-radius:10px;padding:12px 16px;display:grid;grid-template-columns:80px 1fr auto;gap:14px;align-items:center;cursor:pointer" onclick="askBrain('${g.grade}年级SKU(${g.desc})·当前${g.tag}·下周决策建议?')">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;font-style:italic;color:${colorVar}">${g.grade} 年级</div>
+        <div>
+          <div style="font-size:13px;font-weight:600">${g.sku}</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px">${g.desc}</div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:${tagColor};background:#fff;padding:4px 10px;border-radius:6px;font-weight:700;letter-spacing:0.1em">${g.tag}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+// 决策记录 KPI(动态)
+// ═══════════════════════════════════════
+function renderActionsKPI(){
+  const data = currentRole === 'mes' ? ACTIONS_DATA_MES : ACTIONS_DATA_WMS;
+  const el = document.getElementById('actions-kpi');
+  if(!el) return;
+  
+  const total = data.length;
+  const closed = data.filter(a => a.status==='已闭环').length;
+  const inProgress = data.filter(a => a.status==='进行中' || a.status==='已派发' || a.status==='已确认').length;
+  const overdue = data.filter(a => a.status==='超期').length;
+  
+  el.innerHTML = `
+    <div class="kpi-card" style="cursor:default">
+      <div class="kpi-val">${total}</div>
+      <div class="kpi-trend up">本月总数</div>
+      <div class="kpi-lbl">DECISIONS</div>
+    </div>
+    <div class="kpi-card" style="cursor:default">
+      <div class="kpi-val good">${closed}</div>
+      <div class="kpi-trend up">已闭环</div>
+      <div class="kpi-lbl">CLOSED</div>
+    </div>
+    <div class="kpi-card" style="cursor:default">
+      <div class="kpi-val warn">${inProgress}</div>
+      <div class="kpi-trend up">进行中</div>
+      <div class="kpi-lbl">IN PROGRESS</div>
+    </div>
+    <div class="kpi-card" style="cursor:default">
+      <div class="kpi-val bad">${overdue}</div>
+      <div class="kpi-trend down">超期</div>
+      <div class="kpi-lbl">OVERDUE</div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════
+// 派任务下拉(按角色)
+// ═══════════════════════════════════════
+function renderDispatchOptions(){
+  const select = document.getElementById('dispatch-type');
+  if(!select) return;
+  
+  const options = currentRole === 'mes' ? [
+    '调用 Agent · 蒸腾排程',
+    '调用 Agent · 设备健康检查',
+    '调用 Agent · 蝴蝶上游扫描',
+    '派任务 · 维修班',
+    '派任务 · 排产调整',
+    '派任务 · 采购紧急补料',
+    '通知 · 欣和总部',
+    '通知 · 经销商总部+合作经销商'
+  ] : [
+    '调用 Agent · Omakase 推单',
+    '调用 Agent · 近效期扫描',
+    '调用 Agent · 仓位优化',
+    '派任务 · 清仓促销组',
+    '派任务 · 仓储调拨',
+    '派任务 · 区域扩容',
+    '通知 · 欣和工厂',
+    '通知 · 经销商总部+合作经销商'
+  ];
+  
+  select.innerHTML = options.map(o => `<option>${o}</option>`).join('');
+}
+
+// ═══════════════════════════════════════
+// Toast 提示
+// ═══════════════════════════════════════
+function showToast(msg){
+  let toast = document.getElementById('global-toast');
+  if(!toast){
+    toast = document.createElement('div');
+    toast.id = 'global-toast';
+    toast.style.cssText = `
+      position:fixed;top:20px;left:50%;transform:translateX(-50%);
+      background:var(--amber);color:#fff;
+      padding:10px 24px;border-radius:24px;
+      font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;font-size:14px;
+      box-shadow:0 4px 20px rgba(184,134,46,0.3);
+      z-index:500;opacity:0;transition:opacity 0.3s ease;
+      pointer-events:none;
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  setTimeout(() => toast.style.opacity = '0', 1800);
+}
+
+// ═══════════════════════════════════════
+// 智能 Agent 建议(按当前角色和议题优先级)
+// ═══════════════════════════════════════
+function agentSuggest(){
+  // MES最紧急议题:L3线异响(alert)
+  // WMS最紧急议题:近效期380箱(alert)
+  
+  const suggestion = currentRole === 'mes' ? 
+    {type:'派任务 · 维修班', target:'L3线维修班+设备工程师', desc:'L3线异响紧急检修·良品率已降到96.5%·预计影响今日产能8%·24小时内复工。需带异响诊断报告', priority:'🚨 紧急(24小时)'} :
+    {type:'派任务 · 清仓促销组', target:'清仓促销组+渠道经理', desc:'禾然近效期380箱·剩30天·5天内必须清仓·方案:50%调拨华北+30%促销+20%降价直销', priority:'🚨 紧急(24小时)'};
+  
+  document.getElementById('dispatch-type').value = suggestion.type;
+  document.getElementById('dispatch-target').value = suggestion.target;
+  document.getElementById('dispatch-desc').value = suggestion.desc;
+  document.getElementById('dispatch-priority').value = suggestion.priority;
+  
+  document.getElementById('agent-suggestion-text').innerHTML = `<strong style="color:var(--green)">✓ Agent 智能推荐(基于今日最紧急议题):</strong> ${suggestion.type} · 已自动填充·DS可修改`;
+}
+
+// ═══════════════════════════════════════
+// 决策记录(inf_actions 模拟数据)
+// ═══════════════════════════════════════
+const ACTIONS_DATA_MES = [
+  {id:'A-2026-0156', time:'2小时前', type:'调用Agent', target:'蒸腾排程Agent', desc:'有机系列下周加产20%·L1线优先承接·额外排程10万瓶', status:'进行中', priority:'high', creator:'王厂长', cost:'¥4.5万', roi:'¥38万'},
+  {id:'A-2026-0155', time:'今早 09:30', type:'派任务', target:'L3线维修班', desc:'L3线异响紧急检修·24小时内复工·影响今日产能8%', status:'已派发', priority:'urgent', creator:'王厂长', cost:'¥2.8万', roi:'¥45万'},
+  {id:'A-2026-0154', time:'昨天 16:45', type:'通知', target:'欣和总部+经销商总部', desc:'有机系列加产计划20%已启动·下周一开始·请同步备货', status:'已确认', priority:'high', creator:'DS', cost:'¥0', roi:'协同价值'},
+  {id:'A-2026-0153', time:'昨天 14:20', type:'调用Agent', target:'设备健康Agent', desc:'全厂6条线OEE扫描·预测性维护排程', status:'已闭环', priority:'medium', creator:'排程主管', cost:'¥0.5万', roi:'¥12万'},
+  {id:'A-2026-0152', time:'2天前', type:'派任务', target:'采购部', desc:'原料W12紧急补货·当前3.2天库存·要求周三前到货', status:'已确认', priority:'urgent', creator:'王厂长', cost:'¥18万', roi:'避免¥85万损失'},
+  {id:'A-2026-0151', time:'3天前', type:'调用Agent', target:'蝴蝶上游Agent', desc:'扫描下游假需求信号·避免被压货误导加产', status:'已闭环', priority:'medium', creator:'Agent自动', cost:'¥0', roi:'避免¥120万错产'}
+];
+
+const ACTIONS_DATA_WMS = [
+  {id:'A-2026-0098', time:'1小时前', type:'调用Agent', target:'Omakase推单Agent', desc:'生成今日推单·覆盖明发等10家深度合伙人·SKU组合优化', status:'进行中', priority:'high', creator:'李经理', cost:'¥0', roi:'¥220万发货'},
+  {id:'A-2026-0097', time:'今早 10:00', type:'派任务', target:'清仓促销组', desc:'禾然近效期380箱清仓·促销+调拨方案·5天内完成', status:'已派发', priority:'urgent', creator:'李经理', cost:'¥3.2万', roi:'避免¥18万过期'},
+  {id:'A-2026-0096', time:'昨天 15:30', type:'调用Agent', target:'仓位优化Agent', desc:'A区库存3.8a偏高·建议优先发往明发等深度合伙人', status:'已闭环', priority:'high', creator:'DOM', cost:'¥0', roi:'¥85万'},
+  {id:'A-2026-0095', time:'昨天 11:00', type:'通知', target:'华北仓储', desc:'调拨1500箱六月鲜有机至华北仓·支援华北销售旺季', status:'已确认', priority:'medium', creator:'李经理', cost:'¥4.5万', roi:'¥62万销售'},
+  {id:'A-2026-0094', time:'2天前', type:'派任务', target:'B区主管', desc:'B区下周空8000板位·准备承接工厂加产订单', status:'已确认', priority:'medium', creator:'李经理', cost:'¥0', roi:'容纳¥240万'},
+  {id:'A-2026-0093', time:'3天前', type:'调用Agent', target:'近效期Agent', desc:'全仓SKU效期扫描·30/60/90天分级清单生成', status:'已闭环', priority:'low', creator:'Agent自动', cost:'¥0', roi:'防损¥45万'}
+];
+
+function renderActions(){
+  const data = currentRole === 'mes' ? ACTIONS_DATA_MES : ACTIONS_DATA_WMS;
+  const el = document.getElementById('actions-list');
+  if(!el) return;
+  
+  // 同时刷新KPI
+  renderActionsKPI();
+  
+  const html = data.map(a => {
+    const statusColor = a.status==='已闭环'?'var(--green)':a.status==='已派发'||a.status==='已确认'?'var(--blue)':a.status==='进行中'?'var(--amber)':'var(--red)';
+    const statusBg = a.status==='已闭环'?'var(--green-bg)':a.status==='已派发'||a.status==='已确认'?'var(--blue-bg)':a.status==='进行中'?'var(--amber-bg)':'var(--red-bg)';
+    const priIcon = a.priority==='urgent'?'🚨':a.priority==='high'?'⚠️':a.priority==='medium'?'○':'·';
+    
+    return `
+      <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:14px 18px;cursor:pointer" onclick="askBrain('查询决策${a.id}详情·${a.desc}·当前状态${a.status}·成本${a.cost} ROI${a.roi}·后续如何处理?')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:14px">${priIcon}</span>
+            <div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600">${a.type} · <em style="color:var(--amber);font-style:italic">${a.target}</em></div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-top:2px">${a.id} · ${a.time} · 创建人 ${a.creator}</div>
+            </div>
+          </div>
+          <div style="background:${statusBg};color:${statusColor};padding:4px 12px;border-radius:8px;font-size:10px;font-weight:600;font-family:'JetBrains Mono',monospace;letter-spacing:0.1em;text-transform:uppercase">${a.status}</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-2);line-height:1.5;margin-bottom:8px">${a.desc}</div>
+        <div style="display:flex;gap:10px;font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:0.05em">
+          <span>💰 成本 <strong style="color:var(--text-2)">${a.cost}</strong></span>
+          <span>📈 ROI <strong style="color:var(--green)">${a.roi}</strong></span>
+        </div>
+      </div>
+    `;
+  }).join('');
+  el.innerHTML = html;
+}
+
+// ═══════════════════════════════════════
+// 派单弹窗 + Agent 建议
+// ═══════════════════════════════════════
+function openDispatch(){
+  const modal = document.getElementById('dispatch-modal');
+  if(!modal) return;
+  
+  document.getElementById('dispatch-role-name').textContent = currentRole === 'mes' ? '工厂' : '仓储';
+  document.getElementById('agent-suggestion-text').innerHTML = '点击 → Agent 自动给出推荐(基于今日最紧急议题·DS可采纳或修改)';
+  
+  // 按角色刷新下拉选项
+  renderDispatchOptions();
+  
+  modal.style.display = 'flex';
+}
+
+function closeDispatch(){
+  const modal = document.getElementById('dispatch-modal');
+  if(modal) modal.style.display = 'none';
+}
+
+function submitDispatch(){
+  const type = document.getElementById('dispatch-type').value;
+  const target = document.getElementById('dispatch-target').value;
+  const desc = document.getElementById('dispatch-desc').value;
+  const priority = document.getElementById('dispatch-priority').value;
+  const channel = document.getElementById('dispatch-channel').value;
+  
+  if(!target.trim() || !desc.trim()){
+    alert('请填写"目标对象"和"任务描述"·或点击 Agent 建议自动填充');
+    return;
+  }
+  
+  const cost = '¥' + (Math.floor(Math.random()*50)+1) + '万';
+  const roi = '¥' + (Math.floor(Math.random()*200)+50) + '万';
+  
+  const newAction = {
+    id: 'A-2026-' + String(157 + Math.floor(Math.random()*100)).padStart(4,'0'),
+    time: '刚刚',
+    type: type.split('·')[0].trim(),
+    target: target,
+    desc: desc,
+    status: '已派发',
+    priority: priority.includes('紧急')?'urgent':priority.includes('高')?'high':priority.includes('中')?'medium':'low',
+    creator: 'DS',
+    cost: cost,
+    roi: roi
+  };
+  
+  if(currentRole === 'mes'){
+    ACTIONS_DATA_MES.unshift(newAction);
+  } else {
+    ACTIONS_DATA_WMS.unshift(newAction);
+  }
+  renderActions();
+  
+  closeDispatch();
+  
+  setTimeout(() => {
+    showToast(`✓ 已派发 · ${newAction.id} · ${cost} → ROI ${roi}`);
+    switchTab('actions');
+  }, 100);
+  
+  document.getElementById('dispatch-target').value = '';
+  document.getElementById('dispatch-desc').value = '';
+}
+
+// ═══════════════════════════════════════
+// 初始化(所有函数和数据定义之后调用)
+// ═══════════════════════════════════════
+renderBriefing();
+renderIssues();
+renderKPIs();
+renderScenarios();
+renderLines();
+renderEvapo();
+renderSchedule();
+renderAgents();
+renderActions();
+renderCDI();
+renderGrades();
+renderDispatchOptions();
+
+// footer日期 · 动态生成
+const fd = new Date();
+const fdEl = document.getElementById('footer-date');
+if(fdEl) fdEl.textContent = `${fd.getFullYear()}.${String(fd.getMonth()+1).padStart(2,'0')}.${String(fd.getDate()).padStart(2,'0')}`;
+</script>
+
+</body>
+</html>

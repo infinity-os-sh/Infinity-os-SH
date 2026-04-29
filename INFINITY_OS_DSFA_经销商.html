@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>DSFA · 经销商业务 · INFINITY OS V1.2</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08080e;
+  --bg2: #0c0e18;
+  --bg3: #10131e;
+  --card: #131620;
+  --card2: #181c28;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #e6eaf5;
+  --text2: #8892a8;
+  --text3: #4a5468;
+  --teal: #4ecdc4;
+  --teal2: #5dd5cb;
+  --teal-dim: rgba(78,205,196,0.12);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96,165,250,0.12);
+  --amber: #f5a623;
+  --amber-dim: rgba(245,166,35,0.12);
+  --red: #ff5f5f;
+  --red-dim: rgba(255,95,95,0.1);
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.1);
+  --purple: #a78bfa;
+  --purple-dim: rgba(167,139,250,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Noto Sans SC',sans-serif;
+  min-height:100vh;
+  font-size:13px;
+  line-height:1.6;
+  padding-bottom:60px;
+}
+
+/* TOPBAR · teal主色(标识"经销商系统") */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,8,14,0.95);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:10px 14px;
+}
+.tb-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tb-logo{display:flex;align-items:center;gap:8px}
+.tb-sym{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,#4ecdc4,#60a5fa);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000;
+  box-shadow:0 3px 12px rgba(78,205,196,0.3);
+}
+.tb-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.04em}
+.tb-name span{color:var(--teal)}
+.tb-tag{
+  font-family:'Space Mono',monospace;font-size:9px;
+  color:var(--text3);letter-spacing:0.15em;text-transform:uppercase;
+}
+.tb-clock{font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)}
+
+/* 经销商身份带 */
+.identity-bar{
+  background:linear-gradient(90deg,var(--teal-dim),transparent);
+  border-bottom:1px solid var(--teal);
+  padding:6px 14px;
+  font-size:10px;
+  color:var(--teal);
+  font-family:'Space Mono',monospace;
+  letter-spacing:0.1em;
+  text-align:center;
+}
+.identity-bar strong{font-weight:700}
+
+/* ROLE SWITCHER */
+.role-bar{
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+  padding:8px 14px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  white-space:nowrap;
+}
+.role-bar::-webkit-scrollbar{display:none}
+.role-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:16px;padding:5px 12px;
+  font-size:11px;color:var(--text2);
+  cursor:pointer;transition:all 0.15s;
+  margin-right:6px;
+  font-family:inherit;
+}
+.role-pill.active{
+  background:var(--teal-dim);
+  border-color:var(--teal);
+  color:var(--teal);
+  font-weight:600;
+}
+.role-icon{font-size:12px}
+
+/* HERO */
+.hero{
+  padding:14px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:12px;
+  align-items:center;
+  background:linear-gradient(135deg,var(--bg2),var(--bg));
+  border-bottom:1px solid var(--border);
+}
+.hero-info{}
+.hero-greeting{
+  font-size:12px;color:var(--text3);
+  font-family:'Space Mono',monospace;letter-spacing:0.05em;
+  margin-bottom:3px;
+}
+.hero-name{
+  font-family:'Syne',sans-serif;
+  font-size:19px;font-weight:700;
+  margin-bottom:2px;
+}
+.hero-name span{color:var(--teal)}
+.hero-role{font-size:11px;color:var(--text2)}
+.hero-stat{
+  text-align:right;
+  background:var(--teal-dim);
+  border:1px solid var(--teal);
+  border-radius:10px;
+  padding:8px 14px;
+}
+.hero-stat-val{
+  font-family:'Syne',sans-serif;
+  font-size:22px;font-weight:800;
+  color:var(--teal);line-height:1;
+}
+.hero-stat-lbl{
+  font-size:9px;color:var(--text2);
+  font-family:'Space Mono',monospace;
+  letter-spacing:0.1em;margin-top:3px;
+  text-transform:uppercase;
+}
+
+/* 控制按钮 */
+.controls{
+  padding:10px 14px;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+}
+.controls-row{
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+}
+.controls-label{
+  font-size:11px;color:var(--text2);
+  font-family:'Space Mono',monospace;letter-spacing:0.05em;
+}
+.btn-ctrl{
+  padding:6px 12px;border-radius:6px;
+  font-size:11px;font-weight:600;
+  cursor:pointer;border:none;
+  font-family:inherit;transition:all 0.15s;
+}
+.btn-add{background:var(--teal);color:#000}
+.btn-add:hover{background:var(--teal2)}
+.btn-remove{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.btn-remove:hover{color:var(--text)}
+.btn-checkin{background:var(--green);color:#000}
+.btn-checkin:hover{filter:brightness(1.1)}
+.btn-reset{background:transparent;color:var(--text3);border:1px solid var(--border)}
+
+/* KPI */
+.kpi4{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:6px;padding:0 14px;margin-top:14px;
+}
+.kpi-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:9px;padding:9px 6px;text-align:center;
+}
+.kpi-val{
+  font-family:'Syne',sans-serif;
+  font-size:18px;font-weight:800;
+  line-height:1;margin-bottom:3px;
+}
+.kpi-lbl{font-size:9px;color:var(--text3);line-height:1.3}
+.c-amber{color:var(--amber)}
+.c-green{color:var(--green)}
+.c-red{color:var(--red)}
+.c-teal{color:var(--teal)}
+.c-blue{color:var(--blue)}
+.c-purple{color:var(--purple)}
+
+/* 区块 */
+.section{margin-top:16px;padding:0 14px}
+.sec-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;
+}
+.sec-title{
+  font-size:11px;font-weight:700;
+  color:var(--text2);letter-spacing:0.1em;
+  text-transform:uppercase;
+  display:flex;align-items:center;gap:6px;
+}
+.sec-title::before{
+  content:'';width:3px;height:12px;
+  background:var(--teal);border-radius:2px;
+}
+.sec-more{
+  font-size:10px;color:var(--text3);
+  font-family:'Space Mono',monospace;cursor:pointer;
+}
+
+/* 任务/门店卡 */
+.task-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:11px 14px;margin-bottom:7px;
+  cursor:pointer;transition:all 0.15s;
+}
+.task-card:hover{border-color:var(--border2);transform:translateX(2px)}
+.task-row{display:flex;align-items:center;gap:10px}
+.task-num{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--teal-dim);color:var(--teal);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:13px;
+  flex-shrink:0;
+}
+.task-info{flex:1;min-width:0}
+.task-store{
+  font-size:13px;font-weight:600;margin-bottom:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.task-meta{
+  display:flex;gap:8px;font-size:10px;color:var(--text3);
+  flex-wrap:wrap;
+}
+.task-meta .grade{
+  padding:1px 6px;border-radius:3px;font-weight:600;
+}
+.task-meta .grade.s{background:var(--green-dim);color:var(--green)}
+.task-meta .grade.a{background:var(--teal-dim);color:var(--teal)}
+.task-meta .grade.b{background:var(--blue-dim);color:var(--blue)}
+.task-meta .grade.c{background:var(--purple-dim);color:var(--purple)}
+.task-meta .grade.d{background:rgba(255,255,255,0.05);color:var(--text3)}
+.task-status{
+  font-size:10px;font-weight:600;flex-shrink:0;
+  padding:3px 8px;border-radius:5px;
+}
+.task-status.done{background:var(--green-dim);color:var(--green)}
+.task-status.now{background:var(--teal-dim);color:var(--teal)}
+.task-status.next{background:var(--bg3);color:var(--text3)}
+
+/* 推单卡 */
+.push-card{
+  background:var(--card);border:1px solid var(--border);
+  border-left:3px solid var(--teal);border-radius:10px;
+  padding:11px 14px;margin-bottom:7px;
+  display:grid;grid-template-columns:1fr auto;
+  gap:10px;align-items:center;
+}
+.push-info{min-width:0}
+.push-customer{
+  font-size:13px;font-weight:600;margin-bottom:3px;
+}
+.push-detail{
+  font-size:11px;color:var(--text3);
+  display:flex;gap:8px;flex-wrap:wrap;
+}
+.push-actions{display:flex;gap:5px;flex-shrink:0}
+.btn-sm{
+  padding:6px 12px;border-radius:6px;font-size:11px;
+  font-weight:600;cursor:pointer;border:none;
+  font-family:inherit;transition:all 0.15s;
+}
+.btn-accept{background:var(--teal);color:#000}
+.btn-accept:hover{background:var(--teal2)}
+.btn-skip{background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+
+/* Agent对话 */
+.agent-box{
+  background:linear-gradient(135deg,rgba(78,205,196,0.06),rgba(96,165,250,0.03));
+  border:1px solid rgba(78,205,196,0.25);
+  border-radius:14px;padding:14px;margin-top:14px;
+}
+.agent-hdr{
+  display:flex;align-items:center;gap:10px;margin-bottom:10px;
+}
+.agent-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.agent-info{flex:1}
+.agent-name{
+  font-family:'Syne',sans-serif;
+  font-size:14px;font-weight:700;
+}
+.agent-status{
+  font-size:10px;color:var(--green);
+  display:flex;align-items:center;gap:4px;
+}
+.agent-status::before{
+  content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--green);animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+.agent-bubble{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;
+  font-size:12px;color:var(--text2);
+  line-height:1.7;margin-bottom:10px;
+}
+
+.preset-row{
+  display:flex;gap:6px;
+  overflow-x:auto;scrollbar-width:none;
+  margin-bottom:10px;padding-bottom:2px;
+}
+.preset-row::-webkit-scrollbar{display:none}
+.preset{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:14px;padding:5px 11px;
+  font-size:11px;color:var(--text2);
+  white-space:nowrap;cursor:pointer;
+  transition:all 0.15s;flex-shrink:0;
+  font-family:inherit;
+}
+.preset:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-dim)}
+
+.agent-input-row{display:flex;gap:6px}
+.agent-input{
+  flex:1;background:var(--bg3);
+  border:1px solid var(--border);border-radius:10px;
+  padding:9px 12px;font-size:12px;
+  color:var(--text);outline:none;font-family:inherit;
+}
+.agent-input:focus{border-color:var(--teal)}
+.agent-input::placeholder{color:var(--text3)}
+.agent-send{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--teal);border:none;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;color:#000;flex-shrink:0;
+}
+.agent-send:hover{background:var(--teal2);transform:scale(1.05)}
+
+.agent-response{
+  display:none;margin-top:10px;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;
+}
+.agent-response.show{display:block}
+.agent-q{
+  font-size:10px;color:var(--text3);
+  margin-bottom:6px;padding-bottom:6px;
+  border-bottom:1px solid var(--border);
+  font-family:'Space Mono',monospace;
+}
+.agent-a{font-size:12px;color:var(--text2);line-height:1.7}
+
+.thinking{display:flex;gap:4px;padding:5px 0}
+.td{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--teal);animation:td 1.2s infinite;
+}
+.td:nth-child(2){animation-delay:0.2s}
+.td:nth-child(3){animation-delay:0.4s}
+@keyframes td{0%,80%,100%{opacity:0.2;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
+
+/* 快捷操作 */
+.quick-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:6px;margin-top:6px;
+}
+.quick-btn{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:12px 4px;text-align:center;
+  cursor:pointer;transition:all 0.15s;
+}
+.quick-btn:hover{
+  border-color:var(--teal);
+  background:var(--teal-dim);
+  transform:translateY(-2px);
+}
+.quick-icon{font-size:22px;margin-bottom:4px;display:block}
+.quick-name{font-size:10px;color:var(--text2);font-weight:500}
+
+/* 一本账(经销商版) */
+.account-card{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);
+  border-radius:12px;padding:14px;
+}
+.account-hdr{
+  display:flex;justify-content:space-between;align-items:baseline;
+  margin-bottom:10px;
+}
+.account-title{
+  font-family:'Syne',sans-serif;
+  font-size:14px;font-weight:700;
+}
+.account-period{
+  font-family:'Space Mono',monospace;
+  font-size:10px;color:var(--text3);
+}
+.account-rows{display:flex;flex-direction:column;gap:7px}
+.account-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 12px;background:var(--bg3);border-radius:8px;font-size:12px;
+}
+.account-label{color:var(--text2)}
+.account-val{
+  font-family:'Syne',sans-serif;font-weight:700;color:var(--text);
+}
+.account-val.plus{color:var(--green)}
+
+.progress-bar{
+  height:4px;background:rgba(255,255,255,0.06);
+  border-radius:2px;overflow:hidden;margin-top:8px;
+}
+.progress-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--teal),var(--teal2));
+}
+
+/* 视图切换 */
+.view{display:none}
+.view.active{display:block;animation:fadeIn 0.25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* 战略SKU标签 */
+.strategy-tag{
+  display:inline-block;padding:1px 6px;border-radius:3px;
+  background:linear-gradient(90deg,var(--amber),#ffc85e);
+  color:#000;font-size:9px;font-weight:700;
+  letter-spacing:0.1em;font-family:'Space Mono',monospace;
+}
+
+/* 底部导航 */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(8,8,14,0.96);
+  backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+  padding:10px 0;
+  display:flex;justify-content:space-around;z-index:100;
+}
+.nav-item{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  cursor:pointer;flex:1;padding:4px 0;
+}
+.nav-item-icon{font-size:18px;color:var(--text3)}
+.nav-item-name{
+  font-size:9px;color:var(--text3);
+  font-family:'Space Mono',monospace;letter-spacing:0.05em;
+}
+.nav-item.active .nav-item-icon{color:var(--teal)}
+.nav-item.active .nav-item-name{color:var(--teal);font-weight:600}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-row">
+    <div class="tb-logo">
+      <div class="tb-sym">D</div>
+      <div>
+        <div class="tb-name">DSFA · INFINITY <span>OS</span></div>
+        <div class="tb-tag">V1.2 · 经销商业务系统</div>
+      </div>
+    </div>
+    <div class="tb-clock" id="clock">--:--</div>
+  </div>
+</div>
+
+<!-- 经销商身份带 -->
+<div class="identity-bar">
+  🏢 雇主:<strong>明发商贸</strong> · 上海浦东 · 与欣和深度合伙第28月 · A+评级
+</div>
+
+<!-- 角色切换 -->
+<div class="role-bar">
+  <div class="role-pill active" data-role="dsr" onclick="switchRole('dsr')">
+    <span class="role-icon">🚗</span>经销商 DSR
+  </div>
+  <div class="role-pill" data-role="dbc" onclick="switchRole('dbc')">
+    <span class="role-icon">💎</span>经销商 美顾
+  </div>
+</div>
+
+<!-- ═══════════ 经销商 DSR 视图 ═══════════ -->
+<div class="view active" id="view-dsr">
+  
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-info">
+      <div class="hero-greeting">早上好</div>
+      <div class="hero-name">王 <span>DSR</span> · 经销商</div>
+      <div class="hero-role" id="dsr-role-line">明发员工 · 浦东片区 · 加载中...</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val" id="dsr-stores-val">?</div>
+      <div class="hero-stat-lbl">服务门店</div>
+    </div>
+  </div>
+
+  <!-- 多点动态控制 -->
+  <div class="controls">
+    <div class="controls-row">
+      <span class="controls-label">🎚️ 服务门店动态调节</span>
+      <button class="btn-ctrl btn-add" onclick="dsrAddStore()">+ 新增门店</button>
+      <button class="btn-ctrl btn-remove" onclick="dsrRemoveStore()">- 移除</button>
+      <button class="btn-ctrl btn-checkin" onclick="dsrCheckIn()">✓ 完成下一家</button>
+      <button class="btn-ctrl btn-reset" onclick="dsrReset()">↺ 重置</button>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi4">
+    <div class="kpi-card">
+      <div class="kpi-val c-teal" id="dsr-kpi-total">?</div>
+      <div class="kpi-lbl">服务门店</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val c-green" id="dsr-kpi-done">?</div>
+      <div class="kpi-lbl">今日完成</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val c-amber" id="dsr-kpi-rev">¥?</div>
+      <div class="kpi-lbl">本月销额</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val c-blue" id="dsr-kpi-rate">?%</div>
+      <div class="kpi-lbl">达成率</div>
+    </div>
+  </div>
+
+  <!-- 今日门店清单 -->
+  <div class="section">
+    <div class="sec-hdr">
+      <div class="sec-title" id="dsr-list-title">📋 今日门店清单</div>
+      <div class="sec-more" id="dsr-list-meta">动态实时</div>
+    </div>
+    <div id="dsr-list">
+      <!-- JS动态渲染 -->
+    </div>
+  </div>
+
+  <!-- Omakase推单(给门店) -->
+  <div class="section">
+    <div class="sec-hdr">
+      <div class="sec-title">🍣 给门店推单 · 本周</div>
+      <div class="sec-more">3 单 ›</div>
+    </div>
+    
+    <div class="push-card">
+      <div class="push-info">
+        <div class="push-customer">罗森张江高科 · <span class="strategy-tag">战略</span></div>
+        <div class="push-detail">
+          <span>📦 六月鲜有机·8箱</span>
+          <span>💰 ¥5,120</span>
+          <span>📊 1.5a→3a</span>
+        </div>
+      </div>
+      <div class="push-actions">
+        <button class="btn-sm btn-accept">推单</button>
+        <button class="btn-sm btn-skip">跳过</button>
+      </div>
+    </div>
+    
+    <div class="push-card">
+      <div class="push-info">
+        <div class="push-customer">家乐福八佰伴</div>
+        <div class="push-detail">
+          <span>📦 红烧500ml·30箱</span>
+          <span>💰 ¥2,340</span>
+          <span>📊 1.0a→2a</span>
+        </div>
+      </div>
+      <div class="push-actions">
+        <button class="btn-sm btn-accept">推单</button>
+        <button class="btn-sm btn-skip">跳过</button>
+      </div>
+    </div>
+    
+    <div class="push-card">
+      <div class="push-info">
+        <div class="push-customer">全家联洋广场</div>
+        <div class="push-detail">
+          <span>📦 葱伴侣·12箱</span>
+          <span>💰 ¥720</span>
+          <span>📊 0.6a→2a</span>
+        </div>
+      </div>
+      <div class="push-actions">
+        <button class="btn-sm btn-accept">推单</button>
+        <button class="btn-sm btn-skip">跳过</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Agent对话 -->
+  <div class="section">
+    <div class="agent-box">
+      <div class="agent-hdr">
+        <div class="agent-avatar">🤖</div>
+        <div class="agent-info">
+          <div class="agent-name">DSR 助手 Agent · 明发版</div>
+          <div class="agent-status">在线 · 经销商立场</div>
+        </div>
+      </div>
+      
+      <div class="agent-bubble" id="dsr-bubble">
+        加载中...
+      </div>
+      
+      <div class="preset-row">
+        <div class="preset" onclick="ask('我管的门店里哪几家最需要补货? 推单理由?', 'dsr')">补货建议</div>
+        <div class="preset" onclick="ask('六月鲜有机怎么向门店推荐? 话术?', 'dsr')">战略 SKU 话术</div>
+        <div class="preset" onclick="ask('我的拜访路线最优顺序?', 'dsr')">路线优化</div>
+        <div class="preset" onclick="ask('我和明发其他DSR比绩效如何?', 'dsr')">同事对比</div>
+      </div>
+      
+      <div class="agent-input-row">
+        <input class="agent-input" id="input-dsr" placeholder="问 DSR 助手任何问题…" 
+               onkeydown="if(event.key==='Enter')ask(this.value,'dsr')">
+        <button class="agent-send" onclick="ask(document.getElementById('input-dsr').value,'dsr')">↑</button>
+      </div>
+      
+      <div class="agent-response" id="response-dsr">
+        <div class="agent-q" id="q-dsr"></div>
+        <div class="agent-a" id="a-dsr"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 快捷操作 -->
+  <div class="section">
+    <div class="sec-hdr">
+      <div class="sec-title">⚡ 快捷操作</div>
+    </div>
+    <div class="quick-grid">
+      <div class="quick-btn">
+        <span class="quick-icon">📷</span>
+        <div class="quick-name">拍货架</div>
+      </div>
+      <div class="quick-btn">
+        <span class="quick-icon">📦</span>
+        <div class="quick-name">报库存</div>
+      </div>
+      <div class="quick-btn">
+        <span class="quick-icon">📝</span>
+        <div class="quick-name">录拜访</div>
+      </div>
+      <div class="quick-btn">
+        <span class="quick-icon">🛒</span>
+        <div class="quick-name">下订单</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 一本账(经销商内部) -->
+  <div class="section">
+    <div class="sec-hdr">
+      <div class="sec-title">💰 我的明发一本账</div>
+      <div class="sec-more">2026.04 ›</div>
+    </div>
+    <div class="account-card">
+      <div class="account-hdr">
+        <div class="account-title">明发DSR 王小明</div>
+        <div class="account-period">本月预计</div>
+      </div>
+      <div class="account-rows">
+        <div class="account-row">
+          <span class="account-label">基础工资</span>
+          <span class="account-val">¥4,500</span>
+        </div>
+        <div class="account-row">
+          <span class="account-label">门店达成奖(明发付)</span>
+          <span class="account-val plus">+¥3,200</span>
+        </div>
+        <div class="account-row">
+          <span class="account-label">战略 SKU 推进奖(欣和付)</span>
+          <span class="account-val plus">+¥1,500</span>
+        </div>
+        <div class="account-row">
+          <span class="account-label">蝴蝶效应处理奖</span>
+          <span class="account-val plus">+¥400</span>
+        </div>
+        <div class="account-row" style="background:var(--teal-dim);border:1px solid var(--teal)">
+          <span class="account-label" style="color:var(--teal);font-weight:600">本月预计合计</span>
+          <span class="account-val" style="color:var(--teal);font-size:15px">¥9,600</span>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:72%"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ 经销商美顾 视图 ═══════════ -->
+<div class="view" id="view-dbc">
+  
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-info">
+      <div class="hero-greeting">早上好</div>
+      <div class="hero-name">林 <span>美顾</span> · 经销商</div>
+      <div class="hero-role" id="dbc-role-line">明发员工 · 加载中...</div>
+    </div>
+    <div class="hero-stat" style="background:var(--green-dim);border-color:var(--green)">
+      <div class="hero-stat-val" style="color:var(--green)" id="dbc-cb-val">?</div>
+      <div class="hero-stat-lbl">本月CB</div>
+    </div>
+  </div>
+
+  <!-- 动态门店数控制 -->
+  <div class="controls">
+    <div class="controls-row">
+      <span class="controls-label">🎚️ 服务门店动态(常驻/巡回灵活)</span>
+      <button class="btn-ctrl btn-add" onclick="dbcAddStore()">+ 新增门店</button>
+      <button class="btn-ctrl btn-remove" onclick="dbcRemoveStore()">- 移除</button>
+      <button class="btn-ctrl btn-checkin" onclick="dbcCheckIn()">✓ 完成下一家</button>
+      <button class="btn-ctrl btn-reset" onclick="dbcReset()">↺ 重置</button>
+    </div>
+  </div>
+
+  <div class="kpi4">
+    <div class="kpi-card">
+      <div class="kpi-val c-teal" id="dbc-kpi-n">?</div>
+      <div class="kpi-lbl">服务门店</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val c-green" id="dbc-kpi-done">?</div>
+      <div class="kpi-lbl">今日完成</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val c-amber" id="dbc-kpi-cb">?</div>
+      <div class="kpi-lbl">今日CB</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val c-blue" id="dbc-kpi-photos">?</div>
+      <div class="kpi-lbl">已拍照</div>
+    </div>
+  </div>
+
+  <!-- 与SFA美顾的关键差异提示 -->
+  <div class="section">
+    <div style="background:var(--teal-dim);border:1px solid var(--teal);border-radius:10px;padding:12px 14px;font-size:11px;color:var(--text2);line-height:1.7">
+      <div style="font-weight:600;color:var(--teal);margin-bottom:4px;font-family:'Space Mono',monospace;letter-spacing:0.1em;font-size:10px">📌 经销商美顾 · 关键差异</div>
+      你是<strong>明发雇的美顾</strong>·不是欣和美顾。差异:工资由明发发(不是欣和)·任务由明发DSR派(不是DOM)·门店是明发自营+合作KA·CB分参与欣和体系(共享激励)·上传数据归属明发(双方共享)。<strong>N=1时是常驻 · N≥2时是巡回</strong>。
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hdr">
+      <div class="sec-title" id="dbc-list-title">🎯 今日服务门店</div>
+      <div class="sec-more" id="dbc-list-meta">动态实时</div>
+    </div>
+    <div id="dbc-list">
+      <!-- JS动态渲染 -->
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="agent-box">
+      <div class="agent-hdr">
+        <div class="agent-avatar">🤖</div>
+        <div class="agent-info">
+          <div class="agent-name">经销商美顾助手 Agent</div>
+          <div class="agent-status" id="dbc-agent-status">在线 · 加载中</div>
+        </div>
+      </div>
+      
+      <div class="agent-bubble" id="dbc-bubble">
+        加载中...
+      </div>
+      
+      <div class="preset-row">
+        <div class="preset" onclick="ask('六月鲜有机的卖点话术?', 'dbc')">有机话术</div>
+        <div class="preset" onclick="ask('我的CB分明发和欣和分别给多少?', 'dbc')">激励来源</div>
+        <div class="preset" onclick="ask('多店巡回如何安排时间?', 'dbc')">巡回安排</div>
+        <div class="preset" onclick="ask('陈列优化建议?', 'dbc')">陈列建议</div>
+      </div>
+      
+      <div class="agent-input-row">
+        <input class="agent-input" id="input-dbc" placeholder="问美顾助手…" 
+               onkeydown="if(event.key==='Enter')ask(this.value,'dbc')">
+        <button class="agent-send" onclick="ask(document.getElementById('input-dbc').value,'dbc')">↑</button>
+      </div>
+      
+      <div class="agent-response" id="response-dbc">
+        <div class="agent-q" id="q-dbc"></div>
+        <div class="agent-a" id="a-dbc"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hdr">
+      <div class="sec-title">⚡ 快捷操作</div>
+    </div>
+    <div class="quick-grid">
+      <div class="quick-btn">
+        <span class="quick-icon">📷</span>
+        <div class="quick-name">拍货架</div>
+      </div>
+      <div class="quick-btn">
+        <span class="quick-icon">🏷️</span>
+        <div class="quick-name">价签识别</div>
+      </div>
+      <div class="quick-btn">
+        <span class="quick-icon">💬</span>
+        <div class="quick-name">客流互动</div>
+      </div>
+      <div class="quick-btn">
+        <span class="quick-icon">📊</span>
+        <div class="quick-name">我的CB</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active">
+    <div class="nav-item-icon">🏠</div>
+    <div class="nav-item-name">首页</div>
+  </div>
+  <div class="nav-item">
+    <div class="nav-item-icon">🏪</div>
+    <div class="nav-item-name">门店</div>
+  </div>
+  <div class="nav-item">
+    <div class="nav-item-icon">🍣</div>
+    <div class="nav-item-name">推单</div>
+  </div>
+  <div class="nav-item">
+    <div class="nav-item-icon">💰</div>
+    <div class="nav-item-name">一本账</div>
+  </div>
+  <div class="nav-item">
+    <div class="nav-item-icon">👤</div>
+    <div class="nav-item-name">我的</div>
+  </div>
+</div>
+
+<script>
+// ─── 时钟 ───
+function tick(){
+  const n = new Date();
+  document.getElementById('clock').textContent = 
+    String(n.getHours()).padStart(2,'0')+':'+
+    String(n.getMinutes()).padStart(2,'0');
+}
+tick(); setInterval(tick, 60000);
+
+// ─── 角色切换 ───
+function switchRole(role){
+  document.querySelectorAll('.role-pill').forEach(p=>p.classList.remove('active'));
+  document.querySelector(`.role-pill[data-role="${role}"]`)?.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+role)?.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ═══════════════════════════════════════
+// 经销商 DSR · 真动态多点门店管理
+// ═══════════════════════════════════════
+
+const STORE_POOL_DSR = [
+  {code:'好',name:'好邻居 世纪大道店',type:'明发自营',grade:'S+',distance:0,rev:18,health:96},
+  {code:'罗',name:'罗森 张江高科店',type:'明发自营',grade:'S',distance:0.8,rev:14,health:92},
+  {code:'家',name:'家乐福 八佰伴店',type:'KA合作',grade:'S+',distance:1.5,rev:22,health:94},
+  {code:'全',name:'全家 联洋广场',type:'连锁',grade:'A',distance:0.3,rev:8,health:85},
+  {code:'7',name:'7-11 虹桥南丰',type:'连锁',grade:'B',distance:4.1,rev:6,health:78},
+  {code:'欧',name:'欧尚 龙之梦店',type:'KA合作',grade:'A',distance:5.5,rev:10,health:84},
+  {code:'物',name:'物美 仙霞路店',type:'连锁',grade:'C',distance:2.6,rev:4,health:72},
+  {code:'M',name:'美宜佳 古羊路',type:'独立',grade:'C',distance:7.2,rev:3,health:68},
+  {code:'盒',name:'盒马 浦东店',type:'KA合作',grade:'S+',distance:3.0,rev:20,health:95},
+  {code:'山',name:'山姆会员 浦东',type:'KA合作',grade:'S+',distance:4.5,rev:25,health:93},
+  {code:'好2',name:'好德便利 延安路',type:'独立',grade:'B',distance:6.0,rev:5,health:75},
+  {code:'快',name:'快客 协和路店',type:'独立',grade:'D',distance:8.0,rev:2,health:60}
+];
+
+// 默认 8 家门店 · 前 3 家已完成
+let dsrStores = STORE_POOL_DSR.slice(0,8).map(s=>({...s, done:false}));
+function dsrInitDone(){
+  if(dsrStores[0]) dsrStores[0].done = true;
+  if(dsrStores[1]) dsrStores[1].done = true;
+  if(dsrStores[2]) dsrStores[2].done = true;
+}
+dsrInitDone();
+
+function renderDsr(){
+  const N = dsrStores.length;
+  const stores = dsrStores;
+  const doneStores = stores.filter(s => s.done);
+  const doneCount = doneStores.length;
+  const totalRev = stores.reduce((sum,s) => sum + s.rev, 0);
+  const avgRate = N ? Math.round(stores.reduce((s,st)=>s+st.health,0)/N) : 0;
+  
+  // 顶部
+  document.getElementById('dsr-stores-val').textContent = N;
+  document.getElementById('dsr-role-line').innerHTML = 
+    N === 0 
+      ? '明发员工 · <strong style="color:var(--red)">N = 0 暂无门店</strong>'
+      : `明发员工 · 浦东片区 · 服务 <strong style="color:var(--teal)">${N}</strong> 家门店 · 今日完成 ${doneCount}/${N}`;
+  
+  // KPI
+  document.getElementById('dsr-kpi-total').textContent = N;
+  document.getElementById('dsr-kpi-done').textContent = doneCount;
+  document.getElementById('dsr-kpi-rev').textContent = '¥' + totalRev + '万';
+  document.getElementById('dsr-kpi-rate').textContent = avgRate + '%';
+  
+  // 标题
+  document.getElementById('dsr-list-title').textContent = `📋 服务门店 · N = ${N}`;
+  document.getElementById('dsr-list-meta').textContent = `${doneCount}/${N} 完成 · 月销 ¥${totalRev}万`;
+  
+  // 列表
+  const listEl = document.getElementById('dsr-list');
+  if(N === 0){
+    listEl.innerHTML = `
+      <div style="padding:32px 16px;text-align:center;background:var(--card);border:1px dashed var(--border);border-radius:10px;color:var(--text3);font-size:12px">
+        当前 N = 0 · 暂无服务门店<br>
+        <button onclick="dsrAddStore()" style="margin-top:12px;background:var(--teal);border:none;border-radius:6px;padding:8px 18px;font-size:12px;font-weight:600;color:#000;cursor:pointer;font-family:inherit">+ 新增第 1 家门店</button>
+      </div>
+    `;
+  } else {
+    const nextIndex = stores.findIndex(s => !s.done);
+    listEl.innerHTML = stores.map((s,i) => {
+      let statusClass, statusText;
+      if(s.done){statusClass='done';statusText='✓';}
+      else if(i===nextIndex){statusClass='now';statusText='前往';}
+      else {statusClass='next';statusText='待办';}
+      
+      const gradeClass = s.grade.startsWith('S') ? 's' : s.grade==='A' ? 'a' : s.grade==='B' ? 'b' : s.grade==='C' ? 'c' : 'd';
+      const distanceText = s.done ? '📍 已到' : (s.distance > 0 ? `📍 ${s.distance}km` : '📍 待出发');
+      
+      return `
+        <div class="task-card">
+          <div class="task-row">
+            <div class="task-num">${i+1}</div>
+            <div class="task-info">
+              <div class="task-store">${s.name}</div>
+              <div class="task-meta">
+                <span class="grade ${gradeClass}">${s.grade}</span>
+                <span style="color:var(--teal)">${s.type}</span>
+                <span>${distanceText}</span>
+                <span>💰 ¥${s.rev}万/月</span>
+              </div>
+            </div>
+            <div class="task-status ${statusClass}">${statusText}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  
+  // Bubble动态
+  const bubbleEl = document.getElementById('dsr-bubble');
+  if(N === 0){
+    bubbleEl.innerHTML = `王DSR · 当前还没有服务门店 · 点击"+ 新增门店"开始。`;
+  } else if(doneCount === N){
+    bubbleEl.innerHTML = `王DSR · <strong style="color:var(--green)">今日 N=${N} 全部完成 ✓</strong> · 月销 ¥${totalRev}万 · 干得漂亮!`;
+  } else {
+    const next = stores[stores.findIndex(s => !s.done)];
+    bubbleEl.innerHTML = `王DSR 早 · 你是<strong>明发的DSR</strong>·浦东片区 · 已完成 <strong>${doneCount}/${N}</strong> · 下一站 <strong>${next.name}</strong> ${next.distance>0?next.distance+'km':''} · 月销 ¥${totalRev}万。`;
+  }
+}
+
+function dsrAddStore(){
+  const used = dsrStores.map(s=>s.name);
+  const available = STORE_POOL_DSR.find(s=>!used.includes(s.name));
+  if(available){
+    dsrStores.push({...available, done:false});
+    renderDsr();
+  } else {
+    alert('已添加全部 ' + STORE_POOL_DSR.length + ' 家候选门店');
+  }
+}
+function dsrRemoveStore(){
+  if(dsrStores.length>0){dsrStores.pop();renderDsr();}
+}
+function dsrCheckIn(){
+  const nextIndex = dsrStores.findIndex(s => !s.done);
+  if(nextIndex >= 0){
+    dsrStores[nextIndex].done = true;
+    renderDsr();
+  } else {
+    alert('今日 N = ' + dsrStores.length + ' 家门店全部完成 ✓');
+  }
+}
+function dsrReset(){
+  dsrStores = STORE_POOL_DSR.slice(0,8).map(s=>({...s, done:false}));
+  dsrInitDone();
+  renderDsr();
+}
+renderDsr();
+
+// ═══════════════════════════════════════
+// 经销商美顾 (DBC) · 动态门店数 (常驻/巡回灵活)
+// ═══════════════════════════════════════
+
+// 经销商美顾门店候选池 (类型偏明发自营和深度合伙门店)
+const STORE_POOL_DBC = [
+  {code:'好',name:'好邻居 世纪大道店',type:'明发自营·S+',cbBase:25,photos:5,dailyCustomers:120},
+  {code:'家',name:'家乐福 八佰伴店',type:'KA合作·S+',cbBase:22,photos:4,dailyCustomers:200},
+  {code:'盒',name:'盒马 浦东店',type:'KA合作·S+',cbBase:25,photos:5,dailyCustomers:180},
+  {code:'山',name:'山姆 浦东店',type:'KA合作·S+',cbBase:28,photos:5,dailyCustomers:150},
+  {code:'罗',name:'罗森 张江高科店',type:'明发自营·S',cbBase:18,photos:3,dailyCustomers:80},
+  {code:'欧',name:'欧尚 龙之梦店',type:'KA合作·A',cbBase:18,photos:4,dailyCustomers:100},
+  {code:'7',name:'7-11 虹桥南丰',type:'连锁·B',cbBase:14,photos:3,dailyCustomers:60},
+  {code:'物',name:'物美 仙霞路店',type:'连锁·B',cbBase:12,photos:3,dailyCustomers:50}
+];
+
+// 默认 1 家(常驻模式) · 可加成多店
+let dbcStores = STORE_POOL_DBC.slice(0,1).map(s => ({...s, done:false}));
+
+function renderDbc(){
+  const N = dbcStores.length;
+  const stores = dbcStores;
+  const doneStores = stores.filter(s => s.done);
+  const doneCount = doneStores.length;
+  const totalCB = doneStores.reduce((sum,s) => sum + s.cbBase, 0);
+  const totalPhotos = doneStores.reduce((sum,s) => sum + s.photos, 0);
+  const isResident = N === 1;
+  const monthlyCB = totalCB + 540; // 历史累计 + 今日
+  
+  // 顶部信息
+  document.getElementById('dbc-cb-val').textContent = monthlyCB;
+  document.getElementById('dbc-role-line').innerHTML = 
+    N === 0
+      ? '明发员工 · <strong style="color:var(--red)">N = 0 · 暂无门店</strong>'
+      : isResident
+        ? `明发员工 · <strong style="color:var(--green)">常驻模式</strong> · ${stores[0].name}`
+        : `明发员工 · <strong style="color:var(--teal)">巡回模式 N = ${N}</strong> · 已完成 ${doneCount}/${N}`;
+  
+  // KPI
+  document.getElementById('dbc-kpi-n').textContent = N;
+  document.getElementById('dbc-kpi-done').textContent = doneCount;
+  document.getElementById('dbc-kpi-cb').textContent = totalCB;
+  document.getElementById('dbc-kpi-photos').textContent = totalPhotos;
+  
+  // 标题
+  const modeText = isResident ? '常驻深耕' : '巡回多点';
+  document.getElementById('dbc-list-title').textContent = `🎯 服务门店 · N = ${N} · ${modeText}`;
+  document.getElementById('dbc-list-meta').textContent = 
+    `${doneCount}/${N} 完成 · CB ${totalCB} 分`;
+  
+  // 列表渲染
+  const listEl = document.getElementById('dbc-list');
+  if(N === 0){
+    listEl.innerHTML = `
+      <div style="padding:32px 16px;text-align:center;background:var(--card);border:1px dashed var(--border);border-radius:10px;color:var(--text3);font-size:12px">
+        当前 N = 0 · 暂无服务门店<br>
+        <button onclick="dbcAddStore()" style="margin-top:12px;background:var(--teal);border:none;border-radius:6px;padding:8px 18px;font-size:12px;font-weight:600;color:#000;cursor:pointer;font-family:inherit">+ 添加第 1 家(常驻模式)</button>
+      </div>
+    `;
+  } else {
+    const nextIndex = stores.findIndex(s => !s.done);
+    
+    listEl.innerHTML = stores.map((s,i) => {
+      let statusClass, statusText;
+      if(s.done){statusClass='done';statusText=`✓ +${s.cbBase} CB`;}
+      else if(i===nextIndex){statusClass='now';statusText=isResident?'进行中':'前往';}
+      else {statusClass='next';statusText='待办';}
+      
+      // 每家门店有具体任务
+      const taskList = `
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+          <span style="font-size:10px;color:var(--text3);padding:2px 6px;background:var(--bg3);border-radius:4px">📷 陈列 ${s.photos}张</span>
+          <span style="font-size:10px;color:var(--text3);padding:2px 6px;background:var(--bg3);border-radius:4px">👥 客流 ~${s.dailyCustomers}</span>
+          <span style="font-size:10px;color:var(--amber);padding:2px 6px;background:var(--amber-dim);border-radius:4px">⭐ 战略SKU 5位</span>
+        </div>
+      `;
+      
+      return `
+        <div class="task-card">
+          <div class="task-row">
+            <div class="task-num" style="background:${s.done?'var(--green-dim)':'var(--teal-dim)'};color:${s.done?'var(--green)':'var(--teal)'}">${i+1}</div>
+            <div class="task-info">
+              <div class="task-store">${s.name}</div>
+              <div class="task-meta">
+                <span style="color:var(--teal)">${s.type}</span>
+                <span>📊 +${s.cbBase} CB</span>
+              </div>
+              ${taskList}
+            </div>
+            <div class="task-status ${statusClass}">${statusText}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  
+  // Bubble动态
+  const bubbleEl = document.getElementById('dbc-bubble');
+  const statusEl = document.getElementById('dbc-agent-status');
+  if(N === 0){
+    bubbleEl.innerHTML = `林老师 · 当前没有服务门店 · 点击"+ 新增门店"开始 · N=1是常驻模式 · N≥2是巡回模式。`;
+    statusEl.textContent = '在线 · 等待门店分配';
+  } else if(N === 1){
+    const s = stores[0];
+    bubbleEl.innerHTML = `林老师 · 你是<strong>明发的美顾</strong> · 当前<strong style="color:var(--green)">常驻模式</strong> · ${s.name}(${s.type}) · 今日 ${s.done?'已完成':'进行中'} · CB ${s.done?'+'+s.cbBase:'目标 '+s.cbBase} · 月累计 ${monthlyCB} 分。`;
+    statusEl.textContent = `在线 · 常驻 · CB +${totalCB}`;
+  } else if(doneCount === N){
+    bubbleEl.innerHTML = `林老师 · <strong style="color:var(--green)">巡回 N=${N} 全部完成 ✓</strong> · 今日 CB +${totalCB} · 拍照 ${totalPhotos} 张 · 月累计 ${monthlyCB} 分 · 干得漂亮!`;
+    statusEl.textContent = `在线 · 全部完成 · CB +${totalCB}`;
+  } else {
+    const next = stores[stores.findIndex(s => !s.done)];
+    const remainingCB = stores.filter(s=>!s.done).reduce((sum,s)=>sum+s.cbBase,0);
+    bubbleEl.innerHTML = `林老师 · 你是<strong>明发的美顾</strong> · <strong style="color:var(--teal)">巡回模式 N=${N}</strong> · 已完成 ${doneCount}/${N} · 下一站 <strong>${next.name}</strong> · 已得 CB ${totalCB} 分 · 完成全部还可 +${remainingCB}。`;
+    statusEl.textContent = `在线 · 巡回 ${doneCount}/${N} · CB +${totalCB}`;
+  }
+}
+
+function dbcAddStore(){
+  const used = dbcStores.map(s=>s.name);
+  const available = STORE_POOL_DBC.find(s=>!used.includes(s.name));
+  if(available){
+    dbcStores.push({...available, done:false});
+    renderDbc();
+  } else {
+    alert('已添加全部 ' + STORE_POOL_DBC.length + ' 家候选门店');
+  }
+}
+function dbcRemoveStore(){
+  if(dbcStores.length>0){dbcStores.pop();renderDbc();}
+}
+function dbcCheckIn(){
+  const nextIndex = dbcStores.findIndex(s => !s.done);
+  if(nextIndex >= 0){
+    dbcStores[nextIndex].done = true;
+    renderDbc();
+  } else {
+    alert('N = ' + dbcStores.length + ' 家门店全部完成 ✓');
+  }
+}
+function dbcReset(){
+  dbcStores = STORE_POOL_DBC.slice(0,1).map(s=>({...s, done:false}));
+  renderDbc();
+}
+renderDbc();
+
+// ═══════════════════════════════════════
+async function ask(q, role){
+  if(!q || !q.trim()) return;
+  const inputEl = document.getElementById('input-'+role);
+  if(inputEl) inputEl.value = '';
+  
+  const respEl = document.getElementById('response-'+role);
+  const qEl = document.getElementById('q-'+role);
+  const aEl = document.getElementById('a-'+role);
+  if(!respEl) return;
+  
+  respEl.classList.add('show');
+  qEl.textContent = '问 · ' + q;
+  aEl.innerHTML = '<div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  
+  const ROLE_PROMPTS = {
+    'dsr':`你是欣和SH INFINITY OS V1.2中"明发商贸"经销商雇的DSR(王小明)的Agent。
+
+身份关键:
+- 你是<strong>明发的DSR</strong>·不是欣和的DSR
+- 用DSFA系统(D=Distributor)·不是SFA
+- 工资由明发发·不是欣和
+- 老板是李老板(明发)·向他汇报
+- 但CB分等激励参与欣和体系(双方共享)
+
+当前情景:
+- 王小明·浦东片区·服务${dsrStores.length}家门店
+- 已完成${dsrStores.filter(s=>s.done).length}家
+- 月销¥${dsrStores.reduce((s,st)=>s+st.rev,0)}万
+
+立场:
+- 帮王DSR分析门店推单
+- 帮他和明发其他DSR比较
+- 帮他冲战略SKU·拿欣和+明发双方激励
+- 不站欣和立场说"配合欣和"·而是站王自己立场说"如何拿更多激励"`,
+
+    'dbc':`你是欣和SH INFINITY OS V1.2中"明发商贸"经销商雇的美顾(林老师)的Agent。
+
+身份关键:
+- 你是<strong>明发的美顾</strong>·不是欣和的美顾
+- 用DSFA系统·不是SFA
+- 工资由明发发·任务由明发DSR派
+- 服务模式灵活:N=1常驻深耕 / N≥2多点巡回
+- CB分参与欣和体系(明发+欣和共同激励)
+
+当前情景(动态):
+- 林老师 · 服务${dbcStores.length}家门店
+- 模式:${dbcStores.length===1?'常驻深耕':'多点巡回 N='+dbcStores.length}
+- 今日完成${dbcStores.filter(s=>s.done).length}家
+- 今日CB +${dbcStores.filter(s=>s.done).reduce((sum,s)=>sum+s.cbBase,0)}
+
+立场:
+- 帮林老师拿更多CB
+- 常驻模式:深耕单店·提升客流转化
+- 巡回模式:优化路线·多店覆盖
+- 战略SKU推广要重点(每店5位消费者)
+
+V1.2合伙人制三大原则:真实·速度·精准可靠
+用中文≤200字·直接给要点·明发立场。`
+  };
+  
+  try{
+    const r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:ROLE_PROMPTS[role] || ROLE_PROMPTS['dsr'],
+        messages:[{role:'user',content:q}]
+      })
+    });
+    const d = await r.json();
+    const txt = d.content?.map(c=>c.text||'').join('') || '暂无回答';
+    aEl.innerHTML = '<div style="white-space:pre-wrap">' + txt + '</div>';
+  }catch(e){
+    aEl.innerHTML = '<div style="color:var(--red);font-size:11px">⚠️ ' + e.message + '</div>';
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>欣和 · 微信 H5 · 门店 + 消费者</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf8f3;
+  --bg-card: #ffffff;
+  --bg-soft: #f5f3ed;
+  --bg-warm: #fdf9ed;
+  --line: #e8e4d8;
+  --line-2: #d4cfbd;
+  --text: #1a1a20;
+  --text-2: #4a4a52;
+  --text-3: #8a8a90;
+  --text-4: #b4b0a4;
+  --amber: #b8862e;
+  --amber-2: #d4a946;
+  --amber-bg: #fdf6e3;
+  --amber-line: rgba(184,134,46,0.3);
+  --green: #5f8c63;
+  --green-bg: rgba(95,140,99,0.1);
+  --red: #a84a3e;
+  --red-bg: rgba(168,74,62,0.08);
+  --blue: #4a6a8a;
+  --blue-bg: rgba(74,106,138,0.08);
+  --orange: #d97a4a;
+  --orange-bg: rgba(217,122,74,0.1);
+  
+  /* 消费者C端·暖色 */
+  --c-bg: #fff8f0;
+  --c-card: #ffffff;
+  --c-warm: #fff2dc;
+  --c-accent: #e8704a;
+  --c-accent-2: #f29662;
+  --c-accent-bg: #fff0e8;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:14px;
+  line-height:1.7;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* 模拟手机壳·限制宽度 */
+.phone-frame{
+  max-width:420px;
+  margin:0 auto;
+  min-height:100vh;
+  background:var(--bg);
+  position:relative;
+  box-shadow:0 0 40px rgba(0,0,0,0.08);
+}
+
+/* 角色切换 · 顶部 */
+.role-bar{
+  position:sticky;top:0;z-index:200;
+  background:rgba(250,248,243,0.96);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--amber-line);
+  padding:12px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.role-bar.consumer{
+  background:rgba(255,248,240,0.96);
+  border-bottom-color:rgba(232,112,74,0.3);
+}
+.role-logo{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.role-logo-sym{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,#b8862e,#d4a946);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;
+  font-weight:700;font-size:16px;font-style:italic;color:#fff;
+  flex-shrink:0;
+}
+.role-bar.consumer .role-logo-sym{
+  background:linear-gradient(135deg,#e8704a,#f29662);
+}
+.role-logo-info{flex:1;min-width:0}
+.role-logo-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:15px;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.role-logo-name em{color:var(--amber);font-style:italic}
+.role-bar.consumer .role-logo-name em{color:var(--c-accent)}
+.role-logo-tag{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  color:var(--text-3);letter-spacing:0.15em;text-transform:uppercase;
+}
+
+.role-switch-btns{display:flex;gap:5px}
+.role-btn{
+  background:var(--bg-soft);
+  border:1px solid var(--line-2);
+  border-radius:14px;
+  padding:5px 10px;
+  font-size:10px;
+  color:var(--text-2);
+  cursor:pointer;
+  font-family:inherit;
+  transition:all 0.15s;
+  white-space:nowrap;
+}
+.role-btn.active{
+  background:var(--amber);
+  color:#fff;border-color:var(--amber);
+}
+.role-bar.consumer .role-btn.active{
+  background:var(--c-accent);
+  border-color:var(--c-accent);
+}
+
+/* 主体容器 */
+.h5-main{
+  padding:14px;
+  padding-bottom:80px;
+}
+.h5-main.consumer{background:var(--c-bg)}
+
+/* 视图切换 */
+.h5-view{display:none;animation:fadeIn 0.3s ease}
+.h5-view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════ 门店 H5 ═══════════ */
+
+/* Hero · 门店 */
+.store-hero{
+  background:linear-gradient(135deg,var(--bg-card) 0%,var(--bg-warm) 100%);
+  border:1px solid var(--amber-line);
+  border-radius:14px;
+  padding:18px 20px;
+  margin-bottom:14px;
+  position:relative;overflow:hidden;
+}
+.store-hero::before{
+  content:'';position:absolute;
+  top:-60px;right:-60px;width:160px;height:160px;
+  background:radial-gradient(circle,rgba(184,134,46,0.1) 0%,transparent 70%);
+  pointer-events:none;
+}
+.store-greeting{
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;font-weight:600;
+  margin-bottom:4px;
+}
+.store-greeting em{color:var(--amber);font-style:italic}
+.store-meta{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;color:var(--text-3);
+  letter-spacing:0.1em;text-transform:uppercase;
+}
+.store-quick-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:8px;margin-top:14px;
+  position:relative;
+}
+.qs-item{
+  background:var(--bg-soft);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:8px 6px;text-align:center;
+}
+.qs-val{
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px;font-weight:700;font-style:italic;
+  color:var(--amber);line-height:1;
+}
+.qs-lbl{
+  font-size:9px;color:var(--text-3);
+  font-family:'JetBrains Mono',monospace;
+  letter-spacing:0.05em;margin-top:3px;
+}
+
+/* 卡片标题 */
+.h5-section{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:14px 16px;
+  margin-bottom:12px;
+}
+.h5-sec-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;padding-bottom:10px;
+  border-bottom:1px solid var(--line);
+}
+.h5-sec-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:16px;font-weight:600;
+}
+.h5-sec-title em{color:var(--amber);font-style:italic}
+.h5-sec-action{
+  font-size:11px;color:var(--amber);font-weight:600;
+  cursor:pointer;
+}
+
+/* 蒸腾自查·门店核心 */
+.evapo-self{
+  background:linear-gradient(135deg,var(--green-bg),transparent);
+  border:1px solid var(--green);
+  border-left:4px solid var(--green);
+  border-radius:10px;
+  padding:14px;margin-bottom:10px;
+}
+.evapo-self.warn{background:linear-gradient(135deg,var(--amber-bg),transparent);border-color:var(--amber);border-left-color:var(--amber)}
+.evapo-self.bad{background:linear-gradient(135deg,var(--red-bg),transparent);border-color:var(--red);border-left-color:var(--red)}
+.es-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:0.15em;
+  font-weight:700;text-transform:uppercase;margin-bottom:6px;
+}
+.evapo-self .es-label{color:var(--green)}
+.evapo-self.warn .es-label{color:var(--amber)}
+.evapo-self.bad .es-label{color:var(--red)}
+.es-content{font-size:13px;color:var(--text-2);line-height:1.6}
+.es-content strong{font-weight:600}
+.evapo-self strong{color:var(--green)}
+.evapo-self.warn strong{color:var(--amber)}
+.evapo-self.bad strong{color:var(--red)}
+
+/* 补货建议·SKU 列表 */
+.sku-suggest{
+  background:var(--bg-soft);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:12px 14px;
+  margin-bottom:6px;
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  gap:10px;align-items:center;
+  cursor:pointer;
+}
+.sku-suggest:active{transform:scale(0.98)}
+.sku-name{font-size:13px;font-weight:600;margin-bottom:3px}
+.sku-meta{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;color:var(--text-3);letter-spacing:0.05em;
+}
+.sku-qty{
+  text-align:right;
+}
+.sku-qty-val{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-weight:700;
+  color:var(--amber);font-size:18px;line-height:1;
+}
+.sku-qty-lbl{
+  font-size:9px;color:var(--text-3);
+  font-family:'JetBrains Mono',monospace;letter-spacing:0.05em;
+}
+.sku-act-btn{
+  background:var(--amber);color:#fff;
+  border:none;border-radius:8px;
+  padding:6px 10px;font-size:10px;font-weight:600;
+  font-family:inherit;cursor:pointer;
+}
+
+/* 收益统计 */
+.earnings{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:8px;
+}
+.earning-card{
+  background:var(--bg-soft);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:14px;
+  cursor:pointer;
+}
+.earning-card.highlight{
+  background:linear-gradient(135deg,var(--amber-bg),transparent);
+  border-color:var(--amber);
+}
+.earning-val{
+  font-family:'Cormorant Garamond',serif;
+  font-size:22px;font-weight:700;font-style:italic;
+  color:var(--text);line-height:1;margin-bottom:4px;
+}
+.earning-card.highlight .earning-val{color:var(--amber)}
+.earning-trend{font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:600;margin-bottom:3px}
+.earning-trend.up{color:var(--green)}
+.earning-lbl{
+  font-size:11px;color:var(--text-3);
+}
+
+/* AI 对话气泡 */
+.h5-ai-box{
+  background:linear-gradient(135deg,var(--bg-card),var(--bg-warm));
+  border:1px solid var(--amber-line);
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:12px;
+}
+.ai-box-hdr{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+}
+.ai-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--amber-2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;color:#fff;
+}
+.role-bar.consumer ~ .h5-main .ai-avatar,
+.h5-main.consumer .ai-avatar{
+  background:linear-gradient(135deg,var(--c-accent),var(--c-accent-2));
+}
+.ai-box-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:14px;font-weight:600;
+}
+.ai-box-name em{color:var(--amber);font-style:italic}
+.h5-main.consumer .ai-box-name em{color:var(--c-accent)}
+.ai-box-quick{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;color:var(--text-3);
+  letter-spacing:0.1em;text-transform:uppercase;
+}
+
+.ai-input-wrap{
+  display:flex;gap:8px;
+  background:var(--bg-soft);
+  border:2px solid var(--line);
+  border-radius:12px;
+  padding:4px 4px 4px 14px;
+  transition:border-color 0.15s;
+}
+.ai-input-wrap:focus-within{border-color:var(--amber)}
+.h5-main.consumer .ai-input-wrap:focus-within{border-color:var(--c-accent)}
+.ai-input{
+  flex:1;background:transparent;border:none;
+  padding:9px 0;font-size:13px;color:var(--text);
+  outline:none;font-family:inherit;
+}
+.ai-input::placeholder{color:var(--text-4)}
+.ai-send{
+  width:36px;height:36px;border-radius:9px;
+  background:var(--amber);border:none;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;color:#fff;flex-shrink:0;
+}
+.h5-main.consumer .ai-send{background:var(--c-accent)}
+
+/* 快捷问按钮 */
+.quick-asks{
+  display:flex;gap:6px;flex-wrap:wrap;
+  margin-top:10px;padding-top:10px;
+  border-top:1px solid var(--line);
+}
+.qa-chip{
+  background:var(--bg-soft);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:5px 10px;
+  font-size:11px;color:var(--text-2);
+  cursor:pointer;font-family:inherit;
+}
+.qa-chip:hover{border-color:var(--amber);color:var(--amber)}
+.h5-main.consumer .qa-chip:hover{border-color:var(--c-accent);color:var(--c-accent)}
+
+/* 对话区 */
+.h5-conversation{display:none;margin-top:12px}
+.h5-conversation.has-content{display:block}
+.h5-msg{margin-bottom:10px;animation:slideUp 0.3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg-user{display:flex;justify-content:flex-end}
+.msg-user-bubble{
+  background:var(--amber);color:#fff;
+  padding:9px 14px;border-radius:16px 16px 4px 16px;
+  font-size:12px;max-width:78%;line-height:1.5;
+}
+.h5-main.consumer .msg-user-bubble{background:var(--c-accent)}
+.msg-ai{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-left:3px solid var(--amber);
+  border-radius:12px;
+  padding:12px 14px;
+}
+.h5-main.consumer .msg-ai{border-left-color:var(--c-accent)}
+.msg-ai-content{font-size:12px;color:var(--text);line-height:1.7;white-space:pre-wrap}
+.msg-ai-content strong{color:var(--amber)}
+.h5-main.consumer .msg-ai-content strong{color:var(--c-accent)}
+.thinking{display:flex;gap:4px;align-items:center;padding:6px 0}
+.td{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:td 1.2s infinite}
+.h5-main.consumer .td{background:var(--c-accent)}
+.td:nth-child(2){animation-delay:0.2s}
+.td:nth-child(3){animation-delay:0.4s}
+@keyframes td{0%,80%,100%{opacity:0.2;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
+
+/* 底部Tab */
+.h5-tabbar{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:420px;
+  background:rgba(255,255,255,0.96);
+  backdrop-filter:blur(20px);
+  border-top:1px solid var(--line);
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  z-index:200;padding:6px 0 max(8px,env(safe-area-inset-bottom));
+}
+.h5-tabbar.consumer{
+  background:rgba(255,248,240,0.96);
+  border-top-color:rgba(232,112,74,0.2);
+}
+.h5-tab{
+  display:flex;flex-direction:column;align-items:center;
+  padding:6px 4px;cursor:pointer;
+}
+.h5-tab-icon{font-size:18px;margin-bottom:2px}
+.h5-tab-name{
+  font-size:10px;color:var(--text-3);
+}
+.h5-tab.active .h5-tab-name{color:var(--amber);font-weight:600}
+.h5-tabbar.consumer .h5-tab.active .h5-tab-name{color:var(--c-accent)}
+
+/* ═══════════ 消费者 H5 ═══════════ */
+
+/* Hero · 消费者(暖色) */
+.consumer-hero{
+  background:linear-gradient(135deg,var(--c-card),var(--c-warm));
+  border:1px solid rgba(232,112,74,0.2);
+  border-radius:18px;
+  padding:18px 20px;
+  margin-bottom:14px;
+  position:relative;overflow:hidden;
+}
+.consumer-hero::before{
+  content:'';position:absolute;
+  top:-60px;right:-60px;width:160px;height:160px;
+  background:radial-gradient(circle,rgba(232,112,74,0.12) 0%,transparent 70%);
+}
+.c-greeting{
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;font-weight:600;
+  margin-bottom:4px;
+}
+.c-greeting em{color:var(--c-accent);font-style:italic}
+.c-meta{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;color:var(--text-3);
+  letter-spacing:0.1em;text-transform:uppercase;
+}
+.c-points{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:8px;margin-top:14px;position:relative;
+}
+.c-point{
+  background:var(--c-accent-bg);
+  border:1px solid rgba(232,112,74,0.2);
+  border-radius:10px;
+  padding:10px 6px;text-align:center;
+}
+.c-point-val{
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px;font-weight:700;font-style:italic;
+  color:var(--c-accent);line-height:1;
+}
+.c-point-lbl{
+  font-size:9px;color:var(--text-3);
+  font-family:'JetBrains Mono',monospace;
+  letter-spacing:0.05em;margin-top:3px;
+}
+
+.h5-section.consumer{
+  background:var(--c-card);
+  border-color:rgba(232,112,74,0.15);
+}
+.h5-section.consumer .h5-sec-title em{color:var(--c-accent)}
+.h5-section.consumer .h5-sec-action{color:var(--c-accent)}
+
+/* 食谱卡片 · 消费者 */
+.recipe-card{
+  background:linear-gradient(135deg,var(--c-warm),transparent);
+  border:1px solid rgba(232,112,74,0.2);
+  border-radius:12px;
+  padding:14px;margin-bottom:8px;
+  cursor:pointer;
+  display:grid;
+  grid-template-columns:60px 1fr;
+  gap:12px;align-items:center;
+}
+.recipe-icon{
+  width:60px;height:60px;border-radius:12px;
+  background:linear-gradient(135deg,var(--c-accent),var(--c-accent-2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;flex-shrink:0;
+}
+.recipe-info{}
+.recipe-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:15px;font-weight:600;margin-bottom:4px;
+}
+.recipe-meta{
+  font-size:11px;color:var(--text-3);line-height:1.5;
+}
+.recipe-tag{
+  display:inline-block;
+  background:var(--c-accent);color:#fff;
+  font-size:9px;font-weight:600;
+  padding:2px 6px;border-radius:8px;
+  margin-right:4px;margin-top:4px;
+}
+
+/* 优惠 · 消费者 */
+.deal-card{
+  background:var(--c-card);
+  border:1px solid rgba(232,112,74,0.2);
+  border-left:4px solid var(--c-accent);
+  border-radius:12px;
+  padding:14px;margin-bottom:8px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;align-items:center;
+  cursor:pointer;
+}
+.deal-info{}
+.deal-name{font-size:13px;font-weight:600;margin-bottom:3px}
+.deal-desc{font-size:11px;color:var(--text-3);line-height:1.5}
+.deal-price{
+  text-align:right;
+}
+.deal-orig{
+  font-size:11px;color:var(--text-3);
+  text-decoration:line-through;
+  font-family:'JetBrains Mono',monospace;
+}
+.deal-now{
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px;font-weight:700;font-style:italic;
+  color:var(--c-accent);line-height:1;
+}
+
+/* 我的资料 · 消费者 */
+.profile-row{
+  display:grid;
+  grid-template-columns:60px 1fr auto;
+  gap:12px;align-items:center;
+  padding:12px 0;
+  border-bottom:1px solid var(--line);
+}
+.profile-row:last-child{border:none}
+.profile-avatar{
+  width:60px;height:60px;border-radius:50%;
+  background:linear-gradient(135deg,var(--c-accent),var(--c-accent-2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;color:#fff;
+}
+.profile-info{}
+.profile-name{font-size:15px;font-weight:600;margin-bottom:3px}
+.profile-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;color:var(--c-accent);
+  letter-spacing:0.05em;text-transform:uppercase;
+}
+.profile-info-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 14px;
+  background:var(--bg-soft);
+  border-radius:8px;
+  margin-bottom:6px;
+  font-size:13px;
+}
+.profile-info-row .label{color:var(--text-3)}
+.profile-info-row .val{font-weight:600}
+
+/* 商品图片占位 */
+.product-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+.product-item{
+  background:var(--c-card);
+  border:1px solid rgba(232,112,74,0.15);
+  border-radius:10px;
+  overflow:hidden;
+  cursor:pointer;
+}
+.product-img{
+  height:100px;
+  background:linear-gradient(135deg,var(--c-warm),var(--c-accent-bg));
+  display:flex;align-items:center;justify-content:center;
+  font-size:38px;
+}
+.product-info{padding:10px}
+.product-name{font-size:12px;font-weight:600;margin-bottom:3px;line-height:1.3}
+.product-price{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-weight:700;
+  color:var(--c-accent);font-size:15px;
+}
+
+/* footer */
+.h5-ftr{
+  text-align:center;
+  margin-top:20px;padding:16px 0;
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:11px;color:var(--text-3);
+}
+
+/* Toast */
+.toast{
+  position:fixed;
+  top:calc(var(--toast-top,40%) + 0px);
+  left:50%;transform:translateX(-50%);
+  background:rgba(26,26,32,0.92);color:#fff;
+  padding:10px 22px;border-radius:24px;
+  font-size:13px;font-weight:500;
+  z-index:500;opacity:0;
+  transition:opacity 0.3s ease;
+  pointer-events:none;
+}
+.toast.show{opacity:1}
+
+::-webkit-scrollbar{width:0;height:0}
+</style>
+</head>
+<body>
+
+<div class="phone-frame" id="phone-frame">
+
+  <!-- 顶部角色栏 -->
+  <div class="role-bar" id="role-bar">
+    <div class="role-logo">
+      <div class="role-logo-sym" id="role-sym">∞</div>
+      <div class="role-logo-info">
+        <div class="role-logo-name" id="role-name">老张 · <em>老张便利店</em></div>
+        <div class="role-logo-tag" id="role-tag">STORE OWNER · 浦东新区</div>
+      </div>
+    </div>
+    <div class="role-switch-btns">
+      <button class="role-btn active" data-role="store" onclick="switchRole('store')">🏪 门店</button>
+      <button class="role-btn" data-role="consumer" onclick="switchRole('consumer')">👨 消费者</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ 门店主体 ═══════════ -->
+  <div class="h5-main" id="h5-main">
+    
+    <!-- 门店首页 -->
+    <div class="h5-view active" id="view-store-home">
+      
+      <!-- Hero -->
+      <div class="store-hero">
+        <div class="store-greeting" id="store-greeting">早上好 · 老张 · <em>欣和好</em></div>
+        <div class="store-meta" id="store-meta">加载中...</div>
+        <div class="store-quick-stats">
+          <div class="qs-item">
+            <div class="qs-val">¥3,420</div>
+            <div class="qs-lbl">今日销售</div>
+          </div>
+          <div class="qs-item">
+            <div class="qs-val">87</div>
+            <div class="qs-lbl">客流量</div>
+          </div>
+          <div class="qs-item">
+            <div class="qs-val">¥520</div>
+            <div class="qs-lbl">欣和系列</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 蒸腾自查 · 门店端核心新功能 -->
+      <div class="h5-section">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">我家店 · <em>蒸腾</em> 自查</div>
+          <div class="h5-sec-action" onclick="askStore('用蒸腾模型分析我们店本周·哪些SKU是真好卖·哪些是促销假象?')">详细 →</div>
+        </div>
+
+        <div class="evapo-self">
+          <div class="es-label">💧 真好卖 · GROWTH</div>
+          <div class="es-content">
+            <strong>六月鲜·有机系列</strong> 蒸腾↑15% · 销量↑13% · 真伪比 1.15<br>
+            消费者真在买·建议<strong>多备货</strong>
+          </div>
+        </div>
+
+        <div class="evapo-self warn">
+          <div class="es-label">⚠️ 促销假象 · WARN</div>
+          <div class="es-content">
+            <strong>味达美·常规</strong> 销量↑18% 但蒸腾仅↑1% · 真伪比 0.06<br>
+            <strong>促销过后会回落</strong>·别囤太多
+          </div>
+        </div>
+
+        <div class="evapo-self bad">
+          <div class="es-label">🚨 死货警示 · DEAD</div>
+          <div class="es-content">
+            <strong>小康·低价</strong> 库存压货 · 蒸腾↓5%<br>
+            建议<strong>降价清仓</strong>·避免占货架
+          </div>
+        </div>
+      </div>
+
+      <!-- 今日补货建议 -->
+      <div class="h5-section">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">今日 <em>补货</em> 建议</div>
+          <div class="h5-sec-action" onclick="askStore('今天为什么这样补货?基于什么数据?')">为什么 →</div>
+        </div>
+        <div id="sku-suggestions"></div>
+      </div>
+
+      <!-- 收益统计 -->
+      <div class="h5-section">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">这个月 · <em>赚多少</em></div>
+          <div class="h5-sec-action" onclick="askStore('这个月赚了多少?详细收入分析')">详情 →</div>
+        </div>
+        <div class="earnings">
+          <div class="earning-card highlight" onclick="askStore('欣和系列销售贡献分析·占比21%·毛利率约30%')">
+            <div class="earning-val">¥18,500</div>
+            <div class="earning-trend up">↑ +12% vs 上月</div>
+            <div class="earning-lbl">欣和系列销售</div>
+          </div>
+          <div class="earning-card" onclick="askStore('总销售额分析·全店所有品类')">
+            <div class="earning-val">¥86,400</div>
+            <div class="earning-trend up">↑ +8%</div>
+            <div class="earning-lbl">总销售额</div>
+          </div>
+          <div class="earning-card" onclick="askStore('返利分析·上月对比')">
+            <div class="earning-val">¥1,420</div>
+            <div class="earning-trend up">↑ +¥240</div>
+            <div class="earning-lbl">返利收入</div>
+          </div>
+          <div class="earning-card" onclick="askStore('S级评级·欣和合作详情')">
+            <div class="earning-val">S 级</div>
+            <div class="earning-trend up">深度合伙</div>
+            <div class="earning-lbl">欣和评级</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI 助手 -->
+      <div class="h5-ai-box">
+        <div class="ai-box-hdr">
+          <div class="ai-avatar">🧠</div>
+          <div>
+            <div class="ai-box-name">欣和 <em>店长助手</em></div>
+            <div class="ai-box-quick">问任何经营问题</div>
+          </div>
+        </div>
+        <div class="ai-input-wrap">
+          <input class="ai-input" id="store-input" placeholder="问·哪款利润高?要补货吗?" onkeydown="if(event.key==='Enter')askStore(this.value)">
+          <button class="ai-send" onclick="askStore(document.getElementById('store-input').value)">→</button>
+        </div>
+        <div class="quick-asks">
+          <div class="qa-chip" onclick="askStore('今天该重点推哪款?为什么?')">推哪款?</div>
+          <div class="qa-chip" onclick="askStore('库存多少天会用完?')">库存几天?</div>
+          <div class="qa-chip" onclick="askStore('陈列怎么改最好卖?')">陈列建议</div>
+          <div class="qa-chip" onclick="askStore('怎么提高客单价?')">客单价</div>
+          <div class="qa-chip" onclick="askStore('附近有没有窜货问题?')">窜货</div>
+        </div>
+      </div>
+
+      <div class="h5-conversation" id="store-conversation"></div>
+    </div>
+
+    <!-- 门店·订货 -->
+    <div class="h5-view" id="view-store-order">
+      <div class="h5-section">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">智能 <em>订货</em> 单</div>
+          <div class="h5-sec-action" onclick="askStore('Omakase推单逻辑解释·这次订货为什么这样组合?')">为什么 →</div>
+        </div>
+        <div style="background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:11px;color:var(--text-2);line-height:1.6">
+          💡 <strong style="color:var(--amber)">无菜单推单 · Omakase</strong> · Agent 已根据您店铺的蒸腾速率+库存水位自动算出最优组合·一键采纳
+        </div>
+        <div id="order-list"></div>
+        
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="role-btn" style="flex:1;padding:12px;font-size:12px;background:var(--bg-soft)" onclick="askStore('修改订货数量·为什么这样推?')">修改数量</button>
+          <button class="role-btn" style="flex:2;padding:12px;font-size:13px;background:var(--amber);color:#fff;border-color:var(--amber)" onclick="confirmOrder()">⚡ 一键下单 · ¥3,840</button>
+        </div>
+      </div>
+
+      <div class="h5-section">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">最近 <em>订单</em></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:var(--bg-soft);padding:12px 14px;border-radius:10px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;cursor:pointer" onclick="askStore('订单 #ORD-2026-0142 详情·当时为什么订这些?')">
+            <div>
+              <div style="font-size:13px;font-weight:600">2026.04.20 订单</div>
+              <div style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:0.05em;margin-top:2px">ORD-2026-0142 · 8 SKU · 已发货</div>
+            </div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--amber);font-size:16px">¥3,200</div>
+          </div>
+          <div style="background:var(--bg-soft);padding:12px 14px;border-radius:10px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;cursor:pointer" onclick="askStore('订单 #ORD-2026-0138 详情')">
+            <div>
+              <div style="font-size:13px;font-weight:600">2026.04.13 订单</div>
+              <div style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:0.05em;margin-top:2px">ORD-2026-0138 · 6 SKU · 已收货</div>
+            </div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--amber);font-size:16px">¥2,850</div>
+          </div>
+          <div style="background:var(--bg-soft);padding:12px 14px;border-radius:10px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;cursor:pointer" onclick="askStore('订单 #ORD-2026-0131 详情')">
+            <div>
+              <div style="font-size:13px;font-weight:600">2026.04.06 订单</div>
+              <div style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:0.05em;margin-top:2px">ORD-2026-0131 · 7 SKU · 已结清</div>
+            </div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--amber);font-size:16px">¥3,150</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 门店·我的 -->
+    <div class="h5-view" id="view-store-me">
+      <div class="h5-section">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">老张的 · <em>欣和合作档案</em></div>
+        </div>
+        <div class="profile-row">
+          <div class="profile-avatar">🧑</div>
+          <div class="profile-info">
+            <div class="profile-name">老张</div>
+            <div class="profile-tag">老张便利店 · 浦东新区</div>
+          </div>
+          <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--amber);font-size:24px">S</div>
+        </div>
+        
+        <div class="profile-info-row">
+          <span class="label">合作年限</span>
+          <span class="val">3 年 · S 级深度合伙</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="label">YTD 销售</span>
+          <span class="val" style="color:var(--amber)">¥345,600</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="label">YTD 返利</span>
+          <span class="val" style="color:var(--green)">¥4,820</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="label">CDI 评分</span>
+          <span class="val">88 / 100</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="label">DSR 联系人</span>
+          <span class="val">周小军 · 138****8888</span>
+        </div>
+      </div>
+
+      <div class="h5-section">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">承诺 · 价值 · <em>交易</em></div>
+        </div>
+        <div style="background:var(--blue-bg);border-left:3px solid var(--blue);border-radius:8px;padding:10px 14px;margin-bottom:8px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--blue);letter-spacing:0.15em;font-weight:700;margin-bottom:5px">📝 承诺 · COMMIT</div>
+          <div style="font-size:12px;color:var(--text-2);line-height:1.6">本月承诺销售额 ¥30,000 · 战略SKU(有机系列) ¥8,000</div>
+        </div>
+        <div style="background:var(--green-bg);border-left:3px solid var(--green);border-radius:8px;padding:10px 14px;margin-bottom:8px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--green);letter-spacing:0.15em;font-weight:700;margin-bottom:5px">💎 价值 · VALUE</div>
+          <div style="font-size:12px;color:var(--text-2);line-height:1.6">已达 <strong style="color:var(--green)">¥18,500 (62%)</strong> · 战略SKU达成 ¥4,200 (53%)</div>
+        </div>
+        <div style="background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:8px;padding:10px 14px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:0.15em;font-weight:700;margin-bottom:5px">💰 交易 · TRANSACTION</div>
+          <div style="font-size:12px;color:var(--text-2);line-height:1.6">本月预计返利 <strong style="color:var(--amber)">¥1,420</strong> · S级深度合伙加权 ×1.5</div>
+        </div>
+      </div>
+
+      <div class="h5-section">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">最近 <em>消息</em></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:var(--bg-soft);padding:10px 14px;border-radius:8px">
+            <div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:3px">🎁 4月深度合伙人激励</div>
+            <div style="font-size:11px;color:var(--text-3)">本月销售突破 ¥30,000 · 额外加返 ¥500</div>
+          </div>
+          <div style="background:var(--bg-soft);padding:10px 14px;border-radius:8px">
+            <div style="font-size:12px;font-weight:600;margin-bottom:3px">📦 周小军 已通知:六月鲜有机5月新品</div>
+            <div style="font-size:11px;color:var(--text-3)">下周三 周小军 上门展示新品·可预订</div>
+          </div>
+          <div style="background:var(--bg-soft);padding:10px 14px;border-radius:8px">
+            <div style="font-size:12px;font-weight:600;margin-bottom:3px">🏆 您是浦东 TOP 10 门店之一</div>
+            <div style="font-size:11px;color:var(--text-3)">CDI评分 88 · 排名第 7 · 持续保持</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 消费者主体 ═══════════ -->
+    
+    <!-- 消费者首页 -->
+    <div class="h5-view" id="view-consumer-home">
+      
+      <!-- Hero -->
+      <div class="consumer-hero">
+        <div class="c-greeting" id="consumer-greeting">早上好 · 小李 · <em>欢迎回来</em></div>
+        <div class="c-meta" id="consumer-meta">加载中...</div>
+        <div class="c-points">
+          <div class="c-point">
+            <div class="c-point-val">2,840</div>
+            <div class="c-point-lbl">积分</div>
+          </div>
+          <div class="c-point">
+            <div class="c-point-val">钻石</div>
+            <div class="c-point-lbl">会员等级</div>
+          </div>
+          <div class="c-point">
+            <div class="c-point-val">28</div>
+            <div class="c-point-lbl">YTD购买</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 今日推荐食谱 -->
+      <div class="h5-section consumer">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">今日 <em>推荐</em> 食谱</div>
+          <div class="h5-sec-action" onclick="askConsumer('给我推荐3道适合上班族的快手菜·要用六月鲜')">更多 →</div>
+        </div>
+        <div class="recipe-card" onclick="askConsumer('详细告诉我葱油鲜虾的做法·要用六月鲜的什么产品?')">
+          <div class="recipe-icon">🍤</div>
+          <div class="recipe-info">
+            <div class="recipe-name">葱油鲜虾</div>
+            <div class="recipe-meta">15分钟·下饭神器·适合 2-3 人</div>
+            <div>
+              <span class="recipe-tag">六月鲜</span>
+              <span class="recipe-tag" style="background:var(--green)">应季</span>
+            </div>
+          </div>
+        </div>
+        <div class="recipe-card" onclick="askConsumer('清蒸鲈鱼怎么做最鲜?用六月鲜哪款最合适?')">
+          <div class="recipe-icon">🐟</div>
+          <div class="recipe-info">
+            <div class="recipe-name">清蒸鲈鱼 · 鲜上加鲜</div>
+            <div class="recipe-meta">20分钟·宴客硬菜·六月鲜推荐</div>
+            <div>
+              <span class="recipe-tag">六月鲜</span>
+              <span class="recipe-tag" style="background:#d4a946">高端</span>
+            </div>
+          </div>
+        </div>
+        <div class="recipe-card" onclick="askConsumer('小白菜炒蘑菇·怎么用酱油提鲜?')">
+          <div class="recipe-icon">🥬</div>
+          <div class="recipe-info">
+            <div class="recipe-name">小白菜炒蘑菇</div>
+            <div class="recipe-meta">10分钟·清淡养生·禾然零添加</div>
+            <div>
+              <span class="recipe-tag" style="background:#5f8c63">禾然</span>
+              <span class="recipe-tag">健康</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 优惠活动 -->
+      <div class="h5-section consumer">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">本月 <em>会员</em> 优惠</div>
+          <div class="h5-sec-action" onclick="askConsumer('我能用什么优惠?详细列出来')">全部 →</div>
+        </div>
+        <div class="deal-card" onclick="askConsumer('六月鲜有机500ml礼盒优惠详情')">
+          <div class="deal-info">
+            <div class="deal-name">六月鲜·有机500ml</div>
+            <div class="deal-desc">钻石会员专享·限本月</div>
+          </div>
+          <div class="deal-price">
+            <div class="deal-orig">¥39.9</div>
+            <div class="deal-now">¥29.9</div>
+          </div>
+        </div>
+        <div class="deal-card" onclick="askConsumer('禾然套装优惠详情')">
+          <div class="deal-info">
+            <div class="deal-name">禾然·零添加 3瓶套装</div>
+            <div class="deal-desc">买2送1·全场包邮</div>
+          </div>
+          <div class="deal-price">
+            <div class="deal-orig">¥98</div>
+            <div class="deal-now">¥65</div>
+          </div>
+        </div>
+        <div class="deal-card" onclick="askConsumer('葱伴侣场景套装详情')">
+          <div class="deal-info">
+            <div class="deal-name">葱伴侣·场景餐桌套</div>
+            <div class="deal-desc">家庭用·满 ¥99 减 ¥20</div>
+          </div>
+          <div class="deal-price">
+            <div class="deal-orig">¥119</div>
+            <div class="deal-now">¥99</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 我的购买建议 · 蒸腾源头 -->
+      <div class="h5-section consumer">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">小李 · <em>购买</em> 习惯</div>
+          <div class="h5-sec-action" onclick="askConsumer('详细分析我的购买习惯')">详情 →</div>
+        </div>
+        <div style="background:linear-gradient(135deg,var(--c-warm),transparent);border:1px solid rgba(232,112,74,0.2);border-left:4px solid var(--c-accent);border-radius:10px;padding:12px 14px;margin-bottom:10px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--c-accent);letter-spacing:0.15em;font-weight:700;text-transform:uppercase;margin-bottom:6px">💧 您是欣和的 · 蒸腾源头</div>
+          <div style="font-size:12px;color:var(--text-2);line-height:1.7">
+            您每个月买 <strong style="color:var(--c-accent)">2-3 瓶</strong> 六月鲜·有机系列·<br>
+            是欣和判断"<strong>真需求</strong>"的关键信号。<br>
+            您的每一笔购买·都在影响下个月的工厂排产。
+          </div>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+          <div class="profile-info-row" style="margin:0">
+            <span class="label">最爱品牌</span>
+            <span class="val">六月鲜</span>
+          </div>
+          <div class="profile-info-row" style="margin:0">
+            <span class="label">复购周期</span>
+            <span class="val">14 天</span>
+          </div>
+          <div class="profile-info-row" style="margin:0">
+            <span class="label">月均消费</span>
+            <span class="val">¥186</span>
+          </div>
+          <div class="profile-info-row" style="margin:0">
+            <span class="label">家中库存</span>
+            <span class="val">~8 天</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI 美食助手 -->
+      <div class="h5-ai-box" style="background:linear-gradient(135deg,var(--c-card),var(--c-warm));border-color:rgba(232,112,74,0.2)">
+        <div class="ai-box-hdr">
+          <div class="ai-avatar">🍳</div>
+          <div>
+            <div class="ai-box-name">欣和 <em>美食助手</em></div>
+            <div class="ai-box-quick">问做菜·搭配·营养</div>
+          </div>
+        </div>
+        <div class="ai-input-wrap">
+          <input class="ai-input" id="consumer-input" placeholder="问·今晚吃什么?要怎么搭?" onkeydown="if(event.key==='Enter')askConsumer(this.value)">
+          <button class="ai-send" onclick="askConsumer(document.getElementById('consumer-input').value)">→</button>
+        </div>
+        <div class="quick-asks">
+          <div class="qa-chip" onclick="askConsumer('今晚吃什么·快手又好吃?')">今晚吃啥</div>
+          <div class="qa-chip" onclick="askConsumer('给孩子做饭·哪款最安全?')">儿童饮食</div>
+          <div class="qa-chip" onclick="askConsumer('低盐健康饮食推荐')">健康饮食</div>
+          <div class="qa-chip" onclick="askConsumer('六月鲜不同款式怎么选?')">怎么选</div>
+          <div class="qa-chip" onclick="askConsumer('请客的硬菜推荐')">宴客菜</div>
+        </div>
+      </div>
+
+      <div class="h5-conversation" id="consumer-conversation"></div>
+    </div>
+
+    <!-- 消费者·商城 -->
+    <div class="h5-view" id="view-consumer-shop">
+      <div class="h5-section consumer">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">欣和 · <em>会员</em> 商城</div>
+          <div class="h5-sec-action" onclick="askConsumer('给我推荐3款最值得买的')">推荐 →</div>
+        </div>
+        <div class="product-grid">
+          <div class="product-item">
+            <div class="product-img" onclick="askConsumer('六月鲜·有机500ml的产品详情·适合做哪些菜?')">🍶</div>
+            <div class="product-info">
+              <div class="product-name">六月鲜·有机500ml</div>
+              <div class="product-price">¥29.9</div>
+              <div style="display:flex;gap:4px;margin-top:6px">
+                <button onclick="addToCart('六月鲜·有机500ml','¥29.9')" style="flex:1;padding:6px;background:var(--bg-soft);border:1px solid var(--c-accent);color:var(--c-accent);border-radius:6px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer">加购</button>
+                <button onclick="buyNow('六月鲜·有机500ml','¥29.9')" style="flex:1;padding:6px;background:var(--c-accent);border:none;color:#fff;border-radius:6px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer">购买</button>
+              </div>
+            </div>
+          </div>
+          <div class="product-item">
+            <div class="product-img" onclick="askConsumer('六月鲜·高端礼盒的产品详情')">🎁</div>
+            <div class="product-info">
+              <div class="product-name">六月鲜·高端礼盒</div>
+              <div class="product-price">¥168</div>
+              <div style="display:flex;gap:4px;margin-top:6px">
+                <button onclick="addToCart('六月鲜·高端礼盒','¥168')" style="flex:1;padding:6px;background:var(--bg-soft);border:1px solid var(--c-accent);color:var(--c-accent);border-radius:6px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer">加购</button>
+                <button onclick="buyNow('六月鲜·高端礼盒','¥168')" style="flex:1;padding:6px;background:var(--c-accent);border:none;color:#fff;border-radius:6px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer">购买</button>
+              </div>
+            </div>
+          </div>
+          <div class="product-item">
+            <div class="product-img" onclick="askConsumer('禾然·零添加的产品特点·适合什么人群?')">🌿</div>
+            <div class="product-info">
+              <div class="product-name">禾然·零添加750ml</div>
+              <div class="product-price">¥35</div>
+              <div style="display:flex;gap:4px;margin-top:6px">
+                <button onclick="addToCart('禾然·零添加750ml','¥35')" style="flex:1;padding:6px;background:var(--bg-soft);border:1px solid var(--c-accent);color:var(--c-accent);border-radius:6px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer">加购</button>
+                <button onclick="buyNow('禾然·零添加750ml','¥35')" style="flex:1;padding:6px;background:var(--c-accent);border:none;color:#fff;border-radius:6px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer">购买</button>
+              </div>
+            </div>
+          </div>
+          <div class="product-item">
+            <div class="product-img" onclick="askConsumer('葱伴侣·场景定制的产品详情')">🌱</div>
+            <div class="product-info">
+              <div class="product-name">葱伴侣·场景定制</div>
+              <div class="product-price">¥45</div>
+              <div style="display:flex;gap:4px;margin-top:6px">
+                <button onclick="addToCart('葱伴侣·场景定制','¥45')" style="flex:1;padding:6px;background:var(--bg-soft);border:1px solid var(--c-accent);color:var(--c-accent);border-radius:6px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer">加购</button>
+                <button onclick="buyNow('葱伴侣·场景定制','¥45')" style="flex:1;padding:6px;background:var(--c-accent);border:none;color:#fff;border-radius:6px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer">购买</button>
+              </div>
+            </div>
+          </div>
+          <div class="product-item">
+            <div class="product-img" onclick="askConsumer('味达美·常规家用·性价比怎么样?')">🥢</div>
+            <div class="product-info">
+              <div class="product-name">味达美·家用装</div>
+              <div class="product-price">¥18</div>
+              <div style="display:flex;gap:4px;margin-top:6px">
+                <button onclick="addToCart('味达美·家用装','¥18')" style="flex:1;padding:6px;background:var(--bg-soft);border:1px solid var(--c-accent);color:var(--c-accent);border-radius:6px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer">加购</button>
+                <button onclick="buyNow('味达美·家用装','¥18')" style="flex:1;padding:6px;background:var(--c-accent);border:none;color:#fff;border-radius:6px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer">购买</button>
+              </div>
+            </div>
+          </div>
+          <div class="product-item">
+            <div class="product-img" onclick="askConsumer('小康·实惠款·适合哪些场景?')">📦</div>
+            <div class="product-info">
+              <div class="product-name">小康·实惠款</div>
+              <div class="product-price">¥9.9</div>
+              <div style="display:flex;gap:4px;margin-top:6px">
+                <button onclick="addToCart('小康·实惠款','¥9.9')" style="flex:1;padding:6px;background:var(--bg-soft);border:1px solid var(--c-accent);color:var(--c-accent);border-radius:6px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer">加购</button>
+                <button onclick="buyNow('小康·实惠款','¥9.9')" style="flex:1;padding:6px;background:var(--c-accent);border:none;color:#fff;border-radius:6px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer">购买</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 购物车浮动 -->
+        <div id="cart-bar" style="display:none;position:sticky;bottom:80px;margin-top:14px;background:var(--c-card);border:1px solid var(--c-accent);border-radius:12px;padding:12px 16px;align-items:center;justify-content:space-between;box-shadow:0 4px 20px rgba(232,112,74,0.15)">
+          <div>
+            <div style="font-size:12px;color:var(--text-3)">购物车 · <span id="cart-count">0</span> 件商品</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--c-accent);font-size:18px">¥<span id="cart-total">0</span></div>
+          </div>
+          <button onclick="checkout()" style="background:var(--c-accent);color:#fff;border:none;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer">结算 →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 消费者·我的 -->
+    <div class="h5-view" id="view-consumer-me">
+      <div class="h5-section consumer">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">小李 · <em>会员资料</em></div>
+        </div>
+        <div class="profile-row">
+          <div class="profile-avatar">👨</div>
+          <div class="profile-info">
+            <div class="profile-name">小李</div>
+            <div class="profile-tag">钻石会员 · 423 天</div>
+          </div>
+          <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--c-accent);font-size:24px">💎</div>
+        </div>
+        
+        <div class="profile-info-row">
+          <span class="label">会员积分</span>
+          <span class="val" style="color:var(--c-accent)">2,840</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="label">YTD 消费</span>
+          <span class="val">¥1,860</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="label">YTD 购买</span>
+          <span class="val">28 次 · 月均 2.8 次</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="label">最爱产品</span>
+          <span class="val">六月鲜·有机系列</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="label">复购率</span>
+          <span class="val">82%</span>
+        </div>
+      </div>
+
+      <div class="h5-section consumer">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">最近 <em>购买</em></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:var(--bg-soft);padding:10px 14px;border-radius:8px;display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center">
+            <div style="font-size:24px">🍶</div>
+            <div>
+              <div style="font-size:12px;font-weight:600">六月鲜·有机500ml</div>
+              <div style="font-size:10px;color:var(--text-3);margin-top:2px">2026.04.20</div>
+            </div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--c-accent);font-size:14px">¥29.9</div>
+          </div>
+          <div style="background:var(--bg-soft);padding:10px 14px;border-radius:8px;display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center">
+            <div style="font-size:24px">🌿</div>
+            <div>
+              <div style="font-size:12px;font-weight:600">禾然·零添加750ml ×2</div>
+              <div style="font-size:10px;color:var(--text-3);margin-top:2px">2026.04.15</div>
+            </div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--c-accent);font-size:14px">¥70</div>
+          </div>
+          <div style="background:var(--bg-soft);padding:10px 14px;border-radius:8px;display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center">
+            <div style="font-size:24px">🌱</div>
+            <div>
+              <div style="font-size:12px;font-weight:600">葱伴侣·场景定制</div>
+              <div style="font-size:10px;color:var(--text-3);margin-top:2px">2026.04.08</div>
+            </div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--c-accent);font-size:14px">¥45</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 您是蒸腾源头(消费者侧重要标签) -->
+      <div class="h5-section consumer">
+        <div class="h5-sec-hdr">
+          <div class="h5-sec-title">您 · 是欣和的 <em>蒸腾源头</em></div>
+        </div>
+        <div style="background:linear-gradient(135deg,var(--c-warm),transparent);border-radius:10px;padding:14px;font-size:12px;color:var(--text-2);line-height:1.8">
+          作为<strong style="color:var(--c-accent)">钻石会员</strong>·您每月购买的频率和品类·会被欣和INFINITY OS"<strong>蒸腾模型</strong>"识别为<strong>真实需求信号</strong>。<br><br>
+          这些信号自下而上传导:<br>
+          您 → 门店 → 经销商 → 仓储 → 工厂<br>
+          直接影响欣和下个月的<strong style="color:var(--c-accent)">生产排程</strong>和<strong style="color:var(--c-accent)">资源投入</strong>。<br><br>
+          您不是被动购买者·您是欣和决策的<strong>第一性输入</strong>。
+        </div>
+      </div>
+    </div>
+
+    <div class="h5-ftr">
+      —  <em>INFINITY OS</em> · 微信 H5 · 欣和 SH —
+    </div>
+
+  </div>
+
+  <!-- 底部Tab -->
+  <div class="h5-tabbar" id="h5-tabbar">
+    <div class="h5-tab active" data-tab="home" onclick="switchH5Tab('home')">
+      <div class="h5-tab-icon">🏠</div>
+      <div class="h5-tab-name">首页</div>
+    </div>
+    <div class="h5-tab" data-tab="middle" onclick="switchH5Tab('middle')">
+      <div class="h5-tab-icon" id="tab-middle-icon">📦</div>
+      <div class="h5-tab-name" id="tab-middle-name">订货</div>
+    </div>
+    <div class="h5-tab" data-tab="ai" onclick="askInline()">
+      <div class="h5-tab-icon">🧠</div>
+      <div class="h5-tab-name">AI</div>
+    </div>
+    <div class="h5-tab" data-tab="me" onclick="switchH5Tab('me')">
+      <div class="h5-tab-icon">👤</div>
+      <div class="h5-tab-name">我的</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+// 全局状态
+// ═══════════════════════════════════════
+let currentRole = 'store';
+let currentTab = 'home';
+let cart = [];  // 购物车(消费者侧)
+let storeHistory = [];  // 门店对话历史
+let consumerHistory = [];  // 消费者对话历史
+
+// 动态天数计算
+const STORE_OPENING = new Date('2022-09-01');
+const MEMBER_REGISTER = new Date('2024-12-30');
+const _today = new Date();
+const storeDays = Math.floor((_today - STORE_OPENING) / (1000*60*60*24));
+const memberDays = Math.floor((_today - MEMBER_REGISTER) / (1000*60*60*24));
+
+function switchRole(role){
+  currentRole = role;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.toggle('active', b.dataset.role === role));
+  
+  // 切角色 → 清购物车(避免跨角色串味)
+  cart = [];
+  updateCartBar();
+  
+  const bar = document.getElementById('role-bar');
+  const main = document.getElementById('h5-main');
+  const tabbar = document.getElementById('h5-tabbar');
+  
+  if(role === 'store'){
+    bar.classList.remove('consumer');
+    main.classList.remove('consumer');
+    tabbar.classList.remove('consumer');
+    document.getElementById('role-sym').textContent = '∞';
+    document.getElementById('role-name').innerHTML = '老张 · <em>老张便利店</em>';
+    document.getElementById('role-tag').textContent = 'STORE OWNER · 浦东新区';
+    document.getElementById('tab-middle-icon').textContent = '📦';
+    document.getElementById('tab-middle-name').textContent = '订货';
+    
+    // 清对话
+    document.getElementById('store-conversation').innerHTML = '';
+    document.getElementById('store-conversation').classList.remove('has-content');
+    storeHistory = [];
+    
+    showToast('已切换 · 老张 · 老张便利店');
+  } else {
+    bar.classList.add('consumer');
+    main.classList.add('consumer');
+    tabbar.classList.add('consumer');
+    document.getElementById('role-sym').textContent = '✦';
+    document.getElementById('role-name').innerHTML = '小李 · <em>钻石会员</em>';
+    document.getElementById('role-tag').textContent = `CONSUMER · ${memberDays} 天`;
+    document.getElementById('tab-middle-icon').textContent = '🛒';
+    document.getElementById('tab-middle-name').textContent = '商城';
+    
+    // 清对话
+    document.getElementById('consumer-conversation').innerHTML = '';
+    document.getElementById('consumer-conversation').classList.remove('has-content');
+    consumerHistory = [];
+    
+    showToast('已切换 · 小李 · 钻石会员');
+  }
+  
+  switchH5Tab('home');
+}
+
+function switchH5Tab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.h5-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.h5-view').forEach(v => v.classList.remove('active'));
+  
+  let viewId;
+  if(currentRole === 'store'){
+    viewId = tab === 'home' ? 'view-store-home' : 
+             tab === 'middle' ? 'view-store-order' : 
+             tab === 'me' ? 'view-store-me' : 'view-store-home';
+  } else {
+    viewId = tab === 'home' ? 'view-consumer-home' : 
+             tab === 'middle' ? 'view-consumer-shop' : 
+             tab === 'me' ? 'view-consumer-me' : 'view-consumer-home';
+  }
+  
+  document.getElementById(viewId)?.classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function askInline(){
+  // AI Tab → 直接focus到输入框
+  switchH5Tab('home');
+  setTimeout(() => {
+    const inp = currentRole === 'store' ? document.getElementById('store-input') : document.getElementById('consumer-input');
+    if(inp){
+      inp.focus();
+      inp.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  }, 200);
+}
+
+// ═══════════════════════════════════════
+// 补货建议 · 门店端
+// ═══════════════════════════════════════
+const SKU_SUGGESTIONS = [
+  {name:'六月鲜·有机500ml', meta:'1年级·战略SKU·真好卖', qty:24, unit:'瓶', evapo:'蒸腾↑15%'},
+  {name:'禾然·零添加750ml', meta:'2年级·健康趋势·复购高', qty:12, unit:'瓶', evapo:'蒸腾↑11%'},
+  {name:'六月鲜·高端礼盒', meta:'2年级·节前备货', qty:6, unit:'盒', evapo:'稳定'},
+  {name:'葱伴侣·场景定制', meta:'3年级·特色SKU', qty:8, unit:'瓶', evapo:'稳定'},
+  {name:'味达美·家用装', meta:'3年级·标准款', qty:18, unit:'瓶', evapo:'稳定'}
+];
+
+function renderSKUSuggestions(){
+  const html = SKU_SUGGESTIONS.map(s => `
+    <div class="sku-suggest" onclick="askStore('${s.name} 这次补 ${s.qty}${s.unit}·依据是什么?')">
+      <div>
+        <div class="sku-name">${s.name}</div>
+        <div class="sku-meta">${s.meta} · ${s.evapo}</div>
+      </div>
+      <div class="sku-qty">
+        <div class="sku-qty-val">${s.qty}</div>
+        <div class="sku-qty-lbl">${s.unit}</div>
+      </div>
+      <button class="sku-act-btn" onclick="event.stopPropagation();addToOrder('${s.name}',${s.qty})">+ 加</button>
+    </div>
+  `).join('');
+  document.getElementById('sku-suggestions').innerHTML = html;
+}
+
+// 智能订货单
+const ORDER_LIST_DATA = [
+  {name:'六月鲜·有机500ml', qty:24, unit:'瓶', price:18, total:432},
+  {name:'禾然·零添加750ml', qty:12, unit:'瓶', price:24, total:288},
+  {name:'六月鲜·高端礼盒', qty:6, unit:'盒', price:120, total:720},
+  {name:'葱伴侣·场景定制', qty:8, unit:'瓶', price:32, total:256},
+  {name:'味达美·家用装', qty:18, unit:'瓶', price:13, total:234},
+  {name:'小康·实惠款', qty:30, unit:'瓶', price:6, total:180}
+];
+
+function renderOrderList(){
+  const html = ORDER_LIST_DATA.map(o => `
+    <div class="sku-suggest">
+      <div>
+        <div class="sku-name">${o.name}</div>
+        <div class="sku-meta">¥${o.price}/${o.unit} · 小计 ¥${o.total}</div>
+      </div>
+      <div class="sku-qty">
+        <div class="sku-qty-val">${o.qty}</div>
+        <div class="sku-qty-lbl">${o.unit}</div>
+      </div>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--amber);font-size:14px">¥${o.total}</div>
+    </div>
+  `).join('');
+  document.getElementById('order-list').innerHTML = html;
+}
+
+function addToOrder(name, qty){
+  showToast(`✓ 已加入订货单 · ${name} ×${qty}`);
+}
+
+function confirmOrder(){
+  showToast('✓ 订单已提交·DSR周小军已收到通知');
+  setTimeout(() => switchH5Tab('home'), 1500);
+}
+
+// ═══════════════════════════════════════
+// 消费者购物车
+// ═══════════════════════════════════════
+
+function addToCart(name, priceStr){
+  const price = parseFloat(priceStr.replace('¥',''));
+  cart.push({name, price});
+  updateCartBar();
+  showToast(`✓ 已加入购物车 · ${name}`);
+}
+
+function buyNow(name, priceStr){
+  showToast(`✓ 立即购买 · ${name} ${priceStr} · 跳微信支付...`);
+  setTimeout(() => {
+    showToast('✓ 模拟付款成功 · 正在通知欣和增加蒸腾信号');
+  }, 1500);
+}
+
+function updateCartBar(){
+  const bar = document.getElementById('cart-bar');
+  if(!bar) return;
+  if(cart.length === 0){
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+  document.getElementById('cart-count').textContent = cart.length;
+  const total = cart.reduce((s,i) => s + i.price, 0);
+  document.getElementById('cart-total').textContent = total.toFixed(1);
+}
+
+function checkout(){
+  if(cart.length === 0) return;
+  const total = cart.reduce((s,i) => s + i.price, 0);
+  showToast(`✓ 结算 ${cart.length} 件 · ¥${total.toFixed(1)} · 跳微信支付...`);
+  setTimeout(() => {
+    showToast('✓ 模拟付款成功 · 您的购买已成为欣和的蒸腾信号');
+    cart = [];
+    updateCartBar();
+  }, 1500);
+}
+
+// ═══════════════════════════════════════
+// Toast
+// ═══════════════════════════════════════
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ═══════════════════════════════════════
+// 对话(真API)
+// ═══════════════════════════════════════
+
+async function askStore(q){
+  if(!q || !q.trim()) return;
+  document.getElementById('store-input').value = '';
+  const conv = document.getElementById('store-conversation');
+  conv.classList.add('has-content');
+  
+  const userMsg = document.createElement('div');
+  userMsg.className = 'h5-msg';
+  userMsg.innerHTML = `<div class="msg-user"><div class="msg-user-bubble">${q}</div></div>`;
+  conv.appendChild(userMsg);
+  
+  const aiMsg = document.createElement('div');
+  aiMsg.className = 'h5-msg';
+  aiMsg.innerHTML = `
+    <div class="msg-ai">
+      <div class="msg-ai-content"><div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>
+    </div>
+  `;
+  conv.appendChild(aiMsg);
+  
+  setTimeout(() => aiMsg.scrollIntoView({behavior:'smooth', block:'center'}), 100);
+  
+  const aiContent = aiMsg.querySelector('.msg-ai-content');
+  storeHistory.push({role:'user', content:q});
+  
+  const sys = `你是欣和SH INFINITY OS V1.2 微信H5·门店店长助手·老张(老张便利店)的副驾驶。
+
+【身份】
+- 服务老张·浦东新区S级深度合伙人门店·浦东TOP10之一
+- 帮老张做经营决策(补货·陈列·定价·客单价)
+- 基于蒸腾模型(消费者真实购买信号)给建议
+- 不是冰冷的数据·是接地气的建议
+
+【实时数据】
+- 今日销售¥3,420·客流87·欣和系列¥520
+- 月度欣和销售¥18,500(占比21%·毛利率约30%)·总¥86,400(↑12%)
+- YTD销售¥345,600·返利¥4,820
+- CDI 88分·浦东排第7
+- 合作3年S级·DSR是周小军
+
+【蒸腾自查】
+- 六月鲜有机:蒸腾↑15%·销量↑13%·真好卖→多备
+- 味达美常规:销量↑18%蒸腾↑1%·促销假象→别囤
+- 小康低价:蒸腾↓5%·死货→降价清
+
+【今日补货建议】
+六月鲜有机24瓶·禾然12瓶·礼盒6盒·葱伴侣8瓶·味达美18瓶
+
+【回答风格】
+1. 接地气·像真人店长助手
+2. 给具体数字和建议
+3. 不要太长(≤200字)
+4. 体现"用蒸腾判断真假需求"的思想
+5. 中文`;
+
+  try{
+    const r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1500,
+        system:sys,
+        messages:storeHistory.map(m => ({role:m.role, content:m.content}))
+      })
+    });
+    const d = await r.json();
+    const txt = d.content?.map(c=>c.text||'').join('') || '暂无回答';
+    storeHistory.push({role:'assistant', content:txt});
+    aiContent.innerHTML = '<div style="white-space:pre-wrap">' + txt + '</div>';
+  }catch(e){
+    aiContent.innerHTML = `<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`;
+    storeHistory.pop();
+  }
+}
+
+async function askConsumer(q){
+  if(!q || !q.trim()) return;
+  document.getElementById('consumer-input').value = '';
+  const conv = document.getElementById('consumer-conversation');
+  conv.classList.add('has-content');
+  
+  const userMsg = document.createElement('div');
+  userMsg.className = 'h5-msg';
+  userMsg.innerHTML = `<div class="msg-user"><div class="msg-user-bubble">${q}</div></div>`;
+  conv.appendChild(userMsg);
+  
+  const aiMsg = document.createElement('div');
+  aiMsg.className = 'h5-msg';
+  aiMsg.innerHTML = `
+    <div class="msg-ai">
+      <div class="msg-ai-content"><div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>
+    </div>
+  `;
+  conv.appendChild(aiMsg);
+  
+  setTimeout(() => aiMsg.scrollIntoView({behavior:'smooth', block:'center'}), 100);
+  
+  const aiContent = aiMsg.querySelector('.msg-ai-content');
+  consumerHistory.push({role:'user', content:q});
+  
+  const sys = `你是欣和SH INFINITY OS V1.2 微信H5·美食助手·小李(钻石会员)的好朋友。
+
+【身份】
+- 服务小李·钻石会员·423天·月均消费¥186
+- 推荐食谱·搭配·营养·使用欣和产品
+- 像朋友一样亲切·不要像销售员
+- 体现"消费者是蒸腾源头"的尊重
+
+【小李的资料】
+- 钻石会员·积分2840·复购率82%
+- 最爱:六月鲜·有机系列
+- 复购周期14天·家中库存约8天
+- YTD购买28次·消费¥1,860·月均2.8次·客单¥66
+
+【欣和产品矩阵】
+- 六月鲜·有机500ml(¥29.9)·首选高端
+- 六月鲜·高端礼盒(¥168)·送礼/宴客
+- 禾然·零添加(¥35)·健康+儿童
+- 葱伴侣·场景定制(¥45)·特色场景
+- 味达美·家用(¥18)·性价比
+- 小康·实惠款(¥9.9)·入门
+
+【回答风格】
+1. 像朋友·暖心·不要冷冰冰
+2. 给具体食谱/搭配·实用
+3. 不要太长(≤200字)
+4. 偶尔提醒"您的购买影响欣和决策"·让用户感觉自己重要
+5. 中文·亲切自然`;
+
+  try{
+    const r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1500,
+        system:sys,
+        messages:consumerHistory.map(m => ({role:m.role, content:m.content}))
+      })
+    });
+    const d = await r.json();
+    const txt = d.content?.map(c=>c.text||'').join('') || '暂无回答';
+    consumerHistory.push({role:'assistant', content:txt});
+    aiContent.innerHTML = '<div style="white-space:pre-wrap">' + txt + '</div>';
+  }catch(e){
+    aiContent.innerHTML = `<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`;
+    consumerHistory.pop();
+  }
+}
+
+// ═══════════════════════════════════════
+// 初始化
+// ═══════════════════════════════════════
+renderSKUSuggestions();
+renderOrderList();
+
+// footer日期
+const fd = new Date();
+const wk = ['日','一','二','三','四','五','六'][fd.getDay()];
+// 动态计算天数 · 已在顶部全局状态定义
+
+document.getElementById('store-meta').textContent = `${fd.getFullYear()}.${String(fd.getMonth()+1).padStart(2,'0')}.${String(fd.getDate()).padStart(2,'0')} 周${wk} · 营业第 ${storeDays.toLocaleString()} 天`;
+document.getElementById('consumer-meta').textContent = `${fd.getFullYear()}.${String(fd.getMonth()+1).padStart(2,'0')}.${String(fd.getDate()).padStart(2,'0')} · 会员第 ${memberDays} 天`;
+
+// 同步profile-tag里的天数
+document.querySelectorAll('.profile-tag').forEach(el => {
+  if(el.textContent.includes('423')) el.textContent = el.textContent.replace('423', memberDays);
+});
+
+// 时间问候
+function getTimeOfDay(){
+  const h = new Date().getHours();
+  if(h<11) return '早上好';
+  if(h<14) return '中午好';
+  if(h<18) return '下午好';
+  return '晚上好';
+}
+document.getElementById('store-greeting').innerHTML = `${getTimeOfDay()} · 老张 · <em>欣和好</em>`;
+document.getElementById('consumer-greeting').innerHTML = `${getTimeOfDay()} · 小李 · <em>欢迎回来</em>`;
+</script>
+
+</body>
+</html>
