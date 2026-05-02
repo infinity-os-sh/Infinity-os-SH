@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INFINITY OS · 派单互锁25步流程图</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Cormorant+Garamond:wght@500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0e; --bg2:#14141a; --bg3:#1a1a22;
+  --text:#f5f3ed; --text2:#b4b0a4; --text3:#6a6660;
+  --gold:#d4a946; --teal:#4ec9b0; --green:#6ba670; --red:#d4624a; 
+  --yellow:#e8c547; --blue:#4fa3d4; --purple:#a578d4;
+  --line:rgba(255,255,255,0.08); --line2:rgba(255,255,255,0.15);
+  --sfa-color:#4fa3d4;
+  --meigu-color:#d4a946;
+  --hub-color:#a578d4;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Noto Sans SC',sans-serif;line-height:1.7;
+  min-height:100vh;
+  background-image:radial-gradient(circle at 20% 50%,rgba(212,169,70,0.04) 0%,transparent 50%);
+}
+.container{max-width:1400px;margin:0 auto;padding:30px 24px 80px}
+
+/* HEADER */
+.header{
+  text-align:center;padding:40px 30px 30px;
+  border-bottom:1px solid var(--line);margin-bottom:40px;
+}
+.header h1{
+  font-family:'Cormorant Garamond',serif;font-weight:700;
+  font-size:48px;line-height:1.2;margin-bottom:12px;
+  background:linear-gradient(135deg,var(--gold) 0%,var(--teal) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.header-tag{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--gold);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:14px}
+.header-sub{font-size:16px;color:var(--text2);font-style:italic;font-family:'Cormorant Garamond',serif}
+
+/* LEGEND */
+.legend{
+  display:flex;justify-content:center;gap:24px;flex-wrap:wrap;
+  padding:20px;background:var(--bg2);border-radius:12px;
+  border:1px solid var(--line);margin-bottom:40px;
+}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:13px}
+.legend-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.legend-dot.sfa{background:var(--sfa-color)}
+.legend-dot.meigu{background:var(--meigu-color)}
+.legend-dot.hub{background:var(--hub-color)}
+.legend-dot.action{background:var(--green)}
+.legend-dot.alert{background:var(--red)}
+
+/* PHASES */
+.phase{margin-bottom:50px}
+.phase-header{
+  display:flex;align-items:center;gap:14px;margin-bottom:24px;
+  padding:14px 20px;background:var(--bg2);
+  border-left:4px solid var(--gold);border-radius:0 10px 10px 0;
+}
+.phase-num{
+  font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:700;
+  color:var(--gold);font-style:italic;line-height:1;flex-shrink:0;
+}
+.phase-info{flex:1}
+.phase-title{font-size:22px;font-weight:700;margin-bottom:4px}
+.phase-desc{font-size:13px;color:var(--text3)}
+.phase-steps{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold)}
+
+/* STEPS GRID */
+.steps-grid{
+  display:grid;grid-template-columns:1fr;gap:14px;
+}
+@media(min-width:900px){
+  .steps-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* STEP CARD */
+.step-card{
+  background:var(--bg2);border:1px solid var(--line);border-radius:12px;
+  padding:18px;position:relative;overflow:hidden;
+  transition:all 0.2s;
+}
+.step-card:hover{border-color:var(--gold);transform:translateY(-2px)}
+.step-card.sfa{border-left:4px solid var(--sfa-color)}
+.step-card.meigu{border-left:4px solid var(--meigu-color)}
+.step-card.hub{border-left:4px solid var(--hub-color)}
+.step-card.alert{border-left:4px solid var(--red)}
+
+.step-header{
+  display:flex;align-items:center;gap:12px;margin-bottom:12px;
+  padding-bottom:12px;border-bottom:1px solid var(--line);
+}
+.step-num{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--bg3);border:2px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;
+  color:var(--gold);flex-shrink:0;
+}
+.step-info{flex:1}
+.step-title{font-size:15px;font-weight:700;line-height:1.3;margin-bottom:2px}
+.step-actor{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:0.05em;text-transform:uppercase}
+.step-actor.sfa{color:var(--sfa-color)}
+.step-actor.meigu{color:var(--meigu-color)}
+.step-actor.hub{color:var(--hub-color)}
+
+.step-content{font-size:13px;color:var(--text2);line-height:1.7}
+.step-content strong{color:var(--text)}
+
+/* FLOW ARROW */
+.flow-arrow{
+  text-align:center;padding:8px;color:var(--gold);font-size:24px;
+  margin:8px 0;opacity:0.5;
+}
+
+/* HIGHLIGHT BOX */
+.highlight{
+  background:linear-gradient(135deg,rgba(212,169,70,0.08),rgba(78,201,176,0.04));
+  border:1px solid var(--gold);border-radius:12px;padding:20px;
+  margin:30px 0;
+}
+.highlight h3{
+  font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--gold);
+  margin-bottom:12px;
+}
+.highlight p{color:var(--text2);font-size:14px;line-height:1.8}
+.highlight strong{color:var(--text)}
+
+/* SUMMARY */
+.summary{
+  background:var(--bg2);border:1px solid var(--line);border-radius:12px;
+  padding:30px;margin-top:50px;
+}
+.summary h2{
+  font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--gold);
+  margin-bottom:20px;
+}
+.summary-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;
+  margin-top:20px;
+}
+.summary-item{
+  background:var(--bg3);border-radius:10px;padding:16px;
+  border-left:3px solid var(--gold);
+}
+.summary-item-num{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:var(--gold);letter-spacing:0.06em;
+}
+.summary-item-title{font-size:14px;font-weight:700;margin:6px 0}
+.summary-item-desc{font-size:12px;color:var(--text3);line-height:1.6}
+
+/* FOOTER */
+.footer{
+  text-align:center;padding:30px;color:var(--text3);
+  border-top:1px solid var(--line);margin-top:60px;
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+}
+.footer-meta{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  margin-top:12px;letter-spacing:0.1em;text-transform:uppercase;
+}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .container{padding:20px 14px}
+  .header h1{font-size:32px}
+  .phase-num{font-size:36px}
+  .legend{gap:12px;padding:14px}
+  .legend-item{font-size:11px}
+}
+
+/* PRINT */
+@media print{
+  body{background:white;color:black}
+  .step-card{break-inside:avoid}
+  .phase{break-before:auto;break-after:auto}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-tag">DISPATCH LOCK · INFINITY OS</div>
+  <h1>派单互锁 · 25步全流程</h1>
+  <div class="header-sub">
+    SFA(欣和员工) ↔ 美顾APP(经销商美顾) · 滴滴双APP互锁机制<br>
+    一次派单 · 25步 · 5阶段 · 三方协同
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot sfa"></div>SFA(DSR/SR)</div>
+  <div class="legend-item"><div class="legend-dot meigu"></div>美顾APP(第9件)</div>
+  <div class="legend-item"><div class="legend-dot hub"></div>INFINITY OS中台</div>
+  <div class="legend-item"><div class="legend-dot action"></div>关键动作</div>
+  <div class="legend-item"><div class="legend-dot alert"></div>异常处理</div>
+</div>
+
+<!-- PHASE 1 -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-num">①</div>
+    <div class="phase-info">
+      <div class="phase-title">派单触发</div>
+      <div class="phase-desc">业务事件发生 · 中台生成任务规格</div>
+      <div class="phase-steps">STEP 1-5 · 触发到推送</div>
+    </div>
+  </div>
+  
+  <div class="steps-grid">
+    
+    <div class="step-card hub">
+      <div class="step-header">
+        <div class="step-num">01</div>
+        <div class="step-info">
+          <div class="step-title">业务事件发生</div>
+          <div class="step-actor hub">中台 · 触发源</div>
+        </div>
+      </div>
+      <div class="step-content">
+        三种触发源:<br>
+        <strong>A · DSR主动</strong>(SFA端)· 看到明发3.8a超标·派美顾<br>
+        <strong>B · 中台自动</strong>· 蝴蝶/Omakase Agent生成任务<br>
+        <strong>C · 经销商求</strong>· 老板自己说"我要美顾来"
+      </div>
+    </div>
+
+    <div class="step-card hub">
+      <div class="step-header">
+        <div class="step-num">02</div>
+        <div class="step-info">
+          <div class="step-title">任务规格生成</div>
+          <div class="step-actor hub">中台 · 任务工厂</div>
+        </div>
+      </div>
+      <div class="step-content">
+        中台生成完整规格:<br>
+        门店地址 · SKU · 数量 · deadline<br>
+        优先级 · 报酬¥58 · 技能要求<br>
+        预估60分钟 · 来源标记
+      </div>
+    </div>
+
+    <div class="step-card hub">
+      <div class="step-header">
+        <div class="step-num">03</div>
+        <div class="step-info">
+          <div class="step-title">美顾池筛选</div>
+          <div class="step-actor hub">中台 · 候选池</div>
+        </div>
+      </div>
+      <div class="step-content">
+        从1万美顾筛合格的:<br>
+        ✅ 区域(锦江+5km)<br>
+        ✅ 等级(B级以上)<br>
+        ✅ 在线(2小时活跃)<br>
+        ✅ CB分(>3.5)<br>
+        ✅ 当天任务未满<br>
+        筛出10人候选
+      </div>
+    </div>
+
+    <div class="step-card hub">
+      <div class="step-header">
+        <div class="step-num">04</div>
+        <div class="step-info">
+          <div class="step-title">算法排序</div>
+          <div class="step-actor hub">中台 · Omakase Agent</div>
+        </div>
+      </div>
+      <div class="step-content">
+        排序因子:<br>
+        距离40% · 历史完成率20%<br>
+        门店历史评分15% · SKU经验10%<br>
+        CB分10% · 响应速度5%<br>
+        <br>
+        Top推荐:陈晓琳(0.94)
+      </div>
+    </div>
+
+    <div class="step-card hub">
+      <div class="step-header">
+        <div class="step-num">05</div>
+        <div class="step-info">
+          <div class="step-title">派单决策</div>
+          <div class="step-actor hub">中台 · 推送策略</div>
+        </div>
+      </div>
+      <div class="step-content">
+        混合派单:<br>
+        <strong>抢单模式</strong>(滴滴) · 推Top 5 · 先抢先得<br>
+        <strong>指派模式</strong>(顺丰) · 直接Top 1 · 30分钟必接<br>
+        <br>
+        本次推送:陈晓琳+王芳+李小妹+张华+赵娟
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PHASE 2 -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-num">②</div>
+    <div class="phase-info">
+      <div class="phase-title">SFA端展示</div>
+      <div class="phase-desc">DSR周小军看到任务派出 · 实时跟进</div>
+      <div class="phase-steps">STEP 6-9 · DSR感知</div>
+    </div>
+  </div>
+  
+  <div class="steps-grid">
+    
+    <div class="step-card sfa">
+      <div class="step-header">
+        <div class="step-num">06</div>
+        <div class="step-info">
+          <div class="step-title">DSR端SFA同步</div>
+          <div class="step-actor sfa">SFA · DSR周小军</div>
+        </div>
+      </div>
+      <div class="step-content">
+        SFA实时显示:<br>
+        任务T20260429001已派<br>
+        老张便利店 · 50箱有机<br>
+        已推送5个候选美顾<br>
+        状态:等待抢单
+      </div>
+    </div>
+
+    <div class="step-card sfa">
+      <div class="step-header">
+        <div class="step-num">07</div>
+        <div class="step-info">
+          <div class="step-title">DSR可选介入</div>
+          <div class="step-actor sfa">SFA · 决策点</div>
+        </div>
+      </div>
+      <div class="step-content">
+        DSR三种选择:<br>
+        <strong>A · 被动等</strong>(默认 · 等抢单)<br>
+        <strong>B · 主动指派</strong>(熟悉陈晓琳 · 指定她)<br>
+        <strong>C · 主动加价</strong>(无人抢 · 提到¥80)
+      </div>
+    </div>
+
+    <div class="step-card sfa">
+      <div class="step-header">
+        <div class="step-num">08</div>
+        <div class="step-info">
+          <div class="step-title">DSR通知机制</div>
+          <div class="step-actor sfa">SFA · 实时推送</div>
+        </div>
+      </div>
+      <div class="step-content">
+        SFA持续推送给DSR:<br>
+        ✅ 任务派出 → 立即<br>
+        ✅ 美顾抢单 → 立即<br>
+        ✅ 美顾到店 → 立即<br>
+        ✅ 完成签字 → 立即<br>
+        ⚠️ 异常告警 → 红色
+      </div>
+    </div>
+
+    <div class="step-card sfa">
+      <div class="step-header">
+        <div class="step-num">09</div>
+        <div class="step-info">
+          <div class="step-title">跨任务管理</div>
+          <div class="step-actor sfa">SFA · 多任务视图</div>
+        </div>
+      </div>
+      <div class="step-content">
+        DSR的全景视图:<br>
+        今日派单 · 15<br>
+        等待抢单 · 3<br>
+        进行中 · 8<br>
+        已完成 · 4<br>
+        <strong>异常浮顶</strong> · 自动突出
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PHASE 3 -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-num">③</div>
+    <div class="phase-info">
+      <div class="phase-title">美顾端响应</div>
+      <div class="phase-desc">陈晓琳收到推送 · 抢单 · 出发</div>
+      <div class="phase-steps">STEP 10-13 · 美顾响应</div>
+    </div>
+  </div>
+  
+  <div class="steps-grid">
+    
+    <div class="step-card meigu">
+      <div class="step-header">
+        <div class="step-num">10</div>
+        <div class="step-info">
+          <div class="step-title">美顾APP收到推送</div>
+          <div class="step-actor meigu">美顾APP · 通知</div>
+        </div>
+      </div>
+      <div class="step-content">
+        多渠道推送:<br>
+        ✅ APP内通知(立即)<br>
+        ✅ 微信工作通(立即)<br>
+        ✅ 短信(可选)<br>
+        ✅ 桌面提醒
+      </div>
+    </div>
+
+    <div class="step-card meigu">
+      <div class="step-header">
+        <div class="step-num">11</div>
+        <div class="step-info">
+          <div class="step-title">美顾决策</div>
+          <div class="step-actor meigu">美顾 · 抢单</div>
+        </div>
+      </div>
+      <div class="step-content">
+        陈晓琳考虑:<br>
+        ✅ 距离近(1.2km)<br>
+        ✅ 老张关系好<br>
+        ✅ ¥58性价比OK<br>
+        ✅ 60分钟时间够<br>
+        点"抢单" · 比其他人快3秒
+      </div>
+    </div>
+
+    <div class="step-card meigu">
+      <div class="step-header">
+        <div class="step-num">12</div>
+        <div class="step-info">
+          <div class="step-title">APP状态切换</div>
+          <div class="step-actor meigu">美顾APP · 工具</div>
+        </div>
+      </div>
+      <div class="step-content">
+        状态:待抢 → 进行中<br>
+        提供工具:<br>
+        路线导航 · 客户联系<br>
+        AI主厨Agent对话<br>
+        上传照片 · 完成签字
+      </div>
+    </div>
+
+    <div class="step-card hub">
+      <div class="step-header">
+        <div class="step-num">13</div>
+        <div class="step-info">
+          <div class="step-title">中台同步给SFA</div>
+          <div class="step-actor hub">中台 · 双向同步</div>
+        </div>
+      </div>
+      <div class="step-content">
+        中台立即推SFA:<br>
+        "陈晓琳已抢单"<br>
+        "预计13:30到达"<br>
+        "距离1.2km"<br>
+        DSR感知:5星·放心
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PHASE 4 -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-num">④</div>
+    <div class="phase-info">
+      <div class="phase-title">执行过程</div>
+      <div class="phase-desc">出发 → 到店 → 执行 → 完成</div>
+      <div class="phase-steps">STEP 14-19 · 现场执行</div>
+    </div>
+  </div>
+  
+  <div class="steps-grid">
+    
+    <div class="step-card meigu">
+      <div class="step-header">
+        <div class="step-num">14</div>
+        <div class="step-info">
+          <div class="step-title">美顾出发</div>
+          <div class="step-actor meigu">美顾APP · GPS</div>
+        </div>
+      </div>
+      <div class="step-content">
+        点"出发"<br>
+        GPS定位开始<br>
+        路径规划(高德/百度)<br>
+        预计13:30到达<br>
+        中台跟踪 · 异常告警
+      </div>
+    </div>
+
+    <div class="step-card meigu">
+      <div class="step-header">
+        <div class="step-num">15</div>
+        <div class="step-info">
+          <div class="step-title">美顾到店</div>
+          <div class="step-actor meigu">美顾APP · 打卡</div>
+        </div>
+      </div>
+      <div class="step-content">
+        GPS显示已到店<br>
+        APP弹"打卡"<br>
+        拍照打卡(真实性验证)<br>
+        时间戳13:28<br>
+        <strong>中台同步通知SFA</strong>
+      </div>
+    </div>
+
+    <div class="step-card meigu">
+      <div class="step-header">
+        <div class="step-num">16</div>
+        <div class="step-info">
+          <div class="step-title">美顾执行</div>
+          <div class="step-actor meigu">美顾APP · 工作</div>
+        </div>
+      </div>
+      <div class="step-content">
+        ① 拍货架现状(12张)<br>
+        ② 跟老张沟通<br>
+        ③ 调整陈列(黄金位)<br>
+        ④ 上货架50箱<br>
+        ⑤ 老板签字<br>
+        每步实时同步给SFA
+      </div>
+    </div>
+
+    <div class="step-card meigu">
+      <div class="step-header">
+        <div class="step-num">17</div>
+        <div class="step-info">
+          <div class="step-title">AI主厨辅助</div>
+          <div class="step-actor meigu">美顾APP · AI Agent</div>
+        </div>
+      </div>
+      <div class="step-content">
+        遇到问题:<br>
+        "客户嫌贵怎么办?"<br>
+        AI主厨即时给3个话术<br>
+        陈晓琳采用 · 老张接受<br>
+        任务推进
+      </div>
+    </div>
+
+    <div class="step-card meigu">
+      <div class="step-header">
+        <div class="step-num">18</div>
+        <div class="step-info">
+          <div class="step-title">完成上报</div>
+          <div class="step-actor meigu">美顾APP · 提交</div>
+        </div>
+      </div>
+      <div class="step-content">
+        50箱已上架<br>
+        老板签字 · 评分老张4星<br>
+        系统结算¥58×85%=¥49.30<br>
+        所有数据上传<br>
+        状态:已完成 · 待DSR确认
+      </div>
+    </div>
+
+    <div class="step-card alert">
+      <div class="step-header">
+        <div class="step-num">19</div>
+        <div class="step-info">
+          <div class="step-title">中台异常处理</div>
+          <div class="step-actor hub">中台 · 防作弊</div>
+        </div>
+      </div>
+      <div class="step-content">
+        中台监控异常:<br>
+        ❌ GPS不在门店附近(假打卡)<br>
+        ❌ 时间过短(1分钟就完?)<br>
+        ❌ 照片重复使用<br>
+        ❌ 老板签字异常<br>
+        异常 → 标记审核 · DSR决定
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PHASE 5 -->
+<div class="phase">
+  <div class="phase-header">
+    <div class="phase-num">⑤</div>
+    <div class="phase-info">
+      <div class="phase-title">反馈+学习</div>
+      <div class="phase-desc">确认 · 评价 · CB分 · Agent学习 · 月度结算</div>
+      <div class="phase-steps">STEP 20-25 · 闭环</div>
+    </div>
+  </div>
+  
+  <div class="steps-grid">
+    
+    <div class="step-card sfa">
+      <div class="step-header">
+        <div class="step-num">20</div>
+        <div class="step-info">
+          <div class="step-title">DSR确认</div>
+          <div class="step-actor sfa">SFA · 验收</div>
+        </div>
+      </div>
+      <div class="step-content">
+        DSR周小军SFA端:<br>
+        看货架前后对比<br>
+        看老板签字<br>
+        看数据完整性<br>
+        给陈晓琳A+<br>
+        点"确认完成"
+      </div>
+    </div>
+
+    <div class="step-card hub">
+      <div class="step-header">
+        <div class="step-num">21</div>
+        <div class="step-info">
+          <div class="step-title">双向评价</div>
+          <div class="step-actor hub">中台 · 评价池</div>
+        </div>
+      </div>
+      <div class="step-content">
+        三方评价:<br>
+        老板 → 陈晓琳:5星<br>
+        陈晓琳 → 老张:4星<br>
+        DSR → 陈晓琳:A+<br>
+        全部进中台
+      </div>
+    </div>
+
+    <div class="step-card hub">
+      <div class="step-header">
+        <div class="step-num">22</div>
+        <div class="step-info">
+          <div class="step-title">CB分计算</div>
+          <div class="step-actor hub">中台 · 评级Agent</div>
+        </div>
+      </div>
+      <div class="step-content">
+        公式:CB=0.5×粘性+0.3×评价+0.2×执行<br>
+        陈晓琳CB分: 4.78 → 4.81<br>
+        等级:5星(保持)<br>
+        下次派单优先级提升
+      </div>
+    </div>
+
+    <div class="step-card hub">
+      <div class="step-header">
+        <div class="step-num">23</div>
+        <div class="step-info">
+          <div class="step-title">数据回流Hologres</div>
+          <div class="step-actor hub">中台 · 数据湖</div>
+        </div>
+      </div>
+      <div class="step-content">
+        所有数据回流:<br>
+        inf_my_tasks · 任务记录<br>
+        inf_evaluations · 评分<br>
+        inf_actions · Agent输出<br>
+        汉询 · 库存更新<br>
+        POS · 销量观察
+      </div>
+    </div>
+
+    <div class="step-card hub">
+      <div class="step-header">
+        <div class="step-num">24</div>
+        <div class="step-info">
+          <div class="step-title">Agent学习</div>
+          <div class="step-actor hub">中台 · 学习Agent</div>
+        </div>
+      </div>
+      <div class="step-content">
+        学习日志记录:<br>
+        蝴蝶检测3.8a → 7天后2.8a · 成功<br>
+        陈晓琳+老张组合 · 权重提升<br>
+        参数调整<br>
+        <strong>下次派单更准</strong>
+      </div>
+    </div>
+
+    <div class="step-card hub">
+      <div class="step-header">
+        <div class="step-num">25</div>
+        <div class="step-info">
+          <div class="step-title">月度结算</div>
+          <div class="step-actor hub">中台 · 财务</div>
+        </div>
+      </div>
+      <div class="step-content">
+        月底:<br>
+        陈晓琳:¥2,400 · CB分↑ · 升5星<br>
+        DSR周小军:¥3,000奖金<br>
+        平台抽成¥46,500<br>
+        重投激励/系统/经销商<br>
+        <strong>形成自循环生态</strong>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- HIGHLIGHT -->
+<div class="highlight">
+  <h3>🎯 核心机制 · 任务原子性</h3>
+  <p>
+    派单互锁的根本保证 = <strong>任务原子性</strong>(数据库ACID)<br><br>
+    抢单 = 一笔事务 · 中台+SFA+美顾APP同时确认<br>
+    任何一方没确认 → 撤销抢单 · 美顾收到"重新尝试"<br>
+    不允许"半成功"状态 · 不让信任崩溃<br><br>
+    <strong>正是这个原子性 · 让25步流程稳定运转 · 让INFINITY OS活起来</strong>
+  </p>
+</div>
+
+<!-- SUMMARY -->
+<div class="summary">
+  <h2>5个失败模式 · 如何应对</h2>
+  <div class="summary-grid">
+    
+    <div class="summary-item">
+      <div class="summary-item-num">FAIL #1</div>
+      <div class="summary-item-title">派出但没人抢</div>
+      <div class="summary-item-desc">3分钟无人 → DSR告警 · 自动加价30% · 重新推送 · 督导介入</div>
+    </div>
+    
+    <div class="summary-item">
+      <div class="summary-item-num">FAIL #2</div>
+      <div class="summary-item-title">美顾失踪</div>
+      <div class="summary-item-desc">2小时没到店 · GPS停滞 → 中台联系 · 取消重派 · CB扣分</div>
+    </div>
+    
+    <div class="summary-item">
+      <div class="summary-item-num">FAIL #3</div>
+      <div class="summary-item-title">假打卡作弊</div>
+      <div class="summary-item-desc">GPS异常+旧照片 → AI识别 · 标记审核 · 大扣CB · 拉黑</div>
+    </div>
+    
+    <div class="summary-item">
+      <div class="summary-item-num">FAIL #4</div>
+      <div class="summary-item-title">完成质量差</div>
+      <div class="summary-item-desc">门店2星·DSR不通过 → 重新派单 · 不发奖金 · 大扣CB · 降级</div>
+    </div>
+    
+    <div class="summary-item">
+      <div class="summary-item-num">FAIL #5</div>
+      <div class="summary-item-title">系统Bug</div>
+      <div class="summary-item-desc">推送丢失 → 监控告警 · 立即修 · 美顾补偿 · 降级手动派单</div>
+    </div>
+    
+  </div>
+</div>
+
+<!-- BACKEND SERVICES -->
+<div class="summary">
+  <h2>15个后端服务 · 支撑派单互锁</h2>
+  <div class="summary-grid">
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #1</div>
+      <div class="summary-item-title">TaskCreationService</div>
+      <div class="summary-item-desc">任务创建 · 规格生成</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #2</div>
+      <div class="summary-item-title">MeiguPoolFilter</div>
+      <div class="summary-item-desc">美顾池筛选</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #3</div>
+      <div class="summary-item-title">MatchingAlgorithm</div>
+      <div class="summary-item-desc">匹配算法</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #4</div>
+      <div class="summary-item-title">NotificationService</div>
+      <div class="summary-item-desc">推送通知</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #5</div>
+      <div class="summary-item-title">GrabService</div>
+      <div class="summary-item-desc">抢单原子性</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #6</div>
+      <div class="summary-item-title">SFANotification</div>
+      <div class="summary-item-desc">SFA推送</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #7</div>
+      <div class="summary-item-title">GPSTracking</div>
+      <div class="summary-item-desc">GPS跟踪</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #8</div>
+      <div class="summary-item-title">CheckInService</div>
+      <div class="summary-item-desc">打卡验证</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #9</div>
+      <div class="summary-item-title">ExecutionService</div>
+      <div class="summary-item-desc">执行管理</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #10</div>
+      <div class="summary-item-title">CompletionService</div>
+      <div class="summary-item-desc">完成提交</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #11</div>
+      <div class="summary-item-title">AntiCheatService</div>
+      <div class="summary-item-desc">防作弊检测</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #12</div>
+      <div class="summary-item-title">ReviewService</div>
+      <div class="summary-item-desc">评价收集</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #13</div>
+      <div class="summary-item-title">CBScoreService</div>
+      <div class="summary-item-desc">CB分计算</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #14</div>
+      <div class="summary-item-title">SettlementService</div>
+      <div class="summary-item-desc">结算财务</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-item-num">SVC #15</div>
+      <div class="summary-item-title">LearningLogService</div>
+      <div class="summary-item-desc">学习日志</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  INFINITY OS · 派单互锁 · 25步全流程<br>
+  欣和SH · 2026-04-29 · DS + Agent 联合编制
+  <div class="footer-meta">
+    DISPATCH LOCK · MEIGU APP × SFA · DIDI-LIKE ARCHITECTURE
+  </div>
+</div>
+
+</div>
+</body>
+</html>
