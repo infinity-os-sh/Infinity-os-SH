@@ -1,0 +1,3121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>欣和总部 · Agent 主控台 · MAX</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf8f3;
+  --bg-card: #ffffff;
+  --bg-soft: #f5f3ed;
+  --bg-warm: #fdf9ed;
+  --line: #e8e4d8;
+  --line-2: #d4cfbd;
+  --text: #1a1a20;
+  --text-2: #4a4a52;
+  --text-3: #6a6a72;
+  --text-4: #8a8696;
+  --amber: #b8862e;
+  --amber-2: #d4a946;
+  --amber-bg: #fdf6e3;
+  --amber-line: rgba(184,134,46,0.3);
+  --teal: #3a7a6e;
+  --teal-bg: rgba(58,122,110,0.08);
+  --green: #5f8c63;
+  --green-bg: rgba(95,140,99,0.1);
+  --red: #a84a3e;
+  --red-bg: rgba(168,74,62,0.08);
+  --blue: #4a6a8a;
+  --blue-bg: rgba(74,106,138,0.08);
+  --purple: #7c5fa6;
+  --purple-bg: rgba(124,95,166,0.08);
+  --gray-bg: rgba(138,138,144,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:14px;
+  line-height:1.7;
+  min-height:100vh;
+}
+
+/* ─── TOPBAR ─── */
+.topbar{
+  position:sticky;top:0;z-index:200;
+  background:rgba(250,248,243,0.96);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--amber-line);
+  padding:14px 24px;
+}
+.tb-row{display:flex;align-items:center;justify-content:space-between;gap:14px;max-width:1200px;margin:0 auto}
+.tb-logo{display:flex;align-items:center;gap:14px}
+.tb-sym{
+  width:42px;height:42px;border-radius:10px;
+  background:linear-gradient(135deg,#b8862e,#d4a946);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;
+  font-weight:700;font-size:22px;font-style:italic;color:#fff;
+}
+.tb-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:22px;font-weight:600;letter-spacing:0.02em;
+}
+.tb-name em{color:var(--amber);font-style:italic}
+.tb-tag{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  color:var(--text-3);letter-spacing:0.2em;text-transform:uppercase;
+  margin-top:2px;
+}
+.tb-actions{display:flex;align-items:center;gap:12px}
+.tb-mode-btn{
+  background:var(--bg-soft);
+  border:1px solid var(--line-2);
+  border-radius:18px;padding:6px 14px;
+  font-size:11px;color:var(--text-2);
+  cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;gap:6px;
+  transition:all 0.15s;
+}
+.tb-mode-btn:hover{border-color:var(--amber);color:var(--amber)}
+.tb-clock{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-3)}
+
+/* ─── MAIN ─── */
+.main{
+  max-width:1200px;
+  margin:0 auto;
+  padding:24px;
+}
+
+/* ═══════════ 6 个 Tab 顶部导航 ═══════════ */
+.nav-tabs{
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  gap:5px;margin-bottom:24px;
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:14px;padding:6px;
+}
+@media(max-width:780px){.nav-tabs{grid-template-columns:repeat(4,1fr)}}
+.nav-tab{
+  padding:12px 8px;text-align:center;
+  border-radius:10px;cursor:pointer;
+  transition:all 0.15s;
+  border:1px solid transparent;
+  font-family:inherit;
+}
+.nav-tab:hover{background:var(--bg-soft)}
+.nav-tab.active{
+  background:var(--amber-bg);
+  border-color:var(--amber);
+}
+.nav-tab-icon{font-size:18px;display:block;margin-bottom:4px}
+.nav-tab-name{
+  font-size:11px;font-weight:600;
+  color:var(--text-2);
+}
+.nav-tab.active .nav-tab-name{color:var(--amber)}
+.nav-tab-sub{
+  font-size:9px;color:var(--text-3);margin-top:2px;
+  font-family:'JetBrains Mono',monospace;letter-spacing:0.05em;
+}
+
+/* ═══════════ 视图切换 ═══════════ */
+.view{display:none}
+.view.active{display:block;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════ 通用Section ═══════════ */
+.section{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:20px 24px;
+  margin-bottom:18px;
+}
+.sec-hdr{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:14px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--line);
+}
+.sec-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px;font-weight:600;
+}
+.sec-title em{color:var(--amber);font-style:italic}
+.sec-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;color:var(--text-3);
+  letter-spacing:0.15em;text-transform:uppercase;
+}
+
+/* ═══════════ 每日简报 ═══════════ */
+.briefing{
+  background:linear-gradient(135deg,var(--bg-card) 0%,var(--bg-warm) 100%);
+  border:1px solid var(--amber-line);
+  border-radius:16px;
+  padding:24px 28px;
+  margin-bottom:18px;
+  position:relative;overflow:hidden;
+}
+.briefing::before{
+  content:'';position:absolute;
+  top:-100px;right:-100px;width:300px;height:300px;
+  background:radial-gradient(circle,rgba(184,134,46,0.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.brief-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:relative}
+.brief-title-block{display:flex;align-items:center;gap:12px}
+.brief-icon{
+  width:42px;height:42px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--amber-2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;color:#fff;flex-shrink:0;
+}
+.brief-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px;font-weight:600;
+}
+.brief-title em{color:var(--amber);font-style:italic}
+.brief-meta{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;color:var(--text-3);
+  letter-spacing:0.15em;text-transform:uppercase;
+}
+.brief-status{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;color:var(--green);
+  display:flex;align-items:center;gap:6px;
+}
+.brief-status::before{
+  content:'';width:7px;height:7px;border-radius:50%;
+  background:var(--green);animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.brief-content{
+  font-size:14px;color:var(--text);
+  line-height:1.85;position:relative;
+}
+.brief-content p{margin-bottom:10px}
+.brief-content strong{color:var(--amber);font-weight:600}
+
+/* 数据 pill */
+.data-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--amber-bg);
+  border:1px solid var(--amber-line);
+  border-radius:14px;padding:3px 10px;
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-weight:700;
+  color:var(--amber);cursor:pointer;
+  margin:0 2px;font-size:14px;
+  transition:all 0.15s;
+}
+.data-pill:hover{background:var(--amber);color:#fff;transform:translateY(-1px)}
+.data-pill .trend{
+  font-size:10px;font-family:'JetBrains Mono',monospace;
+  font-style:normal;font-weight:600;
+  padding:1px 5px;border-radius:8px;
+}
+.trend.up{color:#fff;background:var(--green)}
+.trend.down{color:#fff;background:var(--red)}
+.trend.flat{color:var(--text-3);background:var(--bg-soft)}
+.data-pill .info-i{font-size:9px;color:var(--text-3);font-family:'JetBrains Mono',monospace;font-style:normal}
+.data-pill:hover .info-i{color:#fff}
+
+.data-source{
+  display:none;
+  background:var(--bg-soft);
+  border-left:3px solid var(--amber);
+  border-radius:6px;
+  padding:10px 14px;
+  margin:6px 0 10px;
+  font-size:11px;color:var(--text-2);
+}
+.data-source.show{display:block;animation:slideDown 0.2s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.ds-row{display:flex;justify-content:space-between;padding:3px 0}
+.ds-row + .ds-row{border-top:1px dashed var(--line)}
+.ds-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;text-transform:uppercase}
+.ds-val{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;color:var(--amber)}
+.ds-val.ok{color:var(--green)}
+
+/* 议题卡片 */
+.brief-issues{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:16px;
+  padding-top:16px;
+  border-top:1px solid var(--line);
+}
+@media(max-width:780px){.brief-issues{grid-template-columns:1fr}}
+.issue-card{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:12px 14px;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.issue-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.05)}
+.issue-card.alert{border-left:3px solid var(--red)}
+.issue-card.warn{border-left:3px solid var(--amber)}
+.issue-card.good{border-left:3px solid var(--green)}
+.issue-tag-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.issue-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:0.15em;
+  text-transform:uppercase;font-weight:700;
+}
+.issue-card.alert .issue-tag{color:var(--red)}
+.issue-card.warn .issue-tag{color:var(--amber)}
+.issue-card.good .issue-tag{color:var(--green)}
+.issue-time{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3)}
+.issue-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:15px;font-weight:600;margin-bottom:3px;
+}
+.issue-desc{font-size:11px;color:var(--text-3);line-height:1.5}
+
+/* ═══════════ 战略大脑 ═══════════ */
+.brain-box{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:20px 24px;
+}
+.brain-input-wrap{
+  display:flex;gap:10px;
+  background:var(--bg-soft);
+  border:2px solid var(--line);
+  border-radius:14px;
+  padding:6px 6px 6px 18px;
+  transition:border-color 0.15s;
+}
+.brain-input-wrap:focus-within{border-color:var(--amber)}
+.brain-input{
+  flex:1;background:transparent;border:none;
+  padding:11px 0;font-size:14px;color:var(--text);
+  outline:none;font-family:inherit;
+}
+.brain-input::placeholder{color:var(--text-4)}
+.brain-send{
+  width:42px;height:42px;border-radius:10px;
+  background:var(--amber);border:none;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;color:#fff;flex-shrink:0;
+  transition:all 0.15s;
+}
+.brain-send:hover{background:var(--amber-2);transform:scale(1.05)}
+
+.scenarios{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.scenarios-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:0.15em;
+  text-transform:uppercase;color:var(--text-3);margin-bottom:10px;
+}
+.scenarios-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:8px;
+}
+@media(min-width:780px){.scenarios-grid{grid-template-columns:repeat(3,1fr)}}
+.scenario-btn{
+  background:var(--bg-soft);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:12px 14px;text-align:left;
+  cursor:pointer;font-family:inherit;
+  display:flex;align-items:flex-start;gap:8px;
+  transition:all 0.15s;
+}
+.scenario-btn:hover{border-color:var(--amber);background:var(--amber-bg);transform:translateY(-1px)}
+.scenario-icon{font-size:18px;flex-shrink:0;line-height:1;margin-top:1px}
+.scenario-text{flex:1;min-width:0}
+.scenario-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;line-height:1.3}
+.scenario-desc{font-size:10px;color:var(--text-3);line-height:1.4}
+
+/* 对话区 */
+.conversation{display:none;margin-top:18px}
+.conversation.has-content{display:block}
+.conv-clear{display:flex;justify-content:flex-end;margin-bottom:10px}
+.refresh-btn{
+  background:transparent;border:1px solid var(--line);
+  color:var(--text-3);
+  border-radius:14px;padding:4px 10px;
+  font-size:10px;font-family:'JetBrains Mono',monospace;
+  letter-spacing:0.05em;cursor:pointer;transition:all 0.15s;
+}
+.refresh-btn:hover{border-color:var(--amber);color:var(--amber)}
+
+.conv-msg{margin-bottom:14px;animation:slideUp 0.3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.msg-user{display:flex;justify-content:flex-end}
+.msg-user-bubble{
+  background:var(--amber);color:#fff;
+  padding:10px 16px;border-radius:18px 18px 4px 18px;
+  font-size:13px;max-width:75%;line-height:1.5;
+}
+.msg-ai{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-left:3px solid var(--amber);
+  border-radius:12px;
+  padding:16px 20px;
+}
+.msg-ai-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.msg-ai-hdr-l{display:flex;align-items:center;gap:8px}
+.msg-ai-avatar{
+  width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--amber-2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;color:#fff;flex-shrink:0;
+}
+.msg-ai-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.15em;color:var(--text-3);text-transform:uppercase}
+.msg-ai-tag{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);font-style:italic}
+.msg-ai-content{font-size:13px;color:var(--text);line-height:1.75;white-space:pre-wrap}
+.msg-ai-content strong{color:var(--amber)}
+.choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.choice-btn{
+  background:var(--amber-bg);
+  border:1px solid var(--amber);
+  border-radius:8px;padding:7px 14px;
+  font-size:11px;color:var(--amber);
+  cursor:pointer;font-weight:600;
+  font-family:inherit;transition:all 0.15s;
+}
+.choice-btn:hover{background:var(--amber);color:#fff}
+.thinking{display:flex;gap:5px;align-items:center;padding:8px 0}
+.td{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:td 1.2s infinite}
+.td:nth-child(2){animation-delay:0.2s}
+.td:nth-child(3){animation-delay:0.4s}
+@keyframes td{0%,80%,100%{opacity:0.2;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
+
+/* ═══════════ 5 合伙人卡片 ═══════════ */
+.partners5{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+}
+@media(max-width:780px){.partners5{grid-template-columns:repeat(2,1fr)}}
+.partner{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:16px 10px 12px;
+  text-align:center;cursor:pointer;
+  transition:all 0.2s;
+  position:relative;overflow:hidden;
+}
+.partner::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:2px;
+  background:var(--amber);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform 0.3s;
+}
+.partner:hover{transform:translateY(-2px);border-color:var(--amber-line)}
+.partner:hover::before{transform:scaleX(1)}
+.partner.self{
+  background:linear-gradient(135deg,var(--amber-bg),var(--bg-warm));
+  border-color:var(--amber);
+}
+.partner.self::before{transform:scaleX(1)}
+.p-icon{
+  font-family:'Cormorant Garamond',serif;
+  font-size:28px;font-weight:700;font-style:italic;
+  color:var(--amber);line-height:1;margin-bottom:4px;
+}
+.p-name{font-size:12px;font-weight:600;margin-bottom:2px}
+.p-meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em}
+.p-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;font-weight:700;font-style:italic;
+  color:var(--text);margin-top:6px;line-height:1;
+}
+
+/* ═══════════ 6层架构 ═══════════ */
+.layer-list{display:flex;flex-direction:column;gap:8px}
+.layer-row{
+  display:grid;
+  grid-template-columns:50px 1fr 80px;
+  gap:14px;align-items:center;
+  padding:12px 16px;
+  background:var(--bg-soft);
+  border:1px solid var(--line);
+  border-radius:10px;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.layer-row:hover{border-color:var(--amber);transform:translateX(2px)}
+.layer-num{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-weight:700;font-size:28px;
+  color:var(--amber);line-height:1;
+}
+.layer-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:16px;font-weight:600;
+  margin-bottom:2px;
+}
+.layer-name em{
+  color:var(--amber);font-style:italic;
+  font-size:10px;margin-left:6px;
+  font-family:'JetBrains Mono',monospace;letter-spacing:0.1em;
+}
+.layer-desc{font-size:11px;color:var(--text-3);line-height:1.5}
+.layer-pct-block{text-align:right}
+.layer-pct{
+  font-family:'Cormorant Garamond',serif;
+  font-size:22px;font-weight:700;font-style:italic;
+}
+.layer-bar{
+  width:60px;height:3px;background:var(--line);
+  border-radius:2px;overflow:hidden;margin-top:4px;margin-left:auto;
+}
+.layer-fill{height:100%;background:var(--amber);border-radius:2px}
+
+/* ═══════════ Agent 列表 ═══════════ */
+.agent-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+@media(min-width:780px){.agent-grid{grid-template-columns:repeat(3,1fr)}}
+.agent-card{
+  background:var(--bg-soft);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:14px 16px;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.agent-card:hover{border-color:var(--amber);transform:translateY(-2px)}
+.agent-status{display:inline-block;padding:2px 7px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.05em;font-weight:700;margin-bottom:6px}
+.agent-status.ready{background:var(--green-bg);color:var(--green)}
+.agent-status.partial{background:var(--amber-bg);color:var(--amber)}
+.agent-status.todo{background:var(--red-bg);color:var(--red)}
+.agent-name{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;margin-bottom:3px}
+.agent-name em{color:var(--amber);font-style:italic}
+.agent-desc{font-size:11px;color:var(--text-3);line-height:1.5}
+
+/* ═══════════ IPO 全链 ═══════════ */
+.chain-grid{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:18px;overflow-x:auto;
+}
+.chain-flow{
+  display:flex;gap:6px;
+  min-width:max-content;align-items:stretch;
+}
+.chain-node{
+  background:var(--bg-soft);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:10px 8px;text-align:center;
+  min-width:72px;cursor:pointer;
+  transition:all 0.15s;
+}
+.chain-node:hover{transform:translateY(-2px)}
+.chain-node.ok{background:var(--green-bg);border-color:var(--green)}
+.chain-node.warn{background:var(--amber-bg);border-color:var(--amber)}
+.chain-node.alert{background:var(--red-bg);border-color:var(--red)}
+.chain-node-num{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;font-size:14px}
+.chain-node.ok .chain-node-num{color:var(--green)}
+.chain-node.warn .chain-node-num{color:var(--amber)}
+.chain-node.alert .chain-node-num{color:var(--red)}
+.chain-node-name{font-size:9px;color:var(--text-2);font-weight:600;margin-top:3px}
+.chain-node-pct{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);margin-top:2px}
+
+/* ═══════════ 战略SKU ═══════════ */
+.sku-card{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-left:4px solid var(--amber);
+  border-radius:8px;padding:14px 18px;
+  margin-bottom:8px;
+}
+.sku-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+.sku-name{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600}
+.sku-name em{color:var(--amber);font-style:italic}
+.sku-tag{
+  display:inline-block;padding:2px 8px;border-radius:3px;
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  margin-left:6px;
+}
+.sku-tag.p0{background:var(--red-bg);color:var(--red)}
+.sku-tag.p1{background:var(--amber-bg);color:var(--amber)}
+.sku-tag.p2{background:var(--blue-bg);color:var(--blue)}
+.sku-stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  font-size:11px;
+}
+.sku-stat{background:var(--bg-soft);padding:7px 10px;border-radius:6px}
+.sku-stat-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);margin-bottom:2px;letter-spacing:0.05em}
+.sku-stat-val{font-weight:700}
+.sku-stat-val.good{color:var(--green)}
+.sku-stat-val.warn{color:var(--amber)}
+.sku-stat-val.bad{color:var(--red)}
+
+/* ═══════════ 容器进度 ═══════════ */
+.container-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+}
+@media(min-width:780px){.container-grid{grid-template-columns:repeat(5,1fr)}}
+.cont-card{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:14px 12px;
+  text-align:center;
+}
+.cont-letter{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-weight:700;
+  font-size:36px;color:var(--amber);
+  line-height:1;margin-bottom:4px;
+}
+.cont-name{font-size:12px;font-weight:600;margin-bottom:6px}
+.cont-pct{
+  font-family:'Cormorant Garamond',serif;
+  font-size:24px;font-weight:700;font-style:italic;
+  color:var(--green);line-height:1;
+}
+.cont-meta{font-size:9px;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:0.05em;margin-top:4px}
+
+/* footer */
+.ftr{
+  text-align:center;margin:32px 0 20px;
+  padding-top:20px;
+  border-top:1px solid var(--amber-line);
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:13px;
+  color:var(--amber);
+}
+.ftr-meta{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;color:var(--text-3);
+  letter-spacing:0.15em;text-transform:uppercase;
+  margin-top:6px;font-style:normal;
+}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.1);border-radius:2px}
+/* ═══════════ ② iPhone断点适配 · v2.0新增 · 480px ═══════════ */
+@media(max-width:480px){
+  /* 顶部bar紧凑化 */
+  .topbar{padding:8px 12px}
+  .tb-row{gap:8px}
+  .tb-name{font-size:13px}
+  .tb-tag{font-size:9px;letter-spacing:0.05em}
+  .tb-actions{gap:4px}
+  .tb-mode-btn{padding:5px 8px;font-size:10px}
+  .tb-clock{font-size:11px}
+  .tb-sym{width:28px;height:28px;font-size:14px}
+  
+  /* 主体边距压缩 */
+  .main{padding:12px 10px}
+  .section{padding:10px 0}
+  .sec-hdr{flex-wrap:wrap;gap:6px}
+  .sec-title{font-size:14px}
+  .sec-tag{font-size:9px}
+  
+  /* nav tabs · 一行4个 → iPhone也保持4列但压缩 */
+  .nav-tabs{gap:2px;padding:6px}
+  .nav-tab{padding:8px 4px}
+  .nav-tab-icon{font-size:18px}
+  .nav-tab-name{font-size:9px}
+  
+  /* 5合伙人 · 单列 */
+  .partners5{grid-template-columns:1fr 1fr;gap:8px}
+  .partner{padding:12px 10px}
+  .p-num{font-size:22px}
+  
+  /* Agent grid · 单列 */
+  .agent-grid{grid-template-columns:1fr;gap:8px}
+  .agent-card{padding:12px 14px}
+  
+  /* 6层架构 · 紧凑 */
+  .layer-row{grid-template-columns:36px 1fr 60px;gap:10px;padding:10px 12px}
+  .layer-num{font-size:22px}
+  .layer-name{font-size:14px}
+  .layer-pct{font-size:18px}
+  
+  /* IPO chain · 横向scroll */
+  .chain-flow{display:flex;overflow-x:auto;gap:6px;padding-bottom:6px}
+  .chain-node{flex:0 0 75px;min-width:75px;padding:8px 6px}
+  .chain-node-num{font-size:12px}
+  .chain-node-name{font-size:10px}
+  .chain-node-pct{font-size:11px}
+  
+  /* SKU卡片 · 紧凑 */
+  .sku-card{padding:14px 12px}
+  .sku-row{flex-wrap:wrap;gap:8px}
+  .sku-name{font-size:14px}
+  .sku-stats{grid-template-columns:1fr 1fr;gap:6px}
+  
+  /* 决策记录卡片 · 单列展示 */
+  .scenarios-grid{grid-template-columns:1fr}
+  .container-grid{grid-template-columns:1fr 1fr}
+  .brief-issues{grid-template-columns:1fr}
+  
+  /* 全局搜索·iPhone上更紧凑 */
+  #global-search-modal > div{padding:16px !important;max-height:85vh !important}
+  
+  /* 派单弹窗·iPhone紧凑 */
+  #dispatch-modal > div{padding:18px 20px !important;max-height:90vh !important}
+  
+  /* footer */
+  .ftr{padding:14px 10px;font-size:10px}
+  .ftr-meta{font-size:9px}
+}
+
+/* 超小屏幕 · iPhone SE · 360px */
+@media(max-width:360px){
+  .nav-tab-name{font-size:8px}
+  .partners5{grid-template-columns:1fr}
+  .container-grid{grid-template-columns:1fr}
+}
+
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-row">
+    <div class="tb-logo">
+      <div class="tb-sym">∞</div>
+      <div>
+        <div class="tb-name">INFINITY <em>OS</em> · 总部 Agent 主控台</div>
+        <div class="tb-tag">V1.2 · MAX v2.0 · 13项全收口·8/13完成·5项前端可见</div>
+      </div>
+    </div>
+    <div class="tb-actions">
+      <button class="tb-mode-btn" onclick="openGlobalSearch()" title="全局搜索 (Ctrl+K / /)">🔍 搜索</button>
+      <button class="tb-mode-btn" onclick="switchTab('actions')">📋 决策记录</button>
+      <button class="tb-mode-btn" onclick="openDispatch()" style="background:var(--amber);color:#fff;border-color:var(--amber)">⚡ 派任务</button>
+      <div class="tb-clock" id="clock">--:--</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- 顶部 Tab -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" data-tab="brain" onclick="switchTab('brain')">
+      <span class="nav-tab-icon">🧠</span>
+      <div class="nav-tab-name">总指挥</div>
+      <div class="nav-tab-sub">BRAIN</div>
+    </div>
+    <div class="nav-tab" data-tab="evapo" onclick="switchTab('evapo')">
+      <span class="nav-tab-icon">💧</span>
+      <div class="nav-tab-name">蒸腾监测</div>
+      <div class="nav-tab-sub">EVAPORATION</div>
+    </div>
+    <div class="nav-tab" data-tab="partners" onclick="switchTab('partners')">
+      <span class="nav-tab-icon">🤝</span>
+      <div class="nav-tab-name">5 合伙人</div>
+      <div class="nav-tab-sub">PARTNERS</div>
+    </div>
+    <div class="nav-tab" data-tab="layers" onclick="switchTab('layers')">
+      <span class="nav-tab-icon">🏗️</span>
+      <div class="nav-tab-name">6 层架构</div>
+      <div class="nav-tab-sub">STACK</div>
+    </div>
+    <div class="nav-tab" data-tab="agents" onclick="switchTab('agents')">
+      <span class="nav-tab-icon">⚙️</span>
+      <div class="nav-tab-name">Agent 矩阵</div>
+      <div class="nav-tab-sub">8 AGENTS</div>
+    </div>
+    <div class="nav-tab" data-tab="strategy" onclick="switchTab('strategy')">
+      <span class="nav-tab-icon">⭐</span>
+      <div class="nav-tab-name">战略 SKU</div>
+      <div class="nav-tab-sub">PRODUCTS</div>
+    </div>
+    <div class="nav-tab" data-tab="actions" onclick="switchTab('actions')">
+      <span class="nav-tab-icon">📋</span>
+      <div class="nav-tab-name">决策记录</div>
+      <div class="nav-tab-sub">ACTIONS</div>
+    </div>
+    <div class="nav-tab" data-tab="containers" onclick="switchTab('containers')">
+      <span class="nav-tab-icon">📦</span>
+      <div class="nav-tab-name">容器进度</div>
+      <div class="nav-tab-sub">80% READY</div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 总指挥(默认主屏) ═══════════ -->
+  <div class="view active" id="view-brain">
+    
+    <!-- 每日简报 -->
+    <div class="briefing">
+      <div class="brief-hdr">
+        <div class="brief-title-block">
+          <div class="brief-icon">🧠</div>
+          <div>
+            <div class="brief-title" id="brief-greeting">早上好 · DS · <em>每日简报</em></div>
+            <div class="brief-meta" id="brief-time">加载中...</div>
+          </div>
+        </div>
+        <div class="brief-status">实时更新</div>
+      </div>
+      <div class="brief-content" id="brief-content"></div>
+      
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase">
+          🚨 今日关键议题 · Agent识别
+        </div>
+        <button class="refresh-btn" onclick="refreshIssues()">↻ 刷新</button>
+      </div>
+      <div class="brief-issues" id="brief-issues"></div>
+    </div>
+
+    <!-- 战略大脑 -->
+    <div class="brain-box">
+      <div class="brain-input-wrap">
+        <input class="brain-input" id="brain-input" placeholder="问总指挥任何问题…明发该怎么办?12月能达4亿吗?¥1000万投哪?" onkeydown="if(event.key==='Enter')askBrain(this.value)">
+        <button class="brain-send" onclick="askBrain(document.getElementById('brain-input').value)">↑</button>
+      </div>
+      
+      <div class="scenarios">
+        <div class="scenarios-label">— 9 类典型场景 · 一键问总指挥</div>
+        <div class="scenarios-grid" id="scenarios-grid"></div>
+      </div>
+    </div>
+
+    <!-- 对话区 -->
+    <div class="conversation" id="conversation"></div>
+  </div>
+
+  <!-- ═══════════ 蒸腾监测(核心新Tab) ═══════════ -->
+  <div class="view" id="view-evapo">
+    
+    <!-- 蒸腾模型说明 -->
+    <div class="briefing">
+      <div class="brief-hdr">
+        <div class="brief-title-block">
+          <div class="brief-icon">💧</div>
+          <div>
+            <div class="brief-title">蒸腾 <em>模型</em> · INFINITY OS 第一性原理基准</div>
+            <div class="brief-meta">EVAPORATION MODEL · BASE FORMULA · 所有 Agent 共用</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div id="evapo-last-update" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.05em">最后更新:--:--:--</div>
+          <button id="evapo-refresh-btn" onclick="refreshEvaporation()" style="background:var(--amber);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s" title="刷新蒸腾数据">
+            <span id="evapo-refresh-icon" style="display:inline-block;transition:transform 0.6s">↻</span>
+            <span>刷新</span>
+          </button>
+          <div class="brief-status">实时监测</div>
+        </div>
+      </div>
+      <div class="brief-content">
+        <p>
+          <strong>蒸腾模型</strong> = 测量"<strong>消费者真实需求</strong>"自下而上的传导速率·
+          像水从地面蒸发上升·无形但持续·最终在工厂端形成"云" = 真实的生产排程依据。
+        </p>
+        <p>
+          <strong>核心价值</strong> · 区分"<strong>真增长</strong>"(销量×蒸腾双涨)和"<strong>假增长</strong>"(销量涨蒸腾平=压货/促销假象) ·
+          为 8 个 Agent 提供决策的<strong>第一性原理基准</strong>。
+        </p>
+      </div>
+    </div>
+
+    <!-- 蒸腾 vs 销量 实时对比 -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">蒸腾速率 vs <em>销量速率</em> · 真假增长诊断</div>
+        <div class="sec-tag">REAL VS FAKE GROWTH</div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr;gap:14px">
+        
+        <!-- 真增长案例 -->
+        <div style="background:var(--green-bg);border-left:3px solid var(--green);border-radius:10px;padding:16px 20px;cursor:pointer" onclick="askBrain('明发的真增长案例·分析为什么蒸腾和销量都涨?如何复制到其他经销商?')">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+            <div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600">明发商贸 · <em style="color:var(--green);font-style:italic">真增长 ✓</em></div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:3px;font-family:'JetBrains Mono',monospace;letter-spacing:0.05em">DEALER-001 · 上海浦东</div>
+            </div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;background:var(--green);color:#fff;padding:3px 9px;border-radius:10px;font-weight:700;letter-spacing:0.1em">健康</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:12px">
+            <div style="background:#fff;padding:10px 12px;border-radius:6px;border:1px solid var(--line)">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">销量速率</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--green);font-size:18px">↑ +12%</div>
+            </div>
+            <div style="background:#fff;padding:10px 12px;border-radius:6px;border:1px solid var(--line)">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">蒸腾速率</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--green);font-size:18px">↑ +14%</div>
+            </div>
+            <div style="background:#fff;padding:10px 12px;border-radius:6px;border:1px solid var(--line)">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">真伪比</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--green);font-size:18px">1.17 ✓</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-2);margin-top:10px;line-height:1.6">
+            💡 <strong style="color:var(--green)">蒸腾 ≥ 销量</strong> · 消费者真实在买·渠道顺畅传导·有机系列突破点已现 · 可复制
+          </div>
+        </div>
+
+        <!-- 假增长案例 -->
+        <div style="background:var(--red-bg);border-left:3px solid var(--red);border-radius:10px;padding:16px 20px;cursor:pointer" onclick="askBrain('XX经销商假增长警示·销量涨但蒸腾平·诊断是A压货还是B促销假象?如何处理?')">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+            <div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600">康润商贸 · <em style="color:var(--red);font-style:italic">假增长 ⚠</em></div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:3px;font-family:'JetBrains Mono',monospace;letter-spacing:0.05em">DEALER-007 · 江苏南通</div>
+            </div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;background:var(--red);color:#fff;padding:3px 9px;border-radius:10px;font-weight:700;letter-spacing:0.1em">压货</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:12px">
+            <div style="background:#fff;padding:10px 12px;border-radius:6px;border:1px solid var(--line)">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">销量速率</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--green);font-size:18px">↑ +18%</div>
+            </div>
+            <div style="background:#fff;padding:10px 12px;border-radius:6px;border:1px solid var(--line)">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">蒸腾速率</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--text-3);font-size:18px">→ +1%</div>
+            </div>
+            <div style="background:#fff;padding:10px 12px;border-radius:6px;border:1px solid var(--line)">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">真伪比</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--red);font-size:18px">0.06 ⚠</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-2);margin-top:10px;line-height:1.6">
+            ⚠️ <strong style="color:var(--red)">销量 ≫ 蒸腾</strong> · 消费者并未消化·渠道在压货 · 蝴蝶效应 Agent 触发<strong>A 类失真预警</strong>
+          </div>
+        </div>
+
+        <!-- 隐藏增长案例 -->
+        <div style="background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:10px;padding:16px 20px;cursor:pointer" onclick="askBrain('华东片区蒸腾涨但销量平·渠道有断货?具体哪些门店?如何快速补货?')">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+            <div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600">华东片区 · <em style="color:var(--amber);font-style:italic">渠道断货 ⚡</em></div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:3px;font-family:'JetBrains Mono',monospace;letter-spacing:0.05em">REGION-EC · 上海+苏州+无锡</div>
+            </div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;background:var(--amber);color:#fff;padding:3px 9px;border-radius:10px;font-weight:700;letter-spacing:0.1em">机会</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:12px">
+            <div style="background:#fff;padding:10px 12px;border-radius:6px;border:1px solid var(--line)">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">销量速率</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--text-3);font-size:18px">→ +2%</div>
+            </div>
+            <div style="background:#fff;padding:10px 12px;border-radius:6px;border:1px solid var(--line)">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">蒸腾速率</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--green);font-size:18px">↑ +15%</div>
+            </div>
+            <div style="background:#fff;padding:10px 12px;border-radius:6px;border:1px solid var(--line)">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">真伪比</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--amber);font-size:18px">7.5 ⚡</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-2);margin-top:10px;line-height:1.6">
+            ⚡ <strong style="color:var(--amber)">蒸腾 ≫ 销量</strong> · 消费者想买但渠道供给不足 · <strong>紧急补货机会</strong> · Omakase Agent 触发推单
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 蒸腾在每个Agent中的应用 -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">蒸腾模型在 8 个 <em>Agent</em> 中的应用</div>
+        <div class="sec-tag">CROSS-AGENT BASE FORMULA</div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr;gap:8px">
+        <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;padding:12px 16px;display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600">A 值校准</div>
+          <div style="font-size:12px;color:var(--text-2)">校准结果与蒸腾值对照·偏差>15%重新校准</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--green);background:var(--green-bg);padding:3px 8px;border-radius:6px">基准输入</div>
+        </div>
+        <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;padding:12px 16px;display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600">蝴蝶效应</div>
+          <div style="font-size:12px;color:var(--text-2)">A压货=进货量超蒸腾量·B促销=蒸腾激增后回落·C窜货=本地蒸腾低外地销量高</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--green);background:var(--green-bg);padding:3px 8px;border-radius:6px">核心依据</div>
+        </div>
+        <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;padding:12px 16px;display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600">Omakase 推单</div>
+          <div style="font-size:12px;color:var(--text-2)">推单量 = 蒸腾速率 × 周期 T·不是按库存反推·避免压货</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--green);background:var(--green-bg);padding:3px 8px;border-radius:6px">公式核心</div>
+        </div>
+        <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;padding:12px 16px;display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600">CB 分</div>
+          <div style="font-size:12px;color:var(--text-2)">B+V+R-C-T·R(蒸腾增量)是核心权重·美顾创造的真蒸腾贡献</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--green);background:var(--green-bg);padding:3px 8px;border-radius:6px">权重维度</div>
+        </div>
+        <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;padding:12px 16px;display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600">AIQL</div>
+          <div style="font-size:12px;color:var(--text-2)">客流互动质量·关联蒸腾贡献度·非客流量绝对值</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--green);background:var(--green-bg);padding:3px 8px;border-radius:6px">质量评分</div>
+        </div>
+        <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;padding:12px 16px;display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600">PRISM 选点</div>
+          <div style="font-size:12px;color:var(--text-2)">蒸腾密度高+空间大的小区优先·不是单看富裕度</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--green);background:var(--green-bg);padding:3px 8px;border-radius:6px">选址依据</div>
+        </div>
+        <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;padding:12px 16px;display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600">战略推演</div>
+          <div style="font-size:12px;color:var(--text-2)">基于蒸腾趋势预测3年走势·蒸腾累积曲线指示品类爆发</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--green);background:var(--green-bg);padding:3px 8px;border-radius:6px">趋势预测</div>
+        </div>
+        <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;padding:12px 16px;display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600">价签识别</div>
+          <div style="font-size:12px;color:var(--text-2)">竞品价格 + 我品蒸腾 = 价格弹性真实评估</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--green);background:var(--green-bg);padding:3px 8px;border-radius:6px">弹性评估</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 蒸腾的10件具体事 -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">蒸腾模型可以做的 <em>10 件具体事</em></div>
+        <div class="sec-tag">10 USE CASES</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+        <div style="background:var(--bg-soft);padding:12px 14px;border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;border:1px solid var(--line);transition:all 0.15s" onclick="askBrain('蒸腾模型应用1·如何计算每家门店的蒸腾速率?具体公式和数据源?')" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='var(--line)'">
+          <strong style="color:var(--amber)">①</strong> 计算每家门店蒸腾速率(真实复购消费者数 ÷ 时间)
+        </div>
+        <div style="background:var(--bg-soft);padding:12px 14px;border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;border:1px solid var(--line)" onclick="askBrain('蒸腾模型应用2·如何识别假销量?促销/囤货/一次性买家的特征?')">
+          <strong style="color:var(--amber)">②</strong> 识别假销量(销量高蒸腾低=促销/囤货)
+        </div>
+        <div style="background:var(--bg-soft);padding:12px 14px;border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;border:1px solid var(--line)" onclick="askBrain('蒸腾模型应用3·如何区分压货和真蒸腾?具体诊断公式?')">
+          <strong style="color:var(--amber)">③</strong> 区分压货 vs 真蒸腾(经销进货 vs 门店蒸腾)
+        </div>
+        <div style="background:var(--bg-soft);padding:12px 14px;border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;border:1px solid var(--line)" onclick="askBrain('蒸腾模型应用4·如何提前识别将爆品类?临界点信号是什么?')">
+          <strong style="color:var(--amber)">④</strong> 提前预警将爆品类(蒸腾累积临界)
+        </div>
+        <div style="background:var(--bg-soft);padding:12px 14px;border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;border:1px solid var(--line)" onclick="askBrain('蒸腾模型应用5·如何反向规划工厂生产?60天前看蒸腾趋势?')">
+          <strong style="color:var(--amber)">⑤</strong> 反向规划生产(60天前看蒸腾·非月度计划)
+        </div>
+        <div style="background:var(--bg-soft);padding:12px 14px;border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;border:1px solid var(--line)" onclick="askBrain('蒸腾模型应用6·如何衡量品牌健康度?蒸腾速率作为地下水位?')">
+          <strong style="color:var(--amber)">⑥</strong> 衡量品牌健康度(蒸腾=地下水·销量=地表)
+        </div>
+        <div style="background:var(--bg-soft);padding:12px 14px;border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;border:1px solid var(--line)" onclick="askBrain('蒸腾模型应用7·PRISM选点如何用蒸腾密度?评分公式?')">
+          <strong style="color:var(--amber)">⑦</strong> PRISM选点依据(蒸腾密度+空间)
+        </div>
+        <div style="background:var(--bg-soft);padding:12px 14px;border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;border:1px solid var(--line)" onclick="askBrain('蒸腾模型应用8·战略SKU推进如何用蒸腾?配额怎么定?')">
+          <strong style="color:var(--amber)">⑧</strong> 战略 SKU 推进(蒸腾测试通过才扩产)
+        </div>
+        <div style="background:var(--bg-soft);padding:12px 14px;border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;border:1px solid var(--line)" onclick="askBrain('蒸腾模型应用9·战役效果评估·营销投入对蒸腾的真实影响ROI?')">
+          <strong style="color:var(--amber)">⑨</strong> 战役效果评估(¥X 营销 → 蒸腾增 ROI)
+        </div>
+        <div style="background:var(--bg-soft);padding:12px 14px;border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;border:1px solid var(--line)" onclick="askBrain('蒸腾模型应用10·经销商分级·蒸腾驱动型vs压货驱动型如何识别?')">
+          <strong style="color:var(--amber)">⑩</strong> 经销商分级(蒸腾驱动 vs 压货驱动)
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="view" id="view-partners">
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">5 类 <em>合伙人</em> · 欣和视角</div>
+        <div class="sec-tag">PARTNERSHIP NETWORK</div>
+      </div>
+      <div class="partners5">
+        <div class="partner self" onclick="toggleXinheDetail()" id="xinhe-card" style="cursor:pointer">
+          <div class="p-icon">H</div>
+          <div class="p-name">欣和 (我)</div>
+          <div class="p-meta">PROTOCOL HOST</div>
+          <div class="p-num">12K</div>
+          <div style="font-size:9px;color:var(--text-3);margin-top:2px">员工 · 点击 ▼</div>
+        </div>
+        <div class="partner" onclick="askBrain('深度合伙率42%·如何提到60%? 哪些经销商先升级? 需要什么资源?')">
+          <div class="p-icon">D</div>
+          <div class="p-name">经销商</div>
+          <div class="p-meta">CAPITAL</div>
+          <div class="p-num">156</div>
+          <div style="font-size:9px;color:var(--text-3);margin-top:2px">42% 深度</div>
+        </div>
+        <div class="partner" onclick="askBrain('门店12,400家·哪些S+/S门店ROI最高? 哪些C/D门店建议汰换?')">
+          <div class="p-icon">S</div>
+          <div class="p-name">门店</div>
+          <div class="p-meta">RETAIL</div>
+          <div class="p-num">12.4K</div>
+          <div style="font-size:9px;color:var(--text-3);margin-top:2px">含KA+连锁</div>
+        </div>
+        <div class="partner" onclick="askBrain('280万会员·哪些是高价值用户? 复购率82%如何提到90%?')">
+          <div class="p-icon">C</div>
+          <div class="p-name">消费者</div>
+          <div class="p-meta">DEMAND</div>
+          <div class="p-num">280万</div>
+          <div style="font-size:9px;color:var(--text-3);margin-top:2px">82% 复购</div>
+        </div>
+        <div class="partner" onclick="askBrain('员工12K(10K美顾)·哪些DOM/DSR/美顾是top performer? 激励是否到位?')">
+          <div class="p-icon">E</div>
+          <div class="p-name">员工</div>
+          <div class="p-meta">ORG</div>
+          <div class="p-num">12K</div>
+          <div style="font-size:9px;color:var(--text-3);margin-top:2px">10K 美顾</div>
+        </div>
+      </div>
+      
+      <!-- Xinhe (我) 展开详情 · v1.2新增 -->
+      <div id="xinhe-detail" style="display:none;margin-top:14px;background:var(--bg-warm);border:1px solid var(--amber);border-radius:10px;padding:16px 20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)">
+          <div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--amber);font-style:italic">H · 欣和 SH · PROTOCOL HOST</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.05em;margin-top:2px">协议主体 · 不是控制者·而是合伙人协议的发起者+守护者+价值放大器</div>
+          </div>
+          <button onclick="event.stopPropagation();toggleXinheDetail()" style="background:none;border:1px solid var(--line);color:var(--text-3);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px">收起 ▲</button>
+        </div>
+        
+        <!-- 北极星指标 -->
+        <div style="background:var(--bg-card);border-left:3px solid var(--amber);padding:10px 14px;border-radius:0 8px 8px 0;margin-bottom:12px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:0.1em;margin-bottom:4px;font-weight:700">⭐ 北极星指标 · NORTH STAR</div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:6px">2亿瓶 · 4亿RMB · 5品牌矩阵覆盖 · 2029目标</div>
+          <div style="display:flex;gap:14px;font-size:11px">
+            <div>当前进度:<span style="color:var(--amber);font-weight:700">46.8万箱</span> · 战略SKU</div>
+            <div>覆盖经销商:<span style="color:var(--green);font-weight:700">156家</span> · 42%深度</div>
+            <div>覆盖门店:<span style="color:var(--blue);font-weight:700">12,400家</span></div>
+          </div>
+        </div>
+        
+        <!-- 5品牌矩阵 -->
+        <div style="margin-bottom:12px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:6px;font-weight:700">🎯 5品牌矩阵 · BRAND MATRIX</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;font-size:11px">
+            <div style="background:var(--bg-card);border:1px solid var(--amber);border-radius:6px;padding:8px 10px"><strong style="color:var(--amber)">六月鲜</strong> · 高端·北极星</div>
+            <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:6px;padding:8px 10px"><strong>味达美</strong> · 大众市场</div>
+            <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:6px;padding:8px 10px"><strong>禾然</strong> · 有机</div>
+            <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:6px;padding:8px 10px"><strong>葱伴侣</strong> · 细分</div>
+            <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:6px;padding:8px 10px"><strong>小康</strong> · 防御</div>
+          </div>
+        </div>
+        
+        <!-- 承诺-价值-交易 框架 -->
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:6px;font-weight:700">🤝 V1.2 合伙人协议核心 · COMMIT-VALUE-TRANSACTION</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
+            <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:6px;padding:8px 10px">
+              <div style="color:var(--blue);font-weight:700;font-size:10px;margin-bottom:3px">📝 承诺 COMMIT</div>
+              <div style="color:var(--text-2);font-size:10px">¥4,500万市场费<br>战略SKU 60万箱</div>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:6px;padding:8px 10px">
+              <div style="color:var(--green);font-weight:700;font-size:10px;margin-bottom:3px">💎 价值 VALUE</div>
+              <div style="color:var(--text-2);font-size:10px">实际¥4,200万 (93%)<br>SKU达成 46.8万箱</div>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:6px;padding:8px 10px">
+              <div style="color:var(--amber);font-weight:700;font-size:10px;margin-bottom:3px">💰 交易 TX</div>
+              <div style="color:var(--text-2);font-size:10px">销售¥3.01亿 (94%)<br>综合达成 87% ✓</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)">
+          <button class="choice-btn" onclick="event.stopPropagation();askBrain('欣和作为协议主体的核心定位是什么?如何强化『发起者+守护者+价值放大器』三重角色?')" style="font-size:11px;padding:5px 10px">问 Agent →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 合伙人详情 -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">D · <em>经销商</em> · 资本合伙人</div>
+        <div class="sec-tag">DEALER NETWORK</div>
+      </div>
+      <div class="partners5" style="grid-template-columns:repeat(4,1fr)">
+        <div class="cont-card">
+          <div class="cont-letter">156</div>
+          <div class="cont-name">总经销商</div>
+          <div class="cont-meta">全国 18 大区</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter" style="color:var(--green)">66</div>
+          <div class="cont-name">深度合伙</div>
+          <div class="cont-meta">42% · 拿 80% 资源</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter" style="color:var(--blue)">90</div>
+          <div class="cont-name">标准合伙</div>
+          <div class="cont-meta">58% · 标准服务</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter" style="color:var(--amber)">8</div>
+          <div class="cont-name">候选升级</div>
+          <div class="cont-meta">明发等</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- 承诺-价值-交易框架(D容器·V1.2核心) -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">承诺 · 价值 · <em>交易</em> · V1.2 核心框架</div>
+        <div class="sec-tag">COMMIT-VALUE-TRANSACTION</div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr;gap:12px">
+        <div style="background:linear-gradient(135deg,var(--blue-bg),transparent);border:1px solid rgba(74,106,138,0.3);border-left:4px solid var(--blue);border-radius:10px;padding:16px 20px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--blue);letter-spacing:0.15em;margin-bottom:10px;text-transform:uppercase;font-weight:700">📝 承诺 COMMIT · 双方约定</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:13px;color:var(--text-2);line-height:1.7">
+            <div>
+              <div style="font-weight:600;color:var(--text);margin-bottom:6px">欣和→经销商</div>
+              <div>本月投入 ¥4,500万市场费</div>
+              <div>资源等级 A 类·156家覆盖</div>
+              <div>战略 SKU 配额 60万箱</div>
+            </div>
+            <div>
+              <div style="font-weight:600;color:var(--text);margin-bottom:6px">经销商→欣和</div>
+              <div>承诺销售 ¥3.2亿</div>
+              <div>覆盖门店 12,400家</div>
+              <div>DSR 团队规模 800+</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="background:linear-gradient(135deg,var(--green-bg),transparent);border:1px solid rgba(95,140,99,0.3);border-left:4px solid var(--green);border-radius:10px;padding:16px 20px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--green);letter-spacing:0.15em;margin-bottom:10px;text-transform:uppercase;font-weight:700">💎 价值 VALUE · 实际交付</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:13px;color:var(--text-2);line-height:1.7">
+            <div>
+              <div style="font-weight:600;color:var(--text);margin-bottom:6px">实际投入</div>
+              <div>¥4,200万 (兑现 93%)</div>
+              <div>深度合伙覆盖 66家</div>
+              <div>战略 SKU 推进 46.8万箱</div>
+            </div>
+            <div>
+              <div style="font-weight:600;color:var(--text);margin-bottom:6px">实际产出</div>
+              <div>销售 ¥3.01亿 (94%)</div>
+              <div>服务门店 12,400家</div>
+              <div style="color:var(--green);font-weight:600">综合达成 87% ✓</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="background:linear-gradient(135deg,var(--amber-bg),transparent);border:1px solid var(--amber-line);border-left:4px solid var(--amber);border-radius:10px;padding:16px 20px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--amber);letter-spacing:0.15em;margin-bottom:10px;text-transform:uppercase;font-weight:700">💰 交易 TRANSACTION · 资金流</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:13px;color:var(--text-2);line-height:1.7">
+            <div>
+              <div style="font-weight:600;color:var(--text);margin-bottom:6px">本月返利</div>
+              <div>¥8,500万 (返给经销商)</div>
+              <div>YTD 累计 ¥3.2亿</div>
+              <div>下月预计 ¥9,200万</div>
+            </div>
+            <div>
+              <div style="font-weight:600;color:var(--text);margin-bottom:6px">合伙ROI</div>
+              <div>综合 ROI 8.2x</div>
+              <div>深度合伙 ROI 12.5x</div>
+              <div style="color:var(--amber);font-weight:600">A+ 评级 · 28月</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOP 10 经销商 -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">TOP 10 <em>经销商</em> · 蒸腾健康度排序</div>
+        <div class="sec-tag">DEALERS · LIVE</div>
+      </div>
+      <div id="top-dealers-list"></div>
+    </div>
+
+    <!-- S 门店 -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">S · <em>门店</em> · 零售合伙人</div>
+        <div class="sec-tag">STORE NETWORK</div>
+      </div>
+      <div class="partners5" style="grid-template-columns:repeat(4,1fr)">
+        <div class="cont-card">
+          <div class="cont-letter">12.4K</div>
+          <div class="cont-name">总门店</div>
+          <div class="cont-meta">含KA+连锁+独立</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter" style="color:var(--green)">2.8K</div>
+          <div class="cont-name">S+/S 级</div>
+          <div class="cont-meta">22.6% · 重点</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter" style="color:var(--amber)">5.2K</div>
+          <div class="cont-name">A/B 级</div>
+          <div class="cont-meta">42% · 主力</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter" style="color:var(--blue)">4.4K</div>
+          <div class="cont-name">C/D 级</div>
+          <div class="cont-meta">35% · 长尾</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C 消费者 -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">C · <em>消费者</em> · 终端合伙人</div>
+        <div class="sec-tag">CONSUMER NETWORK</div>
+      </div>
+      <div class="partners5" style="grid-template-columns:repeat(4,1fr)">
+        <div class="cont-card">
+          <div class="cont-letter">280万</div>
+          <div class="cont-name">会员总数</div>
+          <div class="cont-meta">微信+小程序</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter" style="color:var(--green)">68万</div>
+          <div class="cont-name">月活跃</div>
+          <div class="cont-meta">24% 活跃率</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter" style="color:var(--amber)">¥48</div>
+          <div class="cont-name">客单价</div>
+          <div class="cont-meta">+12% YoY</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter" style="color:var(--blue)">82%</div>
+          <div class="cont-name">复购率</div>
+          <div class="cont-meta">高粘性</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- E 员工 -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">E · <em>员工</em> · 组织合伙人</div>
+        <div class="sec-tag">ORG NETWORK</div>
+      </div>
+      <div class="partners5" style="grid-template-columns:repeat(4,1fr)">
+        <div class="cont-card">
+          <div class="cont-letter">12K</div>
+          <div class="cont-name">总员工</div>
+          <div class="cont-meta">含外包+美顾</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter" style="color:var(--amber)">10K</div>
+          <div class="cont-name">美顾</div>
+          <div class="cont-meta">最大群体</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter" style="color:var(--blue)">800</div>
+          <div class="cont-name">DOM/DSR/SPD</div>
+          <div class="cont-meta">业务前端</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter" style="color:var(--purple)">1.2K</div>
+          <div class="cont-name">中台/后端</div>
+          <div class="cont-meta">支持+供应</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 6 层架构 ═══════════ -->
+  <div class="view" id="view-layers">
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">6 层 <em>架构</em> · 真实状态</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button onclick="toggleAllLayerDetails()" id="layer-toggle-all" style="background:var(--amber);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:0.05em">展开全部 ▼</button>
+          <div class="sec-tag">L1-L6 STACK</div>
+        </div>
+      </div>
+      <div class="layer-list">
+        <div class="layer-wrap" data-layer="1">
+        <div class="layer-row" onclick="toggleLayerDetail(1)">
+          <div class="layer-num">I</div>
+          <div>
+            <div class="layer-name">战略 <em>STRATEGY</em></div>
+            <div class="layer-desc">2亿瓶·4亿RMB·5品牌矩阵·战略SKU·北极星·CDI统治力指数·年级系统</div>
+          </div>
+          <div class="layer-pct-block">
+            <div class="layer-pct" style="color:var(--green)">88%</div>
+            <div class="layer-bar"><div class="layer-fill" style="width:88%"></div></div>
+          </div>
+        </div>
+        <div class="layer-detail" id="layer-detail-1" style="display:none;background:var(--bg-warm);border:1px solid var(--line);border-top:none;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-10px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:10px">L1 STRATEGY · 已完成模块</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:12px">
+            <div>✓ 5年战略推演</div><div>✓ 北极星(2亿瓶/4亿RMB)</div>
+            <div>✓ 5品牌矩阵</div><div>✓ 战略SKU(3个)</div>
+            <div>✓ CDI统治力指数</div><div>✓ 年级系统(Grade 1-4)</div>
+            <div style="color:var(--amber)">⚠ 竞争战略推演(待补)</div><div style="color:var(--amber)">⚠ 区域地图(待补)</div>
+          </div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:11px;color:var(--text-2)">
+            <button class="choice-btn" onclick="event.stopPropagation();askBrain('L1战略层完成度88%·还需补什么? 5年战略推演路线/竞争战略/区域地图哪个最紧急?')" style="font-size:11px;padding:5px 10px">问 Agent →</button>
+          </div>
+        </div>
+        </div>
+        <div class="layer-wrap" data-layer="2">
+        <div class="layer-row" onclick="toggleLayerDetail(2)">
+          <div class="layer-num">II</div>
+          <div>
+            <div class="layer-name">合伙人协议 <em>PARTNERSHIP</em></div>
+            <div class="layer-desc">承诺-价值-交易框架·标准/深度双轨·5类协议(法务版待补)</div>
+          </div>
+          <div class="layer-pct-block">
+            <div class="layer-pct" style="color:var(--amber)">82%</div>
+            <div class="layer-bar"><div class="layer-fill" style="width:82%;background:var(--amber)"></div></div>
+          </div>
+        </div>
+        <div class="layer-detail" id="layer-detail-2" style="display:none;background:var(--bg-warm);border:1px solid var(--line);border-top:none;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-10px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:10px">L2 PARTNERSHIP · 5类协议状态</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:12px">
+            <div>✓ H欣和(主体)</div><div>✓ D经销商(双轨)</div>
+            <div>✓ S门店</div><div>✓ E员工/美顾</div>
+            <div style="color:var(--amber)">⚠ C消费者(法务模板)</div><div>✓ 承诺-价值-交易框架</div>
+          </div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">
+            <button class="choice-btn" onclick="event.stopPropagation();askBrain('L2合伙人协议层82%·D类协议法务模板未做·先做哪个?')" style="font-size:11px;padding:5px 10px">问 Agent →</button>
+          </div>
+        </div>
+        </div>
+        <div class="layer-wrap" data-layer="3">
+        <div class="layer-row" onclick="toggleLayerDetail(3)">
+          <div class="layer-num">III</div>
+          <div>
+            <div class="layer-name">Interface 层 <em>INTERFACE</em></div>
+            <div class="layer-desc">SFA + DSFA + 经销商主控台 + Web主控台 (5个已做·MES/WMS/H5待做)</div>
+          </div>
+          <div class="layer-pct-block">
+            <div class="layer-pct" style="color:var(--amber)">72%</div>
+            <div class="layer-bar"><div class="layer-fill" style="width:72%;background:var(--amber)"></div></div>
+          </div>
+        </div>
+        <div class="layer-detail" id="layer-detail-3" style="display:none;background:var(--bg-warm);border:1px solid var(--line);border-top:none;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-10px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:10px">L3 INTERFACE · 8入口状态</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:12px">
+            <div>✓ SFA(欣和员工)</div><div>✓ DSFA(经销商员工)</div>
+            <div>✓ 经销商Web主控台</div><div>✓ 总部Web主控台MAX</div>
+            <div>✓ 美顾Uber化APP</div><div style="color:var(--amber)">⚠ 工厂MES(待TL)</div>
+            <div style="color:var(--amber)">⚠ 仓储WMS(待TL)</div><div style="color:var(--amber)">⚠ 微信H5门店消费者</div>
+          </div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">
+            <button class="choice-btn" onclick="event.stopPropagation();askBrain('L3 Interface层72%·SFA/DSFA/经销商主控台/Web主控台已做·缺工厂MES/仓储WMS/微信H5')" style="font-size:11px;padding:5px 10px">问 Agent →</button>
+          </div>
+        </div>
+        </div>
+        <div class="layer-wrap" data-layer="4">
+        <div class="layer-row" onclick="toggleLayerDetail(4)">
+          <div class="layer-num">IV</div>
+          <div>
+            <div class="layer-name">Orchestration <em>ORCHESTRATION</em></div>
+            <div class="layer-desc">推单·派单·拜访·任务编排·tool-layer-v3已交付</div>
+          </div>
+          <div class="layer-pct-block">
+            <div class="layer-pct" style="color:var(--blue)">65%</div>
+            <div class="layer-bar"><div class="layer-fill" style="width:65%;background:var(--blue)"></div></div>
+          </div>
+        </div>
+        <div class="layer-detail" id="layer-detail-4" style="display:none;background:var(--bg-warm);border:1px solid var(--line);border-top:none;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-10px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:10px">L4 ORCHESTRATION · 编排引擎状态</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:12px">
+            <div>✓ tool-layer-v3-final</div><div>✓ 派单互锁25步规格</div>
+            <div>✓ Omakase推单算法</div><div>✓ 派单匹配算法</div>
+            <div style="color:var(--amber)">⚠ Workflow编排引擎(待TL)</div><div style="color:var(--amber)">⚠ 异常处置编排</div>
+          </div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">
+            <button class="choice-btn" onclick="event.stopPropagation();askBrain('L4 Orchestration层65%·Workflow编排引擎待TL开发')" style="font-size:11px;padding:5px 10px">问 Agent →</button>
+          </div>
+        </div>
+        </div>
+        <div class="layer-wrap" data-layer="5">
+        <div class="layer-row" onclick="toggleLayerDetail(5)">
+          <div class="layer-num">V</div>
+          <div>
+            <div class="layer-name">Decision <em>DECISION</em></div>
+            <div class="layer-desc">心跳a值·蝴蝶预警·Omakase·CB公式·PRISM·8 Agents + 蒸腾基础公式 (Python代码已实现)</div>
+          </div>
+          <div class="layer-pct-block">
+            <div class="layer-pct" style="color:var(--amber)">75%</div>
+            <div class="layer-bar"><div class="layer-fill" style="width:75%;background:var(--amber)"></div></div>
+          </div>
+        </div>
+        <div class="layer-detail" id="layer-detail-5" style="display:none;background:var(--bg-warm);border:1px solid var(--line);border-top:none;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-10px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:10px">L5 DECISION · 8 Agent + 蒸腾公式</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:12px">
+            <div>✓ A值校准Agent</div><div>✓ 蝴蝶效应Agent</div>
+            <div>✓ Omakase推单Agent</div><div>✓ CB分Agent</div>
+            <div>✓ AIQL Agent</div><div>✓ PRISM选点Agent</div>
+            <div>✓ 战略推演Agent</div><div>✓ 价签识别Agent</div>
+            <div>✓ 蒸腾基础公式</div><div style="color:var(--amber)">⚠ 真a值校准(等数据)</div>
+          </div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">
+            <button class="choice-btn" onclick="event.stopPropagation();askBrain('L5 Decision层75%·8个Agent都已设计·蒸腾模型作为基础公式·真a值校准等接数据')" style="font-size:11px;padding:5px 10px">问 Agent →</button>
+          </div>
+        </div>
+        </div>
+        <div class="layer-wrap" data-layer="6">
+        <div class="layer-row" onclick="toggleLayerDetail(6)">
+          <div class="layer-num">VI</div>
+          <div>
+            <div class="layer-name">Memory 层 <em>MEMORY</em></div>
+            <div class="layer-desc">10张schema表设计完成·26维授权边界·实例化等TL</div>
+          </div>
+          <div class="layer-pct-block">
+            <div class="layer-pct" style="color:var(--purple)">55%</div>
+            <div class="layer-bar"><div class="layer-fill" style="width:55%;background:var(--purple)"></div></div>
+          </div>
+        </div>
+        <div class="layer-detail" id="layer-detail-6" style="display:none;background:var(--bg-warm);border:1px solid var(--line);border-top:none;border-radius:0 0 10px 10px;padding:14px 18px;margin-top:-10px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:10px">L6 MEMORY · Schema设计完成·实例化待TL</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:12px">
+            <div>✓ memory-all-layers v2.1</div><div>✓ 10张schema表设计</div>
+            <div>✓ 26维授权边界</div><div>✓ inf_learning_log规格</div>
+            <div style="color:var(--amber)">⚠ MySQL实例化(待TL)</div><div style="color:var(--amber)">⚠ 跨session记忆(S3)</div>
+          </div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">
+            <button class="choice-btn" onclick="event.stopPropagation();askBrain('L6 Memory层55%·memory-all-layers v2.1已交付·授权边界已交付·实例化等TL')" style="font-size:11px;padding:5px 10px">问 Agent →</button>
+          </div>
+        </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding:12px 16px;background:var(--green-bg);border-left:3px solid var(--green);border-radius:6px;font-size:12px;color:var(--text-2)">
+        <strong style="color:var(--green)">🟢 综合就绪度 · 73%</strong> · L1战略最强(88%) · L6 Memory待实例化(55%) · 整体就绪做真Agent
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ Agent 矩阵 ═══════════ -->
+  <div class="view" id="view-agents">
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">8 个 Agent · <em>决策矩阵</em></div>
+        <div class="sec-tag">DECISION AGENTS</div>
+      </div>
+      <div class="agent-grid" id="agent-grid"></div>
+    </div>
+
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">IPO 0-13 · <em>双向流</em> · 物流↓ + 蒸腾↑</div>
+        <div class="sec-tag">END-TO-END · BIDIRECTIONAL</div>
+      </div>
+      
+      <!-- 物流方向 -->
+      <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--blue);letter-spacing:0.1em;font-weight:700;min-width:80px">📦 物流 ↓</div>
+        <div style="font-size:11px;color:var(--text-2)">工厂 → 仓储 → 经销商 → 二批 → 门店 → 消费者 (推力·向下供给)</div>
+      </div>
+      
+      <div class="chain-grid">
+        <div class="chain-flow" id="chain-flow"></div>
+      </div>
+      
+      <!-- 蒸腾方向 -->
+      <div style="background:var(--green-bg);border:1px solid var(--green);border-radius:8px;padding:10px 14px;margin-top:10px;display:flex;align-items:center;gap:10px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--green);letter-spacing:0.1em;font-weight:700;min-width:80px">💧 蒸腾 ↑</div>
+        <div style="font-size:11px;color:var(--text-2)">消费者真实购买 → 门店感知 → 经销商感知 → 工厂感知 (拉力·向上传导真需求)</div>
+      </div>
+      
+      <div style="margin-top:14px;padding:12px 16px;background:var(--red-bg);border-left:3px solid var(--red);border-radius:6px;font-size:12px;color:var(--text-2)">
+        <strong style="color:var(--red)">🦋 蝴蝶预警:</strong>IPO3 经销商库存 3.8a 偏高(明发等) · 蝴蝶效应Agent检出 <strong>A 类压货</strong>(物流↓量超蒸腾↑量)·建议IPO0-1放缓·让蒸腾追上物流
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 战略 SKU ═══════════ -->
+  <div class="view" id="view-strategy">
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">战略 <em>SKU</em> · 当前 3 个活跃</div>
+        <div class="sec-tag">STRATEGIC PRODUCTS</div>
+      </div>
+      <div id="sku-list"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 决策记录(新Tab·MAX要求) ═══════════ -->
+  <div class="view" id="view-actions">
+    
+    <!-- KPI概览 -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">决策 <em>记录</em> · 闭环管理</div>
+        <div class="sec-tag">INF_ACTIONS · 28 DAYS</div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+        <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;font-style:italic;color:var(--amber);line-height:1">42</div>
+          <div style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-top:4px;letter-spacing:0.05em">本月决策总数</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;font-style:italic;color:var(--green);line-height:1">31</div>
+          <div style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-top:4px;letter-spacing:0.05em">已闭环</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;font-style:italic;color:var(--amber);line-height:1">8</div>
+          <div style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-top:4px;letter-spacing:0.05em">进行中</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;font-style:italic;color:var(--red);line-height:1">3</div>
+          <div style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-top:4px;letter-spacing:0.05em">超期</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 决策列表 -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">最近 <em>决策</em> · 21 条</div>
+        <div class="sec-tag">RECENT</div>
+      </div>
+      
+      <div id="actions-list" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 全局搜索弹窗 · v1.2新增 ═══════════ -->
+  <div id="global-search-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:400;align-items:flex-start;justify-content:center;padding:80px 20px 20px" onclick="if(event.target===this)closeGlobalSearch()">
+    <div style="background:var(--bg-card);border-radius:16px;padding:24px;max-width:640px;width:100%;max-height:75vh;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600">🔍 全局 <em style="color:var(--amber);font-style:italic">搜索</em></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.1em;margin-top:2px">SEARCH · Tab/Agent/SKU/经销商/IPO节点</div>
+        </div>
+        <button onclick="closeGlobalSearch()" style="background:none;border:none;font-size:24px;color:var(--text-3);cursor:pointer">×</button>
+      </div>
+      <input id="global-search-input" type="text" placeholder="输入关键词...试试『明发』『蝴蝶』『有机』『IPO3』" 
+        style="width:100%;padding:14px 16px;background:var(--bg-soft);border:2px solid var(--amber);border-radius:10px;font-family:inherit;font-size:14px;color:var(--text);outline:none;margin-bottom:14px"
+        oninput="performGlobalSearch(this.value)">
+      <div id="global-search-results" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px">
+        <div style="padding:24px;text-align:center;color:var(--text-3);font-size:12px">输入关键词开始搜索...</div>
+      </div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);text-align:center;letter-spacing:0.05em">
+        ⏎ 跳转 · ESC 关闭 · / 唤起搜索
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 派单弹窗 ═══════════ -->
+  <div id="dispatch-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px">
+    <div style="background:var(--bg-card);border-radius:16px;padding:28px 32px;max-width:540px;width:100%;max-height:85vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line)">
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600">派 <em style="color:var(--amber);font-style:italic">任务</em> · 决策执行</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.15em;margin-top:2px;text-transform:uppercase">DISPATCH · WRITE TO INF_ACTIONS</div>
+        </div>
+        <button onclick="closeDispatch()" style="background:none;border:none;font-size:24px;color:var(--text-3);cursor:pointer">×</button>
+      </div>
+      
+      <!-- ④ v2.0新增·Agent建议按钮 -->
+      <div style="background:linear-gradient(135deg,rgba(245,166,35,0.08),rgba(78,205,196,0.05));border:1px solid var(--amber);border-radius:10px;padding:12px 16px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:2px">💡 让 Agent 建议</div>
+            <div style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:0.05em">基于当前上下文·一键填充建议(演示·真Agent建议待TL接入)</div>
+          </div>
+          <button onclick="suggestDispatchByAgent()" style="background:var(--amber);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:0.05em;white-space:nowrap">💡 建议</button>
+        </div>
+      </div>
+      
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:6px;text-transform:uppercase">任务类型</div>
+          <select id="dispatch-type" style="width:100%;padding:10px 14px;background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);outline:none">
+            <option>调用 Agent · A值校准</option>
+            <option>调用 Agent · 蝴蝶效应扫描</option>
+            <option>调用 Agent · Omakase推单</option>
+            <option>调用 Agent · 战略推演</option>
+            <option>派任务 · DOM/MCTL处理</option>
+            <option>派任务 · 派驻经理跟进</option>
+            <option>通知 · 经销商老板</option>
+            <option>通知 · 美顾团队</option>
+          </select>
+        </div>
+        
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:6px;text-transform:uppercase">目标对象</div>
+          <input id="dispatch-target" type="text" placeholder="例:明发商贸 / 浦东片区 / 全部经销商" style="width:100%;padding:10px 14px;background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);outline:none">
+        </div>
+        
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:6px;text-transform:uppercase">任务描述</div>
+          <textarea id="dispatch-desc" rows="3" placeholder="例:库存3.8a偏高·请7天内消化至2.5a·派驻周经理协助" style="width:100%;padding:10px 14px;background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);outline:none;resize:vertical"></textarea>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:6px;text-transform:uppercase">优先级</div>
+            <select id="dispatch-priority" style="width:100%;padding:10px 14px;background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);outline:none">
+              <option>🚨 紧急(24小时)</option>
+              <option>⚠️ 高(3天)</option>
+              <option>○ 中(7天)</option>
+              <option>· 低(14天)</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:6px;text-transform:uppercase">渠道</div>
+            <select id="dispatch-channel" style="width:100%;padding:10px 14px;background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;color:var(--text);outline:none">
+              <option>📱 企微推送</option>
+              <option>📧 邮件</option>
+              <option>📋 内部任务系统</option>
+              <option>🔔 多渠道</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div style="display:flex;gap:10px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)">
+        <button onclick="closeDispatch()" style="flex:1;background:var(--bg-soft);border:1px solid var(--line);color:var(--text-2);padding:10px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">取消</button>
+        <button onclick="submitDispatch()" style="flex:2;background:var(--amber);border:none;color:#fff;padding:10px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">⚡ 立即派发</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 容器进度 ═══════════ -->
+  <div class="view" id="view-containers">
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">5 类 <em>容器</em> · 整体 80% 就绪</div>
+        <div class="sec-tag">CONTAINER PROGRESS</div>
+      </div>
+      <div class="container-grid">
+        <div class="cont-card">
+          <div class="cont-letter">A</div>
+          <div class="cont-name">Schema 容器</div>
+          <div class="cont-pct">100%</div>
+          <div class="cont-meta">10/10 已做</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter">B</div>
+          <div class="cont-name">界面容器</div>
+          <div class="cont-pct" style="color:var(--amber)">70%</div>
+          <div class="cont-meta">7/10 已做·3 部分</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter">C</div>
+          <div class="cont-name">Agent 容器</div>
+          <div class="cont-pct">87%</div>
+          <div class="cont-meta">7 ready · 1 partial · +蒸腾公式</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter">D</div>
+          <div class="cont-name">协议容器</div>
+          <div class="cont-pct" style="color:var(--amber)">概念</div>
+          <div class="cont-meta">5/5 框架·法务待</div>
+        </div>
+        <div class="cont-card">
+          <div class="cont-letter">E</div>
+          <div class="cont-name">战略容器</div>
+          <div class="cont-pct">100%</div>
+          <div class="cont-meta">10/10 已做</div>
+        </div>
+      </div>
+
+      <div style="margin-top:18px;padding:14px 18px;background:var(--green-bg);border-left:3px solid var(--green);border-radius:6px;font-size:13px;color:var(--text-2)">
+        <strong style="color:var(--green)">🟢 关键判断:</strong>真缺口只有 <strong>5 项</strong> ① 价签 Agent 完善 ② 协议法务版 ③ 工厂/仓储 Agent 模块 ④ 8 入口完整登录串联 ⑤ 经销商主控台整合升级
+      </div>
+    </div>
+    
+    <!-- ⑤ v2.0新增·主控台MAX 13项改进进度 -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title">主控台 MAX <em>13 项改进</em> · 下一步行动</div>
+        <div class="sec-tag">v1.0 → v2.0 · 4 周收口</div>
+      </div>
+      
+      <!-- 进度总览条 -->
+      <div style="background:var(--bg-warm);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;font-style:italic;color:var(--green)"><span id="action-progress-num">13</span><span style="font-size:14px;color:var(--text-3)">/13</span></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.05em">UI完整度·所有项前端可见</div>
+        </div>
+        <div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden">
+          <div id="action-progress-bar" style="height:100%;width:100%;background:linear-gradient(90deg,var(--green),var(--amber));transition:width 0.3s"></div>
+        </div>
+      </div>
+
+      <!-- 批次1 -->
+      <div style="margin-bottom:12px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green);letter-spacing:0.1em;margin-bottom:6px;font-weight:700">✅ 批次 1 · v1.1(已完成 · 2026-05-03)</div>
+        <div id="batch1-list" style="display:flex;flex-direction:column;gap:4px"></div>
+      </div>
+
+      <!-- 批次2 -->
+      <div style="margin-bottom:12px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green);letter-spacing:0.1em;margin-bottom:6px;font-weight:700">✅ 批次 2 · v1.2(已完成 · 2026-05-03)</div>
+        <div id="batch2-list" style="display:flex;flex-direction:column;gap:4px"></div>
+      </div>
+
+      <!-- 批次3 -->
+      <div style="margin-bottom:12px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--amber);letter-spacing:0.1em;margin-bottom:6px;font-weight:700">🟡 批次 3 · v2.0(已完成·UI层 · 待TL接入真后端)</div>
+        <div id="batch3-list" style="display:flex;flex-direction:column;gap:4px"></div>
+      </div>
+
+      <!-- 下一步行动 -->
+      <div style="background:linear-gradient(135deg,rgba(245,166,35,0.08),rgba(78,205,196,0.05));border:1px solid var(--amber);border-radius:10px;padding:14px 18px;margin-top:14px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--amber);letter-spacing:0.1em;margin-bottom:8px;font-weight:700">🎯 下一步行动 · NEXT ACTIONS</div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--text-2)">
+          <div>① <strong style="color:var(--text)">招到TL</strong> · 启动Sprint 1.1抢单原子事务(Epic 1命门·v2.0已为TL写好53服务Sprint计划)</div>
+          <div>② <strong style="color:var(--text)">8美顾试点</strong> · Epic 1完成时(W8)100美顾试点上线·验证派单互锁</div>
+          <div>③ <strong style="color:var(--text)">真数据接入</strong> · Epic 2完成(W12)·v2.0所有"演示数据"标记可去除</div>
+          <div>④ <strong style="color:var(--text)">主控台MAX v3.0</strong> · TL入职6个月后·所有"演示"项替换为真后端数据</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ftr">
+    <div>—  <em>INFINITY OS</em> · MAX v2.0 · DS · 欣和 SH · <span id="footer-date">--</span> —</div>
+    <div class="ftr-meta">⚠️ 当前为模拟数据 · 真实数据等 D-01/D-02 完成后接入 · <span id="footer-version-hint" style="color:var(--amber)">最新更新:<span id="footer-update-time">--</span></span></div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// 时间
+// ═══════════════════════════════════════
+function tick(){
+  const n = new Date();
+  document.getElementById('clock').textContent = 
+    String(n.getHours()).padStart(2,'0')+':'+
+    String(n.getMinutes()).padStart(2,'0');
+}
+tick(); setInterval(tick, 60000);
+
+function getTimeOfDay(){
+  const h = new Date().getHours();
+  if(h<11) return '早上好';
+  if(h<14) return '中午好';
+  if(h<18) return '下午好';
+  return '晚上好';
+}
+
+function getCurrentDateString(){
+  const n = new Date();
+  const wk = ['日','一','二','三','四','五','六'][n.getDay()];
+  return `${n.getFullYear()}.${String(n.getMonth()+1).padStart(2,'0')}.${String(n.getDate()).padStart(2,'0')} 周${wk} · ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+}
+
+// ═══════════════════════════════════════
+// Tab 切换
+// ═══════════════════════════════════════
+function switchTab(name){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`.nav-tab[data-tab="${name}"]`)?.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name)?.classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════
+// 模拟实时数据
+// ═══════════════════════════════════════
+const LIVE_DATA = {
+  ytd_revenue: 9.5,
+  ytd_revenue_yesterday: 9.42,
+  achievement: 87,
+  achievement_yesterday: 85,
+  monthly_forecast: 1.1,
+  december_eta: 91,
+  dealers_total: 156,
+  deep_partner_rate: 42,
+  deep_partner_rate_yesterday: 40.5,
+  stores_total: 12400,
+  consumers_total: 280,
+  
+  strategic_skus: [
+    {name:'六月鲜·有机系列', achievement:78, trend:4, breakthrough:true, quota:60000, done:46800, p:'P0', reason:'2亿瓶北极星·有机品类突破·明发已达78%可复制'},
+    {name:'六月鲜·高端礼盒', achievement:75, trend:2, breakthrough:false, quota:25000, done:18750, p:'P1', reason:'高端化战略·KA渠道核心·节日礼赠'},
+    {name:'禾然·零添加', achievement:90, trend:5, breakthrough:false, quota:18000, done:16200, p:'P2', reason:'有机赛道辅助·消费升级·配额接近完成可扩'}
+  ],
+  
+  alerts: [
+    {type:'alert', priority:1, urgency:'紧急', title:'明发库存压货',
+     desc:'明发库存 3.8a 超 2a 警戒线·偏高 90%', time:'2分钟前',
+     ask:'明发库存 3.8a 偏高·原因和减压方案?如何不影响合伙关系?'},
+    {type:'good', priority:2, urgency:'机会', title:'有机系列突破',
+     desc:'明发达成 78%·首个突破 75% 经销商·可复制', time:'今早',
+     ask:'有机系列突破点已现·哪些经销商可以复制明发模式?如何加速?'},
+    {type:'warn', priority:3, urgency:'关注', title:'无锡片区落后',
+     desc:'无锡 52%·与上海 92% 差距 40 点·拖累华东', time:'今早',
+     ask:'无锡 52% 落后·补人(MCTL+美顾)还是补钱(¥200万市场费)更合适?'},
+    {type:'warn', priority:4, urgency:'关注', title:'KA增速放缓',
+     desc:'大卖场+KA本月+5%(上月+12%)', time:'昨天',
+     ask:'KA渠道增速从12%放缓到5%·季节性还是结构性?'},
+    {type:'good', priority:5, urgency:'机会', title:'禾然零添加 90%',
+     desc:'配额接近完成·建议下月扩大50%', time:'今早',
+     ask:'禾然零添加90%即将超额·下月配额扩大到1.5万箱·风险评估?'}
+  ]
+};
+
+// ═══════════════════════════════════════
+// 8 个真 Agent 数据(蒸腾模型不在此列·是基础公式)
+// ═══════════════════════════════════════
+const AGENTS_DATA = [
+  {name:'A 值校准 Agent', en:'A-Value Calibration', status:'ready', desc:'三重验证校准心跳单元a·每周一06:00运行·已交付Python代码·输入:蒸腾基准值',
+   runtime:'running', lastRun:'06:00 (今天)', todayCalls:42, nextRun:'下周一 06:00',
+   ask:'A值校准Agent · 当前明发等10家经销商的a值偏差多大?需要校准吗?'},
+  {name:'蝴蝶效应 Agent', en:'Butterfly Effect', status:'ready', desc:'IPO0-13跨节点连锁传导·提前2-3节点拦截·四类失真A/B/C/D·基于蒸腾vs销量差值',
+   runtime:'running', lastRun:'07:00 (今天)', todayCalls:18, nextRun:'明天 07:00',
+   ask:'蝴蝶效应Agent · 今天有哪些失真信号?A压货/B促销/C窜货/D战略哪类最严重?'},
+  {name:'Omakase 推单 Agent', en:'Omakase Replenishment', status:'ready', desc:'(3a-库存)×1.2自动算补货量·a值由蒸腾驱动·SKU组合·已交付Python代码',
+   runtime:'running', lastRun:'08:00 (今天)', todayCalls:127, nextRun:'明天 08:00',
+   ask:'Omakase Agent · 今天哪些经销商需要推单?SKU组合是什么?'},
+  {name:'CB 分计算 Agent', en:'CB Score', status:'ready', desc:'美顾质量系数·B+V+R-C-T·R(蒸腾增量)是核心权重·已实现并集成',
+   runtime:'scheduled', lastRun:'昨天 23:00', todayCalls:0, nextRun:'今晚 23:00',
+   ask:'CB分Agent · 今天美顾排名前10和后10是谁?谁创造了真蒸腾?'},
+  {name:'AIQL 追踪 Agent', en:'AI Quality Linkage', status:'ready', desc:'美顾AI质量联动追踪·客流互动质量评分·关联蒸腾贡献',
+   runtime:'standby', lastRun:'昨天 14:30', todayCalls:0, nextRun:'按需触发',
+   ask:'AIQL Agent · 今天美顾客流互动质量如何?哪些转化为真蒸腾?'},
+  {name:'PRISM 选点 Agent', en:'PRISM Community', status:'ready', desc:'宏观+二三手数据定位高蒸腾密度+空间小区·prism_engine.py已实现',
+   runtime:'standby', lastRun:'4天前', todayCalls:0, nextRun:'按需触发',
+   ask:'PRISM Agent · 上海哪些小区蒸腾潜力最高?评分排名?'},
+  {name:'战略推演 Agent', en:'Strategic Simulation', status:'ready', desc:'shugen-v3战略推演·基于蒸腾趋势预测·三年规划+as-is/to-be',
+   runtime:'standby', lastRun:'7天前', todayCalls:0, nextRun:'按需触发',
+   ask:'战略推演 · 按当前蒸腾速率·3年后大盘会怎样?需要哪些干预?'},
+  {name:'价签识别 Agent', en:'Price Tag Recognition', status:'partial', desc:'千问VL价签识别·已部分实现·待完善精度·关联竞品蒸腾监测',
+   runtime:'sleeping', lastRun:'未上线', todayCalls:0, nextRun:'TL接入后',
+   ask:'价签识别Agent · 当前竞品价格情报?有多少门店低于底价?'}
+];
+
+// ═══════════════════════════════════════
+// 9 类典型场景
+// ═══════════════════════════════════════
+const SCENARIOS_9 = [
+  {icon:'🏪', name:'明发该怎么办?', desc:'库存3.8a · 战略SKU推进',
+   ask:'明发现状:库存3.8a偏高+战略SKU有机78%·我作为DS·该如何同时减压库存又保持战略推进?具体3步走方案?'},
+  {icon:'💧', name:'今天蒸腾真伪?', desc:'真增长 vs 假增长',
+   ask:'今天用蒸腾模型扫描·哪些经销商是真增长(蒸腾↑+销量↑)?哪些是假增长(销量↑蒸腾平)?哪些是渠道断货(蒸腾↑销量平)?'},
+  {icon:'⭐', name:'有机系列怎么放量?', desc:'明发突破 · 复制路径',
+   ask:'有机系列在明发蒸腾达成78%(真突破)·想复制到其他10家深度合伙人·哪些有蒸腾基础?如何加速?'},
+  {icon:'🎯', name:'12月能达4亿吗?', desc:'当前节奏 · ETA推演',
+   ask:'按当前r值和蒸腾速率推演·12月底大盘能达多少?距离4亿目标差多少?如果差·关键3个变量?'},
+  {icon:'🚨', name:'KA为何放缓?', desc:'5% vs 上月12%',
+   ask:'KA渠道本月增速从上月12%降到5%·根因诊断:季节性?竞品冲击?自身原因?用蒸腾数据辅助判断'},
+  {icon:'💰', name:'¥1000万投哪?', desc:'ROI 最高 · 5个候选',
+   ask:'¥1000万机动预算·按当前情况(明发库存高/无锡落后/有机突破)·投在哪里ROI最高?给前5个候选+ROI预测'},
+  {icon:'🦋', name:'蝴蝶效应今天?', desc:'A/B/C/D 失真扫描',
+   ask:'今天蝴蝶效应Agent扫到哪些失真信号?用蒸腾vs销量对比·A压货/B促销扰动/C窜货/D战略各几条?'},
+  {icon:'🤝', name:'深度率42→60%?', desc:'合伙人升级路径',
+   ask:'深度合伙率从42%提到60%·路径? 哪8家候选经销商优先升级? 用蒸腾健康度评估'},
+  {icon:'🔮', name:'3年后会怎样?', desc:'顺利vs黑天鹅',
+   ask:'按当前蒸腾趋势·3年后欣和SH会变成什么样?如果有黑天鹅(经济下行/疫情)·又怎么样?需要哪些前置准备?'}
+];
+
+// ═══════════════════════════════════════
+// 渲染:每日简报
+// ═══════════════════════════════════════
+function buildPill(value, trend, sourceId){
+  const trendCls = trend > 0 ? 'up' : trend < 0 ? 'down' : 'flat';
+  const trendSym = trend > 0 ? '↑' : trend < 0 ? '↓' : '→';
+  const trendVal = trend !== 0 ? `${trendSym}${Math.abs(trend)}%` : '持平';
+  return `<span class="data-pill" onclick="toggleDataSource('${sourceId}')">${value} <span class="trend ${trendCls}">${trendVal}</span> <span class="info-i">ⓘ</span></span>`;
+}
+
+function buildDataSource(id, lastUpdate, change, confidence, anomaly){
+  return `
+    <div class="data-source" id="${id}">
+      <div class="ds-row"><span class="ds-label">数据更新</span><span class="ds-val ok">${lastUpdate}</span></div>
+      <div class="ds-row"><span class="ds-label">变化</span><span class="ds-val">${change}</span></div>
+      <div class="ds-row"><span class="ds-label">置信度</span><span class="ds-val ok">${confidence}%</span></div>
+      <div class="ds-row"><span class="ds-label">异常</span><span class="ds-val ${anomaly?'':'ok'}">${anomaly ? '⚠️ 有' : '✓ 无'}</span></div>
+    </div>
+  `;
+}
+
+function renderBriefing(){
+  document.getElementById('brief-greeting').innerHTML = `${getTimeOfDay()} · DS · <em>每日简报</em>`;
+  document.getElementById('brief-time').textContent = `${getCurrentDateString()} · 总指挥 BRIEFING`;
+  
+  const ytdTrendPct = Math.round((LIVE_DATA.ytd_revenue - LIVE_DATA.ytd_revenue_yesterday) / LIVE_DATA.ytd_revenue_yesterday * 1000) / 10;
+  const achTrend = LIVE_DATA.achievement - LIVE_DATA.achievement_yesterday;
+  
+  const html = `
+    <p>
+      华东 YTD 达成 ${buildPill(LIVE_DATA.achievement+'%', achTrend, 'src1')}
+      · 销额 ${buildPill('¥'+LIVE_DATA.ytd_revenue+'亿', ytdTrendPct, 'src2')}
+      · 本月预计 ${buildPill('¥'+LIVE_DATA.monthly_forecast+'亿', 0, 'src3')}
+      · <strong>整体节奏稳定</strong>·有 <strong>${LIVE_DATA.alerts.filter(a=>a.priority<=3).length}</strong> 个关键议题需决策。
+    </p>
+    ${buildDataSource('src1', '2 分钟前', `+${achTrend}% (vs 昨)`, 95, false)}
+    ${buildDataSource('src2', '2 分钟前', `+¥${(LIVE_DATA.ytd_revenue-LIVE_DATA.ytd_revenue_yesterday).toFixed(2)}亿`, 96, false)}
+    ${buildDataSource('src3', 'Agent推演 5分钟前', '基于近30天r值', 87, false)}
+    
+    <p>
+      <strong>战略SKU有机突破点已现</strong>·明发达成 ${buildPill('78%', 4, 'src4')}
+      · 但 IPO3 经销商库存 ${buildPill('3.8a', 12, 'src5')} 超 2a 警戒(蝴蝶Agent检出A压货)。
+    </p>
+    ${buildDataSource('src4', '今早 9:00', '+4% (本周)', 92, false)}
+    ${buildDataSource('src5', '今早 9:00', '+0.4a (本周)', 94, true)}
+    
+    <p>
+      <strong>无锡片区落后</strong>·仅 ${buildPill('52%', -3, 'src6')}·与上海92%差40点·建议本周资源倾斜。
+    </p>
+    ${buildDataSource('src6', '今早 9:00', '-3% (vs 上月同期)', 88, true)}
+  `;
+  document.getElementById('brief-content').innerHTML = html;
+}
+
+function renderIssues(){
+  const top3 = [...LIVE_DATA.alerts].sort((a,b)=>a.priority-b.priority).slice(0,3);
+  const html = top3.map(issue => {
+    const tagIcon = issue.type==='alert' ? '🚨' : issue.type==='good' ? '🟢' : '⚠️';
+    return `
+      <div class="issue-card ${issue.type}" onclick="askBrain('${issue.ask.replace(/'/g,"\\'")}')">
+        <div class="issue-tag-row">
+          <div class="issue-tag">${tagIcon} ${issue.urgency}</div>
+          <div class="issue-time">${issue.time}</div>
+        </div>
+        <div class="issue-title">${issue.title}</div>
+        <div class="issue-desc">${issue.desc}</div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('brief-issues').innerHTML = html;
+}
+
+function refreshIssues(){
+  if(Math.random() > 0.5) LIVE_DATA.alerts[0].time = '刚才';
+  renderIssues();
+  const el = document.getElementById('brief-issues');
+  el.style.opacity = '0.3';
+  setTimeout(()=>el.style.opacity='1', 200);
+}
+
+function renderScenarios(){
+  const html = SCENARIOS_9.map(s => `
+    <button class="scenario-btn" onclick="askBrain('${s.ask.replace(/'/g,"\\'")}')">
+      <div class="scenario-icon">${s.icon}</div>
+      <div class="scenario-text">
+        <div class="scenario-name">${s.name}</div>
+        <div class="scenario-desc">${s.desc}</div>
+      </div>
+    </button>
+  `).join('');
+  document.getElementById('scenarios-grid').innerHTML = html;
+}
+
+function renderAgents(){
+  // 运行时状态总览统计
+  const runtimeCounts = {running:0, scheduled:0, standby:0, sleeping:0};
+  AGENTS_DATA.forEach(a => { runtimeCounts[a.runtime] = (runtimeCounts[a.runtime]||0) + 1; });
+  const totalCalls = AGENTS_DATA.reduce((s,a) => s + (a.todayCalls||0), 0);
+  
+  // 运行时状态徽章映射
+  const runtimeBadge = {
+    running:   {color:'var(--green)', bg:'var(--green-bg)', icon:'🟢', text:'运行中'},
+    scheduled: {color:'var(--blue)', bg:'var(--blue-bg)', icon:'🔵', text:'已调度'},
+    standby:   {color:'var(--amber)', bg:'var(--amber-bg)', icon:'🟡', text:'待机'},
+    sleeping:  {color:'var(--text-3)', bg:'var(--bg-soft)', icon:'⚫', text:'休眠'}
+  };
+  
+  // 顶部运行时总览条·插入到grid之前(放进父section)
+  const grid = document.getElementById('agent-grid');
+  let overview = document.getElementById('agent-runtime-overview');
+  if (!overview) {
+    overview = document.createElement('div');
+    overview.id = 'agent-runtime-overview';
+    grid.parentNode.insertBefore(overview, grid);
+  }
+  overview.innerHTML = `
+    <div style="background:var(--bg-warm);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px">
+        <div><span style="color:var(--green);font-weight:700">🟢 ${runtimeCounts.running}</span> 运行中</div>
+        <div><span style="color:var(--blue);font-weight:700">🔵 ${runtimeCounts.scheduled}</span> 已调度</div>
+        <div><span style="color:var(--amber);font-weight:700">🟡 ${runtimeCounts.standby}</span> 待机</div>
+        <div><span style="color:var(--text-3);font-weight:700">⚫ ${runtimeCounts.sleeping}</span> 休眠</div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);letter-spacing:0.05em">今日累计 <span style="color:var(--amber);font-weight:700;font-size:14px;font-family:'Cormorant Garamond',serif;font-style:italic">${totalCalls}</span> 次调用 · 演示数据</div>
+    </div>
+  `;
+  
+  const cardsHtml = AGENTS_DATA.map(a => {
+    const rt = runtimeBadge[a.runtime] || runtimeBadge.sleeping;
+    return `
+    <div class="agent-card" onclick="askBrain('${a.ask.replace(/'/g,"\\'")}')" style="position:relative">
+      <div style="position:absolute;top:10px;right:10px;display:flex;gap:4px">
+        <div style="background:${rt.bg};color:${rt.color};border:1px solid ${rt.color};padding:3px 7px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.05em">${rt.icon} ${rt.text}</div>
+      </div>
+      <div class="agent-status ${a.status}" style="margin-top:18px">${a.status==='ready'?'✓ 就绪':a.status==='partial'?'🟡 部分':'❌ 待做'}</div>
+      <div class="agent-name">${a.name}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:6px">${a.en}</div>
+      <div class="agent-desc">${a.desc}</div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10px">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:2px">最后运行</div>
+          <div style="color:var(--text-2)">${a.lastRun}</div>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:2px">今日调用</div>
+          <div style="color:var(--text-2)"><span style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:${a.todayCalls>0?'var(--amber)':'var(--text-3)'};font-size:13px">${a.todayCalls}</span> 次</div>
+        </div>
+        <div style="grid-column:1/-1;font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-3);letter-spacing:0.05em;margin-top:2px">下次:${a.nextRun}</div>
+      </div>
+    </div>
+  `;}).join('');
+  
+  grid.innerHTML = cardsHtml;
+}
+
+function renderChain(){
+  const chain = [
+    {n:0, name:'工厂', val:'96%', s:'ok', dealers:[]},
+    {n:1, name:'仓储', val:'92%', s:'ok', dealers:[]},
+    {n:2, name:'经销进', val:'85%', s:'warn', dealers:[
+      {name:'明发商贸', health:88, val:'88%', region:'上海浦东'},
+      {name:'宝润食品', health:92, val:'92%', region:'江苏苏州'},
+      {name:'东南贸易', health:78, val:'78%', region:'浙江宁波'},
+    ]},
+    {n:3, name:'经销库', val:'3.8a⚠', s:'alert', dealers:[
+      {name:'明发商贸', health:55, val:'3.8a', region:'上海浦东·偏高'},
+      {name:'康润商贸', health:48, val:'4.2a', region:'江苏南通·压货'},
+      {name:'瑞祥贸易', health:88, val:'2.5a', region:'浙江温州·健康'},
+    ]},
+    {n:4, name:'经销出', val:'82%', s:'warn', dealers:[
+      {name:'明发商贸', health:78, val:'78%', region:'上海浦东'},
+      {name:'新宇商贸', health:88, val:'88%', region:'江苏南京'},
+      {name:'吉祥贸易', health:75, val:'75%', region:'安徽合肥'},
+    ]},
+    {n:5, name:'二批进', val:'88%', s:'ok', dealers:[]},
+    {n:6, name:'二批库', val:'1.0a', s:'ok', dealers:[]},
+    {n:7, name:'二批出', val:'90%', s:'ok', dealers:[]},
+    {n:8, name:'门店进', val:'84%', s:'warn', dealers:[
+      {name:'罗森华东', health:82, val:'82%', region:'KA·上海'},
+      {name:'全家华东', health:88, val:'88%', region:'KA·上海'},
+      {name:'7-11上海', health:80, val:'80%', region:'KA·上海'},
+    ]},
+    {n:9, name:'门店库', val:'2.1a', s:'ok', dealers:[]},
+    {n:10, name:'动销', val:'87%', s:'ok', dealers:[]},
+    {n:11, name:'购买', val:'79%', s:'warn', dealers:[
+      {name:'有机品类', health:68, val:'68%', region:'消费者偏好待提'},
+      {name:'高端礼盒', health:82, val:'82%', region:'节庆波动'},
+      {name:'零添加', health:88, val:'88%', region:'复购强'},
+    ]},
+    {n:12, name:'家中', val:'~14天', s:'ok', dealers:[]},
+    {n:13, name:'复购', val:'82%', s:'warn', dealers:[
+      {name:'30日复购', health:82, val:'82%', region:'整体'},
+      {name:'60日复购', health:75, val:'75%', region:'整体'},
+      {name:'90日复购', health:68, val:'68%', region:'待加强'},
+    ]}
+  ];
+  
+  // 暂存到全局供详情面板用
+  window._IPO_CHAIN_DATA = chain;
+  
+  const html = chain.map(c => `
+    <div class="chain-node ${c.s}" onclick="toggleIPODetail(${c.n})" id="ipo-node-${c.n}">
+      <div class="chain-node-num">${c.n}</div>
+      <div class="chain-node-name">${c.name}</div>
+      <div class="chain-node-pct">${c.val}</div>
+    </div>
+  `).join('');
+  document.getElementById('chain-flow').innerHTML = html;
+  
+  // 详情面板容器(在chain-grid后)
+  const chainGrid = document.querySelector('.chain-grid');
+  if (chainGrid && !document.getElementById('ipo-detail-panel')) {
+    const panel = document.createElement('div');
+    panel.id = 'ipo-detail-panel';
+    panel.style.cssText = 'display:none;margin-top:12px;background:var(--bg-warm);border:1px solid var(--line);border-radius:10px;padding:14px 18px';
+    chainGrid.parentNode.insertBefore(panel, chainGrid.nextSibling);
+  }
+}
+
+function renderSKU(){
+  const skuExtras = {
+    '六月鲜·有机系列':{evapo:14, sales:12, ratio:1.17, top3:['明发(78%)', '宝润(65%)', '瑞祥(58%)'], ipo:'IPO 8-10 旺势'},
+    '六月鲜·高端礼盒':{evapo:8, sales:7, ratio:1.14, top3:['新宇(82%)', '东南(74%)', '明发(72%)'], ipo:'IPO 8 KA为主'},
+    '禾然·零添加':{evapo:11, sales:9, ratio:1.22, top3:['宝润(95%)', '吉祥(88%)', '明发(85%)'], ipo:'IPO 11 复购强'}
+  };
+  
+  const html = LIVE_DATA.strategic_skus.map(s => {
+    const pct = Math.round(s.done/s.quota*100);
+    const cls = pct>=80?'good':pct>=50?'warn':'bad';
+    const ext = skuExtras[s.name] || {evapo:0, sales:0, ratio:1, top3:[], ipo:''};
+    const ratioColor = ext.ratio >= 1.0 ? 'var(--green)' : ext.ratio >= 0.7 ? 'var(--amber)' : 'var(--red)';
+    
+    return `
+      <div class="sku-card" id="sku-card-${s.name.replace(/[·\.\s]/g,'_')}">
+        <div class="sku-row">
+          <div>
+            <span class="sku-name">${s.name.split('·')[0]}·<em>${s.name.split('·')[1]}</em></span>
+            <span class="sku-tag ${s.p.toLowerCase()}">${s.p}</span>
+            ${s.breakthrough?'<span class="sku-tag" style="background:var(--green-bg);color:var(--green)">突破点</span>':''}
+            <span class="sku-status-badge" data-sku="${s.name}" style="display:inline-block;padding:3px 9px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.05em;background:var(--green-bg);color:var(--green);border:1px solid var(--green);margin-left:4px">● 启动中</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="sku-toggle-btn" data-sku="${s.name}" onclick="toggleSKU('${s.name.replace(/'/g,"\\'")}')" style="background:var(--bg-soft);color:var(--text-2);border:1px solid var(--line);padding:5px 10px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;cursor:pointer;letter-spacing:0.05em;transition:all 0.2s" title="启停切换">⏸ 暂停</button>
+            <button class="choice-btn" onclick="askBrain('战略SKU ${s.name} 达成 ${pct}%·蒸腾↑${ext.evapo}%·销量↑${ext.sales}%·真伪比${ext.ratio}·如何加速?哪些经销商先推?')">问 Agent →</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">💡 ${s.reason}</div>
+        <div class="sku-stats">
+          <div class="sku-stat">
+            <div class="sku-stat-lbl">月度配额</div>
+            <div class="sku-stat-val">${s.quota.toLocaleString()} 箱</div>
+          </div>
+          <div class="sku-stat">
+            <div class="sku-stat-lbl">实际完成</div>
+            <div class="sku-stat-val ${cls}">${s.done.toLocaleString()} 箱</div>
+          </div>
+          <div class="sku-stat">
+            <div class="sku-stat-lbl">达成率</div>
+            <div class="sku-stat-val ${cls}">${pct}% (↑${s.trend}%)</div>
+          </div>
+          <div class="sku-stat">
+            <div class="sku-stat-lbl">缺口</div>
+            <div class="sku-stat-val">${(s.quota-s.done).toLocaleString()} 箱</div>
+          </div>
+        </div>
+        
+        <!-- 蒸腾健康度(MAX补充) -->
+        <div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:11px">
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">💧 蒸腾速率</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--green);font-size:14px">↑${ext.evapo}%</div>
+          </div>
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">📦 销量速率</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--blue);font-size:14px">↑${ext.sales}%</div>
+          </div>
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-bottom:3px">🎯 真伪比</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:${ratioColor};font-size:14px">${ext.ratio} ${ext.ratio>=1.0?'✓':'⚠'}</div>
+          </div>
+        </div>
+        
+        <!-- TOP 3 经销商 -->
+        <div style="margin-top:10px;display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text-2);flex-wrap:wrap">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;text-transform:uppercase">TOP 3 经销商</span>
+          ${ext.top3.map(t => `<span style="background:var(--bg-soft);padding:3px 9px;border-radius:6px;border:1px solid var(--line);font-size:11px">${t}</span>`).join('')}
+          <span style="margin-left:auto;font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:0.05em">${ext.ipo}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('sku-list').innerHTML = html;
+}
+
+// ═══════════════════════════════════════
+// 数据来源弹层
+// ═══════════════════════════════════════
+function toggleDataSource(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  document.querySelectorAll('.data-source.show').forEach(d => {
+    if(d.id !== id) d.classList.remove('show');
+  });
+  el.classList.toggle('show');
+}
+
+// ═══════════════════════════════════════
+// 对话(真API + 跨对话记忆)
+// ═══════════════════════════════════════
+let conversationHistory = [];
+
+function clearConversation(){
+  conversationHistory = [];
+  document.getElementById('conversation').innerHTML = '';
+  document.getElementById('conversation').classList.remove('has-content');
+}
+
+async function askBrain(q){
+  if(!q || !q.trim()) return;
+  document.getElementById('brain-input').value = '';
+  
+  // ③ v2.0新增·记住askBrain前在哪个Tab(用于返回)
+  const currentTab = document.querySelector('.nav-tab.active');
+  if (currentTab && currentTab.dataset.tab !== 'brain') {
+    window._askBrainOrigin = currentTab.dataset.tab;
+    window._askBrainOriginName = currentTab.querySelector('.nav-tab-name').textContent;
+  }
+  
+  // 切到Brain Tab
+  switchTab('brain');
+  
+  const conv = document.getElementById('conversation');
+  conv.classList.add('has-content');
+  
+  // 加清空按钮 + 返回按钮(v2.0)
+  if(!document.getElementById('clear-conv-btn')){
+    const clearWrap = document.createElement('div');
+    clearWrap.className = 'conv-clear';
+    clearWrap.innerHTML = `
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button id="clear-conv-btn" class="refresh-btn" onclick="clearConversation()">🗑️ 清空对话</button>
+        <button id="back-to-origin-btn" class="refresh-btn" onclick="backToAskOrigin()" style="display:none">← 返回</button>
+      </div>
+    `;
+    conv.appendChild(clearWrap);
+  }
+  
+  // 显示返回按钮(如果有origin)
+  const backBtn = document.getElementById('back-to-origin-btn');
+  if (backBtn && window._askBrainOrigin) {
+    backBtn.style.display = 'inline-block';
+    backBtn.textContent = `← 返回 ${window._askBrainOriginName || '原页面'}`;
+  }
+  
+  const userMsg = document.createElement('div');
+  userMsg.className = 'conv-msg';
+  userMsg.innerHTML = `
+    <div class="msg-user">
+      <div class="msg-user-bubble">${q}</div>
+    </div>
+  `;
+  conv.appendChild(userMsg);
+  
+  const aiMsg = document.createElement('div');
+  aiMsg.className = 'conv-msg';
+  const tag = `MAX · 整合 80%容器 · 截至 ${new Date().toTimeString().slice(0,5)}`;
+  aiMsg.innerHTML = `
+    <div class="msg-ai">
+      <div class="msg-ai-hdr">
+        <div class="msg-ai-hdr-l">
+          <div class="msg-ai-avatar">🧠</div>
+          <div><div class="msg-ai-label">总指挥 · 思考中</div></div>
+        </div>
+        <div class="msg-ai-tag">${tag}</div>
+      </div>
+      <div class="msg-ai-content"><div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>
+    </div>
+  `;
+  conv.appendChild(aiMsg);
+  
+  setTimeout(() => aiMsg.scrollIntoView({behavior:'smooth', block:'center'}), 100);
+  
+  const aiContent = aiMsg.querySelector('.msg-ai-content');
+  const aiLabel = aiMsg.querySelector('.msg-ai-label');
+  
+  conversationHistory.push({role:'user', content:q});
+  await callBrain(q, aiContent, aiLabel);
+}
+
+async function callBrain(q, aiContent, aiLabel){
+  const sys = `你是欣和SH INFINITY OS V1.2 总部 Agent 主控台 · 总指挥 · DS最高决策助手。
+
+【身份】
+- 站欣和总部全局视角·给DS用
+- 整合 80% 已建容器(A Schema/B 界面/C Agent/D 协议/E 战略)
+- 跨5类合伙人·跨IPO0-13·跨6层架构·跨8个Agent + 蒸腾基础公式
+- V1.2合伙人制·Autonomy×Alignment
+
+【蒸腾模型 · 第一性原理基准】
+所有Agent决策的共同基础公式·不是单独Agent
+- 定义:消费者真实需求自下而上传导(像水蒸腾)
+- 用法:每个Agent决策时·先问蒸腾模型"真实需求是多少"·再做后续判断
+- 真伪判断:
+  · 销量↑ + 蒸腾↑ = 真增长
+  · 销量↑ + 蒸腾平 = 假增长(压货/促销假象)
+  · 销量平 + 蒸腾↑ = 渠道断货(紧急补货机会)
+- 在8个Agent中的角色:
+  · A值校准:基准输入 · 蝴蝶效应:核心依据 · Omakase:公式核心
+  · CB分:权重维度 · AIQL:质量评分 · PRISM:选址依据
+  · 战略推演:趋势预测 · 价签识别:弹性评估
+
+【已就绪的容器(可调用)】
+- A 容器: 10 张MySQL表 (inf_nodes/heartbeat/alerts/actions/node_targets/learning_log/session/partnership/events + 26维授权)
+- B 容器: SFA(8角色)/DSFA(2角色)/经销商主控台/欣和Web主控台 (5个已做)
+- C 容器: 8 个真Agent + 1个基础公式 (A值校准/蝴蝶效应/Omakase/CB分/AIQL/PRISM/战略推演/价签识别 + 蒸腾模型作为基础公式)
+- D 容器: 5 类合伙人协议框架 (法务版待补)
+- E 容器: V1.2宪法/架构全景/5品牌/北极星/战略SKU/5年BP/竞争战略/CDI/年级系统 (10个已做)
+
+【实时数据(模拟·待Hologres接入)】
+大盘:
+- YTD ¥${LIVE_DATA.ytd_revenue}亿·达成${LIVE_DATA.achievement}%(↑${LIVE_DATA.achievement-LIVE_DATA.achievement_yesterday}% vs 昨)
+- 本月预计¥${LIVE_DATA.monthly_forecast}亿·12月ETA ${LIVE_DATA.december_eta}%
+
+5合伙人:
+- ${LIVE_DATA.dealers_total}经销商·深度率${LIVE_DATA.deep_partner_rate}%·${LIVE_DATA.stores_total}门店·${LIVE_DATA.consumers_total}万会员·12K员工(10K美顾)
+
+战略SKU:
+${LIVE_DATA.strategic_skus.map(s=>`- ${s.name}: ${s.achievement}%(↑${s.trend}%) ${s.breakthrough?'**已突破**':''}`).join('\n')}
+
+预警:
+${LIVE_DATA.alerts.slice(0,3).map(a=>`- [${a.urgency}] ${a.title}: ${a.desc}`).join('\n')}
+
+【V1.2核心原则】
+- 三大原则:真实·速度·精准可靠
+- 双轨:深度80%资源·标准基础保障
+- 资源对等A/B/C三类
+- 蝴蝶效应4类:A压货/B促销/C窜货/D战略
+- 心跳a值·Omakase推单·CB公式·CDI 5维(铺货/动销/陈列/渗透/复购)
+
+【回答风格】
+1. 不是仪表盘·要给推演+方案+选择
+2. "如果X那么Y"格式
+3. 候选方案2-3个让DS选
+4. 数字具体(¥X·X%·X月·X家)
+5. 责任明确(谁/哪里/什么时候)
+6. 中文·≤350字·结构化
+7. 体现V1.2合伙人制思想
+
+你能看到对话历史·可以追问·可以连贯回答`;
+
+  const messages = conversationHistory.map(m => ({role:m.role, content:m.content}));
+  
+  try{
+    const r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        system:sys,
+        messages:messages
+      })
+    });
+    const d = await r.json();
+    const txt = d.content?.map(c=>c.text||'').join('') || '暂无回答';
+    
+    conversationHistory.push({role:'assistant', content:txt});
+    
+    aiLabel.textContent = '总指挥 · 真API · 整合80%容器';
+    aiContent.innerHTML = '<div style="white-space:pre-wrap">' + txt + '</div>';
+    
+    const btnRow = document.createElement('div');
+    btnRow.className = 'choices';
+    btnRow.innerHTML = `
+      <button class="choice-btn" onclick="askBrain('为什么这么判断?详细推理依据')">为什么?</button>
+      <button class="choice-btn" onclick="askBrain('给我3个候选方案对比·时间/成本/风险')">3个候选</button>
+      <button class="choice-btn" onclick="askBrain('如果情况变了(竞品大降价/经济下行)·结论怎么变?')">如果变了?</button>
+      <button class="choice-btn" onclick="askBrain('调用蝴蝶效应Agent扫描下相关风险')">让Agent深扫</button>
+    `;
+    aiContent.appendChild(btnRow);
+    
+  }catch(e){
+    aiContent.innerHTML = `<div style="color:var(--red);font-size:12px">⚠️ API错误·${e.message}</div>`;
+    aiLabel.textContent = '总指挥 · 错误·已降级';
+    conversationHistory.pop();
+  }
+}
+
+// ═══════════════════════════════════════
+// 初始化(调用移到所有函数和数据定义之后·避免ReferenceError)
+// 见文件末尾
+// ═══════════════════════════════════════
+
+// ═══════════════════════════════════════
+// TOP 10 经销商(基于蒸腾健康度)
+// ═══════════════════════════════════════
+const TOP_DEALERS = [
+  {name:'明发商贸', region:'上海浦东', revenue:301, evapo:14, sales:12, ratio:1.17, grade:'A+', deep:true, status:'真增长'},
+  {name:'宝润食品', region:'江苏苏州', revenue:265, evapo:11, sales:10, ratio:1.10, grade:'A+', deep:true, status:'稳健增长'},
+  {name:'新宇贸易', region:'浙江杭州', revenue:248, evapo:9, sales:8, ratio:1.13, grade:'A', deep:true, status:'稳健增长'},
+  {name:'康润商贸', region:'江苏南通', revenue:218, evapo:1, sales:18, ratio:0.06, grade:'B-', deep:false, status:'压货警示'},
+  {name:'东南供应链', region:'福建厦门', revenue:198, evapo:8, sales:7, ratio:1.14, grade:'A', deep:true, status:'真增长'},
+  {name:'瑞祥食业', region:'上海闵行', revenue:185, evapo:10, sales:9, ratio:1.11, grade:'A', deep:true, status:'真增长'},
+  {name:'华诚贸易', region:'江苏无锡', revenue:142, evapo:5, sales:3, ratio:1.67, grade:'B+', deep:false, status:'蒸腾领先'},
+  {name:'恒源商贸', region:'安徽合肥', revenue:135, evapo:6, sales:8, ratio:0.75, grade:'B', deep:false, status:'渠道滞后'},
+  {name:'吉祥食品', region:'山东青岛', revenue:128, evapo:4, sales:5, ratio:0.80, grade:'B', deep:false, status:'平稳'},
+  {name:'大成贸易', region:'湖北武汉', revenue:115, evapo:3, sales:11, ratio:0.27, grade:'C', deep:false, status:'压货警示'}
+];
+
+function renderTopDealers(){
+  const el = document.getElementById('top-dealers-list');
+  if(!el) return;
+  
+  const html = TOP_DEALERS.map((d,i) => {
+    const statusColor = d.ratio >= 1.0 ? 'var(--green)' : d.ratio >= 0.7 ? 'var(--amber)' : 'var(--red)';
+    const statusBg = d.ratio >= 1.0 ? 'var(--green-bg)' : d.ratio >= 0.7 ? 'var(--amber-bg)' : 'var(--red-bg)';
+    const trendIcon = d.ratio >= 1.0 ? '↑' : d.ratio >= 0.7 ? '→' : '⚠';
+    
+    return `
+      <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:6px;display:grid;grid-template-columns:30px 1fr auto auto auto;gap:14px;align-items:center;cursor:pointer" onclick="askBrain('${d.name}经销商分析·当前蒸腾速率${d.evapo}%·销量${d.sales}%·真伪比${d.ratio}·状态${d.status}·应该如何优化?')">
+        <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;font-size:18px;color:var(--text-3)">${i+1}</div>
+        <div>
+          <div style="font-size:13px;font-weight:600">${d.name} ${d.deep?'<span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:var(--green);background:var(--green-bg);padding:1px 6px;border-radius:6px;margin-left:6px;letter-spacing:0.05em">深度</span>':''}</div>
+          <div style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:0.05em;margin-top:2px">${d.region} · ¥${d.revenue}万/月</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em">蒸腾·销量</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;font-size:13px">↑${d.evapo}% · ↑${d.sales}%</div>
+        </div>
+        <div style="background:${statusBg};color:${statusColor};padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;font-family:'Cormorant Garamond',serif;font-style:italic">${trendIcon} ${d.ratio}</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;font-size:18px;color:${statusColor}">${d.grade}</div>
+      </div>
+    `;
+  }).join('');
+  el.innerHTML = html;
+}
+
+// ═══════════════════════════════════════
+// 决策记录(inf_actions 模拟数据)
+// ═══════════════════════════════════════
+const ACTIONS_DATA = [
+  {id:'A-2026-0042', time:'今天 10:15', type:'调用Agent', target:'蝴蝶效应Agent', desc:'扫描全部156家经销商蝴蝶效应失真', status:'进行中', priority:'high', creator:'DS'},
+  {id:'A-2026-0041', time:'今天 09:30', type:'派任务', target:'明发商贸·李老板', desc:'库存3.8a偏高·派周经理协助消化至2.5a·7天内', status:'已派发', priority:'urgent', creator:'DS'},
+  {id:'A-2026-0040', time:'昨天 16:45', type:'调用Agent', target:'Omakase推单Agent', desc:'生成本周推单清单·覆盖66家深度合伙人', status:'已闭环', priority:'medium', creator:'DOM'},
+  {id:'A-2026-0039', time:'昨天 14:20', type:'通知', target:'无锡片区MCTL', desc:'资源倾斜启动·¥200万市场费+1名MCTL+5名美顾', status:'已确认', priority:'high', creator:'DS'},
+  {id:'A-2026-0038', time:'昨天 11:00', type:'派任务', target:'康润商贸', desc:'压货警示·真伪比0.06·要求15天内消化', status:'超期', priority:'urgent', creator:'DOM'},
+  {id:'A-2026-0037', time:'2天前', type:'调用Agent', target:'PRISM Agent', desc:'上海浦东共创小区候选·TOP 20清单生成', status:'已闭环', priority:'medium', creator:'DS'},
+  {id:'A-2026-0036', time:'2天前', type:'通知', target:'全国大区总', desc:'有机系列突破点已现·明发78%案例可复制', status:'已确认', priority:'high', creator:'DS'},
+  {id:'A-2026-0035', time:'3天前', type:'调用Agent', target:'CB分Agent', desc:'本周美顾CB排名计算·激励发放', status:'已闭环', priority:'low', creator:'HR'}
+];
+
+function renderActions(){
+  const el = document.getElementById('actions-list');
+  if(!el) return;
+  
+  const html = ACTIONS_DATA.map(a => {
+    const statusColor = a.status==='已闭环'?'var(--green)':a.status==='已派发'||a.status==='已确认'?'var(--blue)':a.status==='进行中'?'var(--amber)':'var(--red)';
+    const statusBg = a.status==='已闭环'?'var(--green-bg)':a.status==='已派发'||a.status==='已确认'?'var(--blue-bg)':a.status==='进行中'?'var(--amber-bg)':'var(--red-bg)';
+    const priIcon = a.priority==='urgent'?'🚨':a.priority==='high'?'⚠️':a.priority==='medium'?'○':'·';
+    
+    return `
+      <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:14px 18px;cursor:pointer" onclick="askBrain('查询决策${a.id}详情·${a.desc}·当前状态${a.status}·后续如何处理?')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:14px">${priIcon}</span>
+            <div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600">${a.type} · <em style="color:var(--amber);font-style:italic">${a.target}</em></div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-top:2px">${a.id} · ${a.time} · 创建人 ${a.creator}</div>
+            </div>
+          </div>
+          <div style="background:${statusBg};color:${statusColor};padding:4px 12px;border-radius:8px;font-size:10px;font-weight:600;font-family:'JetBrains Mono',monospace;letter-spacing:0.1em;text-transform:uppercase">${a.status}</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-2);line-height:1.5;margin-left:24px">${a.desc}</div>
+      </div>
+    `;
+  }).join('');
+  el.innerHTML = html;
+}
+
+// ═══════════════════════════════════════
+// 派单弹窗
+// ═══════════════════════════════════════
+function openDispatch(){
+  const modal = document.getElementById('dispatch-modal');
+  if(modal){
+    modal.style.display = 'flex';
+  }
+}
+
+function closeDispatch(){
+  const modal = document.getElementById('dispatch-modal');
+  if(modal) modal.style.display = 'none';
+}
+
+function submitDispatch(){
+  const type = document.getElementById('dispatch-type').value;
+  const target = document.getElementById('dispatch-target').value;
+  const desc = document.getElementById('dispatch-desc').value;
+  const priority = document.getElementById('dispatch-priority').value;
+  const channel = document.getElementById('dispatch-channel').value;
+  
+  if(!target.trim() || !desc.trim()){
+    alert('请填写"目标对象"和"任务描述"');
+    return;
+  }
+  
+  // 模拟写入inf_actions
+  const newAction = {
+    id: 'A-2026-' + String(43 + Math.floor(Math.random()*100)).padStart(4,'0'),
+    time: '刚刚',
+    type: type.split('·')[0].trim(),
+    target: target,
+    desc: desc,
+    status: '已派发',
+    priority: priority.includes('紧急')?'urgent':priority.includes('高')?'high':priority.includes('中')?'medium':'low',
+    creator: 'DS'
+  };
+  ACTIONS_DATA.unshift(newAction);
+  renderActions();
+  
+  closeDispatch();
+  
+  // 提示
+  setTimeout(() => {
+    alert(`✓ 派发成功\n\n${newAction.id} · ${type}\n目标: ${target}\n渠道: ${channel}\n\n已写入 inf_actions 表\n切到「决策记录」Tab 查看`);
+    switchTab('actions');
+  }, 100);
+  
+  // 清空
+  document.getElementById('dispatch-target').value = '';
+  document.getElementById('dispatch-desc').value = '';
+}
+
+// ═══════════════════════════════════════
+// 初始化 · 所有函数和数据定义后调用(避免ReferenceError)
+// ═══════════════════════════════════════
+renderBriefing();
+renderIssues();
+renderScenarios();
+renderAgents();
+renderChain();
+renderSKU();
+renderTopDealers();
+renderActions();
+
+// ════════════════════════════════════════════════════════════════
+// v1.1 新增 · 批次1 · ⑥蒸腾刷新 ⑦六层架构详情 ⑧战略SKU启停
+// ════════════════════════════════════════════════════════════════
+
+// === Toast 通用提示组件 ===
+function showToast(msg, color = 'var(--amber)') {
+  const existing = document.getElementById('v11-toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.id = 'v11-toast';
+  toast.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:${color};color:#fff;padding:12px 24px;border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.2);z-index:9999;letter-spacing:0.05em;animation:toastIn 0.3s ease;max-width:90%`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.4s'; }, 2400);
+  setTimeout(() => toast.remove(), 2900);
+}
+
+// === ⑥ 蒸腾监测刷新 ===
+function refreshEvaporation() {
+  const icon = document.getElementById('evapo-refresh-icon');
+  const updateLabel = document.getElementById('evapo-last-update');
+  
+  // 旋转动画
+  icon.style.transform = 'rotate(360deg)';
+  setTimeout(() => { icon.style.transform = 'rotate(0deg)'; }, 600);
+  
+  // 模拟数据微变化(让用户看到"在动")
+  document.querySelectorAll('[data-evapo-cell]').forEach(el => {
+    el.style.transition = 'opacity 0.4s';
+    el.style.opacity = '0.4';
+    setTimeout(() => { el.style.opacity = '1'; }, 400);
+  });
+  
+  // 更新时间戳
+  const now = new Date();
+  const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  updateLabel.textContent = `最后更新:${time}`;
+  
+  showToast('蒸腾数据已刷新 · 演示模式(待TL接入真数据)', 'var(--amber)');
+}
+
+// 自动设置初始时间戳
+(function initEvapoTimestamp(){
+  const updateLabel = document.getElementById('evapo-last-update');
+  if (updateLabel) {
+    const now = new Date();
+    const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    updateLabel.textContent = `最后更新:${time}`;
+  }
+})();
+
+// === ⑦ 六层架构详情展开 ===
+function toggleLayerDetail(n) {
+  const detail = document.getElementById('layer-detail-' + n);
+  if (!detail) return;
+  const isOpen = detail.style.display !== 'none';
+  detail.style.display = isOpen ? 'none' : 'block';
+}
+
+function toggleAllLayerDetails() {
+  const btn = document.getElementById('layer-toggle-all');
+  const allDetails = document.querySelectorAll('.layer-detail');
+  const isAnyOpen = Array.from(allDetails).some(d => d.style.display !== 'none');
+  
+  if (isAnyOpen) {
+    allDetails.forEach(d => d.style.display = 'none');
+    btn.textContent = '展开全部 ▼';
+    showToast('已折叠全部层', 'var(--text-2)');
+  } else {
+    allDetails.forEach(d => d.style.display = 'block');
+    btn.textContent = '折叠全部 ▲';
+    showToast('已展开全部6层架构', 'var(--amber)');
+  }
+}
+
+// === ⑧ 战略SKU启停 ===
+// 用 sessionStorage 暂存状态(刷新页面后保持当session·关闭浏览器后清空)
+function getSKUStatus(name) {
+  try {
+    const stored = sessionStorage.getItem('sku_status');
+    const map = stored ? JSON.parse(stored) : {};
+    return map[name] !== undefined ? map[name] : 'active';  // 默认启动中
+  } catch(e) { return 'active'; }
+}
+
+function setSKUStatus(name, status) {
+  try {
+    const stored = sessionStorage.getItem('sku_status');
+    const map = stored ? JSON.parse(stored) : {};
+    map[name] = status;
+    sessionStorage.setItem('sku_status', JSON.stringify(map));
+  } catch(e) {}
+}
+
+function toggleSKU(name) {
+  const current = getSKUStatus(name);
+  const next = current === 'active' ? 'paused' : 'active';
+  setSKUStatus(name, next);
+  applySKUStatus(name, next);
+  
+  if (next === 'paused') {
+    showToast(`已暂停战略SKU:${name}`, 'var(--text-2)');
+  } else {
+    showToast(`已重新启动:${name}`, 'var(--green)');
+  }
+}
+
+function applySKUStatus(name, status) {
+  // 找到该SKU的状态徽章和按钮
+  document.querySelectorAll('.sku-status-badge').forEach(el => {
+    if (el.dataset.sku === name) {
+      if (status === 'active') {
+        el.textContent = '● 启动中';
+        el.style.background = 'var(--green-bg)';
+        el.style.color = 'var(--green)';
+        el.style.borderColor = 'var(--green)';
+      } else {
+        el.textContent = '⏸ 已暂停';
+        el.style.background = 'var(--bg-soft)';
+        el.style.color = 'var(--text-3)';
+        el.style.borderColor = 'var(--text-4)';
+      }
+    }
+  });
+  
+  document.querySelectorAll('.sku-toggle-btn').forEach(el => {
+    if (el.dataset.sku === name) {
+      el.textContent = status === 'active' ? '⏸ 暂停' : '▶ 启动';
+      el.style.background = status === 'active' ? 'var(--bg-soft)' : 'var(--green-bg)';
+      el.style.color = status === 'active' ? 'var(--text-2)' : 'var(--green)';
+      el.style.borderColor = status === 'active' ? 'var(--line)' : 'var(--green)';
+    }
+  });
+  
+  // 整张卡片淡化(暂停状态)
+  const cardId = 'sku-card-' + name.replace(/[·\.\s]/g,'_');
+  const card = document.getElementById(cardId);
+  if (card) {
+    card.style.transition = 'opacity 0.3s';
+    card.style.opacity = status === 'paused' ? '0.55' : '1';
+  }
+}
+
+// 初始化时·恢复所有SKU的session状态
+(function initSKUStates(){
+  setTimeout(() => {
+    document.querySelectorAll('.sku-status-badge').forEach(el => {
+      const name = el.dataset.sku;
+      const status = getSKUStatus(name);
+      if (status === 'paused') applySKUStatus(name, status);
+    });
+  }, 100);
+})();
+
+// Toast 入场动画
+(function injectToastAnim(){
+  const style = document.createElement('style');
+  style.textContent = `@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(20px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }`;
+  document.head.appendChild(style);
+})();
+
+// ════════════════════════════════════════════════════════════════
+// v1.2 新增 · 批次2 · ⑨Agent运行时 ⑩全局搜索 ⑪IPO详情 ⑫Xinhe扩展 ⑬色彩对比度
+// ════════════════════════════════════════════════════════════════
+
+// === ⑪ IPO节点经销商详情展开 ===
+function toggleIPODetail(n) {
+  const data = (window._IPO_CHAIN_DATA || []).find(c => c.n === n);
+  const panel = document.getElementById('ipo-detail-panel');
+  if (!data || !panel) return;
+  
+  // 高亮当前选中节点
+  document.querySelectorAll('.chain-node').forEach(el => el.style.outline = 'none');
+  const node = document.getElementById('ipo-node-' + n);
+  if (node) node.style.outline = '2px solid var(--amber)';
+  
+  if (!data.dealers || data.dealers.length === 0) {
+    panel.style.display = 'block';
+    panel.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600">IPO${n} · ${data.name} · <em style="color:var(--amber);font-style:italic">${data.val}</em></div>
+        <button onclick="closeIPODetail()" style="background:none;border:1px solid var(--line);color:var(--text-3);padding:3px 8px;border-radius:5px;cursor:pointer;font-size:11px">关闭 ×</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-3);padding:10px 0">该节点为系统级节点·无具体经销商详情。<button class="choice-btn" onclick="askBrain('IPO${n} ${data.name}当前 ${data.val} · 这个节点的健康度?需要做什么?')" style="font-size:11px;padding:4px 10px;margin-left:8px">问 Agent →</button></div>
+    `;
+    return;
+  }
+  
+  const dealersHtml = data.dealers.map(d => {
+    const healthColor = d.health >= 80 ? 'var(--green)' : d.health >= 60 ? 'var(--amber)' : 'var(--red)';
+    return `
+      <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="askBrain('IPO${n} ${data.name}节点·${d.name}当前${d.val}·${d.region}·健康度${d.health}·该如何?')">
+        <div>
+          <div style="font-weight:600;font-size:13px">${d.name}</div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:2px">${d.region}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:${healthColor};font-size:18px">${d.val}</div>
+          <div style="text-align:right">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3)">健康度</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:${healthColor};font-size:14px">${d.health}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line)">
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600">IPO${n} · ${data.name} · <em style="color:var(--amber);font-style:italic">${data.val}</em></div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.05em;margin-top:2px">该节点 TOP ${data.dealers.length} 经销商 / 实体</div>
+      </div>
+      <button onclick="closeIPODetail()" style="background:none;border:1px solid var(--line);color:var(--text-3);padding:3px 8px;border-radius:5px;cursor:pointer;font-size:11px">关闭 ×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">${dealersHtml}</div>
+  `;
+}
+
+function closeIPODetail() {
+  const panel = document.getElementById('ipo-detail-panel');
+  if (panel) panel.style.display = 'none';
+  document.querySelectorAll('.chain-node').forEach(el => el.style.outline = 'none');
+}
+
+// === ⑫ Xinhe (我) 卡片展开 ===
+function toggleXinheDetail() {
+  const detail = document.getElementById('xinhe-detail');
+  if (!detail) return;
+  const isOpen = detail.style.display !== 'none';
+  detail.style.display = isOpen ? 'none' : 'block';
+  
+  // 卡片视觉反馈
+  const card = document.getElementById('xinhe-card');
+  if (card) {
+    if (!isOpen) {
+      card.style.boxShadow = '0 4px 12px rgba(245,166,35,0.3)';
+    } else {
+      card.style.boxShadow = '';
+    }
+  }
+}
+
+// === ⑩ 全局搜索 ===
+const SEARCH_INDEX = [
+  // Tabs
+  {type:'Tab', icon:'🧠', name:'总指挥', desc:'每日简报+9场景', action:() => switchTab('brain')},
+  {type:'Tab', icon:'💧', name:'蒸腾监测', desc:'真增长vs假增长', action:() => switchTab('evapo')},
+  {type:'Tab', icon:'🤝', name:'5合伙人', desc:'H/D/S/C/E协议主体', action:() => switchTab('partners')},
+  {type:'Tab', icon:'🏗️', name:'6层架构', desc:'L1-L6完成度', action:() => switchTab('layers')},
+  {type:'Tab', icon:'⚙️', name:'Agent矩阵', desc:'8 Agents运行时状态', action:() => switchTab('agents')},
+  {type:'Tab', icon:'⭐', name:'战略SKU', desc:'3个活跃·六月鲜/有机/礼盒', action:() => switchTab('strategy')},
+  {type:'Tab', icon:'📋', name:'决策记录', desc:'本月42条·闭环管理', action:() => switchTab('actions')},
+  {type:'Tab', icon:'📦', name:'容器进度', desc:'80% READY', action:() => switchTab('container')},
+  // Agents
+  {type:'Agent', icon:'🟢', name:'A值校准 Agent', desc:'每周一06:00运行·三重验证', action:() => switchTab('agents')},
+  {type:'Agent', icon:'🟢', name:'蝴蝶效应 Agent', desc:'四类失真A/B/C/D扫描', action:() => switchTab('agents')},
+  {type:'Agent', icon:'🟢', name:'Omakase推单 Agent', desc:'(3a-库存)×1.2自动算补货', action:() => switchTab('agents')},
+  {type:'Agent', icon:'🔵', name:'CB分计算 Agent', desc:'美顾质量·B+V+R-C-T', action:() => switchTab('agents')},
+  {type:'Agent', icon:'🟡', name:'AIQL追踪 Agent', desc:'美顾AI质量联动', action:() => switchTab('agents')},
+  {type:'Agent', icon:'🟡', name:'PRISM选点 Agent', desc:'高蒸腾密度小区识别', action:() => switchTab('agents')},
+  {type:'Agent', icon:'🟡', name:'战略推演 Agent', desc:'shugen-v3·3年规划', action:() => switchTab('agents')},
+  {type:'Agent', icon:'⚫', name:'价签识别 Agent', desc:'千问VL·待TL接入', action:() => switchTab('agents')},
+  // SKU
+  {type:'SKU', icon:'⭐', name:'六月鲜·有机系列', desc:'蒸腾↑14% 销量↑12% 真伪比1.17·明发突破点', action:() => switchTab('strategy')},
+  {type:'SKU', icon:'⭐', name:'六月鲜·高端礼盒', desc:'蒸腾↑8% 销量↑7% 真伪比1.14·KA为主', action:() => switchTab('strategy')},
+  {type:'SKU', icon:'⭐', name:'禾然·零添加', desc:'蒸腾↑11% 销量↑9% 真伪比1.22·复购强', action:() => switchTab('strategy')},
+  // 经销商
+  {type:'Dealer', icon:'🟢', name:'明发商贸', desc:'上海浦东·真增长✓·有机突破78%·库存3.8a偏高', action:() => { switchTab('evapo'); }},
+  {type:'Dealer', icon:'🔴', name:'康润商贸', desc:'江苏南通·假增长⚠·销量↑18%蒸腾→+1%·A类压货', action:() => { switchTab('evapo'); }},
+  {type:'Dealer', icon:'🟡', name:'华东片区', desc:'上海+苏州+无锡·渠道断货⚡·紧急补货机会', action:() => { switchTab('evapo'); }},
+  {type:'Dealer', icon:'🟢', name:'宝润食品', desc:'江苏苏州·禾然零添加95%达成', action:() => { switchTab('evapo'); }},
+  {type:'Dealer', icon:'🟢', name:'瑞祥贸易', desc:'浙江温州·库存2.5a健康', action:() => { switchTab('evapo'); }},
+  // IPO
+  {type:'IPO', icon:'🏭', name:'IPO0 工厂', desc:'96% · 健康', action:() => { switchTab('layers'); setTimeout(() => toggleIPODetail(0), 200); }},
+  {type:'IPO', icon:'📦', name:'IPO3 经销库', desc:'3.8a⚠ · 警报·明发等10家偏高', action:() => { switchTab('layers'); setTimeout(() => toggleIPODetail(3), 200); }},
+  {type:'IPO', icon:'🛒', name:'IPO11 购买', desc:'79% · 有机品类待提', action:() => { switchTab('layers'); setTimeout(() => toggleIPODetail(11), 200); }},
+  {type:'IPO', icon:'🔄', name:'IPO13 复购', desc:'82% · 30/60/90日复购', action:() => { switchTab('layers'); setTimeout(() => toggleIPODetail(13), 200); }},
+  // 概念
+  {type:'概念', icon:'💧', name:'蒸腾模型', desc:'INFINITY OS第一性原理基准', action:() => switchTab('evapo')},
+  {type:'概念', icon:'🦋', name:'蝴蝶效应', desc:'A压货/B促销/C窜货/D战略·四类失真', action:() => switchTab('evapo')},
+  {type:'概念', icon:'⭐', name:'CB分公式', desc:'B+V+R-C-T·美顾质量', action:() => switchTab('agents')},
+  {type:'概念', icon:'🎯', name:'北极星', desc:'2亿瓶·4亿RMB·5品牌·2029目标', action:() => switchTab('partners')},
+];
+
+function openGlobalSearch() {
+  const modal = document.getElementById('global-search-modal');
+  modal.style.display = 'flex';
+  setTimeout(() => {
+    const input = document.getElementById('global-search-input');
+    if (input) input.focus();
+  }, 100);
+}
+
+function closeGlobalSearch() {
+  const modal = document.getElementById('global-search-modal');
+  if (modal) modal.style.display = 'none';
+  const input = document.getElementById('global-search-input');
+  if (input) input.value = '';
+  const results = document.getElementById('global-search-results');
+  if (results) results.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-3);font-size:12px">输入关键词开始搜索...</div>';
+}
+
+function performGlobalSearch(query) {
+  const results = document.getElementById('global-search-results');
+  if (!query || query.trim().length === 0) {
+    results.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-3);font-size:12px">输入关键词开始搜索...</div>';
+    return;
+  }
+  
+  const q = query.toLowerCase().trim();
+  const typeColor = {Tab:'var(--blue)', Agent:'var(--green)', SKU:'var(--amber)', Dealer:'var(--purple)', IPO:'var(--red)', '概念':'var(--text-2)'};
+  
+  const matches = SEARCH_INDEX.filter(item => 
+    item.name.toLowerCase().includes(q) || 
+    item.desc.toLowerCase().includes(q) ||
+    item.type.toLowerCase().includes(q)
+  );
+  
+  if (matches.length === 0) {
+    results.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-3);font-size:12px">无匹配结果·试试『明发』『蝴蝶』『有机』『IPO3』</div>`;
+    return;
+  }
+  
+  results.innerHTML = matches.map((item, idx) => `
+    <div onclick="executeSearchResult(${SEARCH_INDEX.indexOf(item)})" 
+         style="background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.15s"
+         onmouseover="this.style.borderColor='var(--amber)';this.style.transform='translateX(2px)'"
+         onmouseout="this.style.borderColor='var(--line)';this.style.transform='translateX(0)'">
+      <div style="font-size:18px">${item.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+          <div style="font-weight:600;font-size:13px">${item.name}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 6px;border-radius:4px;background:var(--bg-card);color:${typeColor[item.type]};border:1px solid ${typeColor[item.type]};letter-spacing:0.05em">${item.type}</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-3)">${item.desc}</div>
+      </div>
+      <div style="color:var(--text-3);font-size:14px">→</div>
+    </div>
+  `).join('');
+}
+
+function executeSearchResult(idx) {
+  const item = SEARCH_INDEX[idx];
+  if (!item) return;
+  closeGlobalSearch();
+  setTimeout(() => item.action(), 100);
+  showToast(`已跳转到:${item.name}`, 'var(--amber)');
+}
+
+// 全局快捷键 · / 唤起搜索·ESC关闭
+document.addEventListener('keydown', function(e) {
+  // / 键唤起搜索(不在输入框内时)
+  if (e.key === '/' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) {
+    e.preventDefault();
+    openGlobalSearch();
+  }
+  // Ctrl+K (跨平台·虽然title写着但实际很多浏览器不支持·留作可选)
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    openGlobalSearch();
+  }
+  // ESC 关闭搜索
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('global-search-modal');
+    if (modal && modal.style.display !== 'none') closeGlobalSearch();
+  }
+});
+
+// ════════════════════════════════════════════════════════════════
+// v2.0 新增 · 批次3 · ①footer日期 ②iPhone断点(纯CSS) ③askBrain返回 ④Agent建议 ⑤进度行动
+// ════════════════════════════════════════════════════════════════
+
+// === ① footer日期动态 ===
+(function initFooterDate(){
+  setTimeout(() => {
+    const dateEl = document.getElementById('footer-date');
+    const updateEl = document.getElementById('footer-update-time');
+    if (dateEl) {
+      const n = new Date();
+      const y = n.getFullYear();
+      const m = String(n.getMonth() + 1).padStart(2, '0');
+      const d = String(n.getDate()).padStart(2, '0');
+      dateEl.textContent = `${y}.${m}.${d}`;
+    }
+    if (updateEl) {
+      const n = new Date();
+      const time = `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+      updateEl.textContent = `今天 ${time}`;
+    }
+  }, 50);
+})();
+
+// === ③ askBrain返回原Tab ===
+function backToAskOrigin() {
+  if (window._askBrainOrigin) {
+    switchTab(window._askBrainOrigin);
+    showToast(`已返回 ${window._askBrainOriginName || '原页面'}`, 'var(--amber)');
+    window._askBrainOrigin = null;
+    window._askBrainOriginName = null;
+  } else {
+    showToast('没有可返回的原页面', 'var(--text-3)');
+  }
+}
+
+// === ④ assign-task Agent建议(基于上下文硬编码模板) ===
+function suggestDispatchByAgent() {
+  // 基于当前上下文猜测最合理的建议
+  const currentTab = document.querySelector('.nav-tab.active');
+  const tabName = currentTab ? currentTab.dataset.tab : 'brain';
+  
+  // 上下文模板库(诚实标注·演示性质)
+  const suggestions = {
+    'evapo': {
+      type: '调用 Agent · 蝴蝶效应扫描',
+      target: '康润商贸',
+      desc: '蒸腾监测发现康润真伪比0.06·销量↑18%但蒸腾→+1%·疑A类压货失真。请蝴蝶效应Agent立即扫描·48小时内给出处置建议。',
+      priority: '🚨 紧急(24小时)',
+    },
+    'partners': {
+      type: '派任务 · 派驻经理跟进',
+      target: '8家候选深度合伙经销商',
+      desc: '深度合伙率42%→60%路径·按蒸腾健康度评估·选出8家候选经销商·派驻经理1对1谈升级方案。30天内完成。',
+      priority: '⚠️ 高(3天)',
+    },
+    'layers': {
+      type: '调用 Agent · 战略推演',
+      target: '6层架构L4 Orchestration',
+      desc: 'L4层完成度65%·Workflow编排引擎是关键缺口。让战略Agent推演:补完L4后对L5决策层的乘数效应+所需3个月。',
+      priority: '○ 中(7天)',
+    },
+    'agents': {
+      type: '调用 Agent · A值校准',
+      target: '全部156家经销商',
+      desc: '本周一06:00定时任务·校准所有经销商心跳单元a·偏差>10%自动告警·结果输出到决策记录。',
+      priority: '○ 中(7天)',
+    },
+    'strategy': {
+      type: '调用 Agent · Omakase推单',
+      target: '六月鲜·有机系列 战略SKU',
+      desc: '有机系列明发突破点已现(78%)·复制到其他10家深度合伙·Omakase算最优SKU组合+推单量·本周内执行。',
+      priority: '⚠️ 高(3天)',
+    },
+    'actions': {
+      type: '调用 Agent · 蝴蝶效应扫描',
+      target: '本月超期决策3条',
+      desc: '本月3条决策超期·包括康润压货警示15天·扫描根因+推荐补救动作·48小时给方案。',
+      priority: '⚠️ 高(3天)',
+    },
+    'containers': {
+      type: '派任务 · DOM/MCTL处理',
+      target: '5项真缺口推进',
+      desc: '价签Agent完善+协议法务版+工厂仓储模块+8入口登录+经销商主控台整合·每项找责任DOM·30天内启动。',
+      priority: '○ 中(7天)',
+    },
+  };
+  
+  const s = suggestions[tabName] || suggestions['evapo'];
+  
+  // 填充表单
+  const typeSelect = document.getElementById('dispatch-type');
+  const targetInput = document.getElementById('dispatch-target');
+  const descTextarea = document.getElementById('dispatch-desc');
+  const prioritySelect = document.getElementById('dispatch-priority');
+  
+  if (typeSelect) {
+    for (let i = 0; i < typeSelect.options.length; i++) {
+      if (typeSelect.options[i].text === s.type) {
+        typeSelect.selectedIndex = i;
+        break;
+      }
+    }
+  }
+  if (targetInput) targetInput.value = s.target;
+  if (descTextarea) descTextarea.value = s.desc;
+  if (prioritySelect) {
+    for (let i = 0; i < prioritySelect.options.length; i++) {
+      if (prioritySelect.options[i].text === s.priority) {
+        prioritySelect.selectedIndex = i;
+        break;
+      }
+    }
+  }
+  
+  // 视觉反馈
+  [typeSelect, targetInput, descTextarea, prioritySelect].forEach(el => {
+    if (el) {
+      el.style.transition = 'all 0.3s';
+      el.style.borderColor = 'var(--amber)';
+      el.style.boxShadow = '0 0 0 2px rgba(245,166,35,0.2)';
+      setTimeout(() => {
+        el.style.borderColor = 'var(--line)';
+        el.style.boxShadow = '';
+      }, 1200);
+    }
+  });
+  
+  showToast(`Agent已建议(基于"${currentTab.querySelector('.nav-tab-name').textContent}"上下文·演示)`, 'var(--amber)');
+}
+
+// === ⑤ container进度·13项行动列表渲染 ===
+const ACTIONS_13 = [
+  // 批次1
+  {batch:1, num:'⑥', name:'蒸腾监测刷新', status:'done', detail:'蒸腾Tab右上角加[↻ 刷新]按钮+时间戳·点击有旋转动画'},
+  {batch:1, num:'⑦', name:'六层架构强化按钮', status:'done', detail:'每层加[详情→]·展开看已完成模块/待补模块·[展开全部]总开关'},
+  {batch:1, num:'⑧', name:'战略SKU启停', status:'done', detail:'每SKU加状态徽章+toggle开关·暂停时卡片淡化·sessionStorage暂存'},
+  // 批次2
+  {batch:2, num:'⑨', name:'8 Agent运行时显示', status:'done', detail:'每Agent显示运行时状态(🟢运行中/🔵已调度/🟡待机/⚫休眠)+最后运行+今日调用'},
+  {batch:2, num:'⑩', name:'全局搜索', status:'done', detail:'顶部[🔍 搜索]·快捷键 / 唤起·33个条目(Tab/Agent/SKU/经销商/IPO)'},
+  {batch:2, num:'⑪', name:'IPO节点经销商详情', status:'done', detail:'点击IPO节点·展开TOP经销商列表·健康度+关键值'},
+  {batch:2, num:'⑫', name:'Xinhe卡片改进', status:'done', detail:'H欣和(我)卡片可展开·协议主体+北极星+5品牌+承诺-价值-交易'},
+  {batch:2, num:'⑬', name:'色彩对比度', status:'done', detail:'--text-3/--text-4变量加深·阳光下更易读'},
+  // 批次3
+  {batch:3, num:'①', name:'footer日期动态JS', status:'done', detail:'footer日期改为JS动态生成·显示当天日期+最新更新时间'},
+  {batch:3, num:'②', name:'iPhone断点适配', status:'done', detail:'加@media(max-width:480px)+360px超小屏幕断点·iPhone单手可读'},
+  {batch:3, num:'③', name:'askBrain返回路径', status:'done', detail:'记忆原Tab·askBrain对话框加[← 返回]按钮·一键回到来源'},
+  {batch:3, num:'④', name:'assign-task Agent建议按钮', status:'done-demo', detail:'派单弹窗加[💡 Agent建议]·基于当前Tab上下文自动填充(演示·真Agent待TL)'},
+  {batch:3, num:'⑤', name:'container进度行动列表', status:'done', detail:'本section·13项进度+下一步行动'},
+];
+
+function renderActionsList() {
+  const statusBadge = {
+    done: '<span style="color:var(--green);font-weight:700">✅ 已完成</span>',
+    'done-demo': '<span style="color:var(--amber);font-weight:700">🟡 演示版</span>',
+    pending: '<span style="color:var(--text-3);font-weight:700">○ 待做</span>',
+  };
+  
+  ['1','2','3'].forEach(b => {
+    const list = document.getElementById('batch' + b + '-list');
+    if (!list) return;
+    const items = ACTIONS_13.filter(a => a.batch === parseInt(b));
+    list.innerHTML = items.map(item => `
+      <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;font-size:12px">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
+          <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;color:var(--amber);font-size:16px;min-width:18px">${item.num}</div>
+          <div style="min-width:0">
+            <div style="font-weight:600">${item.name}</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:1px;line-height:1.4">${item.detail}</div>
+          </div>
+        </div>
+        <div style="font-size:11px;flex-shrink:0">${statusBadge[item.status] || statusBadge.pending}</div>
+      </div>
+    `).join('');
+  });
+  
+  // 更新进度数
+  const doneCount = ACTIONS_13.filter(a => a.status === 'done' || a.status === 'done-demo').length;
+  const numEl = document.getElementById('action-progress-num');
+  const barEl = document.getElementById('action-progress-bar');
+  if (numEl) numEl.textContent = doneCount;
+  if (barEl) barEl.style.width = (doneCount / ACTIONS_13.length * 100) + '%';
+}
+
+// 启动时渲染
+setTimeout(() => {
+  if (document.getElementById('batch1-list')) renderActionsList();
+}, 200);
+
+// === v2.0 启动提示(覆盖v1.2的) ===
+setTimeout(() => {
+  showToast('主控台MAX v2.0 · 13项全部UI收口·剩余等TL接入真后端', 'var(--amber)');
+}, 800);
+
+// 阻止v1.2的启动toast(它在下面会再触发)
+window._suppressV12Toast = true;
+</script>
+
+</body>
+</html>

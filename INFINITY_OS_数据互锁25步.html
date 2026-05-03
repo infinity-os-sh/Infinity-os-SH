@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INFINITY OS · 数据互锁25步</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #09090f;
+  --bg2: #0e1018;
+  --bg3: #13161f;
+  --card: #141820;
+  --card2: #1a2030;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.15);
+  --text: #e8ecf5;
+  --text2: #8a95aa;
+  --text3: #4a5468;
+  --accent: #ff5f5f;
+  --accent2: #ff8585;
+  --accent-dim: rgba(255,95,95,0.12);
+  --amber: #f5a623;
+  --green: #4ade80;
+  --teal: #4ecdc4;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;line-height:1.7;min-height:100vh}
+.hero{padding:48px 24px 32px;text-align:center;background:radial-gradient(ellipse at top,rgba(255,95,95,0.1),transparent 60%);border-bottom:1px solid var(--border)}
+.hero-icon{
+  width:72px;height:72px;border-radius:18px;
+  background:linear-gradient(135deg,var(--accent),#cc4444);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:36px;margin-bottom:18px;
+  box-shadow:0 8px 32px rgba(255,95,95,0.3);
+}
+.hero-title{font-family:'Syne',sans-serif;font-weight:800;font-size:36px;margin-bottom:8px;letter-spacing:0.02em}
+.hero-title span{color:var(--accent)}
+.hero-sub{font-size:14px;color:var(--text2);font-family:'Space Mono',monospace;margin-bottom:10px}
+.hero-tag{display:inline-block;background:var(--accent-dim);border:1px solid rgba(255,95,95,0.3);border-radius:20px;padding:6px 14px;font-size:11px;color:var(--accent);font-family:'Space Mono',monospace}
+
+.section{max-width:920px;margin:0 auto;padding:32px 24px}
+.section-title{font-family:'Syne',sans-serif;font-weight:700;font-size:24px;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.section-title::before{content:'';width:3px;height:24px;background:var(--accent);border-radius:2px}
+
+.intro{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:18px 20px;margin-bottom:24px;font-size:13px;color:var(--text2);line-height:1.7}
+.intro strong{color:var(--accent);font-weight:600}
+
+.phase-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:20px 0}
+@media(max-width:640px){.phase-grid{grid-template-columns:1fr 1fr}}
+.phase-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:14px 10px;text-align:center;
+  border-top:3px solid var(--accent);
+}
+.phase-num{font-family:'Syne',sans-serif;font-weight:800;color:var(--accent);font-size:14px;margin-bottom:4px}
+.phase-name{font-size:11px;color:var(--text);font-weight:600;line-height:1.3;margin-bottom:4px}
+.phase-steps{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+
+.step{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:18px 20px;margin-bottom:12px;
+  position:relative;transition:all 0.2s;
+}
+.step:hover{border-color:var(--accent);transform:translateX(2px)}
+.step-hdr{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.step-num{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:14px;
+  color:#000;background:var(--accent);
+  padding:4px 10px;border-radius:6px;flex-shrink:0;
+}
+.step-name{font-size:15px;font-weight:600;flex:1}
+.step-phase{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;background:var(--bg3);padding:3px 8px;border-radius:4px}
+.step-body{font-size:12px;color:var(--text2);line-height:1.7;padding-left:46px}
+.step-body strong{color:var(--accent);font-weight:600}
+
+.callout{
+  border-left:3px solid var(--accent);
+  background:var(--accent-dim);
+  padding:14px 18px;border-radius:0 8px 8px 0;
+  margin:18px 0;font-size:13px;
+}
+.callout.green{border-color:var(--green);background:rgba(74,222,128,0.1)}
+.callout.amber{border-color:var(--amber);background:rgba(245,166,35,0.1)}
+.callout.teal{border-color:var(--teal);background:rgba(78,205,196,0.1)}
+.callout-title{font-weight:700;margin-bottom:6px;font-size:12px;letter-spacing:0.05em;color:var(--accent)}
+.callout.green .callout-title{color:var(--green)}
+.callout.amber .callout-title{color:var(--amber)}
+.callout.teal .callout-title{color:var(--teal)}
+
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:14px 0}
+.svc-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px}
+.svc-item-num{font-family:'Space Mono',monospace;color:var(--accent);font-weight:700;font-size:11px;margin-right:6px}
+.svc-item-name{color:var(--text)}
+.svc-item-desc{font-size:10px;color:var(--text3);margin-top:3px}
+
+.failure-list{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.failure-item{background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:12px 16px;font-size:12px}
+.failure-name{font-weight:600;color:var(--accent);margin-bottom:4px;font-size:13px}
+.failure-desc{color:var(--text2);font-size:11px;line-height:1.6}
+
+.footer{text-align:center;padding:48px 24px 32px;border-top:1px solid var(--border);margin-top:48px;color:var(--text3);font-size:11px;font-family:'Space Mono',monospace}
+.footer-brand{font-family:'Syne',sans-serif;color:var(--accent);font-weight:700;margin-bottom:6px}
+
+.divider{height:1px;background:var(--border);margin:32px 0}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-icon">🩸</div>
+  <h1 class="hero-title">数据<span>互锁</span> 25步</h1>
+  <div class="hero-sub">血液循环 · 1事件的全生命周期 · 12个后端服务</div>
+  <div class="hero-tag">INFINITY OS · DS · 2026-05-02</div>
+</div>
+
+<div class="section">
+  <div class="intro">
+    <strong>数据互锁的本质 = 同一个事实 · 双方看到一致</strong><br>
+    派单互锁让指令双向流动 · 数据互锁让事实双向同步。<br>
+    25步连起来 · INFINITY OS的"血液循环"完整一圈 · 从现场发生到中台落地到双端反哺。
+  </div>
+
+  <div class="section-title">5 Phase × 25 Step 总览</div>
+  <div class="phase-grid">
+    <div class="phase-card"><div class="phase-num">P1</div><div class="phase-name">现场采集</div><div class="phase-steps">Step 1-5</div></div>
+    <div class="phase-card"><div class="phase-num">P2</div><div class="phase-name">上传入库</div><div class="phase-steps">Step 6-10</div></div>
+    <div class="phase-card"><div class="phase-num">P3</div><div class="phase-name">处理加工</div><div class="phase-steps">Step 11-15</div></div>
+    <div class="phase-card"><div class="phase-num">P4</div><div class="phase-name">双端反哺</div><div class="phase-steps">Step 16-20</div></div>
+    <div class="phase-card"><div class="phase-num">P5</div><div class="phase-name">对账学习</div><div class="phase-steps">Step 21-25</div></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <div class="section-title">Phase 1 · 现场采集(Step 1-5)</div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">01</span><span class="step-name">事件触发</span><span class="step-phase">P1 现场采集</span></div>
+    <div class="step-body">5种触发源全自动:<strong>美顾打卡(到店)/任务完成(签字)/POS交易/汉询T+1/Dcloud实时</strong>。事件唯一ID生成·时间戳锁定(服务器时间·防客户端篡改)。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">02</span><span class="step-name">本地采集(美顾APP)</span><span class="step-phase">P1 现场采集</span></div>
+    <div class="step-body">APP本地SQLite缓存·5类数据并行采集:位置(GPS+时间戳)/图像(照片+EXIF)/库存(盘点数字)/关系(评分+评论)/交易(任务费记录)。打包成1个Event对象·本地暂存等待上传。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">03</span><span class="step-name">数据完整性自检</span><span class="step-phase">P1 现场采集</span></div>
+    <div class="step-body">APP本地校验上传前:必填字段(task_id/GPS/12张货架照/签字照/评分)。异常处理:字段缺失→提示美顾补全·照片模糊→重拍·GPS漂移>500m→重新定位。<strong>不让脏数据上路</strong>·保护服务器和带宽。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">04</span><span class="step-name">加密+签名</span><span class="step-phase">P1 现场采集</span></div>
+    <div class="step-body">本地加密:敏感字段(老板手机号/签字)→AES加密·整个Event→SHA-256签名·时间戳锁(防重放攻击)。中台收到能验证"真是陈晓琳上传"·不是中间人伪造。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">05</span><span class="step-name">上传队列</span><span class="step-phase">P1 现场采集</span></div>
+    <div class="step-body">弱网处理:网络好→立即上传·网络差→进本地队列·失败→指数退避重试(1s/2s/4s/8s)·7天内自动重传。本地最多缓存100个Event·让美顾在地下停车场也能正常工作。</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <div class="section-title">Phase 2 · 上传入库(Step 6-10)</div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">06</span><span class="step-name">API接入</span><span class="step-phase">P2 上传入库</span></div>
+    <div class="step-body">中台API接入:POST /api/v1/events·Token+签名+时间戳三重验证(±5分钟内防重放)·限流(单美顾100次/分钟)。通过→进入处理管道·不通过→拒绝+告警。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">07</span><span class="step-name">原始数据落地(staging)</span><span class="step-phase">P2 上传入库</span></div>
+    <div class="step-body">不直接进主表·先进staging。inf_events_staging表保留90天:event_id/raw_payload/received_at/status="pending"。<strong>原始数据保留(审计/复盘)·主表只放清洗后干净数据</strong>·出问题能追溯到原始。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">08</span><span class="step-name">防作弊检测(AntiCheatDetector) ⭐</span><span class="step-phase">P2 上传入库</span></div>
+    <div class="step-body"><strong>多源交叉检查·5维交叉:</strong>①GPS真实性(门店3km内·轨迹合理·设备一致) ②照片真实性(EXIF时间戳/GPS·AI图像比对) ③时间合理性(<5分钟假打卡·>4小时异常) ④行为模式(完美10单查·全5星查·新美顾连续A级查)。通过→verified·不通过→suspicious人工审核。<strong>这一步是数据互锁的命根</strong>。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">09</span><span class="step-name">数据补全(EnrichmentService)</span><span class="step-phase">P2 上传入库</span></div>
+    <div class="step-body">原始数据+关联补全:美顾完整资料(姓名/等级/CB分/经销商)·门店完整资料(地址/类型/难度/经销商)·经销商资料·任务规格·历史关联(陈晓琳过去30天去过老张3次)。<strong>Agent决策不用现查·提速10倍</strong>。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">10</span><span class="step-name">主表写入(DataLakeWriter)</span><span class="step-phase">P2 上传入库</span></div>
+    <div class="step-body">分表写入Hologres:inf_my_tasks/inf_evaluations/inf_inventory_snapshots/inf_meigu_actions/inf_photos(URL→OSS只存元数据)。<strong>事务保证:5表打包成1个事务·全成功COMMIT·任一失败ROLLBACK</strong>·不允许半成功。写入后staging.status="processed"。</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <div class="section-title">Phase 3 · 处理加工(Step 11-15)</div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">11</span><span class="step-name">事件流广播(EventStreamPublisher)</span><span class="step-phase">P3 处理加工</span></div>
+    <div class="step-body">Kafka事件流:发布Topic "task.completed"·订阅者并行处理(A值校准/蝴蝶效应/CB分/一本账/学习日志5个Agent)。<strong>1次事件·5个Agent同时反应·<500ms内全部完成</strong>。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">12</span><span class="step-name">A值校准Agent处理</span><span class="step-phase">P3 处理加工</span></div>
+    <div class="step-body">读取老张便利店过去30天r值→加入今天新数据点(50箱)→重新计算移动平均→检测是否需要r值调整。输出:老张r值8箱/天→8.2箱/天·写入inf_node_targets·调整>10%触发警报。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">13</span><span class="step-name">蝴蝶效应Agent处理</span><span class="step-phase">P3 处理加工</span></div>
+    <div class="step-body">读取明发库存(经销商层)→减去本次消化(50箱)→计算新水位3.8a→3.5a→跨节点检查(老张层↑·明发层↓·工厂层无变化)。输出:水位告警从"红"→"橙"·失真检测·写入inf_alerts。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">14</span><span class="step-name">CB分Agent处理</span><span class="step-phase">P3 处理加工</span></div>
+    <div class="step-body">读取陈晓琳近30天数据→计算粘性(活跃/回访/社群)+评价(老板均值)+执行(DSR评级映射)→CB公式0.5×粘性+0.3×评价+0.2×执行。输出:CB分4.78→4.81·等级5星(保持)·主厨认证进度85%→88%。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">15</span><span class="step-name">一本账Agent处理</span><span class="step-phase">P3 处理加工</span></div>
+    <div class="step-body">计算本次任务费(¥58×1.5×1.2×1.18×1.05=¥110.18)·抽成15%(¥16.53进激励池)·美顾到手¥93.65·累计本月收入。写入inf_settlements/inf_meigu_income/inf_bonus_pool三表·事务保证一致。</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <div class="section-title">Phase 4 · 双端反哺(Step 16-20)</div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">16</span><span class="step-name">SFA端推送(DSR)</span><span class="step-phase">P4 双端反哺</span></div>
+    <div class="step-body">3条推送通道分级:即时通知(WebSocket·任务卡片亮红点)+看板更新(完成数+1·CB分+0.01)+异常告警(企微·仅异常推送)。<strong>DSR感知:不需要主动查·系统自动告诉·重要的浮到顶部</strong>。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">17</span><span class="step-name">美顾APP反哺</span><span class="step-phase">P4 双端反哺</span></div>
+    <div class="step-body">3条推送:即时通知(¥93.65已结算+音效)+个人看板(月累计/CB分/等级/排名)+成就解锁游戏化("连续5星·解锁主厨认证候选")。<strong>让美顾爱看自己的页面·数据本身就是激励</strong>。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">18</span><span class="step-name">经销商主控台反哺</span><span class="step-phase">P4 双端反哺</span></div>
+    <div class="step-body">明发老板看到:美顾陈晓琳为我们消化50箱·当前库存3.5a·美顾质量分本月平均4.6·月度积分+50。延迟分级:任务完成5分钟内可见·月度报表凌晨生成·季度报表月底生成。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">19</span><span class="step-name">中台监控大屏</span><span class="step-phase">P4 双端反哺</span></div>
+    <div class="step-body">DS和管理层实时看到:今日任务完成数·美顾活跃数·异常告警数·激励池余额·各Agent健康度。监控指标:数据延迟<5秒/防作弊误报<1%/API响应<200ms·任一指标红→DS手机告警。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">20</span><span class="step-name">异常处理(SuspiciousDataReview)</span><span class="step-phase">P4 双端反哺</span></div>
+    <div class="step-body">异常队列(staging.status="suspicious")进DSR审核界面:看异常原因(GPS漂移/EXIF不符)·三选一(确认通过/要求重做/确认作弊)。24小时未审升级城市经理·48小时未审自动按"暂时通过"+后续抽查。</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <div class="section-title">Phase 5 · 对账学习(Step 21-25)</div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">21</span><span class="step-name">跨源对账(凌晨02:00)</span><span class="step-phase">P5 对账学习</span></div>
+    <div class="step-body">CrossReconciliation定时任务·三方对账:美顾上报(50箱已上货) vs 汉询(老张库存+50箱) vs Dcloud(明发出库50箱) vs POS(老张销售-X箱)。一致性检查·不一致自动标记inf_reconciliation_alerts·第二天DSR收到清单。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">22</span><span class="step-name">数据质量监控(DataQualityMonitor)</span><span class="step-phase">P5 对账学习</span></div>
+    <div class="step-body">日报指标三维度:完整性(必填字段缺失<0.5%/GPS缺失<1%)·准确性(防作弊误判<1%/对账偏差<3%)·及时性(上传成功率>99%/T+1对账完成率100%)。任一指标红→DS+TL收到告警。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">23</span><span class="step-name">学习日志写入(LearningLogService)</span><span class="step-phase">P5 对账学习</span></div>
+    <div class="step-body">inf_learning_log每条事件留痕:event_id+触发的agents+预测值(A值校准/蝴蝶/CB分预测)+实际值+delta(各Agent准确率累计)。每日凌晨汇总·形成学习样本。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">24</span><span class="step-name">快照归档(SnapshotService)</span><span class="step-phase">P5 对账学习</span></div>
+    <div class="step-body">每日凌晨快照:全表快照(增量/全量)。存储分级:热数据(30天内)→Hologres·温数据(30-90天)→MaxCompute·冷数据(>90天)→OSS归档。<strong>任何时间点的"系统状态"可重现</strong>·用于异常追溯+学习样本训练。</div>
+  </div>
+  
+  <div class="step">
+    <div class="step-hdr"><span class="step-num">25</span><span class="step-name">月度数据健康报告</span><span class="step-phase">P5 对账学习</span></div>
+    <div class="step-body">月底自动生成:数据完整性99.7%·防作弊拦截18起(确认作弊3起)·跨源对账偏差均值1.2%·API平均响应142ms。学习样本累计:本月+412条·总样本424条·距500阈值还差76条·预计6月底达成。报告自动推送DS+TL+管理层。</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <div class="section-title">5个失败模式 · 全防住</div>
+  <div class="failure-list">
+    <div class="failure-item"><div class="failure-name">①数据脏</div><div class="failure-desc">GPS漂移/照片重复/时间错乱·Step 8防住·AntiCheatDetector多源交叉</div></div>
+    <div class="failure-item"><div class="failure-name">②数据丢</div><div class="failure-desc">弱网丢包/服务器宕机/Event丢失·Step 5/7防住·本地队列+staging+重传</div></div>
+    <div class="failure-item"><div class="failure-name">③数据假</div><div class="failure-desc">伪造GPS/PS签字/互刷·Step 4/8防住·加密签名+多源交叉+AI检测</div></div>
+    <div class="failure-item"><div class="failure-name">④数据延</div><div class="failure-desc">T+1太慢错过干预窗口·Step 11防住·Kafka事件流秒级响应</div></div>
+    <div class="failure-item"><div class="failure-name">⑤数据孤</div><div class="failure-desc">双端不一致/经销商和中台对不上·Step 16-19防住·SSOT原则中台唯一真源</div></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <div class="section-title">12个后端服务 · TL第2个Epic</div>
+  <div class="svc-grid">
+    <div class="svc-item"><span class="svc-item-num">01</span><span class="svc-item-name">DataIngestionService</span><div class="svc-item-desc">数据接入·美顾/SFA/POS/汉询</div></div>
+    <div class="svc-item"><span class="svc-item-num">02</span><span class="svc-item-name">RawDataValidator</span><div class="svc-item-desc">原始数据格式验证</div></div>
+    <div class="svc-item"><span class="svc-item-num">03</span><span class="svc-item-name">DeduplicationService</span><div class="svc-item-desc">去重·同事件多次上报</div></div>
+    <div class="svc-item"><span class="svc-item-num">04</span><span class="svc-item-name">EnrichmentService</span><div class="svc-item-desc">数据补全·关联门店/经销商</div></div>
+    <div class="svc-item"><span class="svc-item-num">05</span><span class="svc-item-name">DataLakeWriter</span><div class="svc-item-desc">写入Hologres·事务保证</div></div>
+    <div class="svc-item"><span class="svc-item-num">06</span><span class="svc-item-name">RealTimeAggregator</span><div class="svc-item-desc">实时聚合·分钟级看板</div></div>
+    <div class="svc-item"><span class="svc-item-num">07</span><span class="svc-item-name">AntiCheatDetector ⭐</span><div class="svc-item-desc">防作弊·5维交叉</div></div>
+    <div class="svc-item"><span class="svc-item-num">08</span><span class="svc-item-name">DataQualityMonitor</span><div class="svc-item-desc">质量监控·脏数据告警</div></div>
+    <div class="svc-item"><span class="svc-item-num">09</span><span class="svc-item-name">SnapshotService</span><div class="svc-item-desc">快照·历史回溯</div></div>
+    <div class="svc-item"><span class="svc-item-num">10</span><span class="svc-item-name">PrivacyGuard</span><div class="svc-item-desc">隐私控制·敏感字段</div></div>
+    <div class="svc-item"><span class="svc-item-num">11</span><span class="svc-item-name">CrossReconciliation</span><div class="svc-item-desc">跨源对账·汉询×Dcloud×美顾</div></div>
+    <div class="svc-item"><span class="svc-item-num">12</span><span class="svc-item-name">EventStreamPublisher</span><div class="svc-item-desc">事件发布·Kafka·给Agent订阅</div></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <div class="callout teal">
+    <div class="callout-title">💎 最容易被忽略的1步:Step 8防作弊检测</div>
+    没这步·所有后续Agent都被骗。A值校准基于假数据·CB分给作弊者高分·激励池流向作弊·系统从底层烂掉。多源交叉是基础能力·不是奢侈品。<strong>第一个Sprint必须包含·不能"先跑起来再加"</strong>。
+  </div>
+  
+  <div class="callout">
+    <div class="callout-title">🩸 一句话总结</div>
+    数据互锁25步 = 1个事件的全生命周期 · 从现场到反哺 · 从信任到学习。<strong>12个后端服务覆盖全程·TL第2个Epic·1个月落地</strong>。
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-brand">INFINITY OS · 数据互锁25步</div>
+  <div>5 Phase × 25 Step · 12个后端服务 · TL第2个Epic</div>
+  <div style="margin-top:6px">DS · 欣和SH · 2026-05-02</div>
+  <div style="margin-top:12px;color:var(--accent)">真实 · 速度 · 精准可靠</div>
+</div>
+
+</body>
+</html>
