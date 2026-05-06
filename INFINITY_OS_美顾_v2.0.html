@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>美顾·陈晓琳·INFINITY OS v2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08090f; --bg2:#0c0e16; --bg3:#11141d; --bg4:#161a25;
+  --card:#141823; --card2:#1a2030; --card3:#1f2638;
+  --line:rgba(255,255,255,0.06); --line2:rgba(255,255,255,0.12);
+  --tx:#e8ecf5; --tx2:#8a95aa; --tx3:#4a5468; --tx4:#2f3645;
+  --am:#f5a623; --am2:#ffc85e; --am-dim:rgba(245,166,35,0.1);
+  --teal:#4ecdc4; --teal-dim:rgba(78,205,196,0.1);
+  --red:#ff5f5f; --red-dim:rgba(255,95,95,0.1);
+  --green:#4ade80; --green-dim:rgba(74,222,128,0.1);
+  --blue:#60a5fa; --blue-dim:rgba(96,165,250,0.1);
+  --purple:#a78bfa; --purple-dim:rgba(167,139,250,0.1);
+  --pink:#f472b6;
+  --gold:linear-gradient(135deg,#f5a623,#ffc85e);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--tx);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden;padding-bottom:74px}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at top,rgba(245,166,35,0.04),transparent 60%),radial-gradient(ellipse at bottom right,rgba(78,205,196,0.025),transparent 50%);mix-blend-mode:screen}
+
+/* ─── 顶栏 ─── */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(8,9,15,0.95);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--line);padding:7px 12px}
+.tb-row1{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tb-user{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.tb-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--am),var(--pink));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000;flex-shrink:0;box-shadow:0 2px 10px rgba(245,166,35,0.3);position:relative}
+.tb-avatar::after{content:'⭐';position:absolute;bottom:-3px;right:-3px;background:#000;border:1.5px solid var(--am);width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px}
+.tb-info{flex:1;min-width:0}
+.tb-name{font-size:12px;font-weight:600}
+.tb-name em{color:var(--am);font-style:normal;font-size:9px;background:var(--am-dim);padding:1px 5px;border-radius:7px;margin-left:3px;font-weight:700}
+.tb-loc{font-size:9px;color:var(--tx3);font-family:'Space Mono',monospace;margin-top:1px}
+.tb-loc em{font-style:normal;color:var(--green)}
+.tb-loc em.moving{color:var(--blue)}
+.tb-clock{font-family:'Space Mono',monospace;font-size:10px;color:var(--tx3);background:rgba(255,255,255,0.04);padding:3px 7px;border-radius:11px;border:1px solid var(--line);white-space:nowrap}
+
+/* 模式切换 */
+.mode-switch{margin-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:5px;background:rgba(0,0,0,0.3);padding:3px;border-radius:11px;border:1px solid var(--line)}
+.mode-btn{padding:7px 6px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;transition:all 0.2s;color:var(--tx3);background:transparent}
+.mode-btn.active.sfa{background:linear-gradient(135deg,rgba(96,165,250,0.18),rgba(96,165,250,0.08));color:var(--blue);border:1px solid rgba(96,165,250,0.3)}
+.mode-btn.active.app{background:linear-gradient(135deg,rgba(245,166,35,0.18),rgba(245,166,35,0.08));color:var(--am);border:1px solid rgba(245,166,35,0.3)}
+.mode-btn small{display:block;font-size:8.5px;font-weight:600;opacity:0.7;margin-top:1px}
+
+.auto-hint{margin-top:5px;font-size:9px;color:var(--tx3);text-align:center;font-family:'Space Mono',monospace;letter-spacing:0.04em}
+.auto-hint em{color:var(--green);font-style:normal}
+.auto-hint em.moving{color:var(--blue)}
+
+/* 角色 chip */
+.role-row{display:flex;gap:4px;margin-top:6px;overflow-x:auto;scrollbar-width:none}
+.role-row::-webkit-scrollbar{display:none}
+.role-chip{font-size:9.5px;font-weight:600;padding:3px 8px;border-radius:11px;background:rgba(255,255,255,0.04);border:1px solid var(--line);color:var(--tx3);white-space:nowrap;cursor:pointer;transition:all 0.15s}
+.role-chip.active{background:var(--am-dim);border-color:rgba(245,166,35,0.35);color:var(--am);font-weight:700}
+
+/* ─── 模式视图 ─── */
+.view{display:none}
+.view.active{display:block;animation:fade 0.3s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════════════════════════════════════════ */
+/* APP 模式 · 首屏一本账                            */
+/* ═══════════════════════════════════════════════ */
+
+/* 双边承诺 */
+.dual-pledge{margin:12px 12px 10px;background:linear-gradient(135deg,rgba(167,139,250,0.06),rgba(78,205,196,0.04));border:1px solid rgba(167,139,250,0.2);border-radius:12px;padding:11px 13px}
+.dp-title{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--purple);font-weight:700;margin-bottom:8px;font-family:'Space Mono',monospace;letter-spacing:0.05em;text-transform:uppercase}
+.dp-title::before{content:'🤝'}
+.dp-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;font-size:10.5px}
+.dp-cell{background:rgba(0,0,0,0.25);border-radius:8px;padding:7px 9px;line-height:1.5}
+.dp-cell-l{font-size:8.5px;color:var(--tx3);font-weight:700;letter-spacing:0.04em;margin-bottom:3px;font-family:'Space Mono',monospace;text-transform:uppercase}
+.dp-cell-l.me{color:var(--purple)}
+.dp-cell-l.co{color:var(--teal)}
+.dp-cell strong{color:var(--tx);font-weight:600}
+
+/* 一本账 hero */
+.ledger-hero{margin:0 12px 13px;background:linear-gradient(160deg,#1f1408 0%,#1a1217 40%,#141823 100%);border:1px solid rgba(245,166,35,0.25);border-radius:18px;padding:16px;position:relative;overflow:hidden}
+.ledger-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold);opacity:0.85}
+.ledger-hero::after{content:'';position:absolute;top:-30%;right:-15%;width:200px;height:200px;background:radial-gradient(circle,rgba(245,166,35,0.15),transparent 70%);pointer-events:none}
+.lh-label{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--am);letter-spacing:0.18em;text-transform:uppercase;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.lh-label::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--am);box-shadow:0 0 7px var(--am);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.lh-amount{font-family:'Syne',sans-serif;font-size:46px;font-weight:800;line-height:1;letter-spacing:-0.02em;color:var(--am);display:flex;align-items:baseline;gap:6px;margin-bottom:9px;text-shadow:0 2px 16px rgba(245,166,35,0.25)}
+.lh-amount small{font-size:17px;font-weight:600;opacity:0.7;letter-spacing:0;color:var(--tx2)}
+.lh-amount tt{font-family:'Space Mono',monospace;font-size:11px;color:var(--tx3);background:rgba(255,255,255,0.04);padding:3px 7px;border-radius:6px;font-weight:600;margin-left:auto;border:1px solid var(--line)}
+
+.lh-progress{height:8px;background:rgba(255,255,255,0.06);border-radius:6px;overflow:hidden;margin-bottom:6px;position:relative}
+.lh-bar{height:100%;background:var(--gold);border-radius:6px;width:81%;position:relative}
+.lh-bar::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);animation:shine 2.5s ease infinite}
+@keyframes shine{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.lh-meta{display:flex;justify-content:space-between;font-size:10.5px;color:var(--tx2);margin-bottom:13px}
+.lh-meta strong{color:var(--am);font-weight:700}
+.lh-meta em{color:var(--red);font-style:normal;font-weight:600}
+
+/* SKU + 客户 with r·a·t */
+.lh-grid{display:grid;grid-template-columns:1fr;gap:8px}
+.lh-sub{background:rgba(0,0,0,0.28);border:1px solid var(--line);border-radius:11px;padding:10px}
+.lh-sub-head{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--tx3);font-weight:700;letter-spacing:0.04em;margin-bottom:8px;text-transform:uppercase;font-family:'Space Mono',monospace}
+.lh-sub-head em{color:var(--am);font-style:normal;font-weight:800;font-size:13px;font-family:'Syne',sans-serif}
+
+.sku-row{padding:7px 8px;background:rgba(255,255,255,0.02);border-radius:7px;margin-bottom:4px;border:1px solid rgba(255,255,255,0.03)}
+.sku-row:last-child{margin-bottom:0}
+.sku-row-top{display:flex;align-items:center;gap:5px;margin-bottom:3px}
+.sku-name{font-size:11px;font-weight:600;flex:1;line-height:1.2}
+.sku-name em{font-style:normal;font-size:8px;background:var(--purple-dim);color:var(--purple);padding:1px 4px;border-radius:3px;margin-left:3px;font-weight:700}
+.sku-money{color:var(--am);font-weight:700;font-family:'Space Mono',monospace;font-size:11px}
+.sku-money.todo{color:var(--tx3)}
+
+.rat-row{display:flex;gap:6px;font-size:9.5px;font-family:'Space Mono',monospace;color:var(--tx3)}
+.rat-cell{display:flex;align-items:center;gap:2px}
+.rat-cell em{color:var(--teal);font-style:normal;font-weight:700;font-size:10px}
+
+.cu-row{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;font-size:11px;border-radius:6px;background:rgba(255,255,255,0.02);margin-bottom:3px}
+.cu-row:last-child{margin-bottom:0}
+.cu-name{color:var(--tx2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cu-amt{color:var(--am);font-family:'Space Mono',monospace;font-weight:700}
+.cu-amt.done::before{content:'✓ ';color:var(--green)}
+
+.lh-cta{margin-top:11px;display:flex;gap:6px}
+.lh-cta-btn{flex:1;text-align:center;padding:9px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;border:1px solid var(--line);color:var(--tx2);background:rgba(255,255,255,0.03)}
+.lh-cta-btn.primary{background:linear-gradient(135deg,var(--am),var(--am2));color:#000;border-color:transparent;font-weight:700}
+.lh-cta-btn:hover{background:rgba(255,255,255,0.06)}
+
+/* EOD */
+.eod{margin:0 12px 14px;background:linear-gradient(135deg,rgba(96,165,250,0.05),rgba(167,139,250,0.04));border:1px solid rgba(96,165,250,0.2);border-radius:14px;padding:13px;display:none}
+.eod.active{display:block;animation:slideD 0.35s ease both}
+@keyframes slideD{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.eod-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.eod-t{font-size:12px;font-weight:700;color:var(--blue)}
+.eod-t::before{content:'💡 ';margin-right:3px}
+.eod-cls{font-size:14px;color:var(--tx3);cursor:pointer;padding:2px 8px}
+.eod-sum{background:rgba(0,0,0,0.25);border-radius:9px;padding:9px;margin-bottom:8px;font-size:11.5px;color:var(--tx2);line-height:1.6}
+.eod-sum strong{color:var(--green)}
+.eod-sum em{color:var(--red);font-style:normal;font-weight:600}
+.eod-tip{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:9px;padding:9px 11px;display:flex;align-items:center;gap:9px;margin-bottom:5px}
+.eod-tip-time{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--blue);background:var(--blue-dim);padding:3px 6px;border-radius:5px;flex-shrink:0}
+.eod-tip-info{flex:1;font-size:11px;color:var(--tx2);line-height:1.5}
+.eod-tip-info strong{color:var(--tx);font-weight:600}
+.eod-tip-gain{font-family:'Space Mono',monospace;font-size:11.5px;font-weight:800;color:var(--green);flex-shrink:0}
+.eod-total{margin-top:9px;padding:9px 12px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:9px;display:flex;align-items:center;justify-content:space-between;font-size:11.5px}
+.eod-total-l{color:var(--green);font-weight:700}
+.eod-total-r{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--green)}
+.eod-total-r small{font-size:10px;font-weight:600;opacity:0.7}
+.eod-add{margin-top:9px;width:100%;padding:11px;border-radius:10px;background:var(--green);color:#000;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans SC',sans-serif}
+
+/* ─── 通用 Tab ─── */
+.tabs-bar{display:flex;gap:0;margin:0 12px 13px;border-bottom:1px solid var(--line);position:sticky;top:155px;z-index:50;background:rgba(8,9,15,0.95);backdrop-filter:blur(15px)}
+.tab-i{flex:1;text-align:center;padding:10px 0 8px;font-size:11.5px;color:var(--tx3);cursor:pointer;font-weight:600;position:relative}
+.tab-i.active.app{color:var(--am)}
+.tab-i.active.app::after{content:'';position:absolute;bottom:-1px;left:25%;right:25%;height:2px;background:var(--am);border-radius:2px}
+.tab-i.active.sfa{color:var(--blue)}
+.tab-i.active.sfa::after{content:'';position:absolute;bottom:-1px;left:25%;right:25%;height:2px;background:var(--blue);border-radius:2px}
+
+.tab-c{display:none;padding:0 12px 14px}
+.tab-c.active{display:block;animation:fade 0.25s ease both}
+
+.mod{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px;margin-bottom:10px}
+.mod-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.mod-t{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--tx)}
+.mod-n{font-family:'Space Mono',monospace;font-size:8.5px;font-weight:800;background:rgba(245,166,35,0.12);color:var(--am);padding:2px 6px;border-radius:5px;letter-spacing:0.04em}
+.mod-m{font-size:9.5px;color:var(--tx3);font-family:'Space Mono',monospace}
+
+/* ─── APP · 一本账三维 ─── */
+.dim-tabs{display:flex;gap:5px;margin-bottom:10px}
+.dim-tab{flex:1;text-align:center;padding:7px;border-radius:8px;font-size:10.5px;font-weight:600;cursor:pointer;background:rgba(0,0,0,0.2);border:1px solid var(--line);color:var(--tx3)}
+.dim-tab.active{background:var(--am-dim);border-color:rgba(245,166,35,0.35);color:var(--am);font-weight:700}
+.dim-c{display:none}
+.dim-c.active{display:block;animation:fade 0.2s ease both}
+
+.dim-row{background:var(--bg3);border:1px solid var(--line);border-radius:9px;padding:9px 11px;display:flex;align-items:center;gap:9px;margin-bottom:5px}
+.dim-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:var(--am-dim);border:1px solid rgba(245,166,35,0.2)}
+.dim-info{flex:1;min-width:0}
+.dim-name{font-size:11.5px;font-weight:600;line-height:1.3;display:flex;align-items:center;gap:5px}
+.dim-name em{color:var(--purple);font-style:normal;font-size:8px;background:var(--purple-dim);padding:1px 5px;border-radius:4px;font-weight:700}
+.dim-meta{font-size:9.5px;color:var(--tx3);margin-top:2px;font-family:'Space Mono',monospace}
+.dim-meta tt{color:var(--teal);font-weight:700}
+.dim-val{font-family:'Space Mono',monospace;font-size:13px;font-weight:800;color:var(--am);flex-shrink:0}
+
+/* CB 拆分 */
+.cb-card{background:linear-gradient(135deg,rgba(244,114,182,0.04),rgba(245,166,35,0.03));border:1px solid rgba(244,114,182,0.2);border-radius:11px;padding:13px}
+.cb-top{display:flex;align-items:center;gap:11px;margin-bottom:11px}
+.cb-num{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:var(--pink);line-height:1}
+.cb-num small{font-size:14px;color:var(--tx3);font-weight:600}
+.cb-info{flex:1}
+.cb-rank{font-size:11.5px;font-weight:700;color:var(--pink)}
+.cb-rank em{font-style:normal;font-size:9px;background:rgba(244,114,182,0.1);padding:1px 5px;border-radius:4px;margin-left:3px}
+.cb-trend{font-size:10px;color:var(--tx3);margin-top:2px;font-family:'Space Mono',monospace}
+.cb-trend em{color:var(--green);font-style:normal;font-weight:700}
+
+.cb-formula{background:rgba(0,0,0,0.3);border-radius:9px;padding:11px;margin-bottom:8px}
+.cb-formula-l{font-size:9.5px;color:var(--tx3);font-family:'Space Mono',monospace;letter-spacing:0.05em;margin-bottom:8px;text-align:center}
+.cb-formula-l strong{color:var(--pink)}
+.cb-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:10.5px}
+.cb-bar-row:last-child{margin-bottom:0}
+.cb-bar-l{width:60px;flex-shrink:0;color:var(--tx2);font-weight:600}
+.cb-bar{flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;position:relative}
+.cb-bar-fill{height:100%;border-radius:4px}
+.cb-bar-v{font-family:'Space Mono',monospace;color:var(--tx);font-weight:700;font-size:10.5px;width:55px;text-align:right;flex-shrink:0}
+
+/* AIQL */
+.aiql-card{background:linear-gradient(135deg,rgba(78,205,196,0.05),rgba(96,165,250,0.04));border:1px solid rgba(78,205,196,0.2);border-radius:11px;padding:13px}
+.aiql-flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;gap:5px;align-items:center;margin-bottom:9px}
+.aiql-step{text-align:center;padding:7px 4px;border-radius:8px;background:rgba(0,0,0,0.25);border:1px solid var(--line)}
+.aiql-step.done{background:var(--teal-dim);border-color:rgba(78,205,196,0.3)}
+.aiql-step.current{background:linear-gradient(135deg,var(--teal),var(--blue));border-color:transparent;color:#fff}
+.aiql-letter{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;line-height:1;color:var(--teal)}
+.aiql-step.done .aiql-letter{color:var(--teal)}
+.aiql-step.current .aiql-letter{color:#fff}
+.aiql-name{font-size:8.5px;color:var(--tx3);margin-top:2px}
+.aiql-step.current .aiql-name{color:rgba(255,255,255,0.9)}
+.aiql-arr{color:var(--tx3);font-size:10px}
+.aiql-text{font-size:10.5px;color:var(--tx2);line-height:1.5;text-align:center}
+.aiql-text strong{color:var(--teal)}
+
+/* 三方评价 */
+.triple-eval{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+.te-cell{background:rgba(0,0,0,0.25);border:1px solid var(--line);border-radius:9px;padding:9px 7px;text-align:center}
+.te-from{font-size:8px;color:var(--tx3);font-family:'Space Mono',monospace;letter-spacing:0.04em;font-weight:700;margin-bottom:5px;text-transform:uppercase}
+.te-stars{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--am);line-height:1;margin-bottom:2px}
+.te-stars small{font-size:9px;color:var(--tx3);font-weight:600}
+.te-cnt{font-size:8.5px;color:var(--tx3);margin-top:2px;font-family:'Space Mono',monospace}
+
+/* 申诉 */
+.appeal-row{background:rgba(255,95,95,0.04);border:1px solid rgba(255,95,95,0.2);border-radius:9px;padding:9px 11px;display:flex;align-items:center;gap:9px;font-size:10.5px;color:var(--tx2);line-height:1.5}
+.appeal-row strong{color:var(--red)}
+.appeal-btn{margin-left:auto;padding:5px 10px;background:var(--red);color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0}
+
+/* ═══════════════════════════════════════════════ */
+/* SFA 模式                                          */
+/* ═══════════════════════════════════════════════ */
+
+.sfa-banner{margin:12px 12px 12px;background:linear-gradient(135deg,rgba(96,165,250,0.06),rgba(74,222,128,0.04));border:1px solid rgba(96,165,250,0.25);border-radius:13px;padding:12px}
+.sfa-banner-l{font-size:10px;color:var(--blue);font-family:'Space Mono',monospace;letter-spacing:0.05em;font-weight:700;margin-bottom:5px;text-transform:uppercase}
+.sfa-banner-l::before{content:'📍 ';margin-right:3px}
+.sfa-banner-store{font-size:14px;font-weight:700;line-height:1.3}
+.sfa-banner-store em{font-style:normal;font-size:10px;background:var(--blue-dim);color:var(--blue);padding:2px 6px;border-radius:5px;margin-left:5px;font-weight:700}
+.sfa-banner-meta{font-size:10px;color:var(--tx3);margin-top:3px;display:flex;align-items:center;gap:10px}
+.sfa-banner-meta em{font-style:normal;color:var(--green);font-weight:600}
+.sfa-banner-progress{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-top:9px}
+.sfa-step{height:5px;border-radius:3px;background:rgba(255,255,255,0.06)}
+.sfa-step.done{background:var(--green)}
+.sfa-step.now{background:var(--am);box-shadow:0 0 6px var(--am)}
+
+/* 五大指标 */
+.kpi-list{display:flex;flex-direction:column;gap:6px}
+.kpi-card{background:var(--bg3);border:1px solid var(--line);border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:10px}
+.kpi-num{width:24px;height:24px;border-radius:6px;background:rgba(245,166,35,0.12);color:var(--am);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-weight:800;font-size:10.5px;flex-shrink:0}
+.kpi-info{flex:1;min-width:0}
+.kpi-name{font-size:12px;font-weight:600;line-height:1.3}
+.kpi-detail{font-size:10px;color:var(--tx3);margin-top:2px;line-height:1.4}
+.kpi-detail em{color:var(--am);font-style:normal;font-weight:600}
+.kpi-state{font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px;flex-shrink:0;font-family:'Space Mono',monospace}
+.kpi-state.done{background:var(--green-dim);color:var(--green)}
+.kpi-state.now{background:var(--blue-dim);color:var(--blue)}
+.kpi-state.todo{background:rgba(255,255,255,0.04);color:var(--tx3)}
+
+/* 试吃 */
+.taste-card{background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.2);border-radius:9px;padding:10px 11px;margin-top:8px}
+.taste-l{font-size:10px;color:var(--purple);font-weight:700;font-family:'Space Mono',monospace;letter-spacing:0.04em;margin-bottom:6px}
+.taste-flow{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--tx2)}
+.taste-step{flex:1;text-align:center;padding:5px 3px;border-radius:6px;background:rgba(0,0,0,0.25);border:1px solid var(--line)}
+.taste-step.done{background:var(--green-dim);color:var(--green);border-color:rgba(74,222,128,0.25)}
+.taste-step.now{background:var(--purple-dim);color:var(--purple);border-color:rgba(167,139,250,0.3)}
+.taste-arr{color:var(--tx3)}
+
+/* 拍照 */
+.photo-row{background:var(--bg3);border:1px solid var(--line);border-radius:10px;padding:10px 11px;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.photo-row.done{opacity:0.65;border-color:rgba(74,222,128,0.2)}
+.photo-icon{width:36px;height:36px;border-radius:8px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.25);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.photo-row.done .photo-icon{background:var(--green-dim);border-color:rgba(74,222,128,0.3)}
+.photo-info{flex:1;min-width:0}
+.photo-step{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--am);font-weight:700;letter-spacing:0.05em;margin-bottom:1px}
+.photo-name{font-size:11.5px;font-weight:600;line-height:1.3}
+.photo-detail{font-size:9.5px;color:var(--tx3);margin-top:2px}
+.photo-state{font-size:10.5px;font-weight:700;font-family:'Space Mono',monospace;flex-shrink:0}
+.photo-state.done{color:var(--green)}
+.photo-state.todo{color:var(--tx3)}
+.photo-state.now{color:var(--am)}
+
+.gps-verify{margin-top:9px;padding:9px 11px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:9px;font-size:10.5px;color:var(--tx2);line-height:1.5}
+.gps-verify strong{color:var(--green)}
+
+.photo-principle{margin-top:9px;background:rgba(78,205,196,0.05);border:1px solid rgba(78,205,196,0.15);border-radius:9px;padding:9px 11px;font-size:10.5px;color:var(--tx2);line-height:1.55}
+.photo-principle strong{color:var(--teal);font-weight:700}
+.photo-principle em{color:var(--am);font-style:normal;font-weight:600}
+
+/* INF-VL 识别结果 */
+.inf-vl-demo{margin-top:9px;padding:11px;background:rgba(245,166,35,0.04);border:1px solid rgba(245,166,35,0.18);border-radius:10px}
+.inf-vl-l{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--am);font-weight:700;letter-spacing:0.05em;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.inf-vl-l::before{content:'🔬';font-size:11px}
+.inf-vl-l em{color:var(--green);font-style:normal;font-weight:700;background:var(--green-dim);padding:1px 5px;border-radius:4px;font-size:8.5px;letter-spacing:0;margin-left:auto}
+.shot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.shot-out{background:rgba(0,0,0,0.3);border:1px solid var(--line);border-radius:7px;padding:7px;text-align:center}
+.shot-icon{font-size:13px;margin-bottom:3px}
+.shot-l{font-size:9px;color:var(--tx3);margin-bottom:2px}
+.shot-v{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--am);line-height:1.2}
+.shot-v.tiny{font-size:10px}
+
+/* 录入三处分填 */
+.input-three{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:9px}
+.input-cell{background:var(--bg3);border:1px solid var(--line);border-radius:9px;padding:9px 7px;text-align:center}
+.input-pos{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--am);letter-spacing:0.05em;margin-bottom:4px;font-weight:700}
+.input-num{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:var(--tx);line-height:1}
+.input-num small{font-size:10px;font-weight:600;opacity:0.6}
+.input-lbl{font-size:8.5px;color:var(--tx3);margin-top:2px}
+.input-total{background:rgba(0,0,0,0.3);border-radius:8px;padding:9px 11px;display:flex;align-items:center;justify-content:space-between;font-size:11px}
+.input-total-l{color:var(--tx3);font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:0.04em;font-weight:700}
+.input-total-r{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--green)}
+.input-total-r small{font-size:10px;opacity:0.7;font-weight:600;margin-left:3px}
+
+/* 反馈 */
+.fb-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.fb-card{background:var(--bg3);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+.fb-lbl{font-size:9px;color:var(--tx3);margin-bottom:3px;font-family:'Space Mono',monospace;letter-spacing:0.04em;font-weight:600}
+.fb-val{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;line-height:1.1}
+.fb-val small{font-size:8.5px;font-weight:600;opacity:0.7;letter-spacing:0;display:block;margin-top:2px;color:var(--tx3);font-family:'Space Mono',monospace}
+.fb-val.green{color:var(--green)}
+.fb-val.am{color:var(--am)}
+.fb-val.blue{color:var(--blue)}
+.fb-val.red{color:var(--red)}
+
+/* AI 主厨 */
+.chef-card{background:linear-gradient(135deg,rgba(78,205,196,0.05),rgba(167,139,250,0.04));border:1px solid rgba(78,205,196,0.2);border-radius:11px;padding:12px}
+.chef-head{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.chef-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--purple));display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.chef-info{flex:1}
+.chef-name{font-size:12px;font-weight:700}
+.chef-name em{color:var(--teal);font-style:normal;font-size:9px;background:var(--teal-dim);padding:1px 5px;border-radius:5px;margin-left:5px;font-weight:700}
+.chef-tag{font-size:9px;color:var(--tx3);margin-top:1px;font-family:'Space Mono',monospace}
+.chef-presets{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.chef-preset{background:rgba(0,0,0,0.25);border:1px solid var(--line);border-radius:12px;padding:5px 9px;font-size:10px;color:var(--tx2);cursor:pointer}
+.chef-input-row{display:flex;gap:5px}
+.chef-input{flex:1;background:var(--bg3);border:1px solid var(--line);border-radius:9px;padding:7px 10px;font-size:11px;color:var(--tx);font-family:'Noto Sans SC',sans-serif;outline:none}
+.chef-input:focus{border-color:var(--teal)}
+.chef-send{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--teal),var(--purple));border:none;color:#fff;font-size:16px;cursor:pointer;font-weight:700;flex-shrink:0}
+.chef-resp{display:none;margin-top:9px;background:rgba(0,0,0,0.3);border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--tx2);line-height:1.7}
+.chef-resp.show{display:block;animation:fade 0.3s ease both}
+.chef-resp-q{font-size:9.5px;color:var(--tx3);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.thinking{display:flex;gap:4px;padding:3px 0}
+.tdot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:tdot 1.2s infinite}
+.tdot:nth-child(2){animation-delay:0.2s}.tdot:nth-child(3){animation-delay:0.4s}
+@keyframes tdot{0%,80%,100%{opacity:0.2;transform:scale(0.7)}40%{opacity:1;transform:scale(1)}}
+
+/* 抢单 */
+.grab-card{background:linear-gradient(135deg,rgba(255,95,95,0.06),rgba(245,166,35,0.04));border:1px solid rgba(255,95,95,0.25);border-radius:11px;padding:11px;margin-bottom:7px}
+.grab-h{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.grab-multi{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--red);background:rgba(255,95,95,0.1);padding:2px 7px;border-radius:5px}
+.grab-multi.high{color:var(--am);background:rgba(245,166,35,0.1)}
+.grab-multi.normal{color:var(--tx2);background:rgba(255,255,255,0.05)}
+.grab-tag{font-size:10px;font-weight:600;color:var(--red)}
+.grab-tag.high{color:var(--am)}
+.grab-tag.normal{color:var(--tx2)}
+.grab-time{margin-left:auto;font-family:'Space Mono',monospace;font-size:9.5px;color:var(--tx3)}
+.grab-info{font-size:11px;line-height:1.5;color:var(--tx)}
+.grab-info strong{color:var(--am)}
+.grab-info em{color:var(--green);font-style:normal;font-weight:700}
+.grab-actions{display:flex;gap:5px;margin-top:8px}
+.grab-btn{flex:1;padding:7px;border-radius:7px;font-size:10.5px;font-weight:700;cursor:pointer;border:none;font-family:'Noto Sans SC',sans-serif}
+.grab-btn.go{background:var(--red);color:#fff}
+.grab-btn.go.high{background:var(--am);color:#000}
+.grab-btn.go.normal{background:var(--tx2);color:#000}
+.grab-btn.skip{background:rgba(255,255,255,0.04);color:var(--tx3);border:1px solid var(--line)}
+
+.prism-card{margin-top:11px;background:linear-gradient(135deg,rgba(167,139,250,0.06),rgba(244,114,182,0.04));border:1px solid rgba(167,139,250,0.25);border-radius:11px;padding:11px}
+.prism-h{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.prism-t{font-size:11px;font-weight:700;color:var(--purple)}
+.prism-t::before{content:'◈ ';margin-right:2px}
+.prism-tag{font-size:9px;color:var(--purple);background:var(--purple-dim);padding:2px 6px;border-radius:4px;font-weight:700}
+.prism-info{font-size:10.5px;color:var(--tx2);line-height:1.55}
+.prism-info strong{color:var(--purple)}
+
+/* 主厨认证 */
+.cert-card{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(244,114,182,0.04));border:1px solid rgba(245,166,35,0.25);border-radius:11px;padding:13px}
+.cert-h{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.cert-medal{width:42px;height:42px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;box-shadow:0 3px 14px rgba(245,166,35,0.4)}
+.cert-info{flex:1}
+.cert-rank{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--am)}
+.cert-status{font-size:10px;color:var(--tx3);margin-top:1px}
+.cert-path{display:flex;align-items:center;gap:4px;margin-bottom:9px}
+.cert-step{flex:1;text-align:center;padding:6px 4px;border-radius:6px;font-size:9.5px;font-weight:600;border:1px solid var(--line);background:rgba(255,255,255,0.02);color:var(--tx3)}
+.cert-step.done{background:var(--am-dim);color:var(--am);border-color:rgba(245,166,35,0.3);font-weight:700}
+.cert-step.current{background:var(--gold);color:#000;border-color:transparent;font-weight:800}
+.cert-arr{color:var(--tx3);font-size:10px}
+.cert-progress-text{font-size:11px;color:var(--tx2);line-height:1.6}
+.cert-progress-text strong{color:var(--am);font-weight:700}
+
+/* 培训 */
+.training-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:9px}
+.training-card{background:var(--bg3);border:1px solid var(--line);border-radius:8px;padding:9px;text-align:center;cursor:pointer}
+.training-icon{font-size:18px;margin-bottom:3px}
+.training-t{font-size:10px;font-weight:600;line-height:1.3}
+.training-m{font-size:8.5px;color:var(--tx3);margin-top:2px}
+
+/* 5 互锁飞轮 */
+.flywheel{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:7px}
+.fw-step{text-align:center;padding:7px 4px;border-radius:7px;background:rgba(0,0,0,0.25);border:1px solid var(--line)}
+.fw-step.done{background:var(--green-dim);border-color:rgba(74,222,128,0.25)}
+.fw-icon{font-size:14px;margin-bottom:2px}
+.fw-name{font-size:8.5px;color:var(--tx2);font-weight:600;line-height:1.2}
+.fw-step.done .fw-name{color:var(--green)}
+
+/* 任务来源 */
+.tc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:9px}
+.tc-cell{background:rgba(0,0,0,0.2);border:1px solid var(--line);border-radius:7px;padding:6px 4px;text-align:center;cursor:pointer}
+.tc-cell.active{border-color:var(--am);background:var(--am-dim)}
+.tc-icon{font-size:13px;margin-bottom:2px}
+.tc-num{font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:var(--tx);line-height:1}
+.tc-name{font-size:8px;color:var(--tx3);margin-top:2px;line-height:1.2;font-weight:600}
+
+/* 路线 */
+.route-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:9px}
+.route-stat{background:rgba(0,0,0,0.2);border-radius:8px;padding:7px 4px;text-align:center}
+.route-stat-num{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;line-height:1;color:var(--am)}
+.route-stat-num.done{color:var(--green)}
+.route-stat-num.now{color:var(--blue)}
+.route-stat-num.left{color:var(--tx2)}
+.route-stat-lbl{font-size:8.5px;color:var(--tx3);margin-top:2px}
+
+.store-card{background:var(--bg3);border:1px solid var(--line);border-radius:9px;padding:9px 11px;display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:5px}
+.store-card.done{opacity:0.6}
+.store-card.current{border-color:rgba(96,165,250,0.4);background:rgba(96,165,250,0.05)}
+.store-grade{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:11px;flex-shrink:0}
+.grade-Sp{background:rgba(245,166,35,0.15);color:var(--am);border:1px solid rgba(245,166,35,0.3)}
+.grade-S{background:rgba(78,205,196,0.12);color:var(--teal);border:1px solid rgba(78,205,196,0.25)}
+.grade-A{background:rgba(96,165,250,0.12);color:var(--blue);border:1px solid rgba(96,165,250,0.25)}
+.grade-B{background:rgba(167,139,250,0.12);color:var(--purple);border:1px solid rgba(167,139,250,0.25)}
+.grade-C{background:rgba(255,255,255,0.04);color:var(--tx3);border:1px solid var(--line)}
+.store-info{flex:1;min-width:0}
+.store-name{font-size:11.5px;font-weight:600;line-height:1.3}
+.store-meta{font-size:9.5px;color:var(--tx3);margin-top:2px;display:flex;align-items:center;gap:7px}
+.store-meta em{color:var(--am);font-style:normal;font-weight:600}
+.store-state{font-size:10.5px;font-weight:700;flex-shrink:0;font-family:'Space Mono',monospace}
+.store-state.done{color:var(--green)}
+.store-state.now{color:var(--blue)}
+.store-state.todo{color:var(--tx3)}
+
+/* 底部 TabBar */
+.tabbar{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(8,9,15,0.96);backdrop-filter:blur(20px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 0 12px}
+.tb-item{text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tb-icon{font-size:18px;line-height:1}
+.tb-name{font-size:9.5px;color:var(--tx3);font-weight:600}
+.tb-item.active.app .tb-icon{color:var(--am)}
+.tb-item.active.app .tb-name{color:var(--am);font-weight:700}
+.tb-item.active.sfa .tb-icon{color:var(--blue)}
+.tb-item.active.sfa .tb-name{color:var(--blue);font-weight:700}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08)}
+
+.fade1{animation:slideUp 0.4s ease both}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.d1{animation-delay:0.05s}.d2{animation-delay:0.12s}.d3{animation-delay:0.2s}
+</style>
+</head>
+<body>
+
+<!-- ══ TOPBAR ══ -->
+<div class="topbar">
+  <div class="tb-row1">
+    <div class="tb-user">
+      <div class="tb-avatar">陈</div>
+      <div class="tb-info">
+        <div class="tb-name">陈晓琳<em>5星·主厨</em></div>
+        <div class="tb-loc"><em id="locStat" class="moving">🚶 路上 · 距步步高西郊 1.2km</em></div>
+      </div>
+    </div>
+    <div class="tb-clock" id="clk">--:--</div>
+  </div>
+
+  <!-- 模式切换器 -->
+  <div class="mode-switch">
+    <div class="mode-btn active app" id="mb-app" onclick="setMode('app')">
+      📱 美顾 APP<small>路上 / 个人 / 收入</small>
+    </div>
+    <div class="mode-btn sfa" id="mb-sfa" onclick="setMode('sfa')">
+      🔧 SFA 工作<small>进店 / 任务 / 拍照</small>
+    </div>
+  </div>
+  <div class="auto-hint">
+    <span id="autoHint"><em class="moving">📡 智能检测</em> · 路上模式 · 进店自动切到 SFA</span>
+  </div>
+
+  <!-- 角色切换 -->
+  <div class="role-row">
+    <div class="role-chip active">欣和雇·常驻</div>
+    <div class="role-chip" onclick="alert('切换巡回模式 · N≥2')">巡回</div>
+    <div class="role-chip" onclick="alert('切换到经销商雇 DSFA · 跨件链接')">经销商雇·DSFA</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- 📱 APP 模式 视图                  -->
+<!-- ══════════════════════════════════ -->
+<div class="view active" id="view-app">
+
+  <!-- 双边承诺 -->
+  <div class="dual-pledge fade1">
+    <div class="dp-title">双边价值承诺 · 实时账单</div>
+    <div class="dp-grid">
+      <div class="dp-cell">
+        <div class="dp-cell-l me">我承诺</div>
+        <div>9 家门店<br><strong>81 瓶 SKU</strong><br>CB ≥ 4.5</div>
+      </div>
+      <div class="dp-cell">
+        <div class="dp-cell-l co">公司承诺</div>
+        <div>完成 → ¥600<br><strong>¥9,860/月</strong><br>5 星合约保留</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 一本账 hero -->
+  <div class="ledger-hero fade1 d1">
+    <div class="lh-label">今天你的收入</div>
+    <div class="lh-amount">
+      <span>¥486</span>
+      <small>/¥600</small>
+      <tt id="lhDate">11.06 周三</tt>
+    </div>
+    <div class="lh-progress"><div class="lh-bar"></div></div>
+    <div class="lh-meta">
+      <span>已完成 <strong>81%</strong></span>
+      <span>距目标 <em>¥114</em></span>
+    </div>
+
+    <div class="lh-grid">
+      <!-- SKU + r·a·t -->
+      <div class="lh-sub">
+        <div class="lh-sub-head">📦 SKU + r·a·t<em>6</em></div>
+
+        <div class="sku-row">
+          <div class="sku-row-top">
+            <div class="sku-name">极鲜500ml</div>
+            <div class="sku-money">¥168</div>
+          </div>
+          <div class="rat-row">
+            <div class="rat-cell">r=<em>2.4</em>瓶/天</div>
+            <div class="rat-cell">a=<em>72</em>瓶/月</div>
+            <div class="rat-cell">T=<em>30</em>天</div>
+            <div class="rat-cell" style="margin-left:auto">28瓶 · 4家</div>
+          </div>
+        </div>
+
+        <div class="sku-row">
+          <div class="sku-row-top">
+            <div class="sku-name">禾然有机500ml<em>1年级×2</em></div>
+            <div class="sku-money">¥120</div>
+          </div>
+          <div class="rat-row">
+            <div class="rat-cell">r=<em>0.8</em>瓶/天</div>
+            <div class="rat-cell">a=<em>11</em>瓶/14天</div>
+            <div class="rat-cell">T=<em>14</em>天</div>
+            <div class="rat-cell" style="margin-left:auto">12瓶 · 2家</div>
+          </div>
+        </div>
+
+        <div class="sku-row">
+          <div class="sku-row-top">
+            <div class="sku-name">极鲜280ml</div>
+            <div class="sku-money">¥75</div>
+          </div>
+          <div class="rat-row">
+            <div class="rat-cell">r=<em>1.3</em>瓶/天</div>
+            <div class="rat-cell">a=<em>39</em>瓶/月</div>
+            <div class="rat-cell">T=<em>30</em>天</div>
+            <div class="rat-cell" style="margin-left:auto">15瓶 · 3家</div>
+          </div>
+        </div>
+
+        <div class="sku-row">
+          <div class="sku-row-top">
+            <div class="sku-name">味达美金标</div>
+            <div class="sku-money">¥60</div>
+          </div>
+          <div class="rat-row">
+            <div class="rat-cell">r=<em>2.1</em>瓶/天</div>
+            <div class="rat-cell">a=<em>63</em>瓶/月</div>
+            <div class="rat-cell">T=<em>30</em>天</div>
+            <div class="rat-cell" style="margin-left:auto">20瓶 · 4家</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 客户名单 -->
+      <div class="lh-sub">
+        <div class="lh-sub-head">👥 客户名单<em>9</em></div>
+        <div class="cu-row"><div class="cu-name">家乐福古北 · S+</div><div class="cu-amt done">¥120</div></div>
+        <div class="cu-row"><div class="cu-name">好邻居世纪 · S+</div><div class="cu-amt done">¥85</div></div>
+        <div class="cu-row"><div class="cu-name">大润发金桥 · S</div><div class="cu-amt done">¥110</div></div>
+        <div class="cu-row"><div class="cu-name">联华世纪 · A</div><div class="cu-amt done">¥68</div></div>
+        <div class="cu-row"><div class="cu-name">联华浦东 · A</div><div class="cu-amt done">¥58</div></div>
+        <div class="cu-row"><div class="cu-name">步步高西郊 · B</div><div class="cu-amt">¥45 进行</div></div>
+      </div>
+    </div>
+
+    <div class="lh-cta">
+      <div class="lh-cta-btn" onclick="goAppTab('ledger')">完整三维明细 →</div>
+      <div class="lh-cta-btn primary" onclick="toggleEod()">弥补差距建议 ⚡</div>
+    </div>
+  </div>
+
+  <!-- EOD -->
+  <div class="eod" id="eod">
+    <div class="eod-h">
+      <div class="eod-t">明日补救建议 · 主动 Agent</div>
+      <div class="eod-cls" onclick="toggleEod()">✕</div>
+    </div>
+    <div class="eod-sum">
+      今日完成 <strong>¥486</strong> · 目标 ¥600 · 差距 <em>¥114</em><br>
+      Agent 算好 3 处补救 · 总可补 <strong>¥122 (>差距)</strong>
+    </div>
+    <div class="eod-tip">
+      <div class="eod-tip-time">09:00</div>
+      <div class="eod-tip-info"><strong>步步高西郊</strong> · 禾然 500ml × 8 瓶<br><span style="color:var(--tx3);font-size:9.5px">1 年级 ×2.0 · r=0.8/天 · 提升 r 至 1.1/天</span></div>
+      <div class="eod-tip-gain">+¥80</div>
+    </div>
+    <div class="eod-tip">
+      <div class="eod-tip-time">10:30</div>
+      <div class="eod-tip-info"><strong>大润发金桥</strong> · 极鲜 280ml × 6 瓶<br><span style="color:var(--tx3);font-size:9.5px">补单 · a 缺 0.3 · r 健康</span></div>
+      <div class="eod-tip-gain">+¥30</div>
+    </div>
+    <div class="eod-tip">
+      <div class="eod-tip-time">11:30</div>
+      <div class="eod-tip-info"><strong>联华世纪</strong> · 味达美 × 4 瓶<br><span style="color:var(--tx3);font-size:9.5px">顺路 · 30分钟可完</span></div>
+      <div class="eod-tip-gain">+¥12</div>
+    </div>
+    <div class="eod-total">
+      <div class="eod-total-l">🎯 明日总可补</div>
+      <div class="eod-total-r">¥122 <small>>差距</small></div>
+    </div>
+    <button class="eod-add" onclick="alert('已加入明日路线 · 09:00 提醒已设置')">一键加入明日路线 →</button>
+  </div>
+
+  <!-- Tab 区 -->
+  <div class="tabs-bar">
+    <div class="tab-i app active" data-atab="home" onclick="goAppTab('home')">首页</div>
+    <div class="tab-i app" data-atab="grab" onclick="goAppTab('grab')">抢单</div>
+    <div class="tab-i app" data-atab="ledger" onclick="goAppTab('ledger')">一本账</div>
+    <div class="tab-i app" data-atab="mine" onclick="goAppTab('mine')">我的</div>
+  </div>
+
+  <!-- Tab 1 · 首页 -->
+  <div class="tab-c active" id="atab-home">
+    <div class="mod fade1 d2">
+      <div class="mod-h"><div class="mod-t"><span class="mod-n">M-X</span>任务来源 · 5 通道</div></div>
+      <div class="tc-grid">
+        <div class="tc-cell active"><div class="tc-icon">🏠</div><div class="tc-num">3</div><div class="tc-name">固定职责</div></div>
+        <div class="tc-cell"><div class="tc-icon">🗺️</div><div class="tc-num">5</div><div class="tc-name">路线计划</div></div>
+        <div class="tc-cell"><div class="tc-icon">📩</div><div class="tc-num">1</div><div class="tc-name">派单·定向</div></div>
+        <div class="tc-cell"><div class="tc-icon">⚡</div><div class="tc-num">2</div><div class="tc-name">抢单·机动</div></div>
+        <div class="tc-cell"><div class="tc-icon">💡</div><div class="tc-num">+</div><div class="tc-name">自发任务</div></div>
+      </div>
+      <div style="font-size:10px;color:var(--tx3);text-align:center;line-height:1.5">
+        固定+路线 = <strong style="color:var(--am)">73%</strong> · 派/抢 27% · 自发可加（+ 按钮）
+      </div>
+    </div>
+
+    <!-- 5 互锁飞轮 -->
+    <div class="mod fade1 d3">
+      <div class="mod-h">
+        <div class="mod-t"><span class="mod-n">M-FW</span>5 互锁飞轮</div>
+        <div class="mod-m">系统进度</div>
+      </div>
+      <div class="flywheel">
+        <div class="fw-step done"><div class="fw-icon">🎯</div><div class="fw-name">派单</div></div>
+        <div class="fw-step done"><div class="fw-icon">🩸</div><div class="fw-name">数据</div></div>
+        <div class="fw-step done"><div class="fw-icon">⭐</div><div class="fw-name">评价</div></div>
+        <div class="fw-step done"><div class="fw-icon">💰</div><div class="fw-name">激励</div></div>
+        <div class="fw-step"><div class="fw-icon">🧠</div><div class="fw-name">学习</div></div>
+      </div>
+      <div style="font-size:10px;color:var(--tx3);line-height:1.5;text-align:center;margin-top:6px">
+        干得好 → 评价好 → CB 高 → 派单优先 → 收入高 → 干得更好
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2 · 抢单 -->
+  <div class="tab-c" id="atab-grab">
+    <div class="mod fade1">
+      <div class="mod-h">
+        <div class="mod-t"><span class="mod-n">M6</span>抢单池 · Uber 化</div>
+        <div class="mod-m">实时</div>
+      </div>
+      <div style="font-size:10.5px;color:var(--tx3);line-height:1.5;margin-bottom:10px">
+        派单 · DOM/系统指定（必接） · 抢单 · 公开抢（机动） · DSR 强派 · 30 秒未抢自动派 · 自发 · 自己加
+      </div>
+
+      <div class="grab-card">
+        <div class="grab-h">
+          <span class="grab-multi">×3.0</span>
+          <span class="grab-tag">紧急 · SURGE</span>
+          <span class="grab-time">剩 2:48</span>
+        </div>
+        <div class="grab-info">
+          <strong>家乐福古北店</strong> · 距 1.2km · 整改任务<br>
+          极鲜 500ml r=2.4 → 库存 0.8a · 急需补陈列 · <em>预估 ¥87 · 30分钟</em>
+        </div>
+        <div class="grab-actions">
+          <button class="grab-btn go">⚡ 抢单</button>
+          <button class="grab-btn skip">略过</button>
+        </div>
+      </div>
+
+      <div class="grab-card" style="border-color:rgba(245,166,35,0.25);background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(78,205,196,0.04))">
+        <div class="grab-h">
+          <span class="grab-multi high">×2.0</span>
+          <span class="grab-tag high">高优 · 试吃活动</span>
+          <span class="grab-time">剩 5:30</span>
+        </div>
+        <div class="grab-info">
+          <strong>步步高浦东店</strong> · 距 3.5km · 5位消费者试吃<br>
+          禾然 1年级 SKU 推广 · 试吃→首购→复购 · <em>¥150 · 60分钟</em>
+        </div>
+        <div class="grab-actions">
+          <button class="grab-btn go high">⚡ 抢单</button>
+          <button class="grab-btn skip">略过</button>
+        </div>
+      </div>
+
+      <div class="grab-card" style="border-color:var(--line);background:var(--bg3)">
+        <div class="grab-h">
+          <span class="grab-multi normal">×1.0</span>
+          <span class="grab-tag normal">普通</span>
+          <span class="grab-time">剩 12:15</span>
+        </div>
+        <div class="grab-info">
+          <strong>联华世纪店</strong> · 距 2.0km · 货架补货<br>
+          味达美 × 4 瓶 · <em>¥12 · 15分钟</em>
+        </div>
+        <div class="grab-actions">
+          <button class="grab-btn go normal">抢单</button>
+          <button class="grab-btn skip">略过</button>
+        </div>
+      </div>
+
+      <!-- PRISM 联动 -->
+      <div class="prism-card">
+        <div class="prism-h">
+          <div class="prism-t">PRISM 共创活动招募</div>
+          <div class="prism-tag">5 名额</div>
+        </div>
+        <div class="prism-info">
+          <strong>古北高端小区</strong> · 周六上午 9-11点 · 高净值家庭场景共创<br>
+          AIQL 全维度提升 · <strong>¥200/场 + AIQL 加速包</strong>
+        </div>
+      </div>
+
+      <div style="margin-top:11px;padding:10px;background:rgba(255,95,95,0.04);border:1px dashed rgba(255,95,95,0.2);border-radius:9px;font-size:10.5px;color:var(--tx2);line-height:1.6">
+        ⏱️ <strong style="color:var(--red)">DSR 强派</strong>：30秒无人抢 · DSR 周小军自动强派给在线美顾<br>
+        💡 <strong style="color:var(--am)">自发任务</strong>：发现新机会（社群/客情）可点 + 自己加
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 3 · 一本账三维 -->
+  <div class="tab-c" id="atab-ledger">
+    <div class="mod fade1">
+      <div class="mod-h">
+        <div class="mod-t"><span class="mod-n">M-L</span>一本账三维明细</div>
+        <div class="mod-m">SKU × 年级 × 时间</div>
+      </div>
+      <div class="dim-tabs">
+        <div class="dim-tab active" data-dim="sku" onclick="goDim('sku')">SKU</div>
+        <div class="dim-tab" data-dim="grade" onclick="goDim('grade')">年级</div>
+        <div class="dim-tab" data-dim="time" onclick="goDim('time')">时间</div>
+      </div>
+
+      <!-- 维度 1 · SKU + r·a·t -->
+      <div class="dim-c active" id="dim-sku">
+        <div class="dim-row">
+          <div class="dim-icon" style="color:var(--am)">🥇</div>
+          <div class="dim-info">
+            <div class="dim-name">极鲜 500ml</div>
+            <div class="dim-meta">28瓶·4家·4年级×0.7 · r=<tt>2.4</tt>/天 · a=<tt>72</tt>瓶 · T=<tt>30</tt>天</div>
+          </div>
+          <div class="dim-val">¥168</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-icon" style="color:var(--purple)">🌿</div>
+          <div class="dim-info">
+            <div class="dim-name">禾然有机 500ml<em>1年级×2.0</em></div>
+            <div class="dim-meta">12瓶·2家 · r=<tt>0.8</tt>/天 · a=<tt>11</tt>瓶 · T=<tt>14</tt>天</div>
+          </div>
+          <div class="dim-val">¥120</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-icon" style="color:var(--am)">🥇</div>
+          <div class="dim-info">
+            <div class="dim-name">极鲜 280ml</div>
+            <div class="dim-meta">15瓶·3家·4年级×0.7 · r=<tt>1.3</tt>/天 · a=<tt>39</tt>瓶 · T=<tt>30</tt>天</div>
+          </div>
+          <div class="dim-val">¥75</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-icon" style="color:var(--blue)">📘</div>
+          <div class="dim-info">
+            <div class="dim-name">味达美金标</div>
+            <div class="dim-meta">20瓶·4家·3年级×1.0 · r=<tt>2.1</tt>/天 · a=<tt>63</tt>瓶 · T=<tt>30</tt>天</div>
+          </div>
+          <div class="dim-val">¥60</div>
+        </div>
+      </div>
+
+      <!-- 维度 2 · 年级 -->
+      <div class="dim-c" id="dim-grade">
+        <div class="dim-row" style="border-color:rgba(167,139,250,0.25);background:rgba(167,139,250,0.04)">
+          <div class="dim-icon" style="background:var(--purple-dim);color:var(--purple);border-color:rgba(167,139,250,0.25)">1</div>
+          <div class="dim-info">
+            <div class="dim-name">1年级 · 投入 · ×2.0</div>
+            <div class="dim-meta">禾然有机 · 12瓶 · 2家 · 主推</div>
+          </div>
+          <div class="dim-val" style="color:var(--purple)">¥120</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-icon" style="background:var(--teal-dim);color:var(--teal);border-color:rgba(78,205,196,0.25)">2</div>
+          <div class="dim-info">
+            <div class="dim-name">2年级 · 成长 · ×1.5</div>
+            <div class="dim-meta">本月暂无</div>
+          </div>
+          <div class="dim-val" style="color:var(--tx3)">¥0</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-icon" style="background:var(--blue-dim);color:var(--blue);border-color:rgba(96,165,250,0.25)">3</div>
+          <div class="dim-info">
+            <div class="dim-name">3年级 · 稳定 · ×1.0</div>
+            <div class="dim-meta">味达美 · 20瓶 · 4家</div>
+          </div>
+          <div class="dim-val" style="color:var(--blue)">¥60</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-icon" style="background:var(--am-dim);color:var(--am);border-color:rgba(245,166,35,0.25)">4</div>
+          <div class="dim-info">
+            <div class="dim-name">4年级 · 收割 · ×0.7</div>
+            <div class="dim-meta">极鲜 500/280ml · 50瓶 · 6家</div>
+          </div>
+          <div class="dim-val">¥306</div>
+        </div>
+        <div style="margin-top:9px;padding:9px 11px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.2);border-radius:8px;font-size:10.5px;color:var(--tx2);line-height:1.6">
+          💡 <strong style="color:var(--purple)">资金流向</strong>：4年级（极鲜·成熟）贡献 63%·养 1年级（禾然·投入）<br>
+          ✨ 主推 1年级 SKU · 系数 ×2.0 · 同样数量收入加倍
+        </div>
+      </div>
+
+      <!-- 维度 3 · 时间 -->
+      <div class="dim-c" id="dim-time">
+        <div class="dim-row">
+          <div class="dim-icon">📅</div>
+          <div class="dim-info">
+            <div class="dim-name">本月（11月）</div>
+            <div class="dim-meta">22 天 · 累计 ¥9,860</div>
+          </div>
+          <div class="dim-val">¥9,860</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-icon">📊</div>
+          <div class="dim-info">
+            <div class="dim-name">本季度（Q4）</div>
+            <div class="dim-meta">10/11 月 · 季度奖差 ¥3,200</div>
+          </div>
+          <div class="dim-val">¥18,420</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-icon">📈</div>
+          <div class="dim-info">
+            <div class="dim-name">YTD 全年</div>
+            <div class="dim-meta">11 个月 · 含 1-10 月</div>
+          </div>
+          <div class="dim-val">¥98,640</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-icon">↗️</div>
+          <div class="dim-info">
+            <div class="dim-name">同比去年</div>
+            <div class="dim-meta">vs 去年 11 月 ¥7,260</div>
+          </div>
+          <div class="dim-val" style="color:var(--green)">+35.8%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AIQL 追踪 -->
+    <div class="mod fade1 d2">
+      <div class="mod-h">
+        <div class="mod-t"><span class="mod-n">M-A</span>AIQL 品牌资产追踪</div>
+        <div class="mod-m">长期价值</div>
+      </div>
+      <div class="aiql-card">
+        <div class="aiql-flow">
+          <div class="aiql-step done">
+            <div class="aiql-letter">A</div>
+            <div class="aiql-name">认知</div>
+          </div>
+          <div class="aiql-arr">→</div>
+          <div class="aiql-step done">
+            <div class="aiql-letter">I</div>
+            <div class="aiql-name">兴趣</div>
+          </div>
+          <div class="aiql-arr">→</div>
+          <div class="aiql-step current">
+            <div class="aiql-letter">Q</div>
+            <div class="aiql-name">质量</div>
+          </div>
+          <div class="aiql-arr">→</div>
+          <div class="aiql-step">
+            <div class="aiql-letter">L</div>
+            <div class="aiql-name">忠诚</div>
+          </div>
+        </div>
+        <div class="aiql-text">
+          本月你的活动主要在 <strong>Q 阶段</strong>（建立产品质量信任）<br>
+          下一步：通过试吃+客情 → <strong>L 忠诚</strong>·复购率提升
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 4 · 我的 -->
+  <div class="tab-c" id="atab-mine">
+
+    <!-- CB 评分拆分 -->
+    <div class="mod fade1">
+      <div class="mod-h">
+        <div class="mod-t"><span class="mod-n">M-CB</span>CB 评分 · 公式拆分</div>
+        <div class="mod-m">三维加权</div>
+      </div>
+      <div class="cb-card">
+        <div class="cb-top">
+          <div class="cb-num">4.78<small>/5</small></div>
+          <div class="cb-info">
+            <div class="cb-rank">5 星 · 主厨<em>稳定</em></div>
+            <div class="cb-trend">滚动 30 天 · 月初 4.55 → 4.78 · <em>+0.23 ↗</em></div>
+          </div>
+        </div>
+        <div class="cb-formula">
+          <div class="cb-formula-l">CB = <strong>0.5×粘性 + 0.3×评价 + 0.2×执行</strong></div>
+          <div class="cb-bar-row">
+            <div class="cb-bar-l">粘性 ×0.5</div>
+            <div class="cb-bar"><div class="cb-bar-fill" style="width:84%;background:var(--pink)"></div></div>
+            <div class="cb-bar-v">4.18 / 5</div>
+          </div>
+          <div class="cb-bar-row">
+            <div class="cb-bar-l">评价 ×0.3</div>
+            <div class="cb-bar"><div class="cb-bar-fill" style="width:97%;background:var(--am)"></div></div>
+            <div class="cb-bar-v">4.86 / 5</div>
+          </div>
+          <div class="cb-bar-row">
+            <div class="cb-bar-l">执行 ×0.2</div>
+            <div class="cb-bar"><div class="cb-bar-fill" style="width:96%;background:var(--green)"></div></div>
+            <div class="cb-bar-v">4.81 / 5</div>
+          </div>
+        </div>
+        <div style="font-size:10.5px;color:var(--tx2);line-height:1.6">
+          💡 <strong style="color:var(--pink)">提升建议</strong>：粘性是短板（4.18）· 加深 S+ 门店客情 + 多做社群活动 → 提升至 4.5 后 CB 可达 4.94
+        </div>
+      </div>
+    </div>
+
+    <!-- 三方评价 -->
+    <div class="mod fade1 d1">
+      <div class="mod-h">
+        <div class="mod-t"><span class="mod-n">M-3E</span>三方评价 · 近 30 天</div>
+        <div class="mod-m">42 单</div>
+      </div>
+      <div class="triple-eval">
+        <div class="te-cell">
+          <div class="te-from">老板 → 我</div>
+          <div class="te-stars">4.86<small>/5</small></div>
+          <div class="te-cnt">42 评 · 全 4-5 星</div>
+        </div>
+        <div class="te-cell">
+          <div class="te-from">我 → 门店</div>
+          <div class="te-stars">4.50<small>/5</small></div>
+          <div class="te-cnt">42 评 · 配合度高</div>
+        </div>
+        <div class="te-cell">
+          <div class="te-from">DSR → 我</div>
+          <div class="te-stars">A+<small>/5档</small></div>
+          <div class="te-cnt">A+占71% A占24%</div>
+        </div>
+      </div>
+      <!-- 申诉 -->
+      <div class="appeal-row" style="margin-top:6px">
+        <span>⚠️ <strong>恶意差评申诉</strong>·过去30天 0 次 · 最近 3 月 1 次成立</span>
+        <button class="appeal-btn" onclick="alert('申诉系统打开 · 上传证据 + 文字说明')">申诉</button>
+      </div>
+    </div>
+
+    <!-- 主厨认证 -->
+    <div class="mod fade1 d2">
+      <div class="mod-h">
+        <div class="mod-t"><span class="mod-n">M8</span>主厨认证</div>
+        <div class="mod-m">CB 4.78</div>
+      </div>
+      <div class="cert-card">
+        <div class="cert-h">
+          <div class="cert-medal">👨‍🍳</div>
+          <div class="cert-info">
+            <div class="cert-rank">主厨 · 已认证</div>
+            <div class="cert-status">CB 持续 4.5+ · 5 星合约</div>
+          </div>
+        </div>
+        <div class="cert-path">
+          <div class="cert-step done">学徒</div>
+          <div class="cert-arr">→</div>
+          <div class="cert-step current">主厨</div>
+          <div class="cert-arr">→</div>
+          <div class="cert-step">名厨</div>
+          <div class="cert-arr">→</div>
+          <div class="cert-step">大师</div>
+        </div>
+        <div class="cert-progress-text">
+          距 <strong>名厨</strong>：CB 持续 <strong>4.7+</strong> 6 个月（已 3 个月）<br>
+          升级后任务费率：¥58 → <strong>¥75/单</strong>
+        </div>
+      </div>
+
+      <!-- 培训中心 -->
+      <div class="training-grid">
+        <div class="training-card" onclick="alert('打开培训视频 · 客户沟通技巧')">
+          <div class="training-icon">🎥</div>
+          <div class="training-t">客户沟通技巧</div>
+          <div class="training-m">12 集 · 已学 8</div>
+        </div>
+        <div class="training-card" onclick="alert('打开培训 · 高端品牌话术')">
+          <div class="training-icon">📖</div>
+          <div class="training-t">高端品牌话术</div>
+          <div class="training-m">15 篇 · 已学 6</div>
+        </div>
+        <div class="training-card" onclick="alert('打开培训 · 货架陈列原理')">
+          <div class="training-icon">📊</div>
+          <div class="training-t">货架陈列原理</div>
+          <div class="training-m">8 集 · 已学 8 ✓</div>
+        </div>
+        <div class="training-card" onclick="alert('打开培训测试 · 名厨晋升')">
+          <div class="training-icon">🎓</div>
+          <div class="training-t">名厨晋升测试</div>
+          <div class="training-m">未通过 · 待补考</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- 🔧 SFA 模式 视图                  -->
+<!-- ══════════════════════════════════ -->
+<div class="view" id="view-sfa">
+
+  <!-- 进店 banner -->
+  <div class="sfa-banner fade1">
+    <div class="sfa-banner-l">当前门店 · 任务执行</div>
+    <div class="sfa-banner-store">步步高西郊店<em>B 级 · 1次/2周</em></div>
+    <div class="sfa-banner-meta">
+      <span>📍 GPS 已验证</span>
+      <span>⏱ 进店 14:32</span>
+      <span><em>已完成 3/5 任务</em></span>
+    </div>
+    <div class="sfa-banner-progress">
+      <div class="sfa-step done"></div>
+      <div class="sfa-step done"></div>
+      <div class="sfa-step done"></div>
+      <div class="sfa-step now"></div>
+      <div class="sfa-step"></div>
+    </div>
+  </div>
+
+  <div class="tabs-bar" style="top:155px">
+    <div class="tab-i sfa active" data-stab="task" onclick="goSfaTab('task')">任务</div>
+    <div class="tab-i sfa" data-stab="photo" onclick="goSfaTab('photo')">拍照</div>
+    <div class="tab-i sfa" data-stab="fb" onclick="goSfaTab('fb')">反馈</div>
+    <div class="tab-i sfa" data-stab="chef" onclick="goSfaTab('chef')">AI主厨</div>
+  </div>
+
+  <!-- SFA Tab 1 · 任务 -->
+  <div class="tab-c active" id="stab-task">
+    <!-- 五大指标 -->
+    <div class="mod fade1">
+      <div class="mod-h">
+        <div class="mod-t"><span class="mod-n">M2</span>五大指标</div>
+        <div class="mod-m">步步高西郊</div>
+      </div>
+      <div class="kpi-list">
+        <div class="kpi-card">
+          <div class="kpi-num">①</div>
+          <div class="kpi-info">
+            <div class="kpi-name">社群 + 客情</div>
+            <div class="kpi-detail">早安发群 08:00 · 老顾客回访 · <em>+¥5/早安</em></div>
+          </div>
+          <div class="kpi-state done">✓ 08:00</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-num">②</div>
+          <div class="kpi-info">
+            <div class="kpi-name">场景经营 · 认知/体验/首购/复购</div>
+            <div class="kpi-detail">试吃活动·新顾客·1/5 位 · <em>+¥30/位</em></div>
+          </div>
+          <div class="kpi-state done">✓ 1/5</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-num">③</div>
+          <div class="kpi-info">
+            <div class="kpi-name">陈列可见性</div>
+            <div class="kpi-detail">货架 + 拍照 + 排面 · <em>+¥40</em></div>
+          </div>
+          <div class="kpi-state now">进行中</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-num">④</div>
+          <div class="kpi-info">
+            <div class="kpi-name">库存盘点 + 配合下单</div>
+            <div class="kpi-detail">三处分填 + Omakase 推单 · <em>+¥25</em></div>
+          </div>
+          <div class="kpi-state todo">待做</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-num">⑤</div>
+          <div class="kpi-info">
+            <div class="kpi-name">数据收集 + 输入</div>
+            <div class="kpi-detail">SFA 上报自动同步 · <em>+¥15</em></div>
+          </div>
+          <div class="kpi-state todo">自动</div>
+        </div>
+      </div>
+
+      <!-- 试吃活动详细 -->
+      <div class="taste-card">
+        <div class="taste-l">🥄 试吃活动·当前进度（指标 ②）</div>
+        <div class="taste-flow">
+          <div class="taste-step done">设置</div>
+          <div class="taste-arr">→</div>
+          <div class="taste-step done">试吃</div>
+          <div class="taste-arr">→</div>
+          <div class="taste-step now">收集</div>
+          <div class="taste-arr">→</div>
+          <div class="taste-step">首购</div>
+          <div class="taste-arr">→</div>
+          <div class="taste-step">复购</div>
+        </div>
+        <div style="font-size:9.5px;color:var(--tx3);margin-top:6px">已 1 位试吃 · 待登记反馈</div>
+      </div>
+    </div>
+
+    <!-- 路线提示 -->
+    <div class="mod fade1 d2">
+      <div class="mod-h">
+        <div class="mod-t"><span class="mod-n">M1</span>今日路线 · 六级</div>
+        <div class="mod-m">9 家·5/9 完成</div>
+      </div>
+      <div class="route-summary">
+        <div class="route-stat"><div class="route-stat-num done">5</div><div class="route-stat-lbl">已完成</div></div>
+        <div class="route-stat"><div class="route-stat-num now">1</div><div class="route-stat-lbl">进行中</div></div>
+        <div class="route-stat"><div class="route-stat-num left">3</div><div class="route-stat-lbl">未开始</div></div>
+        <div class="route-stat"><div class="route-stat-num">81%</div><div class="route-stat-lbl">达成率</div></div>
+      </div>
+      <div class="store-card current">
+        <div class="store-grade grade-B">B</div>
+        <div class="store-info">
+          <div class="store-name">步步高西郊店</div>
+          <div class="store-meta">1次/2周·15:30 → 进行中 · <em>禾然 1年级×2.0</em></div>
+        </div>
+        <div class="store-state now">进行中</div>
+      </div>
+      <div class="store-card">
+        <div class="store-grade grade-B">B</div>
+        <div class="store-info">
+          <div class="store-name">华联超市浦东 · 下一站</div>
+          <div class="store-meta">1次/2周·16:30 → 待去</div>
+        </div>
+        <div class="store-state todo">待去</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SFA Tab 2 · 拍照 -->
+  <div class="tab-c" id="stab-photo">
+    <div class="mod fade1">
+      <div class="mod-h">
+        <div class="mod-t"><span class="mod-n">M3</span>三合一拍照 SOP</div>
+        <div class="mod-m">先拍后填</div>
+      </div>
+
+      <!-- GPS 验证 -->
+      <div class="gps-verify">
+        ✅ <strong>GPS 已验证</strong> · 步步高西郊店 · 距门店 5米 · 防作弊确认
+      </div>
+
+      <div style="margin-top:9px">
+        <div class="photo-row done">
+          <div class="photo-icon">📸</div>
+          <div class="photo-info">
+            <div class="photo-step">SOP 1 · 进店第一张</div>
+            <div class="photo-name">主货架·全景</div>
+            <div class="photo-detail">SKU + 数量 + 生产日期 三合一</div>
+          </div>
+          <div class="photo-state done">✓ 已拍</div>
+        </div>
+        <div class="photo-row done">
+          <div class="photo-icon">📸</div>
+          <div class="photo-info">
+            <div class="photo-step">SOP 2 · 端架</div>
+            <div class="photo-name">端架·正面</div>
+            <div class="photo-detail">如该店有端架</div>
+          </div>
+          <div class="photo-state done">✓ 已拍</div>
+        </div>
+        <div class="photo-row">
+          <div class="photo-icon">📸</div>
+          <div class="photo-info">
+            <div class="photo-step">SOP 3 · 后仓</div>
+            <div class="photo-name">后仓·全景</div>
+            <div class="photo-detail">仓库箱数 · 新鲜度</div>
+          </div>
+          <div class="photo-state now">下一步</div>
+        </div>
+        <div class="photo-row">
+          <div class="photo-icon">📸</div>
+          <div class="photo-info">
+            <div class="photo-step">SOP 4 · 补货后</div>
+            <div class="photo-name">补货达标确认</div>
+            <div class="photo-detail">陈列面积 ≥ 目标</div>
+          </div>
+          <div class="photo-state todo">待做</div>
+        </div>
+        <div class="photo-row">
+          <div class="photo-icon">📸</div>
+          <div class="photo-info">
+            <div class="photo-step">SOP 5 · 特殊（可选）</div>
+            <div class="photo-name">竞品/异常/空位</div>
+            <div class="photo-detail">如发现异常拍照</div>
+          </div>
+          <div class="photo-state todo">可选</div>
+        </div>
+      </div>
+
+      <div class="photo-principle">
+        <strong>核心原则</strong>·先拍照（客观记录）→ 数数填数（参考照片放大）<br>
+        照片→<em>训练库</em>（INF-VL 60%→95% 过渡） · 数字→<em>心跳系统</em>（当前可信）
+      </div>
+
+      <!-- INF-VL 识别结果 -->
+      <div class="inf-vl-demo">
+        <div class="inf-vl-l">
+          INF-VL 识别 · SOP 1
+          <em>87.3% 精度</em>
+        </div>
+        <div class="shot-grid">
+          <div class="shot-out">
+            <div class="shot-icon">🏷️</div>
+            <div class="shot-l">SKU 识别</div>
+            <div class="shot-v tiny">极鲜500ml<br>极鲜280ml<br>禾然有机</div>
+          </div>
+          <div class="shot-out">
+            <div class="shot-icon">📦</div>
+            <div class="shot-l">数量盘点</div>
+            <div class="shot-v">48</div>
+          </div>
+          <div class="shot-out">
+            <div class="shot-icon">📅</div>
+            <div class="shot-l">生产日期</div>
+            <div class="shot-v tiny">2026.03.15<br>剩 320 天<br>✓ 新鲜</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数字录入 -->
+    <div class="mod fade1 d2">
+      <div class="mod-h">
+        <div class="mod-t"><span class="mod-n">M4</span>数字录入 · 三处分填</div>
+        <div class="mod-m">极鲜 500ml</div>
+      </div>
+      <div class="input-three">
+        <div class="input-cell">
+          <div class="input-pos">主货架</div>
+          <div class="input-num">48<small>瓶</small></div>
+          <div class="input-lbl">8排×6列</div>
+        </div>
+        <div class="input-cell">
+          <div class="input-pos">端架</div>
+          <div class="input-num">24<small>瓶</small></div>
+          <div class="input-lbl">4排×6列</div>
+        </div>
+        <div class="input-cell">
+          <div class="input-pos">后仓</div>
+          <div class="input-num">3<small>箱</small></div>
+          <div class="input-lbl">36瓶</div>
+        </div>
+      </div>
+      <div class="input-total">
+        <div class="input-total-l">✓ 系统自动汇总</div>
+        <div class="input-total-r">108<small>瓶 = 1.66a</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SFA Tab 3 · 反馈 -->
+  <div class="tab-c" id="stab-fb">
+    <div class="mod fade1">
+      <div class="mod-h">
+        <div class="mod-t"><span class="mod-n">M5</span>实时反馈</div>
+        <div class="mod-m">极鲜 500ml</div>
+      </div>
+      <div class="fb-grid">
+        <div class="fb-card">
+          <div class="fb-lbl">货架量·双指标①</div>
+          <div class="fb-val green">72瓶 ✓<small>≥目标 60·健康</small></div>
+        </div>
+        <div class="fb-card">
+          <div class="fb-lbl">仓库量·双指标②</div>
+          <div class="fb-val am">36瓶<small>到下次拜访 OK</small></div>
+        </div>
+        <div class="fb-card">
+          <div class="fb-lbl">心跳水位</div>
+          <div class="fb-val am">1.66a<small>2A 预警·建议补</small></div>
+        </div>
+        <div class="fb-card">
+          <div class="fb-lbl">新鲜度</div>
+          <div class="fb-val green">320天<small>非近效期</small></div>
+        </div>
+        <div class="fb-card">
+          <div class="fb-lbl">蝴蝶效应</div>
+          <div class="fb-val green">✓ 正常<small>无 ABCD 异常</small></div>
+        </div>
+        <div class="fb-card">
+          <div class="fb-lbl">AI 验收</div>
+          <div class="fb-val green">达标<small>陈列面积 ≥ 90%</small></div>
+        </div>
+      </div>
+      <div style="margin-top:9px;background:var(--red-dim);border:1px solid rgba(255,95,95,0.2);border-radius:8px;padding:9px 11px;font-size:11px;color:var(--red);display:flex;align-items:center;gap:7px">⚠️ <strong>建议补货 12 瓶</strong> · Omakase 已生成推单 · 待门店老板确认</div>
+    </div>
+  </div>
+
+  <!-- SFA Tab 4 · AI 主厨 -->
+  <div class="tab-c" id="stab-chef">
+    <div class="mod fade1">
+      <div class="mod-h">
+        <div class="mod-t"><span class="mod-n">M7</span>AI 主厨咨询</div>
+        <div class="mod-m">现场 · 实时</div>
+      </div>
+      <div class="chef-card">
+        <div class="chef-head">
+          <div class="chef-avatar">👨‍🍳</div>
+          <div class="chef-info">
+            <div class="chef-name">AI 主厨<em>Sonnet 4</em></div>
+            <div class="chef-tag">CHEF · 24/7 · 现场支援</div>
+          </div>
+        </div>
+        <div class="chef-presets">
+          <div class="chef-preset" onclick="askChef('客户嫌六月鲜有机贵·怎么应对？')">嫌贵话术</div>
+          <div class="chef-preset" onclick="askChef('禾然有机的卖点是什么？怎么向消费者讲？')">禾然卖点</div>
+          <div class="chef-preset" onclick="askChef('门店老板不愿意上新品·怎么劝说？')">老板说服</div>
+          <div class="chef-preset" onclick="askChef('如何快速建立社群+客情？')">社群技巧</div>
+        </div>
+        <div class="chef-input-row">
+          <input class="chef-input" id="chefIn" placeholder="问 AI 主厨..." onkeydown="if(event.key==='Enter')askChef(this.value)" />
+          <button class="chef-send" onclick="askChef(document.getElementById('chefIn').value)">→</button>
+        </div>
+        <div class="chef-resp" id="chefResp">
+          <div class="chef-resp-q" id="chefQ"></div>
+          <div id="chefA"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 底部 TabBar · 根据当前模式显示 -->
+<div class="tabbar" id="tabbar">
+  <!-- APP 模式 4 个 Tab -->
+  <div class="tb-item app active" data-mode="app" data-atab="home" onclick="goAppTab('home')"><div class="tb-icon">🏠</div><div class="tb-name">首页</div></div>
+  <div class="tb-item app" data-mode="app" data-atab="grab" onclick="goAppTab('grab')"><div class="tb-icon">⚡</div><div class="tb-name">抢单</div></div>
+  <div class="tb-item app" data-mode="app" data-atab="ledger" onclick="goAppTab('ledger')"><div class="tb-icon">💰</div><div class="tb-name">一本账</div></div>
+  <div class="tb-item app" data-mode="app" data-atab="mine" onclick="goAppTab('mine')"><div class="tb-icon">👤</div><div class="tb-name">我的</div></div>
+
+  <!-- SFA 模式 4 个 Tab (默认隐藏) -->
+  <div class="tb-item sfa" data-mode="sfa" data-stab="task" onclick="goSfaTab('task')" style="display:none"><div class="tb-icon">📋</div><div class="tb-name">任务</div></div>
+  <div class="tb-item sfa" data-mode="sfa" data-stab="photo" onclick="goSfaTab('photo')" style="display:none"><div class="tb-icon">📷</div><div class="tb-name">拍照</div></div>
+  <div class="tb-item sfa" data-mode="sfa" data-stab="fb" onclick="goSfaTab('fb')" style="display:none"><div class="tb-icon">📊</div><div class="tb-name">反馈</div></div>
+  <div class="tb-item sfa" data-mode="sfa" data-stab="chef" onclick="goSfaTab('chef')" style="display:none"><div class="tb-icon">👨‍🍳</div><div class="tb-name">主厨</div></div>
+</div>
+
+<script>
+// ── 时钟 ──
+function clk(){
+  const n=new Date();
+  document.getElementById('clk').textContent=
+    n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+}
+clk();setInterval(clk,30000);
+
+// ── 模式切换 ──
+let currentMode='app';
+function setMode(m){
+  currentMode=m;
+  // 切顶部按钮
+  document.getElementById('mb-app').classList.toggle('active',m==='app');
+  document.getElementById('mb-sfa').classList.toggle('active',m==='sfa');
+  // 切视图
+  document.getElementById('view-app').classList.toggle('active',m==='app');
+  document.getElementById('view-sfa').classList.toggle('active',m==='sfa');
+  // 切底部 TabBar
+  document.querySelectorAll('.tb-item.app').forEach(t=>t.style.display=m==='app'?'flex':'none');
+  document.querySelectorAll('.tb-item.sfa').forEach(t=>t.style.display=m==='sfa'?'flex':'none');
+  // 切位置状态显示
+  const loc=document.getElementById('locStat');
+  const hint=document.getElementById('autoHint');
+  if(m==='sfa'){
+    loc.classList.remove('moving');
+    loc.innerHTML='📍 在店内 · 步步高西郊';
+    hint.innerHTML='<em>📡 智能检测</em> · 进店模式 · 离店自动切到 APP';
+  }else{
+    loc.classList.add('moving');
+    loc.innerHTML='🚶 路上 · 距步步高西郊 1.2km';
+    hint.innerHTML='<em class="moving">📡 智能检测</em> · 路上模式 · 进店自动切到 SFA';
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── APP Tab ──
+function goAppTab(id){
+  document.querySelectorAll('#view-app .tab-c').forEach(t=>t.classList.remove('active'));
+  document.getElementById('atab-'+id).classList.add('active');
+  document.querySelectorAll('#view-app .tab-i').forEach(t=>t.classList.toggle('active',t.dataset.atab===id));
+  document.querySelectorAll('.tb-item.app').forEach(t=>t.classList.toggle('active',t.dataset.atab===id));
+  if(currentMode!=='app')setMode('app');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── SFA Tab ──
+function goSfaTab(id){
+  document.querySelectorAll('#view-sfa .tab-c').forEach(t=>t.classList.remove('active'));
+  document.getElementById('stab-'+id).classList.add('active');
+  document.querySelectorAll('#view-sfa .tab-i').forEach(t=>t.classList.toggle('active',t.dataset.stab===id));
+  document.querySelectorAll('.tb-item.sfa').forEach(t=>t.classList.toggle('active',t.dataset.stab===id));
+  if(currentMode!=='sfa')setMode('sfa');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── EOD ──
+function toggleEod(){document.getElementById('eod').classList.toggle('active')}
+
+// ── 维度切换 ──
+function goDim(d){
+  document.querySelectorAll('.dim-c').forEach(c=>c.classList.remove('active'));
+  document.getElementById('dim-'+d).classList.add('active');
+  document.querySelectorAll('.dim-tab').forEach(t=>t.classList.toggle('active',t.dataset.dim===d));
+}
+
+// ── AI 主厨 ──
+async function askChef(q){
+  if(!q||!q.trim())return;
+  const inEl=document.getElementById('chefIn');
+  const respEl=document.getElementById('chefResp');
+  const qEl=document.getElementById('chefQ');
+  const aEl=document.getElementById('chefA');
+  respEl.classList.add('show');
+  qEl.textContent='❓ '+q;
+  aEl.innerHTML='<div class="thinking"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>';
+  inEl.value='';
+
+  const sys=`你是欣和 SH INFINITY OS 系统中的「AI 主厨」 · 服务一线美顾陈晓琳·5星全职合约。
+你的职责：实时回答美顾在门店遇到的销售问题·提供应对话术和专业建议。
+
+知识背景：
+- 五大品牌：六月鲜（高端·4年级）/禾然（有机·1年级×2.0）/味达美（中端·3年级）/葱伴侣（利基·2年级）/小康（防御·1年级）
+- 餐饮渠道（B端独立 SubCo）
+- 战略 SKU：禾然有机·1年级 SKU 系数 ×2.0·收入加倍
+- AIQL 框架：A 认知 → I 兴趣 → Q 质量 → L 忠诚
+- 美顾五大指标：①社群+客情 ②场景经营 ③陈列可见性 ④库存盘点+下单 ⑤数据收集
+- r·a·t：r 日销率·a 心跳量·T 周期天数（S+ 7天/B 14天/D 30天）
+
+请用中文简洁回答·不超过 200 字·直接给应对话术或要点·像真主厨教徒弟一样。`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:sys,messages:[{role:'user',content:q}]
+      })
+    });
+    const d=await r.json();
+    const txt=d.content?.map(c=>c.text||'').join('')||'AI 主厨暂时离线·请稍后再问。';
+    aEl.innerHTML=`<div style="white-space:pre-wrap">${txt}</div>`;
+  }catch(e){
+    aEl.innerHTML=`<div style="color:var(--red);font-size:11px">⚠️ ${e.message}</div>`;
+  }
+}
+
+// ── 日期 ──
+const dt=new Date();
+document.getElementById('lhDate').textContent=
+  String(dt.getMonth()+1).padStart(2,'0')+'.'+String(dt.getDate()).padStart(2,'0')+' 周'+'日一二三四五六'[dt.getDay()];
+
+// ── 任务通道 ──
+document.querySelectorAll('.tc-cell').forEach(c=>{
+  c.addEventListener('click',()=>{
+    document.querySelectorAll('.tc-cell').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+  });
+});
+
+// ── 抢单 ──
+document.querySelectorAll('.grab-btn.go').forEach(b=>{
+  b.addEventListener('click',function(){
+    const card=this.closest('.grab-card');
+    const info=card.querySelector('.grab-info').textContent.split('·')[0].trim();
+    if(confirm(`确认抢单 ${info} ?`)){
+      card.style.opacity='0.4';
+      this.textContent='✓ 已抢';
+      this.style.background='var(--green)';
+      this.style.color='#000';
+    }
+  });
+});
+</script>
+</body>
+</html>
