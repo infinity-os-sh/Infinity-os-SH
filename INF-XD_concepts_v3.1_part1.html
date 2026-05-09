@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>INF-XD v3.0 · 概念文档 v3.0 · 整合 10 类用户 + Schema</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0f; --bg2:#0e0e15; --bg3:#14141f; --bg4:#1a1a28;
+  --line:rgba(255,255,255,0.06); --line2:rgba(255,255,255,0.12);
+  --t1:#fff; --t2:#c5c8d6; --t3:#7a7e92;
+  --amber:#f5a623; --amber-dim:rgba(245,166,35,0.1);
+  --green:#10b981; --green-dim:rgba(16,185,129,0.1);
+  --red:#ef4444; --red-dim:rgba(239,68,68,0.1);
+  --blue:#60a5fa; --blue-dim:rgba(96,165,250,0.1);
+  --teal:#4ecdc4; --teal-dim:rgba(78,205,196,0.1);
+  --purple:#a78bfa; --purple-dim:rgba(167,139,250,0.1);
+  --gold:#fbbf24; --gold-dim:rgba(251,191,36,0.1);
+  --rose:#fb7185; --rose-dim:rgba(251,113,133,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--t1);font-family:'Noto Sans SC',sans-serif;line-height:1.7;padding-bottom:60px}
+
+.topbar{position:sticky;top:0;z-index:100;background:rgba(10,10,15,0.95);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);padding:14px 16px}
+.tb-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800}
+.tb-title span{color:var(--rose)}
+.tb-title .v{font-family:'Space Mono',monospace;font-size:11px;background:var(--rose-dim);color:var(--rose);padding:2px 8px;border-radius:5px;margin-left:8px}
+.tb-sub{font-size:11px;color:var(--t3);font-family:'Space Mono',monospace;margin-top:4px}
+
+.banner{margin:14px;padding:18px;border-radius:14px}
+.banner-shock{background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(167,139,250,0.04));border:1px solid rgba(239,68,68,0.3)}
+.banner-good{background:linear-gradient(135deg,rgba(16,185,129,0.06),rgba(78,205,196,0.04));border:1px solid rgba(16,185,129,0.3)}
+.banner-h{font-size:14px;font-weight:800;margin-bottom:10px;font-family:'Syne',sans-serif}
+.banner-shock .banner-h{color:var(--red)}
+.banner-good .banner-h{color:var(--green)}
+.banner-text{font-size:13px;color:var(--t2);line-height:1.7}
+.banner-text strong.r{color:var(--red)}
+.banner-text strong.g{color:var(--green)}
+
+.toc{margin:14px;padding:14px 16px;background:var(--bg3);border:1px solid var(--line);border-radius:12px}
+.toc-h{font-size:11px;color:var(--t3);font-family:'Space Mono',monospace;font-weight:700;margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase}
+.toc-list{display:flex;flex-direction:column;gap:6px}
+.toc-item{padding:10px 12px;background:var(--bg2);border-radius:8px;font-size:12px;color:var(--t2);display:flex;align-items:center;gap:8px;cursor:pointer;transition:all 0.15s;border:1px solid transparent;text-decoration:none}
+.toc-item:hover{border-color:var(--rose);color:var(--rose)}
+.toc-num{font-family:'Syne',sans-serif;font-weight:800;color:var(--rose);font-size:14px;flex-shrink:0;min-width:20px}
+.toc-tag{font-size:9px;padding:2px 6px;border-radius:4px;margin-left:auto;font-family:'Space Mono',monospace;font-weight:600}
+.toc-tag.new{background:var(--rose-dim);color:var(--rose)}
+.toc-tag.fix{background:var(--amber-dim);color:var(--amber)}
+.toc-tag.kept{background:var(--bg4);color:var(--t3)}
+.toc-tag.crit{background:var(--rose);color:#000}
+
+.section{margin:24px 14px;background:var(--bg3);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sec-h{padding:16px;background:linear-gradient(180deg,var(--bg4),var(--bg3));border-bottom:1px solid var(--line)}
+.sec-num{display:inline-block;width:32px;height:32px;border-radius:8px;background:var(--rose);color:#000;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;text-align:center;line-height:32px;margin-right:10px}
+.sec-num.crit{background:#ef4444;color:#fff;box-shadow:0 0 12px rgba(239,68,68,0.4)}
+.sec-num.kept{background:var(--bg4);color:var(--t3)}
+.sec-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;display:inline}
+.sec-tag{display:inline-block;font-size:9px;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;font-weight:700;margin-left:8px;vertical-align:middle}
+.sec-tag.new{background:var(--rose);color:#000}
+.sec-tag.fix{background:var(--amber);color:#000}
+.sec-tag.crit{background:#ef4444;color:#fff}
+.sec-tag.kept{background:var(--bg4);color:var(--t3)}
+.sec-sub{font-size:11px;color:var(--t3);margin-top:6px;margin-left:42px}
+.sec-body{padding:16px}
+
+.h3{font-size:13px;font-weight:700;color:var(--rose);margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+.h3::before{content:'▼';font-size:9px}
+.h3:first-child{margin-top:0}
+
+.note{padding:10px 12px;margin:10px 0;border-radius:6px;font-size:12px;color:var(--t2);line-height:1.7;border-left:3px solid}
+.note strong{font-weight:700}
+.n-rose{background:var(--rose-dim);border-left-color:var(--rose)}
+.n-rose strong{color:var(--rose)}
+.n-green{background:var(--green-dim);border-left-color:var(--green)}
+.n-green strong{color:var(--green)}
+.n-red{background:var(--red-dim);border-left-color:var(--red)}
+.n-red strong{color:var(--red)}
+.n-amber{background:var(--amber-dim);border-left-color:var(--amber)}
+.n-amber strong{color:var(--amber)}
+.n-blue{background:var(--blue-dim);border-left-color:var(--blue)}
+.n-blue strong{color:var(--blue)}
+
+.tbl{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+.tbl th{background:var(--bg4);color:var(--t3);padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);font-weight:700;font-size:11px;letter-spacing:0.04em;text-transform:uppercase}
+.tbl td{padding:10px;border-bottom:1px solid var(--line);color:var(--t2);vertical-align:top;font-size:12px;line-height:1.6}
+.tbl tr:last-child td{border:none}
+.tbl strong{color:var(--t1)}
+.tbl em{font-style:normal;color:var(--rose);font-weight:600}
+
+.formula{background:var(--bg2);border:1px solid var(--line2);border-radius:8px;padding:12px 14px;margin:10px 0;font-family:'Space Mono',monospace;font-size:11px;color:var(--green);overflow-x:auto;white-space:pre;line-height:1.6}
+
+.role-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;font-family:'Space Mono',monospace}
+.role-flagship{background:rgba(251,191,36,0.15);color:var(--gold);border:1px solid rgba(251,191,36,0.4)}
+.role-core{background:rgba(245,166,35,0.15);color:var(--amber);border:1px solid rgba(245,166,35,0.4)}
+.role-volume{background:rgba(96,165,250,0.15);color:var(--blue);border:1px solid rgba(96,165,250,0.4)}
+.role-niche{background:rgba(167,139,250,0.15);color:var(--purple);border:1px solid rgba(167,139,250,0.4)}
+.role-defensive{background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.4)}
+.role-candidate{background:rgba(78,205,196,0.15);color:var(--teal);border:1px solid rgba(78,205,196,0.4)}
+.role-sunset{background:rgba(122,126,146,0.15);color:var(--t3);border:1px solid var(--line2)}
+
+.user-row{padding:10px 12px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;margin-bottom:6px;display:flex;align-items:flex-start;gap:10px}
+.user-num{font-family:'Syne',sans-serif;font-weight:800;color:var(--rose);font-size:14px;flex-shrink:0;width:22px}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:12px;font-weight:700;color:var(--t1);margin-bottom:3px}
+.user-desc{font-size:11px;color:var(--t3);line-height:1.6}
+.user-tag{font-size:9px;padding:2px 6px;border-radius:3px;font-family:'Space Mono',monospace;font-weight:600;flex-shrink:0;margin-top:1px}
+.tag-xinhe{background:var(--green-dim);color:var(--green)}
+.tag-dist{background:var(--amber-dim);color:var(--amber)}
+.tag-sup{background:var(--blue-dim);color:var(--blue)}
+
+.gate{margin:30px 14px;padding:18px;background:rgba(251,113,133,0.06);border:1px solid rgba(251,113,133,0.3);border-radius:14px}
+.gate-h{font-size:15px;font-weight:800;color:var(--rose);margin-bottom:12px;display:flex;align-items:center;gap:8px;font-family:'Syne',sans-serif}
+.gate-list{font-size:12px;color:var(--t2);line-height:1.8}
+.gate-list li{margin-left:18px;margin-bottom:6px}
+.gate-list strong{color:var(--rose)}
+
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.compare-col{padding:12px;border-radius:10px;font-size:12px;line-height:1.6}
+.compare-col.old{background:var(--red-dim);border:1px solid rgba(239,68,68,0.25)}
+.compare-col.new{background:var(--green-dim);border:1px solid rgba(16,185,129,0.25)}
+.compare-h{font-size:11px;font-weight:700;margin-bottom:6px;font-family:'Space Mono',monospace}
+.compare-col.old .compare-h{color:var(--red)}
+.compare-col.new .compare-h{color:var(--green)}
+
+.link-box{display:inline-block;padding:6px 10px;background:var(--blue-dim);border:1px solid rgba(96,165,250,0.3);border-radius:6px;font-size:11px;color:var(--blue);font-family:'Space Mono',monospace;margin:4px 0;word-break:break-all}
+
+@media (min-width:768px){
+  body{max-width:780px;margin:0 auto;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-title">INF-XD <span>概念文档</span> <span class="v">v3.0</span></div>
+  <div class="tb-sub">迭代 1.6 · 整合 10 类用户 + Schema V1.0 + 修 V2.0 全部 48 问题</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- V3.0 核心修正 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="banner banner-shock">
+  <div class="banner-h">⚠ V3.0 解决的 V2.0 致命错误</div>
+  <div class="banner-text">
+    <strong class="r">错误 #1 · 用户对象错</strong>: V2.0 通篇"美顾"·实际 INF-XD 服务 <strong>10 类用户</strong> (6 一线 + 4 主管)<br>
+    <strong class="r">错误 #2 · V1.0 内容丢失</strong>: 7 例外表 / 5 类动销方案表 / 屏 7 老 vs 新对比 全部丢失<br>
+    <strong class="r">错误 #3 · DS 核心概念缺失</strong>: 4 体战略 / 三非妥协 / 一本账 0 处<br>
+    <strong class="r">错误 #4 · Schema 内容缺失</strong>: 状态机 / 奖金公式 / 角色资源比例 严重缺失<br>
+    <strong class="r">错误 #5 · 数字错误</strong>: income_share 75% 超 70% 上限 · 公式 1.5 瓶不合理 · 毛利 27.8% 不专业<br>
+    <strong class="r">错误 #6 · 设计漏洞</strong>: 6 张卡放错地方 · 长按动作冲突 · 无离线降级 · 无角色权限<br>
+    <strong class="r">错误 #7 · 法律合规风险</strong>: income_share 显示需法务·没警告<br><br>
+    
+    <strong class="g">V3.0 全部修复 · 18 节系统重构</strong>
+  </div>
+</div>
+
+<div class="banner banner-good">
+  <div class="banner-h">📐 V3.0 文档说明</div>
+  <div class="banner-text">
+    <strong class="g">权威 Schema URL</strong>:<br>
+    <span class="link-box">https://infinity-os-sh.github.io/Infinity-os-SH/infinity_os_sku_partner_schema_v1.html</span><br><br>
+    
+    本文档基于 Schema V1.0 + 用户矩阵 V1.0 (10 类) 重写<br>
+    <strong class="g">小步快跑 = 你审完才动代码</strong> · 写错改文档 1 分钟·写错代码改 30 分钟
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 目录 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="toc">
+  <div class="toc-h">★ 目录 (V3.0 共 18 节)</div>
+  <div class="toc-list">
+    <a class="toc-item" href="#c0"><span class="toc-num">0</span><span>用户矩阵 · 10 类一线/主管</span><span class="toc-tag crit">致命修</span></a>
+    <a class="toc-item" href="#c1"><span class="toc-num">1</span><span>INF-XD 在 INFINITY OS 中的位置</span><span class="toc-tag fix">改</span></a>
+    <a class="toc-item" href="#c2"><span class="toc-num">2</span><span>角色权限矩阵 · 谁看到什么</span><span class="toc-tag new">新</span></a>
+    <a class="toc-item" href="#c3"><span class="toc-num">3</span><span>SKU 7 角色 + 7 阶段 (基于 Schema)</span><span class="toc-tag fix">改</span></a>
+    <a class="toc-item" href="#c4"><span class="toc-num">4</span><span>屏 7 智能补货建议 · 多角色版本</span><span class="toc-tag fix">改</span></a>
+    <a class="toc-item" href="#c5"><span class="toc-num">5</span><span>完整补货公式 · 修数学错误</span><span class="toc-tag crit">致命修</span></a>
+    <a class="toc-item" href="#c6"><span class="toc-num">6</span><span>2A 动态 7 例外 · 恢复 V1.0</span><span class="toc-tag fix">恢复</span></a>
+    <a class="toc-item" href="#c7"><span class="toc-num">7</span><span>动销方案 5 类 · 恢复 V1.0</span><span class="toc-tag fix">恢复</span></a>
+    <a class="toc-item" href="#c8"><span class="toc-num">8</span><span>动销链 + getOwners + 状态机</span><span class="toc-tag fix">改</span></a>
+    <a class="toc-item" href="#c9"><span class="toc-num">9</span><span>SKU 详情屏 · 现场 vs APP 分工</span><span class="toc-tag fix">改</span></a>
+    <a class="toc-item" href="#c10"><span class="toc-num">10</span><span>5 大指标 + 主控屏</span><span class="toc-tag kept">保</span></a>
+    <a class="toc-item" href="#c11"><span class="toc-num">11</span><span>奖金公式 · 完整恢复</span><span class="toc-tag new">新</span></a>
+    <a class="toc-item" href="#c12"><span class="toc-num">12</span><span>异常/边界场景</span><span class="toc-tag new">新</span></a>
+    <a class="toc-item" href="#c13"><span class="toc-num">13</span><span>与 INFINITY OS 模块衔接</span><span class="toc-tag new">新</span></a>
+    <a class="toc-item" href="#c14"><span class="toc-num">14</span><span>DS 4 体 + 三非 + 一本账</span><span class="toc-tag new">新</span></a>
+    <a class="toc-item" href="#c15"><span class="toc-num">15</span><span>落地评估 + 数据源现状</span><span class="toc-tag new">新</span></a>
+    <a class="toc-item" href="#c16"><span class="toc-num">16</span><span>命名 · 📊 智能补货建议</span><span class="toc-tag fix">改</span></a>
+    <a class="toc-item" href="#c17"><span class="toc-num">17</span><span>V2.0 → V3.0 改动总结 + 审批</span><span class="toc-tag new">新</span></a>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 节 0 · 用户矩阵 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="c0">
+  <div class="sec-h">
+    <span class="sec-num crit">0</span><span class="sec-title">用户矩阵 · 10 类一线/主管</span><span class="sec-tag crit">致命错误修复</span>
+    <div class="sec-sub">DS 2026-05-09 明确 · INF-XD 不是单一美顾 App</div>
+  </div>
+  <div class="sec-body">
+    
+    <div class="note n-red">
+      <strong>V2.0 致命错误</strong>: 通篇"美顾在 INF-XD"·实际 INF-XD 服务 <strong>10 类用户</strong>·完全错位
+    </div>
+    
+    <div class="h3">一线执行 · 6 类 (操作型)</div>
+    
+    <div class="user-row">
+      <div class="user-num">①</div>
+      <div class="user-info">
+        <div class="user-name">欣和雇用美顾·常驻</div>
+        <div class="user-desc">单店全天驻店·熟悉店铺·完整主流程·拍照+盘点+陈列+客情</div>
+      </div>
+      <span class="user-tag tag-xinhe">欣和雇</span>
+    </div>
+    
+    <div class="user-row">
+      <div class="user-num">②</div>
+      <div class="user-info">
+        <div class="user-name">欣和雇用美顾·非常驻 (巡店)</div>
+        <div class="user-desc">多店巡回·节奏快·精简版主流程·快速盘点+异常上报</div>
+      </div>
+      <span class="user-tag tag-xinhe">欣和雇</span>
+    </div>
+    
+    <div class="user-row">
+      <div class="user-num">③</div>
+      <div class="user-info">
+        <div class="user-name">欣和雇用美顾·临时 (项目制)</div>
+        <div class="user-desc">短期项目·培训少·基础版+引导式 SOP·只做关键 1-2 项</div>
+      </div>
+      <span class="user-tag tag-xinhe">欣和雇</span>
+    </div>
+    
+    <div class="user-row">
+      <div class="user-num">④</div>
+      <div class="user-info">
+        <div class="user-name">经销商雇用美顾 (导购)</div>
+        <div class="user-desc">不在欣和体系内·经销商付钱·INF-XD 简化版·主要服务经销商考核</div>
+      </div>
+      <span class="user-tag tag-dist">经销商雇</span>
+    </div>
+    
+    <div class="user-row">
+      <div class="user-num">⑤</div>
+      <div class="user-info">
+        <div class="user-name">欣和雇用零售业代 (SR)</div>
+        <div class="user-desc">欣和直营销售代表·全功能 INF-XD·覆盖 KA 大卖场/直营终端</div>
+      </div>
+      <span class="user-tag tag-xinhe">欣和雇</span>
+    </div>
+    
+    <div class="user-row">
+      <div class="user-num">⑥</div>
+      <div class="user-info">
+        <div class="user-name">经销商雇用零售业代 (DSR)</div>
+        <div class="user-desc">经销商体系内业代·有限功能 INF-XD·只能看自己经销商的店</div>
+      </div>
+      <span class="user-tag tag-dist">经销商雇</span>
+    </div>
+    
+    <div class="h3">主管 · 4 类 (监督型)</div>
+    
+    <div class="user-row">
+      <div class="user-num">⑦</div>
+      <div class="user-info">
+        <div class="user-name">美顾主管</div>
+        <div class="user-desc">管 4 类美顾·派单+激励+抽查·dashboard 视图为主</div>
+      </div>
+      <span class="user-tag tag-sup">主管</span>
+    </div>
+    
+    <div class="user-row">
+      <div class="user-num">⑧</div>
+      <div class="user-info">
+        <div class="user-name">SR 主管</div>
+        <div class="user-desc">管 SR 区域绩效·区域报表·KA 大客户管理</div>
+      </div>
+      <span class="user-tag tag-sup">主管</span>
+    </div>
+    
+    <div class="user-row">
+      <div class="user-num">⑨</div>
+      <div class="user-info">
+        <div class="user-name">DSR 主管</div>
+        <div class="user-desc">管经销商业代·DSR 派单+经销商对接·一本账数据</div>
+      </div>
+      <span class="user-tag tag-sup">主管</span>
+    </div>
+    
+    <div class="user-row">
+      <div class="user-num">⑩</div>
+      <div class="user-info">
+        <div class="user-name">DOM 督导</div>
+        <div class="user-desc">欣和驻店督导·全方位+异常处理+动销决策权 (T+3 拍板)</div>
+      </div>
+      <span class="user-tag tag-sup">主管</span>
+    </div>
+    
+    <div class="h3">登录后角色切换</div>
+    
+    <div class="formula">INF-XD 进入流程:
+
+  1. 登录 (账号识别角色)
+  2. 系统识别雇主 (欣和 / 经销商) + 角色 (美顾/SR/DSR/主管)
+  3. 顶栏显示当前角色 + 切换器 (一人多角色时)
+  4. 进入对应版本 UI
+
+例:
+  张三 = 欣和 + 美顾·常驻 → 完整版
+  李四 = 经销商 + DSR → 有限版 + 经销商范围
+  王五 = 欣和 + DOM 督导 → dashboard + 决策权</div>
+    
+    <div class="note n-green">
+      <strong>修正后</strong>: INF-XD 不再是"单一美顾 App"·而是"现场盘点工具"·按角色定制 UI
+    </div>
+    
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 节 1 · INF-XD 在 INFINITY OS 中的位置 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="c1">
+  <div class="sec-h">
+    <span class="sec-num">1</span><span class="sec-title">INF-XD 在 INFINITY OS 中的位置</span><span class="sec-tag fix">改</span>
+    <div class="sec-sub">L3 接口层 + 派单互锁 Phase 3-5 + 美顾 v2.9 分工</div>
+  </div>
+  <div class="sec-body">
+    
+    <div class="h3">6 层架构 + INF-XD 位置</div>
+    
+    <div class="formula">┌──────────────────────────────────────────┐
+│ L6 战略层 · 北极星 (六月鲜 200M瓶/4B RMB)│
+├──────────────────────────────────────────┤
+│ L5 决策层 · Agent (智能补货/蝴蝶/心跳/...)│
+├──────────────────────────────────────────┤
+│ L4 编排层 · 派单互锁 25 步                │
+├──────────────────────────────────────────┤
+│ L3 接口层 · INF-XD ★ (10 类用户) +      │
+│            美顾 v2.9 (T0/T4 APP 模式)    │
+├──────────────────────────────────────────┤
+│ L2 合伙人协议层 · SKU 合伙人化 Schema    │
+├──────────────────────────────────────────┤
+│ L1 数据层 · SAP / POS / 汉询 / Dcloud    │
+└──────────────────────────────────────────┘</div>
+    
+    <div class="h3">INF-XD vs 美顾 v2.9 APP 分工</div>
+    
+    <table class="tbl">
+      <thead>
+        <tr><th>时空</th><th>模块</th><th>谁用</th><th>功能</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>T0 路上前</strong></td><td>美顾 v2.9 APP</td><td>美顾 4 类</td><td>看任务·路线规划·准备</td></tr>
+        <tr><td><strong>T1 进店</strong></td><td>INF-XD</td><td>全 10 类</td><td>登录·识别店铺·进入流程</td></tr>
+        <tr><td><strong>T2 现场作业</strong></td><td>INF-XD ★</td><td>全 10 类</td><td>拍照·盘点·推单·上报</td></tr>
+        <tr><td><strong>T3 离店</strong></td><td>INF-XD</td><td>全 10 类</td><td>签退·CB 评分·任务关闭</td></tr>
+        <tr><td><strong>T4 离店后</strong></td><td>美顾 v2.9 APP</td><td>美顾 4 类</td><td>复盘·6 张卡详情·学习</td></tr>
+      </tbody>
+    </table>
+    
+    <div class="h3">派单互锁 25 步中 · INF-XD 位置</div>
+    
+    <div class="formula">25 步分 5 Phase:
+  Phase 1: 派单触发 (1-5 步)     · 后端 + DOM 派单
+  Phase 2: SFA 展示 (6-9 步)     · INF-XD 部分介入
+  Phase 3: 美顾响应 (10-13 步)   · INF-XD 抢单 ★
+  Phase 4: 执行 (14-19 步)       · INF-XD 主流程 ★★★
+  Phase 5: 反馈学习 (20-25 步)   · INF-XD CB 评分 ★
+
+  INF-XD = Phase 3-5 (核心)·Phase 2 边缘
+  Phase 1 在后端·INF-XD 不参与</div>
+    
+    <div class="note n-blue">
+      <strong>认知修正</strong>:
+      <ul style="margin-left:18px;margin-top:6px">
+        <li>INF-XD 不是"独立 App"·是 INFINITY OS L3 接口层一部分</li>
+        <li>INF-XD 输出 → 多个 Agent 接收 (节 13 详述)</li>
+        <li>INF-XD 与美顾 v2.9 APP 时空分工 (T0/T4 vs T1-T3)</li>
+      </ul>
+    </div>
+    
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 节 2 · 角色权限矩阵 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="c2">
+  <div class="sec-h">
+    <span class="sec-num">2</span><span class="sec-title">角色权限矩阵 · 谁看到什么</span><span class="sec-tag new">新增</span>
+    <div class="sec-sub">V2.0 完全没设计 · 法律合规 + 信息治理</div>
+  </div>
+  <div class="sec-body">
+    
+    <div class="note n-red">
+      <strong>V2.0 漏洞</strong>: 屏 7 一份 UI 给所有人看·暴露 income_share 等敏感信息·法务风险
+    </div>
+    
+    <div class="h3">10 类用户权限矩阵</div>
+    
+    <table class="tbl">
+      <thead>
+        <tr><th>用户</th><th>SKU 角色</th><th>income%</th><th>动销决策</th><th>多店数据</th><th>奖金详情</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>① 美顾·常驻</td><td>✓ 看</td><td>✓ 自己</td><td>✗ 上报</td><td>✗ 仅本店</td><td>✓ 自己</td></tr>
+        <tr><td>② 美顾·巡店</td><td>✓ 看</td><td>✓ 自己</td><td>✗ 上报</td><td>✓ 自己路线</td><td>✓ 自己</td></tr>
+        <tr><td>③ 美顾·临时</td><td>简化</td><td>限基础</td><td>✗ 上报</td><td>✗ 仅本店</td><td>✓ 自己</td></tr>
+        <tr><td>④ 经销商美顾</td><td>简化</td><td>经销商版</td><td>✗ 上报</td><td>✗ 经销商</td><td>经销商版</td></tr>
+        <tr><td>⑤ SR (欣和)</td><td>✓ 看</td><td>✓ 自己</td><td>建议权</td><td>✓ 自己</td><td>✓ 自己</td></tr>
+        <tr><td>⑥ DSR</td><td>✓ 看</td><td>✓ 自己</td><td>建议权</td><td>✓ 自己</td><td>✓ 自己</td></tr>
+        <tr><td>⑦ 美顾主管</td><td>✓ 全</td><td>✓ 团队</td><td>建议权</td><td>✓ 团队</td><td>✓ 团队</td></tr>
+        <tr><td>⑧ SR 主管</td><td>✓ 全</td><td>✓ 团队</td><td>建议权</td><td>✓ 区域</td><td>✓ 团队</td></tr>
+        <tr><td>⑨ DSR 主管</td><td>✓ 全</td><td>✓ 经销商</td><td>建议权</td><td>✓ 经销商</td><td>✓ 经销商</td></tr>
+        <tr><td>⑩ DOM 督导</td><td>✓ 全</td><td>✓ 全</td><td>★ 决策权</td><td>✓ 督导域</td><td>✓ 督导域</td></tr>
+      </tbody>
+    </table>
+    
+    <div class="h3">"老板看屏 7" 的权限处理 (关键)</div>
+    
+    <div class="note n-amber">
+      <strong>场景</strong>: 美顾完成盘点·把屏 7 给经销商老板看·让老板确认推单<br>
+      <strong>风险</strong>: 老板看到欣和内部信息 (PM 张三 30% income_share / 美顾我 ¥58 奖金) → 信息暴露
+    </div>
+    
+    <div class="formula">屏 7 双视图设计:
+
+  ┌─ 一线视图 (美顾自己看) ─────────┐
+  │ [SKU 列表]                      │
+  │ 推送给: 张三 PM 30%             │
+  │         李四 KA 20%             │
+  │         美顾我 10% · 预估 ¥3,750 │
+  └────────────────────────────────┘
+  
+  按"给老板看" 切换 →
+  
+  ┌─ 老板视图 (隐内部信息) ──────────┐
+  │ [SKU 列表]                       │
+  │ ✓ 已联动责任团队 (4 人)          │
+  │ ✓ 后续 7 日内方案落地             │
+  │ ✗ 不显示个人姓名·奖金·百分比      │
+  └─────────────────────────────────┘</div>
+    
+    <div class="note n-green">
+      <strong>合规价值</strong>: 法务可批 (内部信息不外泄)·美顾可看 (自己利益清楚)·老板可看 (协作信号清楚)
+    </div>
+    
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 节 3 · SKU 7 角色 + 7 阶段 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="c3">
+  <div class="sec-h">
+    <span class="sec-num">3</span><span class="sec-title">SKU 7 角色 + 7 阶段 (基于 Schema)</span><span class="sec-tag fix">改</span>
+    <div class="sec-sub">引用 Schema Section 02-03 · 加资源比例 + V1.1 命名建议</div>
+  </div>
+  <div class="sec-body">
+    
+    <div class="h3">7 角色 + 资源分配比例 (Schema Section 02)</div>
+    
+    <table class="tbl">
+      <thead>
+        <tr><th>角色</th><th>徽章</th><th>资源 %</th><th>合伙等级</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Flagship 旗舰</td><td><span class="role-badge role-flagship">🏆 旗舰</span></td><td><em>25%</em></td><td>深度 S</td></tr>
+        <tr><td>Core 主力</td><td><span class="role-badge role-core">⭐ 主力</span></td><td><em>30%</em></td><td>深度 A</td></tr>
+        <tr><td>Volume 跑量</td><td><span class="role-badge role-volume">📦 跑量</span></td><td><em>25%</em></td><td>标准 B</td></tr>
+        <tr><td>Niche 利基</td><td><span class="role-badge role-niche">🎯 利基</span></td><td>8%</td><td>标准 C</td></tr>
+        <tr><td>Defensive 防御</td><td><span class="role-badge role-defensive">🛡 防御</span></td><td>5%</td><td>战术 D</td></tr>
+        <tr><td>Candidate 候选</td><td><span class="role-badge role-candidate">🌱 候选</span></td><td>5%</td><td>观察期</td></tr>
+        <tr><td>Sunset 退场</td><td><span class="role-badge role-sunset">🌅 退场</span></td><td>2%</td><td>退出</td></tr>
+      </tbody>
+    </table>
+    
+    <div class="note n-amber">
+      <strong>命名警告 (Schema Section 03)</strong>: "Defensive" 既是角色名也是阶段名<br>
+      • 角色 SkuRole.DEFENSIVE = 长期身份 (例: 小康低价线)<br>
+      • 阶段 SkuStage.DEFENSIVE = 临时状态 (例: 六月鲜受冲击进入防御阶段)<br><br>
+      
+      <strong>V3.0 处理 (修 V2.0 #16)</strong>: 阶段使用 Schema V1.1 命名 <em>defending</em> · UI 显示中文"防御中"·避免与角色冲突
+    </div>
+    
+    <div class="h3">7 阶段 + 修饰因子 (Schema Section 09)</div>
+    
+    <table class="tbl">
+      <thead>
+        <tr><th>阶段</th><th>修饰因子</th><th>美顾该做</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>🥚 Incubation 孵化</td><td>预测驱动·不依赖 r 值</td><td>暂不补·测试</td></tr>
+        <tr><td>🐣 Introduction 引入</td><td>aggressiveness +1</td><td>激进铺货</td></tr>
+        <tr><td>📈 Growth 成长</td><td>触发水位 × 1.2</td><td>跟销量爬·调高</td></tr>
+        <tr><td>🌟 Maturity 成熟</td><td>默认 1.0</td><td>稳定补</td></tr>
+        <tr><td>🛡 defending 防御中</td><td>max +0.5a</td><td>多备防竞品</td></tr>
+        <tr><td>📉 Decline 衰退</td><td>aggressiveness -1</td><td>降补·清旧</td></tr>
+        <tr><td>🌅 Exit 退场</td><td>触发水位 = 0</td><td>停补·清场</td></tr>
+      </tbody>
+    </table>
+    
+    <div class="h3">getReorderPolicy 5 字段 (Schema Section 07)</div>
+    
+    <table class="tbl">
+      <thead>
+        <tr><th>字段</th><th>意义</th><th>例 (Flagship)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>reorder_threshold</td><td>触发补货水位 (a 倍)</td><td><em>≤ 1.5a</em></td></tr>
+        <tr><td>aggressiveness</td><td>激进度</td><td>high (宁多勿缺)</td></tr>
+        <tr><td>stockout_tolerance</td><td>缺货容忍</td><td>zero (零容忍)</td></tr>
+        <tr><td>max_overstock</td><td>最大水位 (a 倍)</td><td>3a</td></tr>
+        <tr><td>approval_required</td><td>是否审批</td><td>否 (自动)</td></tr>
+      </tbody>
+    </table>
+    
+    <div class="note n-blue">
+      <strong>修正 (修 V2.0 #11)</strong>: V2.0 缺资源比例·V3.0 完整列出<br>
+      <strong>修正 (修 V2.0 #8)</strong>: V2.0 缺 5 字段·V3.0 完整 + 加 stage_modifier
+    </div>
+    
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 节 4 · 屏 7 数据建议 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="c4">
+  <div class="sec-h">
+    <span class="sec-num">4</span><span class="sec-title">屏 7 智能补货建议 · 多角色版本</span><span class="sec-tag fix">改</span>
+    <div class="sec-sub">三段式保留 + 各角色定制版本 + 数字修正</div>
+  </div>
+  <div class="sec-body">
+    
+    <div class="h3">屏 7 老 vs 新 完整对比 (恢复 V1.0 表)</div>
+    
+    <table class="tbl">
+      <thead>
+        <tr><th>对比</th><th>V0.7 (Stage 4)</th><th>V3.0</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>名称</strong></td><td>🍣 Omakase 推单</td><td><em>📊 智能补货建议</em></td></tr>
+        <tr><td><strong>用户对象</strong></td><td>美顾 (单一)</td><td><em>10 类·分版本</em></td></tr>
+        <tr><td><strong>第 1 段</strong></td><td>(无)</td><td><em>📊 现状 (含 SKU 角色徽章)</em></td></tr>
+        <tr><td><strong>第 2 段</strong></td><td>建议补货 22 瓶</td><td><em>🟢 该补 (按 Schema 策略)</em></td></tr>
+        <tr><td><strong>第 3 段</strong></td><td>(无·禾然 36 瓶被推)</td><td><em>🟠 该动销 + 5 方案</em></td></tr>
+        <tr><td><strong>动态 W</strong></td><td>固定 2A</td><td><em>动态 W (节日/临期/...)</em></td></tr>
+        <tr><td><strong>关联合伙人</strong></td><td>(无)</td><td><em>双视图 (一线/老板)</em></td></tr>
+      </tbody>
+    </table>
+    
+    <div class="h3">屏 7 一线视图 (美顾/SR/DSR 看)</div>
+    
+    <div class="formula">┌──────────────────────────────────────────┐
+│ 📊 智能补货建议·点"给老板看"切换视图 ▶    │
+└──────────────────────────────────────────┘
+
+┌─ 📊 现状 ────────────────────────────────┐
+│ 极鲜 500ml [🏆][🌟] 12瓶·还卖 1.2 天 ⚠   │
+│ 禾然有机 [🎯][📉] 36瓶·已超 1.5a max ⚠⚠ │
+│ 味达美   [📦][🌟] 8瓶·还卖 4 天          │
+│ 动态 W: 节日前 (春节 -7d)·×1.5 系数       │
+│ [展开 ▼ 看 SKU 详情]                      │
+└──────────────────────────────────────────┘
+
+┌─ 🟢 该补 ────────────────────────────────┐
+│ 极鲜 500ml [🏆] 补 80 瓶 ¥8,000          │
+│   理由: Flagship 1.5a + 春节 ×1.5         │
+│ 味达美 [📦] 补 12 瓶 ¥1,080                │
+│ ─────                                     │
+│ 总: 92 瓶 · ¥9,080                         │
+└──────────────────────────────────────────┘
+
+┌─ 🟠 该动销 ──────────────────────────────┐
+│ 禾然有机 [🎯][📉] 36 瓶                    │
+│   ⚠ 不补反动销 (Niche+Decline)             │
+│ 配套方案 (3 选 1):                         │
+│   方案 A · 端架试吃 ¥800                   │
+│   方案 B · 极鲜捆绑 0 成本                  │
+│   方案 C · 8 折促销 5%利润                 │
+└──────────────────────────────────────────┘
+
+┌─ 👥 推送给 (你能看·老板切换视图后看不到) ─┐
+│ 张三 PM 30% income_share (修后总=70%)      │
+│ 李四 KA 20%                                │
+│ 王五 经销商 10%                             │
+│ 美顾我 10% · 预估销售奖金 ¥X·战略奖金 ¥Y   │
+│ (剩 30% → 团队池)                          │
+└──────────────────────────────────────────┘
+
+[ ✗ 老板拒绝 ]   [ ✓ 老板同意 ]
+
+(法务批后·income_share 数字才能显示)</div>
+    
+    <div class="h3">屏 7 老板视图 (经销商老板看)</div>
+    
+    <div class="formula">┌──────────────────────────────────────────┐
+│ 📊 智能补货建议·老板视图                   │
+└──────────────────────────────────────────┘
+
+┌─ 📊 现状 ──────────────────────────────────┐
+│ (同一线视图) ✓                              │
+└────────────────────────────────────────────┘
+
+┌─ 🟢 该补 ──────────────────────────────────┐
+│ (同一线视图) ✓                              │
+└────────────────────────────────────────────┘
+
+┌─ 🟠 该动销 ────────────────────────────────┐
+│ (同一线视图) ✓                              │
+└────────────────────────────────────────────┘
+
+┌─ 👥 协作 ──────────────────────────────────┐
+│ ✓ 已联动欣和责任团队 (4 人)                  │
+│ ✓ T+0 启动·T+3 方案落地·T+14 验收           │
+│ ✗ 隐 income_share 等内部信息                │
+└────────────────────────────────────────────┘
+
+[ ✗ 拒绝 ]   [ ✓ 同意 ]</div>
+    
+    <div class="h3">关键数字修正 (修 V2.0 #14)</div>
+    
+    <div class="compare-grid">
+      <div class="compare-col old">
+        <div class="compare-h">❌ V2.0 错</div>
+        张三 PM 30% +<br>
+        李四 KA 20% +<br>
+        王五 经销商 15% +<br>
+        美顾 10%<br>
+        = <strong style="color:var(--red)">75% (超 70% Schema 上限)</strong>
+      </div>
+      <div class="compare-col new">
+        <div class="compare-h">✅ V3.0 修</div>
+        张三 PM 30% +<br>
+        李四 KA 20% +<br>
+        王五 经销商 10% +<br>
+        美顾 10%<br>
+        = <strong style="color:var(--green)">70% (剩 30% 团队池)</strong>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 节 5 · 完整补货公式 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="c5">
+  <div class="sec-h">
+    <span class="sec-num crit">5</span><span class="sec-title">完整补货公式 · 修数学错误</span><span class="sec-tag crit">致命修</span>
+    <div class="sec-sub">修 V2.0 #26 公式不一致 · 整合 6 维预测 + Schema 策略 + 2A 动态</div>
+  </div>
+  <div class="sec-body">
+    
+    <div class="note n-red">
+      <strong>V2.0 致命错误 (#17 + #26)</strong>: 公式定义和实例不一致·实例引入 LT 期间需求但公式没有<br>
+      V3.0 完整修正
+    </div>
+    
+    <div class="h3">完整公式 V3.0 (统一定义)</div>
+    
+    <div class="formula">补货量 Q = max(0, 期间需求 D × 安全系数 K - 现有 I - 在途 IT)
+
+期间需求 D = (LT + 复盘周期 T) × r 预测
+
+r 预测 = r 历史基线 × 综合修饰系数
+
+综合修饰系数 = role_threshold / max_overstock 边界
+            × stage_modifier (Schema)
+            × dynamic_W (节日/临期/...)
+            × forecast_factor (主动+被动+趋势)
+
+边界检查:
+  - 若 Q 超过 max_overstock → 截断到 max_overstock
+  - 若 Q < 0 → 不补
+  - 若 SKU 角色 = Sunset → Q = 0</div>
+    
+    <div class="h3">实例 · 极鲜 500ml [🏆][🌟] 在 步步高西郊店 春节前 7 天</div>
+    
+    <div class="formula">SKU 元数据 (Schema V1.0):
+  角色 = Flagship · 阶段 = Maturity
+  reorder_threshold = ≤ 1.5a
+  max_overstock = 3a
+  stage_modifier = 1.0 (Maturity 默认)
+  approval_required = false (自动)
+
+数据 (假设):
+  r 历史基线 = 4 瓶/天 (近 30 天)
+  现有 I = 12 瓶
+  在途 IT = 0
+  LT (订货到货) = 3 天
+  T (下次拜访) = 14 天
+
+修饰系数:
+  stage_modifier = 1.0
+  dynamic_W = 1.5 (春节前 14 天系数)
+  forecast_factor:
+    - 央视广告 ×1.2 (主动)
+    - 端架陈列 ×1.3 (主动)
+    - 海天降价 ×0.9 (被动)
+    - 天气转冷 ×1.1 (被动)
+    - 7 天上升 ×1.1 (趋势)
+    = 1.2 × 1.3 × 0.9 × 1.1 × 1.1 = 1.70
+
+r 预测 = 4 × 1.0 × 1.5 × 1.70 = 10.2 瓶/天
+
+期间需求 D = (3 + 14) × 10.2 = 173 瓶
+
+安全系数 K = 1.3 (B 级店中等稳定)
+
+Q = 173 × 1.3 - 12 - 0 = 213 瓶
+
+边界检查:
+  max_overstock = 3a × r_预测
+                = 3 × 10.2 × 14 (复盘周期内最大库存)
+                = 428 瓶
+  Q = 213 < 428 ✓ 通过
+
+最终补货 = 213 瓶 (取整 200 瓶)</div>
+    
+    <div class="note n-green">
+      <strong>修正点</strong>:
+      <ul style="margin-left:18px;margin-top:6px">
+        <li>公式定义和实例完全一致</li>
+        <li>r 预测整合 6 维度 (你早前提的)</li>
+        <li>边界检查防止超 max_overstock</li>
+        <li>Sunset 角色直接 Q=0 (Schema 一致)</li>
+      </ul>
+    </div>
+    
+    <div class="note n-amber">
+      <strong>承认局限</strong>: 这是 INF-XD 演示版公式·实际生产环境需:<br>
+      - r 历史基线 → 接 SAP/POS<br>
+      - forecast_factor → 接营销系统 + 天气 API<br>
+      - 边界 max_overstock → 接经销商仓容<br>
+      - <strong>这些都是 Tech Lead 后端阶段</strong>·V3.0 演示用 mock 数据格式
+    </div>
+    
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 节 6 · 2A 动态 7 例外 (恢复 V1.0) -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="c6">
+  <div class="sec-h">
+    <span class="sec-num">6</span><span class="sec-title">2A 动态 7 例外 · 恢复 V1.0</span><span class="sec-tag fix">恢复 V1.0 内容</span>
+    <div class="sec-sub">修 V2.0 #1 · 加 SKU 角色叠加</div>
+  </div>
+  <div class="sec-body">
+    
+    <div class="note n-amber">
+      <strong>V2.0 漏洞</strong>: 把 V1.0 的 7 例外表删了·只留 dynamic_W 公式·没列具体条件
+    </div>
+    
+    <div class="h3">允许 > 2A · 4 种 (恢复)</div>
+    
+    <table class="tbl">
+      <thead>
+        <tr><th>例外</th><th>水位上调</th><th>触发</th><th>持续</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>① 节日备货</strong></td><td><em>3-4A</em></td><td>春节/中秋前 14-30 天</td><td>节后回 2A</td></tr>
+        <tr><td><strong>② 新店开业</strong></td><td><em>3A</em></td><td>新店 30 天内</td><td>30 天后回 2A</td></tr>
+        <tr><td><strong>③ 新品上市</strong></td><td><em>3A</em></td><td>SKU 上市 60 天</td><td>60 天后按实际 r</td></tr>
+        <tr><td><strong>④ 物流中断预防</strong></td><td><em>2.5A</em></td><td>仓库关闭/天气灾</td><td>恢复后 7 天</td></tr>
+      </tbody>
+    </table>
+    
+    <div class="h3">要求 < 2A · 3 种 (恢复)</div>
+    
+    <table class="tbl">
+      <thead>
+        <tr><th>例外</th><th>水位下调</th><th>触发</th><th>原因</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>⑤ 临期 SKU</strong></td><td><em>1.5A</em></td><td>剩余保质期 < 60 天</td><td>避免临期损失</td></tr>
+        <tr><td><strong>⑥ 慢动销门店</strong></td><td><em>1.5A</em></td><td>D 级店</td><td>动销慢·占资金</td></tr>
+        <tr><td><strong>⑦ 季节下行</strong></td><td><em>1.5A</em></td><td>夏季 6-8 月</td><td>季节回升再补</td></tr>
+      </tbody>
+    </table>
+    
+    <div class="h3">SKU 角色 × 2A 动态 叠加 (V3.0 新)</div>
+    
+    <div class="formula">最终水位 W = role_threshold × dynamic_W
+
+例 1 · Flagship 春节前:
+  W = 1.5a × 1.5 (节日) = 2.25a 触发水位
+  即库存 < 2.25a 立即补
+
+例 2 · Niche 临期:
+  W = 0.5a × 0.75 (临期) = 0.375a 触发水位
+  几乎不补·消化为先
+
+例 3 · Sunset:
+  W = 0a × X = 0a (永不补)</div>
+    
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 节 7 · 动销方案 5 类 (恢复 V1.0) -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="c7">
+  <div class="sec-h">
+    <span class="sec-num">7</span><span class="sec-title">动销方案 5 类 · 恢复 V1.0</span><span class="sec-tag fix">恢复 V1.0 内容</span>
+    <div class="sec-sub">修 V2.0 #2 · 加 r 提升数据</div>
+  </div>
+  <div class="sec-body">
+    
+    <table class="tbl">
+      <thead>
+        <tr><th>方案</th><th>成本</th><th>适用</th><th>预期 r 提升</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>A · 端架陈列 + 试吃</strong></td><td>¥800/店/周</td><td>有人流·缺曝光</td><td><em>+50-80%</em></td></tr>
+        <tr><td><strong>B · 与高动销 SKU 捆绑</strong></td><td>0</td><td>同品类有快销</td><td><em>+30-50%</em></td></tr>
+        <tr><td><strong>C · 临期前折扣</strong></td><td>5-10% 利润</td><td>剩余 < 30 天</td><td><em>+100%</em></td></tr>
+        <tr><td><strong>D · 退仓换店</strong></td><td>物流费</td><td>店选错</td><td>—</td></tr>
+        <tr><td><strong>E · 淘汰 SKU</strong></td><td>—</td><td>3 月连续不动</td><td>—</td></tr>
+      </tbody>
+    </table>
+    
+    <div class="note n-green">
+      DOM 督导按 SKU 角色 × 阶段 × 店铺等级·从 5 方案中选 1 (T+3 拍板)
+    </div>
+    
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 节 8 · 动销链 + getOwners + 状态机 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="c8">
+  <div class="sec-h">
+    <span class="sec-num">8</span><span class="sec-title">动销链 + getOwners + 状态机</span><span class="sec-tag fix">改</span>
+    <div class="sec-sub">修 V2.0 #9 状态机缺失 + #46 通知机制缺失</div>
+  </div>
+  <div class="sec-body">
+    
+    <div class="h3">完整责任链 (V3.0)</div>
+    
+    <table class="tbl">
+      <thead>
+        <tr><th>时间</th><th>动作</th><th>责任人</th><th>通知</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>T+0</strong></td><td>美顾/SR/DSR 长按 SKU·点"动销工单"·getOwners 自动派</td><td>一线</td><td>企微推送 4 责任人</td></tr>
+        <tr><td><strong>T+1~T+2</strong></td><td>PM + KA + DOM 协商方案</td><td>3 责任人</td><td>企微群讨论</td></tr>
+        <tr><td><strong>T+3 (硬)</strong></td><td>DOM 拍板·区域督导审批</td><td><em>DOM</em></td><td>方案推送美顾·邮件区域副总</td></tr>
+        <tr><td><strong>T+3~T+10</strong></td><td>美顾执行·INF-VL 验证</td><td>一线</td><td>每次执行进度推送</td></tr>
+        <tr><td><strong>T+14</strong></td><td>系统验收·写 inf_compensation_monthly</td><td>系统</td><td>奖金结果推送·失败升级邮件</td></tr>
+      </tbody>
+    </table>
+    
+    <div class="note n-amber">
+      <strong>超时升级 (V3.0 新)</strong>:
+      <ul style="margin-left:18px;margin-top:6px">
+        <li>T+3 未出方案 → 自动升级区域副总 (邮件 + 企微)</li>
+        <li>T+14 r 回升 < 10% → 升级区域副总开会决策 (退仓/淘汰)</li>
+      </ul>
+    </div>
+    
+    <div class="h3">SKU 状态机 (Schema Section 13 · 修 V2.0 #9)</div>
+    
+    <table class="tbl">
+      <thead>
+        <tr><th>转换</th><th>触发</th><th>决策权</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Candidate → Sunset</td><td>6 月未达标 (月销 &lt; 5万)</td><td><em>Tier 1 自动</em></td></tr>
+        <tr><td>Maturity → defending</td><td>竞品降价 ≥ 10%</td><td><em>Tier 1 自动</em></td></tr>
+        <tr><td>Volume → Core</td><td>市占率 ≥ 5% × 12 月</td><td>Tier 2 业务</td></tr>
+        <tr><td>Core → Flagship</td><td>北极星贡献度 ≥ 70</td><td>Tier 3 战略</td></tr>
+        <tr><td>任何 → Sunset (主动)</td><td>战略决策</td><td>Tier 3 战略</td></tr>
+      </tbody>
+    </table>
+    
+    <div class="note n-blue">
+      <strong>INF-XD 必须订阅状态变化 (Schema Section 13.6)</strong>:
+      <ul style="margin-left:18px;margin-top:6px">
+        <li>每次推单前重新调 getRole / getStage·缓存 ≤ 1 小时</li>
+        <li>订阅 sku_state_changed 事件·切换时清旧策略</li>
+        <li>角色/阶段切换中途的 SKU → 用最新</li>
+      </ul>
+    </div>
+    
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 节 9 · SKU 详情屏 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section" id="c9">
+  <div class="sec-h">
+    <span class="sec-num">9</span><span class="sec-title">SKU 详情屏 · 现场 vs APP 分工</span><span class="sec-tag fix">改</span>
+    <div class="sec-sub">修 V2.0 #13 (6 张卡放错地方) + #18 (长按动作冲突)</div>
+  </div>
+  <div class="sec-body">
+    
+    <div class="note n-red">
+      <strong>V2.0 漏洞</strong>: 6 张卡放在 INF-XD 现场·美顾 30 秒拍照模式没空看 6 张卡
+    </div>
+    
+    <div class="h3">现场 (INF-XD) vs APP 模式 (美顾 v2.9) 分工</div>
+    
+    <table class="tbl">
+      <thead>
+        <tr><th>时空</th><th>用途</th><th>显示什么</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>T1-T3 现场</strong><br>(INF-XD)</td><td>30 秒决策</td><td><em>精简 1 卡</em>: 角色徽章 + 阶段标签 + 该补/动销 + 1 句理由</td></tr>
+        <tr><td><strong>T0/T4 路上</strong><br>(美顾 v2.9 APP)</td><td>5 分钟学习</td><td><em>完整 6 张卡</em>: Schema Section 04 全部</td></tr>
+      </tbody>
+    </table>
+    
+    <div class="h3">现场 INF-XD · 精简卡 (V3.0 新)</div>
+    
+    <div class="formula">美顾长按 SKU → 弹"现场卡":
+
+┌─────────────────────────────┐
+│ 极鲜 500ml [🏆 旗舰][🌟 成熟] │
+│ ─────                       │
+│ 现 12 瓶 · 还卖 1.2 天 ⚠   │
+│ 该: 补 80 瓶 ¥8,000          │
+│ 因: Flagship 1.5a + 春节×1.5 │
+│                             │
+│ [📋 上报动销] [✓ 关闭]      │
+└─────────────────────────────┘
+
+(没有 6 张卡·美顾 30 秒能看完)</div>
+    
+    <div class="h3">APP 模式 (T0/T4) · 完整 6 张卡</div>
+    
+    <div class="note n-blue">
+      美顾下班复盘·或上班路上准备时·在美顾 v2.9 APP 看完整 6 张卡<br>
+      用于学习·了解 SKU 战略价值·规划自己拜访策略<br><br>
+      
+      6 张卡内容 = Schema Section 04 (角色/阶段/目标/投入/产出/退出)<br>
+      但这不是 INF-XD 范围·是美顾 v2.9 范围
+    </div>
+    
+    <div class="h3">动作冲突修正 (修 V2.0 #18)</div>
+    
+    <table class="tbl">
+      <thead>
+        <tr><th>动作</th><th>V2.0 (冲突)</th><th>V3.0 (清晰)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>短按 SKU</td><td>(无定义)</td><td>SKU 详情现场卡 (节 9)</td></tr>
+        <tr><td>长按 SKU</td><td>6 张卡 + 动销工单 (冲突)</td><td><em>上报动销工单</em> (节 8)</td></tr>
+        <tr><td>双击 SKU</td><td>(无)</td><td><em>跳转美顾 v2.9 APP 6 张卡</em></td></tr>
+      </tbody>
+    </table>
+    
+  </div>
+</div>
+
+<!-- 由于篇幅限制·节 10-17 在 Part 2 (后续) -->
+<div class="banner banner-good">
+  <div class="banner-h">📐 Part 1 · 节 0-9 完成 · Part 2 待续</div>
+  <div class="banner-text">
+    Part 1 (本文) · 节 0-9: 用户矩阵 / 位置 / 权限 / SKU 角色 / 屏 7 / 公式 / 2A / 动销 / 状态机 / 详情屏<br>
+    Part 2 (待续) · 节 10-17: 5 大指标 / 奖金公式 / 异常 / 模块衔接 / 4体三非一本账 / 落地 / 改名 / 总结<br><br>
+    
+    <strong class="g">小步快跑</strong>: 你先审 Part 1 (节 0-9 是 V2.0 致命错误的修正)·OK 后我写 Part 2
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 审门 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="gate">
+  <div class="gate-h">⛩️ V3.0 Part 1 审门 · 你审 15-20 分钟</div>
+  <ul class="gate-list">
+    <li><strong>审点 1</strong>: 节 0 用户矩阵 10 类 (6 一线 + 4 主管) 完整对吗?</li>
+    <li><strong>审点 2</strong>: 节 1 INF-XD 在 INFINITY OS 中的位置 + 派单互锁 Phase 3-5 对?</li>
+    <li><strong>审点 3</strong>: 节 2 角色权限矩阵 + 双视图 (一线/老板) 合理?</li>
+    <li><strong>审点 4</strong>: 节 4 屏 7 各角色版本 + 数字修正 (75% → 70%) OK?</li>
+    <li><strong>审点 5</strong>: 节 5 完整补货公式 + 实例 (修 V2.0 数学错误) 对?</li>
+    <li><strong>审点 6</strong>: 节 8 状态机 Tier 1/2/3 + 通知机制 + INF-XD 订阅 OK?</li>
+    <li><strong>审点 7</strong>: 节 9 现场 vs APP 模式 分工 (6 张卡放对地方) OK?</li>
+  </ul>
+  
+  <div style="margin-top:14px;padding:12px;background:rgba(0,0,0,0.3);border-radius:10px;font-size:12px;color:var(--t2);line-height:1.7">
+    <strong style="color:var(--green)">反馈选项:</strong><br><br>
+    
+    <strong style="color:var(--green)">A · Part 1 全通过</strong>
+    <span style="color:var(--t3)">→ 我写 Part 2 (节 10-17)·30-40 分钟</span><br><br>
+    
+    <strong style="color:var(--amber)">B · 改某节</strong>
+    <span style="color:var(--t3)">→ 你说"改 X"·我修 Part 1·零代码</span><br><br>
+    
+    <strong style="color:var(--blue)">C · 加新节</strong>
+    <span style="color:var(--t3)">→ 你说"加 Y"·我补到 Part 1</span><br><br>
+    
+    <strong style="color:var(--red)">D · 我哪里又错了</strong>
+    <span style="color:var(--t3)">→ 你指出·我修文档</span>
+  </div>
+  
+  <div style="margin-top:12px;padding:10px;background:rgba(78,205,196,0.06);border-left:3px solid var(--teal);border-radius:6px;font-size:11px;color:var(--t2);line-height:1.7">
+    <strong style="color:var(--teal)">迭代节奏 (小步快跑)</strong><br>
+    ✅ 迭代 1 (V1.0) · 5 概念<br>
+    ✅ 迭代 1.5 (V2.0) · 整合 Schema (有 48 个问题)<br>
+    ✅ 迭代 1.6 (V3.0 Part 1) · 修 V2.0 致命错误·节 0-9<br>
+    ⏳ 迭代 1.6 (V3.0 Part 2) · 节 10-17·待你审 Part 1 后<br>
+    ⏳ 迭代 2 · 改屏 7 代码 (基于 V3.0)<br>
+    ⏳ 迭代 3-5 · 后续<br>
+    每步独立·错了不深陷·小步快跑
+  </div>
+</div>
+
+</body>
+</html>
