@@ -1,0 +1,3175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>INFINITY OS · INF-XD v3.0 · 现场盘点 (Stage 4 修订)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f; --bg2: #0e0e15; --bg3: #14141f; --bg4: #1a1a28;
+  --line: rgba(255,255,255,0.06); --line2: rgba(255,255,255,0.12);
+  --t1: #ffffff; --t2: #c5c8d6; --t3: #7a7e92;
+  --amber: #f5a623; --amber-dim: rgba(245,166,35,0.15);
+  --green: #10b981; --green-dim: rgba(16,185,129,0.15);
+  --red: #ef4444; --red-dim: rgba(239,68,68,0.15);
+  --blue: #60a5fa; --blue-dim: rgba(96,165,250,0.15);
+  --teal: #4ecdc4; --teal-dim: rgba(78,205,196,0.15);
+  --purple: #a78bfa; --purple-dim: rgba(167,139,250,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--t1);font-family:'Noto Sans SC',sans-serif;-webkit-font-smoothing:antialiased;height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none}
+body{position:fixed;width:100%;height:100%}
+body.bf-active .main{top:120px !important;transition:top 0.3s}
+
+/* ─────── 顶栏 ─────── */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,15,0.95);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);padding:8px 12px;display:flex;justify-content:space-between;align-items:center;height:52px}
+.tb-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.tb-back-btn{padding:6px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--line);color:var(--t2);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;flex-shrink:0;min-width:60px}
+.tb-back-btn:disabled{opacity:0.3;cursor:not-allowed}
+.tb-back-btn:active{transform:scale(0.95);background:var(--bg4)}
+.tb-info{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
+.tb-store-row{display:flex;align-items:baseline;gap:6px}
+.tb-time{font-family:'Space Mono',monospace;font-size:10px;color:var(--t3);font-weight:700}
+.tb-store{font-size:13px;font-weight:700;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-store-grade{font-size:10px;color:var(--t3)}
+.tb-right{display:flex;gap:6px;align-items:center;position:relative}
+.tb-status{display:flex;gap:4px;align-items:center;font-size:10px;color:var(--green);font-family:'Space Mono',monospace;font-weight:700}
+.tb-status.offline{color:var(--red)}
+.tb-icon-btn{width:32px;height:32px;border-radius:8px;background:var(--bg3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer}
+.tb-icon-btn:hover{background:var(--bg4)}
+
+/* 角色切换器 (V3.1 节 0 · 10 类用户) */
+.role-switcher{display:flex;align-items:center;gap:4px;height:32px;padding:0 10px;background:var(--bg3);border:1px solid var(--line);border-radius:8px;font-size:11px;color:var(--t1);cursor:pointer;font-weight:600;font-family:'Noto Sans SC',sans-serif;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.role-switcher:active{transform:scale(0.97);background:var(--bg4)}
+.role-switcher .rs-emoji{font-size:13px}
+.role-switcher .rs-arrow{font-size:9px;color:var(--t3);margin-left:2px}
+.role-dropdown{display:none;position:absolute;top:38px;right:0;width:240px;max-height:480px;overflow-y:auto;background:var(--bg3);border:1px solid var(--line2);border-radius:10px;box-shadow:0 16px 48px rgba(0,0,0,0.7),0 0 0 1px rgba(245,166,35,0.2);z-index:201;padding:6px}
+.role-dropdown.show{display:block;animation:rdSlide 0.16s ease-out}
+@keyframes rdSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.role-backdrop{display:none;position:fixed;top:52px;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);z-index:200;animation:rdFade 0.16s ease-out}
+.role-backdrop.show{display:block}
+@keyframes rdFade{from{opacity:0}to{opacity:1}}
+.role-group{font-size:9px;color:var(--t3);padding:8px 10px 4px;font-family:'Space Mono',monospace;font-weight:700;letter-spacing:0.05em;text-transform:uppercase}
+.role-item{padding:9px 10px;font-size:11px;color:var(--t2);cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:6px;transition:background 0.1s}
+.role-item:hover{background:var(--bg4)}
+.role-item.active{background:rgba(245,166,35,0.12);color:var(--amber)}
+.role-item.active::after{content:'✓';margin-left:auto;color:var(--amber);font-weight:700}
+.role-item .ri-num{font-family:'Space Mono',monospace;font-size:10px;color:var(--t3);min-width:14px}
+.role-item .ri-tag{font-size:9px;padding:1px 5px;border-radius:3px;font-family:'Space Mono',monospace;margin-left:auto}
+.ri-tag-xinhe{background:rgba(16,185,129,0.15);color:var(--green)}
+.ri-tag-dist{background:rgba(245,166,35,0.15);color:var(--amber)}
+.ri-tag-sup{background:rgba(96,165,250,0.15);color:var(--blue)}
+.role-divider{height:1px;background:var(--line);margin:4px 8px}
+.role-hint{padding:8px 10px;font-size:10px;color:var(--t3);line-height:1.5;border-top:1px solid var(--line);margin-top:4px}
+
+/* ─────── 主区 ─────── */
+.main{position:fixed;top:50px;left:0;right:0;bottom:0;overflow:hidden}
+.screen{position:absolute;top:0;left:0;right:0;bottom:0;display:none;flex-direction:column;padding:14px 16px;animation:slideIn 0.3s ease-out;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.screen.active{display:flex}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* V3.1 屏 7 (内容多) · 按钮 sticky 底部 · 老板永远能看到 */
+#s7 .show-boss-tip{position:sticky;bottom:62px;background:var(--bg);padding:10px 0;margin-bottom:0;z-index:10;border-top:1px solid var(--line)}
+#s7 .btn-row{position:sticky;bottom:0;background:var(--bg);padding:8px 0 12px;margin-top:0;z-index:11;box-shadow:0 -8px 16px rgba(0,0,0,0.5)}
+
+/* ─────── 进度提示 ─────── */
+.progress{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--t3);font-family:'Space Mono',monospace;margin-bottom:12px;padding-right:60px}
+.progress-step{color:var(--green);font-weight:700;letter-spacing:0.05em}
+.progress-step.amber{color:var(--amber)}
+.progress-bar{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-bottom:10px;margin-right:60px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--teal));border-radius:2px;transition:width 0.4s}
+
+/* ─────── GPS 大圆圈 ─────── */
+.gps-circle{width:160px;height:160px;border-radius:50%;border:3px solid var(--green);background:rgba(16,185,129,0.08);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:24px auto;color:var(--green);position:relative;animation:pulse 2s infinite}
+.gps-circle.checkout{border-color:var(--teal);background:rgba(78,205,196,0.08);color:var(--teal)}
+.gps-icon{font-size:48px;line-height:1}
+.gps-text{font-size:13px;font-weight:700;margin-top:6px}
+.gps-dist{font-size:10px;margin-top:2px;opacity:0.8}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.3)}50%{box-shadow:0 0 0 12px rgba(16,185,129,0)}}
+
+/* ─────── 大标题 + 副标 ─────── */
+.big-title{font-size:18px;font-weight:700;text-align:center;margin-bottom:4px;color:var(--t1)}
+.big-sub{font-size:12px;color:var(--t3);text-align:center;line-height:1.6}
+.big-meta{font-family:'Space Mono',monospace;font-size:11px;color:var(--green);text-align:center;margin-top:6px}
+
+/* ─────── 大按钮 ─────── */
+.big-btn{margin-top:auto;padding:16px;border-radius:14px;text-align:center;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all 0.15s;letter-spacing:0.04em;width:100%}
+.big-btn:active{transform:scale(0.97)}
+.big-btn.green{background:var(--green);color:#000}
+.big-btn.green:hover{background:#0f9f72}
+.big-btn.amber{background:var(--amber);color:#000}
+.big-btn.amber:hover{background:#e09418}
+.big-btn.red{background:var(--red);color:#fff}
+.big-btn.dim{background:var(--bg3);color:var(--t2);border:1px solid var(--line2)}
+.big-btn.dim:hover{background:var(--bg4)}
+.btn-row{display:flex;gap:8px;margin-top:auto}
+.btn-row .big-btn{margin-top:0;padding:12px;font-size:13px}
+
+/* ─────── 任务总览 屏 (V3.1 节 10 改进) ─────── */
+.task-list{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.task-row{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--bg3);border-radius:10px;font-size:12px;border:1px solid var(--line);cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent}
+.task-row:active{transform:scale(0.98);background:var(--bg4)}
+.task-row.task-main{background:var(--amber-dim);border-color:rgba(245,166,35,0.4)}
+.task-row.task-main .task-name{color:var(--amber);font-weight:700}
+.task-row.done{opacity:0.5;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.05)}
+.task-row.done .task-name{color:var(--green)}
+.task-row.done .task-name::before{content:'✓ ';color:var(--green);font-weight:700}
+.task-row .task-num{font-family:'Space Mono',monospace;color:var(--t3);margin-right:6px;font-size:11px}
+.task-row.task-main .task-num{color:var(--amber)}
+.task-row.done .task-num{color:var(--green);text-decoration:line-through}
+.task-name{font-size:12px;flex:1}
+.task-meta{font-size:10px;color:var(--t3);font-family:'Space Mono',monospace;text-align:right}
+.task-meta.amber{color:var(--amber)}
+.auto-skip{text-align:center;font-size:10px;color:var(--t3);margin-top:8px}
+
+/* SKU 战略价值卡 (V3.1) */
+.sku-strategy{padding:10px 14px;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.25);border-radius:10px;margin:10px 0;font-size:11px;color:var(--t2);line-height:1.6;display:flex;align-items:center;gap:8px}
+.sku-strategy-icon{font-size:16px;flex-shrink:0}
+.sku-strategy strong{color:var(--purple);font-weight:700}
+.sku-strategy em{font-style:normal;color:var(--amber);font-weight:700;font-family:'Space Mono',monospace}
+
+/* 任务进度统计 (V3.1) */
+.task-stats{display:flex;gap:8px;margin-bottom:10px;font-size:11px}
+.task-stat-pill{padding:4px 10px;background:var(--bg3);border:1px solid var(--line);border-radius:14px;color:var(--t2);font-family:'Space Mono',monospace}
+.task-stat-pill em{color:var(--amber);font-weight:700;font-style:normal}
+.auto-skip .countdown{color:var(--amber);font-weight:700}
+
+/* ─────── 拍照屏 ─────── */
+.photo-area{flex:1;background:linear-gradient(135deg,#1a1a28,#0e0e15);border:2px dashed var(--line2);border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:12px;flex-direction:column;gap:10px;margin:14px 0;cursor:pointer;position:relative;overflow:hidden;min-height:200px;-webkit-user-select:none;user-select:none}
+.photo-area:hover{border-color:var(--amber)}
+.photo-area.taken{background:linear-gradient(135deg,rgba(16,185,129,0.06),rgba(0,0,0,0));border-color:var(--green);border-style:solid;color:var(--green)}
+.photo-area.long-press{border-color:var(--red);background:rgba(239,68,68,0.05)}
+.photo-icon{font-size:56px;line-height:1}
+.photo-hint{font-size:14px;font-weight:600}
+.photo-tip{font-size:10px;opacity:0.7;text-align:center;padding:0 16px;line-height:1.5}
+
+/* ─────── INF-VL 识别 ─────── */
+.recognition{padding:12px;background:rgba(16,185,129,0.04);border:1px solid rgba(16,185,129,0.25);border-radius:10px;font-size:12px;color:var(--t2);line-height:1.7;margin:12px 0}
+
+/* ─────── V4.0 · 主管 Dashboard ─────── */
+.supervisor-view{display:none;padding:14px 0}
+.supervisor-view.show{display:block}
+.frontline-view{display:block}
+.frontline-view.hide{display:none}
+
+.sup-hdr{padding:12px 14px;background:linear-gradient(135deg,rgba(96,165,250,0.08) 0%,rgba(167,139,250,0.06) 100%);border:1px solid rgba(96,165,250,0.25);border-radius:12px;margin-bottom:10px}
+.sup-hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sup-hdr-name{font-size:14px;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:6px}
+.sup-hdr-tag{font-size:9px;background:var(--blue);color:#fff;padding:2px 6px;border-radius:4px;font-weight:700}
+.sup-hdr-time{font-size:10px;color:var(--t3);font-family:'Space Mono',monospace}
+.sup-hdr-stats{display:flex;gap:8px}
+.sup-stat{flex:1;text-align:center;padding:6px 4px;background:rgba(0,0,0,0.2);border-radius:6px}
+.sup-stat-num{font-size:16px;font-weight:800;line-height:1.1;font-family:'Space Mono',monospace}
+.sup-stat-lbl{font-size:9px;color:var(--t3);margin-top:2px}
+
+.sup-card{padding:10px 12px;background:var(--bg3);border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
+.sup-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sup-card-title{font-size:12px;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:6px}
+.sup-card-count{font-size:9px;color:var(--t3);font-family:'Space Mono',monospace}
+.sup-card-action{font-size:10px;color:var(--blue);font-weight:600;cursor:pointer;padding:2px 6px;border-radius:4px}
+.sup-card-action:hover{background:rgba(96,165,250,0.1)}
+
+.sup-row{display:flex;align-items:center;justify-content:space-between;padding:7px 8px;background:var(--bg2);border-radius:6px;margin-bottom:4px;border:1px solid transparent}
+.sup-row:last-child{margin-bottom:0}
+.sup-row.urgent{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.04)}
+.sup-row.warn{border-color:rgba(245,166,35,0.3);background:rgba(245,166,35,0.04)}
+.sup-row-l{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.sup-row-icon{flex-shrink:0;font-size:12px}
+.sup-row-text{font-size:11px;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sup-row-meta{font-size:9px;color:var(--t3);flex-shrink:0;margin-left:6px}
+.sup-row-btn{flex-shrink:0;padding:3px 8px;background:var(--amber);color:#000;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;border:none;font-family:inherit;margin-left:6px}
+.sup-row-btn:hover{background:var(--amber2)}
+
+.sup-rank-row{display:flex;align-items:center;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px}
+.sup-rank-row:last-child{border-bottom:none}
+.sup-rank-num{flex-shrink:0;width:18px;font-weight:700;color:var(--t3);font-family:'Space Mono',monospace}
+.sup-rank-num.top{color:var(--amber)}
+.sup-rank-name{flex:1;color:var(--t1)}
+.sup-rank-cb{font-family:'Space Mono',monospace;font-weight:700;color:var(--green);font-size:11px;flex-shrink:0;margin-right:8px}
+.sup-rank-bar{flex-shrink:0;width:50px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+.sup-rank-fill{height:100%;background:var(--green);border-radius:2px}
+
+.sup-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:8px 16px;border-radius:8px;font-size:11px;font-weight:700;z-index:1000;display:none;box-shadow:0 4px 16px rgba(16,185,129,0.5)}
+.sup-toast.show{display:block;animation:fadeIn 0.3s}
+@keyframes fadeIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* V4.1 · 派工 Modal */
+.dispatch-modal{}
+.dispatch-context{padding:10px 12px;background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.2);border-radius:8px;margin-bottom:14px;font-size:12px}
+.dispatch-context-l1{font-weight:700;color:var(--amber);margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.dispatch-context-l2{font-size:10px;color:var(--t3);line-height:1.5}
+
+.dispatch-section{margin-bottom:14px}
+.dispatch-section-label{font-size:11px;font-weight:700;color:var(--t1);margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.dispatch-section-required{color:var(--red);font-size:10px}
+
+.dispatch-options{display:flex;flex-direction:column;gap:6px}
+.dispatch-option{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:2px solid var(--line);border-radius:10px;cursor:pointer;transition:all 0.15s}
+.dispatch-option:hover{border-color:var(--amber)}
+.dispatch-option.selected{border-color:var(--amber);background:rgba(245,166,35,0.06)}
+.dispatch-option-radio{flex-shrink:0;width:18px;height:18px;border:2px solid var(--line2);border-radius:50%;position:relative;transition:all 0.15s}
+.dispatch-option.selected .dispatch-option-radio{border-color:var(--amber)}
+.dispatch-option.selected .dispatch-option-radio::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:8px;height:8px;background:var(--amber);border-radius:50%}
+.dispatch-option-info{flex:1;min-width:0}
+.dispatch-option-name{font-size:13px;font-weight:600;color:var(--t1)}
+.dispatch-option-meta{font-size:10px;color:var(--t3);margin-top:1px}
+.dispatch-option-cb{flex-shrink:0;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--green)}
+.dispatch-option-status{flex-shrink:0;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700}
+.dispatch-option-status.busy{background:rgba(245,166,35,0.15);color:var(--amber)}
+.dispatch-option-status.free{background:rgba(16,185,129,0.15);color:var(--green)}
+
+.dispatch-time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.dispatch-time{padding:10px 6px;background:var(--bg3);border:2px solid var(--line);border-radius:8px;text-align:center;cursor:pointer;font-size:11px;font-weight:600;color:var(--t2);transition:all 0.15s}
+.dispatch-time:hover{border-color:var(--blue)}
+.dispatch-time.selected{border-color:var(--blue);background:rgba(96,165,250,0.08);color:var(--blue)}
+.dispatch-time-time{font-size:10px;color:var(--t3);margin-top:2px;font-weight:400}
+.dispatch-time.selected .dispatch-time-time{color:var(--blue)}
+
+.dispatch-note{width:100%;padding:9px 10px;background:var(--bg3);border:1px solid var(--line);border-radius:8px;color:var(--t1);font-size:12px;font-family:inherit;outline:none;resize:none;min-height:48px}
+.dispatch-note:focus{border-color:var(--amber)}
+.dispatch-note::placeholder{color:var(--t3);font-size:11px}
+
+.dispatch-confirm-row{display:flex;gap:8px;margin-top:14px}
+.dispatch-cancel-btn{flex:1;padding:11px;background:var(--bg3);border:1px solid var(--line);border-radius:10px;color:var(--t2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.dispatch-confirm-btn{flex:2;padding:11px;background:var(--amber);border:none;border-radius:10px;color:#000;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.dispatch-confirm-btn:disabled{opacity:0.4;cursor:not-allowed}
+.dispatch-confirm-btn:hover:not(:disabled){background:var(--amber2)}
+
+/* 已派工的异常行 (派工后状态) */
+.sup-row.dispatched{opacity:0.6;background:rgba(16,185,129,0.04);border-color:rgba(16,185,129,0.2)}
+.sup-row.dispatched .sup-row-btn{background:var(--green);color:#fff;cursor:default}
+.sup-row.dispatched .sup-row-btn:hover{background:var(--green)}
+
+/* V4.2 · 派工历史浮动按钮 */
+.dispatch-history-fab{position:fixed;bottom:80px;right:14px;width:48px;height:48px;border-radius:50%;background:var(--blue);border:none;color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(96,165,250,0.4);display:none;align-items:center;justify-content:center;z-index:75}
+.dispatch-history-fab.show{display:flex}
+.dispatch-history-fab:hover{background:var(--blue);transform:scale(1.05)}
+.dispatch-history-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:10px;min-width:18px;height:18px;font-size:10px;font-weight:700;padding:0 4px;display:none;align-items:center;justify-content:center;font-family:'Space Mono',monospace}
+
+/* 历史 Modal */
+.history-list{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow-y:auto}
+.history-item{display:flex;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--line);border-radius:10px;align-items:flex-start}
+.history-time{flex-shrink:0;font-size:9px;color:var(--t3);font-family:'Space Mono',monospace;padding-top:1px;width:48px}
+.history-main{flex:1;min-width:0}
+.history-target{font-size:12px;font-weight:600;color:var(--t1);margin-bottom:3px}
+.history-meta{font-size:11px;color:var(--t2)}
+.history-note{font-size:10px;color:var(--t3);margin-top:3px;padding:3px 6px;background:rgba(245,166,35,0.06);border-radius:4px;display:inline-block}
+.history-status{flex-shrink:0;font-size:9px;padding:3px 7px;border-radius:4px;font-weight:700;align-self:flex-start;margin-top:1px}
+.history-status.dispatched{background:rgba(245,166,35,0.15);color:var(--amber)}
+.history-status.accepted{background:rgba(96,165,250,0.15);color:var(--blue)}
+.history-status.completed{background:rgba(16,185,129,0.15);color:var(--green)}
+
+/* B2/B3/B4 · 全屏列表 (复用 modal 但更大) */
+.full-list-modal .modal{max-height:95vh;border-radius:16px 16px 0 0;padding:16px 14px 20px}
+.list-section-tabs{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px}
+.list-section-tabs::-webkit-scrollbar{display:none}
+.list-tab{padding:6px 12px;background:var(--bg3);border:1px solid var(--line);border-radius:14px;font-size:11px;font-weight:600;color:var(--t2);cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0;font-family:inherit}
+.list-tab.active{background:var(--amber);color:#000;border-color:var(--amber)}
+
+.full-list{max-height:65vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:2px}
+.full-list-item{padding:10px 12px;background:var(--bg3);border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:all 0.15s}
+.full-list-item:hover{border-color:var(--amber);background:rgba(245,166,35,0.04)}
+.full-list-item.urgent{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.04)}
+.full-list-item.warn{border-color:rgba(245,166,35,0.3);background:rgba(245,166,35,0.04)}
+.full-list-item.info{border-color:rgba(96,165,250,0.2);background:rgba(96,165,250,0.03)}
+.full-list-item.dispatched{opacity:0.5}
+.fl-icon{flex-shrink:0;font-size:14px}
+.fl-content{flex:1;min-width:0}
+.fl-title{font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl-meta{font-size:10px;color:var(--t3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl-action{flex-shrink:0;padding:4px 10px;background:var(--amber);color:#000;border-radius:5px;font-size:10px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.fl-action:disabled{background:var(--green);color:#fff;cursor:default}
+.fl-cb{flex-shrink:0;font-family:'Space Mono',monospace;font-weight:700;color:var(--green);font-size:11px}
+.fl-status{flex-shrink:0;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700}
+.fl-status.done{background:rgba(16,185,129,0.15);color:var(--green)}
+.fl-status.progress{background:rgba(245,166,35,0.15);color:var(--amber)}
+.fl-status.pending{background:rgba(255,255,255,0.06);color:var(--t3)}
+
+.list-summary{padding:10px 12px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.15);border-radius:8px;font-size:11px;color:var(--t2);margin-bottom:10px;display:flex;gap:14px;flex-wrap:wrap}
+.list-summary-item{display:flex;align-items:center;gap:4px}
+.list-summary-num{font-family:'Space Mono',monospace;font-weight:700;color:var(--blue)}
+
+/* 阶段切换器 (DS 演示用·只屏 4 显示) */
+.stage-switcher{display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.2);border-radius:8px;margin-bottom:10px;font-size:10px;color:var(--blue);font-family:'Space Mono',monospace}
+.stage-switcher-label{flex-shrink:0;font-weight:700}
+.stage-btn{flex:1;padding:5px 8px;background:transparent;border:1px solid var(--line2);border-radius:5px;color:var(--t3);cursor:pointer;font-family:inherit;font-size:10px;font-weight:700;transition:all 0.15s;-webkit-tap-highlight-color:transparent}
+.stage-btn:hover{color:var(--t2);border-color:var(--blue)}
+.stage-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* 阶段说明卡 (顶部提示) */
+.stage-info{padding:10px 12px;border-radius:10px;margin-bottom:10px;font-size:11px;line-height:1.6;display:flex;align-items:flex-start;gap:8px}
+.stage-info-icon{flex-shrink:0;font-size:16px}
+.stage-info.s1{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.25);color:var(--amber)}
+.stage-info.s2{background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.25);color:var(--purple)}
+.stage-info.s3{background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.25);color:var(--green)}
+.stage-info-title{font-weight:700;margin-bottom:2px}
+.stage-info-desc{color:var(--t2);font-weight:400;font-size:10px}
+
+/* 阶段 1 · 美顾手填表单 */
+.manual-date-form{margin-top:8px}
+.date-sku-row{padding:10px 12px;background:var(--bg3);border:1px solid var(--line);border-radius:10px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px}
+.date-sku-name{font-size:12px;font-weight:600;color:var(--t1);display:flex;align-items:center;gap:6px}
+.date-sku-name .sku-tag{font-size:9px;font-weight:600;padding:1px 6px;background:rgba(16,185,129,0.15);color:var(--green);border-radius:4px;font-family:'Space Mono',monospace}
+.date-input-row{display:flex;gap:6px;align-items:center}
+.date-input{flex:1;padding:7px 8px;background:var(--bg2);border:1px solid var(--line);border-radius:6px;color:var(--t1);font-size:13px;font-family:'Space Mono',monospace;outline:none;text-align:center;-webkit-appearance:none;appearance:none;min-height:32px}
+.date-input:focus{border-color:var(--amber);background:rgba(245,166,35,0.04)}
+.date-input::placeholder{color:var(--t3);font-size:11px}
+.date-sep{color:var(--t3);font-size:14px;font-weight:700;flex-shrink:0}
+.photo-archive-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.25);border-radius:4px;font-size:9px;color:var(--blue);font-family:'Space Mono',monospace;width:fit-content}
+
+/* 阶段 2 · AI 候选 + 美顾确认 */
+.ai-candidate-row{padding:10px 12px;background:var(--bg3);border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
+.ai-candidate-name{font-size:12px;font-weight:600;color:var(--t1);margin-bottom:4px}
+.ai-candidate-suggest{font-size:13px;color:var(--purple);font-family:'Space Mono',monospace;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.ai-confidence{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700}
+.ai-confidence.high{background:rgba(16,185,129,0.15);color:var(--green)}
+.ai-confidence.mid{background:rgba(245,166,35,0.15);color:var(--amber)}
+.ai-confidence.low{background:rgba(239,68,68,0.15);color:var(--red)}
+.ai-actions{display:flex;gap:6px}
+.ai-action-btn{flex:1;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;background:transparent;font-family:'Noto Sans SC',sans-serif}
+.ai-action-btn.confirm{border-color:var(--green);color:var(--green)}
+.ai-action-btn.confirm:hover{background:rgba(16,185,129,0.1)}
+.ai-action-btn.modify{border-color:var(--amber);color:var(--amber)}
+.ai-action-btn.modify:hover{background:rgba(245,166,35,0.1)}
+
+/* 阶段 3 · 自动接受 + 异常人工 */
+.s3-auto-row{padding:10px 12px;background:rgba(16,185,129,0.04);border:1px solid rgba(16,185,129,0.25);border-radius:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.s3-low-confidence-row{padding:10px 12px;background:rgba(245,166,35,0.06);border:1px solid var(--amber);border-radius:10px;margin-bottom:8px}
+.s3-summary{padding:10px 12px;background:rgba(16,185,129,0.08);border-radius:10px;font-size:11px;color:var(--green);text-align:center;margin-bottom:8px;font-weight:600}
+.recog-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.recog-name{font-weight:700;color:var(--green)}
+.recog-pct{font-family:'Space Mono',monospace;font-size:11px;color:var(--green)}
+.recog-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0}
+.recog-row em{font-style:normal;color:var(--green);font-weight:600}
+.recog-bar{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:8px}
+.recog-bar-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.4s}
+
+/* ─────── 反馈卡 grid ─────── */
+.fb-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.fb-card{padding:12px 10px;background:var(--bg3);border-radius:10px;text-align:center;border:1px solid var(--line)}
+.fb-card.ok{background:rgba(16,185,129,0.05);border-color:rgba(16,185,129,0.25)}
+.fb-card.warn{background:rgba(245,166,35,0.05);border-color:rgba(245,166,35,0.3)}
+.fb-card.bad{background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.3)}
+.fb-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1}
+.fb-num.green{color:var(--green)}
+.fb-num.amber{color:var(--amber)}
+.fb-num.red{color:var(--red)}
+.fb-lbl{font-size:10px;color:var(--t3);margin-top:4px;line-height:1.4}
+
+/* ─────── 差异行 ─────── */
+.diff-h{font-size:10px;color:var(--t3);margin:8px 0 4px;font-family:'Space Mono',monospace;font-weight:700}
+.diff-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border-radius:8px;font-size:11px;color:var(--t2);margin-bottom:4px}
+.diff-circle{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:11px;flex-shrink:0;font-family:'Syne',sans-serif}
+.diff-1{background:var(--green)}
+.diff-2{background:var(--amber)}
+.diff-3{background:var(--red)}
+
+/* ─────── 智能补货建议 (V3.1 屏 7) ─────── */
+.smart-reorder{margin:8px 0 12px}
+
+/* 视图切换 toggle */
+.view-toggle{display:flex;gap:4px;background:var(--bg3);border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:10px}
+.vt-btn{flex:1;padding:7px 10px;font-size:11px;font-family:'Noto Sans SC',sans-serif;color:var(--t3);background:transparent;border:none;border-radius:7px;cursor:pointer;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;transition:all 0.15s}
+.vt-btn.active{background:var(--bg4);color:var(--amber);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+
+/* 段卡 */
+.sr-seg{background:var(--bg3);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.sr-seg-h{font-size:11px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace}
+.sr-seg.s-status{border-color:rgba(96,165,250,0.25);background:rgba(96,165,250,0.04)}
+.sr-seg.s-status .sr-seg-h{color:var(--blue)}
+.sr-seg.s-add{border-color:rgba(16,185,129,0.25);background:rgba(16,185,129,0.04)}
+.sr-seg.s-add .sr-seg-h{color:var(--green)}
+.sr-seg.s-promo{border-color:rgba(245,166,35,0.25);background:rgba(245,166,35,0.04)}
+.sr-seg.s-promo .sr-seg-h{color:var(--amber)}
+.sr-seg.s-team{border-color:rgba(167,139,250,0.25);background:rgba(167,139,250,0.04)}
+.sr-seg.s-team .sr-seg-h{color:var(--purple)}
+
+/* SKU 行 */
+.sr-sku{display:flex;align-items:center;gap:6px;padding:7px 8px;background:rgba(0,0,0,0.25);border-radius:6px;margin-bottom:4px;font-size:11px;flex-wrap:wrap}
+.sr-sku:last-child{margin-bottom:0}
+.sr-sku-name{color:var(--t1);font-weight:600;flex-shrink:0}
+.sr-sku-info{color:var(--t2);font-size:10px;flex:1;min-width:0}
+.sr-sku-info.warn{color:var(--amber)}
+.sr-sku-info.bad{color:var(--red)}
+.sr-sku-action{font-family:'Space Mono',monospace;font-size:10px;color:var(--green);font-weight:700;flex-shrink:0}
+
+/* SKU 角色徽章 */
+.sku-badge{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;font-size:11px;flex-shrink:0;line-height:1}
+.sku-badge.b-flagship{background:rgba(251,191,36,0.18);color:#fbbf24;border:1px solid rgba(251,191,36,0.4)}
+.sku-badge.b-core{background:rgba(245,166,35,0.18);color:var(--amber);border:1px solid rgba(245,166,35,0.4)}
+.sku-badge.b-volume{background:rgba(96,165,250,0.18);color:var(--blue);border:1px solid rgba(96,165,250,0.4)}
+.sku-badge.b-niche{background:rgba(167,139,250,0.18);color:#a78bfa;border:1px solid rgba(167,139,250,0.4)}
+.sku-badge.b-defensive{background:rgba(239,68,68,0.18);color:var(--red);border:1px solid rgba(239,68,68,0.4)}
+.sku-badge.b-mature{background:rgba(255,255,255,0.08);color:var(--t2);border:1px solid var(--line2)}
+.sku-badge.b-decline{background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.3)}
+.sku-badge.b-defending{background:rgba(245,166,35,0.1);color:var(--amber);border:1px solid rgba(245,166,35,0.3)}
+
+/* 推单理由 */
+.sr-reason{font-size:10px;color:var(--t3);padding:3px 10px 7px;line-height:1.5}
+.sr-total{padding:8px 10px;background:rgba(16,185,129,0.08);border-radius:6px;font-size:11px;color:var(--green);font-weight:700;text-align:right;margin-top:5px;font-family:'Space Mono',monospace}
+
+/* 动态 W 提示 */
+.dynamic-w{padding:6px 10px;background:rgba(0,0,0,0.3);border-radius:5px;font-size:10px;color:var(--t3);margin-top:6px;font-family:'Space Mono',monospace}
+.dynamic-w em{color:var(--amber);font-weight:700;font-style:normal}
+
+/* 动销方案 */
+.promo-opts{margin-top:6px;display:flex;flex-direction:column;gap:4px}
+.promo-opt{padding:6px 10px;background:rgba(0,0,0,0.25);border-radius:6px;border:1px solid var(--line);font-size:10px;color:var(--t2);display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all 0.15s}
+.promo-opt:hover{border-color:var(--amber);background:var(--amber-dim)}
+.promo-opt-name{font-weight:600;color:var(--t1)}
+.promo-opt-cost{color:var(--t3);font-family:'Space Mono',monospace}
+
+/* 推送给 (协作团队) */
+.team-row{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:rgba(0,0,0,0.2);border-radius:5px;margin-bottom:3px;font-size:10px}
+.team-name{color:var(--t2);font-weight:600}
+.team-share{color:var(--purple);font-family:'Space Mono',monospace;font-weight:700;font-size:10px}
+.team-self{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.2)}
+.team-self .team-name{color:var(--amber)}
+.team-self .team-share{color:var(--amber)}
+.team-pool{font-size:9px;color:var(--t3);text-align:right;margin-top:5px;font-style:italic}
+
+/* 老板视图 */
+.boss-view-msg{padding:10px 12px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.2);border-radius:8px;font-size:11px;color:var(--blue);line-height:1.6;margin-bottom:8px;display:flex;align-items:flex-start;gap:8px}
+.boss-view-msg-icon{flex-shrink:0;font-size:14px;margin-top:1px}
+
+/* ─────── (Deprecated v3.1) Omakase 老样式 · 已被 .smart-reorder 替代 ─────── */
+.omakase{background:var(--amber-dim);border:1px solid rgba(245,166,35,0.4);border-radius:14px;padding:14px;margin:12px 0}
+.omakase-h{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--amber);font-weight:700;margin-bottom:10px}
+.oma-skus{display:flex;flex-direction:column;gap:5px}
+.oma-row{display:flex;justify-content:space-between;font-size:12px;padding:8px 10px;background:rgba(0,0,0,0.3);border-radius:6px}
+.oma-row strong{color:var(--amber);font-family:'Syne',sans-serif}
+.oma-total{font-family:'Space Mono',monospace;font-size:11px;color:var(--t3);margin-top:8px;text-align:right}
+.show-boss-tip{font-size:11px;color:var(--t3);text-align:center;margin:12px 0}
+.show-boss-tip strong{color:var(--amber)}
+
+/* ─────── AI 验收 ─────── */
+.ai-verify{background:rgba(16,185,129,0.06);border:2px solid var(--green);border-radius:16px;padding:18px;text-align:center;margin:14px 0}
+.ai-verify-icon{font-size:56px;line-height:1}
+.ai-verify-title{font-size:18px;font-weight:700;color:var(--green);margin-top:8px}
+.ai-verify-meta{font-size:12px;color:var(--t2);margin-top:6px}
+.ai-verify-sub{font-size:10px;color:var(--t3);margin-top:4px}
+.verify-stats{display:flex;flex-direction:column;gap:4px;margin-top:12px;font-size:11px}
+.verify-row{display:flex;justify-content:space-between;padding:6px 10px;background:var(--bg3);border-radius:6px}
+.verify-row.partial{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.2)}
+.verify-row em{font-style:normal;color:var(--green)}
+.verify-row.partial em{color:var(--amber)}
+
+/* ─────── 签退总结 ─────── */
+.checkout-summary{font-size:12px;color:var(--t3);text-align:center;line-height:1.7;margin:12px 0}
+.checkout-summary strong{color:var(--t1);font-weight:700}
+.checkout-summary .income{color:var(--green);font-family:'Syne',sans-serif;font-size:14px;font-weight:800}
+.checkout-meta{font-size:10px;color:var(--t3);text-align:center;margin-top:8px;line-height:1.7}
+
+/* ─────── AI 主厨浮动按钮 ─────── */
+.chef-btn{position:fixed;top:70px;right:14px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--amber),#ff7c38);color:#000;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;box-shadow:0 4px 14px rgba(245,166,35,0.5);z-index:85;border:none;transition:transform 0.15s}
+.chef-btn:hover{transform:scale(1.1)}
+.chef-btn:active{transform:scale(0.95)}
+
+/* ─────── Modal / 异常面板 ─────── */
+.modal-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:flex-end;animation:fadeIn 0.2s}
+.modal-mask.show{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{width:100%;background:var(--bg2);border-radius:20px 20px 0 0;padding:20px 16px 24px;max-height:80vh;overflow-y:auto;animation:slideUp 0.25s ease-out}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.modal-title{font-size:15px;font-weight:700}
+.modal-close{width:30px;height:30px;border-radius:50%;background:var(--bg3);border:none;font-size:14px;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* ─────── Chef 话术卡 ─────── */
+.chef-list{display:flex;flex-direction:column;gap:8px}
+.chef-card{padding:14px;background:var(--bg3);border-radius:12px;border:1px solid var(--line);cursor:pointer;transition:all 0.15s;font-family:inherit;text-align:left;color:var(--t2)}
+.chef-card:hover{background:var(--bg4);border-color:var(--amber)}
+.chef-card.priority{background:rgba(245,166,35,0.08);border-color:rgba(245,166,35,0.4)}
+.chef-card-h{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.chef-card-icon{font-size:20px}
+.chef-card-name{font-size:13px;font-weight:700;color:var(--t1)}
+.chef-card-desc{font-size:11px;color:var(--t3);line-height:1.4;margin-left:30px}
+
+/* ─────── Chef 回答区 ─────── */
+.chef-answer{display:none;background:var(--bg3);border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:12px;font-size:12px;color:var(--t2);line-height:1.7}
+.chef-answer.show{display:block}
+.chef-thinking{display:flex;gap:4px;align-items:center;font-size:11px;color:var(--amber)}
+.cd-dot{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:cdot 1.2s infinite}
+.cd-dot:nth-child(2){animation-delay:.2s}
+.cd-dot:nth-child(3){animation-delay:.4s}
+@keyframes cdot{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* ─────── 异常上报菜单 ─────── */
+.exception-list{display:flex;flex-direction:column;gap:8px}
+.exc-card{padding:14px;background:var(--bg3);border-radius:10px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1px solid var(--line);font-family:inherit;color:var(--t2);text-align:left;width:100%}
+.exc-card:hover{background:var(--bg4);border-color:var(--amber)}
+.exc-icon{font-size:28px;flex-shrink:0;line-height:1}
+.exc-text{flex:1}
+.exc-name{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:2px}
+.exc-desc{font-size:11px;color:var(--t3);line-height:1.4}
+
+/* ─────── 蝴蝶效应 alert (V3.1 · 4 类颜色) ─────── */
+.butterfly-alert{position:fixed;top:60px;left:14px;right:14px;border-radius:10px;padding:10px 12px;z-index:75;display:none;animation:slideDown 0.3s ease-out;color:#fff;border:1px solid;box-shadow:0 4px 16px rgba(0,0,0,0.4)}
+.butterfly-alert.show{display:block}
+@keyframes slideDown{from{transform:translateY(-30px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* A 类 · 压货失真 · 红色 (急) */
+.butterfly-alert.bf-a{background:rgba(239,68,68,0.95);border-color:var(--red);box-shadow:0 4px 16px rgba(239,68,68,0.3)}
+/* B 类 · 促销扰动 · 黄色 (警觉) */
+.butterfly-alert.bf-b{background:rgba(245,166,35,0.95);border-color:var(--amber);box-shadow:0 4px 16px rgba(245,166,35,0.3)}
+/* C 类 · 窜货失真 · 紫色 (调查) */
+.butterfly-alert.bf-c{background:rgba(167,139,250,0.95);border-color:var(--purple);box-shadow:0 4px 16px rgba(167,139,250,0.3)}
+/* D 类 · 战略扰动 · 蓝色 (信息) */
+.butterfly-alert.bf-d{background:rgba(96,165,250,0.95);border-color:var(--blue);box-shadow:0 4px 16px rgba(96,165,250,0.3)}
+
+.bf-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;font-weight:700}
+.bf-text{font-size:11px;line-height:1.5}
+.bf-action{margin-top:8px;padding:6px 10px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.3);border-radius:6px;font-size:11px;font-weight:600;color:#fff;cursor:pointer;display:inline-block;transition:all 0.15s}
+.bf-action:hover{background:rgba(0,0,0,0.4)}
+.bf-close{background:transparent;border:none;color:#fff;font-size:14px;cursor:pointer;padding:0;width:20px;height:20px}
+
+/* 演示切换 (开发态) */
+.bf-demo-switcher{position:fixed;bottom:14px;left:14px;z-index:80;display:flex;flex-direction:column;gap:6px;padding:8px 10px;background:rgba(0,0,0,0.88);border:1px solid var(--line2);border-radius:8px;font-size:9px;font-family:'Space Mono',monospace;box-shadow:0 4px 16px rgba(0,0,0,0.5);min-width:200px}
+.bf-demo-switcher.show{display:flex}
+.bf-demo-switcher.hide{display:none}
+.bf-demo-row{display:flex;gap:4px;flex-wrap:wrap}
+.bf-demo-btn{padding:3px 8px;background:var(--bg3);border:1px solid var(--line);border-radius:4px;color:var(--t2);cursor:pointer;font-family:inherit;font-size:9px;font-weight:700;flex:1}
+
+/* V3.3 · 蝴蝶 alert 停留时间滑块 */
+.bf-stay-row{display:flex;align-items:center;gap:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.1);margin-top:2px}
+.bf-stay-label{flex-shrink:0;color:var(--amber);font-weight:700;font-size:9px}
+.bf-stay-slider{flex:1;-webkit-appearance:none;appearance:none;height:4px;background:var(--line2);border-radius:2px;outline:none;cursor:pointer}
+.bf-stay-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;background:var(--amber);border-radius:50%;cursor:pointer;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4)}
+.bf-stay-slider::-moz-range-thumb{width:14px;height:14px;background:var(--amber);border-radius:50%;cursor:pointer;border:2px solid #fff}
+.bf-stay-value{flex-shrink:0;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--amber);min-width:32px;text-align:right}
+.bf-demo-btn:hover{background:var(--bg4)}
+.bf-demo-btn.active{background:var(--amber);color:#000;border-color:var(--amber)}
+
+/* ─────── 设置弹窗 ─────── */
+.settings-list{display:flex;flex-direction:column;gap:10px}
+.settings-item{padding:14px;background:var(--bg3);border-radius:10px;border:1px solid var(--line)}
+.settings-item-h{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;margin-bottom:4px}
+.settings-item-desc{font-size:11px;color:var(--t3)}
+.settings-toggle{display:flex;gap:6px}
+.toggle-btn{padding:6px 12px;border-radius:8px;background:var(--bg4);color:var(--t3);font-size:11px;border:1px solid var(--line);cursor:pointer;font-family:inherit}
+.toggle-btn.active{background:var(--amber);color:#000;border-color:var(--amber);font-weight:700}
+
+/* ─────── 教程屏 ─────── */
+.tutorial-screen{padding:20px 16px;flex:1;display:flex;flex-direction:column}
+.tut-icon{font-size:64px;text-align:center;margin:20px 0 12px}
+.tut-title{font-size:20px;font-weight:800;text-align:center;color:var(--amber);margin-bottom:8px}
+.tut-sub{font-size:13px;color:var(--t2);text-align:center;line-height:1.7;margin-bottom:20px}
+.tut-features{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.tut-feat{display:flex;gap:12px;padding:12px;background:var(--bg3);border-radius:10px;border:1px solid var(--line);align-items:flex-start}
+.tut-feat-icon{font-size:22px;flex-shrink:0}
+.tut-feat-text{flex:1;font-size:11px;color:var(--t2);line-height:1.6}
+.tut-feat-text strong{color:var(--amber);display:block;font-size:12px;margin-bottom:2px}
+
+/* 滚动条 */
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
+
+/* iPhone 底部安全区 */
+@supports (padding-bottom: env(safe-area-inset-bottom)){
+  .screen{padding-bottom:max(20px, env(safe-area-inset-bottom))}
+}
+
+/* 桌面端 */
+@media (min-width: 768px){
+  /* iPad: 内容居中 + 最大宽度 600px (比 420 大·更适合 iPad) */
+  body{max-width:600px;margin:0 auto}
+  .topbar{max-width:600px;margin:0 auto;left:50%;right:auto;transform:translateX(-50%);width:600px}
+  .main{max-width:600px;margin:0 auto;left:50%;right:auto;transform:translateX(-50%);width:600px}
+  .nav-bar{max-width:600px;margin:0 auto;left:50%;transform:translateX(-50%)}
+  .chef-btn{right:calc(50% - 282px);top:70px}
+  .butterfly-alert{max-width:572px;width:572px;left:50% !important;right:auto !important;transform:translateX(-50%);margin-left:0;margin-right:0}
+  .modal-mask{max-width:600px;margin:0 auto;left:50%;right:auto;transform:translateX(-50%);width:600px}
+}
+
+/* 主区充满 (顶栏 52px) */
+.main{top:52px !important}
+
+
+/* ─────── 陈列位置清单 (屏 2.5) ─────── */
+.position-list{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.position-card{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg3);border:1px solid var(--line);border-radius:10px}
+.position-card.must{background:var(--green-dim);border-color:rgba(16,185,129,0.3)}
+.position-card.optional{background:var(--bg3);border:1px dashed var(--line2)}
+.pos-icon{font-size:24px;flex-shrink:0;line-height:1}
+.pos-info{flex:1;min-width:0}
+.pos-name{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:3px}
+.pos-desc{font-size:10px;color:var(--t3);line-height:1.4}
+.pos-tag{font-size:10px;padding:3px 8px;border-radius:5px;font-family:'Space Mono',monospace;font-weight:700;flex-shrink:0}
+.pos-tag.must{background:var(--green);color:#000}
+.pos-tag.opt{background:var(--bg4);color:var(--t3);border:1px solid var(--line2)}
+.pos-howto{font-size:11px;color:var(--t2);background:var(--amber-dim);border:1px solid rgba(245,166,35,0.2);border-radius:8px;padding:10px 12px;margin:10px 0;line-height:1.6}
+.pos-howto strong{color:var(--amber)}
+
+/* ─────── 底部双按钮 (拍照 + 跳过) ─────── */
+.photo-actions{display:flex;gap:8px;margin-top:auto}
+.photo-actions .big-btn{margin:0}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ 顶栏 ═══════════ -->
+<div class="topbar">
+  <div class="tb-left">
+    <button class="tb-back-btn" id="tbBackBtn" onclick="navBack()">‹ 返回</button>
+    <div class="tb-info">
+      <div class="tb-store-row">
+        <span class="tb-store" id="tbStore">步步高西郊店</span>
+        <span class="tb-store-grade">B 级</span>
+      </div>
+      <div class="tb-time" id="tbTime">--:--</div>
+    </div>
+  </div>
+  <div class="tb-right">
+    <button class="role-switcher" id="roleSwitcher" onclick="toggleRoleDropdown(event)">
+      <span class="rs-emoji" id="rsEmoji">👤</span>
+      <span id="rsLabel">美顾·常驻</span>
+      <span class="rs-arrow">▼</span>
+    </button>
+    <div class="role-backdrop" id="roleBackdrop" onclick="closeRoleDropdown()"></div>
+    <div class="role-dropdown" id="roleDropdown" onclick="event.stopPropagation()">
+      <div class="role-group">一线执行 · 6 类</div>
+      <div class="role-item active" data-role="meigou_resident" onclick="setRole('meigou_resident')">
+        <span class="ri-num">①</span>
+        <span>美顾·常驻</span>
+        <span class="ri-tag ri-tag-xinhe">欣和</span>
+      </div>
+      <div class="role-item" data-role="meigou_visit" onclick="setRole('meigou_visit')">
+        <span class="ri-num">②</span>
+        <span>美顾·巡店</span>
+        <span class="ri-tag ri-tag-xinhe">欣和</span>
+      </div>
+      <div class="role-item" data-role="meigou_temp" onclick="setRole('meigou_temp')">
+        <span class="ri-num">③</span>
+        <span>美顾·临时</span>
+        <span class="ri-tag ri-tag-xinhe">欣和</span>
+      </div>
+      <div class="role-item" data-role="meigou_dist" onclick="setRole('meigou_dist')">
+        <span class="ri-num">④</span>
+        <span>美顾·导购</span>
+        <span class="ri-tag ri-tag-dist">经销商</span>
+      </div>
+      <div class="role-item" data-role="sr" onclick="setRole('sr')">
+        <span class="ri-num">⑤</span>
+        <span>SR · 零售业代</span>
+        <span class="ri-tag ri-tag-xinhe">欣和</span>
+      </div>
+      <div class="role-item" data-role="dsr" onclick="setRole('dsr')">
+        <span class="ri-num">⑥</span>
+        <span>DSR · 零售业代</span>
+        <span class="ri-tag ri-tag-dist">经销商</span>
+      </div>
+      <div class="role-divider"></div>
+      <div class="role-group">主管监督 · 4 类</div>
+      <div class="role-item" data-role="sup_meigou" onclick="setRole('sup_meigou')">
+        <span class="ri-num">⑦</span>
+        <span>美顾主管</span>
+        <span class="ri-tag ri-tag-sup">主管</span>
+      </div>
+      <div class="role-item" data-role="sup_sr" onclick="setRole('sup_sr')">
+        <span class="ri-num">⑧</span>
+        <span>SR 主管</span>
+        <span class="ri-tag ri-tag-sup">主管</span>
+      </div>
+      <div class="role-item" data-role="sup_dsr" onclick="setRole('sup_dsr')">
+        <span class="ri-num">⑨</span>
+        <span>DSR 主管</span>
+        <span class="ri-tag ri-tag-sup">主管</span>
+      </div>
+      <div class="role-item" data-role="dom" onclick="setRole('dom')">
+        <span class="ri-num">⑩</span>
+        <span>DOM 督导</span>
+        <span class="ri-tag ri-tag-sup">主管</span>
+      </div>
+      <div class="role-hint">切换角色后视图自适应 · 主管视图开发中</div>
+    </div>
+    <span class="tb-status" id="tbStatus">📶 ✓</span>
+    <button class="tb-icon-btn" onclick="openSettings()">⚙</button>
+  </div>
+</div>
+
+<!-- ═══════════ 蝴蝶效应 alert (V3.1 · 4 类) ═══════════ -->
+<div class="butterfly-alert bf-a" id="butterflyAlert">
+  <div class="bf-h">
+    <span id="bfTitle">⚠ 蝴蝶效应红色 · A 类压货</span>
+    <button class="bf-close" onclick="closeButterfly()">×</button>
+  </div>
+  <div class="bf-text" id="bfText">检测到 禾然有机 后仓 36 瓶 远超 2A · 建议先消化不补</div>
+  <button class="bf-action" id="bfAction" onclick="actButterfly()">→ 跳转推动销</button>
+</div>
+
+<!-- 蝴蝶 4 类演示切换器 (开发/演示用) -->
+<div class="bf-demo-switcher hide" id="bfDemoSwitcher">
+  <div class="bf-demo-row">
+    <button class="bf-demo-btn active" onclick="triggerBf('A',this)">🔴 A 压货</button>
+    <button class="bf-demo-btn" onclick="triggerBf('B',this)">🟡 B 促销扰</button>
+    <button class="bf-demo-btn" onclick="triggerBf('C',this)">🟣 C 窜货</button>
+    <button class="bf-demo-btn" onclick="triggerBf('D',this)">🔵 D 战略</button>
+  </div>
+  <div class="bf-stay-row">
+    <span class="bf-stay-label">⏱ 停留</span>
+    <input type="range" class="bf-stay-slider" id="bfStaySlider" min="3" max="30" value="8" oninput="updateBfStay(this.value)">
+    <span class="bf-stay-value" id="bfStayValue">8s</span>
+  </div>
+</div>
+
+<!-- ═══════════ 主区 ═══════════ -->
+<div class="main">
+
+  <!-- ─────── 屏 0 · 教程引导 (首次自动·之后跳过) ─────── -->
+  <div class="screen" id="s0">
+    <div class="tutorial-screen">
+      <div class="tut-icon">🍣</div>
+      <div class="tut-title">INF-XD v3.0</div>
+      <div class="tut-sub">现场盘点 · 极简模式<br>主货架 + 后仓 2 张照 · 30 秒搞定</div>
+      <div class="tut-features">
+        <div class="tut-feat">
+          <span class="tut-feat-icon">📷</span>
+          <div class="tut-feat-text">
+            <strong>线性流程</strong>
+            系统决定下一步·你只需要"下一步"
+          </div>
+        </div>
+        <div class="tut-feat">
+          <span class="tut-feat-icon">💬</span>
+          <div class="tut-feat-text">
+            <strong>AI 主厨救命</strong>
+            右上角 💬 浮动按钮·任何屏幕 1 秒可调救命话术
+          </div>
+        </div>
+        <div class="tut-feat">
+          <span class="tut-feat-icon">⚙</span>
+          <div class="tut-feat-text">
+            <strong>切高级模式</strong>
+            老美顾点右上角 ⚙ → 切回 SOP 1-5 完整模式
+          </div>
+        </div>
+      </div>
+      <button class="big-btn green" onclick="dismissTutorial()">✓ 我知道了 · 开始作业</button>
+    </div>
+  </div>
+
+  <!-- ─────── 屏 1 · GPS 验证 ─────── -->
+  <div class="screen" id="s1">
+    <div class="progress">
+      <span class="progress-step">T1 · 进店打卡</span>
+      <span>1 / 9</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:11%"></div></div>
+    
+    <!-- V4.0 · 一线视图 (默认显示) -->
+    <div class="frontline-view" id="frontlineView">
+      <div class="gps-circle">
+        <div class="gps-icon">📍</div>
+        <div class="gps-text">已到店</div>
+        <div class="gps-dist">距门店 5 米</div>
+      </div>
+      
+      <div class="big-title">GPS 已验证</div>
+      <div class="big-sub">步步高西郊店 · B 级 · 1 次/2 周</div>
+      <div class="big-meta" id="checkInTime">进店时间: 14:32:08</div>
+      
+      <button class="big-btn green" onclick="goScreen(2)">开始今日作业 →</button>
+    </div>
+    
+    <!-- V4.0 · 主管视图 (切换角色后显示) -->
+    <div class="supervisor-view" id="supervisorView">
+      
+      <!-- 主管头·当前主管信息 + 今日数据 -->
+      <div class="sup-hdr">
+        <div class="sup-hdr-top">
+          <div class="sup-hdr-name">
+            <span id="supTitle">⭐ DOM 督导 · 张三</span>
+            <span class="sup-hdr-tag" id="supTag">主管</span>
+          </div>
+          <span class="sup-hdr-time" id="supDate">2026-05-10 周一</span>
+        </div>
+        <div class="sup-hdr-stats">
+          <div class="sup-stat">
+            <div class="sup-stat-num" style="color:var(--green)">22</div>
+            <div class="sup-stat-lbl">已巡店</div>
+          </div>
+          <div class="sup-stat">
+            <div class="sup-stat-num" style="color:var(--t1)">25</div>
+            <div class="sup-stat-lbl">总店数</div>
+          </div>
+          <div class="sup-stat">
+            <div class="sup-stat-num" style="color:var(--amber)">88%</div>
+            <div class="sup-stat-lbl">完成率</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 卡 1 · 异常清单 (3 条) -->
+      <div class="sup-card">
+        <div class="sup-card-hdr">
+          <div class="sup-card-title">🚨 异常清单 <span class="sup-card-count">3 家待处理</span></div>
+          <span class="sup-card-action" onclick="supervisorAction('all-alerts')">看全部 →</span>
+        </div>
+        <div class="sup-row urgent">
+          <div class="sup-row-l">
+            <span class="sup-row-icon">🔴</span>
+            <span class="sup-row-text">家乐福古北店</span>
+            <span class="sup-row-meta">A 类压货 · 36 瓶</span>
+          </div>
+          <button class="sup-row-btn" onclick="supervisorAction('dispatch','urgent-1')">派工</button>
+        </div>
+        <div class="sup-row warn">
+          <div class="sup-row-l">
+            <span class="sup-row-icon">🟡</span>
+            <span class="sup-row-text">步步高西郊店</span>
+            <span class="sup-row-meta">B 类促销扰</span>
+          </div>
+          <button class="sup-row-btn" onclick="supervisorAction('dispatch','urgent-2')">派工</button>
+        </div>
+        <div class="sup-row warn">
+          <div class="sup-row-l">
+            <span class="sup-row-icon">🟣</span>
+            <span class="sup-row-text">联华联洋店</span>
+            <span class="sup-row-meta">C 类窜货</span>
+          </div>
+          <button class="sup-row-btn" onclick="supervisorAction('dispatch','urgent-3')">派工</button>
+        </div>
+      </div>
+      
+      <!-- 卡 2 · 今日下属盘点 -->
+      <div class="sup-card">
+        <div class="sup-card-hdr">
+          <div class="sup-card-title">👥 下属盘点 <span class="sup-card-count">22 / 25 已完成</span></div>
+          <span class="sup-card-action" onclick="supervisorAction('all-team')">看全部 →</span>
+        </div>
+        <div class="sup-row">
+          <div class="sup-row-l">
+            <span class="sup-row-icon">✓</span>
+            <span class="sup-row-text">陈晓琳·美顾常驻</span>
+            <span class="sup-row-meta">5 店 完成</span>
+          </div>
+          <span class="sup-row-meta" style="color:var(--green)">CB 4.92</span>
+        </div>
+        <div class="sup-row">
+          <div class="sup-row-l">
+            <span class="sup-row-icon">✓</span>
+            <span class="sup-row-text">王红·美顾巡店</span>
+            <span class="sup-row-meta">8 店 完成</span>
+          </div>
+          <span class="sup-row-meta" style="color:var(--green)">CB 4.78</span>
+        </div>
+        <div class="sup-row warn">
+          <div class="sup-row-l">
+            <span class="sup-row-icon">⏳</span>
+            <span class="sup-row-text">李军·美顾常驻</span>
+            <span class="sup-row-meta">3/5 进行中</span>
+          </div>
+          <span class="sup-row-meta">CB 4.65</span>
+        </div>
+      </div>
+      
+      <!-- 卡 3 · 排名 (TOP 5) -->
+      <div class="sup-card">
+        <div class="sup-card-hdr">
+          <div class="sup-card-title">🏆 本周排名 <span class="sup-card-count">CB 分</span></div>
+          <span class="sup-card-action" onclick="supervisorAction('all-rank')">看全部 →</span>
+        </div>
+        <div class="sup-rank-row">
+          <span class="sup-rank-num top">①</span>
+          <span class="sup-rank-name">陈晓琳</span>
+          <span class="sup-rank-cb">4.92</span>
+          <div class="sup-rank-bar"><div class="sup-rank-fill" style="width:98%"></div></div>
+        </div>
+        <div class="sup-rank-row">
+          <span class="sup-rank-num top">②</span>
+          <span class="sup-rank-name">王红</span>
+          <span class="sup-rank-cb">4.78</span>
+          <div class="sup-rank-bar"><div class="sup-rank-fill" style="width:95%"></div></div>
+        </div>
+        <div class="sup-rank-row">
+          <span class="sup-rank-num">③</span>
+          <span class="sup-rank-name">张敏</span>
+          <span class="sup-rank-cb">4.71</span>
+          <div class="sup-rank-bar"><div class="sup-rank-fill" style="width:94%"></div></div>
+        </div>
+        <div class="sup-rank-row">
+          <span class="sup-rank-num">④</span>
+          <span class="sup-rank-name">李军</span>
+          <span class="sup-rank-cb">4.65</span>
+          <div class="sup-rank-bar"><div class="sup-rank-fill" style="width:92%"></div></div>
+        </div>
+        <div class="sup-rank-row">
+          <span class="sup-rank-num">⑤</span>
+          <span class="sup-rank-name">刘强</span>
+          <span class="sup-rank-cb">4.58</span>
+          <div class="sup-rank-bar"><div class="sup-rank-fill" style="width:91%"></div></div>
+        </div>
+      </div>
+      
+      <!-- 卡 4 · 快速操作 -->
+      <div class="sup-card">
+        <div class="sup-card-hdr">
+          <div class="sup-card-title">⚡ 快速操作</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <button class="big-btn dim" onclick="supervisorAction('report')" style="margin:0;padding:10px;font-size:11px">📊 周报</button>
+          <button class="big-btn dim" onclick="supervisorAction('plan')" style="margin:0;padding:10px;font-size:11px">📅 排班</button>
+          <button class="big-btn dim" onclick="supervisorAction('train')" style="margin:0;padding:10px;font-size:11px">🎓 培训</button>
+          <button class="big-btn dim" onclick="supervisorAction('msg')" style="margin:0;padding:10px;font-size:11px">💬 群发</button>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <!-- V4.0 · 主管操作 toast (Mock) -->
+  <div class="sup-toast" id="supToast">✓ 已派工给 陈晓琳</div>
+  
+  <!-- V4.1 · 派工 Modal -->
+  <div class="modal-mask" id="dispatchModal" onclick="if(event.target===this)closeDispatch()">
+    <div class="modal dispatch-modal">
+      <div class="modal-h">
+        <span class="modal-title">📋 派工 · <span id="dispatchTarget">家乐福古北店</span></span>
+        <button class="modal-close" onclick="closeDispatch()">×</button>
+      </div>
+      
+      <!-- 异常上下文 -->
+      <div class="dispatch-context" id="dispatchContext">
+        <div class="dispatch-context-l1">🔴 <span id="dispatchAlertType">A 类压货</span> · <span id="dispatchAlertDetail">36 瓶禾然有机·远超 2A</span></div>
+        <div class="dispatch-context-l2">建议: 先消化不补·尽快推动销活动</div>
+      </div>
+      
+      <!-- 派给谁 -->
+      <div class="dispatch-section">
+        <div class="dispatch-section-label">👤 派给谁 <span class="dispatch-section-required">*</span></div>
+        <div class="dispatch-options" id="dispatchAssigneeList">
+          <!-- V4.2 · 动态填充·根据当前主管角色筛选 -->
+        </div>
+      </div>
+      
+      <!-- 何时执行 -->
+      <div class="dispatch-section">
+        <div class="dispatch-section-label">⏰ 何时执行 <span class="dispatch-section-required">*</span></div>
+        <div class="dispatch-time-grid">
+          <div class="dispatch-time selected" onclick="selectDispatchTime(this, 'now')">
+            立即
+            <div class="dispatch-time-time">现在</div>
+          </div>
+          <div class="dispatch-time" onclick="selectDispatchTime(this, 'evening')">
+            今晚
+            <div class="dispatch-time-time">18:00 后</div>
+          </div>
+          <div class="dispatch-time" onclick="selectDispatchTime(this, 'tomorrow')">
+            明早
+            <div class="dispatch-time-time">9:00</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 备注 -->
+      <div class="dispatch-section">
+        <div class="dispatch-section-label">📝 备注 (可选)</div>
+        <textarea class="dispatch-note" id="dispatchNote" placeholder="例: 先看仓库实际数·确认是真压货·别看错"></textarea>
+      </div>
+      
+      <!-- 确认 / 取消 -->
+      <div class="dispatch-confirm-row">
+        <button class="dispatch-cancel-btn" onclick="closeDispatch()">取消</button>
+        <button class="dispatch-confirm-btn" id="dispatchConfirmBtn" onclick="confirmDispatch()">✓ 确认派工</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- V4.2 · 派工历史浮动按钮 (主管 only) -->
+  <button class="dispatch-history-fab" id="dispatchHistoryFab" onclick="openDispatchHistory()">
+    📋
+    <span class="dispatch-history-badge" id="dispatchHistoryBadge">0</span>
+  </button>
+  
+  <!-- V4.2 · 派工历史 Modal -->
+  <div class="modal-mask" id="dispatchHistoryModal" onclick="if(event.target===this)closeDispatchHistory()">
+    <div class="modal">
+      <div class="modal-h">
+        <span class="modal-title">📋 派工历史</span>
+        <button class="modal-close" onclick="closeDispatchHistory()">×</button>
+      </div>
+      <div class="history-list" id="dispatchHistoryList">
+        <!-- 动态填充 -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- V4.2 · B2 异常完整列表 Modal -->
+  <div class="modal-mask full-list-modal" id="alertsFullModal" onclick="if(event.target===this)closeAlertsFull()">
+    <div class="modal">
+      <div class="modal-h">
+        <span class="modal-title">🚨 异常清单 · 全部</span>
+        <button class="modal-close" onclick="closeAlertsFull()">×</button>
+      </div>
+      <div class="list-summary">
+        <span class="list-summary-item">🔴 A 压货 <span class="list-summary-num" id="cntA">0</span></span>
+        <span class="list-summary-item">🟡 B 促销扰 <span class="list-summary-num" id="cntB">0</span></span>
+        <span class="list-summary-item">🟣 C 窜货 <span class="list-summary-num" id="cntC">0</span></span>
+        <span class="list-summary-item">🔵 D 战略 <span class="list-summary-num" id="cntD">0</span></span>
+      </div>
+      <div class="list-section-tabs">
+        <button class="list-tab active" onclick="filterAlerts('all', this)">全部</button>
+        <button class="list-tab" onclick="filterAlerts('A', this)">🔴 A 压货</button>
+        <button class="list-tab" onclick="filterAlerts('B', this)">🟡 B 促销</button>
+        <button class="list-tab" onclick="filterAlerts('C', this)">🟣 C 窜货</button>
+        <button class="list-tab" onclick="filterAlerts('D', this)">🔵 D 战略</button>
+      </div>
+      <div class="full-list" id="alertsFullList"></div>
+    </div>
+  </div>
+  
+  <!-- V4.2 · B3 下属完整列表 Modal -->
+  <div class="modal-mask full-list-modal" id="teamFullModal" onclick="if(event.target===this)closeTeamFull()">
+    <div class="modal">
+      <div class="modal-h">
+        <span class="modal-title">👥 下属盘点 · 全部</span>
+        <button class="modal-close" onclick="closeTeamFull()">×</button>
+      </div>
+      <div class="list-summary">
+        <span class="list-summary-item">✓ 已完成 <span class="list-summary-num" id="cntDone">0</span></span>
+        <span class="list-summary-item">⏳ 进行中 <span class="list-summary-num" id="cntProgress">0</span></span>
+        <span class="list-summary-item">⏸ 未开始 <span class="list-summary-num" id="cntPending">0</span></span>
+      </div>
+      <div class="list-section-tabs">
+        <button class="list-tab active" onclick="filterTeam('all', this)">全部</button>
+        <button class="list-tab" onclick="filterTeam('done', this)">✓ 已完成</button>
+        <button class="list-tab" onclick="filterTeam('progress', this)">⏳ 进行中</button>
+        <button class="list-tab" onclick="filterTeam('pending', this)">⏸ 未开始</button>
+      </div>
+      <div class="full-list" id="teamFullList"></div>
+    </div>
+  </div>
+  
+  <!-- V4.2 · B4 排名完整列表 Modal -->
+  <div class="modal-mask full-list-modal" id="rankFullModal" onclick="if(event.target===this)closeRankFull()">
+    <div class="modal">
+      <div class="modal-h">
+        <span class="modal-title">🏆 全员排名 · CB 分</span>
+        <button class="modal-close" onclick="closeRankFull()">×</button>
+      </div>
+      <div class="list-section-tabs">
+        <button class="list-tab active" onclick="filterRank('week', this)">本周</button>
+        <button class="list-tab" onclick="filterRank('month', this)">本月</button>
+        <button class="list-tab" onclick="filterRank('quarter', this)">本季</button>
+      </div>
+      <div class="full-list" id="rankFullList"></div>
+    </div>
+  </div>
+
+  <!-- ─────── 屏 2 · 任务总览 (V3.1 · 5 卡可点·不自动跳) ─────── -->
+  <div class="screen" id="s2">
+    <div class="progress">
+      <span class="progress-step">T1 · 任务总览</span>
+      <span>2 / 9</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:22%"></div></div>
+    
+    <div class="big-title" style="font-size:14px;margin-top:6px">本店今日 5 大指标</div>
+    <div class="big-sub">点击进入任务 · 不自动跳 · 你来主导</div>
+    
+    <!-- 任务进度 -->
+    <div class="task-stats">
+      <div class="task-stat-pill">已完成 <em id="taskDone">0</em> / 5</div>
+      <div class="task-stat-pill">预估总奖金 <em>¥X</em></div>
+    </div>
+    
+    <!-- SKU 战略价值 (V3.1) -->
+    <div class="sku-strategy">
+      <span class="sku-strategy-icon">⭐</span>
+      <div>本店 SKU 组合: <strong>1 Flagship + 2 Core + 2 Volume</strong><br><em>战略权重 ★★★ 高</em> · 重点店</div>
+    </div>
+    
+    <!-- 5 大任务·全部可点 -->
+    <div class="task-list">
+      <div class="task-row" data-task="1" onclick="enterTask(1)">
+        <span class="task-num">①</span>
+        <span class="task-name">社群+客情</span>
+        <span class="task-meta amber">+¥5/早安</span>
+      </div>
+      <div class="task-row" data-task="2" onclick="enterTask(2)">
+        <span class="task-num">②</span>
+        <span class="task-name">场景经营·试吃</span>
+        <span class="task-meta amber">+¥30/位</span>
+      </div>
+      <div class="task-row task-main" data-task="3" onclick="enterTask(3)">
+        <span class="task-num">③</span>
+        <span class="task-name">陈列+盘点 ★ 主任务</span>
+        <span class="task-meta amber">销售+战略奖金</span>
+      </div>
+      <div class="task-row" data-task="4" onclick="enterTask(4)">
+        <span class="task-num">④</span>
+        <span class="task-name">库存+下单 (含智能补货)</span>
+        <span class="task-meta">心跳水位</span>
+      </div>
+      <div class="task-row" data-task="5" onclick="enterTask(5)">
+        <span class="task-num">⑤</span>
+        <span class="task-name">数据收集</span>
+        <span class="task-meta">自动·后台</span>
+      </div>
+    </div>
+    
+    <div class="auto-skip">点击任意任务进入 · 完成 5 项后结算</div>
+    <button class="big-btn green" onclick="goScreen(25)">▶ 开始主任务 (陈列+盘点)</button>
+  </div>
+
+  
+  <!-- ─────── 屏 2.5 · 陈列位置清单 (新) ─────── -->
+  <div class="screen" id="s25">
+    <div class="progress">
+      <span class="progress-step">T1 · 陈列清单</span>
+      <span>·</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:25%"></div></div>
+    
+    <div class="big-title" style="font-size:15px">本店陈列位置 · 共 2 必拍</div>
+    <div class="big-sub">系统已知本店陈列布局·跟着引导拍即可</div>
+    
+    <div class="position-list">
+      <div class="position-card must">
+        <div class="pos-icon">📷</div>
+        <div class="pos-info">
+          <div class="pos-name">① 主货架 · 全景</div>
+          <div class="pos-desc">距 1.5 米 · 横向涵盖所有排面</div>
+        </div>
+        <div class="pos-tag must">必拍</div>
+      </div>
+      
+      <div class="position-card must">
+        <div class="pos-icon">📦</div>
+        <div class="pos-info">
+          <div class="pos-name">② 后仓 · 库存</div>
+          <div class="pos-desc">含批次 · 箱数 · 生产日期</div>
+        </div>
+        <div class="pos-tag must">必拍</div>
+      </div>
+      
+      <div class="position-card optional">
+        <div class="pos-icon">📋</div>
+        <div class="pos-info">
+          <div class="pos-name">端架 / 堆头 / 收银台</div>
+          <div class="pos-desc">长按主屏拍照按钮 → 上报·非必拍</div>
+        </div>
+        <div class="pos-tag opt">选拍</div>
+      </div>
+    </div>
+    
+    <div class="pos-howto">
+      💡 <strong>系统会按顺序引导</strong>·美顾按提示拍·INF-VL 自动识别 SKU+数量+生产日期
+    </div>
+    
+    <button class="big-btn green" onclick="goScreen(3)">开始拍摄 · SOP 1 主货架 →</button>
+  </div>
+
+  <!-- ─────── 屏 3 · 拍主货架 ─────── -->
+  <div class="screen" id="s3">
+    <div class="progress">
+      <span class="progress-step">T2 · 极简模式</span>
+      <span>3 / 9</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:33%"></div></div>
+    
+    <div class="big-title" style="font-size:15px">SOP 1 · 拍主货架</div>
+    <div class="big-sub">请对准 <strong style="color:var(--amber)">主货架</strong> · 拍完 INF-VL 识别 SKU + 数量 + 生产日期</div>
+    
+    <div id="photoArea1" class="photo-area"
+         ontouchstart="photoStart(event, 1)" 
+         ontouchend="photoEnd(event, 1)" 
+         ontouchcancel="photoEnd(event, 1)"
+         onmousedown="photoStart(event, 1)" 
+         onmouseup="photoEnd(event, 1)"
+         onmouseleave="photoEnd(event, 1)">
+      <div class="photo-icon">📷</div>
+      <div class="photo-hint">点击 · 拍 [主货架]</div>
+      <div class="photo-tip">距离 1.5 米 · 横向涵盖所有排面 · 包含左右各一竞品位置<br><br><em style="color:var(--amber);font-style:normal">💡 长按 = 上报异常 (端架/堆头/货损/竞品)</em></div>
+    </div>
+    
+    <!-- 底部双按钮 (主拍 + 跳过) -->
+    <div class="photo-actions">
+      <button class="big-btn amber" onclick="takePhoto(1)" style="margin:0;flex:2">📷 拍主货架</button>
+      <button class="big-btn dim" onclick="skipPhoto(1)" style="margin:0;flex:1;font-size:12px">→ 跳过</button>
+    </div>
+  </div>
+
+  <!-- ─────── 屏 4 · INF-VL 识别 + 生产日期 3 阶段 (V3.2) ─────── -->
+  <div class="screen" id="s4">
+    <div class="progress">
+      <span class="progress-step amber" id="vlProgressStep">INF-VL 识别 + 生产日期</span>
+      <span>4 / 9</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:44%"></div></div>
+    
+    <!-- 阶段切换器 (DS 演示用) -->
+    <div class="stage-switcher">
+      <span class="stage-switcher-label">📅 识别阶段</span>
+      <button class="stage-btn active" id="stageBtn1" onclick="switchStage(1)">阶段1·手填</button>
+      <button class="stage-btn" id="stageBtn2" onclick="switchStage(2)">阶段2·AI辅助</button>
+      <button class="stage-btn" id="stageBtn3" onclick="switchStage(3)">阶段3·AI主导</button>
+    </div>
+    
+    <!-- 阶段说明 -->
+    <div class="stage-info s1" id="stageInfo">
+      <span class="stage-info-icon">⚠</span>
+      <div>
+        <div class="stage-info-title" id="stageInfoTitle">当前阶段 1 · INF-VL 训练中</div>
+        <div class="stage-info-desc" id="stageInfoDesc">SKU + 数量已成熟·生产日期请手填 + 拍照存档 (后续 AI 自动识别)</div>
+      </div>
+    </div>
+    
+    <!-- 拍照预览 -->
+    <div class="photo-area taken" style="cursor:default;border:1px solid var(--green);min-height:90px;background:#222">
+      <div style="background:rgba(0,0,0,0.6);padding:6px 12px;border-radius:6px">
+        <div class="photo-icon" style="font-size:18px">✓</div>
+        <div class="photo-hint" style="font-size:11px;margin-top:2px">主货架已拍·照片存档训练库</div>
+      </div>
+    </div>
+    
+    <!-- INF-VL 识别结果 (SKU + 数量·已成熟) -->
+    <div class="recognition" id="vlRecognition" style="margin:8px 0">
+      <div class="recog-h">
+        <span class="recog-name">✓ INF-VL 已识别 (SKU + 数量)</span>
+        <span class="recog-pct" id="vlPercent">100%</span>
+      </div>
+      <div class="recog-row"><span>SKU 识别</span><em id="vlSku" style="color:var(--green)">5 SKU · 87.3% 精度</em></div>
+      <div class="recog-row"><span>数量盘点</span><em id="vlCount" style="color:var(--green)">72 瓶 · 95.7% 精度</em></div>
+    </div>
+    
+    <!-- 阶段 1 · 手填表单 -->
+    <div class="manual-date-form" id="stage1Form">
+      <div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+        📝 请手填生产日期 <span class="photo-archive-tag">📸 同时存档训练 AI</span>
+      </div>
+      
+      <div class="date-sku-row">
+        <div class="date-sku-name">极鲜 500ml <span class="sku-tag">24 瓶</span></div>
+        <div class="date-input-row">
+          <input class="date-input" type="number" placeholder="YYYY" min="2024" max="2030" id="d1y">
+          <span class="date-sep">·</span>
+          <input class="date-input" type="number" placeholder="MM" min="1" max="12" id="d1m">
+          <span class="date-sep">·</span>
+          <input class="date-input" type="number" placeholder="DD" min="1" max="31" id="d1d">
+        </div>
+      </div>
+      
+      <div class="date-sku-row">
+        <div class="date-sku-name">极鲜 280ml <span class="sku-tag">16 瓶</span></div>
+        <div class="date-input-row">
+          <input class="date-input" type="number" placeholder="YYYY" min="2024" max="2030" id="d2y">
+          <span class="date-sep">·</span>
+          <input class="date-input" type="number" placeholder="MM" min="1" max="12" id="d2m">
+          <span class="date-sep">·</span>
+          <input class="date-input" type="number" placeholder="DD" min="1" max="31" id="d2d">
+        </div>
+      </div>
+      
+      <div class="date-sku-row">
+        <div class="date-sku-name">禾然有机 <span class="sku-tag">12 瓶</span></div>
+        <div class="date-input-row">
+          <input class="date-input" type="number" placeholder="YYYY" min="2024" max="2030" id="d3y">
+          <span class="date-sep">·</span>
+          <input class="date-input" type="number" placeholder="MM" min="1" max="12" id="d3m">
+          <span class="date-sep">·</span>
+          <input class="date-input" type="number" placeholder="DD" min="1" max="31" id="d3d">
+        </div>
+      </div>
+    </div>
+    
+    <!-- 阶段 2 · AI 候选 + 美顾确认 -->
+    <div class="manual-date-form" id="stage2Form" style="display:none">
+      <div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:8px">
+        🤖 AI 识别候选 · 请确认或修改
+      </div>
+      
+      <div class="ai-candidate-row">
+        <div class="ai-candidate-name">极鲜 500ml · 24 瓶</div>
+        <div class="ai-candidate-suggest">
+          AI: 2026.03.15 <span class="ai-confidence high">置信 92%</span>
+        </div>
+        <div class="ai-actions">
+          <button class="ai-action-btn confirm" onclick="confirmAI(1)">✓ 确认</button>
+          <button class="ai-action-btn modify" onclick="modifyAI(1)">✏ 修改</button>
+        </div>
+      </div>
+      
+      <div class="ai-candidate-row">
+        <div class="ai-candidate-name">极鲜 280ml · 16 瓶</div>
+        <div class="ai-candidate-suggest">
+          AI: 2026.04.20 <span class="ai-confidence high">置信 88%</span>
+        </div>
+        <div class="ai-actions">
+          <button class="ai-action-btn confirm" onclick="confirmAI(2)">✓ 确认</button>
+          <button class="ai-action-btn modify" onclick="modifyAI(2)">✏ 修改</button>
+        </div>
+      </div>
+      
+      <div class="ai-candidate-row">
+        <div class="ai-candidate-name">禾然有机 · 12 瓶</div>
+        <div class="ai-candidate-suggest">
+          AI: 2026.0?.20 <span class="ai-confidence low">置信 68%</span>
+        </div>
+        <div class="ai-actions">
+          <button class="ai-action-btn confirm" onclick="confirmAI(3)">✓ 确认</button>
+          <button class="ai-action-btn modify" onclick="modifyAI(3)">✏ 修改</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 阶段 3 · AI 主导 -->
+    <div class="manual-date-form" id="stage3Form" style="display:none">
+      <div class="s3-summary">
+        🎯 AI 已自动识别 5 个 SKU · 平均置信 96%
+      </div>
+      
+      <div class="s3-auto-row">
+        <span style="color:var(--green);font-size:11px">✓ 极鲜 500ml · 2026.03.15 (96%)</span>
+        <span style="font-size:9px;color:var(--t3)">自动接受</span>
+      </div>
+      <div class="s3-auto-row">
+        <span style="color:var(--green);font-size:11px">✓ 极鲜 280ml · 2026.04.20 (94%)</span>
+        <span style="font-size:9px;color:var(--t3)">自动接受</span>
+      </div>
+      
+      <div class="s3-low-confidence-row">
+        <div style="font-size:11px;color:var(--amber);font-weight:700;margin-bottom:4px">
+          ⚠ 1 项低置信·请人工确认
+        </div>
+        <div class="ai-candidate-name">禾然有机 · 12 瓶</div>
+        <div class="ai-candidate-suggest">
+          AI: 2026.03.20 <span class="ai-confidence low">置信 74%</span>
+        </div>
+        <div class="ai-actions">
+          <button class="ai-action-btn confirm" onclick="confirmAI(3)">✓ 确认 03.20</button>
+          <button class="ai-action-btn modify" onclick="modifyAI(3)">✏ 修改</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="photo-actions" style="margin-top:8px">
+      <button class="big-btn green" id="vlNextBtn" onclick="completeDateInput()" style="margin:0;flex:2">✓ 完成 · 拍后仓 →</button>
+      <button class="big-btn dim" onclick="skipRecognition()" style="margin:0;flex:1;font-size:12px">→ 跳过</button>
+    </div>
+  </div>
+
+  <!-- ─────── 屏 5 · 拍后仓 + 手填批次 (V3.4 · 完整 #29) ─────── -->
+  <div class="screen" id="s5">
+    <div class="progress">
+      <span class="progress-step">T2 · 极简模式</span>
+      <span>5 / 9</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:55%"></div></div>
+    
+    <div class="big-title" style="font-size:14px">SOP 2 · 拍后仓 + 填批次</div>
+    <div class="big-sub" style="font-size:11px">拍照存档训练 AI · 然后手填批次/生产日期</div>
+    
+    <!-- 阶段说明 (与屏 4 一致) -->
+    <div class="stage-info s1" style="margin-bottom:10px">
+      <span class="stage-info-icon">⚠</span>
+      <div>
+        <div class="stage-info-title" id="stage5InfoTitle">当前阶段 1 · 后仓批次手填</div>
+        <div class="stage-info-desc" id="stage5InfoDesc">拍照 + 手填批次 · 一个 SKU 可能多批次堆叠 (后续 AI 自动)</div>
+      </div>
+    </div>
+    
+    <!-- 拍照区 (缩小到 100px) -->
+    <div class="photo-area" 
+         ontouchstart="photoStart(event, 2)" 
+         ontouchend="photoEnd(event, 2)" 
+         ontouchcancel="photoEnd(event, 2)"
+         onmousedown="photoStart(event, 2)" 
+         onmouseup="photoEnd(event, 2)"
+         onmouseleave="photoEnd(event, 2)"
+         style="min-height:100px;max-height:120px;flex:none;margin:0 0 8px 0;padding:8px;gap:4px">
+      <div class="photo-icon" style="font-size:22px">📦</div>
+      <div class="photo-hint" style="font-size:12px;font-weight:600">点击 · 拍 [后仓]</div>
+      <div class="photo-tip" style="font-size:9px;line-height:1.4">📡 主货架 5 SKU ✓ · 📸 拍照存档训练 · 💡 长按异常</div>
+    </div>
+    
+    <!-- 后仓批次手填表单 (阶段 1 · 默认显示) -->
+    <div class="manual-date-form" id="warehouseStage1">
+      <div style="font-size:11px;font-weight:700;color:var(--t1);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+        📦 后仓批次手填 <span class="photo-archive-tag">📸 同时存档</span>
+      </div>
+      
+      <div class="date-sku-row">
+        <div class="date-sku-name">极鲜 500ml <span class="sku-tag">后仓 36 瓶</span></div>
+        <div class="date-input-row">
+          <input class="date-input" type="number" placeholder="数量" min="1" max="999" id="w1q" style="flex:0.7">
+          <span class="date-sep">·</span>
+          <input class="date-input" type="number" placeholder="YYYY" min="2024" max="2030" id="w1y">
+          <span class="date-sep">/</span>
+          <input class="date-input" type="number" placeholder="MM" min="1" max="12" id="w1m">
+          <span class="date-sep">/</span>
+          <input class="date-input" type="number" placeholder="DD" min="1" max="31" id="w1d">
+        </div>
+      </div>
+      
+      <div class="date-sku-row">
+        <div class="date-sku-name">极鲜 280ml <span class="sku-tag">后仓 24 瓶</span></div>
+        <div class="date-input-row">
+          <input class="date-input" type="number" placeholder="数量" min="1" max="999" id="w2q" style="flex:0.7">
+          <span class="date-sep">·</span>
+          <input class="date-input" type="number" placeholder="YYYY" min="2024" max="2030" id="w2y">
+          <span class="date-sep">/</span>
+          <input class="date-input" type="number" placeholder="MM" min="1" max="12" id="w2m">
+          <span class="date-sep">/</span>
+          <input class="date-input" type="number" placeholder="DD" min="1" max="31" id="w2d">
+        </div>
+      </div>
+      
+      <div class="date-sku-row">
+        <div class="date-sku-name">禾然有机 <span class="sku-tag">后仓 36 瓶</span></div>
+        <div class="date-input-row">
+          <input class="date-input" type="number" placeholder="数量" min="1" max="999" id="w3q" style="flex:0.7">
+          <span class="date-sep">·</span>
+          <input class="date-input" type="number" placeholder="YYYY" min="2024" max="2030" id="w3y">
+          <span class="date-sep">/</span>
+          <input class="date-input" type="number" placeholder="MM" min="1" max="12" id="w3m">
+          <span class="date-sep">/</span>
+          <input class="date-input" type="number" placeholder="DD" min="1" max="31" id="w3d">
+        </div>
+      </div>
+      
+      <div style="font-size:9px;color:var(--t3);margin-top:4px;padding:0 2px">💡 一个 SKU 多批次时·填最早过期那批 (其他批次后续完善)</div>
+    </div>
+    
+    <!-- 底部双按钮 -->
+    <div class="photo-actions" style="margin-top:8px">
+      <button class="big-btn green" onclick="completeWarehouseInput()" style="margin:0;flex:2">✓ 完成 · 看反馈 →</button>
+      <button class="big-btn dim" onclick="skipPhoto(2)" style="margin:0;flex:1;font-size:12px">→ 跳过</button>
+    </div>
+  </div>
+
+  <!-- ─────── 屏 6 · 反馈卡 ─────── -->
+  <div class="screen" id="s6">
+    <div class="progress">
+      <span class="progress-step">T2 · 实时反馈</span>
+      <span>6 / 9</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:66%"></div></div>
+    
+    <div class="big-title" style="font-size:15px">实时反馈 · 4 卡 + 3 差异</div>
+    
+    <div class="fb-grid">
+      <div class="fb-card ok">
+        <div class="fb-num green">72</div>
+        <div class="fb-lbl">货架量·健康<br>≥目标 60</div>
+      </div>
+      <div class="fb-card warn">
+        <div class="fb-num amber">1.66a</div>
+        <div class="fb-lbl">心跳水位<br>2A 预警</div>
+      </div>
+      <div class="fb-card ok">
+        <div class="fb-num green">36</div>
+        <div class="fb-lbl">仓库量<br>下次 OK</div>
+      </div>
+      <div class="fb-card ok">
+        <div class="fb-num green">320</div>
+        <div class="fb-lbl">新鲜度·天<br>非临期</div>
+      </div>
+    </div>
+    
+    <div class="diff-h">差异 (vs 上次拜访):</div>
+    <div class="diff-row"><div class="diff-circle diff-1">①</div><div>极鲜500 · <em style="color:var(--green);font-style:normal">销售 -8 瓶</em> · 正常</div></div>
+    <div class="diff-row"><div class="diff-circle diff-2">②</div><div>禾然 · <em style="color:var(--amber);font-style:normal">修正 +2 瓶</em> · 上次少算</div></div>
+    <div class="diff-row"><div class="diff-circle diff-3">③</div><div>味达美 · <em style="color:var(--red);font-style:normal">损失 -1 瓶</em> · 待查</div></div>
+    
+    <button class="big-btn green" onclick="goScreen(7)">继续 · 智能补货建议</button>
+  </div>
+
+  <!-- ─────── 屏 7 · 📊 智能补货建议 (V3.1) ─────── -->
+  <div class="screen" id="s7">
+    <div class="progress">
+      <span class="progress-step">T2 · 智能补货建议</span>
+      <span>7 / 9</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:77%"></div></div>
+    
+    <div class="big-title" style="font-size:15px">📊 智能补货建议</div>
+    <div class="big-sub">三段式 · 有现状 / 该补 / 该动销 · 给老板看 ↓</div>
+    
+    <div class="smart-reorder">
+      <!-- 视图切换 toggle -->
+      <div class="view-toggle">
+        <button class="vt-btn active" id="vtFrontline" onclick="switchView('frontline')">
+          👤 一线视图
+        </button>
+        <button class="vt-btn" id="vtBoss" onclick="switchView('boss')">
+          👔 给老板看
+        </button>
+      </div>
+      
+      <!-- 段 1 · 📊 现状 -->
+      <div class="sr-seg s-status">
+        <div class="sr-seg-h">📊 现状 · 3 个 SKU</div>
+        <div class="sr-sku">
+          <span class="sku-badge b-flagship" title="Flagship 旗舰">🏆</span>
+          <span class="sku-badge b-mature" title="Maturity 成熟">🌟</span>
+          <span class="sr-sku-name">极鲜 500ml</span>
+          <span class="sr-sku-info warn">12 瓶 · 还卖 1.2 天 ⚠</span>
+        </div>
+        <div class="sr-sku">
+          <span class="sku-badge b-niche" title="Niche 利基">🎯</span>
+          <span class="sku-badge b-decline" title="Decline 衰退">📉</span>
+          <span class="sr-sku-name">禾然有机</span>
+          <span class="sr-sku-info bad">36 瓶 · 已超 1.5a max ⚠⚠</span>
+        </div>
+        <div class="sr-sku">
+          <span class="sku-badge b-volume" title="Volume 跑量">📦</span>
+          <span class="sku-badge b-mature" title="Maturity 成熟">🌟</span>
+          <span class="sr-sku-name">味达美</span>
+          <span class="sr-sku-info">8 瓶 · 还卖 4 天</span>
+        </div>
+        <div class="dynamic-w">动态 W: 春节 -7d · <em>×1.5</em> 节日系数</div>
+      </div>
+      
+      <!-- 段 2 · 🟢 该补 -->
+      <div class="sr-seg s-add">
+        <div class="sr-seg-h">🟢 该补 · 2 个 SKU</div>
+        <div class="sr-sku">
+          <span class="sku-badge b-flagship">🏆</span>
+          <span class="sr-sku-name">极鲜 500ml</span>
+          <span class="sr-sku-info" style="flex:1"></span>
+          <span class="sr-sku-action">补 80 瓶 ¥8,000</span>
+        </div>
+        <div class="sr-reason">理由: Flagship 1.5a · LT 3d + T 14d · ×1.5 节日</div>
+        <div class="sr-sku">
+          <span class="sku-badge b-volume">📦</span>
+          <span class="sr-sku-name">味达美</span>
+          <span class="sr-sku-info" style="flex:1"></span>
+          <span class="sr-sku-action">补 12 瓶 ¥1,080</span>
+        </div>
+        <div class="sr-reason">理由: Volume 1.0a · 标准节奏</div>
+        <div class="sr-total">总: 92 瓶 · ¥9,080</div>
+      </div>
+      
+      <!-- 段 3 · 🟠 该动销 -->
+      <div class="sr-seg s-promo">
+        <div class="sr-seg-h">🟠 该动销 (不补反销) · 1 个 SKU</div>
+        <div class="sr-sku">
+          <span class="sku-badge b-niche">🎯</span>
+          <span class="sku-badge b-decline">📉</span>
+          <span class="sr-sku-name">禾然有机</span>
+          <span class="sr-sku-info bad">36 瓶 (Niche+Decline)</span>
+        </div>
+        <div class="sr-reason">⚠ 不补反动销 · 选 1 方案:</div>
+        <div class="promo-opts">
+          <div class="promo-opt" onclick="selectPromo(this,'A')">
+            <span><span class="promo-opt-name">A · 端架试吃</span> +50-80% r</span>
+            <span class="promo-opt-cost">¥800</span>
+          </div>
+          <div class="promo-opt" onclick="selectPromo(this,'B')">
+            <span><span class="promo-opt-name">B · 极鲜捆绑</span> +30-50% r</span>
+            <span class="promo-opt-cost">¥0</span>
+          </div>
+          <div class="promo-opt" onclick="selectPromo(this,'C')">
+            <span><span class="promo-opt-name">C · 8 折促销</span> +100% r</span>
+            <span class="promo-opt-cost">5% 利润</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 段 4 · 👥 推送给 (一线视图独有) -->
+      <div class="sr-seg s-team" id="teamSegment">
+        <div class="sr-seg-h">👥 协作团队 · 你能看 老板看不到</div>
+        <div class="team-row">
+          <span class="team-name">PM·张三</span>
+          <span class="team-share">income_share 30%</span>
+        </div>
+        <div class="team-row">
+          <span class="team-name">KA·李四</span>
+          <span class="team-share">income_share 20%</span>
+        </div>
+        <div class="team-row">
+          <span class="team-name">经销商·王五</span>
+          <span class="team-share">income_share 10%</span>
+        </div>
+        <div class="team-row team-self">
+          <span class="team-name">⭐ 我 · 一线执行</span>
+          <span class="team-share">income_share 10%</span>
+        </div>
+        <div class="team-pool">合计 70% · 剩 30% → 团队池</div>
+        <div style="margin-top:6px;padding:6px 10px;background:rgba(245,166,35,0.06);border-radius:5px;font-size:10px;color:var(--amber);line-height:1.6">
+          ⚠ income_share 数字需法务审批 (演示数据)<br>
+          预估销售奖金 ¥X · 战略奖金 ¥Y · 季度结算
+        </div>
+      </div>
+      
+      <!-- 老板视图独有 (默认隐藏) -->
+      <div class="boss-view-msg" id="bossViewMsg" style="display:none">
+        <span class="boss-view-msg-icon">🤝</span>
+        <div>
+          <strong>已联动欣和责任团队 (4 人)</strong><br>
+          T+0 启动 · T+3 方案落地 · T+14 验收<br>
+          <span style="font-size:10px;color:var(--t3)">协作团队详情仅一线可见</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="show-boss-tip">📱 <strong>请把屏幕给老板看</strong> · 等他确认</div>
+    
+    <div class="btn-row">
+      <button class="big-btn dim" onclick="bossReject()">✗ 老板拒绝</button>
+      <button class="big-btn green" onclick="goScreen(8)">✓ 老板同意</button>
+    </div>
+  </div>
+
+  <!-- ─────── 屏 8 · AI 验收 ─────── -->
+  <div class="screen" id="s8">
+    <div class="progress">
+      <span class="progress-step">T3 · AI 验收</span>
+      <span>8 / 9</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:88%"></div></div>
+    
+    <div class="big-title" style="font-size:14px;margin-top:6px">离店验收 · 本次拜访总结</div>
+    
+    <div class="ai-verify">
+      <div class="ai-verify-icon">✓</div>
+      <div class="ai-verify-title">AI 验收达标</div>
+      <div class="ai-verify-meta">陈列面积 92% (目标 ≥ 90%)</div>
+      <div class="ai-verify-sub">本次拜访 33 分钟 · 完成 4/5 任务</div>
+    </div>
+    
+    <div class="verify-stats">
+      <div class="verify-row"><span>陈列可见性</span><em>92% ✓</em></div>
+      <div class="verify-row"><span>库存盘点</span><em>5/5 ✓</em></div>
+      <div class="verify-row"><span>智能补货建议</span><em>老板已确认 ✓</em></div>
+      <div class="verify-row partial"><span>试吃活动</span><em>本次跳过</em></div>
+    </div>
+    
+    <button class="big-btn green" onclick="goScreen(9)">继续 · 签退离店</button>
+  </div>
+
+  <!-- ─────── 屏 9 · 签退 ─────── -->
+  <div class="screen" id="s9">
+    <div class="progress">
+      <span class="progress-step">T3 · 签退离店</span>
+      <span>9 / 9 ✓</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+    
+    <div class="gps-circle checkout">
+      <div class="gps-icon">📤</div>
+      <div class="gps-text">即将离店</div>
+      <div class="gps-dist">距门店 3 米</div>
+    </div>
+    
+    <div class="checkout-summary">
+      本次拜访 <strong>33 分钟</strong><br>
+      贡献 <span class="income">92 瓶推单 ¥9,080</span><br>
+      <span style="font-size:10px;color:var(--t3)">income_share 10% · 销售奖金按 Schema 公式计算</span>
+    </div>
+    
+    <div class="checkout-meta">
+      ✓ 数据已同步 · 5 SKU + 5 批次<br>
+      ✓ 智能补货建议生成 · 92 瓶 ¥9,080<br>
+      ✓ CB 已计算 · 4.78 → 4.80 (+0.02)
+    </div>
+    
+    <button class="big-btn green" onclick="finishVisit()">📤 签退 · 进下一家 →</button>
+  </div>
+
+</div>
+
+
+<!-- ═══════════ AI 主厨浮动按钮 ═══════════ -->
+<button class="chef-btn" onclick="openChef()" id="chefBtn">💬</button>
+
+<!-- ═══════════ AI 主厨弹窗 ═══════════ -->
+<div class="modal-mask" id="chefModal" onclick="if(event.target===this)closeChef()">
+  <div class="modal">
+    <div class="modal-h">
+      <div class="modal-title">💬 AI 主厨 · 救命话术</div>
+      <button class="modal-close" onclick="closeChef()">×</button>
+    </div>
+    
+    <div class="chef-list">
+      <button class="chef-card priority" onclick="askChef('嫌贵话术', '老板说太贵了不愿意补货·我应该怎么应对? 给我一个 100 字以内的话术·要专业·要点出 六月鲜 高端定位的价值。')">
+        <div class="chef-card-h">
+          <span class="chef-card-icon">💰</span>
+          <span class="chef-card-name">嫌贵话术</span>
+        </div>
+        <div class="chef-card-desc">老板说"太贵了"怎么办</div>
+      </button>
+      
+      <button class="chef-card" onclick="askChef('禾然卖点', '禾然有机酱油的核心卖点是什么? 给我 3 个最有说服力的卖点·一句话一个·要面对老板讲。')">
+        <div class="chef-card-h">
+          <span class="chef-card-icon">🌿</span>
+          <span class="chef-card-name">禾然卖点</span>
+        </div>
+        <div class="chef-card-desc">有机·健康·高端</div>
+      </button>
+      
+      <button class="chef-card" onclick="askChef('老板说服', '老板拒绝补货 / 拒绝陈列调整 / 拒绝试吃活动·我应该怎么应对? 给我一个温和但坚定的话术。')">
+        <div class="chef-card-h">
+          <span class="chef-card-icon">👨‍💼</span>
+          <span class="chef-card-name">老板说服</span>
+        </div>
+        <div class="chef-card-desc">补货被拒 / 拒绝陈列</div>
+      </button>
+      
+      <button class="chef-card" onclick="askChef('社群技巧', '早安发群应该发什么内容? 给我 3 个吸引人的早安话术·适合发到老顾客微信群。')">
+        <div class="chef-card-h">
+          <span class="chef-card-icon">💬</span>
+          <span class="chef-card-name">社群技巧</span>
+        </div>
+        <div class="chef-card-desc">早安发群 / 客情维护</div>
+      </button>
+    </div>
+    
+    <div class="chef-answer" id="chefAnswer">
+      <div id="chefAnswerContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ 异常上报弹窗 ═══════════ -->
+<div class="modal-mask" id="exceptionModal" onclick="if(event.target===this)closeException()">
+  <div class="modal">
+    <div class="modal-h">
+      <div class="modal-title">⚠ 异常上报</div>
+      <button class="modal-close" onclick="closeException()">×</button>
+    </div>
+    
+    <div class="exception-list">
+      <button class="exc-card" onclick="reportException('货损')">
+        <span class="exc-icon">💔</span>
+        <div class="exc-text">
+          <div class="exc-name">货损上报</div>
+          <div class="exc-desc">破损 / 过期 / 失踪 (子选)</div>
+        </div>
+      </button>
+      
+      <button class="exc-card" onclick="reportException('竞品')">
+        <span class="exc-icon">🏷️</span>
+        <div class="exc-text">
+          <div class="exc-name">竞品价签上报</div>
+          <div class="exc-desc">拍价签 → INF-VL OCR 自动读价</div>
+        </div>
+      </button>
+      
+      <button class="exc-card" onclick="reportException('工单')">
+        <span class="exc-icon">🚨</span>
+        <div class="exc-text">
+          <div class="exc-name">紧急工单</div>
+          <div class="exc-desc">突发情况上报</div>
+        </div>
+      </button>
+      
+      <button class="exc-card" onclick="reportException('情报')">
+        <span class="exc-icon">📊</span>
+        <div class="exc-text">
+          <div class="exc-name">市场情报</div>
+          <div class="exc-desc">门店动态 / 竞品活动</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ 设置弹窗 ═══════════ -->
+<div class="modal-mask" id="settingsModal" onclick="if(event.target===this)closeSettings()">
+  <div class="modal">
+    <div class="modal-h">
+      <div class="modal-title">⚙ 设置</div>
+      <button class="modal-close" onclick="closeSettings()">×</button>
+    </div>
+    
+    <div class="settings-list">
+      <div class="settings-item">
+        <div class="settings-item-h">
+          <span>拍照模式</span>
+          <div class="settings-toggle">
+            <button class="toggle-btn active" onclick="switchMode('simple', this)">极简</button>
+            <button class="toggle-btn" onclick="switchMode('advanced', this)">高级</button>
+          </div>
+        </div>
+        <div class="settings-item-desc">极简: 主+后仓 2 张照 · 高级: SOP 1-5 完整流程</div>
+      </div>
+      
+      <div class="settings-item">
+        <div class="settings-item-h"><span>重新看教程</span></div>
+        <div class="settings-item-desc">点击 → 重置教程·下次启动会显示</div>
+        <button class="big-btn dim" style="margin-top:10px;padding:8px;font-size:11px" onclick="resetTutorial()">重置教程</button>
+      </div>
+      
+      <div class="settings-item">
+        <div class="settings-item-h"><span>关于</span></div>
+        <div class="settings-item-desc">INFINITY OS · INF-XD v3.0<br>Stage 4 极简模式 · 演示原型<br>Tech Lead 后端开发后才能上线</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ 隐藏的相机输入 (调系统相机) ═══════════ -->
+<input type="file" id="cameraInput1" accept="image/*" capture="environment" style="display:none" />
+<input type="file" id="cameraInput2" accept="image/*" capture="environment" style="display:none" />
+
+<script>
+// ─────── 状态管理 ───────
+// 安全的 localStorage 包装 (Safari 隐私模式兼容)
+window.safeStorage = {
+  get: (k) => { try { return localStorage.getItem(k); } catch(e) { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch(e) {} },
+  del: (k) => { try { localStorage.removeItem(k); } catch(e) {} }
+};
+const safeStorage = window.safeStorage;
+
+window.State = {
+  currentScreen: 0,
+  mode: safeStorage.get('infxd_mode') || 'simple',
+  tutorialDone: safeStorage.get('infxd_tutorial_done') === 'true',
+  longPressTimer: null,
+  vlProgressTimer: null,
+  autoSkipTimer: null,
+  butterflyShown: false,
+  currentRole: safeStorage.get('infxd_role') || 'meigou_resident',  // V3.1 节 0 · 10 类用户
+};
+const State = window.State;
+
+// V3.1 · 10 类用户角色定义
+const ROLES = {
+  meigou_resident: {emoji:'👤', label:'美顾·常驻', tag:'欣和'},
+  meigou_visit:    {emoji:'🚶', label:'美顾·巡店', tag:'欣和'},
+  meigou_temp:     {emoji:'⏱', label:'美顾·临时', tag:'欣和'},
+  meigou_dist:     {emoji:'🛒', label:'美顾·导购', tag:'经销商'},
+  sr:              {emoji:'💼', label:'SR', tag:'欣和'},
+  dsr:             {emoji:'📋', label:'DSR', tag:'经销商'},
+  sup_meigou:      {emoji:'👔', label:'美顾主管', tag:'主管'},
+  sup_sr:          {emoji:'👔', label:'SR 主管', tag:'主管'},
+  sup_dsr:         {emoji:'👔', label:'DSR 主管', tag:'主管'},
+  dom:             {emoji:'⭐', label:'DOM 督导', tag:'主管'}
+};
+
+// V3.1 · 切换角色
+function toggleRoleDropdown(e){
+  if(e) e.stopPropagation();
+  const dd = document.getElementById('roleDropdown');
+  const bd = document.getElementById('roleBackdrop');
+  if(!dd) return;
+  const willShow = !dd.classList.contains('show');
+  dd.classList.toggle('show');
+  if(bd) bd.classList.toggle('show', willShow);
+}
+
+function closeRoleDropdown(){
+  document.getElementById('roleDropdown')?.classList.remove('show');
+  document.getElementById('roleBackdrop')?.classList.remove('show');
+}
+
+function setRole(roleId){
+  if(!ROLES[roleId]) return;
+  State.currentRole = roleId;
+  safeStorage.set('infxd_role', roleId);
+  
+  // 更新顶栏显示
+  const role = ROLES[roleId];
+  document.getElementById('rsEmoji').textContent = role.emoji;
+  document.getElementById('rsLabel').textContent = role.label;
+  
+  // 更新选中状态
+  document.querySelectorAll('.role-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.role === roleId);
+  });
+  
+  // 关闭下拉 + backdrop
+  closeRoleDropdown();
+  
+  // V4.0 · 切换屏 1 视图 (一线 / 主管)
+  applyRoleView(roleId);
+  
+  console.log('[Role] 切换到', roleId, role.label);
+}
+
+// V4.0 · 根据角色切换屏 1 视图
+function applyRoleView(roleId){
+  const role = ROLES[roleId];
+  if(!role) return;
+  
+  const isSupervisor = role.tag === '主管';
+  const flView = document.getElementById('frontlineView');
+  const supView = document.getElementById('supervisorView');
+  const historyFab = document.getElementById('dispatchHistoryFab');
+  if(!flView || !supView) return;
+  
+  if(isSupervisor){
+    flView.classList.add('hide');
+    supView.classList.add('show');
+    // 更新主管头标题
+    const supTitle = document.getElementById('supTitle');
+    if(supTitle) supTitle.textContent = role.emoji + ' ' + role.label + ' · 张三';
+    // 更新今日日期
+    const supDate = document.getElementById('supDate');
+    if(supDate){
+      const d = new Date();
+      const days = ['日','一','二','三','四','五','六'];
+      supDate.textContent = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')} 周${days[d.getDay()]}`;
+    }
+    // V4.2 · 显示派工历史浮动按钮
+    if(historyFab) historyFab.classList.add('show');
+    if(typeof updateDispatchHistoryBadge === 'function') updateDispatchHistoryBadge();
+  } else {
+    flView.classList.remove('hide');
+    supView.classList.remove('show');
+    // V4.2 · 隐藏派工历史浮动按钮
+    if(historyFab) historyFab.classList.remove('show');
+  }
+}
+
+// V4.0 · 主管操作 (Mock)
+function supervisorAction(action, target){
+  // V4.1 · 派工 → 打开 modal
+  if(action === 'dispatch'){
+    openDispatch(target);
+    return;
+  }
+  // V4.2 · B2/B3/B4 完整列表
+  if(action === 'all-alerts'){ openAlertsFull(); return; }
+  if(action === 'all-team'){ openTeamFull(); return; }
+  if(action === 'all-rank'){ openRankFull(); return; }
+  
+  const toast = document.getElementById('supToast');
+  if(!toast) return;
+  
+  let msg = '✓ 操作成功';
+  switch(action){
+    case 'report': msg = '📊 周报·开发中'; break;
+    case 'plan': msg = '📅 排班·开发中'; break;
+    case 'train': msg = '🎓 培训·开发中'; break;
+    case 'msg': msg = '💬 群发·开发中'; break;
+  }
+  
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 2000);
+  console.log('[Supervisor]', action, target);
+}
+
+// V4.1 · 派工 modal · 异常配置
+const DISPATCH_ALERTS = {
+  'urgent-1': {
+    target: '家乐福古北店',
+    icon: '🔴',
+    type: 'A 类压货',
+    detail: '36 瓶禾然有机·远超 2A',
+    suggest: '建议: 先消化不补·尽快推动销活动'
+  },
+  'urgent-2': {
+    target: '步步高西郊店',
+    icon: '🟡',
+    type: 'B 类促销扰',
+    detail: 'r 值从 8 骤降到 4 (-50%)·促销结束影响',
+    suggest: '建议: 暂缓补货·等 r 稳定再下单'
+  },
+  'urgent-3': {
+    target: '联华联洋店',
+    icon: '🟣',
+    type: 'C 类窜货',
+    detail: '本店周边 200m 检测 ¥15 低价禾然',
+    suggest: '建议: 派人调查·上报 DOM 督导'
+  }
+};
+
+// V4.2 · 全员名单 (按角色分组)
+const STAFF = {
+  meigou: [
+    {name:'陈晓琳', role:'美顾·常驻', distance:'800m', stat:'5 店今日完成', cb:4.92, status:'free'},
+    {name:'王红',   role:'美顾·巡店', distance:'1.2km', stat:'8 店今日完成', cb:4.78, status:'free'},
+    {name:'张敏',   role:'美顾·常驻', distance:'1.5km', stat:'4 店今日完成', cb:4.71, status:'free'},
+    {name:'李军',   role:'美顾·常驻', distance:'2.1km', stat:'3/5 进行中', cb:4.65, status:'busy'},
+    {name:'刘强',   role:'美顾·临时', distance:'3.0km', stat:'今日 6 店完成', cb:4.58, status:'free'},
+    {name:'赵芳',   role:'美顾·导购', distance:'4.2km', stat:'2/5 进行中', cb:4.52, status:'busy'}
+  ],
+  sr: [
+    {name:'王建华', role:'SR', distance:'500m', stat:'12 店本周拜访', cb:4.85, status:'free'},
+    {name:'李志强', role:'SR', distance:'1.8km', stat:'8 店本周拜访', cb:4.70, status:'free'},
+    {name:'孙明',   role:'SR', distance:'3.5km', stat:'15 店本周拜访', cb:4.62, status:'busy'}
+  ],
+  dsr: [
+    {name:'周大伟', role:'DSR', distance:'1.0km', stat:'10 店本周拜访', cb:4.75, status:'free'},
+    {name:'吴刚',   role:'DSR', distance:'2.5km', stat:'7 店本周拜访', cb:4.60, status:'free'},
+    {name:'郑爽',   role:'DSR', distance:'4.0km', stat:'12 店本周拜访', cb:4.55, status:'busy'}
+  ]
+};
+
+// V4.2 · 按主管角色筛选候选下属
+function getCandidates(supervisorRole){
+  switch(supervisorRole){
+    case 'sup_meigou': return STAFF.meigou.slice(0, 4);
+    case 'sup_sr':     return STAFF.sr;
+    case 'sup_dsr':    return STAFF.dsr;
+    case 'dom':
+      // DOM 督导 = 看全员·top 6
+      return [...STAFF.meigou.slice(0,2), ...STAFF.sr.slice(0,2), ...STAFF.dsr.slice(0,2)];
+    default:
+      return STAFF.meigou.slice(0, 3);  // 默认
+  }
+}
+
+// V4.2 · 派工历史 (localStorage 持久)
+let DISPATCH_HISTORY = (function(){
+  try {
+    const raw = localStorage.getItem('infxd_dispatch_history');
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+})();
+
+function saveDispatchHistory(){
+  try { localStorage.setItem('infxd_dispatch_history', JSON.stringify(DISPATCH_HISTORY)); } catch(e) {}
+}
+
+// V4.1 · 当前派工状态
+let currentDispatch = {
+  alertId: null,
+  assignee: '陈晓琳',
+  time: 'now',
+  note: ''
+};
+
+// V4.1 · 打开派工 modal
+function openDispatch(alertId){
+  const alert = DISPATCH_ALERTS[alertId];
+  if(!alert) return;
+  
+  // V4.2 · 按当前主管角色筛选候选
+  const candidates = getCandidates(State.currentRole);
+  if(candidates.length === 0){
+    console.warn('当前角色无候选下属');
+    return;
+  }
+  
+  currentDispatch = {
+    alertId: alertId,
+    assignee: candidates[0].name,
+    time: 'now',
+    note: ''
+  };
+  
+  // 填充内容
+  document.getElementById('dispatchTarget').textContent = alert.target;
+  document.getElementById('dispatchAlertType').textContent = alert.type;
+  document.getElementById('dispatchAlertDetail').textContent = alert.detail;
+  
+  // 改图标 (按异常类型)
+  const ctx = document.getElementById('dispatchContext');
+  if(ctx){
+    const l1 = ctx.querySelector('.dispatch-context-l1');
+    if(l1) l1.firstChild.textContent = alert.icon + ' ';
+  }
+  
+  // V4.2 · 动态生成候选列表
+  const list = document.getElementById('dispatchAssigneeList');
+  if(list){
+    list.innerHTML = candidates.map((p, i) => `
+      <div class="dispatch-option ${i===0 ? 'selected' : ''}" onclick="selectDispatchAssignee(this, '${p.name}')">
+        <div class="dispatch-option-radio"></div>
+        <div class="dispatch-option-info">
+          <div class="dispatch-option-name">${p.name}·${p.role}</div>
+          <div class="dispatch-option-meta">距门店 ${p.distance} · ${p.stat}</div>
+        </div>
+        <span class="dispatch-option-cb">CB ${p.cb}</span>
+        <span class="dispatch-option-status ${p.status}">${p.status === 'free' ? '空闲' : '忙'}</span>
+      </div>
+    `).join('');
+  }
+  
+  // 重置时间 (默认立即)
+  document.querySelectorAll('.dispatch-time').forEach((el, i) => {
+    el.classList.toggle('selected', i === 0);
+  });
+  document.getElementById('dispatchNote').value = '';
+  
+  // 显示 modal
+  document.getElementById('dispatchModal').classList.add('show');
+}
+
+function closeDispatch(){
+  document.getElementById('dispatchModal').classList.remove('show');
+}
+
+function selectDispatchAssignee(el, name){
+  document.querySelectorAll('#dispatchAssigneeList .dispatch-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  currentDispatch.assignee = name;
+}
+
+function selectDispatchTime(el, time){
+  document.querySelectorAll('.dispatch-time').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  currentDispatch.time = time;
+}
+
+function confirmDispatch(){
+  const note = document.getElementById('dispatchNote').value.trim();
+  currentDispatch.note = note;
+  
+  // 关 modal
+  closeDispatch();
+  
+  // 异常行变"已派工"状态
+  const alertId = currentDispatch.alertId;
+  const alert = DISPATCH_ALERTS[alertId];
+  
+  // 找到对应行
+  const allRows = document.querySelectorAll('#supervisorView .sup-row');
+  allRows.forEach(row => {
+    const btn = row.querySelector('.sup-row-btn');
+    if(btn && btn.getAttribute('onclick')?.includes(alertId)){
+      row.classList.add('dispatched');
+      btn.textContent = '已派工';
+      btn.disabled = true;
+      btn.onclick = null;
+    }
+  });
+  
+  // 时间文案
+  const timeText = currentDispatch.time === 'now' ? '立即执行' :
+                   currentDispatch.time === 'evening' ? '今晚 18:00' : '明早 9:00';
+  
+  // V4.2 · 写入派工历史
+  const now = new Date();
+  const timeStamp = `${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  DISPATCH_HISTORY.unshift({
+    time: timeStamp,
+    target: alert.target,
+    alertType: alert.type,
+    icon: alert.icon,
+    assignee: currentDispatch.assignee,
+    when: timeText,
+    note: note,
+    status: 'dispatched'  // dispatched / accepted / completed
+  });
+  // 最多保留 50 条
+  if(DISPATCH_HISTORY.length > 50) DISPATCH_HISTORY = DISPATCH_HISTORY.slice(0, 50);
+  saveDispatchHistory();
+  
+  // 更新历史 badge
+  updateDispatchHistoryBadge();
+  
+  // 弹 toast
+  const toast = document.getElementById('supToast');
+  if(toast){
+    toast.textContent = `✓ 已派给 ${currentDispatch.assignee} · ${timeText}`;
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'), 2500);
+  }
+  
+  console.log('[V4.1 派工]', currentDispatch);
+}
+
+// V4.2 · 派工历史 badge
+function updateDispatchHistoryBadge(){
+  const badge = document.getElementById('dispatchHistoryBadge');
+  if(badge){
+    const todayCount = DISPATCH_HISTORY.filter(h => {
+      const now = new Date();
+      const today = `${now.getMonth()+1}/${now.getDate()}`;
+      return h.time.startsWith(today);
+    }).length;
+    if(todayCount > 0){
+      badge.textContent = todayCount;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+}
+
+// V4.2 · 打开派工历史 modal
+function openDispatchHistory(){
+  const list = document.getElementById('dispatchHistoryList');
+  if(!list) return;
+  
+  if(DISPATCH_HISTORY.length === 0){
+    list.innerHTML = '<div style="text-align:center;padding:30px 0;color:var(--t3);font-size:12px">暂无派工记录</div>';
+  } else {
+    list.innerHTML = DISPATCH_HISTORY.map(h => `
+      <div class="history-item">
+        <div class="history-time">${h.time}</div>
+        <div class="history-main">
+          <div class="history-target">${h.icon} ${h.target} · ${h.alertType}</div>
+          <div class="history-meta">→ ${h.assignee} · ${h.when}</div>
+          ${h.note ? `<div class="history-note">📝 ${h.note}</div>` : ''}
+        </div>
+        <span class="history-status ${h.status}">${h.status === 'dispatched' ? '待接' : h.status === 'accepted' ? '已接' : '完成'}</span>
+      </div>
+    `).join('');
+  }
+  
+  document.getElementById('dispatchHistoryModal').classList.add('show');
+}
+
+function closeDispatchHistory(){
+  document.getElementById('dispatchHistoryModal').classList.remove('show');
+}
+
+// ─────── V4.2 · B2 异常完整列表 ───────
+const ALL_ALERTS = [
+  // A 类压货
+  {id:'urgent-1', type:'A', cls:'urgent', icon:'🔴', target:'家乐福古北店', detail:'A 类压货 · 36 瓶禾然有机', meta:'远超 2A · 经销商被压'},
+  {id:'a-2', type:'A', cls:'urgent', icon:'🔴', target:'大润发徐汇店', detail:'A 类压货 · 48 瓶极鲜', meta:'后仓积压 2 周'},
+  {id:'a-3', type:'A', cls:'urgent', icon:'🔴', target:'永辉超市浦东', detail:'A 类压货 · 24 瓶味达美', meta:'仓库满 3a'},
+  // B 类促销扰
+  {id:'urgent-2', type:'B', cls:'warn', icon:'🟡', target:'步步高西郊店', detail:'B 类促销扰 · r 骤降 50%', meta:'促销结束影响'},
+  {id:'b-2', type:'B', cls:'warn', icon:'🟡', target:'物美良乡店', detail:'B 类促销扰 · r 暴增后跌', meta:'5/1 大促后异常'},
+  // C 类窜货
+  {id:'urgent-3', type:'C', cls:'warn', icon:'🟣', target:'联华联洋店', detail:'C 类窜货 · 周边 ¥15 低价', meta:'疑似二批窜货'},
+  {id:'c-2', type:'C', cls:'warn', icon:'🟣', target:'家乐福金山店', detail:'C 类窜货 · 同 SKU 不同价', meta:'¥17 vs 底价 ¥17'},
+  {id:'c-3', type:'C', cls:'warn', icon:'🟣', target:'欧尚南汇店', detail:'C 类窜货 · 跨区流入', meta:'非区域经销商货'},
+  // D 类战略扰动
+  {id:'d-1', type:'D', cls:'info', icon:'🔵', target:'极鲜·全市', detail:'D 类战略 · defending 阶段', meta:'海天降价 12% · max +0.5a'},
+  {id:'d-2', type:'D', cls:'info', icon:'🔵', target:'禾然有机·全市', detail:'D 类战略 · niche+decline', meta:'消化率 <50% 持续'}
+];
+
+let currentAlertFilter = 'all';
+
+function openAlertsFull(){
+  // 计数
+  const cntA = ALL_ALERTS.filter(a => a.type === 'A').length;
+  const cntB = ALL_ALERTS.filter(a => a.type === 'B').length;
+  const cntC = ALL_ALERTS.filter(a => a.type === 'C').length;
+  const cntD = ALL_ALERTS.filter(a => a.type === 'D').length;
+  document.getElementById('cntA').textContent = cntA;
+  document.getElementById('cntB').textContent = cntB;
+  document.getElementById('cntC').textContent = cntC;
+  document.getElementById('cntD').textContent = cntD;
+  
+  currentAlertFilter = 'all';
+  // 重置 tab
+  document.querySelectorAll('#alertsFullModal .list-tab').forEach((t, i) => 
+    t.classList.toggle('active', i === 0));
+  
+  renderAlertsList();
+  document.getElementById('alertsFullModal').classList.add('show');
+}
+
+function closeAlertsFull(){
+  document.getElementById('alertsFullModal').classList.remove('show');
+}
+
+function filterAlerts(type, btnEl){
+  currentAlertFilter = type;
+  document.querySelectorAll('#alertsFullModal .list-tab').forEach(t => t.classList.remove('active'));
+  btnEl.classList.add('active');
+  renderAlertsList();
+}
+
+function renderAlertsList(){
+  const list = document.getElementById('alertsFullList');
+  if(!list) return;
+  
+  const filtered = currentAlertFilter === 'all' 
+    ? ALL_ALERTS 
+    : ALL_ALERTS.filter(a => a.type === currentAlertFilter);
+  
+  if(filtered.length === 0){
+    list.innerHTML = '<div style="text-align:center;padding:30px 0;color:var(--t3);font-size:12px">无该类异常</div>';
+    return;
+  }
+  
+  // 检查是否已派工 (从 history 里查)
+  const dispatched = new Set(DISPATCH_HISTORY.map(h => h.target));
+  
+  list.innerHTML = filtered.map(a => {
+    const isDispatched = dispatched.has(a.target) || (DISPATCH_ALERTS[a.id] && document.querySelector(`#supervisorView .sup-row[onclick*="${a.id}"]`)?.classList.contains('dispatched'));
+    return `
+      <div class="full-list-item ${a.cls} ${isDispatched ? 'dispatched' : ''}">
+        <span class="fl-icon">${a.icon}</span>
+        <div class="fl-content">
+          <div class="fl-title">${a.target}</div>
+          <div class="fl-meta">${a.detail} · ${a.meta}</div>
+        </div>
+        <button class="fl-action" ${isDispatched ? 'disabled' : ''} onclick="dispatchFromList('${a.id}', '${a.target}', '${a.icon}', '${a.detail.split(' · ')[0]}', '${a.detail.split(' · ')[1] || ''}')">${isDispatched ? '已派' : '派工'}</button>
+      </div>
+    `;
+  }).join('');
+}
+
+// 从异常完整列表派工
+function dispatchFromList(id, target, icon, type, detail){
+  // 注册到 DISPATCH_ALERTS (动态扩展)
+  DISPATCH_ALERTS[id] = {target, icon, type, detail, suggest: '建议: 立即跟进'};
+  closeAlertsFull();
+  setTimeout(()=>openDispatch(id), 100);
+}
+
+// ─────── V4.2 · B3 下属完整列表 ───────
+const ALL_TEAM = [
+  // 已完成 (10)
+  {name:'陈晓琳', role:'美顾·常驻', stat:'5/5 完成', cb:4.92, status:'done'},
+  {name:'王红', role:'美顾·巡店', stat:'8/8 完成', cb:4.78, status:'done'},
+  {name:'张敏', role:'美顾·常驻', stat:'4/4 完成', cb:4.71, status:'done'},
+  {name:'刘强', role:'美顾·临时', stat:'6/6 完成', cb:4.58, status:'done'},
+  {name:'王建华', role:'SR', stat:'12/12 拜访', cb:4.85, status:'done'},
+  {name:'李志强', role:'SR', stat:'8/8 拜访', cb:4.70, status:'done'},
+  {name:'周大伟', role:'DSR', stat:'10/10 拜访', cb:4.75, status:'done'},
+  {name:'吴刚', role:'DSR', stat:'7/7 拜访', cb:4.60, status:'done'},
+  {name:'孙阳', role:'美顾·常驻', stat:'3/3 完成', cb:4.66, status:'done'},
+  {name:'陈勇', role:'美顾·巡店', stat:'5/5 完成', cb:4.55, status:'done'},
+  // 进行中 (8)
+  {name:'李军', role:'美顾·常驻', stat:'3/5 进行中', cb:4.65, status:'progress'},
+  {name:'赵芳', role:'美顾·导购', stat:'2/5 进行中', cb:4.52, status:'progress'},
+  {name:'孙明', role:'SR', stat:'10/15 拜访', cb:4.62, status:'progress'},
+  {name:'郑爽', role:'DSR', stat:'8/12 拜访', cb:4.55, status:'progress'},
+  {name:'田刚', role:'美顾·临时', stat:'2/4 进行中', cb:4.45, status:'progress'},
+  {name:'范敏', role:'SR', stat:'5/10 拜访', cb:4.58, status:'progress'},
+  {name:'马林', role:'DSR', stat:'4/8 拜访', cb:4.50, status:'progress'},
+  {name:'罗强', role:'美顾·导购', stat:'1/3 进行中', cb:4.40, status:'progress'},
+  // 未开始 (7)
+  {name:'高龙', role:'美顾·常驻', stat:'0/5 未开始', cb:4.30, status:'pending'},
+  {name:'梁丽', role:'美顾·巡店', stat:'0/8 未开始', cb:4.25, status:'pending'},
+  {name:'谢华', role:'SR', stat:'0/12 未开始', cb:4.20, status:'pending'},
+  {name:'方军', role:'DSR', stat:'0/10 未开始', cb:4.15, status:'pending'},
+  {name:'夏明', role:'美顾·临时', stat:'未上岗', cb:4.10, status:'pending'},
+  {name:'宋艳', role:'美顾·导购', stat:'休假', cb:4.05, status:'pending'},
+  {name:'程刚', role:'SR', stat:'病假', cb:4.00, status:'pending'}
+];
+
+let currentTeamFilter = 'all';
+
+function openTeamFull(){
+  const cntDone = ALL_TEAM.filter(t => t.status === 'done').length;
+  const cntProgress = ALL_TEAM.filter(t => t.status === 'progress').length;
+  const cntPending = ALL_TEAM.filter(t => t.status === 'pending').length;
+  document.getElementById('cntDone').textContent = cntDone;
+  document.getElementById('cntProgress').textContent = cntProgress;
+  document.getElementById('cntPending').textContent = cntPending;
+  
+  currentTeamFilter = 'all';
+  document.querySelectorAll('#teamFullModal .list-tab').forEach((t, i) => 
+    t.classList.toggle('active', i === 0));
+  
+  renderTeamList();
+  document.getElementById('teamFullModal').classList.add('show');
+}
+
+function closeTeamFull(){
+  document.getElementById('teamFullModal').classList.remove('show');
+}
+
+function filterTeam(status, btnEl){
+  currentTeamFilter = status;
+  document.querySelectorAll('#teamFullModal .list-tab').forEach(t => t.classList.remove('active'));
+  btnEl.classList.add('active');
+  renderTeamList();
+}
+
+function renderTeamList(){
+  const list = document.getElementById('teamFullList');
+  if(!list) return;
+  
+  const filtered = currentTeamFilter === 'all' ? ALL_TEAM : ALL_TEAM.filter(t => t.status === currentTeamFilter);
+  
+  list.innerHTML = filtered.map(p => {
+    const icon = p.status === 'done' ? '✓' : p.status === 'progress' ? '⏳' : '⏸';
+    const statusLbl = p.status === 'done' ? '完成' : p.status === 'progress' ? '进行' : '未开始';
+    return `
+      <div class="full-list-item" onclick="showStaffDetail('${p.name}','${p.role}','${p.stat}','${p.cb}')">
+        <span class="fl-icon">${icon}</span>
+        <div class="fl-content">
+          <div class="fl-title">${p.name}·${p.role}</div>
+          <div class="fl-meta">${p.stat}</div>
+        </div>
+        <span class="fl-cb">${p.cb}</span>
+        <span class="fl-status ${p.status}">${statusLbl}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function showStaffDetail(name, role, stat, cb){
+  alert(`${name} · ${role}\n\n今日: ${stat}\nCB 分: ${cb}\n\n详情页·开发中`);
+}
+
+// ─────── V4.2 · B4 排名完整列表 ───────
+const RANK_BY_PERIOD = {
+  week: ALL_TEAM.slice().sort((a,b) => b.cb - a.cb),
+  month: ALL_TEAM.slice().sort((a,b) => b.cb - a.cb),  // mock·实际不同
+  quarter: ALL_TEAM.slice().sort((a,b) => b.cb - a.cb)
+};
+let currentRankPeriod = 'week';
+
+function openRankFull(){
+  currentRankPeriod = 'week';
+  document.querySelectorAll('#rankFullModal .list-tab').forEach((t, i) => 
+    t.classList.toggle('active', i === 0));
+  renderRankList();
+  document.getElementById('rankFullModal').classList.add('show');
+}
+
+function closeRankFull(){
+  document.getElementById('rankFullModal').classList.remove('show');
+}
+
+function filterRank(period, btnEl){
+  currentRankPeriod = period;
+  document.querySelectorAll('#rankFullModal .list-tab').forEach(t => t.classList.remove('active'));
+  btnEl.classList.add('active');
+  renderRankList();
+}
+
+function renderRankList(){
+  const list = document.getElementById('rankFullList');
+  if(!list) return;
+  
+  const data = RANK_BY_PERIOD[currentRankPeriod] || RANK_BY_PERIOD.week;
+  const max = Math.max(...data.map(p => p.cb));
+  
+  list.innerHTML = data.map((p, i) => {
+    const numColor = i < 3 ? 'top' : '';
+    const num = (i+1).toString();
+    const pct = (p.cb / max * 100).toFixed(0);
+    return `
+      <div class="full-list-item" onclick="showStaffDetail('${p.name}','${p.role}','${p.stat}','${p.cb}')">
+        <span class="fl-icon"><span class="sup-rank-num ${numColor}" style="width:auto;display:inline">${num}</span></span>
+        <div class="fl-content">
+          <div class="fl-title">${p.name}·${p.role}</div>
+          <div class="fl-meta">${p.stat}</div>
+        </div>
+        <span class="fl-cb">${p.cb}</span>
+        <div class="sup-rank-bar"><div class="sup-rank-fill" style="width:${pct}%"></div></div>
+      </div>
+    `;
+  }).join('');
+}
+
+// 点其他位置关闭下拉
+document.addEventListener('click', (e) => {
+  const dd = document.getElementById('roleDropdown');
+  const sw = document.getElementById('roleSwitcher');
+  if(dd && dd.classList.contains('show') && !dd.contains(e.target) && !sw.contains(e.target)){
+    closeRoleDropdown();
+  }
+});
+
+// ESC 键关闭
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') closeRoleDropdown();
+});
+
+// 初始化角色显示 (页面加载时)
+window.addEventListener('DOMContentLoaded', () => {
+  const role = ROLES[State.currentRole] || ROLES.meigou_resident;
+  const emojiEl = document.getElementById('rsEmoji');
+  const labelEl = document.getElementById('rsLabel');
+  if(emojiEl) emojiEl.textContent = role.emoji;
+  if(labelEl) labelEl.textContent = role.label;
+  document.querySelectorAll('.role-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.role === State.currentRole);
+  });
+  // V4.0 · 启动时根据当前角色显示对应视图
+  if(typeof applyRoleView === 'function') applyRoleView(State.currentRole);
+});
+
+// ─────── 时钟 ───────
+function updateTime(){
+  const d = new Date();
+  const t = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+  document.getElementById('tbTime').textContent = t;
+}
+updateTime();
+setInterval(updateTime, 30000);
+
+// ─────── 屏幕切换 ───────
+function goScreen(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const target = document.getElementById('s'+n);
+  if(target){
+    target.classList.add('active');
+    State.currentScreen = n;
+    
+    // 自动逻辑
+    if(n===2) startAutoSkip();
+    if(n===4) startVLRecognition();
+    
+    // V3.4b · 演示切换器·只屏 6 + 蝴蝶要触发时显示
+    if(n===6 && !State.butterflyShown){
+      setTimeout(()=>showButterfly('A'), 2000);
+      toggleBfDemoSwitcher(true);
+    } else {
+      // 任何其他屏 (含屏 5)·强制隐切换器
+      toggleBfDemoSwitcher(false);
+    }
+  }
+}
+
+// ─────── 启动 ───────
+function bootApp(){
+  if(!State.tutorialDone){
+    goScreen(0);
+  } else {
+    goScreen(1);
+  }
+}
+
+function dismissTutorial(){
+  safeStorage.set('infxd_tutorial_done', 'true');
+  State.tutorialDone = true;
+  goScreen(1);
+}
+
+// ─────── 自动跳过 (V3.1 · 已废弃·屏 2 不再自动跳) ───────
+function startAutoSkip(){
+  // V3.1 · 屏 2 改为美顾主动点击·不自动跳
+  // 旧逻辑保留以防其他地方调用
+  return;
+}
+
+// ─────── V3.1 · 5 大任务进入 ───────
+function enterTask(n){
+  // n=1..5 · 不同任务进不同屏
+  const taskMap = {
+    1: { name: '社群+客情', screen: null, msg: '社群任务·开发中' },
+    2: { name: '场景经营·试吃', screen: null, msg: '试吃任务·开发中' },
+    3: { name: '陈列+盘点 (主任务)', screen: 25 },  // 跳到陈列清单屏
+    4: { name: '库存+下单', screen: 25 },  // 也走主流程·内含智能补货
+    5: { name: '数据收集', screen: null, msg: '数据收集·后台自动·无需操作' }
+  };
+  const task = taskMap[n];
+  if(!task) return;
+  
+  if(task.screen){
+    // 标记任务进行中 (后续完成会标 done)
+    State.currentTask = n;
+    goScreen(task.screen);
+  } else {
+    // 没单独屏的任务·提示开发中
+    alert(`${task.name}\n\n${task.msg}`);
+  }
+}
+
+// 标记任务完成
+function markTaskDone(n){
+  const row = document.querySelector(`[data-task="${n}"]`);
+  if(row) row.classList.add('done');
+  // 更新计数
+  const doneCount = document.querySelectorAll('.task-row.done').length;
+  const cnt = document.getElementById('taskDone');
+  if(cnt) cnt.textContent = doneCount;
+}
+
+// ─────── 拍照 ───────
+// 跳过拍照 (直接走流程·演示用)
+function skipPhoto(stage){
+  if(stage === 1){
+    // 用占位图作为 photo1
+    State.photo1 = 'placeholder';
+    goScreen(4);
+  } else if(stage === 2){
+    State.photo2 = 'placeholder';
+    goScreen(6);
+  }
+}
+
+// 跳过 INF-VL 识别 (强制完成)
+function skipRecognition(){
+  // V3.2 · 跳过 = 跳生产日期填写·直接走 (训练数据丢失)
+  goScreen(5);
+}
+
+// ─────── V3.2 · 屏 4 三阶段切换 (DS 演示用) ───────
+function switchStage(n){
+  // 切按钮 active
+  for(let i=1; i<=3; i++){
+    const btn = document.getElementById('stageBtn'+i);
+    if(btn) btn.classList.toggle('active', i === n);
+  }
+  
+  // 切表单显示
+  for(let i=1; i<=3; i++){
+    const form = document.getElementById('stage'+i+'Form');
+    if(form) form.style.display = (i === n ? '' : 'none');
+  }
+  
+  // 切阶段说明
+  const info = document.getElementById('stageInfo');
+  const title = document.getElementById('stageInfoTitle');
+  const desc = document.getElementById('stageInfoDesc');
+  if(!info || !title || !desc) return;
+  
+  info.classList.remove('s1','s2','s3');
+  
+  if(n === 1){
+    info.classList.add('s1');
+    title.textContent = '当前阶段 1 · INF-VL 训练中';
+    desc.textContent = 'SKU + 数量已成熟·生产日期请手填 + 拍照存档 (后续 AI 自动识别)';
+  } else if(n === 2){
+    info.classList.add('s2');
+    title.textContent = '阶段 2 · TL 上线后 6 个月';
+    desc.textContent = 'AI 显示候选日期·美顾确认或修改·错的纠正反训练 AI';
+  } else {
+    info.classList.add('s3');
+    title.textContent = '阶段 3 · 12-18 月后';
+    desc.textContent = '精度 ≥ 95% · AI 默认接受·只低置信 (<80%) 才人工';
+  }
+  
+  console.log('[Stage] 切到阶段', n);
+}
+
+// V3.2 · 美顾完成生产日期填写
+function completeDateInput(){
+  // 阶段 1 · 校验手填
+  const stage1 = document.getElementById('stage1Form');
+  if(stage1 && stage1.style.display !== 'none'){
+    // 收集手填日期
+    const dates = [];
+    let allFilled = true;
+    for(let i=1; i<=3; i++){
+      const y = document.getElementById('d'+i+'y')?.value;
+      const m = document.getElementById('d'+i+'m')?.value;
+      const d = document.getElementById('d'+i+'d')?.value;
+      if(!y || !m || !d){
+        allFilled = false;
+      }
+      dates.push({y, m, d});
+    }
+    
+    if(!allFilled){
+      const ok = confirm('生产日期未填全·继续吗?\n\n(实际场景必须填全·此处为演示宽松)');
+      if(!ok) return;
+    }
+    
+    // 保存到 State
+    State.productionDates = dates;
+    console.log('[V3.2] 阶段 1 手填日期:', dates);
+  }
+  
+  // 跳屏 5
+  goScreen(5);
+}
+
+// V3.4 · 屏 5 · 后仓批次手填完成 → 跳屏 6
+function completeWarehouseInput(){
+  // 收集后仓批次填写
+  const batches = [];
+  let allFilled = true;
+  for(let i=1; i<=3; i++){
+    const q = document.getElementById('w'+i+'q')?.value;
+    const y = document.getElementById('w'+i+'y')?.value;
+    const m = document.getElementById('w'+i+'m')?.value;
+    const d = document.getElementById('w'+i+'d')?.value;
+    if(!q || !y || !m || !d){
+      allFilled = false;
+    }
+    batches.push({q, y, m, d});
+  }
+  
+  if(!allFilled){
+    const ok = confirm('后仓批次未填全·继续吗?\n\n(实际场景必须填全·此处为演示宽松)');
+    if(!ok) return;
+  }
+  
+  // 保存到 State
+  State.warehouseBatches = batches;
+  console.log('[V3.4] 后仓批次:', batches);
+  
+  // 跳屏 6
+  goScreen(6);
+}
+
+// V3.2 · 阶段 2 / 3 · 确认 AI 候选
+function confirmAI(idx){
+  console.log('[V3.2] 确认 AI 候选 SKU', idx);
+  // 简单视觉反馈
+  const rows = document.querySelectorAll('#stage2Form .ai-candidate-row, #stage3Form .s3-low-confidence-row');
+  if(rows[idx-1]){
+    rows[idx-1].style.opacity = '0.5';
+    rows[idx-1].style.background = 'rgba(16,185,129,0.06)';
+  }
+}
+
+// V3.2 · 阶段 2 / 3 · 修改 AI 候选
+function modifyAI(idx){
+  const newDate = prompt('请输入正确日期 (YYYY.MM.DD):');
+  if(newDate){
+    console.log('[V3.2] 修改 SKU', idx, '为', newDate);
+    alert('已记录 · 错的纠正会反训练 AI');
+  }
+}
+
+function takePhoto(stage){
+  // 调系统相机 (iOS Safari 支持 capture=environment 后置)
+  const inputId = stage === 1 ? 'cameraInput1' : 'cameraInput2';
+  const input = document.getElementById(inputId);
+  if(!input) return;
+  
+  input.value = '';  // 清空·允许重拍
+  input.onchange = function(e){
+    const file = e.target.files[0];
+    if(file){
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        // 保存图片 (后续 Tech Lead 后端用)
+        if(stage === 1){
+          State.photo1 = ev.target.result;
+          // 屏 4 显示真照片
+          updatePhoto4Preview(State.photo1);
+          goScreen(4);
+        } else {
+          State.photo2 = ev.target.result;
+          goScreen(6);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  // 触发系统相机
+  input.click();
+}
+
+// 屏 4 · 显示主货架真照片 preview
+function updatePhoto4Preview(dataURL){
+  const taken = document.querySelector('#s4 .photo-area.taken');
+  if(!taken) return;
+  taken.innerHTML = `<img src="${dataURL}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:14px" />
+    <div style="position:relative;background:rgba(0,0,0,0.7);padding:8px 14px;border-radius:8px;backdrop-filter:blur(4px)">
+      <div class="photo-icon" style="font-size:28px">✓</div>
+      <div class="photo-hint" style="font-size:12px;margin-top:4px">主货架已拍 · INF-VL 识别中</div>
+    </div>`;
+  taken.style.background = '#000';
+}
+
+// ─────── INF-VL 识别动画 (V3.2 · 不再含日期·日期由美顾手填) ───────
+function startVLRecognition(){
+  // V3.2 · SKU + 数量已成熟·快速展示完成 (1.5s)
+  // 真实情况由后端调 INF-VL · 此处 mock
+  
+  const vlPercent = document.getElementById('vlPercent');
+  const vlSku = document.getElementById('vlSku');
+  const vlCount = document.getElementById('vlCount');
+  const vlProgressStep = document.getElementById('vlProgressStep');
+  
+  // 立即设最终结果 (vlSku/vlCount 已在 HTML 默认显示完成态)
+  if(vlPercent) vlPercent.textContent = '100%';
+  if(vlSku){
+    vlSku.textContent = '5 SKU · 87.3% 精度';
+    vlSku.style.color = 'var(--green)';
+  }
+  if(vlCount){
+    vlCount.textContent = '72 瓶 · 95.7% 精度';
+    vlCount.style.color = 'var(--green)';
+  }
+  if(vlProgressStep){
+    vlProgressStep.textContent = '✓ INF-VL 已识别 SKU + 数量·请填生产日期';
+    vlProgressStep.classList.remove('amber');
+  }
+}
+
+// ─────── 拍照 + 长按异常 (统一处理) ───────
+let touchStartTime = 0;
+let longPressTriggered = false;
+
+function photoStart(e, stage){
+  e.preventDefault();
+  e.stopPropagation();
+  touchStartTime = Date.now();
+  longPressTriggered = false;
+  
+  // 长按 600ms 弹异常
+  State.longPressTimer = setTimeout(()=>{
+    longPressTriggered = true;
+    document.querySelectorAll('.photo-area').forEach(p=>p.classList.add('long-press'));
+    if(navigator.vibrate) navigator.vibrate(50);
+    openException();
+  }, 600);
+}
+
+function photoEnd(e, stage){
+  e.preventDefault();
+  e.stopPropagation();
+  
+  // 取消长按计时
+  if(State.longPressTimer){
+    clearTimeout(State.longPressTimer);
+    State.longPressTimer = null;
+  }
+  document.querySelectorAll('.photo-area').forEach(p=>p.classList.remove('long-press'));
+  
+  // 短按 (<600ms 且没触发长按) = 拍照
+  const duration = Date.now() - touchStartTime;
+  if(!longPressTriggered && duration < 600){
+    takePhoto(stage);
+  }
+}
+
+// 兼容旧代码 (仅鼠标 mouse 设备用)
+function startLongPress(e){
+  if(e && e.preventDefault) e.preventDefault();
+}
+function endLongPress(){}
+
+// ─────── 老板拒绝 → 自动调 嫌贵话术 ───────
+function bossReject(){
+  openChef();
+  // 自动触发嫌贵话术
+  setTimeout(()=>{
+    const cards = document.querySelectorAll('.chef-card');
+    if(cards[0]) cards[0].click();
+  }, 300);
+}
+
+// ─────── V3.1 · 屏 7 视图切换 (一线 / 老板) ───────
+function switchView(view){
+  const teamSeg = document.getElementById('teamSegment');
+  const bossMsg = document.getElementById('bossViewMsg');
+  const btnFrontline = document.getElementById('vtFrontline');
+  const btnBoss = document.getElementById('vtBoss');
+  
+  if(view === 'frontline'){
+    if(teamSeg) teamSeg.style.display = '';
+    if(bossMsg) bossMsg.style.display = 'none';
+    btnFrontline?.classList.add('active');
+    btnBoss?.classList.remove('active');
+  } else {
+    if(teamSeg) teamSeg.style.display = 'none';
+    if(bossMsg) bossMsg.style.display = 'flex';
+    btnFrontline?.classList.remove('active');
+    btnBoss?.classList.add('active');
+  }
+}
+
+// ─────── V3.1 · 屏 7 选动销方案 ───────
+function selectPromo(el, optName){
+  // 取消所有 selected
+  document.querySelectorAll('.promo-opt').forEach(o => o.style.borderColor = '');
+  // 高亮当前
+  el.style.borderColor = 'var(--amber)';
+  el.style.background = 'var(--amber-dim)';
+  console.log('[Promo] 已选方案', optName);
+}
+
+// ─────── AI 主厨 ───────
+function openChef(){
+  document.getElementById('chefModal').classList.add('show');
+  document.getElementById('chefAnswer').classList.remove('show');
+}
+
+function closeChef(){
+  document.getElementById('chefModal').classList.remove('show');
+}
+
+async function askChef(name, prompt){
+  const answer = document.getElementById('chefAnswer');
+  const content = document.getElementById('chefAnswerContent');
+  answer.classList.add('show');
+  content.innerHTML = '<div class="chef-thinking"><span>🍳 AI 主厨思考中</span><div class="cd-dot"></div><div class="cd-dot"></div><div class="cd-dot"></div></div>';
+  
+  const sys = `你是 INFINITY OS 美顾的 AI 主厨助手·任务是给一线美顾(销售)提供现场救命话术。
+背景: 美顾在零售门店工作 · 推广欣和 SH 的酱油品牌 (六月鲜·禾然·味达美等) · 经常被门店老板拒绝。
+要求: 简洁专业 · 100 字以内 · 直接给出可用话术 · 用中文。`;
+  
+  try{
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        system: sys,
+        messages: [{role:'user', content: prompt}]
+      })
+    });
+    const data = await r.json();
+    const text = data.content?.map(c=>c.text||'').join('') || '暂时无法获取话术·请稍后重试。';
+    content.innerHTML = `
+      <div style="font-size:11px;color:var(--amber);font-weight:700;margin-bottom:6px">💡 ${name}</div>
+      <div style="white-space:pre-wrap;font-size:12px;line-height:1.7">${text}</div>
+    `;
+  } catch(e){
+    content.innerHTML = `<div style="color:var(--red);font-size:11px">⚠ 调用失败: ${e.message}</div>`;
+  }
+}
+
+// ─────── 异常上报 ───────
+function openException(){
+  document.getElementById('exceptionModal').classList.add('show');
+}
+
+function closeException(){
+  document.getElementById('exceptionModal').classList.remove('show');
+}
+
+function reportException(type){
+  alert(`✓ 已记录 ${type} 异常上报\n(实际后端 API 在 Tech Lead 阶段实现)`);
+  closeException();
+}
+
+// ─────── V3.1 · 蝴蝶效应 4 类配置 ───────
+const BUTTERFLY_TYPES = {
+  A: {
+    code: 'bf-a',
+    icon: '⚠ 蝴蝶效应红色',
+    name: 'A 类压货',
+    text: '检测到 禾然有机 后仓 36 瓶 远超 2A · 经销商被压货 · 建议先消化不补',
+    action: '→ 跳转推动销',
+    actionScreen: 7,
+    severity: '🔴 急'
+  },
+  B: {
+    code: 'bf-b',
+    icon: '⚠ 蝴蝶效应黄色',
+    name: 'B 类促销扰动',
+    text: '极鲜 5 月促销结束 · r 值从 8/天 骤降到 4/天 (-50%) · 暂缓补货 · 等 r 稳定再下单',
+    action: '→ 修订 r 基线',
+    actionScreen: 7,
+    severity: '🟡 警觉'
+  },
+  C: {
+    code: 'bf-c',
+    icon: '⚠ 蝴蝶效应紫色',
+    name: 'C 类窜货失真',
+    text: '本店周边 200m 检测到 ¥15 低价禾然 · 疑似窜货 · 建议上报 DOM 督导调查',
+    action: '→ 上报 DOM 督导',
+    actionScreen: null,
+    severity: '🟣 调查'
+  },
+  D: {
+    code: 'bf-d',
+    icon: 'ℹ 蝴蝶效应蓝色',
+    name: 'D 类战略扰动',
+    text: '极鲜 进入 defending 防御阶段 (海天降价 12%) · 补货策略调整 max +0.5a · 多备防竞品',
+    action: '→ 学习新策略',
+    actionScreen: null,
+    severity: '🔵 信息'
+  }
+};
+
+// ─────── 蝴蝶效应 alert (V3.3 · 4 类 + 停留时间可调) ───────
+let currentBfType = 'A';
+
+// V3.3 · 蝴蝶 alert 停留时间 (默认 8 秒·可调 3-30 秒)
+let BF_STAY_TIME = 8000;  // 毫秒
+let bfStayTimer = null;   // 当前 timer · 切类时清掉
+
+// 启动时·从 localStorage 读保存的设置
+(function initBfStayTime(){
+  try {
+    const saved = localStorage.getItem('infxd_bf_stay_sec');
+    if(saved){
+      const sec = parseInt(saved);
+      if(sec >= 3 && sec <= 30){
+        BF_STAY_TIME = sec * 1000;
+      }
+    }
+  } catch(e) { /* localStorage 不可用·用默认 */ }
+})();
+
+// V3.3 · 调停留时间 (滑块触发)
+function updateBfStay(sec){
+  sec = parseInt(sec);
+  if(isNaN(sec) || sec < 3 || sec > 30) return;
+  BF_STAY_TIME = sec * 1000;
+  // 更新显示
+  const valEl = document.getElementById('bfStayValue');
+  if(valEl) valEl.textContent = sec + 's';
+  // 保存到 localStorage
+  try { localStorage.setItem('infxd_bf_stay_sec', sec); } catch(e) {}
+  console.log('[V3.3] 蝴蝶停留时间改为', sec, '秒');
+}
+
+function showButterfly(type){
+  type = type || currentBfType || 'A';
+  const cfg = BUTTERFLY_TYPES[type];
+  if(!cfg) return;
+  
+  currentBfType = type;
+  const alert = document.getElementById('butterflyAlert');
+  
+  // 切类·清旧 class·加新 class
+  alert.classList.remove('bf-a','bf-b','bf-c','bf-d');
+  alert.classList.add(cfg.code);
+  
+  // 填文案
+  document.getElementById('bfTitle').textContent = cfg.icon + ' · ' + cfg.name;
+  document.getElementById('bfText').textContent = cfg.text;
+  const actionBtn = document.getElementById('bfAction');
+  if(actionBtn){
+    actionBtn.textContent = cfg.action;
+    actionBtn.style.display = cfg.actionScreen ? 'inline-block' : 'none';
+  }
+  
+  alert.classList.add('show');
+  document.body.classList.add('bf-active');
+  State.butterflyShown = true;
+  
+  // V3.3 · 清旧 timer · 用新的 BF_STAY_TIME
+  if(bfStayTimer) clearTimeout(bfStayTimer);
+  bfStayTimer = setTimeout(()=>{
+    if(alert.classList.contains('show')){
+      alert.classList.remove('show');
+      document.body.classList.remove('bf-active');
+    }
+  }, BF_STAY_TIME);
+}
+
+function closeButterfly(){
+  document.getElementById('butterflyAlert').classList.remove('show');
+  document.body.classList.remove('bf-active');
+}
+
+// 蝴蝶行动按钮 → 跳屏
+function actButterfly(){
+  const cfg = BUTTERFLY_TYPES[currentBfType];
+  if(cfg && cfg.actionScreen){
+    closeButterfly();
+    goScreen(cfg.actionScreen);
+  } else if(cfg) {
+    alert(`${cfg.name}\n\n${cfg.action}\n\n该流程开发中...`);
+  }
+}
+
+// V3.1 · 演示切换 (DS 切看 4 类)
+function triggerBf(type, btn){
+  // 切按钮 active
+  document.querySelectorAll('.bf-demo-btn').forEach(b => b.classList.remove('active'));
+  btn?.classList.add('active');
+  // 触发对应类
+  State.butterflyShown = false;
+  showButterfly(type);
+}
+
+// 演示模式·屏 6 时显示切换器
+function toggleBfDemoSwitcher(show){
+  const sw = document.getElementById('bfDemoSwitcher');
+  if(!sw) return;
+  if(show) {
+    sw.classList.remove('hide');
+    sw.classList.add('show');
+    // V3.3 · 同步滑块到当前 BF_STAY_TIME
+    const slider = document.getElementById('bfStaySlider');
+    const valEl = document.getElementById('bfStayValue');
+    if(slider && valEl){
+      const sec = Math.round(BF_STAY_TIME / 1000);
+      slider.value = sec;
+      valEl.textContent = sec + 's';
+    }
+  } else {
+    sw.classList.remove('show');
+    sw.classList.add('hide');
+  }
+}
+
+// ─────── 设置 ───────
+function openSettings(){
+  document.getElementById('settingsModal').classList.add('show');
+}
+
+function closeSettings(){
+  document.getElementById('settingsModal').classList.remove('show');
+}
+
+function switchMode(mode, btn){
+  State.mode = mode;
+  safeStorage.set('infxd_mode', mode);
+  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  if(mode==='advanced'){
+    alert('已切换至 高级模式\n(Stage 5 完整实现 · 当前为占位)');
+  }
+}
+
+function resetTutorial(){
+  safeStorage.del('infxd_tutorial_done');
+  State.tutorialDone = false;
+  alert('教程已重置 · 下次启动显示');
+  closeSettings();
+}
+
+// ─────── 完成本次拜访 ───────
+function finishVisit(){
+  alert('✓ 本次拜访完成\n\n贡献 92 瓶推单 ¥9,080\nincome_share 10% · 月底奖金结算\nCB 4.78 → 4.80\n\n切回 APP 模式 (T4 离店后)\n(美顾 v2.9 APP 模式由 INF-XD 嵌入框架对接)');
+  // Reset 准备下一家
+  setTimeout(()=>{
+    State.butterflyShown = false;
+    bootApp();
+  }, 1500);
+}
+
+// ─────── 启动 ───────
+bootApp();
+
+
+// ─────── 全局导航 ───────
+const screenFlow = ['s0','s1','s2','s3','s4','s5','s6','s7','s8','s9'];
+
+function navBack(){
+  const cur = State.currentScreen;
+  if(cur === 0 || cur === 1){
+    if(navigator.vibrate) navigator.vibrate(50);
+    return; // 第一屏不能再返回
+  }
+  // 屏 25 (陈列清单) 返回 屏 2
+  if(cur === 25){ goScreen(2); return; }
+  // 屏 3 (拍主货架) 返回 屏 25
+  if(cur === 3){ goScreen(25); return; }
+  // 屏 4 (识别中) 返回到屏 3 + 取消识别
+  if(cur === 4){
+    if(State.vlProgressTimer) clearInterval(State.vlProgressTimer);
+    goScreen(3);
+    return;
+  }
+  goScreen(cur - 1);
+}
+
+function navNext(){
+  const cur = State.currentScreen;
+  if(cur === 0){
+    dismissTutorial();
+    return;
+  }
+  if(cur === 1){ goScreen(2); return; }
+  if(cur === 2){ 
+    if(State.autoSkipTimer) clearInterval(State.autoSkipTimer);
+    goScreen(3); return; 
+  }
+  if(cur === 3){ takePhoto(1); return; }
+  if(cur === 4){ 
+    // 强制完成识别
+    if(State.vlProgressTimer) clearInterval(State.vlProgressTimer);
+    goScreen(5); 
+    return; 
+  }
+  if(cur === 5){ takePhoto(2); return; }
+  if(cur === 6){ goScreen(7); return; }
+  if(cur === 7){ goScreen(8); return; } // 跳过老板确认
+  if(cur === 8){ goScreen(9); return; }
+  if(cur === 9){ finishVisit(); return; }
+}
+
+function updateNavBar(){
+  const cur = State.currentScreen;
+  const backBtn = document.getElementById('tbBackBtn');
+  if(!backBtn) return;
+  
+  // 教程屏 + 第 1 屏 = 返回禁用
+  if(cur === 0 || cur === 1){
+    backBtn.disabled = true;
+  } else {
+    backBtn.disabled = false;
+  }
+}
+
+// hook goScreen 以便更新 nav
+const origGoScreen = goScreen;
+goScreen = function(n){
+  origGoScreen(n);
+  updateNavBar();
+};
+
+// 启动后更新一次
+setTimeout(updateNavBar, 100);
+
+// 设置进店时间
+const now = new Date();
+document.getElementById('checkInTime').textContent = '进店时间: ' + 
+  now.getHours().toString().padStart(2,'0') + ':' + 
+  now.getMinutes().toString().padStart(2,'0') + ':' + 
+  now.getSeconds().toString().padStart(2,'0');
+</script>
+</body>
+</html>
