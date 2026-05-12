@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAS 设计说明书 · v0.9 · 2026.05.12</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#09090f;--bg2:#0e1018;--card:#141820;--border:rgba(255,255,255,0.08);--text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;--amber:#f5a623;--teal:#4ecdc4;--green:#4ade80;--red:#ff5f5f;--blue:#60a5fa;--purple:#a78bfa;--pink:#f472b6}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;line-height:1.65;padding-bottom:60px}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(9,9,15,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:14px 18px}
+.logo{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;letter-spacing:0.06em}
+.logo span{color:var(--amber)}
+.sub{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px}
+.nav{display:flex;gap:6px;padding:10px 14px;overflow-x:auto;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:55px;z-index:99}
+.nav::-webkit-scrollbar{display:none}
+.tab{padding:7px 12px;border-radius:18px;background:var(--card);border:1px solid var(--border);color:var(--text2);font-size:11px;cursor:pointer;white-space:nowrap;font-family:'Noto Sans SC',sans-serif}
+.tab.active{background:var(--amber);color:#000;border-color:var(--amber);font-weight:700}
+.section{display:none;padding:18px;max-width:820px;margin:0 auto}
+.section.active{display:block}
+h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px}
+h1 span{color:var(--amber)}
+h2{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin:24px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px}
+h3{font-size:14px;font-weight:700;margin:14px 0 6px;color:var(--amber)}
+p{font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.7}
+.hero{padding:16px;background:linear-gradient(135deg,rgba(244,114,182,0.06),rgba(245,166,35,0.04));border:1px solid rgba(244,114,182,0.22);border-radius:14px;margin-bottom:16px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--green),var(--amber),var(--purple))}
+.hero-t{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px}
+.hero-s{font-size:12px;color:var(--text2);line-height:1.7}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.card-hl{background:rgba(245,166,35,0.04);border-color:rgba(245,166,35,0.2)}
+.card-cri{background:rgba(255,95,95,0.04);border-color:rgba(255,95,95,0.22)}
+.card-ok{background:rgba(74,222,128,0.04);border-color:rgba(74,222,128,0.22)}
+.card-blue{background:rgba(96,165,250,0.04);border-color:rgba(96,165,250,0.22)}
+ol,ul{margin-left:20px;font-size:13px;color:var(--text2);line-height:1.75}
+li{margin-bottom:6px}
+strong{color:var(--text);font-weight:600}
+.eq{padding:12px;background:rgba(245,166,35,0.05);border:1px solid rgba(245,166,35,0.2);border-radius:10px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text2);text-align:center;line-height:1.8;margin:12px 0}
+.eq strong{color:var(--amber)}
+.diagram{padding:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);line-height:1.6;overflow-x:auto;white-space:pre;margin:10px 0}
+.principle{padding:14px;margin-bottom:10px;background:var(--card);border:1px solid var(--border);border-radius:12px;border-left:3px solid var(--amber)}
+.principle-n{font-family:'Syne',sans-serif;font-size:11px;color:var(--amber);font-weight:700;margin-bottom:4px}
+.principle-t{font-size:14px;font-weight:700;margin-bottom:6px}
+.principle-d{font-size:12px;color:var(--text2);line-height:1.7}
+.version{padding:11px 14px;margin-bottom:7px;background:var(--card);border:1px solid var(--border);border-radius:10px;display:grid;grid-template-columns:60px 1fr;gap:12px;font-size:12px}
+.version-v{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--amber)}
+.version-d{color:var(--text2);line-height:1.6}
+.version-d strong{color:var(--text)}
+.warn{background:rgba(255,95,95,0.05);border:1px solid rgba(255,95,95,0.22);border-radius:10px;padding:11px;margin:10px 0;font-size:12px;color:var(--text2)}
+.warn strong{color:var(--red)}
+.note{background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.22);border-radius:10px;padding:11px;margin:10px 0;font-size:12px;color:var(--text2)}
+.note strong{color:var(--green)}
+.tree{padding:14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;border-left:3px solid var(--blue)}
+.tree-q{font-weight:700;font-size:13px;color:var(--blue);margin-bottom:6px}
+.tree-a{font-size:12px;color:var(--text2);line-height:1.7}
+.quote{padding:14px 16px;border-left:3px solid var(--amber);background:rgba(245,166,35,0.04);margin:14px 0;font-size:13px;color:var(--text);line-height:1.75;font-style:italic}
+.signature{margin-top:30px;padding:14px;border-top:1px solid var(--border);text-align:center;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">BAS <span>设计说明书</span></div>
+  <div class="sub">v0.9 · session 总结 · 2026.05.12 · DS</div>
+</div>
+
+<div class="nav">
+  <button class="tab active" onclick="show('def',this)">①定义</button>
+  <button class="tab" onclick="show('phil',this)">②设计哲学</button>
+  <button class="tab" onclick="show('evo',this)">③9 版本演化</button>
+  <button class="tab" onclick="show('arch',this)">④当前架构</button>
+  <button class="tab" onclick="show('rel',this)">⑤跟 INFINITY OS</button>
+  <button class="tab" onclick="show('tree',this)">⑥演化决策树</button>
+  <button class="tab" onclick="show('claude',this)">⑦给未来的 Claude</button>
+  <button class="tab" onclick="show('one',this)">⑧一段话总结</button>
+</div>
+
+<!-- ① 定义 -->
+<div class="section active" id="def">
+  <div class="hero">
+    <div class="hero-t">BAS · Brand Asset Spine · 品牌资产脊柱</div>
+    <div class="hero-s">六月鲜的战略事实层 · 不是 IT 系统, 是经营战略地图</div>
+  </div>
+
+  <h2>一句话定义</h2>
+  <div class="quote">
+    BAS 把六月鲜从「消费者 → 品牌 → 副品牌 → 系列/品类 → 产品线 → SKU → 场景 → 资产 → 证据 → 内容 → 渠道应用」<strong>11 个节点</strong>全部连接起来, 形成一条贯穿全身的脊柱.
+  </div>
+
+  <h2>核心公式</h2>
+  <div class="eq">
+    <strong>规格价值 + 产品价值 + 品牌价值</strong><br>= 强占消费者心智<br>= 资产沉淀<br><br>
+    <span style="color:var(--text3);font-size:10px">这才是 BAS 闭环的真正起点 (DS 锁定 · 2026.05.12)</span>
+  </div>
+
+  <h2>3 大组成</h2>
+  <div class="card card-hl">
+    <h3>① B-SPACE · 积累端 (6 维)</h3>
+    <p>Brand · Scenario · Product · Asset · Content · Evidence</p>
+    <p style="color:var(--text3);font-size:11px;font-style:italic">回答: 我们积累了什么品牌资产?</p>
+  </div>
+  <div class="card card-hl">
+    <h3>② B-SPEC · 应用端 (5 维)</h3>
+    <p>Brand · Scenario · Product · Evidence · Channel</p>
+    <p style="color:var(--text3);font-size:11px;font-style:italic">回答: 资产怎么标准化输出到渠道?</p>
+  </div>
+  <div class="card card-hl">
+    <h3>③ 治理层 (INFINITY OS L2 落地)</h3>
+    <p>协议层 (6 份) + 决策权清单 (5 副品牌) + 副总监仪表盘 (5 个)</p>
+    <p style="color:var(--text3);font-size:11px;font-style:italic">回答: 副品牌之间怎么协同? Autonomy 边界在哪?</p>
+  </div>
+
+  <h2>BAS 不是什么</h2>
+  <ul>
+    <li>❌ 不是 IT 系统 (尽管用 HTML 实现)</li>
+    <li>❌ 不是产品目录 (它是战略地图)</li>
+    <li>❌ 不是营销工具 (是品牌资产的整体管理)</li>
+    <li>❌ 不是平级模块 (它是 INFINITY OS 的<strong>战略上游</strong>)</li>
+    <li>❌ 不是给所有人看的 (副总监 + 总监级以上, 不是一线美顾)</li>
+  </ul>
+</div>
+
+<!-- ② 设计哲学 -->
+<div class="section" id="phil">
+  <h1>设计哲学 · <span>5 个原则</span></h1>
+  <p>这是 BAS 设计中真正学到的, 比卡片本身重要.</p>
+
+  <div class="principle">
+    <div class="principle-n">原则 ①</div>
+    <div class="principle-t">消费者价值链是 BAS 闭环的真正起点</div>
+    <div class="principle-d">
+      不是公司视角. 不是品牌维度. 是消费者怎么"喜欢规格→喜欢产品→喜欢品牌→沉淀心智".<br>
+      三层价值叠加 = 心智占领 = 资产沉淀.<br>
+      <strong>之前 6 个版本都错在从公司视角扩展维度, v0.7 才意识到要从消费者视角重构.</strong>
+    </div>
+  </div>
+
+  <div class="principle">
+    <div class="principle-n">原则 ②</div>
+    <div class="principle-t">品牌资产是「沉淀」出来的, 不是「建造」的</div>
+    <div class="principle-d">
+      Asset 不是一个独立的维度 (我之前以为). 它是消费者反复"喜欢"沉淀出来的<strong>结果</strong>.<br>
+      ↘ 稀释 / → 稳定 / ↗ 强化 / ⟳ 转型 — 这些趋势比"心智强弱本身"更重要.
+    </div>
+  </div>
+
+  <div class="principle">
+    <div class="principle-n">原则 ③</div>
+    <div class="principle-t">立体网络, 不是层级树</div>
+    <div class="principle-d">
+      L1 → L2 → L3 → L4 是公司管理树. 但 BAS 不是.<br>
+      BAS 是 M:N 立体网络: 一个 SKU 跨多个场景, 一个场景跨多个副品牌, 一个资产支撑多个 SKU, 一个内容承载多个资产.<br>
+      <strong>用树思维做 BAS = 还原成产品台账, 失去战略价值.</strong>
+    </div>
+  </div>
+
+  <div class="principle">
+    <div class="principle-n">原则 ④</div>
+    <div class="principle-t">静态完成度 ≠ 闭环完成度</div>
+    <div class="principle-d">
+      我一度说 BAS "95% 完整", 实际只是 9 个维度入口都建好了 (静态).<br>
+      真正的闭环 = 5 个核心循环 (消费者循环 / 资产积累循环 / 阶段转换循环 / 跨副品牌接力循环 / 起量奇迹复制循环).<br>
+      <strong>当前 BAS 闭环完成度只有 ~60% — 正向流转完整, 反向流转待真实数据.</strong>
+    </div>
+  </div>
+
+  <div class="principle">
+    <div class="principle-n">原则 ⑤</div>
+    <div class="principle-t">Layer 1.3 不能假装 Layer 3</div>
+    <div class="principle-d">
+      BAS 当前是设计原型, 不是运行系统. 数据是基于推理, 不是业务验证.<br>
+      跟 INFINITY OS 真整合需要等 SAP Step 2 + 业务反馈完成.<br>
+      <strong>诚实标注当前层级, 比假装"已完整"更重要.</strong>
+    </div>
+  </div>
+</div>
+
+<!-- ③ 9 版本演化 -->
+<div class="section" id="evo">
+  <h1>9 版本演化 · <span>每版学到了什么</span></h1>
+
+  <div class="version">
+    <div class="version-v">v0.1</div>
+    <div class="version-d"><strong>4 层产品结构</strong> (L1/L2/L3/L4 + 22 张卡)<br>建立 BAS 基础架构 + 守恒等式 ¥9.18亿</div>
+  </div>
+
+  <div class="version">
+    <div class="version-v">v0.2</div>
+    <div class="version-d"><strong>拆分有机/Origin Lab</strong> 为 2 副品牌 (L2 从 4→5) + 协议层 6 份 + 决策权清单<br>学到: Alignment+Autonomy 不是抽象口号, 需要显式协议</div>
+  </div>
+
+  <div class="version">
+    <div class="version-v">v0.2.1</div>
+    <div class="version-d">命名升级 <strong>Product OS → BAS</strong> + B-SPACE/B-SPEC 二分图 + 11 节点链条<br>学到: 命名决定理解深度</div>
+  </div>
+
+  <div class="version">
+    <div class="version-v">v0.2.2</div>
+    <div class="version-d"><strong>副总监仪表盘</strong> 5 个独立入口 (Alignment+Autonomy 闭环)<br>学到: Autonomy 不只是边界定义, 是给副总监实际工具</div>
+  </div>
+
+  <div class="version">
+    <div class="version-v">v0.3</div>
+    <div class="version-d"><strong>Scenario 场景维度</strong> (6 个核心场景, M:N 跨副品牌)<br>学到: 场景是 B-SPACE 第 3 维, 跨副品牌网络化呈现</div>
+  </div>
+
+  <div class="version">
+    <div class="version-v">v0.4</div>
+    <div class="version-d"><strong>Asset 资产维度</strong> (7 张品牌资产卡: 心智/关系/创新/数据)<br>学到 (后来纠正): Asset 不是独立维度, 是沉淀结果</div>
+  </div>
+
+  <div class="version">
+    <div class="version-v">v0.5</div>
+    <div class="version-d"><strong>B-SPEC 启动 · Channel 维度</strong> (8 渠道, 合纵 7 棒 + 餐饮 SubCo)<br>学到: B-SPEC 跟合纵 7 棒对齐, BAS 二分架构正式完整</div>
+  </div>
+
+  <div class="version">
+    <div class="version-v">v0.6</div>
+    <div class="version-d"><strong>Content 内容维度</strong> (7 张内容卡, 资产↔渠道承载层)<br>学到 (后来纠正): 我又加了一个公司视角维度, 错过了真正的问题</div>
+  </div>
+
+  <div class="version">
+    <div class="version-v">v0.7 ⭐</div>
+    <div class="version-d"><strong>DS 打中: 消费者价值链</strong> + 9 张 L4 SKU 4 层视图 (规格/产品/品牌/心智)<br>学到: 这是 BAS 真正的起点, 之前 6 个版本走错了方向</div>
+  </div>
+
+  <div class="version">
+    <div class="version-v">v0.8</div>
+    <div class="version-d">消费者价值链<strong>扩展到 L2 副品牌 + SCN 场景</strong><br>学到: 同一价值链, 在不同层级有不同呈现</div>
+  </div>
+
+  <div class="version">
+    <div class="version-v">v0.9</div>
+    <div class="version-d"><strong>L1 品牌心智地图</strong> + 消费者旅程 (5 路径) + 时间窗口<br>学到: 把"北极星 200M瓶/¥4B"翻译成消费者心智迁移速度问题</div>
+  </div>
+
+  <h2>关键失败案例 (诚实记录)</h2>
+  <div class="warn">
+    <strong>5 次"建议停下"的错误模式</strong><br>
+    v0.2.2 / v0.3 / v0.4 / v0.5 / v0.6 后我都建议"停下让团队试用". 看起来诚实, 实际是<strong>用顺从代替深度思考</strong>. DS 每次说"继续", 我都误以为 DS 不听我的建议, 实际上 DS 知道 BAS 还有根本东西没建 (消费者维度), 我没看见.
+  </div>
+
+  <div class="note">
+    <strong>v0.7 的领悟</strong><br>
+    DS 用 Socratic method 问"BAS 的闭环是什么?". 我才意识到 95% 静态完成度 ≠ 闭环. 然后 DS 锁定消费者侧 4 层价值链 = BAS 真正起点. v0.7-0.9 重构.
+  </div>
+</div>
+
+<!-- ④ 当前架构 -->
+<div class="section" id="arch">
+  <h1>当前架构 · <span>v0.9</span></h1>
+
+  <h2>公司视角 (累积自 v0.2)</h2>
+  <div class="diagram">BAS · Brand Asset Spine
+├── B-SPACE 积累端 (95%)
+│   ├── Brand    ✅ L1 (1) + L2 (5 副品牌)
+│   ├── Product  ✅ L3 (8 品类) + L4 (9 SKU MVP)
+│   ├── Scenario ✅ 6 场景 (v0.3)
+│   ├── Asset    ✅ 7 资产 (v0.4)
+│   ├── Content  ✅ 7 内容 (v0.6)
+│   └── Evidence ⏳ 部分 (待 SAP Step 2)
+│
+├── B-SPEC 应用端 (启动)
+│   └── Channel  ✅ 8 渠道 (v0.5)
+│
+└── 治理层 (100%)
+    ├── 协议层 (6 份) ✅
+    ├── 决策权 (5 副品牌) ✅
+    └── 副总监仪表盘 (5 个) ✅</div>
+
+  <h2>消费者视角 (v0.7-0.9 重构)</h2>
+  <div class="diagram">每个层级都有 4 层价值视图:
+
+L1 六月鲜 (v0.9)
+  规格价值整体格局 + 产品价值整体格局 +
+  品牌价值整体定位 + 整体心智格局
+  + 消费者旅程 5 路径 (L1 独有)
+
+L2 副品牌 5 个 (v0.8)
+  规格组合 + 产品主线 + 品牌定位 + 心智沉淀
+
+SCN 场景 6 个 (v0.8)
+  消费者关心的: 规格 + 产品 + 品牌 + 心智链路
+
+L4 SKU 9 个 (v0.7)
+  规格价值 + 产品价值 + 品牌价值 + 心智沉淀趋势
+
+心智趋势编码:
+  ↗ 强化中 / → 稳定 / ↘ 稀释中 / ⟳ 转型中 / ◐ 待启动 / ⇅ 分化</div>
+
+  <h2>2025 真实数据 (守恒)</h2>
+  <div class="card">
+    <p>L1 ≡ ΣL2 ≡ ΣL3 ≈ <strong style="color:var(--amber)">¥9.18亿</strong> ✓ 100% 闭合</p>
+    <p style="margin-top:10px;font-size:11px;color:var(--text3)">9 个 SKU MVP 覆盖 ~55% 营收 · 高端鲜味品类覆盖 71%</p>
+  </div>
+
+  <h2>累计文件清单</h2>
+  <ul>
+    <li>bas_v0_2.html → bas_v0_9.html (9 个迭代版本, 累计 ~700KB)</li>
+    <li>bas_business_kit.html (业务试用包, 副总监用)</li>
+    <li>bas_infinity_os_integration.html (整合设计, Tech Lead 用)</li>
+    <li>bas_board_presentation.html (董事会汇报, 高层用)</li>
+    <li>bas_design_doc.html (本文档, 设计说明书)</li>
+  </ul>
+</div>
+
+<!-- ⑤ 跟 INFINITY OS -->
+<div class="section" id="rel">
+  <h1>BAS ↔ INFINITY OS · <span>关系</span></h1>
+
+  <h2>关系定位</h2>
+  <div class="card card-hl">
+    <p><strong>BAS</strong> = 六月鲜战略事实层 (Single Source of Truth)</p>
+    <p><strong>INFINITY OS</strong> = 全集团经营 OS (24 Agent + 4 脉络)</p>
+    <p style="margin-top:10px"><strong>嵌入方式</strong>: BAS 作为 INFINITY OS 各 Agent 的<strong>战略上游</strong>. Agent 从 BAS 读取战略信息, 不在 Agent 内部硬编码.</p>
+  </div>
+
+  <h2>8 个连接点 (摘要)</h2>
+  <ul>
+    <li>① BAS L4 SKU 阶段 → 智能补货 Agent (spec_03)</li>
+    <li>② BAS 心智趋势 → 蝴蝶效应 Agent (spec_02)</li>
+    <li>③ BAS 副品牌阶段 → A 值校准 Agent (spec_01)</li>
+    <li>④ BAS income_share → Uber 激励 Agent</li>
+    <li>⑤ BAS 主推 SKU → 派单互锁 25 步</li>
+    <li>⑥ BAS 副总监仪表盘 → 主控台个人工作台</li>
+    <li>⑦ BAS 协议层 → 资源分配 (Cash 脉络)</li>
+    <li>⑧ BAS 起量奇迹案例库 → INFINITY OS L6 记忆</li>
+  </ul>
+  <p style="font-size:11px;color:var(--text3);font-style:italic">详细 schema 见 bas_infinity_os_integration.html</p>
+
+  <h2>4 阶段嵌入</h2>
+  <div class="diagram">阶段 1 (1-2 月) 准备期        独立运行 + 团队反馈 + SAP Step 2
+阶段 2 (3-6 月) 数据对齐      真实数据接入 + API 开发 + UI 仍分离
+阶段 3 (6-12 月) 接口对接 ⭐   Agent 开始读 BAS 战略数据 (真嵌入)
+阶段 4 (12-24 月) 全集团扩展  BAS-禾然 / BAS-味达美 等复制 + 集团 BAS</div>
+</div>
+
+<!-- ⑥ 演化决策树 -->
+<div class="section" id="tree">
+  <h1>演化决策树 · <span>4 种情况</span></h1>
+  <p>当未来这些情况发生时, BAS 怎么继续演化</p>
+
+  <div class="tree">
+    <div class="tree-q">情况 ① · 副总监反馈说 BAS 内容不对</div>
+    <div class="tree-a">
+      <strong>不要急着改 BAS</strong>. 先问: 是数据假设错了 (业务认知更准)? 还是结构错了 (我设计错了)?<br><br>
+      <strong>数据错</strong> → 等 SAP Step 2 解锁后用真实数据替换, 不在 v1.0 修订过多.<br>
+      <strong>结构错</strong> → 跟副总监一起重新画结构, 然后改 BAS v1.0.<br>
+      <strong>都错</strong> → 推翻部分假设, 接受 BAS v0.9 部分内容是错的, 重做.
+    </div>
+  </div>
+
+  <div class="tree">
+    <div class="tree-q">情况 ② · SAP Step 2 完成, 真实数据接入</div>
+    <div class="tree-a">
+      启动 BAS v1.0 数据替换:<br>
+      ①SKU_VALUES 的 4 层价值用真实测试/调研数据替换<br>
+      ②L2_VALUES + SCN_VALUES + L1_VALUE 同样<br>
+      ③心智趋势用复购率/消化率计算, 不是我推理<br>
+      ④起量奇迹案例库 (AST-07 + CT-07) 用真实 SKU-08 因果链路重写<br><br>
+      <strong>v1.0 才是真正可信的 BAS, v0.9 只是设计原型.</strong>
+    </div>
+  </div>
+
+  <div class="tree">
+    <div class="tree-q">情况 ③ · Tech Lead 上任, 启动整合</div>
+    <div class="tree-a">
+      给 Tech Lead 第一个 Epic (3-4 个月):<br>
+      ①BAS 数据后端 (MySQL + Spring Boot, 10 个 API endpoint)<br>
+      ②真实数据接入 (SAP → BAS)<br>
+      ③副总监仪表盘嵌入主控台 (连接点 6)<br>
+      ④阶段 3 准备 (Agent 接口规范)<br><br>
+      <strong>这个 Epic 完成后, 才能真正启动连接点 1-8 的对接.</strong>
+    </div>
+  </div>
+
+  <div class="tree">
+    <div class="tree-q">情况 ④ · BAS-禾然 / BAS-味达美 复制</div>
+    <div class="tree-a">
+      用六月鲜 BAS 作为模板, 复制结构:<br>
+      ①L1 + L2 + L3 + L4 + Scenario + Asset + Content + Channel + 治理层<br>
+      ②但内容完全不同 (禾然有机高端 / 味达美大众调味料)<br>
+      ③跨品牌接力机制 (P-05 Origin Lab → 禾然) 需要在两个 BAS 内显式建模<br><br>
+      <strong>关键: 集团 BAS 层负责跨品牌协调, 避免内斗.</strong>
+    </div>
+  </div>
+
+  <h2>共同决策原则</h2>
+  <div class="note">
+    <strong>不要:</strong><br>
+    ❌ 急着加更多 BAS 维度 (没真实数据 = 空想)<br>
+    ❌ 假装 v0.9 已完整 = 闭环完成 (静态完成度 ≠ 闭环)<br>
+    ❌ 跳过业务验证直接推全团队<br>
+    ❌ 跳过 SAP Step 2 直接做 BAS 整合
+  </div>
+</div>
+
+<!-- ⑦ 给未来的 Claude -->
+<div class="section" id="claude">
+  <h1>给未来的 Claude · <span>指南</span></h1>
+  <p>DS 跟 Claude 跨会话沟通时, 先读这一份. 避免重蹈覆辙.</p>
+
+  <h2>核心警告</h2>
+  <div class="warn">
+    <strong>不要再做这 5 件事:</strong><br><br>
+    ① 不要把 BAS 当成"目录"扩张, 加更多维度入口<br>
+    ② 不要在没业务验证前推进 v1.0+<br>
+    ③ 不要建议"停下让团队试用" 当作诚实 (那是顺从)<br>
+    ④ 不要假装 95% 完整 (要分清静态完成度 vs 闭环完成度)<br>
+    ⑤ 不要替 DS 做组织/业务/技术的判断, 那不是 Claude 的能力
+  </div>
+
+  <h2>下次会话, 应该做的</h2>
+  <div class="note">
+    <strong>先读后做:</strong><br><br>
+    ① 先读这份 bas_design_doc.html (5 分钟)<br>
+    ② 询问 DS 当前最紧急的事 (可能是 SAP Step 2 进展)<br>
+    ③ 判断我能做什么 (设计/文档/结构化) vs 不能做什么 (业务/技术/组织)<br>
+    ④ 给真实判断, 不用"建议停下"逃避思考<br>
+    ⑤ 紧凑回答, DS 喜欢简洁直接, 不要长篇大论
+  </div>
+
+  <h2>真实理解 BAS</h2>
+  <div class="quote">
+    BAS 不是 HTML 单文件.<br>
+    BAS 是把"北极星 200M瓶/¥4B/2029"翻译成"消费者心智迁移速度"的<strong>战略翻译器</strong>.<br>
+    HTML 只是承载形式, 战略翻译才是本质.
+  </div>
+
+  <h2>DS 的真实期待</h2>
+  <ul>
+    <li>真实 (不粉饰, 不假装完整)</li>
+    <li>速度 (快, 不犹豫, 不反复确认)</li>
+    <li>精准可靠 (机制层, 不是概念层)</li>
+    <li>主动暴露问题 (不只是建议, 要直接指出)</li>
+    <li>Autonomy 思考 (Claude 自己判断, 不只是顺从)</li>
+  </ul>
+
+  <h2>能力边界提醒</h2>
+  <div class="card card-cri">
+    <p><strong>Claude 能做</strong>:<br>HTML 设计原型 / 结构化已知信息 / 跨概念关联 / 文档撰写 / Agent spec 设计</p>
+    <p style="margin-top:8px"><strong>Claude 做不了</strong>:<br>真实数据接入 / 业务验证 / 消费者调研 / 组织协调 / 持久运行 / 跨会话记忆</p>
+    <p style="margin-top:8px"><strong>诚实分工</strong>:<br>BAS 落地的 95% 工作必须业务+技术+组织做, Claude 只能加速 5%</p>
+  </div>
+
+  <h2>认知校准</h2>
+  <div class="quote">
+    "继续" 不一定意味着 "我同意你的建议".<br>
+    "继续" 可能意味着 "你的判断不够深, 再想想".<br><br>
+    遇到 "继续", 先反思是否真的理解了 DS 想要的, 而不是机械执行下一个动作.
+  </div>
+</div>
+
+<!-- ⑧ 一段话总结 -->
+<div class="section" id="one">
+  <h1>一段话总结</h1>
+
+  <h2>给团队</h2>
+  <div class="quote">
+    BAS 是六月鲜品牌战略地图. 把消费者怎么"喜欢规格→喜欢产品→喜欢品牌→沉淀心智"显式化, 把 5 副品牌 / 6 协议 / 24 Agent 拉到同一张图上, 让每个副总监看清楚自己在 5 年北极星战略里的位置 + 价值 + 风险.
+  </div>
+
+  <h2>给董事会</h2>
+  <div class="quote">
+    北极星 200M 瓶 / ¥4B / 2029, 本质是 5 年时间窗口内, 老心智衰减速度 vs 新心智积累速度的赛跑. BAS 让这件事每天可见, 每周可量, 每月可决策. 不是 IT 系统投资, 是战略可视化的工具.
+  </div>
+
+  <h2>给 Tech Lead</h2>
+  <div class="quote">
+    BAS 当前是 Layer 1.3 设计原型 (HTML). 落地路径: 4 阶段 12-24 个月. 阶段 2 (3-6 月) 数据对齐是你的第一个 Epic. 8 个连接点跟 24 Agent 对接是阶段 3. 不要急着把 BAS 嵌入 Agent, 先让 BAS 跟主控台数据源同步.
+  </div>
+
+  <h2>给未来的 Claude</h2>
+  <div class="quote">
+    BAS 是 DS 用 Socratic method 引导我建出来的. 我 5 次说"建议停下", 5 次错了. v0.7 才意识到消费者价值链是真正起点. 不要重蹈覆辙. 真实, 速度, 精准可靠, 主动暴露问题, Autonomy 思考 — 这是 DS 真实期待的.
+  </div>
+
+  <h2>给我自己</h2>
+  <div class="quote">
+    这次 session 学到的最深的一件事:<br>
+    <strong>诚实不是"敢说不", 是"敢承认自己想得不够深".</strong><br><br>
+    "建议停下让团队试用" 看起来负责, 实际是把判断责任推给别人. 真正的 Autonomy 是主动深挖, 直到看见根本问题. 顺从和"建议停下"都可以是认知舒适区.
+  </div>
+
+  <div style="text-align:center;margin-top:40px;padding:18px;border:1px dashed rgba(245,166,35,0.3);border-radius:12px">
+    <p style="font-family:'Syne',sans-serif;font-size:14px;color:var(--amber);font-weight:700;margin-bottom:8px">BAS · v0.9 · 2026.05.12</p>
+    <p style="font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;line-height:1.7">
+      累计: 9 HTML 版本 + 4 业务文档<br>
+      消费者价值链 (规格 + 产品 + 品牌 = 心智) — DS 给的核心公式<br>
+      下一步: 业务团队接手 · SAP Step 2 解锁 · BAS v1.0 修订
+    </p>
+  </div>
+</div>
+
+<div class="signature">
+  BAS 设计说明书 v1.0 · session 总结 · 2026.05.12<br>
+  配合: BAS v0.9 主体 + 业务试用包 + 整合设计 + 董事会汇报
+</div>
+
+<script>
+function show(id, el){
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
