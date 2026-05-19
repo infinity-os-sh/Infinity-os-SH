@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INF-XM · 寻觅 · 路上模块 · v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907;
+  --bg-1: #14110d;
+  --bg-2: #1c1815;
+  --bg-3: #251f1a;
+  --surface: #1a1612;
+  --surface-2: #221d18;
+  --border: rgba(255, 220, 180, 0.08);
+  --border-2: rgba(255, 220, 180, 0.15);
+  --text-0: #f4ede0;
+  --text-1: #c8bda8;
+  --text-2: #847868;
+  --text-3: #524a40;
+  
+  --c-road: #4ecdc4;
+  --road-dim: rgba(78, 205, 196, 0.12);
+  --road-strong: rgba(78, 205, 196, 0.25);
+  
+  --green: #88c850;
+  --amber: #f5a623;
+  --warn: #ffc85e;
+  --red: #e94560;
+  --red-hot: #ff5050;
+  --blue: #5d9cec;
+  --gold: #d4af37;
+  --purple: #a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html, body {
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-family: 'Noto Sans SC', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+@media (min-width: 600px) {
+  body { max-width: 440px; margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.6); min-height: 100vh; }
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 30% 0%, rgba(78, 205, 196, 0.05) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 100%, rgba(245, 166, 35, 0.03) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+
+/* Layer 1.3 横条 */
+.layer-badge {
+  background: linear-gradient(90deg, rgba(255,200,94,0.18) 0%, rgba(255,200,94,0.08) 50%, rgba(255,200,94,0.18) 100%);
+  border-bottom: 1px solid rgba(255,200,94,0.3);
+  padding: 6px 16px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 10px; color: var(--warn);
+  font-family: 'Space Mono', monospace;
+  position: relative; z-index: 101;
+}
+.lb-text strong { color: var(--warn); font-weight: 700; }
+
+/* 顶部 sticky */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,9,7,0.92); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+}
+.tb-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px;
+}
+.tb-back {
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-1); cursor: pointer;
+  font-size: 14px;
+}
+.tb-title-block { flex: 1; }
+.tb-code {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; color: var(--c-road);
+  letter-spacing: 0.1em;
+}
+.tb-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 16px;
+}
+.tb-title-cn {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 13px; color: var(--gold);
+  margin-left: 4px; font-weight: 500;
+}
+.tb-stage {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: rgba(212,175,55,0.1);
+  color: var(--gold);
+  border: 1px solid rgba(212,175,55,0.25);
+}
+
+/* 蝴蝶效应预警 · 跨Tab顶部 */
+.butterfly-bar {
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(90deg, rgba(255,95,80,0.08), rgba(245,166,35,0.06));
+  border: 1px solid rgba(255,95,80,0.18);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+.bf-icon { font-size: 12px; color: var(--red); }
+.bf-text { flex: 1; color: var(--text-1); }
+.bf-text strong { color: var(--red); }
+.bf-arrow { color: var(--text-3); font-size: 11px; }
+
+/* 美顾身份小卡 */
+.id-mini {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.idm-avatar {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f5a623, #ff7c38);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.idm-info { flex: 1; min-width: 0; }
+.idm-name {
+  font-weight: 600; font-size: 13px;
+  display: flex; align-items: baseline; gap: 4px;
+}
+.idm-stars { color: var(--gold); font-size: 9px; }
+.idm-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; color: var(--text-2);
+}
+.idm-cb { color: var(--green); font-weight: 700; }
+
+main { position: relative; z-index: 2; padding: 14px 14px 100px; }
+
+/* ============ 任务热力图 · Uber化核心 ============ */
+.map-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  overflow: hidden;
+}
+.map-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+.map-loc {
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--text-0);
+  font-weight: 600;
+  display: flex; align-items: center; gap: 5px;
+  border: 1px solid var(--border-2);
+}
+.ml-pin { font-size: 13px; }
+.map-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-2);
+}
+
+.map-area {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  background: var(--bg-1);
+  background-image: 
+    linear-gradient(rgba(255,220,180,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,220,180,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+/* 任务点 */
+.map-dot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+.md-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  color: white;
+  font-size: 16px;
+  position: relative;
+  z-index: 5;
+  border: 2px solid;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.map-dot.urgent .md-icon { 
+  background: #ff5050; 
+  border-color: #ff7a8a;
+}
+.map-dot.hot .md-icon { 
+  background: #ff7c38; 
+  border-color: #ffa066;
+}
+.map-dot.normal .md-icon { 
+  background: #ff8845; 
+  border-color: #ffa066;
+}
+.map-dot.progress .md-icon { 
+  background: var(--green); 
+  border-color: #b3e060;
+}
+
+/* 光晕 */
+.md-glow {
+  position: absolute;
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  pointer-events: none;
+}
+.map-dot.urgent .md-glow {
+  background: radial-gradient(circle, rgba(255,80,80,0.45) 0%, rgba(255,80,80,0.15) 40%, transparent 70%);
+  animation: glow-pulse 1.8s infinite ease-in-out;
+}
+.map-dot.hot .md-glow {
+  background: radial-gradient(circle, rgba(255,124,56,0.35) 0%, rgba(255,124,56,0.1) 40%, transparent 70%);
+}
+.map-dot.normal .md-glow {
+  background: radial-gradient(circle, rgba(255,136,69,0.25) 0%, transparent 70%);
+}
+@keyframes glow-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.85; }
+  50% { transform: translate(-50%, -50%) scale(1.25); opacity: 1; }
+}
+/* normal 也加 glow */
+.map-dot.normal .md-glow {
+  background: radial-gradient(circle, rgba(255,136,69,0.3) 0%, transparent 70%);
+  width: 70px; height: 70px;
+}
+
+/* 任务倍数标签 */
+.md-tag {
+  position: absolute;
+  top: -10px; right: -14px;
+  background: var(--red);
+  color: white;
+  font-size: 9px;
+  font-weight: 800;
+  font-family: 'Syne', sans-serif;
+  padding: 2px 6px;
+  border-radius: 8px;
+  z-index: 6;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+.md-tag.hot { background: var(--amber); color: #1a0a00; }
+
+/* 小康品牌标记 */
+.map-brand {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+}
+.mb-label {
+  width: 30px; height: 30px;
+  background: var(--gold);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+  color: #1a0a00;
+  border: 2px solid var(--bg-1);
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(212,175,55,0.4);
+}
+.mb-tip {
+  position: absolute;
+  top: 32px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(212,175,55,0.9);
+  color: #1a0a00;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+/* 我的位置 */
+.map-dot.me {
+  z-index: 8;
+}
+.md-pulse {
+  width: 18px; height: 18px;
+  background: var(--c-road);
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 0 0 4px rgba(78,205,196,0.3), 0 0 20px rgba(78,205,196,0.6);
+  animation: me-pulse 2s infinite;
+  position: relative;
+}
+.md-pulse::before {
+  content: '我';
+  position: absolute;
+  top: 24px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: var(--c-road);
+  font-weight: 700;
+  font-family: 'Noto Sans SC', sans-serif;
+  background: rgba(0,0,0,0.7);
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+@keyframes me-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(78,205,196,0.3), 0 0 20px rgba(78,205,196,0.6); }
+  50% { box-shadow: 0 0 0 10px rgba(78,205,196,0.15), 0 0 30px rgba(78,205,196,0.9); }
+}
+
+/* 任务总览底部 */
+.map-summary {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(12px);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--text-0);
+  z-index: 10;
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--border-2);
+}
+.ms-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--c-road);
+  font-weight: 700;
+}
+.ms-stat strong {
+  color: var(--gold);
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+}
+
+/* 图例 */
+.map-legend {
+  display: flex; gap: 10px;
+  margin-top: 10px;
+  padding: 8px 4px;
+  flex-wrap: wrap;
+}
+.ml-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px;
+  color: var(--text-2);
+  font-family: 'Space Mono', monospace;
+}
+.ml-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid;
+  display: inline-block;
+}
+.ml-dot.urgent { background: #ff5050; border-color: #ff7a8a; }
+.ml-dot.hot { background: #ff7c38; border-color: #ffa066; }
+.ml-dot.normal { background: #ff8845; border-color: #ffa066; }
+.ml-dot.progress { background: var(--green); border-color: #b3e060; }
+
+/* 模块标题 */
+.section-title {
+  display: flex; align-items: center; gap: 8px;
+  margin: 18px 0 10px;
+}
+.st-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 13px;
+  color: var(--c-road); 
+  background: var(--road-dim);
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+.st-text {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-0);
+  letter-spacing: 0.01em;
+}
+.st-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-3);
+  margin-left: auto;
+}
+.st-tag.a { background: rgba(245,166,35,0.1); color: var(--amber); }
+.st-tag.b { background: rgba(78,205,196,0.1); color: var(--c-road); }
+
+/* ============ 1 · 双边价值承诺 (B-3) ============ */
+.pact-card {
+  background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
+  border: 1px solid var(--border-2);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.pact-row {
+  padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px;
+}
+.pact-row.me {
+  border-bottom: 1px dashed var(--border);
+}
+.pact-side {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+.pact-side.me { background: rgba(78,205,196,0.15); color: var(--c-road); }
+.pact-side.co { background: rgba(212,175,55,0.15); color: var(--gold); }
+.pact-content { flex: 1; font-size: 12px; line-height: 1.5; color: var(--text-1); }
+.pact-content strong { color: var(--text-0); font-weight: 600; }
+.pact-meta {
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+/* ============ 2 · 进度 + SURGE 顶部条 ============ */
+.surge-progress {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-top: 12px;
+}
+.sp-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.sp-left { font-size: 12px; color: var(--text-2); }
+.sp-amount {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--c-road);
+  line-height: 1;
+}
+.sp-amount small {
+  font-size: 13px; color: var(--text-2);
+  font-weight: 500;
+}
+.sp-pct {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px; color: var(--c-road);
+  margin-top: 2px;
+}
+.surge-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: linear-gradient(135deg, #f5a623, #ff7c38);
+  color: #1a0a00;
+  padding: 6px 11px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 12px;
+  font-family: 'Syne', sans-serif;
+  box-shadow: 0 4px 12px rgba(245,166,35,0.3);
+  animation: surge-pulse 2s infinite;
+}
+@keyframes surge-pulse {
+  0%, 100% { box-shadow: 0 4px 12px rgba(245,166,35,0.3); }
+  50% { box-shadow: 0 4px 20px rgba(245,166,35,0.6); }
+}
+.sp-bar {
+  height: 6px; background: rgba(255,220,180,0.06);
+  border-radius: 3px; overflow: hidden;
+  margin: 10px 0 8px;
+}
+.sp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-road), var(--green));
+  border-radius: 3px;
+  width: 81%;
+  transition: width 0.6s;
+}
+.sp-gap {
+  font-size: 11px; color: var(--text-2);
+  display: flex; justify-content: space-between;
+}
+.sp-gap-amount { color: var(--amber); font-weight: 700; font-family: 'Space Mono', monospace; }
+.surge-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; color: var(--amber);
+  margin-top: 6px;
+}
+
+/* ============ 3 · M-X 5 通道 (B-6) ============ */
+.mx-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px;
+  margin-top: 12px;
+}
+.mx-group {
+  margin-bottom: 12px;
+}
+.mx-group:last-child { margin-bottom: 0; }
+.mx-glabel {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 0.1em;
+  color: var(--text-3);
+  margin-bottom: 6px;
+  display: flex; align-items: center; gap: 8px;
+}
+.mx-pct {
+  background: var(--surface-2);
+  color: var(--text-1);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.mx-pct.high { background: var(--road-dim); color: var(--c-road); }
+.mx-pct.mid { background: rgba(245,166,35,0.15); color: var(--amber); }
+.mx-pct.free { background: rgba(167,139,250,0.15); color: var(--purple); }
+.mx-items {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.mx-item {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 11px;
+  color: var(--text-1);
+  display: flex; align-items: center; gap: 5px;
+}
+.mx-icon { font-size: 12px; opacity: 0.8; }
+.mx-count {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  color: var(--text-0);
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 3px;
+}
+
+/* ============ 4 · 抢单池 (A-6) ============ */
+.grab-pool {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 6px;
+}
+.grab-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.grab-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+}
+.grab-card.urgent::before { background: var(--red); }
+.grab-card.hot::before { background: var(--amber); }
+.grab-card.normal::before { background: var(--c-road); }
+.grab-card.in-progress::before { background: var(--green); }
+
+.grab-card.urgent {
+  background: linear-gradient(135deg, rgba(255,80,80,0.08) 0%, var(--surface) 60%);
+  border-color: rgba(255,80,80,0.25);
+}
+.gc-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.gc-tag-row { display: flex; gap: 6px; align-items: center; }
+.gc-tag {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 5px;
+}
+.gc-tag.urgent { background: var(--red); color: white; }
+.gc-tag.hot { background: var(--amber); color: #1a0a00; }
+.gc-tag.normal { background: var(--surface-2); color: var(--text-1); }
+.gc-multiplier {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--amber);
+}
+.gc-multiplier.urgent-x { color: var(--red); }
+.gc-multiplier.normal-x { color: var(--text-2); }
+.gc-countdown {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-2);
+}
+.gc-countdown.hot { color: var(--red); font-weight: 700; }
+
+.gc-store {
+  font-size: 13px; font-weight: 600; color: var(--text-0);
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 3px;
+}
+.gc-store-stars { color: var(--gold); font-size: 10px; }
+.gc-distance {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; color: var(--text-2);
+  font-weight: 500;
+}
+.gc-task {
+  font-size: 12px; color: var(--text-1);
+  line-height: 1.5;
+  margin: 6px 0;
+}
+.gc-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+.gc-price {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--green);
+}
+.gc-price-base {
+  font-size: 10px; color: var(--text-3);
+  text-decoration: line-through;
+  margin-right: 3px;
+}
+.gc-btn {
+  background: var(--c-road);
+  color: #0a1f1d;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 12px;
+  font-family: 'Noto Sans SC', sans-serif;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+}
+.gc-btn.urgent {
+  background: var(--red);
+  color: white;
+  animation: btn-pulse 1.5s infinite;
+}
+@keyframes btn-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+.gc-btn.in-progress {
+  background: var(--surface-2);
+  color: var(--green);
+  border: 1px solid var(--green);
+}
+.gc-btn:active { transform: scale(0.96); }
+
+/* ============ 5 · 厨艺挑战 3种 (A-4) ============ */
+.challenge-grid {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.ch-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  position: relative;
+}
+.ch-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.ch-type {
+  font-size: 18px;
+  width: 32px; height: 32px;
+  background: var(--bg-2);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+.ch-title-block { flex: 1; }
+.ch-name {
+  font-weight: 700; font-size: 13px;
+  color: var(--text-0);
+}
+.ch-theme {
+  font-size: 11px;
+  color: var(--text-2);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+.ch-reward {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--green);
+  text-align: right;
+  flex-shrink: 0;
+}
+.ch-reward small {
+  display: block;
+  font-size: 9px; color: var(--text-3);
+  margin-top: 1px;
+  font-family: 'Space Mono', monospace;
+  font-weight: 500;
+}
+.ch-progress {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+.ch-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,220,180,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.ch-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-road), var(--green));
+  border-radius: 2px;
+}
+.ch-progress-text {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-2);
+  font-weight: 700;
+}
+.ch-action {
+  background: transparent;
+  border: 1px solid var(--c-road);
+  color: var(--c-road);
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: 'Noto Sans SC', sans-serif;
+  cursor: pointer;
+  font-weight: 600;
+}
+.ch-action:active { transform: scale(0.96); }
+.ch-action.flow {
+  background: linear-gradient(135deg, var(--purple), #d4789a);
+  border: none;
+  color: white;
+}
+
+/* ============ 6 · M-FW5 飞轮 (B-7) ============ */
+.flywheel {
+  background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+  border: 1px solid var(--border-2);
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+}
+.fw-loop {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 4px;
+  margin: 10px 0 8px;
+}
+.fw-node {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px;
+  flex: 1;
+}
+.fw-emoji {
+  font-size: 18px;
+  width: 36px; height: 36px;
+  background: var(--surface-2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border);
+}
+.fw-node.active .fw-emoji {
+  background: var(--road-strong);
+  border-color: var(--c-road);
+  box-shadow: 0 0 12px rgba(78,205,196,0.4);
+}
+.fw-label {
+  font-size: 10px;
+  color: var(--text-2);
+  font-weight: 600;
+}
+.fw-arrow {
+  color: var(--text-3);
+  font-size: 10px;
+  margin: 0 -2px;
+}
+.fw-note {
+  font-size: 11px;
+  color: var(--text-2);
+  line-height: 1.5;
+  margin-top: 8px;
+}
+.fw-note strong { color: var(--c-road); }
+
+/* ============ 7 · PRISM 共创 (A-7) ============ */
+.prism-card {
+  background: linear-gradient(135deg, rgba(167,139,250,0.08), rgba(212,120,154,0.04));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 14px;
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.prism-card::before {
+  content: '◈';
+  position: absolute;
+  top: 8px; right: 12px;
+  font-size: 24px;
+  color: rgba(167,139,250,0.3);
+}
+.pr-tag {
+  display: inline-block;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(167,139,250,0.15);
+  color: var(--purple);
+  margin-bottom: 8px;
+  letter-spacing: 0.1em;
+}
+.pr-title {
+  font-weight: 700; font-size: 14px;
+  color: var(--text-0);
+}
+.pr-info {
+  font-size: 11px; color: var(--text-2);
+  margin: 6px 0 10px;
+  line-height: 1.6;
+}
+.pr-reward-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(167,139,250,0.2);
+}
+.pr-reward {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--purple);
+}
+.pr-reward small {
+  font-size: 10px; color: var(--text-2);
+  display: block; margin-top: 1px;
+  font-family: 'Space Mono', monospace;
+}
+.pr-btn {
+  background: var(--purple);
+  color: white;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  font-family: 'Noto Sans SC', sans-serif;
+  cursor: pointer;
+}
+
+/* ============ 8 · 进行中 + 今日 (A-8) ============ */
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.status-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+}
+.sc-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  margin-bottom: 6px;
+}
+.sc-count {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--text-0);
+  line-height: 1;
+}
+.sc-count small {
+  font-size: 12px; color: var(--text-2);
+  font-weight: 500;
+  margin-left: 4px;
+}
+.sc-amount {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--green);
+  font-weight: 700;
+  margin-top: 6px;
+}
+.status-card.active {
+  background: linear-gradient(135deg, rgba(78,205,196,0.08), var(--surface));
+  border-color: rgba(78,205,196,0.25);
+}
+.status-card.active .sc-count { color: var(--c-road); }
+
+/* ============ 撮合引擎接入 ============ */
+.engine-card {
+  background: var(--bg-3);
+  border: 1px dashed var(--border-2);
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 14px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 11px; color: var(--text-2);
+  line-height: 1.5;
+}
+.eng-pulse {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--warn);
+  box-shadow: 0 0 8px var(--warn);
+  flex-shrink: 0;
+  animation: enga 2.5s infinite;
+}
+@keyframes enga {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.engine-card strong {
+  color: var(--gold);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+}
+.eng-stage {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--warn);
+  letter-spacing: 0.05em;
+  display: block;
+  margin-top: 2px;
+}
+
+/* 底部固定 · 撮合状态 + 返回 */
+.bottom-fix {
+  position: fixed; bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100%; max-width: 440px;
+  background: rgba(10,9,7,0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+  z-index: 99;
+}
+.bf-status {
+  flex: 1; font-size: 10px; color: var(--text-2);
+  display: flex; align-items: center; gap: 6px;
+}
+.bf-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--warn);
+  box-shadow: 0 0 6px var(--warn);
+  animation: enga 2.5s infinite;
+}
+.bf-back {
+  background: var(--c-road);
+  color: #0a1f1d;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Noto Sans SC', sans-serif;
+  cursor: pointer;
+}
+
+.decor-grain {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+/* ============ embed 模式 (主壳子 iframe 嵌入用·避免重复) ============ */
+.embed-mode .layer-badge,
+.embed-mode .butterfly-bar,
+.embed-mode .id-mini,
+.embed-mode .tb-stage,
+.embed-mode .tb-back,
+.embed-mode .bottom-fix {
+  display: none !important;
+}
+.embed-mode .topbar {
+  padding: 8px 14px !important;
+  position: relative !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.embed-mode .topbar .tb-row {
+  margin-bottom: 0 !important;
+}
+.embed-mode main {
+  padding-top: 10px !important;
+  padding-bottom: 24px !important;
+}
+
+</style>
+</head>
+<body>
+
+<div class="decor-grain"></div>
+
+<!-- Layer 1.3 横条 -->
+<div class="layer-badge">
+  <span>⚠</span>
+  <span class="lb-text"><strong>Layer 1.3 演示版</strong> · 非真实Agent · 模拟数据</span>
+</div>
+
+<!-- 顶部 -->
+<div class="topbar">
+  <div class="tb-row">
+    <button class="tb-back" onclick="alert('返回主壳子 · 真实环境用 Tab 切换')">‹</button>
+    <div class="tb-title-block">
+      <div class="tb-code">INF-XM · v1.0 · 路上模块</div>
+      <div class="tb-title">寻觅<span class="tb-title-cn">Xún Mì</span></div>
+    </div>
+    <div class="tb-stage">Stage 2.5</div>
+  </div>
+  
+  <!-- 蝴蝶效应预警 · 跨Tab顶部 -->
+  <div class="butterfly-bar">
+    <span class="bf-icon">⚠</span>
+    <div class="bf-text">
+      <strong>蝴蝶效应 · A压货</strong> · 步步高西郊 极鲜500ml 库存 4.2a (>3a警戒) · 建议本周降推
+    </div>
+    <span class="bf-arrow">›</span>
+  </div>
+  
+  <!-- 美顾身份小卡 -->
+  <div class="id-mini">
+    <div class="idm-avatar">🍖</div>
+    <div class="idm-info">
+      <div class="idm-name">陈晓琳<span class="idm-stars">★★★★★</span></div>
+      <div class="idm-meta">5星·主厨 · <span class="idm-cb">CB 4.78</span> · 欣和·常驻</div>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- ============ 0 · 任务热力图 (Uber化核心) ★ ============ -->
+<div class="section-title">
+  <span class="st-num">📍</span>
+  <span class="st-text">任务热力图 · Uber化核心</span>
+  <span class="st-tag a">★ A · 司机端</span>
+</div>
+
+<div class="map-card">
+  <div class="map-header">
+    <div class="map-loc">
+      <span class="ml-pin">📍</span>
+      <span>上海·浦东新区</span>
+    </div>
+    <div class="map-meta">扫描 5km · 8 任务</div>
+  </div>
+  
+  <div class="map-area">
+    <!-- 网格背景已用CSS -->
+    
+    <!-- 周围任务标点 -->
+    <!-- 紧急 红色 ×3.0 -->
+    <div class="map-dot urgent" style="left: 30%; top: 22%">
+      <div class="md-glow"></div>
+      <div class="md-icon">¥</div>
+      <div class="md-tag">×3.0</div>
+    </div>
+    
+    <!-- 高优 橙色 ×2.0 -->
+    <div class="map-dot hot" style="left: 70%; top: 28%">
+      <div class="md-glow"></div>
+      <div class="md-icon">¥</div>
+      <div class="md-tag hot">×2.0</div>
+    </div>
+    
+    <!-- 进行中 绿色 (我抢的) -->
+    <div class="map-dot progress" style="left: 22%; top: 65%">
+      <div class="md-icon">¥</div>
+    </div>
+    
+    <!-- 普通 橙色 -->
+    <div class="map-dot normal" style="left: 60%; top: 70%">
+      <div class="md-icon">¥</div>
+    </div>
+    
+    <!-- 普通 橙色 2 -->
+    <div class="map-dot normal" style="left: 85%; top: 78%">
+      <div class="md-icon">¥</div>
+    </div>
+    
+    <!-- 小康酱油标记 (品牌门店) -->
+    <div class="map-brand" style="left: 50%; top: 50%">
+      <div class="mb-label">小</div>
+      <div class="mb-tip">小康专卖店</div>
+    </div>
+    
+    <!-- 我的位置 (中心·脉动) -->
+    <div class="map-dot me" style="left: 50%; top: 55%">
+      <div class="md-pulse"></div>
+    </div>
+    
+    <!-- 底部任务总览 -->
+    <div class="map-summary">
+      <span class="ms-tag">🎯 5km 内</span>
+      <span class="ms-stat"><strong>8</strong> 任务 · 总值 <strong>¥846</strong></span>
+    </div>
+  </div>
+  
+  <!-- 图例 -->
+  <div class="map-legend">
+    <div class="ml-item"><span class="ml-dot urgent"></span>紧急 ×3.0 (1)</div>
+    <div class="ml-item"><span class="ml-dot hot"></span>高优 ×2.0 (1)</div>
+    <div class="ml-item"><span class="ml-dot normal"></span>普通 ×1.0 (3)</div>
+    <div class="ml-item"><span class="ml-dot progress"></span>进行中 (2)</div>
+  </div>
+</div>
+
+<!-- ============ 1 · 双边价值承诺 (B-3) ============ -->
+<div class="section-title">
+  <span class="st-num">1</span>
+  <span class="st-text">双边价值承诺</span>
+  <span class="st-tag b">B-3 · 合伙人制核心</span>
+</div>
+
+<div class="pact-card">
+  <div class="pact-row me">
+    <span class="pact-side me">我承诺</span>
+    <div class="pact-content">
+      <strong>9 家门店 · 81 瓶 SKU · CB ≥ 4.5</strong>
+      <span class="pact-meta">今日目标 · 路线已规划 · 6/9 已签到</span>
+    </div>
+  </div>
+  <div class="pact-row">
+    <span class="pact-side co">公司承诺</span>
+    <div class="pact-content">
+      <strong>完成 → ¥600 · 月 ¥9,860 · 5 星合约保留</strong>
+      <span class="pact-meta">实时到账 · 季度奖 ¥3,200 阶梯</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 2 · 进度 + SURGE (A-5) ============ -->
+<div class="section-title">
+  <span class="st-num">2</span>
+  <span class="st-text">今日进度 · SURGE 加价中</span>
+  <span class="st-tag a">A-5</span>
+</div>
+
+<div class="surge-progress">
+  <div class="sp-row">
+    <div class="sp-left">
+      <div>今日收入</div>
+      <div class="sp-amount">¥486<small> / ¥600</small></div>
+      <div class="sp-pct">▲ 81% 达成</div>
+    </div>
+    <div class="surge-pill">⚡ ×1.5</div>
+  </div>
+  <div class="sp-bar"><div class="sp-fill"></div></div>
+  <div class="sp-gap">
+    <span>距目标</span>
+    <span class="sp-gap-amount">差 ¥114 · 一本账有补救建议</span>
+  </div>
+  <div class="surge-meta">⚡ SURGE · 周一晚高峰 · 剩 1h 47m · 抢单全 ×1.5</div>
+</div>
+
+<!-- ============ 3 · M-X 5 通道 (B-6) ============ -->
+<div class="section-title">
+  <span class="st-num">3</span>
+  <span class="st-text">M-X · 任务来源 5 通道</span>
+  <span class="st-tag b">B-6</span>
+</div>
+
+<div class="mx-card">
+  <div class="mx-group">
+    <div class="mx-glabel">常规 · 稳定保底 <span class="mx-pct high">73%</span></div>
+    <div class="mx-items">
+      <div class="mx-item"><span class="mx-icon">🏠</span>固定职责<span class="mx-count">3</span></div>
+      <div class="mx-item"><span class="mx-icon">🗺️</span>路线计划<span class="mx-count">5</span></div>
+    </div>
+  </div>
+  <div class="mx-group">
+    <div class="mx-glabel">机动 · 临时激励 <span class="mx-pct mid">27%</span></div>
+    <div class="mx-items">
+      <div class="mx-item"><span class="mx-icon">📩</span>派单·定向<span class="mx-count">1</span></div>
+      <div class="mx-item"><span class="mx-icon">⚡</span>抢单·机动<span class="mx-count">2</span></div>
+    </div>
+  </div>
+  <div class="mx-group">
+    <div class="mx-glabel">主动 · 上不封顶 <span class="mx-pct free">+</span></div>
+    <div class="mx-items">
+      <div class="mx-item"><span class="mx-icon">💡</span>自发任务<span class="mx-count">+</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 4 · 抢单池 (A-6) ============ -->
+<div class="section-title">
+  <span class="st-num">4</span>
+  <span class="st-text">抢单池 · 实时撮合</span>
+  <span class="st-tag a">A-6</span>
+</div>
+
+<div class="grab-pool">
+  <!-- 紧急 -->
+  <div class="grab-card urgent">
+    <div class="gc-head">
+      <div class="gc-tag-row">
+        <span class="gc-tag urgent">🚨 紧急</span>
+        <span class="gc-multiplier urgent-x">×3.0</span>
+      </div>
+      <span class="gc-countdown hot">剩 28s · DSR强派</span>
+    </div>
+    <div class="gc-store">老张便利店 <span class="gc-store-stars">★★★★★</span></div>
+    <div class="gc-distance">📍 1.2 km · 西郊路</div>
+    <div class="gc-task">六月鲜·有机 陈列倒塌·需 60 分钟内重新陈列 + 拍照确认</div>
+    <div class="gc-foot">
+      <div>
+        <span class="gc-price-base">¥95</span>
+        <span class="gc-price">¥285</span>
+      </div>
+      <button class="gc-btn urgent" onclick="grabTask(this, '紧急')">立即抢单</button>
+    </div>
+  </div>
+  
+  <!-- 高优 -->
+  <div class="grab-card hot">
+    <div class="gc-head">
+      <div class="gc-tag-row">
+        <span class="gc-tag hot">⭐ 高优</span>
+        <span class="gc-multiplier">×2.0</span>
+      </div>
+      <span class="gc-countdown">剩 3h 12m</span>
+    </div>
+    <div class="gc-store">阳光超市 <span class="gc-store-stars">★★★★☆</span></div>
+    <div class="gc-distance">📍 2.8 km · 浦东大道</div>
+    <div class="gc-task">禾然零添加新品上架 + 店员培训 · 1年级×2.0 系数加成</div>
+    <div class="gc-foot">
+      <div>
+        <span class="gc-price-base">¥80</span>
+        <span class="gc-price">¥160</span>
+      </div>
+      <button class="gc-btn" onclick="grabTask(this, '高优')">抢单</button>
+    </div>
+  </div>
+  
+  <!-- 普通·进行中 -->
+  <div class="grab-card in-progress">
+    <div class="gc-head">
+      <div class="gc-tag-row">
+        <span class="gc-tag normal">○ 进行中</span>
+        <span class="gc-multiplier normal-x">×1.0</span>
+      </div>
+      <span class="gc-countdown">距门店 0.8km</span>
+    </div>
+    <div class="gc-store">步步高西郊 <span class="gc-store-stars">★★★★★</span></div>
+    <div class="gc-distance">📍 0.8 km · S+ 重点门店</div>
+    <div class="gc-task">货架理货 + 拍照查货 + 竞品调研 · 已开始 22 分钟</div>
+    <div class="gc-foot">
+      <div>
+        <span class="gc-price">¥45</span>
+      </div>
+      <button class="gc-btn in-progress">导航 · 进行中</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 5 · 厨艺挑战 3 种 (A-4) ============ -->
+<div class="section-title">
+  <span class="st-num">5</span>
+  <span class="st-text">厨艺挑战 · 主厨成长</span>
+  <span class="st-tag a">A-4</span>
+</div>
+
+<div class="challenge-grid">
+  <!-- 主题挑战 -->
+  <div class="ch-card">
+    <div class="ch-head">
+      <div class="ch-type">🍳</div>
+      <div class="ch-title-block">
+        <div class="ch-name">主题挑战</div>
+        <div class="ch-theme">有机酱油的 8 种用法 · 红烧/凉拌/腌制/蘸酱...</div>
+      </div>
+      <div class="ch-reward">
+        ¥800
+        <small>基础+完成+优秀</small>
+      </div>
+    </div>
+    <div class="ch-progress">
+      <div class="ch-bar"><div class="ch-bar-fill" style="width: 37%"></div></div>
+      <span class="ch-progress-text">3 / 8</span>
+      <button class="ch-action">继续</button>
+    </div>
+  </div>
+  
+  <!-- 季节挑战 -->
+  <div class="ch-card">
+    <div class="ch-head">
+      <div class="ch-type">🥬</div>
+      <div class="ch-title-block">
+        <div class="ch-name">季节挑战</div>
+        <div class="ch-theme">禾然零添加做"春季鲜蔬 3 道菜" · 适合宝妈群体</div>
+      </div>
+      <div class="ch-reward">
+        ¥300
+        <small>未开始</small>
+      </div>
+    </div>
+    <div class="ch-progress">
+      <div class="ch-bar"><div class="ch-bar-fill" style="width: 0%"></div></div>
+      <span class="ch-progress-text">0 / 3</span>
+      <button class="ch-action">接受</button>
+    </div>
+  </div>
+  
+  <!-- 创意挑战 -->
+  <div class="ch-card">
+    <div class="ch-head">
+      <div class="ch-type">🎬</div>
+      <div class="ch-title-block">
+        <div class="ch-name">创意挑战</div>
+        <div class="ch-theme">60 秒短视频 · "红烧肉的灵魂酱油" · 上欣和官号</div>
+      </div>
+      <div class="ch-reward">
+        ¥500+
+        <small>+流量分成</small>
+      </div>
+    </div>
+    <div class="ch-progress">
+      <div class="ch-bar"><div class="ch-bar-fill" style="width: 0%"></div></div>
+      <span class="ch-progress-text">0 / 1</span>
+      <button class="ch-action flow">上传</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 6 · M-FW5 互锁飞轮 (B-7) ============ -->
+<div class="section-title">
+  <span class="st-num">6</span>
+  <span class="st-text">M-FW5 · 互锁飞轮</span>
+  <span class="st-tag b">B-7</span>
+</div>
+
+<div class="flywheel">
+  <div class="fw-loop">
+    <div class="fw-node active">
+      <div class="fw-emoji">🎯</div>
+      <div class="fw-label">派单</div>
+    </div>
+    <span class="fw-arrow">→</span>
+    <div class="fw-node">
+      <div class="fw-emoji">🩸</div>
+      <div class="fw-label">数据</div>
+    </div>
+    <span class="fw-arrow">→</span>
+    <div class="fw-node">
+      <div class="fw-emoji">⭐</div>
+      <div class="fw-label">评价</div>
+    </div>
+    <span class="fw-arrow">→</span>
+    <div class="fw-node">
+      <div class="fw-emoji">💰</div>
+      <div class="fw-label">激励</div>
+    </div>
+    <span class="fw-arrow">→</span>
+    <div class="fw-node">
+      <div class="fw-emoji">🧠</div>
+      <div class="fw-label">学习</div>
+    </div>
+  </div>
+  <div class="fw-note">
+    干得好 → 评价好 → <strong>CB 高</strong> → 派单优先 → 收入高 → 干得更好
+  </div>
+</div>
+
+<!-- ============ 7 · PRISM 共创 (A-7) ============ -->
+<div class="section-title">
+  <span class="st-num">7</span>
+  <span class="st-text">PRISM 共创活动</span>
+  <span class="st-tag a">A-7</span>
+</div>
+
+<div class="prism-card">
+  <span class="pr-tag">◈ 精准选点 · 高净值</span>
+  <div class="pr-title">古北高端小区 · 家庭场景共创</div>
+  <div class="pr-info">
+    📅 周六 9:00 - 11:00<br>
+    📍 古北国际花园 · 5 名额限定<br>
+    🎯 试吃 + 烹饪示范 + 现场AIQL数据回收
+  </div>
+  <div class="pr-reward-row">
+    <div class="pr-reward">
+      ¥200/场
+      <small>+ AIQL 加速包</small>
+    </div>
+    <button class="pr-btn" onclick="this.textContent='已报名 ✓'; this.style.background='var(--green)'">立即报名</button>
+  </div>
+</div>
+
+<!-- ============ 8 · 进行中 + 今日完成 (A-8) ============ -->
+<div class="section-title">
+  <span class="st-num">8</span>
+  <span class="st-text">实时任务状态</span>
+  <span class="st-tag a">A-8</span>
+</div>
+
+<div class="status-grid">
+  <div class="status-card active">
+    <div class="sc-label">⚡ 进行中</div>
+    <div class="sc-count">2<small>单</small></div>
+    <div class="sc-amount">¥445 锁定</div>
+  </div>
+  <div class="status-card">
+    <div class="sc-label">✓ 今日完成</div>
+    <div class="sc-count">7<small>单</small></div>
+    <div class="sc-amount">¥386 已入账</div>
+  </div>
+</div>
+
+<!-- 撮合引擎接入 -->
+<div class="engine-card">
+  <span class="eng-pulse"></span>
+  <div>
+    接 <strong>撮合引擎</strong> · 接收"派给我"视图 · 7层组织撮合后台支撑
+    <span class="eng-stage">Layer 1.3 · 演示模拟 · TL 到位后真实落地 (Phase 2 ~H1 2027)</span>
+  </div>
+</div>
+
+</main>
+
+<!-- 底部固定 -->
+<div class="bottom-fix">
+  <div class="bf-status">
+    <span class="bf-dot"></span>
+    撮合引擎 · 演示模拟
+  </div>
+  <button class="bf-back" onclick="alert('真实环境用主壳子4Tab导航')">‹ 返回主壳子</button>
+</div>
+
+<script>
+function grabTask(btn, level) {
+  btn.disabled = true;
+  btn.textContent = '抢单成功 ✓';
+  btn.style.background = 'var(--green)';
+  btn.style.color = 'white';
+  setTimeout(() => {
+    const card = btn.closest('.grab-card');
+    card.style.opacity = '0.5';
+    card.style.transition = 'opacity 0.4s';
+  }, 600);
+}
+</script>
+
+
+<script>
+// embed 模式检测 · 主壳子 iframe 嵌入时通过 ?embed=1 启用
+(function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('embed') === '1') {
+    document.body.classList.add('embed-mode');
+  }
+})();
+</script>
+
+</body>
+</html>

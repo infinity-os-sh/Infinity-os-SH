@@ -138,7 +138,7 @@ git checkout -b phase1-meishi-app
 | 命名体系 | V1.2 | 21 KB | ✓ 含 11 APP 矩阵 + DS 修正 |
 | 美食顾问 app 架构 | V1.1 | 23 KB | ✓ 含撮合引擎独立 |
 | 主壳子 | V2.0 | 35 KB | ✓ 4 Tab iframe 整合 |
-| INF-XM 寻觅 | v1.0 | 32 KB | ✓ 路上 8 模块 |
+| INF-XM 寻觅 | v1.0 | 41 KB | ✓ 路上 9 模块 (含地图★) |
 | INF-XL 心律 | v1.0 | 52 KB | ✓ 一本账 10 模块 (灵魂) |
 | INF-XP 心品 | v1.0 | 33 KB | ✓ 我的 7 模块 (主厨认证) |
 
