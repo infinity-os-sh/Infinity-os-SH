@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INF-XL · 心律 · 一本账模块 · v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907;
+  --bg-1: #14110d;
+  --bg-2: #1c1815;
+  --bg-3: #251f1a;
+  --surface: #1a1612;
+  --surface-2: #221d18;
+  --border: rgba(255, 220, 180, 0.08);
+  --border-2: rgba(255, 220, 180, 0.15);
+  --text-0: #f4ede0;
+  --text-1: #c8bda8;
+  --text-2: #847868;
+  --text-3: #524a40;
+  
+  --c-ledger: #88c850;
+  --ledger-dim: rgba(136, 200, 80, 0.12);
+  --ledger-strong: rgba(136, 200, 80, 0.25);
+  
+  --green: #88c850;
+  --green-deep: #5fa635;
+  --amber: #f5a623;
+  --warn: #ffc85e;
+  --red: #e94560;
+  --red-soft: #ff7a8a;
+  --blue: #5d9cec;
+  --gold: #d4af37;
+  --purple: #a78bfa;
+  --rose: #d4789a;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html, body {
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-family: 'Noto Sans SC', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+@media (min-width: 600px) {
+  body { max-width: 440px; margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.6); min-height: 100vh; }
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(136, 200, 80, 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 30% 100%, rgba(212, 175, 55, 0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+
+.layer-badge {
+  background: linear-gradient(90deg, rgba(255,200,94,0.18), rgba(255,200,94,0.08), rgba(255,200,94,0.18));
+  border-bottom: 1px solid rgba(255,200,94,0.3);
+  padding: 6px 16px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 10px; color: var(--warn);
+  font-family: 'Space Mono', monospace;
+  position: relative; z-index: 101;
+}
+.lb-text strong { color: var(--warn); font-weight: 700; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,9,7,0.92); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+}
+.tb-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px;
+}
+.tb-back {
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-1); cursor: pointer; font-size: 14px;
+}
+.tb-title-block { flex: 1; }
+.tb-code {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; color: var(--c-ledger);
+  letter-spacing: 0.1em;
+}
+.tb-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 16px;
+}
+.tb-title-cn {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 13px; color: var(--gold);
+  margin-left: 4px; font-weight: 500;
+}
+.tb-stage {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: rgba(212,175,55,0.1);
+  color: var(--gold);
+  border: 1px solid rgba(212,175,55,0.25);
+}
+
+/* 心跳脉动顶部条 */
+.heartbeat-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(90deg, rgba(136,200,80,0.08), rgba(136,200,80,0.04));
+  border: 1px solid rgba(136,200,80,0.2);
+  border-radius: 10px;
+  padding: 8px 11px;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+/* 蝴蝶效应预警条 · 跨 Tab 一致 */
+.butterfly-bar {
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(90deg, rgba(255,95,80,0.08), rgba(245,166,35,0.06));
+  border: 1px solid rgba(255,95,80,0.18);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+.bf-icon { font-size: 12px; color: var(--red); }
+.bf-text { flex: 1; color: var(--text-1); }
+.bf-text strong { color: var(--red); }
+.bf-arrow { color: var(--text-3); font-size: 11px; }
+
+/* 美顾身份小卡 · 跨 Tab 一致 */
+.id-mini {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.idm-avatar {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f5a623, #ff7c38);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.idm-info { flex: 1; min-width: 0; }
+.idm-name {
+  font-weight: 600; font-size: 13px;
+  display: flex; align-items: baseline; gap: 4px;
+}
+.idm-stars { color: var(--gold); font-size: 9px; }
+.idm-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; color: var(--text-2);
+}
+.idm-cb { color: var(--green); font-weight: 700; }
+.hb-icon {
+  font-size: 16px;
+  color: var(--c-ledger);
+  animation: heartbeat 1.4s ease-in-out infinite;
+}
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  20%, 60% { transform: scale(1.18); }
+  40%, 80% { transform: scale(0.95); }
+}
+.hb-info { flex: 1; }
+.hb-formula {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--c-ledger);
+  font-weight: 700;
+}
+.hb-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--text-3);
+  margin-top: 1px;
+}
+
+main { position: relative; z-index: 2; padding: 14px 14px 100px; }
+
+.section-title {
+  display: flex; align-items: center; gap: 8px;
+  margin: 18px 0 10px;
+}
+.st-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 13px;
+  color: var(--c-ledger); 
+  background: var(--ledger-dim);
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+.st-text {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-0);
+  letter-spacing: 0.01em;
+}
+.st-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-3);
+  margin-left: auto;
+}
+.st-tag.b { background: rgba(78,205,196,0.1); color: #4ecdc4; }
+.st-tag.b5 { background: rgba(255,80,80,0.15); color: var(--red-soft); }
+.st-tag.soul { background: linear-gradient(135deg, var(--gold), var(--amber)); color: #1a0a00; font-weight: 700; }
+
+/* ============ 1 · 今日收入 vs 目标 ============ */
+.income-card {
+  background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+  border: 1px solid var(--border-2);
+  border-radius: 16px;
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.income-card::before {
+  content: '¥';
+  position: absolute;
+  top: -20px; right: -20px;
+  font-family: 'Syne', sans-serif;
+  font-size: 140px;
+  color: rgba(136, 200, 80, 0.04);
+  font-weight: 800;
+}
+.ic-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-2);
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+.ic-row {
+  display: flex; align-items: baseline; gap: 4px;
+  margin-bottom: 12px;
+}
+.ic-amount {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 38px;
+  color: var(--c-ledger);
+  line-height: 1;
+}
+.ic-target {
+  font-size: 14px;
+  color: var(--text-2);
+  font-family: 'Space Mono', monospace;
+}
+.ic-pct-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: var(--ledger-dim);
+  color: var(--c-ledger);
+  margin-left: 6px;
+  font-weight: 700;
+}
+.ic-bar {
+  height: 8px;
+  background: rgba(255,220,180,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+.ic-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green-deep), var(--c-ledger), #b3e060);
+  border-radius: 4px;
+  width: 81%;
+  transition: width 0.8s;
+  position: relative;
+}
+.ic-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.ic-gap-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 10px;
+}
+.ic-gap {
+  font-size: 11px;
+  color: var(--text-2);
+}
+.ic-gap-amount {
+  color: var(--amber);
+  font-weight: 700;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+}
+.ic-agent-hint {
+  font-size: 10px;
+  color: var(--gold);
+  font-family: 'Space Mono', monospace;
+  cursor: pointer;
+}
+
+/* ============ 2 · 弥补差距 Agent (★INFINITY OS灵魂) ============ */
+.agent-card {
+  background: linear-gradient(135deg, 
+    rgba(212,175,55,0.1) 0%, 
+    rgba(245,166,35,0.06) 50%,
+    rgba(212,175,55,0.03) 100%);
+  border: 1px solid rgba(212,175,55,0.35);
+  border-radius: 16px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(212,175,55,0.08);
+}
+.agent-card::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -10%;
+  width: 60%; height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(212,175,55,0.08), transparent);
+  animation: agent-glow 4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes agent-glow {
+  0%, 100% { transform: translateX(-100%) rotate(45deg); }
+  50% { transform: translateX(100%) rotate(45deg); }
+}
+.ag-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+  position: relative;
+}
+.ag-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--gold), var(--amber));
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(212,175,55,0.3);
+}
+.ag-title-block { flex: 1; }
+.ag-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-0);
+}
+.ag-sub {
+  font-size: 10px;
+  color: var(--gold);
+  font-family: 'Space Mono', monospace;
+  margin-top: 2px;
+  letter-spacing: 0.05em;
+}
+.ag-thinking {
+  font-size: 11px;
+  color: var(--text-1);
+  background: rgba(255,255,255,0.03);
+  border-left: 2px solid var(--gold);
+  padding: 8px 10px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.ag-thinking strong { color: var(--gold); }
+.ag-suggestions {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-bottom: 10px;
+}
+.ag-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 11px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+.ag-time {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  padding: 3px 6px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+.ag-detail {
+  flex: 1; font-size: 11px; color: var(--text-1);
+  line-height: 1.5;
+}
+.ag-detail strong { color: var(--text-0); }
+.ag-detail-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--text-3);
+  display: block;
+  margin-top: 2px;
+}
+.ag-plus {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--green);
+  flex-shrink: 0;
+}
+.ag-total {
+  background: var(--bg-3);
+  border-radius: 8px;
+  padding: 9px 11px;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 11px;
+  color: var(--text-1);
+}
+.ag-total-amt {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--green);
+}
+.ag-action-row {
+  display: flex; gap: 8px;
+}
+.ag-btn {
+  flex: 1;
+  background: linear-gradient(135deg, var(--gold), var(--amber));
+  color: #1a0a00;
+  border: none;
+  padding: 10px;
+  border-radius: 9px;
+  font-weight: 700;
+  font-size: 12px;
+  font-family: 'Noto Sans SC', sans-serif;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+}
+.ag-btn.ghost {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid rgba(212,175,55,0.4);
+  flex: 0 0 auto;
+  padding: 10px 14px;
+}
+.ag-btn:active { transform: scale(0.97); }
+
+/* ============ 3 · SKU + r·a·T 三维明细 ============ */
+.sku-list {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.sku-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  position: relative;
+}
+.sku-card.grade-1 {
+  background: linear-gradient(135deg, rgba(167,139,250,0.08), var(--surface));
+  border-color: rgba(167,139,250,0.25);
+}
+.sku-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.sku-name-block { flex: 1; min-width: 0; }
+.sku-name {
+  font-weight: 700; font-size: 13px;
+  color: var(--text-0);
+  margin-bottom: 3px;
+  display: flex; align-items: center; gap: 6px;
+}
+.sku-grade {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+.sku-grade.g1 { background: rgba(167,139,250,0.2); color: var(--purple); }
+.sku-grade.g2 { background: rgba(78,205,196,0.15); color: #4ecdc4; }
+.sku-grade.g3 { background: rgba(245,166,35,0.15); color: var(--amber); }
+.sku-grade.g4 { background: rgba(132,120,104,0.15); color: var(--text-2); }
+.sku-rat {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-2);
+  font-weight: 500;
+  line-height: 1.4;
+}
+.sku-rat strong { color: var(--c-ledger); font-weight: 700; }
+.sku-income {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--green);
+  flex-shrink: 0;
+  text-align: right;
+}
+.sku-coef {
+  font-size: 9px;
+  color: var(--text-3);
+  font-family: 'Space Mono', monospace;
+  display: block;
+  margin-top: 2px;
+  font-weight: 600;
+}
+.sku-foot {
+  display: flex; align-items: center; gap: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-size: 11px;
+  color: var(--text-2);
+}
+.sku-foot-item {
+  display: flex; align-items: center; gap: 3px;
+}
+.sku-foot-item strong {
+  color: var(--text-1);
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+}
+
+/* ============ 4 · 客户名单 6 级 ============ */
+.client-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.client-tabs {
+  display: flex; 
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.client-tabs::-webkit-scrollbar { display: none; }
+.client-tab {
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--text-2);
+  cursor: pointer;
+  flex-shrink: 0;
+  border-bottom: 2px solid transparent;
+  font-weight: 600;
+  font-family: 'Noto Sans SC', sans-serif;
+  background: transparent;
+  border-top: none; border-left: none; border-right: none;
+}
+.client-tab.active {
+  color: var(--c-ledger);
+  border-bottom-color: var(--c-ledger);
+}
+.client-tab .ct-count {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  margin-left: 3px;
+  color: var(--text-3);
+}
+.client-list {
+  padding: 6px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.client-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  font-size: 12px;
+}
+.client-tier {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  width: 28px; height: 24px;
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.tier-sp { background: linear-gradient(135deg, var(--gold), var(--amber)); color: #1a0a00; }
+.tier-s { background: var(--gold); color: #1a0a00; }
+.tier-a { background: var(--c-ledger); color: #0a1a05; }
+.tier-b { background: var(--blue); color: #001020; }
+.tier-c { background: var(--surface-2); color: var(--text-1); }
+.tier-d { background: var(--bg-3); color: var(--text-2); border: 1px solid var(--border); }
+.client-name {
+  flex: 1;
+  color: var(--text-1);
+  font-weight: 500;
+}
+.client-name.progress {
+  color: var(--green);
+}
+.client-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-3);
+}
+.client-freq {
+  font-size: 9px;
+  color: var(--text-3);
+  margin-left: 6px;
+  font-family: 'Space Mono', monospace;
+}
+
+/* ============ 5 · M-L 一本账三维 ============ */
+.tridim-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+}
+.td-views {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  background: var(--bg-2);
+  padding: 4px;
+  border-radius: 9px;
+  margin-bottom: 12px;
+}
+.td-view {
+  padding: 7px;
+  font-size: 11px;
+  text-align: center;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-2);
+  font-weight: 600;
+  font-family: 'Noto Sans SC', sans-serif;
+  background: transparent;
+  border: none;
+  transition: all 0.2s;
+}
+.td-view.active {
+  background: var(--c-ledger);
+  color: #0a1a05;
+}
+.td-content {
+  font-size: 11px;
+  color: var(--text-1);
+  line-height: 1.6;
+}
+.td-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.td-row:last-child { border: none; }
+.td-row-l { color: var(--text-1); }
+.td-row-r {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  color: var(--text-0);
+}
+.td-row-r.up { color: var(--green); }
+.td-row-r.down { color: var(--red); }
+
+/* ============ 6 · 年级系数 + 资金流向 ============ */
+.grade-flow-card {
+  background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+  border: 1px solid var(--border-2);
+  border-radius: 14px;
+  padding: 14px;
+}
+.gf-grades {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.gf-grade {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 6px;
+  text-align: center;
+}
+.gf-g.active { background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.3); }
+.gf-glevel {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  color: var(--text-2);
+  margin-bottom: 3px;
+}
+.gf-gcoef {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--c-ledger);
+}
+.gf-gincome {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 3px;
+}
+.gf-grade.g1 { background: rgba(167,139,250,0.08); border-color: rgba(167,139,250,0.25); }
+.gf-grade.g1 .gf-gcoef { color: var(--purple); }
+.gf-grade.g4 .gf-gcoef { color: var(--text-2); }
+
+.gf-flow {
+  background: var(--bg-3);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 11px;
+  color: var(--text-1);
+  line-height: 1.6;
+  text-align: center;
+}
+.gf-flow strong { color: var(--gold); }
+.gf-arrow {
+  color: var(--amber);
+  font-size: 14px;
+  margin: 0 6px;
+}
+
+/* ============ 7 · AIQL 品牌资产 ============ */
+.aiql-card {
+  background: linear-gradient(135deg, rgba(167,139,250,0.06), rgba(78,205,196,0.04));
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 14px;
+  padding: 14px;
+}
+.aiql-flow {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 10px 0;
+}
+.aiql-stage {
+  display: flex; flex-direction: column; align-items: center;
+  flex: 1;
+  position: relative;
+}
+.aiql-letter {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--text-2);
+  border: 2px solid transparent;
+}
+.aiql-stage.passed .aiql-letter {
+  background: var(--ledger-dim);
+  color: var(--c-ledger);
+  border-color: var(--c-ledger);
+}
+.aiql-stage.current .aiql-letter {
+  background: linear-gradient(135deg, var(--purple), var(--rose));
+  color: white;
+  border-color: var(--purple);
+  box-shadow: 0 0 16px rgba(167,139,250,0.5);
+  animation: aiql-pulse 2s infinite;
+}
+@keyframes aiql-pulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(167,139,250,0.5); }
+  50% { box-shadow: 0 0 24px rgba(167,139,250,0.8); }
+}
+.aiql-label {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 4px;
+  font-weight: 600;
+}
+.aiql-stage.current .aiql-label { color: var(--purple); font-weight: 700; }
+.aiql-line {
+  position: absolute;
+  top: 18px; left: 50%; right: -50%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--c-ledger), var(--border));
+}
+.aiql-stage:last-child .aiql-line { display: none; }
+.aiql-note {
+  background: var(--bg-3);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 11px;
+  color: var(--text-1);
+  line-height: 1.55;
+  margin-top: 10px;
+}
+.aiql-note strong { color: var(--purple); }
+
+/* ============ 8 · CB 三维公式 ============ */
+.cb-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+}
+.cb-top {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 12px;
+}
+.cb-big {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 40px;
+  color: var(--c-ledger);
+  line-height: 1;
+}
+.cb-info { flex: 1; }
+.cb-rank {
+  font-size: 11px;
+  color: var(--gold);
+  font-weight: 700;
+}
+.cb-trend {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+.cb-trend strong { color: var(--green); }
+.cb-formula {
+  background: var(--bg-2);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--text-1);
+  margin-bottom: 12px;
+  text-align: center;
+  border: 1px dashed var(--border-2);
+}
+.cb-formula strong { color: var(--gold); }
+.cb-dim {
+  display: grid;
+  grid-template-columns: 60px 1fr 50px;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 11px;
+}
+.cb-dim:last-child { border: none; }
+.cb-dim-name { color: var(--text-1); font-weight: 600; }
+.cb-dim-name.weak { color: var(--red-soft); }
+.cb-dim-bar {
+  height: 6px;
+  background: rgba(255,220,180,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.cb-dim-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-ledger), var(--gold));
+  border-radius: 3px;
+}
+.cb-dim-fill.weak {
+  background: linear-gradient(90deg, var(--amber), var(--red-soft));
+}
+.cb-dim-val {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  text-align: right;
+  color: var(--text-0);
+}
+.cb-dim-val.weak { color: var(--red-soft); }
+.cb-tip {
+  background: rgba(245,166,35,0.06);
+  border-left: 2px solid var(--amber);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 10.5px;
+  color: var(--text-1);
+  line-height: 1.6;
+  margin-top: 10px;
+}
+.cb-tip strong { color: var(--amber); }
+
+/* ============ 9 · M-3E 三方评价 ============ */
+.eval-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+}
+.eval-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.eval-row:last-of-type { border: none; }
+.eval-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.eval-icon.boss { background: rgba(245,166,35,0.15); color: var(--amber); }
+.eval-icon.me { background: rgba(78,205,196,0.15); color: #4ecdc4; }
+.eval-icon.dsr { background: rgba(136,200,80,0.15); color: var(--c-ledger); }
+.eval-info { flex: 1; }
+.eval-dir {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-0);
+}
+.eval-meta {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 1px;
+  font-family: 'Space Mono', monospace;
+}
+.eval-score {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  color: var(--c-ledger);
+  flex-shrink: 0;
+}
+.eval-score.grade {
+  color: var(--gold);
+}
+.eval-protest {
+  margin-top: 10px;
+  padding: 8px 11px;
+  background: rgba(255,80,80,0.05);
+  border-left: 2px solid var(--red);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text-1);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.eval-protest strong { color: var(--red-soft); }
+.eval-protest-btn {
+  background: transparent;
+  border: 1px solid rgba(255,80,80,0.3);
+  color: var(--red-soft);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-family: 'Noto Sans SC', sans-serif;
+  cursor: pointer;
+}
+
+/* ============ 10 · 收入多维 + 提现 ============ */
+.income-multi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+}
+.im-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.im-cell {
+  background: var(--bg-2);
+  border-radius: 9px;
+  padding: 10px 8px;
+  text-align: center;
+}
+.im-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--text-3);
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.im-amount {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--text-0);
+  line-height: 1;
+}
+.im-cell.big .im-amount {
+  font-size: 20px;
+  color: var(--c-ledger);
+}
+.im-trend {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  margin-top: 3px;
+}
+.im-trend.up { color: var(--green); }
+.im-trend.down { color: var(--red); }
+
+.im-bars {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  height: 60px;
+  gap: 5px;
+  padding: 8px;
+  background: var(--bg-2);
+  border-radius: 9px;
+  margin-bottom: 12px;
+}
+.im-bar {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center;
+}
+.im-bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, var(--c-ledger), var(--green-deep));
+  border-radius: 3px 3px 0 0;
+  min-height: 4px;
+}
+.im-bar.today .im-bar-fill {
+  background: linear-gradient(180deg, var(--gold), var(--amber));
+}
+.im-bar-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  color: var(--text-3);
+  margin-top: 4px;
+}
+
+.withdraw-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--bg-3);
+  border-radius: 9px;
+  border: 1px solid var(--border);
+}
+.wd-info { font-size: 11px; color: var(--text-1); }
+.wd-info strong { color: var(--text-0); }
+.wd-meta {
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+.wd-btn {
+  background: var(--c-ledger);
+  color: #0a1a05;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 12px;
+  font-family: 'Noto Sans SC', sans-serif;
+  cursor: pointer;
+}
+
+/* ============ SKU 合伙人化 schema 卡 ============ */
+.schema-card {
+  margin-top: 16px;
+  background: linear-gradient(135deg, rgba(212,175,55,0.06) 0%, rgba(212,175,55,0.02) 100%);
+  border: 1px solid rgba(212,175,55,0.2);
+  border-radius: 14px;
+  padding: 16px;
+}
+.sc-tag {
+  display: inline-block;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  background: rgba(212,175,55,0.1);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(212,175,55,0.3);
+  margin-bottom: 8px;
+}
+.sc-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+.sc-desc {
+  font-size: 11px;
+  color: var(--text-1);
+  line-height: 1.65;
+  margin-bottom: 8px;
+}
+.sc-6cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.sc-6card {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 5px;
+  font-size: 9px;
+  text-align: center;
+  color: var(--text-2);
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.sc-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--text-3);
+  padding-top: 8px;
+  border-top: 1px dashed rgba(212,175,55,0.15);
+}
+
+/* 底部固定 */
+.bottom-fix {
+  position: fixed; bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100%; max-width: 440px;
+  background: rgba(10,9,7,0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+  z-index: 99;
+}
+.bf-status {
+  flex: 1; font-size: 10px; color: var(--text-2);
+  display: flex; align-items: center; gap: 6px;
+}
+.bf-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--warn);
+  box-shadow: 0 0 6px var(--warn);
+  animation: enga 2.5s infinite;
+}
+@keyframes enga { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.bf-back {
+  background: var(--c-ledger);
+  color: #0a1a05;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Noto Sans SC', sans-serif;
+  cursor: pointer;
+}
+
+.decor-grain {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+</style>
+</head>
+<body>
+
+<div class="decor-grain"></div>
+
+<div class="layer-badge">
+  <span>⚠</span>
+  <span class="lb-text"><strong>Layer 1.3 演示版</strong> · 非真实Agent · 模拟数据</span>
+</div>
+
+<div class="topbar">
+  <div class="tb-row">
+    <button class="tb-back" onclick="alert('真实环境用主壳子4Tab')">‹</button>
+    <div class="tb-title-block">
+      <div class="tb-code">INF-XL · v1.0 · 一本账模块</div>
+      <div class="tb-title">心律<span class="tb-title-cn">Xīn Lǜ</span></div>
+    </div>
+    <div class="tb-stage">Stage 2.5</div>
+  </div>
+  
+  <!-- 心跳脉动顶部条 -->
+  <div class="heartbeat-bar">
+    <span class="hb-icon">💓</span>
+    <div class="hb-info">
+      <div class="hb-formula">r = a ÷ T · 经营心跳实时运转</div>
+      <div class="hb-meta">心跳公式 v2.0 · INFINITY OS 灵魂底层 · 4 SKU 全健康</div>
+    </div>
+  </div>
+  
+  <!-- 蝴蝶效应预警条 · 跨 Tab 顶部 (与 INF-XM 一致) -->
+  <div class="butterfly-bar">
+    <span class="bf-icon">⚠</span>
+    <div class="bf-text">
+      <strong>蝴蝶效应 · A压货</strong> · 步步高西郊 极鲜500ml 库存 4.2a (>3a警戒) · 建议本周降推
+    </div>
+    <span class="bf-arrow">›</span>
+  </div>
+  
+  <!-- 美顾身份小卡 · 跨 Tab 顶部一致 -->
+  <div class="id-mini">
+    <div class="idm-avatar">🍖</div>
+    <div class="idm-info">
+      <div class="idm-name">陈晓琳<span class="idm-stars">★★★★★</span></div>
+      <div class="idm-meta">5星·主厨 · <span class="idm-cb">CB 4.78</span> · 欣和·常驻</div>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- ============ 1 · 今日收入 vs 目标 ============ -->
+<div class="section-title">
+  <span class="st-num">1</span>
+  <span class="st-text">今日收入 · vs 目标</span>
+  <span class="st-tag">基础</span>
+</div>
+
+<div class="income-card">
+  <div class="ic-label">📅 2026-05-19 · 周二</div>
+  <div class="ic-row">
+    <span class="ic-amount">¥486</span>
+    <span class="ic-target">/ ¥600</span>
+    <span class="ic-pct-tag">81%</span>
+  </div>
+  <div class="ic-bar"><div class="ic-fill"></div></div>
+  <div class="ic-gap-row">
+    <span class="ic-gap">距目标 <span class="ic-gap-amount">差 ¥114</span></span>
+    <span class="ic-agent-hint">💡 Agent 已给补救建议 ↓</span>
+  </div>
+</div>
+
+<!-- ============ 2 · 弥补差距 Agent ★INFINITY OS灵魂 ============ -->
+<div class="section-title">
+  <span class="st-num">2</span>
+  <span class="st-text">弥补差距 Agent · 主动建议</span>
+  <span class="st-tag soul">★ 灵魂 B-5</span>
+</div>
+
+<div class="agent-card">
+  <div class="ag-head">
+    <div class="ag-icon">🤖</div>
+    <div class="ag-title-block">
+      <div class="ag-title">明日补救路线</div>
+      <div class="ag-sub">Agent · 已扫描 9 家门店 · 算 3 处补救</div>
+    </div>
+  </div>
+  
+  <div class="ag-thinking">
+    <strong>💭 Agent 推理:</strong> 今日差 ¥114 · 明日路线含 3 家可加值门店 ·
+    其中步步高·禾然(1年级×2.0) r 偏低有上调空间 · 大润发·极鲜 280ml 有补单
+    · 联华顺路·总可补 <strong>¥122 (>差距)</strong>
+  </div>
+  
+  <div class="ag-suggestions">
+    <div class="ag-item">
+      <span class="ag-time">09:00</span>
+      <div class="ag-detail">
+        <strong>步步高西郊 · 禾然500ml × 8 瓶</strong>
+        <span class="ag-detail-meta">1年级×2.0 · r 0.8 → 1.1/天 · 拉升上架率</span>
+      </div>
+      <span class="ag-plus">+¥80</span>
+    </div>
+    <div class="ag-item">
+      <span class="ag-time">10:30</span>
+      <div class="ag-detail">
+        <strong>大润发金桥 · 极鲜280ml × 6 瓶</strong>
+        <span class="ag-detail-meta">补单 · a 缺 0.3 · r 健康</span>
+      </div>
+      <span class="ag-plus">+¥30</span>
+    </div>
+    <div class="ag-item">
+      <span class="ag-time">11:30</span>
+      <div class="ag-detail">
+        <strong>联华世纪 · 味达美金标 × 4 瓶</strong>
+        <span class="ag-detail-meta">顺路 · 30 分钟可完</span>
+      </div>
+      <span class="ag-plus">+¥12</span>
+    </div>
+  </div>
+  
+  <div class="ag-total">
+    <span>明日总可补</span>
+    <span class="ag-total-amt">¥122 ↗ 超目标 ¥8</span>
+  </div>
+  
+  <div class="ag-action-row">
+    <button class="ag-btn ghost">查看路线 ›</button>
+    <button class="ag-btn" onclick="this.textContent='已加入明日 ✓'; this.style.background='var(--green)'; this.style.color='white'">一键加入明日路线 →</button>
+  </div>
+</div>
+
+<!-- ============ 3 · SKU + r·a·T 三维明细 ============ -->
+<div class="section-title">
+  <span class="st-num">3</span>
+  <span class="st-text">SKU · r·a·T 三维明细</span>
+  <span class="st-tag b">B-4 · 心跳底层</span>
+</div>
+
+<div class="sku-list">
+  <!-- 4年级·极鲜500ml -->
+  <div class="sku-card">
+    <div class="sku-head">
+      <div class="sku-name-block">
+        <div class="sku-name">极鲜 500ml <span class="sku-grade g4">4年级</span></div>
+        <div class="sku-rat">
+          r=<strong>2.4</strong>瓶/天 · a=<strong>72</strong>瓶/月 · T=<strong>30</strong>天
+        </div>
+      </div>
+      <div class="sku-income">
+        ¥168
+        <span class="sku-coef">×0.7 系数</span>
+      </div>
+    </div>
+    <div class="sku-foot">
+      <span class="sku-foot-item">📦 <strong>28瓶</strong></span>
+      <span class="sku-foot-item">🏪 <strong>4家</strong></span>
+      <span class="sku-foot-item">💧 健康</span>
+    </div>
+  </div>
+  
+  <!-- 1年级·禾然 -->
+  <div class="sku-card grade-1">
+    <div class="sku-head">
+      <div class="sku-name-block">
+        <div class="sku-name">禾然有机 500ml <span class="sku-grade g1">1年级·主推</span></div>
+        <div class="sku-rat">
+          r=<strong>0.8</strong>瓶/天 · a=<strong>11</strong>瓶/14天 · T=<strong>14</strong>天
+        </div>
+      </div>
+      <div class="sku-income">
+        ¥120
+        <span class="sku-coef">×2.0 系数 ★</span>
+      </div>
+    </div>
+    <div class="sku-foot">
+      <span class="sku-foot-item">📦 <strong>12瓶</strong></span>
+      <span class="sku-foot-item">🏪 <strong>2家</strong></span>
+      <span class="sku-foot-item" style="color:var(--amber)">⚠ r 偏低</span>
+    </div>
+  </div>
+  
+  <!-- 4年级·极鲜280ml -->
+  <div class="sku-card">
+    <div class="sku-head">
+      <div class="sku-name-block">
+        <div class="sku-name">极鲜 280ml <span class="sku-grade g4">4年级</span></div>
+        <div class="sku-rat">
+          r=<strong>1.3</strong>瓶/天 · a=<strong>39</strong>瓶/月 · T=<strong>30</strong>天
+        </div>
+      </div>
+      <div class="sku-income">
+        ¥75
+        <span class="sku-coef">×0.7 系数</span>
+      </div>
+    </div>
+    <div class="sku-foot">
+      <span class="sku-foot-item">📦 <strong>15瓶</strong></span>
+      <span class="sku-foot-item">🏪 <strong>3家</strong></span>
+      <span class="sku-foot-item">💧 健康</span>
+    </div>
+  </div>
+  
+  <!-- 3年级·味达美 -->
+  <div class="sku-card">
+    <div class="sku-head">
+      <div class="sku-name-block">
+        <div class="sku-name">味达美金标 <span class="sku-grade g3">3年级·奶牛</span></div>
+        <div class="sku-rat">
+          r=<strong>2.1</strong>瓶/天 · a=<strong>63</strong>瓶/月 · T=<strong>30</strong>天
+        </div>
+      </div>
+      <div class="sku-income">
+        ¥60
+        <span class="sku-coef">×1.0 系数</span>
+      </div>
+    </div>
+    <div class="sku-foot">
+      <span class="sku-foot-item">📦 <strong>20瓶</strong></span>
+      <span class="sku-foot-item">🏪 <strong>4家</strong></span>
+      <span class="sku-foot-item">💧 稳定</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 4 · 客户名单 6 级 ============ -->
+<div class="section-title">
+  <span class="st-num">4</span>
+  <span class="st-text">客户名单 · 6 级</span>
+  <span class="st-tag b">B-13</span>
+</div>
+
+<div class="client-card">
+  <div class="client-tabs">
+    <button class="client-tab active" onclick="switchClient(this, 'all')">全部 <span class="ct-count">9</span></button>
+    <button class="client-tab" onclick="switchClient(this, 'sp')">S+ <span class="ct-count">2</span></button>
+    <button class="client-tab" onclick="switchClient(this, 's')">S <span class="ct-count">1</span></button>
+    <button class="client-tab" onclick="switchClient(this, 'a')">A <span class="ct-count">2</span></button>
+    <button class="client-tab" onclick="switchClient(this, 'b')">B <span class="ct-count">2</span></button>
+    <button class="client-tab" onclick="switchClient(this, 'cd')">C/D <span class="ct-count">2</span></button>
+  </div>
+  <div class="client-list">
+    <div class="client-item">
+      <div class="client-tier tier-sp">S+</div>
+      <div class="client-name">家乐福古北 <span class="client-freq">3×/周</span></div>
+      <div class="client-meta">¥120</div>
+    </div>
+    <div class="client-item">
+      <div class="client-tier tier-sp">S+</div>
+      <div class="client-name">好邻居世纪 <span class="client-freq">3×/周</span></div>
+      <div class="client-meta">¥85</div>
+    </div>
+    <div class="client-item">
+      <div class="client-tier tier-s">S</div>
+      <div class="client-name">大润发金桥 <span class="client-freq">2×/周</span></div>
+      <div class="client-meta">¥110</div>
+    </div>
+    <div class="client-item">
+      <div class="client-tier tier-a">A</div>
+      <div class="client-name">联华世纪 <span class="client-freq">1×/周</span></div>
+      <div class="client-meta">¥68</div>
+    </div>
+    <div class="client-item">
+      <div class="client-tier tier-a">A</div>
+      <div class="client-name">联华浦东 <span class="client-freq">1×/周</span></div>
+      <div class="client-meta">¥58</div>
+    </div>
+    <div class="client-item">
+      <div class="client-tier tier-b">B</div>
+      <div class="client-name progress">步步高西郊 ⚡进行中 <span class="client-freq">1×/2周</span></div>
+      <div class="client-meta">¥45</div>
+    </div>
+    <div class="client-item">
+      <div class="client-tier tier-b">B</div>
+      <div class="client-name">华联浦江 <span class="client-freq">1×/2周</span></div>
+      <div class="client-meta">¥38</div>
+    </div>
+    <div class="client-item">
+      <div class="client-tier tier-c">C</div>
+      <div class="client-name">永辉汶水 <span class="client-freq">1×/月</span></div>
+      <div class="client-meta">¥22</div>
+    </div>
+    <div class="client-item">
+      <div class="client-tier tier-d">D</div>
+      <div class="client-name">便利蜂浦东 <span class="client-freq">1×/月</span></div>
+      <div class="client-meta">¥15</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 5 · M-L 一本账三维 ============ -->
+<div class="section-title">
+  <span class="st-num">5</span>
+  <span class="st-text">M-L · 一本账三维</span>
+  <span class="st-tag b">B-8</span>
+</div>
+
+<div class="tridim-card">
+  <div class="td-views">
+    <button class="td-view active" onclick="switchTd(this, 'sku')">SKU 视图</button>
+    <button class="td-view" onclick="switchTd(this, 'grade')">年级视图</button>
+    <button class="td-view" onclick="switchTd(this, 'time')">时间视图</button>
+  </div>
+  
+  <div class="td-content" id="td-content">
+    <div class="td-row">
+      <span class="td-row-l">🥇 极鲜 500ml</span>
+      <span class="td-row-r">¥168 · 34.6%</span>
+    </div>
+    <div class="td-row">
+      <span class="td-row-l">🌿 禾然有机 500ml</span>
+      <span class="td-row-r up">¥120 · 24.7%</span>
+    </div>
+    <div class="td-row">
+      <span class="td-row-l">🥇 极鲜 280ml</span>
+      <span class="td-row-r">¥75 · 15.4%</span>
+    </div>
+    <div class="td-row">
+      <span class="td-row-l">📘 味达美金标</span>
+      <span class="td-row-r">¥60 · 12.3%</span>
+    </div>
+    <div class="td-row">
+      <span class="td-row-l">+ 其他 (基础+任务)</span>
+      <span class="td-row-r">¥63 · 13.0%</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 6 · 年级系数 + 资金流向 ============ -->
+<div class="section-title">
+  <span class="st-num">6</span>
+  <span class="st-text">年级系数 · 资金流向</span>
+  <span class="st-tag b">B-9</span>
+</div>
+
+<div class="grade-flow-card">
+  <div class="gf-grades">
+    <div class="gf-grade g1">
+      <div class="gf-glevel">1 年级</div>
+      <div class="gf-gcoef">×2.0</div>
+      <div class="gf-gincome">¥120 · 24.5%</div>
+    </div>
+    <div class="gf-grade">
+      <div class="gf-glevel">2 年级</div>
+      <div class="gf-gcoef">×1.5</div>
+      <div class="gf-gincome">¥0</div>
+    </div>
+    <div class="gf-grade">
+      <div class="gf-glevel">3 年级</div>
+      <div class="gf-gcoef">×1.0</div>
+      <div class="gf-gincome">¥60 · 12.3%</div>
+    </div>
+    <div class="gf-grade g4">
+      <div class="gf-glevel">4 年级</div>
+      <div class="gf-gcoef">×0.7</div>
+      <div class="gf-gincome">¥306 · 62.9%</div>
+    </div>
+  </div>
+  
+  <div class="gf-flow">
+    💰 资金流向: 4 年级 (¥306·收割) <span class="gf-arrow">→</span> <strong>养</strong> <span class="gf-arrow">→</span> 1 年级 (¥120·投入)
+  </div>
+</div>
+
+<!-- ============ 7 · AIQL 品牌资产追踪 ============ -->
+<div class="section-title">
+  <span class="st-num">7</span>
+  <span class="st-text">M-A · AIQL 品牌资产</span>
+  <span class="st-tag b">B-10</span>
+</div>
+
+<div class="aiql-card">
+  <div class="aiql-flow">
+    <div class="aiql-stage passed">
+      <div class="aiql-letter">A</div>
+      <div class="aiql-label">认知</div>
+      <div class="aiql-line"></div>
+    </div>
+    <div class="aiql-stage passed">
+      <div class="aiql-letter">I</div>
+      <div class="aiql-label">兴趣</div>
+      <div class="aiql-line"></div>
+    </div>
+    <div class="aiql-stage current">
+      <div class="aiql-letter">Q</div>
+      <div class="aiql-label">质量</div>
+      <div class="aiql-line"></div>
+    </div>
+    <div class="aiql-stage">
+      <div class="aiql-letter">L</div>
+      <div class="aiql-label">忠诚</div>
+    </div>
+  </div>
+  <div class="aiql-note">
+    本月主要在 <strong>Q · 质量信任</strong> 阶段 ·
+    下一步通过 试吃 + 客情 → <strong>L · 忠诚</strong> · 复购率提升 +15-20% 预期
+  </div>
+</div>
+
+<!-- ============ 8 · CB 三维公式 ============ -->
+<div class="section-title">
+  <span class="st-num">8</span>
+  <span class="st-text">M-CB · 评分三维公式</span>
+  <span class="st-tag b">B-11 ★透明</span>
+</div>
+
+<div class="cb-card">
+  <div class="cb-top">
+    <div class="cb-big">4.78</div>
+    <div class="cb-info">
+      <div class="cb-rank">★★★★★ · 5星·主厨稳定</div>
+      <div class="cb-trend">月初 4.55 → 4.78 · <strong>+0.23 ↗</strong></div>
+    </div>
+  </div>
+  
+  <div class="cb-formula">
+    CB = <strong>0.5</strong>×粘性 + <strong>0.3</strong>×评价 + <strong>0.2</strong>×执行
+  </div>
+  
+  <div class="cb-dim">
+    <span class="cb-dim-name weak">粘性 ×0.5</span>
+    <div class="cb-dim-bar"><div class="cb-dim-fill weak" style="width:83.6%"></div></div>
+    <span class="cb-dim-val weak">4.18</span>
+  </div>
+  <div class="cb-dim">
+    <span class="cb-dim-name">评价 ×0.3</span>
+    <div class="cb-dim-bar"><div class="cb-dim-fill" style="width:97.2%"></div></div>
+    <span class="cb-dim-val">4.86</span>
+  </div>
+  <div class="cb-dim">
+    <span class="cb-dim-name">执行 ×0.2</span>
+    <div class="cb-dim-bar"><div class="cb-dim-fill" style="width:96.2%"></div></div>
+    <span class="cb-dim-val">4.81</span>
+  </div>
+  
+  <div class="cb-tip">
+    💡 <strong>短板提醒:</strong> 粘性是短板 (4.18) ·
+    加深 S+ 门店客情 + 多做社群活动 → 粘性可达 4.5 → CB 可达 <strong>4.94</strong>
+  </div>
+</div>
+
+<!-- ============ 9 · M-3E 三方评价 ============ -->
+<div class="section-title">
+  <span class="st-num">9</span>
+  <span class="st-text">M-3E · 三方评价网</span>
+  <span class="st-tag b">B-12</span>
+</div>
+
+<div class="eval-card">
+  <div class="eval-row">
+    <div class="eval-icon boss">👔</div>
+    <div class="eval-info">
+      <div class="eval-dir">老板 → 我</div>
+      <div class="eval-meta">42 评 · 全 4-5 星</div>
+    </div>
+    <div class="eval-score">4.86</div>
+  </div>
+  
+  <div class="eval-row">
+    <div class="eval-icon me">🍳</div>
+    <div class="eval-info">
+      <div class="eval-dir">我 → 门店</div>
+      <div class="eval-meta">42 评 · 配合度高</div>
+    </div>
+    <div class="eval-score">4.50</div>
+  </div>
+  
+  <div class="eval-row">
+    <div class="eval-icon dsr">🚗</div>
+    <div class="eval-info">
+      <div class="eval-dir">DSR → 我</div>
+      <div class="eval-meta">A+ 71% · A 24% · B 5%</div>
+    </div>
+    <div class="eval-score grade">A+</div>
+  </div>
+  
+  <div class="eval-protest">
+    <span>⚠ <strong>恶意差评申诉</strong> · 近 30 天 0 次</span>
+    <button class="eval-protest-btn">申诉中心</button>
+  </div>
+</div>
+
+<!-- ============ 10 · 收入多维 + 提现 ============ -->
+<div class="section-title">
+  <span class="st-num">10</span>
+  <span class="st-text">收入多维 · 提现</span>
+  <span class="st-tag b">B-15 + A-8</span>
+</div>
+
+<div class="income-multi">
+  <div class="im-grid">
+    <div class="im-cell">
+      <div class="im-label">📅 今日</div>
+      <div class="im-amount">¥486</div>
+      <div class="im-trend up">▲ 81% 目标</div>
+    </div>
+    <div class="im-cell">
+      <div class="im-label">📊 本周</div>
+      <div class="im-amount">¥1,820</div>
+      <div class="im-trend up">▲ +12%</div>
+    </div>
+    <div class="im-cell big">
+      <div class="im-label">📈 本月</div>
+      <div class="im-amount">¥9,860</div>
+      <div class="im-trend up">▲ +17%</div>
+    </div>
+    <div class="im-cell">
+      <div class="im-label">📆 季度</div>
+      <div class="im-amount">¥28,420</div>
+      <div class="im-trend up">▲ +22%</div>
+    </div>
+    <div class="im-cell">
+      <div class="im-label">YTD</div>
+      <div class="im-amount">¥98,640</div>
+      <div class="im-trend up">▲ +35.8%</div>
+    </div>
+    <div class="im-cell">
+      <div class="im-label">同比</div>
+      <div class="im-amount" style="color:var(--green)">+35.8%</div>
+      <div class="im-trend">↗ 显著</div>
+    </div>
+  </div>
+  
+  <!-- 本周柱图 -->
+  <div class="im-bars">
+    <div class="im-bar"><div class="im-bar-fill" style="height:35%"></div><div class="im-bar-label">一</div></div>
+    <div class="im-bar"><div class="im-bar-fill" style="height:42%"></div><div class="im-bar-label">二</div></div>
+    <div class="im-bar"><div class="im-bar-fill" style="height:50%"></div><div class="im-bar-label">三</div></div>
+    <div class="im-bar"><div class="im-bar-fill" style="height:58%"></div><div class="im-bar-label">四</div></div>
+    <div class="im-bar"><div class="im-bar-fill" style="height:65%"></div><div class="im-bar-label">五</div></div>
+    <div class="im-bar today"><div class="im-bar-fill" style="height:81%"></div><div class="im-bar-label">六·今</div></div>
+    <div class="im-bar"><div class="im-bar-fill" style="height:30%; opacity:0.3"></div><div class="im-bar-label">日</div></div>
+  </div>
+  
+  <div class="withdraw-row">
+    <div class="wd-info">
+      <strong>💳 可提现 ¥486</strong>
+      <span class="wd-meta">工商银行 · 尾号 8888 · 实时到账</span>
+    </div>
+    <button class="wd-btn" onclick="this.textContent='提现成功 ✓'; this.style.background='var(--gold)'; this.style.color='#1a0a00'">提现</button>
+  </div>
+</div>
+
+<!-- ============ SKU 合伙人化 schema 卡 (memory #28) ============ -->
+<div class="schema-card">
+  <span class="sc-tag">⚓ 底层 Schema · memory #28</span>
+  <div class="sc-title">SKU = 合伙人节点</div>
+  <div class="sc-desc">
+    每个 SKU 是合伙人节点 · 关联多人收入/绩效/奖金 · 决定品牌生命周期投资
+  </div>
+  <div class="sc-6cards">
+    <div class="sc-6card">①角色</div>
+    <div class="sc-6card">②生命周期</div>
+    <div class="sc-6card">③阶段目标</div>
+    <div class="sc-6card">④投入</div>
+    <div class="sc-6card">⑤产出</div>
+    <div class="sc-6card">⑥退出条件</div>
+  </div>
+  <div class="sc-meta">
+    DS 锁定 · 5-10 核心 SKU 试点 · 六月鲜先行 · 6 个月跑通再全铺
+  </div>
+</div>
+
+</main>
+
+<div class="bottom-fix">
+  <div class="bf-status">
+    <span class="bf-dot"></span>
+    撮合引擎 · 演示模拟 · INF-XL 心律
+  </div>
+  <button class="bf-back" onclick="alert('真实环境用主壳子4Tab')">‹ 返回主壳子</button>
+</div>
+
+<script>
+// 客户分级 Tab 切换 (演示·真实需后端过滤)
+function switchClient(btn, tier) {
+  btn.parentElement.querySelectorAll('.client-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  // 真实环境 fetch 后端·这里仅切换样式
+}
+
+// 一本账三维视图切换
+const tdData = {
+  sku: `
+    <div class="td-row"><span class="td-row-l">🥇 极鲜 500ml</span><span class="td-row-r">¥168 · 34.6%</span></div>
+    <div class="td-row"><span class="td-row-l">🌿 禾然有机 500ml</span><span class="td-row-r up">¥120 · 24.7%</span></div>
+    <div class="td-row"><span class="td-row-l">🥇 极鲜 280ml</span><span class="td-row-r">¥75 · 15.4%</span></div>
+    <div class="td-row"><span class="td-row-l">📘 味达美金标</span><span class="td-row-r">¥60 · 12.3%</span></div>
+    <div class="td-row"><span class="td-row-l">+ 其他 (基础+任务)</span><span class="td-row-r">¥63 · 13.0%</span></div>
+  `,
+  grade: `
+    <div class="td-row"><span class="td-row-l">1 年级 ×2.0 (禾然投入)</span><span class="td-row-r up">¥120 · 24.5%</span></div>
+    <div class="td-row"><span class="td-row-l">2 年级 ×1.5</span><span class="td-row-r">¥0 · 0%</span></div>
+    <div class="td-row"><span class="td-row-l">3 年级 ×1.0 (味达美·奶牛)</span><span class="td-row-r">¥60 · 12.3%</span></div>
+    <div class="td-row"><span class="td-row-l">4 年级 ×0.7 (极鲜·收割)</span><span class="td-row-r down">¥306 · 62.9%</span></div>
+    <div class="td-row"><span class="td-row-l">💧 健康度</span><span class="td-row-r up">良好 · 资金循环</span></div>
+  `,
+  time: `
+    <div class="td-row"><span class="td-row-l">📅 今日</span><span class="td-row-r">¥486 · 81%目标</span></div>
+    <div class="td-row"><span class="td-row-l">📊 本周</span><span class="td-row-r up">¥1,820 · ▲12%</span></div>
+    <div class="td-row"><span class="td-row-l">📈 本月</span><span class="td-row-r up">¥9,860 · ▲17%</span></div>
+    <div class="td-row"><span class="td-row-l">📆 季度</span><span class="td-row-r up">¥28,420 · ▲22%</span></div>
+    <div class="td-row"><span class="td-row-l">📊 YTD / 同比</span><span class="td-row-r up">¥98,640 · ▲35.8%</span></div>
+  `
+};
+function switchTd(btn, view) {
+  btn.parentElement.querySelectorAll('.td-view').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('td-content').innerHTML = tdData[view];
+}
+</script>
+
+</body>
+</html>
