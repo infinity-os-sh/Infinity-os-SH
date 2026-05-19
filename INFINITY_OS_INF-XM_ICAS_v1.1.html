@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INF-XM · ICAS 路上 · v1.1 · 督导走访路上</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907;
+  --bg-1: #14110d;
+  --bg-2: #1c1815;
+  --bg-3: #251f1a;
+  --surface: #1a1612;
+  --border: rgba(255, 220, 180, 0.08);
+  --border-2: rgba(255, 220, 180, 0.15);
+  --text-0: #f4ede0;
+  --text-1: #c8bda8;
+  --text-2: #847868;
+  --text-3: #524a40;
+  --c-road: #4ecdc4;
+  --green: #88c850;
+  --amber: #f5a623;
+  --red: #e94560;
+  --blue: #5d9cec;
+  --gold: #d4af37;
+  --purple: #a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html, body {
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-family: 'Noto Sans SC', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+@media (min-width: 600px) {
+  body { max-width: 440px; margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.6); }
+}
+
+.layer-badge {
+  background: rgba(233, 69, 96, 0.15);
+  border-bottom: 1px solid rgba(233, 69, 96, 0.25);
+  color: var(--red);
+  font-size: 10px;
+  padding: 6px 14px;
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+}
+.embed-mode .layer-badge { display: none; }
+
+.mod-header {
+  padding: 18px 16px 14px;
+  background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+  border-bottom: 1px solid var(--border);
+}
+.mod-code {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--c-road);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.mod-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--text-0);
+  margin-top: 4px;
+}
+.mod-sub {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+
+.card {
+  margin: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+.card-hl {
+  background: linear-gradient(135deg, rgba(78,205,196,0.06) 0%, var(--surface) 100%);
+  border-color: rgba(78,205,196,0.2);
+}
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-0);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.card-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(78,205,196,0.1);
+  color: var(--c-road);
+  font-weight: 700;
+  margin-left: auto;
+}
+
+/* 业态簇热力图 (10 业态) */
+.heat-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin: 10px 0;
+}
+.heat-cell {
+  aspect-ratio: 1;
+  background: var(--bg-2);
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.heat-cell:hover { transform: translateY(-1px); border-color: var(--gold); }
+.heat-cell.hot {
+  background: linear-gradient(135deg, rgba(233,69,96,0.25) 0%, rgba(245,166,35,0.15) 100%);
+  border-color: var(--red);
+}
+.heat-cell.warm {
+  background: linear-gradient(135deg, rgba(245,166,35,0.2) 0%, rgba(255,200,94,0.1) 100%);
+  border-color: var(--amber);
+}
+.heat-cell.cool {
+  background: linear-gradient(135deg, rgba(78,205,196,0.15) 0%, rgba(78,205,196,0.05) 100%);
+  border-color: var(--c-road);
+}
+.heat-code {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-0);
+}
+.heat-name {
+  font-size: 9px;
+  color: var(--text-1);
+  margin-top: 1px;
+}
+.heat-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text-0);
+  align-self: flex-end;
+}
+.heat-cell.hot .heat-num { color: var(--red); }
+.heat-cell.warm .heat-num { color: var(--amber); }
+
+/* 今日任务列表 */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  border-left: 3px solid var(--c-road);
+  font-size: 11px;
+}
+.task-row.urgent { border-left-color: var(--red); background: rgba(233,69,96,0.05); }
+.task-row.warning { border-left-color: var(--amber); background: rgba(245,166,35,0.05); }
+.task-row.done { opacity: 0.5; border-left-color: var(--green); }
+.task-time {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-2);
+  min-width: 45px;
+  flex-shrink: 0;
+}
+.task-target {
+  flex: 1;
+  color: var(--text-1);
+}
+.task-name {
+  font-weight: 600;
+  color: var(--text-0);
+}
+.task-desc {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+.task-status {
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: var(--bg-3);
+  color: var(--text-2);
+  flex-shrink: 0;
+  font-weight: 600;
+}
+.task-row.urgent .task-status {
+  background: rgba(233,69,96,0.2);
+  color: var(--red);
+}
+.task-row.done .task-status {
+  background: rgba(136,200,80,0.2);
+  color: var(--green);
+}
+
+/* KA 客户卡 */
+.ka-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.ka-card {
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.ka-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--gold), #ff7c38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.ka-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-0);
+}
+.ka-meta {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 2px;
+  font-family: 'Space Mono', monospace;
+}
+.ka-status {
+  text-align: right;
+}
+.ka-amount {
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green);
+}
+.ka-pct {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+/* 业态簇专属任务面板 */
+.cluster-panel {
+  margin-top: 14px;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(245,166,35,0.08) 0%, transparent 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(245,166,35,0.2);
+}
+.cluster-panel-title {
+  font-size: 12px;
+  color: var(--gold);
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cluster-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cluster-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-1);
+  padding: 6px 8px;
+  background: var(--bg-2);
+  border-radius: 6px;
+}
+.cluster-action b { color: var(--text-0); }
+.cluster-action-mark {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--amber);
+  font-weight: 700;
+  margin-left: auto;
+}
+
+/* SURGE 倍率提醒 */
+.surge-card {
+  background: linear-gradient(135deg, rgba(233,69,96,0.15) 0%, rgba(245,166,35,0.08) 100%);
+  border: 1px solid rgba(233,69,96,0.3);
+  border-radius: 12px;
+  padding: 14px;
+  margin: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.surge-mult {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  color: var(--red);
+}
+.surge-info { flex: 1; }
+.surge-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-0);
+}
+.surge-desc {
+  font-size: 11px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+/* 飞轮进度 */
+.flywheel {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin: 10px 0;
+}
+.flywheel-step {
+  text-align: center;
+  padding: 10px 6px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.flywheel-step.done {
+  background: rgba(136,200,80,0.1);
+  border-color: rgba(136,200,80,0.3);
+}
+.flywheel-step.current {
+  background: rgba(78,205,196,0.1);
+  border-color: var(--c-road);
+}
+.flywheel-icon {
+  font-size: 16px;
+}
+.flywheel-label {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+.flywheel-step.done .flywheel-label { color: var(--green); }
+.flywheel-step.current .flywheel-label { color: var(--c-road); font-weight: 600; }
+.flywheel-step.todo .flywheel-label { color: var(--text-3); }
+
+/* 弥补差距 Agent */
+.agent-card {
+  background: linear-gradient(135deg, rgba(245, 166, 35, 0.1) 0%, rgba(255, 124, 56, 0.05) 100%);
+  border: 1px solid rgba(245, 166, 35, 0.3);
+  border-radius: 12px;
+  padding: 14px;
+  margin: 12px 14px;
+}
+.agent-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.agent-icon { font-size: 18px; }
+.agent-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--gold);
+}
+.agent-action {
+  background: var(--bg-2);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-1);
+  border-left: 2px solid var(--amber);
+}
+.agent-action b { color: var(--gold); }
+
+.bottom-fix {
+  padding: 14px 16px 32px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-3);
+}
+.embed-mode .bottom-fix { display: none; }
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 演示版 · ICAS 视角 v1.1 · 督导走访路上 · 模拟数据</div>
+
+<div class="mod-header">
+  <div class="mod-code">INF-XM · 寻觅 · ICAS v1.1</div>
+  <div class="mod-title">ICAS · 督导走访路上</div>
+  <div class="mod-sub">张丽华 · 厨艺总监 · 督导级 · 12 徒弟 ICA · 5 星考核 · 教学路线</div>
+</div>
+
+<!-- 1 · 10 业态簇热力图 (核心) -->
+<section class="card card-hl">
+  <div class="card-title">🔥 10 业态簇任务热力图<span class="card-tag">今日</span></div>
+  <div class="heat-grid">
+    <div class="heat-cell hot">
+      <div>
+        <div class="heat-code">KA</div>
+        <div class="heat-name">大卖场</div>
+      </div>
+      <div class="heat-num">12</div>
+    </div>
+    <div class="heat-cell warm">
+      <div>
+        <div class="heat-code">MWS</div>
+        <div class="heat-name">会员仓储</div>
+      </div>
+      <div class="heat-num">5</div>
+    </div>
+    <div class="heat-cell warm">
+      <div>
+        <div class="heat-code">CVS</div>
+        <div class="heat-name">便利店</div>
+      </div>
+      <div class="heat-num">8</div>
+    </div>
+    <div class="heat-cell cool">
+      <div>
+        <div class="heat-code">CSS</div>
+        <div class="heat-name">精品社超</div>
+      </div>
+      <div class="heat-num">3</div>
+    </div>
+    <div class="heat-cell warm">
+      <div>
+        <div class="heat-code">O2O</div>
+        <div class="heat-name">外卖</div>
+      </div>
+      <div class="heat-num">6</div>
+    </div>
+    <div class="heat-cell cool">
+      <div>
+        <div class="heat-code">OTM</div>
+        <div class="heat-name">即时零售</div>
+      </div>
+      <div class="heat-num">2</div>
+    </div>
+    <div class="heat-cell hot">
+      <div>
+        <div class="heat-code">EC</div>
+        <div class="heat-name">电商</div>
+      </div>
+      <div class="heat-num">15</div>
+    </div>
+    <div class="heat-cell warm">
+      <div>
+        <div class="heat-code">LIVE</div>
+        <div class="heat-name">直播</div>
+      </div>
+      <div class="heat-num">7</div>
+    </div>
+    <div class="heat-cell cool">
+      <div>
+        <div class="heat-code">CB</div>
+        <div class="heat-name">社区团</div>
+      </div>
+      <div class="heat-num">1</div>
+    </div>
+    <div class="heat-cell hot">
+      <div>
+        <div class="heat-code">RES</div>
+        <div class="heat-name">餐饮</div>
+      </div>
+      <div class="heat-num">10</div>
+    </div>
+  </div>
+  <div style="margin-top:8px; font-size:10px; color:var(--text-2); display:flex; gap:12px; justify-content:center;">
+    <span><span style="color:var(--red)">●</span> 高优 ≥10</span>
+    <span><span style="color:var(--amber)">●</span> 中优 4-9</span>
+    <span><span style="color:var(--c-road)">●</span> 常规 ≤3</span>
+  </div>
+</section>
+
+<!-- 2 · SURGE 倍率 (Uber 化机制) -->
+<div class="surge-card">
+  <div class="surge-mult">1.3×</div>
+  <div class="surge-info">
+    <div class="surge-title">ICAS 教学 SURGE</div>
+    <div class="surge-desc">5 星考核第 2 轮 · 教学积分 1.3 倍 · 月底前</div>
+  </div>
+</div>
+
+<!-- 3 · 今日 KA 拜访路线 -->
+<section class="card">
+  <div class="card-title">🗺 今日徒弟走访<span class="card-tag">5 徒弟</span></div>
+  <div class="ka-grid">
+    <div class="ka-card">
+      <div class="ka-icon">🏆</div>
+      <div>
+        <div class="ka-name">沃尔玛古北店</div>
+        <div class="ka-meta">09:00 · 续约谈判 · 战略</div>
+      </div>
+      <div class="ka-status">
+        <div class="ka-amount">¥1.2M</div>
+        <div class="ka-pct">季度合约</div>
+      </div>
+    </div>
+    <div class="ka-card">
+      <div class="ka-icon">📦</div>
+      <div>
+        <div class="ka-name">山姆浦东店</div>
+        <div class="ka-meta">11:00 · SKU 准入 · 高端</div>
+      </div>
+      <div class="ka-status">
+        <div class="ka-amount">¥850K</div>
+        <div class="ka-pct">大包装试销</div>
+      </div>
+    </div>
+    <div class="ka-card">
+      <div class="ka-icon">🏬</div>
+      <div>
+        <div class="ka-name">家乐福金桥店</div>
+        <div class="ka-meta">14:00 · 陈列检查 · 中级</div>
+      </div>
+      <div class="ka-status">
+        <div class="ka-amount">¥320K</div>
+        <div class="ka-pct">端架黄金位</div>
+      </div>
+    </div>
+    <div class="ka-card">
+      <div class="ka-icon">🥩</div>
+      <div>
+        <div class="ka-name">永辉精品中山店</div>
+        <div class="ka-meta">16:00 · 高端 SKU · 试销</div>
+      </div>
+      <div class="ka-status">
+        <div class="ka-amount">¥180K</div>
+        <div class="ka-pct">禾然铺货</div>
+      </div>
+    </div>
+    <div class="ka-card">
+      <div class="ka-icon">🛒</div>
+      <div>
+        <div class="ka-name">盒马七宝店</div>
+        <div class="ka-meta">17:30 · O2O 联动 · 30 分钟达</div>
+      </div>
+      <div class="ka-status">
+        <div class="ka-amount">¥210K</div>
+        <div class="ka-pct">即时零售</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · 今日任务列表 -->
+<section class="card">
+  <div class="card-title">📋 今日任务<span class="card-tag">SR-KA 专属</span></div>
+  <div class="task-list">
+    <div class="task-row urgent">
+      <div class="task-time">09:00</div>
+      <div class="task-target">
+        <div class="task-name">陈晓琳 步步高 · 大师冲刺</div>
+        <div class="task-desc">红烧肉签名菜技艺评估 · CB 4.78</div>
+      </div>
+      <div class="task-status">5 星</div>
+    </div>
+    <div class="task-row warning">
+      <div class="task-time">10:30</div>
+      <div class="task-target">
+        <div class="task-name">李婷 永辉 · 名厨晋升</div>
+        <div class="task-desc">清蒸鱼招牌菜考核 · 准备评估</div>
+      </div>
+      <div class="task-status">高优</div>
+    </div>
+    <div class="task-row warning">
+      <div class="task-time">13:00</div>
+      <div class="task-target">
+        <div class="task-name">孙磊 711 · 学徒辅导</div>
+        <div class="task-desc">便利餐饮·新人期 CB 3.95 → 4.2 目标</div>
+      </div>
+      <div class="task-status">重点</div>
+    </div>
+    <div class="task-row">
+      <div class="task-time">15:30</div>
+      <div class="task-target">
+        <div class="task-name">钱凯 山姆 · 名厨候选</div>
+        <div class="task-desc">大包装高端食材教学 · 重点扶持</div>
+      </div>
+      <div class="task-status">5 星</div>
+    </div>
+    <div class="task-row done">
+      <div class="task-time">17:00</div>
+      <div class="task-target">
+        <div class="task-name">徒弟集体技艺分享会</div>
+        <div class="task-desc">本月新菜共享 · 主厨等级互评</div>
+      </div>
+      <div class="task-status">已完成</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · SR-KA 业态簇专属任务 -->
+<section class="card">
+  <div class="card-title">⚡ SR-KA 业态专属任务<span class="card-tag">本周</span></div>
+  <div class="cluster-panel">
+    <div class="cluster-panel-title">🍳 ICAS 督导专属任务</div>
+    <div class="cluster-action-list">
+      <div class="cluster-action">
+        <span>⭐</span>
+        <span><b>5 星考核</b>每季对每 ICA 评估 5 维度 · 决定等级</span>
+        <span class="cluster-action-mark">+20 积分</span>
+      </div>
+      <div class="cluster-action">
+        <span>🍖</span>
+        <span><b>签名菜认证</b>红烧肉 / 清蒸鱼 / 麻婆豆腐 等技艺标准化</span>
+        <span class="cluster-action-mark">+20 积分</span>
+      </div>
+      <div class="cluster-action">
+        <span>📚</span>
+        <span><b>新菜技艺培训</b>厨艺创新·禾然有机食材搭配</span>
+        <span class="cluster-action-mark">+20 积分</span>
+      </div>
+      <div class="cluster-action">
+        <span>💎</span>
+        <span><b>AIQL 漏斗维护</b>团队 AIQL 88/82/78/72 · 持续优化</span>
+        <span class="cluster-action-mark">+20 积分</span>
+      </div>
+      <div class="cluster-action">
+        <span>🎓</span>
+        <span><b>等级升降路径</b>学徒¥45 → 主厨¥58 → 名厨¥75 → 大师¥95</span>
+        <span class="cluster-action-mark">+20 积分</span>
+      </div>
+    </div>
+      <div class="cluster-action">
+        <span>📊</span>
+        <span><b>陈列检查</b>堆头 / 端架 / 黄金位 · 6 月鲜战略位置</span>
+        <span class="cluster-action-mark">+20 积分</span>
+      </div>
+      <div class="cluster-action">
+        <span>🏷</span>
+        <span><b>价签 AI 扫描</b>A23 联动 · 价格异常预警 (5 互锁)</span>
+        <span class="cluster-action-mark">+15 积分</span>
+      </div>
+      <div class="cluster-action">
+        <span>🎁</span>
+        <span><b>促销节奏</b>618 / 双 11 / 春节 · 计划提前 8 周</span>
+        <span class="cluster-action-mark">+30 积分</span>
+      </div>
+      <div class="cluster-action">
+        <span>💰</span>
+        <span><b>账期管控</b>30 天回款 · 异常追讨 · 风险预警</span>
+        <span class="cluster-action-mark">+25 积分</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · 飞轮进度 -->
+<section class="card">
+  <div class="card-title">🔄 今日飞轮<span class="card-tag">Uber 化</span></div>
+  <div class="flywheel">
+    <div class="flywheel-step done">
+      <div class="flywheel-icon">🚶</div>
+      <div class="flywheel-label">寻觅<br>已完成</div>
+    </div>
+    <div class="flywheel-step current">
+      <div class="flywheel-icon">🏪</div>
+      <div class="flywheel-label">询点<br>进行中</div>
+    </div>
+    <div class="flywheel-step todo">
+      <div class="flywheel-icon">💰</div>
+      <div class="flywheel-label">心律<br>下班统计</div>
+    </div>
+    <div class="flywheel-step todo">
+      <div class="flywheel-icon">👤</div>
+      <div class="flywheel-label">心品<br>晚间复盘</div>
+    </div>
+  </div>
+  <div style="margin-top:10px; font-size:10px; color:var(--text-2); padding:8px; background:var(--bg-2); border-radius:6px; line-height:1.6;">
+    今日已完成 1 家 (沃尔玛晨访) · 剩 4 家 · 预估 18:00 收工<br>
+    业态簇切换: 顶部点 MWS / CVS / EC / 等可看其他业态视图
+  </div>
+</section>
+
+<!-- 7 · 弥补差距 Agent (SR 视角) -->
+<div class="agent-card">
+  <div class="agent-head">
+    <span class="agent-icon">🤖</span>
+    <span class="agent-title">弥补差距 Agent · ICAS 督导视角</span>
+  </div>
+  <div style="font-size:11px;color:var(--text-1);margin-bottom:8px">
+    12 徒弟中名厨候选仅 3 个·目标 6 个·Agent 给 3 个建议:
+  </div>
+  <div class="agent-action">
+    <b>建议 · 李婷晋升加速</b><br>
+    清蒸鱼招牌已稳定 · 下周名厨考核 · 预估通过率 92%
+  </div>
+  <div class="agent-action">
+    <b>建议 · 孙磊重点辅导</b><br>
+    陈晓琳一对一带教 · 30 天内 CB 4.0+ 达标
+  </div>
+  <div class="agent-action">
+    <b>建议 · 禾然品牌大使扩张</b><br>
+    陈刚 + 钱凯 + 吴峰 3 个名厨集中培训 · 高端市场冲锋
+  </div>
+  <div style="margin-top:8px;font-size:10px;color:var(--text-2)">
+    Agent 推理基础: 12 徒弟等级 + 5 星考核进度 + AIQL 漏斗 + CB 评分
+  </div>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · INF-XM · SR 视角 v1.1<br>
+  Layer 1.3 演示 · 10 业态簇专属 · ICAS-教学 默认<br>
+  ★ 14 APP 矩阵第 ⑥ 个 · 一线督导 · 12 徒弟走访
+</div>
+
+<script>
+if (new URLSearchParams(location.search).get('embed') === '1') {
+  document.body.classList.add('embed-mode');
+}
+</script>
+
+</body>
+</html>

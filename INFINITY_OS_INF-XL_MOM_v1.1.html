@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INF-XL · MMOM 一本账 · v1.1 · 5 OM 跨区直营</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907;
+  --bg-1: #14110d;
+  --bg-2: #1c1815;
+  --bg-3: #251f1a;
+  --surface: #1a1612;
+  --surface-2: #221d18;
+  --border: rgba(255, 220, 180, 0.08);
+  --border-2: rgba(255, 220, 180, 0.15);
+  --text-0: #f4ede0;
+  --text-1: #c8bda8;
+  --text-2: #847868;
+  --text-3: #524a40;
+  --c-ledger: #88c850;
+  --green: #88c850;
+  --amber: #f5a623;
+  --warn: #ffc85e;
+  --red: #e94560;
+  --blue: #5d9cec;
+  --gold: #d4af37;
+  --purple: #a78bfa;
+  --rose: #d4789a;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html, body {
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-family: 'Noto Sans SC', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+@media (min-width: 600px) {
+  body { max-width: 440px; margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.6); }
+}
+
+/* 顶部 Layer 1.3 横条 */
+.layer-badge {
+  background: rgba(233, 69, 96, 0.15);
+  border-bottom: 1px solid rgba(233, 69, 96, 0.25);
+  color: var(--red);
+  font-size: 10px;
+  padding: 6px 14px;
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+}
+.embed-mode .layer-badge { display: none; }
+
+/* 模块顶部 */
+.mod-header {
+  padding: 18px 16px 14px;
+  background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+  border-bottom: 1px solid var(--border);
+}
+.mod-code {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--c-ledger);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.mod-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--text-0);
+  margin-top: 4px;
+}
+.mod-sub {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+
+/* 模块卡片 */
+.card {
+  margin: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  position: relative;
+}
+.card-hl {
+  background: linear-gradient(135deg, rgba(136, 200, 80, 0.06) 0%, var(--surface) 100%);
+  border-color: rgba(136, 200, 80, 0.2);
+}
+.card-red {
+  background: linear-gradient(135deg, rgba(233, 69, 96, 0.06) 0%, var(--surface) 100%);
+  border-color: rgba(233, 69, 96, 0.2);
+}
+.card-warn {
+  background: linear-gradient(135deg, rgba(245, 166, 35, 0.06) 0%, var(--surface) 100%);
+  border-color: rgba(245, 166, 35, 0.2);
+}
+
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-0);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.card-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(245, 166, 35, 0.1);
+  color: var(--amber);
+  font-weight: 700;
+  margin-left: auto;
+}
+
+/* 5 互锁状态 */
+.interlock-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+.interlock-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.il-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--bg-3);
+  color: var(--amber);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.il-name {
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+  min-width: 56px;
+}
+.il-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.il-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--green), var(--amber));
+}
+.il-pct {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--text-1);
+  font-weight: 700;
+  min-width: 32px;
+  text-align: right;
+}
+
+/* 7 维度评分 */
+.dim-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dim-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 50px 30px;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.dim-name { color: var(--text-1); }
+.dim-bar {
+  height: 5px;
+  background: var(--bg-3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.dim-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--green);
+}
+.dim-fill.warn { background: var(--amber); }
+.dim-fill.bad { background: var(--red); }
+.dim-score {
+  font-family: 'Space Mono', monospace;
+  color: var(--text-0);
+  text-align: right;
+  font-weight: 700;
+}
+.dim-weight {
+  font-family: 'Space Mono', monospace;
+  color: var(--text-3);
+  font-size: 10px;
+}
+.dim-row.highlight {
+  background: rgba(245, 166, 35, 0.08);
+  margin: -2px -8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(245, 166, 35, 0.2);
+}
+
+/* 二批商 ABCD 列表 */
+.dealer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.dealer-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 50px 60px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  border-left: 3px solid var(--green);
+  font-size: 11px;
+}
+.dealer-row.B { border-left-color: var(--blue); }
+.dealer-row.C { border-left-color: var(--amber); }
+.dealer-row.D { border-left-color: var(--red); }
+.dealer-grade {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--green);
+  color: var(--bg-0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+}
+.dealer-row.B .dealer-grade { background: var(--blue); }
+.dealer-row.C .dealer-grade { background: var(--amber); }
+.dealer-row.D .dealer-grade { background: var(--red); }
+.dealer-name {
+  font-weight: 600;
+  color: var(--text-0);
+}
+.dealer-meta {
+  color: var(--text-2);
+  font-size: 10px;
+  font-family: 'Space Mono', monospace;
+}
+.dealer-num {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  color: var(--text-1);
+  text-align: right;
+}
+.dealer-action {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  text-align: center;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+/* P1/P2 路径 */
+.path-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.path-label {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--amber);
+  flex-shrink: 0;
+}
+.path-stack {
+  flex: 1;
+}
+.path-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-0);
+}
+.path-desc {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+.path-bar {
+  margin-top: 6px;
+  height: 10px;
+  background: var(--bg-3);
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
+.path-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), rgba(136, 200, 80, 0.6));
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.path-pct {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-0);
+  z-index: 1;
+}
+
+/* 价格异常预警 */
+.alert-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 10px 0;
+}
+.alert-tier {
+  background: var(--bg-2);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.alert-tier.red { border-color: rgba(233, 69, 96, 0.3); background: rgba(233, 69, 96, 0.06); }
+.alert-tier.warn { border-color: rgba(245, 166, 35, 0.3); background: rgba(245, 166, 35, 0.06); }
+.alert-tier.blue { border-color: rgba(93, 156, 236, 0.3); background: rgba(93, 156, 236, 0.06); }
+.alert-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--text-0);
+}
+.alert-tier.red .alert-num { color: var(--red); }
+.alert-tier.warn .alert-num { color: var(--amber); }
+.alert-tier.blue .alert-num { color: var(--blue); }
+.alert-label {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+.alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.alert-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  background: var(--bg-2);
+  border-radius: 6px;
+  font-size: 11px;
+  border-left: 3px solid var(--red);
+}
+.alert-item.warn { border-left-color: var(--amber); }
+.alert-icon {
+  font-size: 12px;
+}
+.alert-store {
+  font-weight: 600;
+  color: var(--text-0);
+  flex-shrink: 0;
+}
+.alert-price {
+  font-family: 'Space Mono', monospace;
+  color: var(--red);
+  font-weight: 700;
+}
+.alert-info {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-left: auto;
+}
+
+/* 跨区窜货 */
+.cross-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+.cross-from-to {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+.cross-region {
+  background: var(--bg-3);
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-1);
+}
+.cross-arrow {
+  color: var(--red);
+  font-weight: 700;
+}
+.cross-count {
+  font-family: 'Space Mono', monospace;
+  color: var(--red);
+  font-weight: 700;
+}
+
+/* 链路追溯 */
+.trace-card {
+  background: var(--bg-2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-1);
+  line-height: 1.7;
+}
+.trace-code {
+  color: var(--amber);
+  font-weight: 700;
+}
+.trace-arrow {
+  color: var(--text-3);
+  margin: 0 4px;
+}
+.trace-flag {
+  color: var(--red);
+  font-weight: 700;
+}
+
+/* 月度走访 */
+.visit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.visit-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 50px;
+  gap: 8px;
+  padding: 7px 9px;
+  background: var(--bg-2);
+  border-radius: 6px;
+  font-size: 11px;
+  align-items: center;
+}
+.visit-date {
+  font-family: 'Space Mono', monospace;
+  color: var(--text-2);
+  font-size: 10px;
+}
+.visit-target {
+  color: var(--text-0);
+  font-weight: 500;
+}
+.visit-result {
+  font-size: 10px;
+  color: var(--green);
+  text-align: right;
+  font-weight: 700;
+}
+.visit-result.bad { color: var(--red); }
+
+/* 弥补差距 Agent */
+.agent-card {
+  background: linear-gradient(135deg, rgba(245, 166, 35, 0.1) 0%, rgba(255, 124, 56, 0.05) 100%);
+  border: 1px solid rgba(245, 166, 35, 0.3);
+  border-radius: 12px;
+  padding: 14px;
+  margin-top: 12px;
+}
+.agent-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.agent-icon {
+  font-size: 18px;
+}
+.agent-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--gold);
+}
+.agent-action {
+  background: var(--bg-2);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-1);
+  border-left: 2px solid var(--amber);
+}
+.agent-action b { color: var(--gold); }
+
+/* 底部 */
+.bottom-fix {
+  padding: 14px 16px 32px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-3);
+}
+.embed-mode .bottom-fix { display: none; }
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 演示版 · MOM 视角 v1.1 · 5 OM 跨区聚合 · 模拟数据</div>
+
+<div class="mod-header">
+  <div class="mod-code">INF-XL · 心律 · MOM v1.1</div>
+  <div class="mod-title">MOM 一本账</div>
+  <div class="mod-sub">陈博文 · 多区域直营 · 5 OM · 30 战略 KA · 跨区聚合</div>
+</div>
+
+<!-- 1 · 直营线 5 OM 综合健康度 -->
+<section class="card card-hl">
+  <div class="card-title">🏆 5 OM 综合健康度<span class="card-tag">华东全</span></div>
+  <div class="interlock-grid">
+    <div class="interlock-row">
+      <div class="il-num">①</div>
+      <div class="il-name">OM-沪</div>
+      <div class="il-bar"><div class="il-fill" style="width:89%"></div></div>
+      <div class="il-pct">89</div>
+    </div>
+    <div class="interlock-row">
+      <div class="il-num">②</div>
+      <div class="il-name">OM-苏</div>
+      <div class="il-bar"><div class="il-fill" style="width:76%"></div></div>
+      <div class="il-pct">76</div>
+    </div>
+    <div class="interlock-row">
+      <div class="il-num">③</div>
+      <div class="il-name">OM-杭</div>
+      <div class="il-bar"><div class="il-fill" style="width:82%"></div></div>
+      <div class="il-pct">82</div>
+    </div>
+    <div class="interlock-row">
+      <div class="il-num">④</div>
+      <div class="il-name">OM-皖</div>
+      <div class="il-bar"><div class="il-fill warn" style="width:65%"></div></div>
+      <div class="il-pct">65</div>
+    </div>
+    <div class="interlock-row">
+      <div class="il-num">⑤</div>
+      <div class="il-name">OM-甬</div>
+      <div class="il-bar"><div class="il-fill" style="width:71%"></div></div>
+      <div class="il-pct">71</div>
+    </div>
+  </div>
+  <div style="margin-top:10px; font-size:10px; color:var(--text-2); line-height:1.6">
+    OM-沪最强 (89·标杆) · OM-皖最弱 (65·待扶持)<br>
+    跨区资源调配: 上海标杆经验输出 + 皖南扶持 ¥8M
+</section>
+
+<!-- 2 · 直营线综合 KPI -->
+<section class="card card-hl">
+  <div class="card-title">📊 直营线综合 KPI<span class="card-tag">OM-沪</span></div>
+  <div class="dim-grid">
+    <div class="dim-row">
+      <div class="dim-name">年销目标达成</div>
+      <div class="dim-bar"><div class="dim-fill" style="width:92%"></div></div>
+      <div class="dim-score">92</div>
+      <div class="dim-weight">20%</div>
+    </div>
+    <div class="dim-row">
+      <div class="dim-name">KA 续约率</div>
+      <div class="dim-bar"><div class="dim-fill" style="width:88%"></div></div>
+      <div class="dim-score">88</div>
+      <div class="dim-weight">15%</div>
+    </div>
+    <div class="dim-row">
+      <div class="dim-name">陈列黄金位占比</div>
+      <div class="dim-bar"><div class="dim-fill" style="width:82%"></div></div>
+      <div class="dim-score">82</div>
+      <div class="dim-weight">15%</div>
+    </div>
+    <div class="dim-row">
+      <div class="dim-name">账期管控 (30 天)</div>
+      <div class="dim-bar"><div class="dim-fill warn" style="width:76%"></div></div>
+      <div class="dim-score">76</div>
+      <div class="dim-weight">15%</div>
+    </div>
+    <div class="dim-row">
+      <div class="dim-name">团队执行力 (ICA+SR)</div>
+      <div class="dim-bar"><div class="dim-fill" style="width:90%"></div></div>
+      <div class="dim-score">90</div>
+      <div class="dim-weight">10%</div>
+    </div>
+    <div class="dim-row">
+      <div class="dim-name">新 SKU 准入率</div>
+      <div class="dim-bar"><div class="dim-fill" style="width:85%"></div></div>
+      <div class="dim-score">85</div>
+      <div class="dim-weight">15%</div>
+    </div>
+    <div class="dim-row highlight">
+      <div class="dim-name">★ 高端 SKU 占比</div>
+      <div class="dim-bar"><div class="dim-fill" style="width:78%"></div></div>
+      <div class="dim-score">78</div>
+      <div class="dim-weight">10%</div>
+    </div>
+  </div>
+  <div style="margin-top:10px; font-size:11px; color:var(--text-1); font-family: 'Space Mono', monospace; text-align:center; padding:8px; background:var(--bg-2); border-radius:6px;">
+    综合健康度: <span style="color:var(--green); font-weight:700; font-size:14px">85.4</span> / 100 · <span style="color:var(--gold)">OM-沪 高级</span>
+  </div>
+</section>
+
+<!-- 3 · 跨区 KA 标准化 ★★ MOM 核心 -->
+<section class="card">
+  <div class="card-title">🤝 跨区 KA 标准化<span class="card-tag">MOM 价值</span></div>
+  <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:10px">
+    <div style="text-align:center; padding:10px; background:rgba(212,175,55,0.08); border-radius:8px; border:1px solid rgba(212,175,55,0.3)">
+      <div style="font-family:Syne; font-weight:800; font-size:22px; color:var(--gold)">5 店</div>
+      <div style="font-size:11px; color:var(--text-1); margin-top:4px">山姆华东</div>
+      <div style="font-size:9px; color:var(--text-2); margin-top:2px">统一谈判·节省 30%</div>
+    </div>
+    <div style="text-align:center; padding:10px; background:rgba(93,156,236,0.08); border-radius:8px; border:1px solid rgba(93,156,236,0.2)">
+      <div style="font-family:Syne; font-weight:800; font-size:22px; color:var(--blue)">38 店</div>
+      <div style="font-size:11px; color:var(--text-1); margin-top:4px">沃尔玛华东</div>
+      <div style="font-size:9px; color:var(--text-2); margin-top:2px">区域谈判·堆头共享</div>
+    </div>
+  </div>
+  <div class="dealer-list">
+    <div class="dealer-row">
+      <div class="dealer-grade" style="background:var(--gold)">🏆</div>
+      <div>
+        <div class="dealer-name">山姆华东 5 店</div>
+        <div class="dealer-meta">上海 2 / 苏州 1 / 杭州 1 / 宁波 1 · 统一谈判</div>
+      </div>
+      <div class="dealer-num">¥45M</div>
+      <div class="dealer-action">统签</div>
+    </div>
+    <div class="dealer-row B">
+      <div class="dealer-grade" style="background:var(--blue)">🏬</div>
+      <div>
+        <div class="dealer-name">沃尔玛华东 38 店</div>
+        <div class="dealer-meta">5 城市 · 区域 OM 联合谈判 · 堆头资源池</div>
+      </div>
+      <div class="dealer-num">¥68M</div>
+      <div class="dealer-action">区域</div>
+    </div>
+    <div class="dealer-row">
+      <div class="dealer-grade" style="background:var(--green)">🥩</div>
+      <div>
+        <div class="dealer-name">永辉精品 12 店</div>
+        <div class="dealer-meta">高端线 · 禾然战略赌注 · 跨区 SKU 准入</div>
+      </div>
+      <div class="dealer-num">¥18M</div>
+      <div class="dealer-action">高端</div>
+    </div>
+  </div>
+  <div style="margin-top:10px; font-size:10px; color:var(--text-2); padding:8px; background:var(--bg-2); border-radius:6px; line-height:1.6">
+    MOM 核心价值: 跨区 KA 统一谈判 · 不再各 OM 各谈各的<br>
+    谈判力量集中 → 价格优势 + 资源整合 + 战略一致
+  </div>
+</section>
+
+<!-- 4 · P1 直营路径 -->
+<section class="card">
+  <div class="card-title">🛤 P1 直营路径<span class="card-tag">无 P2</span></div>
+  <div class="path-row">
+    <div class="path-label">P1</div>
+    <div class="path-stack">
+      <div class="path-title">直营路径 ★</div>
+      <div class="path-desc">经销商 → 战略 KA → 消费者 (链路最短)</div>
+      <div class="path-bar">
+        <div class="path-fill" style="width:100%"></div>
+        <div class="path-pct">100%</div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:10px; font-size:10px; color:var(--text-2); line-height:1.6; padding:8px; background:var(--bg-2); border-radius:6px;">
+    OM 主管 P1 直营 = 厂家不依赖经销商的"备份血管"<br>
+    战略意义: 与 DOM (P2 经销商) 平级 · CTL 仲裁推/拉/直营/分销资源分配<br>
+    OM 优势: 链路短 · 数据透明 · 品牌掌控 · 战略 KA 直签
+  </div>
+</section>
+
+<!-- 5 · 季度合约状态 -->
+<section class="card card-warn">
+  <div class="card-title">📜 季度合约状态<span class="card-tag">Q3 续约</span></div>
+  <div class="alert-summary">
+    <div class="alert-tier" style="border-color:rgba(136,200,80,0.3); background:rgba(136,200,80,0.06)">
+      <div class="alert-num" style="color:var(--green)">3</div>
+      <div class="alert-label">✓ 已续约</div>
+    </div>
+    <div class="alert-tier warn">
+      <div class="alert-num">2</div>
+      <div class="alert-label">🟡 谈判中</div>
+    </div>
+    <div class="alert-tier red">
+      <div class="alert-num">1</div>
+      <div class="alert-label">🔴 待签</div>
+    </div>
+  </div>
+  <div class="alert-list">
+    <div class="alert-item" style="border-left-color:var(--green)">
+      <span class="alert-icon">✓</span>
+      <span class="alert-store">山姆会员店</span>
+      <span style="color:var(--green);font-family:'Space Mono',monospace;font-weight:700">¥12M / 年</span>
+      <span class="alert-info">已签 · 3 年战略合约</span>
+    </div>
+    <div class="alert-item warn">
+      <span class="alert-icon">🟡</span>
+      <span class="alert-store">沃尔玛华东</span>
+      <span style="color:var(--amber);font-family:'Space Mono',monospace;font-weight:700">¥18M / 年</span>
+      <span class="alert-info">谈判中 · 本周 GMO 会议</span>
+    </div>
+    <div class="alert-item">
+      <span class="alert-icon">🔴</span>
+      <span class="alert-store">家乐福华东</span>
+      <span style="color:var(--red);font-family:'Space Mono',monospace;font-weight:700">¥15M / 年</span>
+      <span class="alert-info">待签 · 苏宁收购整合中</span>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · 高端 SKU 战略矩阵 -->
+<section class="card">
+  <div class="card-title">⭐ 高端 SKU 战略矩阵<span class="card-tag">直营 KA</span></div>
+  <div class="dealer-list">
+    <div class="dealer-row">
+      <div class="dealer-grade" style="background:var(--gold)">⭐</div>
+      <div>
+        <div class="dealer-name">六月鲜极鲜 1.5L 大包装</div>
+        <div class="dealer-meta">山姆/Costco 专属 · ¥45 · 高端</div>
+      </div>
+      <div class="dealer-num">¥3.2M</div>
+      <div class="dealer-action">月销</div>
+    </div>
+    <div class="dealer-row">
+      <div class="dealer-grade" style="background:var(--c-ledger)">🌿</div>
+      <div>
+        <div class="dealer-name">禾然有机酱油 500ml</div>
+        <div class="dealer-meta">永辉精品/盒马 · ¥58 · 战略赌注</div>
+      </div>
+      <div class="dealer-num">¥1.8M</div>
+      <div class="dealer-action">月销</div>
+    </div>
+    <div class="dealer-row B">
+      <div class="dealer-grade" style="background:var(--blue)">📦</div>
+      <div>
+        <div class="dealer-name">山姆专属 双瓶礼盒</div>
+        <div class="dealer-meta">会员定制 · ¥98 · 礼品场景</div>
+      </div>
+      <div class="dealer-num">¥0.9M</div>
+      <div class="dealer-action">试销</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · 政府关系 + 媒体 -->
+<section class="card">
+  <div class="card-title">🤝 政府关系 + 媒体<span class="card-tag">华东全</span></div>
+  <div class="cross-row">
+    <div class="cross-from-to">
+      <span style="font-size:11px;color:var(--text-1)">📜 上海市食品安全协会</span>
+    </div>
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--green);font-weight:700">理事单位 ✓</span>
+  </div>
+  <div class="cross-row">
+    <div class="cross-from-to">
+      <span style="font-size:11px;color:var(--text-1)">📺 央视农业频道 · 节目合作</span>
+    </div>
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);font-weight:700">7 月播出</span>
+  </div>
+  <div class="cross-row">
+    <div class="cross-from-to">
+      <span style="font-size:11px;color:var(--text-1)">🍽 米其林中国指南 · 推荐合作</span>
+    </div>
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--green);font-weight:700">已签 · Q3 启动</span>
+  </div>
+  <div style="margin-top:10px; font-size:10px; color:var(--text-2); padding:8px; background:var(--bg-2); border-radius:6px; line-height:1.6;">
+    OM 战略层职责: 政府/协会/媒体/高端餐饮 · 不是日常销售工作<br>
+    上海作为大区核心·OM 承担华东品牌外宣窗口
+  </div>
+</section>
+
+<!-- 8 · 月度战略走访 -->
+<section class="card">
+  <div class="card-title">📅 战略走访记录<span class="card-tag">华东全</span></div>
+  <div class="visit-list">
+    <div class="visit-row">
+      <div class="visit-date">05/19</div>
+      <div class="visit-target">山姆全球采购总监 · 续约会议</div>
+      <div class="visit-result">✓ 完成</div>
+    </div>
+    <div class="visit-row">
+      <div class="visit-date">05/17</div>
+      <div class="visit-target">米其林上海中国区主厨 · 合作启动</div>
+      <div class="visit-result">✓ 完成</div>
+    </div>
+    <div class="visit-row">
+      <div class="visit-date">05/15</div>
+      <div class="visit-target">沃尔玛华东总监 · 续约谈判 1 轮</div>
+      <div class="visit-result">⚠ 进行</div>
+    </div>
+    <div class="visit-row">
+      <div class="visit-date">05/12</div>
+      <div class="visit-target">盒马 O2O 集成方案 · 30 分钟达</div>
+      <div class="visit-result">✓ 完成</div>
+    </div>
+    <div class="visit-row">
+      <div class="visit-date">05/08</div>
+      <div class="visit-target">上海食品安全协会理事会</div>
+      <div class="visit-result">✓ 完成</div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · 弥补差距 Agent (DOM 专属) -->
+<div class="agent-card">
+  <div class="agent-head">
+    <span class="agent-icon">🤖</span>
+    <span class="agent-title">弥补差距 Agent · MOM 跨区直营</span>
+  </div>
+  <div style="font-size:11px; color:var(--text-1); margin-bottom:8px">
+    MOM 跨区综合 76.6·OM-皖 65 拖低·Agent 给 3 个建议:
+  </div>
+  <div class="agent-action">
+    <b>建议 1 · OM-皖扶持 (65 → 75)</b><br>
+    安排 OM-沪林志远 1 个月驻地辅导·合肥商圈培育·预估皖区 +10 分
+  </div>
+  <div class="agent-action">
+    <b>建议 2 · 山姆 5 店统一续约</b><br>
+    上海+苏州+杭州+宁波 5 店打包谈·价格优势 + 长期合约·预估 +¥8M
+  </div>
+  <div class="agent-action">
+    <b>建议 3 · 禾然全华东 KA 铺货</b><br>
+    永辉/盒马/Olé 三大高端连锁·禾然有机突围·预估 +¥4M
+  </div>
+  <div style="margin-top:8px; font-size:10px; color:var(--text-2)">
+    Agent 推理基础: 5 OM 评分 + 跨区 KA 标准化 + 战略 SKU 矩阵
+  </div>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · INF-XL · DOM 视角 v1.1<br>
+  Layer 1.3 演示 · 模拟数据 · 待 TL 后端激活一物一码<br>
+  ★ 14 APP 矩阵第 ⑩ 个 · 跨区直营·与 MDOM 互补
+</div>
+
+<script>
+// embed 模式 (主壳子嵌入时隐藏 Layer/底部)
+if (new URLSearchParams(location.search).get('embed') === '1') {
+  document.body.classList.add('embed-mode');
+}
+</script>
+
+</body>
+</html>

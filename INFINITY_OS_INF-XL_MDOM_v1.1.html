@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INF-XL · MMDOM 一本账 · v1.1 · 5 DOM 跨区聚合</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907;
+  --bg-1: #14110d;
+  --bg-2: #1c1815;
+  --bg-3: #251f1a;
+  --surface: #1a1612;
+  --surface-2: #221d18;
+  --border: rgba(255, 220, 180, 0.08);
+  --border-2: rgba(255, 220, 180, 0.15);
+  --text-0: #f4ede0;
+  --text-1: #c8bda8;
+  --text-2: #847868;
+  --text-3: #524a40;
+  --c-ledger: #88c850;
+  --green: #88c850;
+  --amber: #f5a623;
+  --warn: #ffc85e;
+  --red: #e94560;
+  --blue: #5d9cec;
+  --gold: #d4af37;
+  --purple: #a78bfa;
+  --rose: #d4789a;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html, body {
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-family: 'Noto Sans SC', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+@media (min-width: 600px) {
+  body { max-width: 440px; margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.6); }
+}
+
+/* 顶部 Layer 1.3 横条 */
+.layer-badge {
+  background: rgba(233, 69, 96, 0.15);
+  border-bottom: 1px solid rgba(233, 69, 96, 0.25);
+  color: var(--red);
+  font-size: 10px;
+  padding: 6px 14px;
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+}
+.embed-mode .layer-badge { display: none; }
+
+/* 模块顶部 */
+.mod-header {
+  padding: 18px 16px 14px;
+  background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+  border-bottom: 1px solid var(--border);
+}
+.mod-code {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--c-ledger);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.mod-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--text-0);
+  margin-top: 4px;
+}
+.mod-sub {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+
+/* 模块卡片 */
+.card {
+  margin: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  position: relative;
+}
+.card-hl {
+  background: linear-gradient(135deg, rgba(136, 200, 80, 0.06) 0%, var(--surface) 100%);
+  border-color: rgba(136, 200, 80, 0.2);
+}
+.card-red {
+  background: linear-gradient(135deg, rgba(233, 69, 96, 0.06) 0%, var(--surface) 100%);
+  border-color: rgba(233, 69, 96, 0.2);
+}
+.card-warn {
+  background: linear-gradient(135deg, rgba(245, 166, 35, 0.06) 0%, var(--surface) 100%);
+  border-color: rgba(245, 166, 35, 0.2);
+}
+
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-0);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.card-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(245, 166, 35, 0.1);
+  color: var(--amber);
+  font-weight: 700;
+  margin-left: auto;
+}
+
+/* 5 互锁状态 */
+.interlock-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+.interlock-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.il-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--bg-3);
+  color: var(--amber);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.il-name {
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+  min-width: 56px;
+}
+.il-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.il-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--green), var(--amber));
+}
+.il-pct {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--text-1);
+  font-weight: 700;
+  min-width: 32px;
+  text-align: right;
+}
+
+/* 7 维度评分 */
+.dim-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dim-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 50px 30px;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.dim-name { color: var(--text-1); }
+.dim-bar {
+  height: 5px;
+  background: var(--bg-3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.dim-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--green);
+}
+.dim-fill.warn { background: var(--amber); }
+.dim-fill.bad { background: var(--red); }
+.dim-score {
+  font-family: 'Space Mono', monospace;
+  color: var(--text-0);
+  text-align: right;
+  font-weight: 700;
+}
+.dim-weight {
+  font-family: 'Space Mono', monospace;
+  color: var(--text-3);
+  font-size: 10px;
+}
+.dim-row.highlight {
+  background: rgba(245, 166, 35, 0.08);
+  margin: -2px -8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(245, 166, 35, 0.2);
+}
+
+/* 二批商 ABCD 列表 */
+.dealer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.dealer-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 50px 60px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  border-left: 3px solid var(--green);
+  font-size: 11px;
+}
+.dealer-row.B { border-left-color: var(--blue); }
+.dealer-row.C { border-left-color: var(--amber); }
+.dealer-row.D { border-left-color: var(--red); }
+.dealer-grade {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--green);
+  color: var(--bg-0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+}
+.dealer-row.B .dealer-grade { background: var(--blue); }
+.dealer-row.C .dealer-grade { background: var(--amber); }
+.dealer-row.D .dealer-grade { background: var(--red); }
+.dealer-name {
+  font-weight: 600;
+  color: var(--text-0);
+}
+.dealer-meta {
+  color: var(--text-2);
+  font-size: 10px;
+  font-family: 'Space Mono', monospace;
+}
+.dealer-num {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  color: var(--text-1);
+  text-align: right;
+}
+.dealer-action {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  text-align: center;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+/* P1/P2 路径 */
+.path-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.path-label {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--amber);
+  flex-shrink: 0;
+}
+.path-stack {
+  flex: 1;
+}
+.path-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-0);
+}
+.path-desc {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+.path-bar {
+  margin-top: 6px;
+  height: 10px;
+  background: var(--bg-3);
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
+.path-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), rgba(136, 200, 80, 0.6));
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.path-pct {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-0);
+  z-index: 1;
+}
+
+/* 价格异常预警 */
+.alert-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 10px 0;
+}
+.alert-tier {
+  background: var(--bg-2);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.alert-tier.red { border-color: rgba(233, 69, 96, 0.3); background: rgba(233, 69, 96, 0.06); }
+.alert-tier.warn { border-color: rgba(245, 166, 35, 0.3); background: rgba(245, 166, 35, 0.06); }
+.alert-tier.blue { border-color: rgba(93, 156, 236, 0.3); background: rgba(93, 156, 236, 0.06); }
+.alert-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--text-0);
+}
+.alert-tier.red .alert-num { color: var(--red); }
+.alert-tier.warn .alert-num { color: var(--amber); }
+.alert-tier.blue .alert-num { color: var(--blue); }
+.alert-label {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+.alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.alert-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  background: var(--bg-2);
+  border-radius: 6px;
+  font-size: 11px;
+  border-left: 3px solid var(--red);
+}
+.alert-item.warn { border-left-color: var(--amber); }
+.alert-icon {
+  font-size: 12px;
+}
+.alert-store {
+  font-weight: 600;
+  color: var(--text-0);
+  flex-shrink: 0;
+}
+.alert-price {
+  font-family: 'Space Mono', monospace;
+  color: var(--red);
+  font-weight: 700;
+}
+.alert-info {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-left: auto;
+}
+
+/* 跨区窜货 */
+.cross-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+.cross-from-to {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+.cross-region {
+  background: var(--bg-3);
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-1);
+}
+.cross-arrow {
+  color: var(--red);
+  font-weight: 700;
+}
+.cross-count {
+  font-family: 'Space Mono', monospace;
+  color: var(--red);
+  font-weight: 700;
+}
+
+/* 链路追溯 */
+.trace-card {
+  background: var(--bg-2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-1);
+  line-height: 1.7;
+}
+.trace-code {
+  color: var(--amber);
+  font-weight: 700;
+}
+.trace-arrow {
+  color: var(--text-3);
+  margin: 0 4px;
+}
+.trace-flag {
+  color: var(--red);
+  font-weight: 700;
+}
+
+/* 月度走访 */
+.visit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.visit-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 50px;
+  gap: 8px;
+  padding: 7px 9px;
+  background: var(--bg-2);
+  border-radius: 6px;
+  font-size: 11px;
+  align-items: center;
+}
+.visit-date {
+  font-family: 'Space Mono', monospace;
+  color: var(--text-2);
+  font-size: 10px;
+}
+.visit-target {
+  color: var(--text-0);
+  font-weight: 500;
+}
+.visit-result {
+  font-size: 10px;
+  color: var(--green);
+  text-align: right;
+  font-weight: 700;
+}
+.visit-result.bad { color: var(--red); }
+
+/* 弥补差距 Agent */
+.agent-card {
+  background: linear-gradient(135deg, rgba(245, 166, 35, 0.1) 0%, rgba(255, 124, 56, 0.05) 100%);
+  border: 1px solid rgba(245, 166, 35, 0.3);
+  border-radius: 12px;
+  padding: 14px;
+  margin-top: 12px;
+}
+.agent-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.agent-icon {
+  font-size: 18px;
+}
+.agent-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--gold);
+}
+.agent-action {
+  background: var(--bg-2);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-1);
+  border-left: 2px solid var(--amber);
+}
+.agent-action b { color: var(--gold); }
+
+/* 底部 */
+.bottom-fix {
+  padding: 14px 16px 32px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-3);
+}
+.embed-mode .bottom-fix { display: none; }
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 演示版 · MDOM 视角 v1.1 · 5 DOM 跨区聚合 · 模拟数据</div>
+
+<div class="mod-header">
+  <div class="mod-code">INF-XL · 心律 · MDOM v1.1</div>
+  <div class="mod-title">MDOM 一本账</div>
+  <div class="mod-sub">周国强 · 多区域 DOM · 5 DOM · 22 经销商 · 112 二批商</div>
+</div>
+
+<!-- 1 · 5 DOM 综合健康度 -->
+<section class="card card-hl">
+  <div class="card-title">📊 5 DOM 综合健康度<span class="card-tag">华东全</span></div>
+  <div class="interlock-grid">
+    <div class="interlock-row">
+      <div class="il-num">①</div>
+      <div class="il-name">沪西</div>
+      <div class="il-bar"><div class="il-fill" style="width:82%"></div></div>
+      <div class="il-pct">82</div>
+    </div>
+    <div class="interlock-row">
+      <div class="il-num">②</div>
+      <div class="il-name">苏南</div>
+      <div class="il-bar"><div class="il-fill" style="width:75%"></div></div>
+      <div class="il-pct">75</div>
+    </div>
+    <div class="interlock-row">
+      <div class="il-num">③</div>
+      <div class="il-name">浙东</div>
+      <div class="il-bar"><div class="il-fill" style="width:78%"></div></div>
+      <div class="il-pct">78</div>
+    </div>
+    <div class="interlock-row">
+      <div class="il-num">④</div>
+      <div class="il-name">皖中</div>
+      <div class="il-bar"><div class="il-fill" style="width:68%; background:linear-gradient(90deg,var(--amber),var(--red))"></div></div>
+      <div class="il-pct">68</div>
+    </div>
+    <div class="interlock-row">
+      <div class="il-num">⑤</div>
+      <div class="il-name">宁北</div>
+      <div class="il-bar"><div class="il-fill" style="width:71%"></div></div>
+      <div class="il-pct">71</div>
+    </div>
+  </div>
+  <div style="margin-top:10px; font-size:10px; color:var(--text-2); line-height:1.6">
+    沪西最强 (82·标杆) → 复制经验给皖中 (68·最弱)<br>
+    跨区调配: 沪西 DOM 黄建国 经验下季度输出到皖中 李峰
+  </div>
+</section>
+
+<!-- 2 · 跨区 5 互锁聚合 -->
+<section class="card card-hl">
+  <div class="card-title">⚙️ 跨区 5 互锁聚合<span class="card-tag">华东加权</span></div>
+  <div class="dim-grid">
+    <div class="dim-row">
+      <div class="dim-name">1. 制度互锁</div>
+      <div class="dim-bar"><div class="dim-fill" style="width:78%"></div></div>
+      <div class="dim-score">78</div>
+      <div class="dim-weight">20%</div>
+    </div>
+    <div class="dim-row highlight">
+      <div class="dim-name">★ 2. 数据互锁 (一物一码)</div>
+      <div class="dim-bar"><div class="dim-fill warn" style="width:65%"></div></div>
+      <div class="dim-score">65</div>
+      <div class="dim-weight">25%</div>
+    </div>
+    <div class="dim-row">
+      <div class="dim-name">3. 信用 (二批商 ABCD)</div>
+      <div class="dim-bar"><div class="dim-fill warn" style="width:52%"></div></div>
+      <div class="dim-score">52</div>
+      <div class="dim-weight">20%</div>
+    </div>
+    <div class="dim-row">
+      <div class="dim-name">4. 经济 (透明返点)</div>
+      <div class="dim-bar"><div class="dim-fill" style="width:76%"></div></div>
+      <div class="dim-score">76</div>
+      <div class="dim-weight">15%</div>
+    </div>
+    <div class="dim-row">
+      <div class="dim-name">5. 学习 (inf_log)</div>
+      <div class="dim-bar"><div class="dim-fill bad" style="width:18%"></div></div>
+      <div class="dim-score">18</div>
+      <div class="dim-weight">20%</div>
+    </div>
+  </div>
+  <div style="margin-top:10px; font-size:11px; color:var(--text-1); font-family: 'Space Mono', monospace; text-align:center; padding:8px; background:var(--bg-2); border-radius:6px;">
+    跨区综合: <span style="color:var(--amber); font-weight:700; font-size:14px">61.4</span> / 100 · 待 TL 后端激活学习
+  </div>
+</section>
+
+<!-- 3 · 跨区窜货热力图 ★★ MDOM 核心 -->
+<section class="card card-red">
+  <div class="card-title">🔥 跨区窜货热力图<span class="card-tag">本月 12 起</span></div>
+  <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:10px">
+    <div style="text-align:center; padding:8px; background:var(--bg-2); border-radius:6px; border:1px solid var(--border)">
+      <div style="font-family:Syne; font-weight:800; font-size:16px; color:var(--green)">沪西</div>
+      <div style="font-size:9px; color:var(--text-2); margin-top:2px">出 4 单</div>
+    </div>
+    <div style="text-align:center; padding:8px; background:rgba(245,166,35,0.08); border-radius:6px; border:1px solid rgba(245,166,35,0.2)">
+      <div style="font-family:Syne; font-weight:800; font-size:16px; color:var(--amber)">苏南</div>
+      <div style="font-size:9px; color:var(--text-2); margin-top:2px">入 3 出 1</div>
+    </div>
+    <div style="text-align:center; padding:8px; background:rgba(245,166,35,0.08); border-radius:6px; border:1px solid rgba(245,166,35,0.2)">
+      <div style="font-family:Syne; font-weight:800; font-size:16px; color:var(--amber)">浙东</div>
+      <div style="font-size:9px; color:var(--text-2); margin-top:2px">入 1 出 0</div>
+    </div>
+    <div style="text-align:center; padding:8px; background:rgba(233,69,96,0.08); border-radius:6px; border:1px solid rgba(233,69,96,0.3)">
+      <div style="font-family:Syne; font-weight:800; font-size:16px; color:var(--red)">皖中</div>
+      <div style="font-size:9px; color:var(--text-2); margin-top:2px">入 5 出 2</div>
+    </div>
+    <div style="text-align:center; padding:8px; background:rgba(93,156,236,0.08); border-radius:6px; border:1px solid rgba(93,156,236,0.2)">
+      <div style="font-family:Syne; font-weight:800; font-size:16px; color:var(--blue)">宁北</div>
+      <div style="font-size:9px; color:var(--text-2); margin-top:2px">入 1 出 0</div>
+    </div>
+  </div>
+  <div class="dealer-list">
+    <div class="dealer-row D">
+      <div class="dealer-grade">⚠</div>
+      <div>
+        <div class="dealer-name">沪西 → 苏南</div>
+        <div class="dealer-meta">中山公园老贸易 D · 跨区 3 单 · 反查锁定</div>
+      </div>
+      <div class="dealer-num">3 单</div>
+      <div class="dealer-action">扣款 10%</div>
+    </div>
+    <div class="dealer-row D">
+      <div class="dealer-grade">⚠</div>
+      <div>
+        <div class="dealer-name">皖中 → 苏南</div>
+        <div class="dealer-meta">合肥小贸易商 D · 跨区 2 单</div>
+      </div>
+      <div class="dealer-num">2 单</div>
+      <div class="dealer-action">扣款 10%</div>
+    </div>
+    <div class="dealer-row C">
+      <div class="dealer-grade">⚠</div>
+      <div>
+        <div class="dealer-name">沪西 → 浙东</div>
+        <div class="dealer-meta">沪西小商品 C · 跨区 1 单</div>
+      </div>
+      <div class="dealer-num">1 单</div>
+      <div class="dealer-action">扣款 10%</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · P1/P2 路径动态 -->
+<section class="card">
+  <div class="card-title">🛤 P1 / P2 路径动态<span class="card-tag">本月</span></div>
+  <div class="path-row">
+    <div class="path-label">P1</div>
+    <div class="path-stack">
+      <div class="path-title">直营路径</div>
+      <div class="path-desc">经销商 → 零售店 (直供 · 链路短)</div>
+      <div class="path-bar">
+        <div class="path-fill" style="width:30%"></div>
+        <div class="path-pct">30%</div>
+      </div>
+    </div>
+  </div>
+  <div class="path-row">
+    <div class="path-label" style="color:var(--rose)">P2</div>
+    <div class="path-stack">
+      <div class="path-title">分销路径 ★</div>
+      <div class="path-desc">经销商 → 二批商 → 零售店 (含 28 家二批商)</div>
+      <div class="path-bar">
+        <div class="path-fill" style="width:70%; background:linear-gradient(90deg,var(--rose),rgba(212,120,154,0.6))"></div>
+        <div class="path-pct">70%</div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:10px; font-size:10px; color:var(--text-2); line-height:1.6; padding:8px; background:var(--bg-2); border-radius:6px;">
+    沪西华南 P2 占比 70% (高于行业平均) · 二批商纳管是关键<br>
+    P1 直营 SR-KA 主导 · P2 分销 DSR + DSR-2 协作
+  </div>
+</section>
+
+<!-- 5 · 价格异常预警 (A23 价签识别联动) -->
+<section class="card card-red">
+  <div class="card-title">🚨 价格异常预警<span class="card-tag">A23 联动</span></div>
+  <div class="alert-summary">
+    <div class="alert-tier red">
+      <div class="alert-num">3</div>
+      <div class="alert-label">🔴 红色严重</div>
+    </div>
+    <div class="alert-tier warn">
+      <div class="alert-num">8</div>
+      <div class="alert-label">🟡 黄色警告</div>
+    </div>
+    <div class="alert-tier blue">
+      <div class="alert-num">12</div>
+      <div class="alert-label">🔵 蓝色提示</div>
+    </div>
+  </div>
+  <div class="alert-list">
+    <div class="alert-item">
+      <span class="alert-icon">🔴</span>
+      <span class="alert-store">武宁路便利店</span>
+      <span class="alert-price">¥12</span>
+      <span class="alert-info">底价 ¥17 · 链路: 中山公园老贸易 D</span>
+    </div>
+    <div class="alert-item">
+      <span class="alert-icon">🔴</span>
+      <span class="alert-store">沪西杂货铺</span>
+      <span class="alert-price">¥13</span>
+      <span class="alert-info">底价 ¥17 · 链路: 中山公园老贸易 D</span>
+    </div>
+    <div class="alert-item warn">
+      <span class="alert-icon">🟡</span>
+      <span class="alert-store">长宁夫妻店</span>
+      <span class="alert-price">¥14.5</span>
+      <span class="alert-info">底价 ¥17 · 链路: 沪西小商品 C</span>
+    </div>
+  </div>
+  <div style="margin-top:10px; font-size:10px; color:var(--text-2); padding:8px; background:var(--bg-2); border-radius:6px; line-height:1.6;">
+    A23 价签识别 (千问 VL) 自动扫描 → 一物一码反查链路 → 锁定责任方<br>
+    扣款规则: 红色严重扣 10% · 黄色扣 5% · 蓝色提示 (DOM 关注)
+  </div>
+</section>
+
+<!-- 6 · 一物一码链路追溯 -->
+<section class="card">
+  <div class="card-title">📍 一物一码链路追溯<span class="card-tag">1 年数据 · 1.2 亿次</span></div>
+  <div class="trace-card">
+    <span class="trace-code">QR-202605-78A3F1</span> · 六月鲜极鲜 500ml<br>
+    工厂出厂<span class="trace-arrow">→</span>沪西华南 (2026-04-02)<br>
+    <span class="trace-arrow">→</span><span class="trace-flag">中山公园老贸易 D</span> (2026-04-08)<br>
+    <span class="trace-arrow">→</span>武宁路便利店 (2026-04-15)<br>
+    <span class="trace-arrow">→</span>A23 扫到 <span class="trace-flag">¥12 (低于底价 ¥17)</span>
+  </div>
+  <div style="margin-top:8px; font-size:10px; color:var(--text-2); line-height:1.6;">
+    自动锁定: 经销商沪西华南 (B 级警告) · 二批商中山公园 (D 级整改) · 联动处罚
+  </div>
+</section>
+
+<!-- 7 · 跨区窜货监控 -->
+<section class="card card-warn">
+  <div class="card-title">🌐 跨区窜货监控<span class="card-tag">MDOM 联动</span></div>
+  <div class="cross-row">
+    <div class="cross-from-to">
+      <span class="cross-region">沪西</span>
+      <span class="cross-arrow">→</span>
+      <span class="cross-region">苏南</span>
+    </div>
+    <span class="cross-count">3 单</span>
+  </div>
+  <div class="cross-row">
+    <div class="cross-from-to">
+      <span class="cross-region">沪西</span>
+      <span class="cross-arrow">→</span>
+      <span class="cross-region">浙东</span>
+    </div>
+    <span class="cross-count">1 单</span>
+  </div>
+  <div style="margin-top:10px; font-size:10px; color:var(--text-2); padding:8px; background:var(--bg-2); border-radius:6px; line-height:1.6;">
+    本月跨区窜货 4 单 · MDOM 周国强已介入<br>
+    一物一码反查: 责任方为中山公园老贸易 D 级 (3/4)·建议下季度解约
+  </div>
+</section>
+
+<!-- 8 · 月度走访记录 -->
+<section class="card">
+  <div class="card-title">📅 月度走访记录<span class="card-tag">本月</span></div>
+  <div class="visit-list">
+    <div class="visit-row">
+      <div class="visit-date">05/19</div>
+      <div class="visit-target">沪西华南调味品 · 总部</div>
+      <div class="visit-result">✓ 完成</div>
+    </div>
+    <div class="visit-row">
+      <div class="visit-date">05/17</div>
+      <div class="visit-target">沪西金桥二批 · A 级表彰</div>
+      <div class="visit-result">✓ 完成</div>
+    </div>
+    <div class="visit-row">
+      <div class="visit-date">05/15</div>
+      <div class="visit-target">中山公园老贸易 · 整改通知</div>
+      <div class="visit-result bad">⚠ 拒绝</div>
+    </div>
+    <div class="visit-row">
+      <div class="visit-date">05/12</div>
+      <div class="visit-target">武宁北方二批 · 升 A 辅导</div>
+      <div class="visit-result">✓ 完成</div>
+    </div>
+    <div class="visit-row">
+      <div class="visit-date">05/08</div>
+      <div class="visit-target">沪西小商品 · 价格警告</div>
+      <div class="visit-result">✓ 完成</div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · 弥补差距 Agent (DOM 专属) -->
+<div class="agent-card">
+  <div class="agent-head">
+    <span class="agent-icon">🤖</span>
+    <span class="agent-title">弥补差距 Agent · MDOM 跨区视角</span>
+  </div>
+  <div style="font-size:11px; color:var(--text-1); margin-bottom:8px">
+    跨区综合 61.4·待激活学习互锁 +9 分潜力·Agent 给 3 个跨区建议:
+  </div>
+  <div class="agent-action">
+    <b>建议 1 · 沪西标杆经验输出皖中</b><br>
+    黄建国 (沪西 82) → 李峰 (皖中 68)·下季度 1 个月驻地辅导·预估皖中 +8 分
+  </div>
+  <div class="agent-action">
+    <b>建议 2 · D 级二批商清理 (12 → 4)</b><br>
+    沪西 / 皖中 D 级二批商解约·跨区窜货 12→4 单·预估综合 +5 分
+  </div>
+  <div class="agent-action">
+    <b>建议 3 · 数据互锁推进 65→80%</b><br>
+    一物一码激活率·联动 TL 后端·DSR-2 二批商纳管 50→100%·预估 +3 分
+  </div>
+  <div style="margin-top:8px; font-size:10px; color:var(--text-2)">
+    Agent 推理基础: 5 DOM 评分 + 跨区窜货 + 5 互锁聚合 + 标杆复制规律
+  </div>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · INF-XL · DOM 视角 v1.1<br>
+  Layer 1.3 演示 · 模拟数据 · 待 TL 后端激活一物一码<br>
+  ★ 14 APP 矩阵第 ⑨ 个 · 多区域跨区窜货监控
+</div>
+
+<script>
+// embed 模式 (主壳子嵌入时隐藏 Layer/底部)
+if (new URLSearchParams(location.search).get('embed') === '1') {
+  document.body.classList.add('embed-mode');
+}
+</script>
+
+</body>
+</html>

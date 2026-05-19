@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INF-XL · GM 一本账 · v1.1 · 北极星追踪</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907;
+  --bg-1: #14110d;
+  --bg-2: #1c1815;
+  --bg-3: #251f1a;
+  --surface: #1a1612;
+  --border: rgba(255, 220, 180, 0.08);
+  --text-0: #f4ede0;
+  --text-1: #c8bda8;
+  --text-2: #847868;
+  --text-3: #524a40;
+  --c-ledger: #88c850;
+  --green: #88c850;
+  --amber: #f5a623;
+  --red: #e94560;
+  --blue: #5d9cec;
+  --gold: #d4af37;
+  --purple: #a78bfa;
+  --rose: #d4789a;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg-0);color:var(--text-0);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+@media(min-width:600px){body{max-width:440px;margin:0 auto;box-shadow:0 0 60px rgba(0,0,0,0.6)}}
+
+.layer-badge{background:rgba(233,69,96,0.15);border-bottom:1px solid rgba(233,69,96,0.25);color:var(--red);font-size:10px;padding:6px 14px;text-align:center;font-family:'Space Mono',monospace}
+.embed-mode .layer-badge{display:none}
+
+.mod-header{padding:18px 16px 14px;background:linear-gradient(180deg,var(--bg-1) 0%,var(--bg-0) 100%);border-bottom:1px solid var(--border)}
+.mod-code{font-family:'Space Mono',monospace;font-size:11px;color:var(--gold);font-weight:700;letter-spacing:0.1em}
+.mod-title{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--text-0);margin-top:4px}
+.mod-sub{font-size:12px;color:var(--text-2);margin-top:4px}
+
+.card{margin:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px}
+.card-hl{background:linear-gradient(135deg,rgba(212,175,55,0.08) 0%,var(--surface) 100%);border-color:rgba(212,175,55,0.3)}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text-0);display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.card-tag{font-family:'Space Mono',monospace;font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(212,175,55,0.15);color:var(--gold);font-weight:700;margin-left:auto}
+
+/* 北极星巨型卡 */
+.polaris-hero{padding:20px;background:linear-gradient(135deg,rgba(212,175,55,0.15) 0%,rgba(245,166,35,0.08) 50%,rgba(78,205,196,0.05) 100%);border:1px solid rgba(212,175,55,0.4);border-radius:14px;text-align:center;position:relative;overflow:hidden}
+.polaris-hero::before{content:'⭐';position:absolute;top:8px;right:14px;font-size:32px;opacity:0.4}
+.polaris-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:0.1em;font-weight:700}
+.polaris-num{font-family:'Syne',sans-serif;font-weight:800;font-size:42px;color:var(--gold);margin:8px 0;line-height:1}
+.polaris-unit{font-size:14px;color:var(--text-1)}
+.polaris-target{font-size:11px;color:var(--text-2);margin-top:6px}
+.polaris-bar{height:8px;background:var(--bg-3);border-radius:4px;overflow:hidden;margin:14px 0 6px;position:relative}
+.polaris-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--amber));border-radius:4px}
+.polaris-pct{font-family:'Space Mono',monospace;font-size:12px;color:var(--gold);font-weight:700;margin-top:4px}
+.polaris-forecast{margin-top:12px;padding:8px 12px;background:rgba(0,0,0,0.3);border-radius:8px;font-size:10px;color:var(--text-1);line-height:1.6;text-align:left}
+.polaris-forecast b{color:var(--gold)}
+
+/* 4 维北极星 */
+.dim4-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.dim4-card{padding:12px;background:var(--bg-2);border-radius:8px;border:1px solid var(--border);text-align:center}
+.dim4-icon{font-size:20px;margin-bottom:4px}
+.dim4-curr{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--gold)}
+.dim4-target{font-size:10px;color:var(--text-3);margin-top:2px}
+.dim4-pct{font-size:10px;color:var(--green);margin-top:4px;font-weight:700}
+
+/* 5 品牌大区矩阵 */
+.brand-mtx{display:flex;flex-direction:column;gap:6px}
+.brand-mtx-row{display:grid;grid-template-columns:24px 1fr 80px 50px;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-2);border-radius:8px;border-left:3px solid;font-size:11px}
+.brand-mtx-row.r1{border-left-color:var(--gold)}
+.brand-mtx-row.r2{border-left-color:var(--green)}
+.brand-mtx-row.r3{border-left-color:var(--c-ledger)}
+.brand-mtx-row.r4{border-left-color:var(--purple)}
+.brand-mtx-row.r5{border-left-color:var(--blue)}
+.brand-mtx-icon{font-size:14px}
+.brand-mtx-name{font-weight:600;color:var(--text-0);font-size:11px}
+.brand-mtx-strat{font-size:10px;color:var(--text-3);margin-top:1px}
+.brand-mtx-amount{font-family:'Space Mono',monospace;font-weight:700;color:var(--text-0);text-align:right;font-size:12px}
+.brand-mtx-pct{font-family:'Space Mono',monospace;font-size:11px;color:var(--green);text-align:right;font-weight:700}
+
+/* 跨大区对比 */
+.region-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg-2);border-radius:6px;margin-bottom:6px;font-size:11px}
+.region-name{font-weight:600;color:var(--text-0);min-width:50px}
+.region-bar{flex:1;height:8px;background:var(--bg-3);border-radius:4px;overflow:hidden;position:relative}
+.region-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--amber));border-radius:4px}
+.region-amount{font-family:'Space Mono',monospace;font-weight:700;color:var(--gold);min-width:60px;text-align:right;font-size:11px}
+.region-pct{font-size:9px;color:var(--text-3);min-width:30px;text-align:right;font-family:'Space Mono',monospace}
+
+/* 季度战略推演 */
+.scenario-card{background:linear-gradient(135deg,rgba(167,139,250,0.08) 0%,rgba(78,205,196,0.04) 100%);border:1px solid rgba(167,139,250,0.25);border-radius:10px;padding:12px;margin-top:8px}
+.scenario-q{font-size:12px;color:var(--purple);font-weight:700;margin-bottom:8px}
+.scenario-list{display:flex;flex-direction:column;gap:6px}
+.scenario-item{padding:8px 10px;background:var(--bg-2);border-radius:6px;font-size:11px;border-left:2px solid var(--purple)}
+.scenario-item b{color:var(--purple)}
+
+/* 资源调配 */
+.resource-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:8px 10px;background:var(--bg-2);border-radius:6px;margin-bottom:6px;font-size:11px}
+.resource-name{color:var(--text-1)}
+.resource-val{font-family:'Space Mono',monospace;font-weight:700;color:var(--green)}
+
+/* Agent */
+.agent-card{background:linear-gradient(135deg,rgba(212,175,55,0.1) 0%,rgba(245,166,35,0.05) 100%);border:1px solid rgba(212,175,55,0.3);border-radius:12px;padding:14px;margin:12px 14px}
+.agent-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.agent-icon{font-size:18px}
+.agent-title{font-weight:700;font-size:13px;color:var(--gold)}
+.agent-action{background:var(--bg-2);border-radius:6px;padding:8px 10px;margin-top:6px;font-size:11px;color:var(--text-1);border-left:2px solid var(--gold)}
+.agent-action b{color:var(--gold)}
+
+.bottom-fix{padding:14px 16px 32px;text-align:center;font-size:10px;color:var(--text-3)}
+.embed-mode .bottom-fix{display:none}
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 演示版 · GM 视角 v1.1 · 北极星追踪 · 模拟数据</div>
+
+<div class="mod-header">
+  <div class="mod-code">INF-XL · 心律 · GM v1.1 ★★</div>
+  <div class="mod-title">GM · 华东一本账</div>
+  <div class="mod-sub">刘大海 · 大区 GM · 12 城市 · 5 品牌 · 北极星追踪</div>
+</div>
+
+<!-- 1 · 北极星追踪 (顶层) -->
+<section class="card card-hl">
+  <div class="card-title">⭐ 北极星追踪<span class="card-tag">200M 瓶</span></div>
+  <div class="polaris-hero">
+    <div class="polaris-label">六月鲜 · 全国年化</div>
+    <div class="polaris-num">156M</div>
+    <div class="polaris-unit">瓶 / 年</div>
+    <div class="polaris-target">目标 200M 瓶 (北极星)</div>
+    <div class="polaris-bar">
+      <div class="polaris-fill" style="width:78%"></div>
+    </div>
+    <div class="polaris-pct">78% 达成 · 距目标差 44M 瓶</div>
+    <div class="polaris-forecast">
+      <b>趋势预测:</b><br>
+      · 2026 年末: 175M 瓶 (达成 87%)<br>
+      · <b>2027 年中: 200M 瓶 达成 ✅ (北极星)</b><br>
+      · 关键驱动: 华东 +20% · 华南 +15% · 华北 +12%
+    </div>
+  </div>
+</section>
+
+<!-- 2 · 4 维北极星指标 -->
+<section class="card">
+  <div class="card-title">🎯 4 维北极星指标<span class="card-tag">2027 目标</span></div>
+  <div class="dim4-grid">
+    <div class="dim4-card">
+      <div class="dim4-icon">🍶</div>
+      <div class="dim4-curr">156M</div>
+      <div class="dim4-target">/ 200M 瓶</div>
+      <div class="dim4-pct">78%</div>
+    </div>
+    <div class="dim4-card">
+      <div class="dim4-icon">💰</div>
+      <div class="dim4-curr">¥3.1B</div>
+      <div class="dim4-target">/ ¥4.0B RMB</div>
+      <div class="dim4-pct">78%</div>
+    </div>
+    <div class="dim4-card">
+      <div class="dim4-icon">🏠</div>
+      <div class="dim4-curr">29M</div>
+      <div class="dim4-target">/ 40M 家庭</div>
+      <div class="dim4-pct">72%</div>
+    </div>
+    <div class="dim4-card">
+      <div class="dim4-icon">🌆</div>
+      <div class="dim4-curr">258</div>
+      <div class="dim4-target">/ 337 城市</div>
+      <div class="dim4-pct">77%</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · 5 品牌大区矩阵 -->
+<section class="card">
+  <div class="card-title">⭐ 5 品牌华东矩阵<span class="card-tag">本年累计</span></div>
+  <div class="brand-mtx">
+    <div class="brand-mtx-row r1">
+      <div class="brand-mtx-icon">⭐</div>
+      <div>
+        <div class="brand-mtx-name">六月鲜 · 战略北极星</div>
+        <div class="brand-mtx-strat">重点投入·拉力主导</div>
+      </div>
+      <div class="brand-mtx-amount">¥850M</div>
+      <div class="brand-mtx-pct">42%</div>
+    </div>
+    <div class="brand-mtx-row r2">
+      <div class="brand-mtx-icon">🥇</div>
+      <div>
+        <div class="brand-mtx-name">味达美 · 现金牛</div>
+        <div class="brand-mtx-strat">守住份额·推力主导</div>
+      </div>
+      <div class="brand-mtx-amount">¥620M</div>
+      <div class="brand-mtx-pct">31%</div>
+    </div>
+    <div class="brand-mtx-row r3">
+      <div class="brand-mtx-icon">🌿</div>
+      <div>
+        <div class="brand-mtx-name">禾然 · 战略赌注</div>
+        <div class="brand-mtx-strat">高端突围·AIQL-A</div>
+      </div>
+      <div class="brand-mtx-amount">¥120M</div>
+      <div class="brand-mtx-pct">6%</div>
+    </div>
+    <div class="brand-mtx-row r4">
+      <div class="brand-mtx-icon">🧅</div>
+      <div>
+        <div class="brand-mtx-name">葱伴侣 · 场景防御</div>
+        <div class="brand-mtx-strat">小品类守住</div>
+      </div>
+      <div class="brand-mtx-amount">¥180M</div>
+      <div class="brand-mtx-pct">9%</div>
+    </div>
+    <div class="brand-mtx-row r5">
+      <div class="brand-mtx-icon">🛡</div>
+      <div>
+        <div class="brand-mtx-name">小康 · 海天阻击</div>
+        <div class="brand-mtx-strat">低端拦截·防御</div>
+      </div>
+      <div class="brand-mtx-amount">¥230M</div>
+      <div class="brand-mtx-pct">12%</div>
+    </div>
+  </div>
+  <div style="margin-top:10px;padding:8px 10px;background:var(--bg-2);border-radius:6px;font-size:11px;text-align:center;color:var(--text-1)">
+    华东大区总销 <span style="color:var(--gold);font-weight:700;font-size:13px;font-family:'Space Mono',monospace">¥2.0B</span> · 全国占比 42%
+  </div>
+</section>
+
+<!-- 4 · 跨大区对比 -->
+<section class="card">
+  <div class="card-title">🌐 跨大区对比<span class="card-tag">全国 4 大区</span></div>
+  <div class="region-row">
+    <div class="region-name">华东 ★</div>
+    <div class="region-bar"><div class="region-fill" style="width:100%"></div></div>
+    <div class="region-amount">¥1.3B</div>
+    <div class="region-pct">42%</div>
+  </div>
+  <div class="region-row">
+    <div class="region-name">华南</div>
+    <div class="region-bar"><div class="region-fill" style="width:62%"></div></div>
+    <div class="region-amount">¥820M</div>
+    <div class="region-pct">26%</div>
+  </div>
+  <div class="region-row">
+    <div class="region-name">华北</div>
+    <div class="region-bar"><div class="region-fill" style="width:48%"></div></div>
+    <div class="region-amount">¥620M</div>
+    <div class="region-pct">20%</div>
+  </div>
+  <div class="region-row">
+    <div class="region-name">西南</div>
+    <div class="region-bar"><div class="region-fill" style="width:28%"></div></div>
+    <div class="region-amount">¥360M</div>
+    <div class="region-pct">12%</div>
+  </div>
+  <div style="margin-top:8px;font-size:10px;color:var(--text-2);padding:8px;background:var(--bg-2);border-radius:6px;line-height:1.6">
+    华东大区贡献 42% · 北极星基地 · 标杆复制源<br>
+    标杆 → 华南 / 华北 / 西南输出 · 经验复制
+  </div>
+</section>
+
+<!-- 5 · 季度战略推演 -->
+<section class="card">
+  <div class="card-title">🎲 季度战略推演<span class="card-tag">AI 推演</span></div>
+  <div class="scenario-card">
+    <div class="scenario-q">Q3 关键决策: 六月鲜涨价 5%?</div>
+    <div class="scenario-list">
+      <div class="scenario-item">
+        <b>销量影响:</b> 下降 8% (置信度 75%)
+      </div>
+      <div class="scenario-item">
+        <b>利润影响:</b> 净利 +3% (单价提升弥补销量)
+      </div>
+      <div class="scenario-item">
+        <b>品牌影响:</b> AIQL 上升 (高端化感知 +)
+      </div>
+      <div class="scenario-item">
+        <b>竞争反应:</b> 海天可能跟涨 · 李锦记观望
+      </div>
+      <div class="scenario-item">
+        <b>渠道反应:</b> 经销商谨慎 · 二批商提价 (5 互锁压力测试)
+      </div>
+      <div class="scenario-item">
+        <b>综合建议:</b> Q3 试点 · 从有机系列开始 · 5 城市灰度
+      </div>
+    </div>
+    <div style="margin-top:8px;font-size:10px;color:var(--text-3)">
+      推演基础: 一物一码 1 年价格数据 + 历史涨价案例 + 竞品监控
+    </div>
+  </div>
+</section>
+
+<!-- 6 · 大区资源调配 -->
+<section class="card">
+  <div class="card-title">💼 大区资源调配<span class="card-tag">本季度</span></div>
+  <div class="resource-row">
+    <div class="resource-name">六月鲜营销投入</div>
+    <div class="resource-val">¥85M</div>
+  </div>
+  <div class="resource-row">
+    <div class="resource-name">禾然战略赌注</div>
+    <div class="resource-val">¥32M</div>
+  </div>
+  <div class="resource-row">
+    <div class="resource-name">A23 价签 AI 推广</div>
+    <div class="resource-val">¥18M</div>
+  </div>
+  <div class="resource-row">
+    <div class="resource-name">DOM 团队扩编 (二批商纳管)</div>
+    <div class="resource-val">¥12M</div>
+  </div>
+  <div class="resource-row">
+    <div class="resource-name">PRISM 共创基金</div>
+    <div class="resource-val">¥8M</div>
+  </div>
+  <div class="resource-row">
+    <div class="resource-name">小康防御 (海天阻击)</div>
+    <div class="resource-val">¥15M</div>
+  </div>
+  <div style="margin-top:10px;font-size:10px;color:var(--text-2);padding:8px;background:var(--bg-2);border-radius:6px;line-height:1.6">
+    本季度大区预算总额 ¥170M · GM 拍板 · MCTL 执行 · CTL 落地<br>
+    资源跨城调配: 上海 → 合肥扶持 ¥8M · 上海标杆经验输出
+  </div>
+</section>
+
+<!-- 7 · 弥补差距 Agent (GM 战略级) -->
+<div class="agent-card">
+  <div class="agent-head">
+    <span class="agent-icon">🤖</span>
+    <span class="agent-title">弥补差距 Agent · GM 大区战略</span>
+  </div>
+  <div style="font-size:11px;color:var(--text-1);margin-bottom:8px">
+    北极星达成 78%·距 200M 瓶差 44M·Agent 给 4 个战略路径:
+  </div>
+  <div class="agent-action">
+    <b>战略 1 · 华东加速 (¥1.3B → ¥1.6B)</b><br>
+    上海标杆复制到 4 城市·二批商纳管全推·预估 +12M 瓶/年
+  </div>
+  <div class="agent-action">
+    <b>战略 2 · 禾然有机突围 (6% → 12%)</b><br>
+    高端市场扩张·联动盒马/山姆·禾然 = 有机首选心智·预估 +8M 瓶/年
+  </div>
+  <div class="agent-action">
+    <b>战略 3 · 餐饮 B 端深挖 (SR-RES)</b><br>
+    米其林 + 五星酒店 + 连锁餐饮·KOL 厨师计划·预估 +15M 瓶/年
+  </div>
+  <div class="agent-action">
+    <b>战略 4 · 跨大区均衡发展</b><br>
+    西南 12% → 18% (¥360M → ¥540M)·重庆/成都/昆明加码·预估 +9M 瓶/年
+  </div>
+  <div style="margin-top:8px;font-size:10px;color:var(--text-2)">
+    Agent 推理基础: 4 维北极星 + 5 品牌矩阵 + 跨大区数据 + 历史增长曲线
+  </div>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · INF-XL · GM 视角 v1.1<br>
+  Layer 1.3 演示 · 北极星追踪 · 200M 瓶 / ¥4B / 40M 家庭 / 337 城市<br>
+  ★★ 14 APP 矩阵第 ⑬ 个 · GM → 总部副总裁
+</div>
+
+<script>
+if(new URLSearchParams(location.search).get('embed')==='1')document.body.classList.add('embed-mode');
+</script>
+</body>
+</html>

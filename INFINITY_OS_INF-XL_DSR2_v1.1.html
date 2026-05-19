@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INF-XL · DSR-2 一本账 · v1.1 · 二批商专属</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907;
+  --bg-1: #14110d;
+  --bg-2: #1c1815;
+  --bg-3: #251f1a;
+  --surface: #1a1612;
+  --border: rgba(255, 220, 180, 0.08);
+  --border-2: rgba(255, 220, 180, 0.15);
+  --text-0: #f4ede0;
+  --text-1: #c8bda8;
+  --text-2: #847868;
+  --text-3: #524a40;
+  --c-ledger: #88c850;
+  --green: #88c850;
+  --amber: #f5a623;
+  --warn: #ffc85e;
+  --red: #e94560;
+  --blue: #5d9cec;
+  --gold: #d4af37;
+  --purple: #a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html, body {
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-family: 'Noto Sans SC', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+@media (min-width: 600px) {
+  body { max-width: 440px; margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.6); }
+}
+
+.layer-badge {
+  background: rgba(233, 69, 96, 0.15);
+  border-bottom: 1px solid rgba(233, 69, 96, 0.25);
+  color: var(--red);
+  font-size: 10px;
+  padding: 6px 14px;
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+}
+.embed-mode .layer-badge { display: none; }
+
+.mod-header {
+  padding: 18px 16px 14px;
+  background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+  border-bottom: 1px solid var(--border);
+}
+.mod-code {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--c-ledger);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.mod-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--text-0);
+  margin-top: 4px;
+}
+.mod-sub {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+
+.card {
+  margin: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  position: relative;
+}
+.card-hl {
+  background: linear-gradient(135deg, rgba(93, 156, 236, 0.06) 0%, var(--surface) 100%);
+  border-color: rgba(93, 156, 236, 0.2);
+}
+.card-gold {
+  background: linear-gradient(135deg, rgba(245, 166, 35, 0.08) 0%, var(--surface) 100%);
+  border-color: rgba(245, 166, 35, 0.25);
+}
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-0);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.card-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(245, 166, 35, 0.1);
+  color: var(--amber);
+  font-weight: 700;
+  margin-left: auto;
+}
+
+/* ABCD 评级大显示 */
+.grade-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(93,156,236,0.15) 0%, rgba(93,156,236,0.05) 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(93,156,236,0.3);
+}
+.grade-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 32px;
+  color: var(--bg-0);
+  flex-shrink: 0;
+}
+.grade-info { flex: 1; }
+.grade-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-0);
+}
+.grade-desc {
+  font-size: 11px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+.grade-trans {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 4px;
+  font-family: 'Space Mono', monospace;
+}
+
+/* 透明度仪表 */
+.gauge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 6px;
+}
+.gauge-label {
+  font-size: 11px;
+  color: var(--text-2);
+  min-width: 80px;
+}
+.gauge-bar {
+  flex: 1;
+  height: 12px;
+  background: var(--bg-3);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+.gauge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue), var(--green));
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.gauge-target {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--gold);
+}
+.gauge-pct {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text-0);
+  min-width: 40px;
+  text-align: right;
+}
+
+/* 进销存 */
+.stock-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 10px 0;
+}
+.stock-card {
+  text-align: center;
+  background: var(--bg-2);
+  border-radius: 8px;
+  padding: 12px 8px;
+  border: 1px solid var(--border);
+}
+.stock-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--text-0);
+}
+.stock-label {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+.stock-trend {
+  font-size: 10px;
+  color: var(--green);
+  margin-top: 2px;
+  font-family: 'Space Mono', monospace;
+}
+.stock-trend.down { color: var(--red); }
+
+/* 透明返点 */
+.rebate-box {
+  background: linear-gradient(135deg, rgba(245,166,35,0.1) 0%, rgba(255,124,56,0.05) 100%);
+  border: 1px solid rgba(245,166,35,0.3);
+  border-radius: 10px;
+  padding: 14px;
+}
+.rebate-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 32px;
+  color: var(--gold);
+  text-align: center;
+}
+.rebate-label {
+  font-size: 11px;
+  color: var(--text-2);
+  text-align: center;
+  margin-top: 4px;
+}
+.rebate-breakdown {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rebate-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  padding: 6px 10px;
+  background: var(--bg-2);
+  border-radius: 6px;
+}
+.rebate-line-name { color: var(--text-1); }
+.rebate-line-val {
+  font-family: 'Space Mono', monospace;
+  color: var(--green);
+  font-weight: 700;
+}
+.rebate-line-val.bad { color: var(--red); }
+
+/* 链路完成度 */
+.link-meter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 10px 0;
+}
+.link-card {
+  background: var(--bg-2);
+  border-radius: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+}
+.link-title {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-bottom: 4px;
+}
+.link-frac {
+  font-family: 'Space Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-0);
+}
+.link-frac span { color: var(--text-3); font-size: 14px; }
+.link-pct {
+  font-size: 10px;
+  color: var(--green);
+  margin-top: 2px;
+}
+
+/* 透明换返点机制 */
+.mech-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+.mech-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.mech-action {
+  flex: 1;
+  color: var(--text-1);
+}
+.mech-val {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  color: var(--green);
+  font-size: 11px;
+}
+.mech-val.red { color: var(--red); }
+
+/* 升级路径 */
+.path-tier {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  position: relative;
+  border-left: 3px solid var(--text-3);
+}
+.path-tier.current {
+  background: linear-gradient(90deg, rgba(93,156,236,0.15), rgba(93,156,236,0.05));
+  border-left-color: var(--blue);
+}
+.path-tier.next {
+  background: linear-gradient(90deg, rgba(245,166,35,0.08), transparent);
+  border-left-color: var(--amber);
+}
+.path-grade {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  width: 32px;
+  text-align: center;
+  color: var(--text-2);
+}
+.path-tier.current .path-grade { color: var(--blue); }
+.path-tier.next .path-grade { color: var(--amber); }
+.path-info { flex: 1; font-size: 11px; }
+.path-name { font-weight: 600; color: var(--text-0); }
+.path-cond { font-size: 10px; color: var(--text-2); margin-top: 2px; }
+.path-arrow { color: var(--text-3); }
+
+/* 弥补差距 Agent */
+.agent-card {
+  background: linear-gradient(135deg, rgba(245, 166, 35, 0.1) 0%, rgba(255, 124, 56, 0.05) 100%);
+  border: 1px solid rgba(245, 166, 35, 0.3);
+  border-radius: 12px;
+  padding: 14px;
+  margin: 12px 14px;
+}
+.agent-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.agent-icon { font-size: 18px; }
+.agent-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--gold);
+}
+.agent-action {
+  background: var(--bg-2);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-1);
+  border-left: 2px solid var(--amber);
+}
+.agent-action b { color: var(--gold); }
+
+.bottom-fix {
+  padding: 14px 16px 32px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-3);
+}
+.embed-mode .bottom-fix { display: none; }
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 演示版 · DSR-2 视角 v1.1 · 二批商专属 · 模拟数据</div>
+
+<div class="mod-header">
+  <div class="mod-code">INF-XL · 心律 · DSR-2 v1.1</div>
+  <div class="mod-title">二批商一本账</div>
+  <div class="mod-sub">武宁北方二批 · 上游: 沪西华南调味品 · 5 互锁第 3 环</div>
+</div>
+
+<!-- 1 · ABCD 评级核心展示 -->
+<section class="card card-hl">
+  <div class="card-title">🏷 当前评级<span class="card-tag">本月</span></div>
+  <div class="grade-hero">
+    <div class="grade-circle">B</div>
+    <div class="grade-info">
+      <div class="grade-name">B 级 · 主要透明</div>
+      <div class="grade-desc">标准返点 · DOM 重点辅导 · 升 A 冲刺中</div>
+      <div class="grade-trans">距离 A 级还差: 透明度 +4% · 价格守纪 100%</div>
+    </div>
+  </div>
+  <div class="gauge-row">
+    <span class="gauge-label">透明度</span>
+    <div class="gauge-bar">
+      <div class="gauge-fill" style="width:76%"></div>
+      <div class="gauge-target" style="left:80%"></div>
+    </div>
+    <span class="gauge-pct">76%</span>
+  </div>
+  <div style="font-size:10px; color:var(--text-3); margin-top:4px; font-family: 'Space Mono', monospace;">
+    🟡 目标 80% → A 级 · 还需 6 月内保持
+  </div>
+</section>
+
+<!-- 2 · 本月进销存 -->
+<section class="card">
+  <div class="card-title">📦 本月进销存<span class="card-tag">5 月</span></div>
+  <div class="stock-grid">
+    <div class="stock-card">
+      <div class="stock-num">¥58k</div>
+      <div class="stock-label">进货</div>
+      <div class="stock-trend">↗ +12%</div>
+    </div>
+    <div class="stock-card">
+      <div class="stock-num">¥45k</div>
+      <div class="stock-label">出货</div>
+      <div class="stock-trend">↗ +8%</div>
+    </div>
+    <div class="stock-card">
+      <div class="stock-num">¥13k</div>
+      <div class="stock-label">库存</div>
+      <div class="stock-trend down">↘ -3%</div>
+    </div>
+  </div>
+  <div style="margin-top:10px; padding:8px 10px; background:var(--bg-2); border-radius:6px; font-size:11px; color:var(--text-1); line-height:1.6;">
+    本月主销 SKU: 六月鲜极鲜 500ml · 152 箱 · 主要发货便利店 + 餐饮长尾<br>
+    异常: 无 · 价格全部 ≥ 底价 ¥17 · 价签 AI 抽查 12 次全通过 ✓
+  </div>
+</section>
+
+<!-- 3 · 透明换返点 (V1.4 经济互锁) -->
+<section class="card card-gold">
+  <div class="card-title">💰 本月透明返点<span class="card-tag">V1.4 经济互锁</span></div>
+  <div class="rebate-box">
+    <div class="rebate-num">¥1,250</div>
+    <div class="rebate-label">本月已发放</div>
+    <div class="rebate-breakdown">
+      <div class="rebate-line">
+        <span class="rebate-line-name">基础返点 · 152 单 × 0.5%</span>
+        <span class="rebate-line-val">+¥760</span>
+      </div>
+      <div class="rebate-line">
+        <span class="rebate-line-name">全月完整 · 上传率 96%</span>
+        <span class="rebate-line-val">+¥350</span>
+      </div>
+      <div class="rebate-line">
+        <span class="rebate-line-name">价格守纪 · 0 起异常</span>
+        <span class="rebate-line-val">+¥220</span>
+      </div>
+      <div class="rebate-line">
+        <span class="rebate-line-name">A 级达标 · 升级奖励</span>
+        <span class="rebate-line-val">¥0</span>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:10px; padding:8px 10px; background:var(--bg-2); border-radius:6px; font-size:10px; color:var(--text-2); line-height:1.6;">
+    奖惩规则:<br>
+    · 1 条数据上传 0.5% · 全月完整 +1% · A 级 +¥3,000<br>
+    · 乱价扣 5% · 窜货扣 10% · D 级取消返点
+  </div>
+</section>
+
+<!-- 4 · 一物一码链路完成度 -->
+<section class="card">
+  <div class="card-title">📍 一物一码链路完成度<span class="card-tag">5 互锁数据</span></div>
+  <div class="link-meter">
+    <div class="link-card">
+      <div class="link-title">本月扫码上传</div>
+      <div class="link-frac">152 <span>/ 158</span></div>
+      <div class="link-pct">96.2% ✓</div>
+    </div>
+    <div class="link-card">
+      <div class="link-title">下游零售店登记</div>
+      <div class="link-frac">148 <span>/ 152</span></div>
+      <div class="link-pct">97.4% ✓</div>
+    </div>
+    <div class="link-card">
+      <div class="link-title">价格备案完整</div>
+      <div class="link-frac">152 <span>/ 152</span></div>
+      <div class="link-pct">100% ✓</div>
+    </div>
+    <div class="link-card">
+      <div class="link-title">异常上报</div>
+      <div class="link-frac">0 <span>起</span></div>
+      <div class="link-pct">优秀 ✓</div>
+    </div>
+  </div>
+  <div style="margin-top:10px; padding:8px 10px; background:var(--bg-2); border-radius:6px; font-size:10px; color:var(--text-2); line-height:1.6;">
+    一物一码 1 年闲置数据 → DSR-2 app 激活·二批商成为可见节点<br>
+    链路: 沪西华南 → 武宁北方 (本店) → 152 家零售店 ✓
+  </div>
+</section>
+
+<!-- 5 · 透明换返点机制 (规则展示) -->
+<section class="card">
+  <div class="card-title">⚙️ 经济互锁机制<span class="card-tag">透明换返点</span></div>
+  <div class="mech-row">
+    <div class="mech-icon">📤</div>
+    <div class="mech-action">每上传 1 条出货数据</div>
+    <div class="mech-val">+0.5%</div>
+  </div>
+  <div class="mech-row">
+    <div class="mech-icon">📊</div>
+    <div class="mech-action">全月数据完整上传</div>
+    <div class="mech-val">+1%</div>
+  </div>
+  <div class="mech-row">
+    <div class="mech-icon">🏆</div>
+    <div class="mech-action">透明 6 个月升 A 级</div>
+    <div class="mech-val">+¥3,000</div>
+  </div>
+  <div class="mech-row">
+    <div class="mech-icon">⚠️</div>
+    <div class="mech-action">乱价 (低于底价 ¥17)</div>
+    <div class="mech-val red">-5%</div>
+  </div>
+  <div class="mech-row">
+    <div class="mech-icon">🚫</div>
+    <div class="mech-action">窜货 (跨区销售)</div>
+    <div class="mech-val red">-10%</div>
+  </div>
+</section>
+
+<!-- 6 · ABCD 升级路径 (信用互锁) -->
+<section class="card">
+  <div class="card-title">📈 ABCD 升级路径<span class="card-tag">信用互锁</span></div>
+  <div class="path-tier next">
+    <div class="path-grade">A</div>
+    <div class="path-info">
+      <div class="path-name">A 级 · 全透明价格守纪</div>
+      <div class="path-cond">透明度 ≥ 80% · 6 月零违规 · 全额返点 + 优先供货</div>
+    </div>
+  </div>
+  <div class="path-tier current">
+    <div class="path-grade">B</div>
+    <div class="path-info">
+      <div class="path-name">B 级 · 主要透明 (当前)</div>
+      <div class="path-cond">透明度 60-80% · 标准返点 · DOM 重点辅导</div>
+    </div>
+    <span class="path-arrow">★</span>
+  </div>
+  <div class="path-tier">
+    <div class="path-grade">C</div>
+    <div class="path-info">
+      <div class="path-name">C 级 · 部分透明</div>
+      <div class="path-cond">透明度 30-60% · 返点削减 · DOM 加密走访</div>
+    </div>
+  </div>
+  <div class="path-tier">
+    <div class="path-grade">D</div>
+    <div class="path-info">
+      <div class="path-name">D 级 · 不透明 / 乱价</div>
+      <div class="path-cond">透明度 < 30% · 不返点 · 限制供货 · 公示警告</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · 弥补差距 Agent (DSR-2 视角) -->
+<div class="agent-card">
+  <div class="agent-head">
+    <span class="agent-icon">🤖</span>
+    <span class="agent-title">弥补差距 Agent · 二批商视角</span>
+  </div>
+  <div style="font-size:11px; color:var(--text-1); margin-bottom:8px">
+    距 A 级还差 4% 透明度·Agent 给 3 个建议·预估 30 天达成:
+  </div>
+  <div class="agent-action">
+    <b>建议 1 · 提升上传率到 100%</b><br>
+    本月 152/158·缺 6 单·建议补传·预估 +1.5% 透明度 + ¥80 返点
+  </div>
+  <div class="agent-action">
+    <b>建议 2 · 增加下游零售店登记</b><br>
+    148/152 已登记·剩 4 家·建议本周走访·预估 +1% 透明度 + ¥60 返点
+  </div>
+  <div class="agent-action">
+    <b>建议 3 · 月底 DOM 走访配合</b><br>
+    黄建国 DOM 已排走访·配合提供完整账册·预估 +2% 透明度 → A 级达标
+  </div>
+  <div style="margin-top:8px; font-size:10px; color:var(--text-2)">
+    A 级达成后预期收益: 月返点 ¥1,250 → ¥4,250 (+¥3,000 升级奖励)
+  </div>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · INF-XL · DSR-2 视角 v1.1<br>
+  Layer 1.3 演示 · 二批商纳管入口 · 5 互锁第 3 环 (信用)<br>
+  ★ 14 APP 矩阵第 ④ 个 · 透明换返点机制
+</div>
+
+<script>
+if (new URLSearchParams(location.search).get('embed') === '1') {
+  document.body.classList.add('embed-mode');
+}
+</script>
+
+</body>
+</html>

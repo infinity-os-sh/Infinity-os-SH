@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INF-XL · SFA 一本账 · v1.1 · SR+DSR 协作账</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907;
+  --bg-1: #14110d;
+  --bg-2: #1c1815;
+  --bg-3: #251f1a;
+  --surface: #1a1612;
+  --border: rgba(255, 220, 180, 0.08);
+  --border-2: rgba(255, 220, 180, 0.15);
+  --text-0: #f4ede0;
+  --text-1: #c8bda8;
+  --text-2: #847868;
+  --text-3: #524a40;
+  --c-ledger: #88c850;
+  --green: #88c850;
+  --amber: #f5a623;
+  --warn: #ffc85e;
+  --red: #e94560;
+  --blue: #5d9cec;
+  --gold: #d4af37;
+  --purple: #a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html, body {
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-family: 'Noto Sans SC', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+@media (min-width: 600px) {
+  body { max-width: 440px; margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.6); }
+}
+
+.layer-badge {
+  background: rgba(233, 69, 96, 0.15);
+  border-bottom: 1px solid rgba(233, 69, 96, 0.25);
+  color: var(--red);
+  font-size: 10px;
+  padding: 6px 14px;
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+}
+.embed-mode .layer-badge { display: none; }
+
+.mod-header {
+  padding: 18px 16px 14px;
+  background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+  border-bottom: 1px solid var(--border);
+}
+.mod-code {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--c-ledger);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.mod-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--text-0);
+  margin-top: 4px;
+}
+.mod-sub {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+
+.card {
+  margin: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  position: relative;
+}
+.card-hl {
+  background: linear-gradient(135deg, rgba(93, 156, 236, 0.06) 0%, var(--surface) 100%);
+  border-color: rgba(93, 156, 236, 0.2);
+}
+.card-gold {
+  background: linear-gradient(135deg, rgba(245, 166, 35, 0.08) 0%, var(--surface) 100%);
+  border-color: rgba(245, 166, 35, 0.25);
+}
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-0);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.card-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(245, 166, 35, 0.1);
+  color: var(--amber);
+  font-weight: 700;
+  margin-left: auto;
+}
+
+/* ABCD 评级大显示 */
+.grade-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(93,156,236,0.15) 0%, rgba(93,156,236,0.05) 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(93,156,236,0.3);
+}
+.grade-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 32px;
+  color: var(--bg-0);
+  flex-shrink: 0;
+}
+.grade-info { flex: 1; }
+.grade-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-0);
+}
+.grade-desc {
+  font-size: 11px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+.grade-trans {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 4px;
+  font-family: 'Space Mono', monospace;
+}
+
+/* 开拓率仪表 */
+.gauge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 6px;
+}
+.gauge-label {
+  font-size: 11px;
+  color: var(--text-2);
+  min-width: 80px;
+}
+.gauge-bar {
+  flex: 1;
+  height: 12px;
+  background: var(--bg-3);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+.gauge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue), var(--green));
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.gauge-target {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--gold);
+}
+.gauge-pct {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text-0);
+  min-width: 40px;
+  text-align: right;
+}
+
+/* 进销存 */
+.stock-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 10px 0;
+}
+.stock-card {
+  text-align: center;
+  background: var(--bg-2);
+  border-radius: 8px;
+  padding: 12px 8px;
+  border: 1px solid var(--border);
+}
+.stock-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--text-0);
+}
+.stock-label {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+.stock-trend {
+  font-size: 10px;
+  color: var(--green);
+  margin-top: 2px;
+  font-family: 'Space Mono', monospace;
+}
+.stock-trend.down { color: var(--red); }
+
+/* 透明返点 */
+.rebate-box {
+  background: linear-gradient(135deg, rgba(245,166,35,0.1) 0%, rgba(255,124,56,0.05) 100%);
+  border: 1px solid rgba(245,166,35,0.3);
+  border-radius: 10px;
+  padding: 14px;
+}
+.rebate-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 32px;
+  color: var(--gold);
+  text-align: center;
+}
+.rebate-label {
+  font-size: 11px;
+  color: var(--text-2);
+  text-align: center;
+  margin-top: 4px;
+}
+.rebate-breakdown {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rebate-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  padding: 6px 10px;
+  background: var(--bg-2);
+  border-radius: 6px;
+}
+.rebate-line-name { color: var(--text-1); }
+.rebate-line-val {
+  font-family: 'Space Mono', monospace;
+  color: var(--green);
+  font-weight: 700;
+}
+.rebate-line-val.bad { color: var(--red); }
+
+/* 链路完成度 */
+.link-meter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 10px 0;
+}
+.link-card {
+  background: var(--bg-2);
+  border-radius: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+}
+.link-title {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-bottom: 4px;
+}
+.link-frac {
+  font-family: 'Space Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-0);
+}
+.link-frac span { color: var(--text-3); font-size: 14px; }
+.link-pct {
+  font-size: 10px;
+  color: var(--green);
+  margin-top: 2px;
+}
+
+/* 二批商联动机制 */
+.mech-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+.mech-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.mech-action {
+  flex: 1;
+  color: var(--text-1);
+}
+.mech-val {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  color: var(--green);
+  font-size: 11px;
+}
+.mech-val.red { color: var(--red); }
+
+/* 升级路径 */
+.path-tier {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  position: relative;
+  border-left: 3px solid var(--text-3);
+}
+.path-tier.current {
+  background: linear-gradient(90deg, rgba(93,156,236,0.15), rgba(93,156,236,0.05));
+  border-left-color: var(--blue);
+}
+.path-tier.next {
+  background: linear-gradient(90deg, rgba(245,166,35,0.08), transparent);
+  border-left-color: var(--amber);
+}
+.path-grade {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  width: 32px;
+  text-align: center;
+  color: var(--text-2);
+}
+.path-tier.current .path-grade { color: var(--blue); }
+.path-tier.next .path-grade { color: var(--amber); }
+.path-info { flex: 1; font-size: 11px; }
+.path-name { font-weight: 600; color: var(--text-0); }
+.path-cond { font-size: 10px; color: var(--text-2); margin-top: 2px; }
+.path-arrow { color: var(--text-3); }
+
+/* 弥补差距 Agent */
+.agent-card {
+  background: linear-gradient(135deg, rgba(245, 166, 35, 0.1) 0%, rgba(255, 124, 56, 0.05) 100%);
+  border: 1px solid rgba(245, 166, 35, 0.3);
+  border-radius: 12px;
+  padding: 14px;
+  margin: 12px 14px;
+}
+.agent-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.agent-icon { font-size: 18px; }
+.agent-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--gold);
+}
+.agent-action {
+  background: var(--bg-2);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-1);
+  border-left: 2px solid var(--amber);
+}
+.agent-action b { color: var(--gold); }
+
+.bottom-fix {
+  padding: 14px 16px 32px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-3);
+}
+.embed-mode .bottom-fix { display: none; }
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 演示版 · SFA 视角 v1.1 · SR+DSR 协作 · 模拟数据</div>
+
+<div class="mod-header">
+  <div class="mod-code">INF-XL · 心律 · SFA v1.1</div>
+  <div class="mod-title">SFA 协作账</div>
+  <div class="mod-sub">王志强 + 张明 · 双登录 · 宁波新市场 · 5/8 店</div>
+</div>
+
+<!-- 1 · ABCD 评级核心展示 -->
+<section class="card card-hl">
+  <div class="card-title">🏷 协作组当前状态<span class="card-tag">本月</span></div>
+  <div class="grade-hero">
+    <div class="grade-circle" style="background:linear-gradient(135deg,var(--gold),#ff7c38);font-size:14px">SFA</div>
+    <div class="grade-info">
+      <div class="grade-name">SFA 协作组 · 新市场开拓</div>
+      <div class="grade-desc">宁波新市场 · SR 王志强 主谈 · DSR 张明 跟进</div>
+      <div class="grade-trans">退出条件: 8 店全开 + 本地经销商招募完成 + 6 个月成熟</div>
+    </div>
+      <div class="grade-desc">上海华南调味品 · CVS 便利店区域专家</div>
+      <div class="grade-trans">距离高级 DSR: 月达成 ≥ 95% · 6 个月稳定</div>
+    </div>
+  </div>
+  <div class="gauge-row">
+    <span class="gauge-label">开拓率</span>
+    <div class="gauge-bar">
+      <div class="gauge-fill" style="width:62%"></div>
+      <div class="gauge-target" style="left:80%"></div>
+    </div>
+    <span class="gauge-pct">62%</span>
+  </div>
+  <div style="font-size:10px; color:var(--text-3); margin-top:4px; font-family: 'Space Mono', monospace;">
+    🎯 目标 8 店 → SFA 退出条件达成
+  </div>
+</section>
+
+<!-- 2 · 本月进销存 -->
+<section class="card">
+  <div class="card-title">🤝 SFA 协作业绩<span class="card-tag">新市场</span></div>
+  <div class="stock-grid">
+    <div class="stock-card">
+      <div class="stock-num">5/8</div>
+      <div class="stock-label">开拓门店</div>
+      <div class="stock-trend">↗ 本周</div>
+    </div>
+    <div class="stock-card">
+      <div class="stock-num">¥8.5K</div>
+      <div class="stock-label">协作业绩</div>
+      <div class="stock-trend">↗ +25%</div>
+    </div>
+    <div class="stock-card">
+      <div class="stock-num">3</div>
+      <div class="stock-label">经销商候选</div>
+      <div class="stock-trend">月底定</div>
+    </div>
+  </div>
+  <div style="margin-top:10px; padding:8px 10px; background:var(--bg-2); border-radius:6px; font-size:11px; color:var(--text-1); line-height:1.6;">
+    宁波本地拓展: 第一百货 + 大润发 + 711 区域 + 餐饮 KOL<br>双账分账: SR 主导 60% / DSR 跟进 40% / 联签 50/50
+  </div>
+</section>
+
+<!-- 3 · 二批商联动 (业代收入) -->
+<section class="card card-gold">
+  <div class="card-title">💰 本月提成<span class="card-tag">业代收入</span></div>
+  <div class="rebate-box">
+    <div class="rebate-num">¥8,500</div>
+    <div class="rebate-label">协作双方分账</div>
+    <div class="rebate-breakdown">
+      <div class="rebate-line">
+        <span class="rebate-line-name">SR 主导签单 (¥320K × 1.5%)</span>
+        <span class="rebate-line-val">¥4,800</span>
+      </div>
+      <div class="rebate-line">
+        <span class="rebate-line-name">DSR 跟进执行 (¥200K × 1.0%)</span>
+        <span class="rebate-line-val">¥2,000</span>
+      </div>
+      <div class="rebate-line">
+        <span class="rebate-line-name">联签 (¥98K × 双 50/50)</span>
+        <span class="rebate-line-val">¥1,470</span>
+      </div>
+      <div class="rebate-line">
+        <span class="rebate-line-name">SURGE 2.5× 新市场加成</span>
+        <span class="rebate-line-val">¥230</span>
+      </div>
+    </div>
+  </div>
+  </div>
+  </div>
+  <div style="margin-top:10px; padding:8px 10px; background:var(--bg-2); border-radius:6px; font-size:10px; color:var(--text-2); line-height:1.6;">
+    奖惩规则:<br>
+    · 1 条数据上传 0.5% · 全月完整 +1% · A 级 +¥3,000<br>
+    · 乱价扣 5% · 窜货扣 10% · D 级取消返点
+  </div>
+</section>
+
+<!-- 4 · 一物一码链路完成度 -->
+<section class="card">
+  <div class="card-title">📊 任务完成度<span class="card-tag">DSR 月度</span></div>
+  <div class="link-meter">
+    <div class="link-card">
+      <div class="link-title">第一百货</div>
+      <div class="link-frac">1 <span>店</span></div>
+      <div class="link-pct">已签 ✓</div>
+    </div>
+    <div class="link-card">
+      <div class="link-title">大润发</div>
+      <div class="link-frac">2 <span>/ 3</span></div>
+      <div class="link-pct">66% ⚠</div>
+    </div>
+    <div class="link-card">
+      <div class="link-title">711 区域</div>
+      <div class="link-frac">12 <span>/ 15</span></div>
+      <div class="link-pct">80% ✓</div>
+    </div>
+    <div class="link-card">
+      <div class="link-title">餐饮 KOL</div>
+      <div class="link-frac">5 <span>家</span></div>
+      <div class="link-pct">已签 ✓</div>
+    </div>
+  </div>
+  <div style="margin-top:10px; padding:8px 10px; background:var(--bg-2); border-radius:6px; font-size:10px; color:var(--text-2); line-height:1.6;">
+    一物一码 1 年闲置数据 → DSR-2 app 激活·二批商成为可见节点<br>
+    链路: 沪西华南 → 武宁北方 (本店) → 152 家零售店 ✓
+  </div>
+</section>
+
+<!-- 5 · 二批商联动机制 (规则展示) -->
+<section class="card">
+  <div class="card-title">🤝 与 DSR-2 协作机制<span class="card-tag">二批商联动</span></div>
+  <div class="mech-row">
+    <div class="mech-icon">👔</div>
+    <div class="mech-action">SR 主导签单 · 提成</div>
+    <div class="mech-val">1.5% × ¥</div>
+  </div>
+  <div class="mech-row">
+    <div class="mech-icon">🚗</div>
+    <div class="mech-action">DSR 跟进执行 · 提成</div>
+    <div class="mech-val">1.0% × ¥</div>
+  </div>
+  <div class="mech-row">
+    <div class="mech-icon">🤝</div>
+    <div class="mech-action">联签 SR + DSR · 双账</div>
+    <div class="mech-val">50/50 分</div>
+  </div>
+  <div class="mech-row">
+    <div class="mech-icon">⚡</div>
+    <div class="mech-action">SURGE 2.5× 新市场加成</div>
+    <div class="mech-val">+2.5×</div>
+  </div>
+  <div class="mech-row">
+    <div class="mech-icon">🏁</div>
+    <div class="mech-action">8 店全开 · SFA 完美退出</div>
+    <div class="mech-val">+¥3,000</div>
+  </div>
+</section>
+
+<!-- 6 · ABCD 升级路径 (业代晋升) -->
+<section class="card">
+  <div class="card-title">📈 DSR 等级路径<span class="card-tag">业代晋升</span></div>
+  <div class="path-tier next">
+    <div class="path-grade">A</div>
+    <div class="path-info">
+      <div class="path-name">A 级 · 全透明价格守纪</div>
+      <div class="path-cond">开拓率 ≥ 80% · 6 月零违规 · 全额返点 + 优先供货</div>
+    </div>
+  </div>
+  <div class="path-tier current">
+    <div class="path-grade">B</div>
+    <div class="path-info">
+      <div class="path-name">SFA 协作组 · 新市场开拓 (当前)</div>
+      <div class="path-cond">开拓率 60-80% · 标准返点 · DOM 重点辅导</div>
+    </div>
+    <span class="path-arrow">★</span>
+  </div>
+  <div class="path-tier">
+    <div class="path-grade">C</div>
+    <div class="path-info">
+      <div class="path-name">C 级 · 部分透明</div>
+      <div class="path-cond">开拓率 30-60% · 返点削减 · DOM 加密走访</div>
+    </div>
+  </div>
+  <div class="path-tier">
+    <div class="path-grade">D</div>
+    <div class="path-info">
+      <div class="path-name">D 级 · 不透明 / 乱价</div>
+      <div class="path-cond">开拓率 < 30% · 不返点 · 限制供货 · 公示警告</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · 弥补差距 Agent (DSR-2 视角) -->
+<div class="agent-card">
+  <div class="agent-head">
+    <span class="agent-icon">🤖</span>
+    <span class="agent-title">弥补差距 Agent · SFA 协作视角</span>
+  </div>
+  <div style="font-size:11px; color:var(--text-1); margin-bottom:8px">
+    距 A 级还差 4% 开拓率·Agent 给 3 个建议·预估 30 天达成:
+  </div>
+  <div class="agent-action">
+    <b>建议 1 · 加快 711 区域签约</b><br>
+    剩 3 店 (12/15)·SR 谈框架·DSR 跑现场·本周完成
+  </div>
+  <div class="agent-action">
+    <b>建议 2 · 月底本地经销商定下</b><br>
+    3 候选·7 维度联合评分·下周联合考察·定 1 家承接 P2
+  </div>
+  <div class="agent-action">
+    <b>建议 3 · SFA 退出准备</b><br>
+    宁波 6 个月成熟后·SR 回直营线 · DSR 留经销商体系
+  </div>
+  <div style="margin-top:8px; font-size:10px; color:var(--text-2)">
+    Agent 推理基础: 新市场开拓进度 + SR/DSR 双账积分 + 退出条件
+  </div>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · INF-XL · DSR-2 视角 v1.1<br>
+  Layer 1.3 演示 · 二批商纳管入口 · 5 互锁第 3 环 (信用)<br>
+  ★ 14 APP 矩阵第 ⑤ 个 · 协作合一 · 导入期
+</div>
+
+<script>
+if (new URLSearchParams(location.search).get('embed') === '1') {
+  document.body.classList.add('embed-mode');
+}
+</script>
+
+</body>
+</html>

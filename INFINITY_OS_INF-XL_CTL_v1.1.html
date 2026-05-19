@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INF-XL · CTL 一本账 · v1.1 · 5 品牌两线汇合</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907;
+  --bg-1: #14110d;
+  --bg-2: #1c1815;
+  --bg-3: #251f1a;
+  --surface: #1a1612;
+  --border: rgba(255, 220, 180, 0.08);
+  --border-2: rgba(255, 220, 180, 0.15);
+  --text-0: #f4ede0;
+  --text-1: #c8bda8;
+  --text-2: #847868;
+  --text-3: #524a40;
+  --c-ledger: #88c850;
+  --green: #88c850;
+  --amber: #f5a623;
+  --warn: #ffc85e;
+  --red: #e94560;
+  --blue: #5d9cec;
+  --gold: #d4af37;
+  --purple: #a78bfa;
+  --rose: #d4789a;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg-0);color:var(--text-0);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+@media(min-width:600px){body{max-width:440px;margin:0 auto;box-shadow:0 0 60px rgba(0,0,0,0.6)}}
+
+.layer-badge{background:rgba(233,69,96,0.15);border-bottom:1px solid rgba(233,69,96,0.25);color:var(--red);font-size:10px;padding:6px 14px;text-align:center;font-family:'Space Mono',monospace}
+.embed-mode .layer-badge{display:none}
+
+.mod-header{padding:18px 16px 14px;background:linear-gradient(180deg,var(--bg-1) 0%,var(--bg-0) 100%);border-bottom:1px solid var(--border)}
+.mod-code{font-family:'Space Mono',monospace;font-size:11px;color:var(--c-ledger);font-weight:700;letter-spacing:0.1em}
+.mod-title{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--text-0);margin-top:4px}
+.mod-sub{font-size:12px;color:var(--text-2);margin-top:4px}
+
+.card{margin:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px}
+.card-hl{background:linear-gradient(135deg,rgba(245,166,35,0.06) 0%,var(--surface) 100%);border-color:rgba(245,166,35,0.2)}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text-0);display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.card-tag{font-family:'Space Mono',monospace;font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(245,166,35,0.1);color:var(--amber);font-weight:700;margin-left:auto}
+
+/* 城市总览 */
+.city-hero{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.city-stat{padding:14px;background:linear-gradient(135deg,var(--bg-2) 0%,var(--bg-3) 100%);border:1px solid var(--border);border-radius:10px;text-align:center}
+.city-num{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:var(--gold)}
+.city-label{font-size:10px;color:var(--text-2);margin-top:2px}
+.city-trend{font-size:10px;color:var(--green);margin-top:4px;font-family:'Space Mono',monospace}
+
+/* 5 品牌矩阵 */
+.brand-list{display:flex;flex-direction:column;gap:8px}
+.brand-row{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-2);border-radius:8px;border-left:3px solid;font-size:11px}
+.brand-row.b1{border-left-color:var(--gold)}
+.brand-row.b2{border-left-color:var(--green)}
+.brand-row.b3{border-left-color:var(--c-ledger)}
+.brand-row.b4{border-left-color:var(--purple)}
+.brand-row.b5{border-left-color:var(--blue)}
+.brand-icon{font-size:18px;text-align:center}
+.brand-info{}
+.brand-name{font-weight:700;color:var(--text-0);font-size:12px}
+.brand-pos{font-size:10px;color:var(--text-2);margin-top:1px}
+.brand-amount{font-family:'Space Mono',monospace;font-weight:700;color:var(--text-0);text-align:right;font-size:13px}
+.brand-p1p2{font-size:9px;color:var(--text-3);text-align:right;margin-top:2px;font-family:'Space Mono',monospace}
+
+/* P1/P2 双线占比 */
+.path-stack{margin-top:12px}
+.path-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.path-label{width:30px;font-family:'Syne',sans-serif;font-weight:800;color:var(--amber);font-size:13px;text-align:center}
+.path-content{flex:1}
+.path-name{font-size:11px;color:var(--text-1)}
+.path-desc{font-size:10px;color:var(--text-3);margin-top:2px}
+.path-bar{height:10px;background:var(--bg-3);border-radius:5px;overflow:hidden;margin-top:6px;position:relative}
+.path-fill{height:100%;background:linear-gradient(90deg,var(--green),rgba(136,200,80,0.6))}
+.path-pct{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--text-0)}
+
+/* 仲裁面板 */
+.arbi-box{padding:12px;background:linear-gradient(135deg,rgba(167,139,250,0.1) 0%,rgba(212,120,154,0.05) 100%);border:1px solid rgba(167,139,250,0.2);border-radius:10px;margin-top:8px}
+.arbi-vs{display:flex;align-items:center;justify-content:space-around;margin:8px 0;padding:8px 0}
+.arbi-side{text-align:center;flex:1}
+.arbi-side-title{font-size:11px;font-weight:700;color:var(--text-1)}
+.arbi-side-val{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:var(--green);margin-top:4px}
+.arbi-side.b .arbi-side-val{color:var(--blue)}
+.arbi-vs-label{font-family:'Space Mono',monospace;color:var(--purple);font-weight:700;font-size:14px;padding:0 12px}
+.arbi-decision{margin-top:10px;padding:8px 10px;background:var(--bg-2);border-radius:6px;font-size:11px;color:var(--text-1);border-left:2px solid var(--purple)}
+.arbi-decision b{color:var(--purple)}
+
+/* 5 互锁聚合 */
+.lock-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+.lock-cell{padding:8px 6px;background:var(--bg-2);border-radius:6px;text-align:center;border:1px solid var(--border)}
+.lock-num{font-family:'Space Mono',monospace;font-weight:700;font-size:14px;color:var(--green)}
+.lock-label{font-size:9px;color:var(--text-2);margin-top:2px}
+.lock-cell.warn .lock-num{color:var(--amber)}
+.lock-cell.bad .lock-num{color:var(--red)}
+
+/* PRISM 共创 */
+.prism-card{background:linear-gradient(135deg,rgba(167,139,250,0.08) 0%,rgba(245,166,35,0.04) 100%);border:1px solid rgba(167,139,250,0.25);border-radius:10px;padding:12px;margin-top:8px}
+.prism-row{display:flex;align-items:center;gap:10px;font-size:11px;padding:6px 0}
+.prism-loc{flex:1;color:var(--text-0);font-weight:600}
+.prism-stat{font-family:'Space Mono',monospace;font-size:10px;color:var(--green);font-weight:700}
+.prism-stat.todo{color:var(--amber)}
+.prism-stat.bad{color:var(--red)}
+
+/* Agent */
+.agent-card{background:linear-gradient(135deg,rgba(245,166,35,0.1) 0%,rgba(255,124,56,0.05) 100%);border:1px solid rgba(245,166,35,0.3);border-radius:12px;padding:14px;margin:12px 14px}
+.agent-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.agent-icon{font-size:18px}
+.agent-title{font-weight:700;font-size:13px;color:var(--gold)}
+.agent-action{background:var(--bg-2);border-radius:6px;padding:8px 10px;margin-top:6px;font-size:11px;color:var(--text-1);border-left:2px solid var(--amber)}
+.agent-action b{color:var(--gold)}
+
+.bottom-fix{padding:14px 16px 32px;text-align:center;font-size:10px;color:var(--text-3)}
+.embed-mode .bottom-fix{display:none}
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 演示版 · CTL 视角 v1.1 · 5 品牌两线汇合 · 模拟数据</div>
+
+<div class="mod-header">
+  <div class="mod-code">INF-XL · 心律 · CTL v1.1 ★</div>
+  <div class="mod-title">CTL · 上海一本账</div>
+  <div class="mod-sub">王志成 · 城市经理 · 双线汇合仲裁 · 5 品牌矩阵</div>
+</div>
+
+<!-- 1 · 上海城市总览 -->
+<section class="card card-hl">
+  <div class="card-title">🏙 上海城市总览<span class="card-tag">本月</span></div>
+  <div class="city-hero">
+    <div class="city-stat">
+      <div class="city-num">¥132M</div>
+      <div class="city-label">本月销售额</div>
+      <div class="city-trend">↗ +18% YoY</div>
+    </div>
+    <div class="city-stat">
+      <div class="city-num">92</div>
+      <div class="city-label">综合健康度</div>
+      <div class="city-trend">华东第一</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div style="padding:10px;background:var(--bg-2);border-radius:8px;font-size:11px">
+      <div style="color:var(--text-2);font-size:10px">MDOM (经销商线)</div>
+      <div style="font-weight:700;margin-top:2px">周国强 · 5 DOM</div>
+      <div style="color:var(--text-3);font-size:10px;margin-top:2px">22 经销商·112 二批商</div>
+    </div>
+    <div style="padding:10px;background:var(--bg-2);border-radius:8px;font-size:11px">
+      <div style="color:var(--text-2);font-size:10px">MOM (直营线)</div>
+      <div style="font-weight:700;margin-top:2px">陈博文 · 5 OM</div>
+      <div style="color:var(--text-3);font-size:10px;margin-top:2px">30 战略 KA · ¥85M/月</div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 · 5 品牌矩阵 -->
+<section class="card">
+  <div class="card-title">⭐ 5 品牌矩阵<span class="card-tag">上海本月</span></div>
+  <div class="brand-list">
+    <div class="brand-row b1">
+      <div class="brand-icon">⭐</div>
+      <div class="brand-info">
+        <div class="brand-name">六月鲜 · 战略北极星</div>
+        <div class="brand-pos">高端首选 · 拉力主导 · 200M 瓶北极星</div>
+      </div>
+      <div>
+        <div class="brand-amount">¥45M</div>
+        <div class="brand-p1p2">P1 30 / P2 70</div>
+      </div>
+    </div>
+    <div class="brand-row b2">
+      <div class="brand-icon">🥇</div>
+      <div class="brand-info">
+        <div class="brand-name">味达美 · 大众首选</div>
+        <div class="brand-pos">现金牛 · 推力主导 · 守住份额</div>
+      </div>
+      <div>
+        <div class="brand-amount">¥38M</div>
+        <div class="brand-p1p2">P1 25 / P2 75</div>
+      </div>
+    </div>
+    <div class="brand-row b3">
+      <div class="brand-icon">🌿</div>
+      <div class="brand-info">
+        <div class="brand-name">禾然 · 有机首选</div>
+        <div class="brand-pos">战略赌注 · 高端突围 · AIQL-A</div>
+      </div>
+      <div>
+        <div class="brand-amount">¥8M</div>
+        <div class="brand-p1p2">P1 65 / P2 35</div>
+      </div>
+    </div>
+    <div class="brand-row b4">
+      <div class="brand-icon">🧅</div>
+      <div class="brand-info">
+        <div class="brand-name">葱伴侣 · 场景专属</div>
+        <div class="brand-pos">小品类防御 · 葱场景</div>
+      </div>
+      <div>
+        <div class="brand-amount">¥12M</div>
+        <div class="brand-p1p2">P1 18 / P2 82</div>
+      </div>
+    </div>
+    <div class="brand-row b5">
+      <div class="brand-icon">🛡</div>
+      <div class="brand-info">
+        <div class="brand-name">小康 · 防御性</div>
+        <div class="brand-pos">海天阻击位 · 低端拦截</div>
+      </div>
+      <div>
+        <div class="brand-amount">¥6M</div>
+        <div class="brand-p1p2">P1 10 / P2 90</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · P1/P2 双线占比 -->
+<section class="card">
+  <div class="card-title">🛤 P1 / P2 双线占比<span class="card-tag">上海本月</span></div>
+  <div class="path-stack">
+    <div class="path-row">
+      <div class="path-label">P1</div>
+      <div class="path-content">
+        <div class="path-name">直营路径 (OM 主管)</div>
+        <div class="path-desc">直营 KA + 战略客户 · ¥34M (26%)</div>
+        <div class="path-bar">
+          <div class="path-fill" style="width:26%"></div>
+          <span class="path-pct">26%</span>
+        </div>
+      </div>
+    </div>
+    <div class="path-row">
+      <div class="path-label" style="color:var(--rose)">P2</div>
+      <div class="path-content">
+        <div class="path-name">分销路径 (DOM 主管)</div>
+        <div class="path-desc">经销商 → 二批商 → 零售店 · ¥98M (74%)</div>
+        <div class="path-bar">
+          <div class="path-fill" style="width:74%;background:linear-gradient(90deg,var(--rose),rgba(212,120,154,0.6))"></div>
+          <span class="path-pct">74%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · DOM-OM 平级博弈仲裁 -->
+<section class="card">
+  <div class="card-title">⚖️ DOM-OM 仲裁<span class="card-tag">本周决策</span></div>
+  <div class="arbi-box">
+    <div style="text-align:center;font-size:11px;color:var(--text-2);margin-bottom:6px">本季度资源分配申请</div>
+    <div class="arbi-vs">
+      <div class="arbi-side">
+        <div class="arbi-side-title">DOM (经销商线)</div>
+        <div class="arbi-side-val">¥850K</div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:2px">二批商纳管投入</div>
+      </div>
+      <div class="arbi-vs-label">VS</div>
+      <div class="arbi-side b">
+        <div class="arbi-side-title">OM (直营线)</div>
+        <div class="arbi-side-val">¥1.2M</div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:2px">山姆续约预算</div>
+      </div>
+    </div>
+    <div class="arbi-decision">
+      <b>CTL 仲裁:</b> 山姆续约保 ¥1.2M (战略级)·DOM 二批商纳管分 2 期·本季 ¥425K (上海试点)·下季 ¥425K (扩 4 城市)
+    </div>
+  </div>
+</section>
+
+<!-- 5 · 5 互锁城市级聚合 -->
+<section class="card">
+  <div class="card-title">⚙️ 5 互锁城市聚合<span class="card-tag">上海</span></div>
+  <div class="lock-grid">
+    <div class="lock-cell">
+      <div class="lock-num">82%</div>
+      <div class="lock-label">制度</div>
+    </div>
+    <div class="lock-cell warn">
+      <div class="lock-num">68%</div>
+      <div class="lock-label">数据</div>
+    </div>
+    <div class="lock-cell warn">
+      <div class="lock-num">52%</div>
+      <div class="lock-label">信用</div>
+    </div>
+    <div class="lock-cell">
+      <div class="lock-num">76%</div>
+      <div class="lock-label">经济</div>
+    </div>
+    <div class="lock-cell bad">
+      <div class="lock-num">22%</div>
+      <div class="lock-label">学习</div>
+    </div>
+  </div>
+  <div style="margin-top:10px;font-size:10px;color:var(--text-2);padding:8px;background:var(--bg-2);border-radius:6px;line-height:1.6">
+    上海 22 经销商·112 二批商·一物一码激活 68%·数据互锁仍是瓶颈<br>
+    学习互锁待 TL 后端 inf_learning_log 启动·当前样本不足
+  </div>
+</section>
+
+<!-- 6 · PRISM 共创活动 -->
+<section class="card">
+  <div class="card-title">🎯 PRISM 共创活动<span class="card-tag">CTL 拍板</span></div>
+  <div class="prism-card">
+    <div class="prism-row">
+      <span class="prism-loc">古北高级住宅区·六月鲜+禾然组合</span>
+      <span class="prism-stat">✓ 进行中</span>
+    </div>
+    <div class="prism-row">
+      <span class="prism-loc">徐汇滨江·高端餐饮厨师 KOL</span>
+      <span class="prism-stat">✓ 完成</span>
+    </div>
+    <div class="prism-row">
+      <span class="prism-loc">浦东陆家嘴·白领健康饮食</span>
+      <span class="prism-stat todo">📅 6/1 启动</span>
+    </div>
+    <div class="prism-row">
+      <span class="prism-loc">普陀社区团购·小康防御活动</span>
+      <span class="prism-stat">✓ 完成</span>
+    </div>
+    <div class="prism-row">
+      <span class="prism-loc">长宁亲子家庭·味达美场景</span>
+      <span class="prism-stat todo">📋 待审批</span>
+    </div>
+  </div>
+  <div style="margin-top:10px;font-size:10px;color:var(--text-2);padding:8px;background:var(--bg-2);border-radius:6px;line-height:1.6">
+    上海本月 PRISM 共创 5 场·覆盖小区 1,200 户·联动门店 38 家<br>
+    CTL 拍板权限: 单场 ≤¥30K 自批·>¥30K 报 MCTL 徐海明
+  </div>
+</section>
+
+<!-- 7 · 弥补差距 Agent (CTL 视角) -->
+<div class="agent-card">
+  <div class="agent-head">
+    <span class="agent-icon">🤖</span>
+    <span class="agent-title">弥补差距 Agent · CTL 城市视角</span>
+  </div>
+  <div style="font-size:11px;color:var(--text-1);margin-bottom:8px">
+    上海综合 92 已是华东第一·但仍有 8 分提升空间·Agent 给 4 个建议:
+  </div>
+  <div class="agent-action">
+    <b>建议 1 · 提升数据互锁 68→85%</b><br>
+    一物一码激活率仍低·联动 DOM 黄建国推动 28 二批商 100% 纳管·+5 分
+  </div>
+  <div class="agent-action">
+    <b>建议 2 · 禾然 P1 占比 65→75%</b><br>
+    高端品牌应更直营·建议从盒马/Olé 切入·减少 P2 风险·+2 分
+  </div>
+  <div class="agent-action">
+    <b>建议 3 · PRISM 共创扩量</b><br>
+    本月 5 场→8 场·浦东陆家嘴白领项目放大·六月鲜拉力提升·+1 分
+  </div>
+  <div class="agent-action">
+    <b>建议 4 · OM/DOM 季度联合规划</b><br>
+    陈博文+周国强本周开会·上海 30 KA + 22 经销商 + 112 二批商三方协同
+  </div>
+  <div style="margin-top:8px;font-size:10px;color:var(--text-2)">
+    Agent 推理基础: 5 品牌矩阵 + P1/P2 双线 + 5 互锁聚合 + DOM/OM 仲裁记录
+  </div>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · INF-XL · CTL 视角 v1.1<br>
+  Layer 1.3 演示 · 双线汇合 · 5 品牌仲裁 · 城市级最高决策<br>
+  ★ 14 APP 矩阵第 ⑪ 个 · CTL → MCTL → GM 升级路径
+</div>
+
+<script>
+if(new URLSearchParams(location.search).get('embed')==='1')document.body.classList.add('embed-mode');
+</script>
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INF-XP · SFA 协作档案 · v1.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907;
+  --bg-1: #14110d;
+  --bg-2: #1c1815;
+  --bg-3: #251f1a;
+  --surface: #1a1612;
+  --border: rgba(255, 220, 180, 0.08);
+  --border-2: rgba(255, 220, 180, 0.15);
+  --text-0: #f4ede0;
+  --text-1: #c8bda8;
+  --text-2: #847868;
+  --text-3: #524a40;
+  --c-self: #c4a874;
+  --green: #88c850;
+  --amber: #f5a623;
+  --red: #e94560;
+  --blue: #5d9cec;
+  --gold: #d4af37;
+  --purple: #a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg-0);color:var(--text-0);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden}
+@media(min-width:600px){body{max-width:440px;margin:0 auto;box-shadow:0 0 60px rgba(0,0,0,0.6)}}
+
+.layer-badge{background:rgba(233,69,96,0.15);border-bottom:1px solid rgba(233,69,96,0.25);color:var(--red);font-size:10px;padding:6px 14px;text-align:center;font-family:'Space Mono',monospace}
+.embed-mode .layer-badge{display:none}
+
+.mod-header{padding:18px 16px 14px;background:linear-gradient(180deg,var(--bg-1) 0%,var(--bg-0) 100%);border-bottom:1px solid var(--border)}
+.mod-code{font-family:'Space Mono',monospace;font-size:11px;color:var(--c-self);font-weight:700;letter-spacing:0.1em}
+.mod-title{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--text-0);margin-top:4px}
+.mod-sub{font-size:12px;color:var(--text-2);margin-top:4px}
+
+/* 档案英雄卡 */
+.hero-card{margin:12px 14px;padding:18px;background:linear-gradient(135deg,var(--bg-2) 0%,var(--surface) 100%);border:1px solid var(--border-2);border-radius:14px;position:relative;overflow:hidden}
+.hero-card::before{content:'';position:absolute;top:-40px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(196,168,116,0.1) 0%,transparent 70%);pointer-events:none}
+.hero-row{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.hero-avatar{width:68px;height:68px;border-radius:18px;background:linear-gradient(135deg,var(--gold) 0%,#ff7c38 100%);display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0;box-shadow:0 8px 24px rgba(212,175,55,0.25)}
+.hero-info{flex:1;min-width:0}
+.hero-name{font-family:'Syne',sans-serif;font-weight:700;font-size:19px;color:var(--text-0)}
+.hero-role{font-size:12px;color:var(--gold);margin-top:2px}
+.hero-meta{font-size:11px;color:var(--text-2);margin-top:4px}
+.hero-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.hero-stat{text-align:center;padding:8px 6px;background:var(--bg-2);border-radius:8px}
+.hero-stat-val{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--gold)}
+.hero-stat-lbl{font-size:9px;color:var(--text-2);margin-top:2px}
+
+/* 通用卡片 */
+.card{margin:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text-0);display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.card-tag{font-family:'Space Mono',monospace;font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(196,168,116,0.1);color:var(--c-self);font-weight:700;margin-left:auto}
+
+/* 战绩列表 */
+.achievement-list{display:flex;flex-direction:column;gap:8px}
+.achievement-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-2);border-radius:8px;border-left:3px solid var(--gold);font-size:11px}
+.achievement-icon{font-size:18px;flex-shrink:0}
+.achievement-text{flex:1}
+.achievement-name{font-weight:600;color:var(--text-0)}
+.achievement-desc{font-size:10px;color:var(--text-2);margin-top:2px}
+.achievement-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--gold);font-weight:700;background:rgba(212,175,55,0.1);padding:3px 7px;border-radius:4px;flex-shrink:0}
+
+/* 等级路径 */
+.path-list{display:flex;flex-direction:column;gap:6px}
+.path-tier{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-2);border-radius:8px;border-left:3px solid var(--text-3);font-size:11px}
+.path-tier.done{border-left-color:var(--green);opacity:0.7}
+.path-tier.current{background:linear-gradient(90deg,rgba(212,175,55,0.15),rgba(212,175,55,0.05));border-left-color:var(--gold)}
+.path-tier.next{background:linear-gradient(90deg,rgba(78,205,196,0.08),transparent);border-left-color:var(--blue)}
+.path-grade{font-family:'Syne',sans-serif;font-weight:800;font-size:14px;width:32px;text-align:center;color:var(--text-2);flex-shrink:0}
+.path-tier.done .path-grade{color:var(--green)}
+.path-tier.current .path-grade{color:var(--gold)}
+.path-tier.next .path-grade{color:var(--blue)}
+.path-info{flex:1}
+.path-name{font-weight:600;color:var(--text-0)}
+.path-cond{font-size:10px;color:var(--text-2);margin-top:1px}
+.path-status{font-size:10px;color:var(--text-3);font-family:'Space Mono',monospace;flex-shrink:0}
+
+/* 认证/培训 */
+.cert-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.cert-card{padding:10px;background:var(--bg-2);border-radius:8px;text-align:center;border:1px solid var(--border)}
+.cert-card.done{background:linear-gradient(135deg,rgba(136,200,80,0.1) 0%,var(--bg-2) 100%);border-color:rgba(136,200,80,0.3)}
+.cert-card.pending{background:linear-gradient(135deg,rgba(245,166,35,0.06) 0%,var(--bg-2) 100%);border-color:rgba(245,166,35,0.2)}
+.cert-icon{font-size:22px}
+.cert-name{font-size:11px;color:var(--text-0);font-weight:600;margin-top:4px}
+.cert-date{font-size:9px;color:var(--text-3);margin-top:2px;font-family:'Space Mono',monospace}
+.cert-card.done .cert-date{color:var(--green)}
+.cert-card.pending .cert-date{color:var(--amber)}
+
+/* 收益 */
+.income-stack{display:flex;flex-direction:column;gap:8px}
+.income-row{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--bg-2);border-radius:6px;font-size:11px}
+.income-name{color:var(--text-1)}
+.income-val{font-family:'Space Mono',monospace;font-weight:700;color:var(--green)}
+.income-total{padding:10px 12px;background:linear-gradient(135deg,rgba(212,175,55,0.15) 0%,rgba(255,124,56,0.05) 100%);border:1px solid rgba(212,175,55,0.3);border-radius:8px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.income-total-name{color:var(--gold);font-weight:700}
+.income-total-val{font-family:'Space Mono',monospace;font-weight:800;color:var(--gold);font-size:16px}
+
+/* 设置 */
+.setting-list{display:flex;flex-direction:column;gap:4px}
+.setting-row{display:flex;align-items:center;gap:10px;padding:11px 12px;background:var(--bg-2);border-radius:6px;font-size:12px;cursor:pointer}
+.setting-icon{font-size:16px}
+.setting-name{flex:1;color:var(--text-1)}
+.setting-arrow{color:var(--text-3)}
+.setting-row.logout{color:var(--red)}
+.setting-row.logout .setting-name{color:var(--red)}
+
+.bottom-fix{padding:14px 16px 32px;text-align:center;font-size:10px;color:var(--text-3)}
+.embed-mode .bottom-fix{display:none}
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 演示版 · SFA 视角 v1.1 · 模拟数据</div>
+
+<div class="mod-header">
+  <div class="mod-code">INF-XP · 心品 · SFA v1.1</div>
+  <div class="mod-title">SFA 我的</div>
+  <div class="mod-sub">王志强 + 张明 · 双登录 · 宁波新市场</div>
+</div>
+
+<!-- 1 · 档案英雄卡 -->
+<section class="hero-card">
+  <div class="hero-row">
+    <div class="hero-avatar">🤝</div>
+    <div class="hero-info">
+      <div class="hero-name">王志强 + 张明</div>
+      <div class="hero-role">SFA 协作组 · 新市场导入期</div>
+      <div class="hero-meta">宁波新市场开拓 · SR 主导 + DSR 跟进 · 60 天进度 5/8 店</div>
+    </div>
+  </div>
+  <div class="hero-grid">
+    <div class="hero-stat"><div class="hero-stat-val">5/8</div><div class="hero-stat-lbl">已开拓</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">¥8.5K</div><div class="hero-stat-lbl">协作业绩</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">60 天</div><div class="hero-stat-lbl">SURGE 期</div></div>
+  </div>
+</section>
+
+<!-- 2 · 战绩 -->
+<section class="card">
+  <div class="card-title">🏆 我的战绩<span class="card-tag">本月</span></div>
+  <div class="achievement-list">
+    <div class="achievement-row">
+      <div class="achievement-icon">👔</div>
+      <div class="achievement-text">
+        <div class="achievement-name">宁波第一百货签约</div>
+        <div class="achievement-desc">SR 主谈 · ¥320K 月签约</div>
+      </div>
+      <div class="achievement-tag">战略级</div>
+    </div>
+    <div class="achievement-row">
+      <div class="achievement-icon">🏪</div>
+      <div class="achievement-text">
+        <div class="achievement-name">711 区域 12 店签约</div>
+        <div class="achievement-desc">DSR 主导 · 区域便利店框架</div>
+      </div>
+      <div class="achievement-tag">区域</div>
+    </div>
+    <div class="achievement-row">
+      <div class="achievement-icon">🤝</div>
+      <div class="achievement-text">
+        <div class="achievement-name">本地经销商招募</div>
+        <div class="achievement-desc">3 候选 · 7 维度联合评分中</div>
+      </div>
+      <div class="achievement-tag">7 维度</div>
+    </div>
+    <div class="achievement-row">
+      <div class="achievement-icon">🍜</div>
+      <div class="achievement-text">
+        <div class="achievement-name">宁波米其林厨师 KOL</div>
+        <div class="achievement-desc">SR 切入 · 高端餐饮联动</div>
+      </div>
+      <div class="achievement-tag">战略</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · 等级路径 -->
+<section class="card">
+  <div class="card-title">📈 等级路径<span class="card-tag">SFA 阶段</span></div>
+  <div class="path-list">
+    <div class="path-tier done">
+      <div class="path-grade">P0</div>
+      <div class="path-info">
+        <div class="path-name">宁波市场调研</div>
+        <div class="path-cond">需求分析 + 经销商盘点 (3 月)</div>
+      </div>
+    </div>
+    <div class="path-tier current">
+      <div class="path-grade">P1</div>
+      <div class="path-info">
+        <div class="path-name">★ 开拓阶段 (当前)</div>
+        <div class="path-cond">SR+DSR 协作 · 8 店开拓 · 60 天</div>
+      </div>
+    </div>
+    <div class="path-tier next">
+      <div class="path-grade">P2</div>
+      <div class="path-info">
+        <div class="path-name">本地经销商招募</div>
+        <div class="path-cond">7 维度评分 + 签约 (月底定)</div>
+      </div>
+    </div>
+    <div class="path-tier ">
+      <div class="path-grade">P3</div>
+      <div class="path-info">
+        <div class="path-name">成熟移交</div>
+        <div class="path-cond">6 个月成熟 · SFA 解散</div>
+      </div>
+    </div>
+    <div class="path-tier ">
+      <div class="path-grade">P4</div>
+      <div class="path-info">
+        <div class="path-name">SFA 退出</div>
+        <div class="path-cond">SR 回直营 · DSR 留经销商体系</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · 认证/培训 -->
+<section class="card">
+  <div class="card-title">🎓 认证 & 培训<span class="card-tag">协作认证</span></div>
+  <div class="cert-grid">
+    <div class="cert-card done">
+      <div class="cert-icon">🚀</div>
+      <div class="cert-name">新市场开拓</div>
+      <div class="cert-date">2026-03</div>
+    </div>
+    <div class="cert-card done">
+      <div class="cert-icon">🤝</div>
+      <div class="cert-name">SR+DSR 协作</div>
+      <div class="cert-date">2026-04</div>
+    </div>
+    <div class="cert-card pending">
+      <div class="cert-icon">📊</div>
+      <div class="cert-name">本地经销商招募</div>
+      <div class="cert-date">5 月待考</div>
+    </div>
+    <div class="cert-card pending">
+      <div class="cert-icon">🏁</div>
+      <div class="cert-name">SFA 完美退出</div>
+      <div class="cert-date">11 月待考</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · 本月收益 -->
+<section class="card">
+  <div class="card-title">💰 本月收益<span class="card-tag">已结算</span></div>
+  <div class="income-stack">
+    <div class="income-row">
+      <span class="income-name">SR 主导签单 (¥320K × 1.5%)</span>
+      <span class="income-val">¥4,800</span>
+    </div>
+    <div class="income-row">
+      <span class="income-name">DSR 跟进 (¥200K × 1.0%)</span>
+      <span class="income-val">¥2,000</span>
+    </div>
+    <div class="income-row">
+      <span class="income-name">联签双账 (¥98K × 50/50)</span>
+      <span class="income-val">¥1,470</span>
+    </div>
+    <div class="income-row">
+      <span class="income-name">SURGE 2.5× 新市场</span>
+      <span class="income-val">¥230</span>
+    </div>
+  </div>
+  <div class="income-total">
+    <span class="income-total-name">本月总收益</span>
+    <span class="income-total-val">¥8,500</span>
+  </div>
+</section>
+
+<!-- 6 · 设置中心 -->
+<section class="card">
+  <div class="card-title">⚙️ 设置中心</div>
+  <div class="setting-list">
+    <div class="setting-row">
+      <span class="setting-icon">🔔</span>
+      <span class="setting-name">消息通知</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-row">
+      <span class="setting-icon">🔐</span>
+      <span class="setting-name">账户安全</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-row">
+      <span class="setting-icon">📞</span>
+      <span class="setting-name">客服 / 反馈</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-row">
+      <span class="setting-icon">📖</span>
+      <span class="setting-name">INFINITY OS 帮助</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-row logout">
+      <span class="setting-icon">🚪</span>
+      <span class="setting-name">退出登录</span>
+      <span class="setting-arrow">›</span>
+    </div>
+  </div>
+</section>
+
+<div class="bottom-fix">
+  INFINITY OS · INF-XP · SFA 视角 v1.1<br>
+  Layer 1.3 演示 · ★ 14 APP 矩阵第 ⑤ 个 · 14 APP 矩阵 · SR+DSR 协作 · 双登录
+</div>
+
+<script>
+if(new URLSearchParams(location.search).get('embed')==='1')document.body.classList.add('embed-mode');
+</script>
+</body>
+</html>
