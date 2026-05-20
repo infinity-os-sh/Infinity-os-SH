@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 大区 GM 驾驶舱 · v1.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907;
+  --bg-1: #14110d;
+  --bg-2: #1c1815;
+  --bg-3: #251f1a;
+  --surface: #1a1612;
+  --surface-2: #221d18;
+  --border: rgba(255, 220, 180, 0.08);
+  --border-2: rgba(255, 220, 180, 0.15);
+  --text-0: #f4ede0;
+  --text-1: #c8bda8;
+  --text-2: #847868;
+  --text-3: #524a40;
+  --gold: #d4af37;
+  --gold-bright: #f5a623;
+  --green: #88c850;
+  --amber: #f5a623;
+  --red: #e94560;
+  --blue: #5d9cec;
+  --purple: #a78bfa;
+  --teal: #4ecdc4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg-0); color: var(--text-0); font-family: 'Noto Sans SC', sans-serif; min-height: 100vh; overflow-x: hidden; }
+@media (min-width: 600px) { body { max-width: 480px; margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.6); } }
+
+.layer-badge { background: rgba(233, 69, 96, 0.15); border-bottom: 1px solid rgba(233, 69, 96, 0.25); color: var(--red); font-size: 10px; padding: 6px 14px; text-align: center; font-family: 'Space Mono', monospace; }
+
+.hero { padding: 18px 14px 14px; background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%); border-bottom: 1px solid var(--border); }
+.hero-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px; }
+.hero-row { display: flex; align-items: center; gap: 14px; }
+.hero-avatar { width: 60px; height: 60px; border-radius: 16px; background: linear-gradient(135deg, var(--gold) 0%, #ff7c38 100%); display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; box-shadow: 0 6px 18px rgba(212, 175, 55, 0.25); }
+.hero-info { flex: 1; min-width: 0; }
+.hero-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; }
+.hero-title { font-size: 12px; color: var(--gold); margin-top: 2px; }
+.hero-scope { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+.hero-score { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 32px; color: var(--green); flex-shrink: 0; }
+
+.cockpit-section { margin: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+.cockpit-section.priority { border-color: rgba(212, 175, 55, 0.25); background: linear-gradient(135deg, rgba(212, 175, 55, 0.04) 0%, var(--surface) 100%); }
+.section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.section-num { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 13px; }
+.section-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; flex: 1; }
+.section-tag { font-family: 'Space Mono', monospace; font-size: 9px; padding: 2px 7px; background: rgba(212, 175, 55, 0.1); color: var(--gold); border-radius: 4px; font-weight: 700; }
+
+/* 北极星 */
+.polaris-box { background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(255, 124, 56, 0.04)); border-radius: 10px; padding: 14px; text-align: center; }
+.polaris-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 40px; color: var(--gold); line-height: 1; }
+.polaris-target { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+.polaris-bar { height: 6px; background: var(--bg-3); border-radius: 3px; margin: 10px 0 4px; overflow: hidden; }
+.polaris-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-bright)); border-radius: 3px; }
+.polaris-eta { font-size: 10px; color: var(--text-3); font-family: 'Space Mono', monospace; }
+
+/* 范围地图 · 4 城市热力图 */
+.city-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+.city-card { background: var(--bg-2); border-radius: 10px; padding: 10px; border-left: 3px solid var(--text-3); cursor: pointer; transition: all 0.15s; }
+.city-card.good { border-left-color: var(--green); background: linear-gradient(135deg, rgba(136, 200, 80, 0.06), var(--bg-2)); }
+.city-card.warn { border-left-color: var(--amber); background: linear-gradient(135deg, rgba(245, 166, 35, 0.06), var(--bg-2)); }
+.city-card.bad { border-left-color: var(--red); background: linear-gradient(135deg, rgba(233, 69, 96, 0.06), var(--bg-2)); }
+.city-card:hover, .city-card:active { background: var(--bg-3); transform: translateY(-1px); }
+.city-name { font-size: 12px; font-weight: 700; color: var(--text-0); display: flex; align-items: center; gap: 4px; }
+.city-name .star { color: var(--gold); font-size: 11px; }
+.city-stat { display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; }
+.city-score { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; }
+.city-score.good { color: var(--green); }
+.city-score.warn { color: var(--amber); }
+.city-score.bad { color: var(--red); }
+.city-monthly { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-2); }
+.city-trend { font-size: 9px; margin-top: 4px; font-family: 'Space Mono', monospace; }
+
+/* Health */
+.health-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 10px; }
+.health-cell { background: var(--bg-2); border-radius: 6px; padding: 8px 4px; text-align: center; border: 1px solid var(--border); }
+.health-cell.good { border-color: rgba(136, 200, 80, 0.3); background: rgba(136, 200, 80, 0.06); }
+.health-cell.warn { border-color: rgba(245, 166, 35, 0.3); background: rgba(245, 166, 35, 0.06); }
+.health-cell.bad { border-color: rgba(233, 69, 96, 0.3); background: rgba(233, 69, 96, 0.06); }
+.health-pct { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; line-height: 1; }
+.health-pct.good { color: var(--green); }
+.health-pct.warn { color: var(--amber); }
+.health-pct.bad { color: var(--red); }
+.health-lbl { font-size: 9px; color: var(--text-2); margin-top: 3px; line-height: 1.2; }
+
+/* 品牌 */
+.brand-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: var(--bg-2); border-radius: 6px; margin-bottom: 4px; font-size: 11px; }
+.brand-name { color: var(--text-0); font-weight: 600; }
+.brand-pct { font-family: 'Space Mono', monospace; font-weight: 700; }
+.brand-pct.good { color: var(--green); }
+.brand-pct.warn { color: var(--amber); }
+
+/* 异常 */
+.alert-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; background: rgba(233, 69, 96, 0.05); border-radius: 6px; margin-bottom: 4px; font-size: 11px; border-left: 3px solid var(--red); }
+.alert-row.warn { background: rgba(245, 166, 35, 0.05); border-left-color: var(--amber); }
+.alert-dot { font-size: 12px; flex-shrink: 0; }
+.alert-text { flex: 1; color: var(--text-1); line-height: 1.5; }
+
+/* Root */
+.root-cause-box { background: var(--bg-2); border-radius: 10px; padding: 12px; }
+.rc-question { font-size: 12px; font-weight: 700; color: var(--amber); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.rc-chain { display: flex; flex-direction: column; gap: 6px; font-size: 11px; line-height: 1.5; }
+.rc-step { display: flex; gap: 8px; color: var(--text-1); align-items: flex-start; }
+.rc-step-num { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 11px; color: var(--amber); flex-shrink: 0; width: 16px; }
+.rc-conclusion { margin-top: 10px; padding: 10px; background: rgba(233, 69, 96, 0.06); border-radius: 6px; border-left: 3px solid var(--red); font-size: 11px; color: var(--text-1); line-height: 1.6; }
+.rc-conclusion b { color: var(--red); }
+
+/* Opp */
+.opp-row { background: linear-gradient(135deg, rgba(136, 200, 80, 0.06) 0%, var(--bg-2) 100%); border-radius: 10px; padding: 12px; border-left: 3px solid var(--green); margin-bottom: 8px; }
+.opp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.opp-title { font-size: 13px; font-weight: 700; color: var(--text-0); }
+.opp-roi { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; color: var(--green); }
+.opp-desc { font-size: 11px; color: var(--text-1); line-height: 1.6; }
+.opp-impact { margin-top: 6px; font-size: 10px; color: var(--text-2); font-family: 'Space Mono', monospace; }
+
+/* Authority */
+.authority-block { margin-bottom: 12px; }
+.authority-label { font-size: 11px; font-weight: 700; margin-bottom: 6px; }
+.authority-label.can { color: var(--green); }
+.authority-label.cant { color: var(--red); }
+.authority-list { font-size: 11px; color: var(--text-1); line-height: 1.7; padding-left: 14px; }
+.authority-list li { list-style: none; position: relative; }
+.authority-list.can li::before { content: '✋'; position: absolute; left: -14px; }
+.authority-list.cant li::before { content: '🚫'; position: absolute; left: -14px; }
+.resource-pool { background: var(--bg-2); border-radius: 8px; padding: 10px; margin-top: 8px; }
+.resource-pool-title { font-size: 11px; color: var(--gold); font-weight: 700; margin-bottom: 6px; }
+.resource-line { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; color: var(--text-1); }
+.resource-line b { color: var(--gold); font-family: 'Space Mono', monospace; }
+
+/* Action */
+.action-card { background: var(--bg-2); border-radius: 10px; padding: 12px; margin-bottom: 8px; border-left: 3px solid var(--gold); }
+.action-card.warn { border-left-color: var(--amber); }
+.action-card.bad { border-left-color: var(--red); }
+.action-head { font-size: 13px; font-weight: 700; color: var(--text-0); margin-bottom: 6px; }
+.action-desc { font-size: 11px; color: var(--text-1); line-height: 1.6; margin-bottom: 8px; }
+.action-impact { background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 8px 10px; font-size: 10px; color: var(--text-2); line-height: 1.6; margin-bottom: 10px; font-family: 'Space Mono', monospace; }
+.action-impact .plus { color: var(--green); }
+.action-impact .minus { color: var(--red); }
+.action-impact .neutral { color: var(--amber); }
+.action-btn { width: 100%; padding: 10px 14px; background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); border: none; border-radius: 8px; font-family: 'Noto Sans SC', sans-serif; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.action-btn:hover, .action-btn:active { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(212, 175, 55, 0.3); }
+.action-btn.report { background: linear-gradient(135deg, var(--blue), var(--teal)); color: white; }
+.action-btn.danger { background: linear-gradient(135deg, var(--red), #c41538); color: white; }
+.action-btn.strategic { background: linear-gradient(135deg, var(--purple), #7c3aed); color: white; }
+
+/* 合伙人收益 */
+.income-big { text-align: center; padding: 16px 0 10px; background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(255, 124, 56, 0.04)); border-radius: 10px; margin-bottom: 12px; }
+.income-big-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 36px; color: var(--gold); line-height: 1; }
+.income-big-lbl { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+.income-breakdown { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.income-breakdown-row { display: flex; justify-content: space-between; padding: 6px 10px; background: var(--bg-2); border-radius: 5px; font-size: 11px; }
+.income-bd-name { color: var(--text-1); }
+.income-bd-val { color: var(--green); font-family: 'Space Mono', monospace; font-weight: 700; }
+.compare-table { background: var(--bg-2); border-radius: 8px; padding: 10px; margin-bottom: 12px; }
+.compare-title { font-size: 11px; color: var(--gold); font-weight: 700; margin-bottom: 8px; }
+.compare-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 5px 0; font-size: 11px; align-items: center; }
+.compare-row.me { background: rgba(212, 175, 55, 0.05); padding: 5px 8px; border-radius: 5px; font-weight: 700; }
+.compare-name { color: var(--text-1); }
+.compare-val { color: var(--text-0); font-family: 'Space Mono', monospace; font-weight: 700; }
+.compare-diff { font-size: 10px; color: var(--text-2); font-family: 'Space Mono', monospace; }
+.partner-traits { background: rgba(78, 205, 196, 0.04); border-radius: 8px; padding: 10px; border: 1px solid rgba(78, 205, 196, 0.15); }
+.partner-traits-title { font-size: 11px; color: var(--teal); font-weight: 700; margin-bottom: 6px; }
+.partner-traits-list { font-size: 11px; color: var(--text-1); line-height: 1.7; }
+
+/* 跳工具 */
+.tools-section { margin: 16px 14px; background: var(--surface); border: 1px solid var(--border-2); border-radius: 14px; padding: 14px; }
+.tools-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.tool-link { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 10px; transition: all 0.15s; cursor: pointer; }
+.tool-link:hover, .tool-link:active { border-color: var(--gold); background: var(--bg-3); transform: translateY(-1px); }
+.tool-icon { font-size: 22px; flex-shrink: 0; }
+.tool-info { flex: 1; min-width: 0; }
+.tool-name { font-size: 12px; font-weight: 700; color: var(--text-0); }
+.tool-desc { font-size: 9px; color: var(--text-2); margin-top: 2px; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border-2); border-radius: 16px; padding: 18px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; }
+.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--gold); margin-bottom: 12px; }
+.modal-section { margin-bottom: 12px; }
+.modal-section-label { font-size: 10px; color: var(--text-3); font-family: 'Space Mono', monospace; letter-spacing: 0.1em; margin-bottom: 4px; text-transform: uppercase; }
+.modal-section-content { font-size: 12px; color: var(--text-1); line-height: 1.6; background: var(--bg-2); padding: 10px; border-radius: 6px; }
+.modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+.modal-btn { flex: 1; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: 700; font-size: 12px; cursor: pointer; border: none; }
+.modal-btn.confirm { background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); }
+.modal-btn.cancel { background: var(--bg-3); color: var(--text-1); }
+
+/* Toast */
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: linear-gradient(135deg, var(--green), #5fa635); color: white; padding: 14px 20px; border-radius: 12px; font-size: 13px; font-weight: 600; z-index: 1001; opacity: 0; transition: all 0.3s; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); max-width: 90%; text-align: center; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* 决策日志 */
+.decision-log-section { margin: 12px 14px; background: linear-gradient(135deg, rgba(167, 139, 250, 0.06), var(--surface)); border: 1px solid rgba(167, 139, 250, 0.2); border-radius: 14px; padding: 14px; }
+.dlog-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--purple); margin-bottom: 4px; }
+.dlog-sub { font-size: 10px; color: var(--text-3); margin-bottom: 12px; font-family: 'Space Mono', monospace; }
+.dlog-empty { text-align: center; font-size: 11px; color: var(--text-3); padding: 16px; font-style: italic; }
+.dlog-entry { background: var(--bg-2); border-radius: 8px; padding: 10px; margin-bottom: 6px; font-size: 11px; border-left: 3px solid var(--purple); }
+.dlog-entry-id { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--purple); margin-bottom: 4px; }
+.dlog-entry-content { color: var(--text-1); line-height: 1.5; }
+
+.bottom-fix { padding: 18px 14px 32px; text-align: center; font-size: 10px; color: var(--text-3); }
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 演示 · L7 大区 GM 驾驶舱 · 北极星追踪</div>
+
+<!-- ═════════ Hero ═════════ -->
+<div class="hero">
+  <div class="hero-top" style="flex-wrap:wrap;gap:8px">
+    <a href="index.html" style="color:var(--bg-0);text-decoration:none;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(212,175,55,0.3)">
+      <span style="font-size:16px">←</span><span>回主页</span>
+    </a>
+    <span style="color:var(--text-3);font-family:'Space Mono',monospace;font-size:11px">L7 GM 驾驶舱 v1.1</span>
+    <span id="now-time" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-2)">--:--</span>
+  </div>
+  <div style="display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;font-family:'Space Mono',monospace;font-size:10px">
+    <span style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-3);flex-shrink:0;border:1px solid var(--border);cursor:pointer" onclick="alert('L8 总部驾驶舱 · 待做')">L8 总部</span>
+    <span style="padding:4px 8px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));color:var(--bg-0);border-radius:4px;flex-shrink:0;font-weight:700">★ L7 GM (当前)</span>
+    <span style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-3);flex-shrink:0;border:1px solid var(--border);cursor:pointer" onclick="alert('L6 MCTL 驾驶舱 · 待做')">L6 MCTL</span>
+    <a href="INFINITY_OS_驾驶舱_CTL_上海_v1.1.html" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--gold);text-decoration:none" title="点击打开 CTL 驾驶舱">L5 CTL ↗</a>
+    <span style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-3);flex-shrink:0;border:1px solid var(--border);cursor:pointer" onclick="alert('L3 DOM 驾驶舱 · 待做')">L3 DOM</span>
+    <span style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-3);flex-shrink:0;border:1px solid var(--border);cursor:pointer" onclick="alert('L1 DSR-2 驾驶舱 · 待做')">L1 DSR-2</span>
+  </div>
+  <div class="hero-row">
+    <div class="hero-avatar">👑</div>
+    <div class="hero-info">
+      <div class="hero-name">刘大海</div>
+      <div class="hero-title">GM · 华东大区经理 · 5 星</div>
+      <div class="hero-scope">华东 12 城 · 5 品牌 · ¥2.0B/年 · 全国 42%</div>
+    </div>
+    <div class="hero-score">91</div>
+  </div>
+</div>
+
+<!-- ═════════ 北极星 · 大区视野专属 ═════════ -->
+<section class="cockpit-section priority">
+  <div class="section-header">
+    <div class="section-num">⭐</div>
+    <div class="section-title">北极星追踪</div>
+    <div class="section-tag">Polaris</div>
+  </div>
+  <div class="polaris-box">
+    <div class="polaris-num">156M</div>
+    <div class="polaris-target">/ 200M 瓶 · 全国 78% 达成 · 距目标 44M</div>
+    <div class="polaris-bar"><div class="polaris-bar-fill" style="width:78%"></div></div>
+    <div class="polaris-eta">2027 年中目标达成</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px">
+    <div style="background:var(--bg-2);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--gold)">¥2.0B</div>
+      <div style="font-size:9px;color:var(--text-2);margin-top:3px">大区年销 / 目标 ¥4B</div>
+    </div>
+    <div style="background:var(--bg-2);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--gold)">42%</div>
+      <div style="font-size:9px;color:var(--text-2);margin-top:3px">全国占比 / 目标 50%</div>
+    </div>
+    <div style="background:var(--bg-2);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--gold)">12</div>
+      <div style="font-size:9px;color:var(--text-2);margin-top:3px">华东城市 / 全国 337</div>
+    </div>
+    <div style="background:var(--bg-2);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--green)">8M</div>
+      <div style="font-size:9px;color:var(--text-2);margin-top:3px">华东家庭 / 目标 40M</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 1 · 大区管辖范围 ═════════ -->
+<section class="cockpit-section priority">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <div class="section-title">我的管辖范围</div>
+    <div class="section-tag">Scope</div>
+  </div>
+
+  <!-- 大区结构 -->
+  <div style="background:var(--bg-2);border-radius:10px;padding:12px;margin-bottom:14px">
+    <div style="text-align:center;padding:10px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));color:var(--bg-0);border-radius:8px;font-weight:700;margin-bottom:10px">👑 GM · 刘大海 (华东大区)</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">
+      <div style="background:var(--bg-3);border-radius:6px;padding:8px;text-align:center;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--gold);font-weight:700">MCTL 徐海明</div>
+        <div style="font-size:9px;color:var(--text-2);margin-top:3px">华东 4 城 ⚠</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--amber);margin-top:2px">88%</div>
+      </div>
+      <div style="background:var(--bg-3);border-radius:6px;padding:8px;text-align:center;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--gold);font-weight:700">MCTL 李华北</div>
+        <div style="font-size:9px;color:var(--text-2);margin-top:3px">华北 4 城 ✓</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--green);margin-top:2px">95%</div>
+      </div>
+      <div style="background:var(--bg-3);border-radius:6px;padding:8px;text-align:center;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--gold);font-weight:700">MCTL 王华南</div>
+        <div style="font-size:9px;color:var(--text-2);margin-top:3px">华南 4 城 ✓</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--green);margin-top:2px">90%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12 城市热力图 · 4 城/MCTL × 3 MCTL -->
+  <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+    <span>🗺 12 城市战略热力图 · 点击下钻</span>
+    <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text-3)">异常红 / 关注黄 / 健康绿</span>
+  </div>
+
+  <div style="font-size:10px;color:var(--text-2);margin-bottom:6px;font-weight:600">🌆 华东片区 (MCTL 徐海明 ⚠)</div>
+  <div class="city-grid" style="margin-bottom:10px">
+    <div class="city-card good" onclick="openCTL()">
+      <div class="city-name">★ 上海 <span class="star">5 星标杆</span></div>
+      <div class="city-stat">
+        <div class="city-score good">92</div>
+        <div class="city-monthly">¥132M / 月</div>
+      </div>
+      <div class="city-trend" style="color:var(--green)">↗ +5 · 华东第一</div>
+    </div>
+    <div class="city-card good" onclick="drillDown('杭州 · 张丽萍', '综合 85 · ¥72M/月 · 新零售盒马腹地')">
+      <div class="city-name">杭州 <span class="star">新零售</span></div>
+      <div class="city-stat">
+        <div class="city-score good">85</div>
+        <div class="city-monthly">¥72M / 月</div>
+      </div>
+      <div class="city-trend" style="color:var(--green)">↗ +3 · O2O 试点</div>
+    </div>
+    <div class="city-card warn" onclick="drillDown('苏州 · 李建华', '综合 78 · ¥58M/月 · 长三角制造业')">
+      <div class="city-name">苏州</div>
+      <div class="city-stat">
+        <div class="city-score warn">78</div>
+        <div class="city-monthly">¥58M / 月</div>
+      </div>
+      <div class="city-trend" style="color:var(--text-2)">→ 持平 · 制造业基地</div>
+    </div>
+    <div class="city-card bad" onclick="drillDown('合肥 · 王勇 ⚠', '综合 65 · ¥38M/月 · 培育期新 CTL · 主拖累')">
+      <div class="city-name">合肥 ⚠</div>
+      <div class="city-stat">
+        <div class="city-score bad">65</div>
+        <div class="city-monthly">¥38M / 月</div>
+      </div>
+      <div class="city-trend" style="color:var(--red)">↘ -8 · 主拖累</div>
+    </div>
+  </div>
+
+  <div style="font-size:10px;color:var(--text-2);margin-bottom:6px;font-weight:600">🏙 华北片区 (MCTL 李华北)</div>
+  <div class="city-grid" style="margin-bottom:10px">
+    <div class="city-card good" onclick="drillDown('北京 · 战略 KA', '综合 96 · ¥118M/月 · 大型 KA 集中')">
+      <div class="city-name">北京</div>
+      <div class="city-stat"><div class="city-score good">96</div><div class="city-monthly">¥118M</div></div>
+      <div class="city-trend" style="color:var(--green)">↗ +4</div>
+    </div>
+    <div class="city-card good" onclick="drillDown('天津 · 港口', '综合 92 · ¥85M/月')">
+      <div class="city-name">天津</div>
+      <div class="city-stat"><div class="city-score good">92</div><div class="city-monthly">¥85M</div></div>
+      <div class="city-trend" style="color:var(--green)">↗ +2</div>
+    </div>
+    <div class="city-card good" onclick="drillDown('青岛 · 港口', '综合 91 · ¥65M/月')">
+      <div class="city-name">青岛</div>
+      <div class="city-stat"><div class="city-score good">91</div><div class="city-monthly">¥65M</div></div>
+      <div class="city-trend" style="color:var(--green)">↗ +3</div>
+    </div>
+    <div class="city-card good" onclick="drillDown('济南 · 工业', '综合 89 · ¥52M/月')">
+      <div class="city-name">济南</div>
+      <div class="city-stat"><div class="city-score good">89</div><div class="city-monthly">¥52M</div></div>
+      <div class="city-trend" style="color:var(--text-2)">→ 持平</div>
+    </div>
+  </div>
+
+  <div style="font-size:10px;color:var(--text-2);margin-bottom:6px;font-weight:600">🌴 华南片区 (MCTL 王华南)</div>
+  <div class="city-grid" style="margin-bottom:10px">
+    <div class="city-card good" onclick="drillDown('广州 · 战略 KA', '综合 88 · ¥62M/月')">
+      <div class="city-name">广州</div>
+      <div class="city-stat"><div class="city-score good">88</div><div class="city-monthly">¥62M</div></div>
+      <div class="city-trend" style="color:var(--green)">↗ +2</div>
+    </div>
+    <div class="city-card good" onclick="drillDown('深圳 · O2O 重镇', '综合 92 · ¥58M/月 · 即时零售')">
+      <div class="city-name">深圳 <span class="star">即时零售</span></div>
+      <div class="city-stat"><div class="city-score good">92</div><div class="city-monthly">¥58M</div></div>
+      <div class="city-trend" style="color:var(--green)">↗ +4</div>
+    </div>
+    <div class="city-card good" onclick="drillDown('厦门 · 高端市场', '综合 90 · ¥38M/月')">
+      <div class="city-name">厦门</div>
+      <div class="city-stat"><div class="city-score good">90</div><div class="city-monthly">¥38M</div></div>
+      <div class="city-trend" style="color:var(--text-2)">→ 持平</div>
+    </div>
+    <div class="city-card warn" onclick="drillDown('福州 · 新拓', '综合 80 · ¥28M/月 · 培育期')">
+      <div class="city-name">福州</div>
+      <div class="city-stat"><div class="city-score warn">80</div><div class="city-monthly">¥28M</div></div>
+      <div class="city-trend" style="color:var(--text-2)">↗ +1</div>
+    </div>
+  </div>
+
+  <!-- 大区核心数据 -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px">
+    <div style="background:var(--bg-3);border-radius:6px;padding:8px 4px;text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--gold)">3</div>
+      <div style="font-size:9px;color:var(--text-2);margin-top:2px">MCTL</div>
+    </div>
+    <div style="background:var(--bg-3);border-radius:6px;padding:8px 4px;text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--gold)">12</div>
+      <div style="font-size:9px;color:var(--text-2);margin-top:2px">CTL 城市</div>
+    </div>
+    <div style="background:var(--bg-3);border-radius:6px;padding:8px 4px;text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--gold)">48</div>
+      <div style="font-size:9px;color:var(--text-2);margin-top:2px">DOM</div>
+    </div>
+    <div style="background:var(--bg-3);border-radius:6px;padding:8px 4px;text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--gold)">320+</div>
+      <div style="font-size:9px;color:var(--text-2);margin-top:2px">二批商</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 1.5 · 向上传导 (我 GM 影响谁) ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num" style="background:linear-gradient(135deg,var(--teal),var(--blue))">⇡</div>
+    <div class="section-title">向上传导杠杆 · 大区在国家级的位置</div>
+    <div class="section-tag" style="background:rgba(78,205,196,0.15);color:var(--teal)">Leverage</div>
+  </div>
+
+  <div style="font-size:11px;color:var(--text-2);margin-bottom:10px;line-height:1.6">
+    GM 不是终点 · 大区是集团北极星追踪的关键节点
+    <br><b style="color:var(--teal)">我华东 42% = 国家 200M 瓶能否达成的关键</b>
+  </div>
+
+  <div style="background:linear-gradient(135deg,rgba(136,200,80,0.06),var(--bg-2));border:1px solid rgba(136,200,80,0.2);border-radius:10px;padding:12px;margin-bottom:8px;border-left:3px solid var(--green)">
+    <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px">✅ 当前 · 我支撑了集团</div>
+    <div style="font-size:11px;color:var(--text-1);line-height:1.7">
+      <div style="margin-bottom:5px;padding:6px 8px;background:var(--bg-2);border-radius:5px;display:flex;justify-content:space-between">
+        <span>→ 集团总部 CEO</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">¥2.0B/年 · 国家 42%</span>
+      </div>
+      <div style="margin-bottom:5px;padding:6px 8px;background:var(--bg-2);border-radius:5px;display:flex;justify-content:space-between">
+        <span>→ 北极星 156M / 200M 瓶</span><span style="font-family:'Space Mono',monospace;color:var(--gold);font-weight:700">华东贡献 65M (42%)</span>
+      </div>
+      <div style="margin-bottom:5px;padding:6px 8px;background:var(--bg-2);border-radius:5px;display:flex;justify-content:space-between">
+        <span>→ 5 品牌全国排位</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">六月鲜 + 禾然 第 1</span>
+      </div>
+      <div style="margin-top:8px;padding:8px;background:rgba(212,175,55,0.06);border-radius:5px;font-size:10px;color:var(--text-2);font-family:'Space Mono',monospace">
+        💎 华东是集团第 1 大区 · 北极星基地 · 战略级
+      </div>
+    </div>
+  </div>
+
+  <div style="background:linear-gradient(135deg,rgba(233,69,96,0.05),var(--bg-2));border:1px solid rgba(233,69,96,0.2);border-radius:10px;padding:12px;border-left:3px solid var(--red)">
+    <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:8px">⚠️ 反向预估 · 如果华东掉队</div>
+    <div style="font-size:11px;color:var(--text-1);line-height:1.7;margin-bottom:8px">
+      假设华东 91 → 78 (像华南某些区) · 北极星滑坡:
+    </div>
+    <div style="font-size:11px;color:var(--text-1);line-height:1.7">
+      <div style="margin-bottom:5px;padding:6px 8px;background:var(--bg-2);border-radius:5px;display:flex;justify-content:space-between">
+        <span>↘ 集团北极星 78% → 70%</span><span style="font-family:'Space Mono',monospace;color:var(--red);font-weight:700">-16M 瓶 · 2027 无法达成</span>
+      </div>
+      <div style="margin-bottom:5px;padding:6px 8px;background:var(--bg-2);border-radius:5px;display:flex;justify-content:space-between">
+        <span>↘ 集团 IPO 估值</span><span style="font-family:'Space Mono',monospace;color:var(--red);font-weight:700">-¥30B 市值</span>
+      </div>
+      <div style="margin-bottom:5px;padding:6px 8px;background:var(--bg-2);border-radius:5px;display:flex;justify-content:space-between">
+        <span>↘ 我 GM 工资 ¥235k</span><span style="font-family:'Space Mono',monospace;color:var(--red);font-weight:700">→ ¥180k (-¥55k)</span>
+      </div>
+      <div style="margin-top:8px;padding:8px;background:rgba(233,69,96,0.06);border-radius:5px;font-size:10px;color:var(--text-2);font-family:'Space Mono',monospace">
+        ⚡ GM 不可掉链 · 影响集团整体战略
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 2 · 健康度仪表盘 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <div class="section-title">大区健康度仪表盘</div>
+    <div class="section-tag">Health</div>
+  </div>
+
+  <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px">5 互锁 (大区聚合)</div>
+  <div class="health-grid">
+    <div class="health-cell good"><div class="health-pct good">82%</div><div class="health-lbl">制度</div></div>
+    <div class="health-cell warn"><div class="health-pct warn">72%</div><div class="health-lbl">数据 ⚠</div></div>
+    <div class="health-cell good"><div class="health-pct good">78%</div><div class="health-lbl">信用</div></div>
+    <div class="health-cell good"><div class="health-pct good">80%</div><div class="health-lbl">经济</div></div>
+    <div class="health-cell bad"><div class="health-pct bad">22%</div><div class="health-lbl">学习 ❌</div></div>
+  </div>
+
+  <div style="font-size:11px;color:var(--gold);font-weight:700;margin:14px 0 6px">5 品牌矩阵 · 华东大区</div>
+  <div class="brand-row"><span class="brand-name">六月鲜 (战略·北极星)</span><span class="brand-pct good">42% ¥840M ✓</span></div>
+  <div class="brand-row"><span class="brand-name">味达美 (现金牛)</span><span class="brand-pct good">31% ¥620M ✓</span></div>
+  <div class="brand-row"><span class="brand-name">禾然 (战略赌注)</span><span class="brand-pct warn">6% ¥120M ⚠ 目标 10%</span></div>
+  <div class="brand-row"><span class="brand-name">葱伴侣 (利基)</span><span class="brand-pct good">9% ¥180M ✓</span></div>
+  <div class="brand-row"><span class="brand-name">小康 (防御)</span><span class="brand-pct good">12% ¥240M ✓</span></div>
+
+  <div style="font-size:11px;color:var(--red);font-weight:700;margin:14px 0 6px">大区级异常清单</div>
+  <div class="alert-row">
+    <span class="alert-dot">🔴</span>
+    <span class="alert-text"><b>合肥 CTL 王勇 65 分</b> · 拖累华东片区 -8 分 · 主拖累点</span>
+  </div>
+  <div class="alert-row warn">
+    <span class="alert-dot">🟡</span>
+    <span class="alert-text"><b>禾然有机 6%</b> · 距 10% 目标差 4% · 高端突围进度慢</span>
+  </div>
+  <div class="alert-row warn">
+    <span class="alert-dot">🟡</span>
+    <span class="alert-text"><b>学习互锁 22%</b> · 大区决策日志几乎缺失 · Agent S3 启动门槛未达</span>
+  </div>
+</section>
+
+<!-- ═════════ 模块 3 · 根因分析 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <div class="section-title">根因分析 · 北极星缺口</div>
+    <div class="section-tag">Root</div>
+  </div>
+
+  <div class="root-cause-box">
+    <div class="rc-question">❓ 北极星 78% · 距 200M 瓶还差 44M · 主因是什么?</div>
+    <div class="rc-chain">
+      <div class="rc-step"><span class="rc-step-num">①</span><span>5 品牌缺口: 禾然有机距目标 4% (-8M 瓶/年)</span></div>
+      <div class="rc-step"><span class="rc-step-num">②</span><span>城市缺口: 合肥拖累 (-12M 瓶/年累计)</span></div>
+      <div class="rc-step"><span class="rc-step-num">③</span><span>渠道缺口: 餐饮 B 端深挖不够 (-15M 瓶/年)</span></div>
+      <div class="rc-step"><span class="rc-step-num">④</span><span>区域缺口: 西南均衡发展滞后 (-9M 瓶/年)</span></div>
+      <div class="rc-step"><span class="rc-step-num">⑤</span><span>合计缺口: ~44M 瓶/年 · 与北极星缺口吻合</span></div>
+    </div>
+    <div class="rc-conclusion">
+      <b>主因</b>: 高端突围 (禾然) 速度不够 + 弱城扶持 (合肥) 不及预期<br>
+      <b>战略调整</b>: 集中资源在 4 个高 ROI 战略 (下面 4 个机会点)<br>
+      <b>预估时间</b>: 18 个月可达 200M 瓶
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 4 · 机会点扫描 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <div class="section-title">大区战略机会扫描</div>
+    <div class="section-tag">Opportunity</div>
+  </div>
+
+  <div class="opp-row">
+    <div class="opp-head">
+      <span class="opp-title">🚀 禾然有机突围 6% → 12%</span>
+      <span class="opp-roi">+8M 瓶/年</span>
+    </div>
+    <div class="opp-desc">米其林 + 五星酒店 + 厨师 KOL · 上海标杆 → 华东复制 · 集中投入¥80M 市场费</div>
+    <div class="opp-impact">影响: 北极星 +4% · 高端定价权 · 集团 IPO 估值故事</div>
+  </div>
+
+  <div class="opp-row">
+    <div class="opp-head">
+      <span class="opp-title">🚀 餐饮 B 端深挖 (SR-RES)</span>
+      <span class="opp-roi">+15M 瓶/年</span>
+    </div>
+    <div class="opp-desc">连锁餐饮 KOL + 团购定制 · DOM/DSR-2 渠道下沉 · 12 城统一推进</div>
+    <div class="opp-impact">影响: 北极星 +7.5% · 渠道扩张</div>
+  </div>
+
+  <div class="opp-row">
+    <div class="opp-head">
+      <span class="opp-title">🚀 合肥扶持加码 (¥12M)</span>
+      <span class="opp-roi">+12M 瓶/年</span>
+    </div>
+    <div class="opp-desc">上海标杆复制 · MCTL 徐海明驻地督导 · 12 个月扭转</div>
+    <div class="opp-impact">影响: 北极星 +6% · 弱城激活</div>
+  </div>
+
+  <div class="opp-row">
+    <div class="opp-head">
+      <span class="opp-title">🚀 山姆华东 5 店统签</span>
+      <span class="opp-roi">+¥8M / 年</span>
+    </div>
+    <div class="opp-desc">上海 + 苏州 + 杭州 + 宁波 + 无锡联签 · MOM 主导 · 跨城价格优势</div>
+    <div class="opp-impact">影响: 战略 KA 锁定 + 标杆复制全国</div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 5 · 决策权限 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <div class="section-title">大区 GM 决策权限</div>
+    <div class="section-tag">Authority</div>
+  </div>
+
+  <div class="authority-block">
+    <div class="authority-label can">✋ 我可自主拍板</div>
+    <ul class="authority-list can">
+      <li>大区预算 ¥170M / 年 · 自主分配</li>
+      <li>跨城资源调配 (合肥扶持 ¥12M)</li>
+      <li>大区战略 SKU 推广 (禾然有机)</li>
+      <li>MCTL 任免 + 5 星考核</li>
+      <li>大区级促销节奏 + 价格调整 (品牌内)</li>
+    </ul>
+  </div>
+
+  <div class="authority-block">
+    <div class="authority-label cant">🚫 我需上报集团</div>
+    <ul class="authority-list cant">
+      <li>跨大区资源 → 报总部 CMO</li>
+      <li>战略级品牌涨价 → 报集团 CEO</li>
+      <li>新品类引入 → 报集团 CIO</li>
+      <li>M&A / 战略合作 → 报集团董事会</li>
+    </ul>
+  </div>
+
+  <div class="resource-pool">
+    <div class="resource-pool-title">💰 我的年度资源池</div>
+    <div class="resource-line"><span>市场费用 (品牌推广)</span><b>¥80,000,000</b></div>
+    <div class="resource-line"><span>渠道激励 (经销商/二批商)</span><b>¥50,000,000</b></div>
+    <div class="resource-line"><span>弱城扶持基金</span><b>¥20,000,000</b></div>
+    <div class="resource-line"><span>战略 SKU 推广 (禾然)</span><b>¥15,000,000</b></div>
+    <div class="resource-line"><span>大区培训 / 培养</span><b>¥5,000,000</b></div>
+    <div class="resource-line" style="border-top:1px solid var(--border);margin-top:6px;padding-top:8px"><span><b>大区年度预算</b></span><b style="color:var(--gold-bright)">¥170,000,000</b></div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 6 · 举措 + 影响预估 ═════════ -->
+<section class="cockpit-section priority">
+  <div class="section-header">
+    <div class="section-num">6</div>
+    <div class="section-title">大区级战略举措</div>
+    <div class="section-tag">Action</div>
+  </div>
+
+  <div class="action-card">
+    <div class="action-head">🚀 举措 1 · 禾然有机 ¥80M 市场费投入</div>
+    <div class="action-desc">米其林 + 五星酒店 + 厨师 KOL · 上海标杆 → 华东复制 · GM 自批 (预算内)</div>
+    <div class="action-impact">
+      投入: ¥80M (大区年度预算 47%) · <span class="neutral">GM 自主决策</span><br>
+      <span class="plus">影响: 禾然 6% → 12% · +8M 瓶/年 · 北极星 +4%</span>
+    </div>
+    <button class="action-btn" onclick="openDecision('gm-1')">批准 ¥80M 投入</button>
+  </div>
+
+  <div class="action-card warn">
+    <div class="action-head">🚀 举措 2 · 合肥扶持加码 ¥12M</div>
+    <div class="action-desc">上海标杆 SOP 全套复制 + MCTL 徐海明驻地督导 + CTL 王勇辅导</div>
+    <div class="action-impact">
+      投入: ¥12M (弱城扶持基金内) · <span class="neutral">GM 自主决策</span><br>
+      <span class="plus">影响: 合肥 65 → 75 · +12M 瓶/年 · 北极星 +6%</span>
+    </div>
+    <button class="action-btn" onclick="openDecision('gm-2')">批准扶持加码</button>
+  </div>
+
+  <div class="action-card strategic">
+    <div class="action-head">📞 举措 3 · 集团涨价 5% 申请 (六月鲜)</div>
+    <div class="action-desc">六月鲜战略级涨价 · 全国统一 · 上海试点先行 · 报集团 CEO 批准</div>
+    <div class="action-impact">
+      投入: 0 (谈判) · <span class="neutral">需报集团 CEO</span><br>
+      <span class="plus">影响: 毛利 +¥150M / 年 · 但有渠道阻力</span>
+    </div>
+    <button class="action-btn report" onclick="openDecision('gm-3')">提交集团审批</button>
+  </div>
+
+  <div class="action-card">
+    <div class="action-head">🍜 举措 4 · 餐饮 B 端深挖战略</div>
+    <div class="action-desc">12 城 SR-RES + 连锁餐饮 KOL 矩阵 + 厨师培训项目</div>
+    <div class="action-impact">
+      投入: ¥25M (市场费内) · <span class="neutral">GM 自主</span><br>
+      <span class="plus">影响: +15M 瓶/年 · 渠道扩张 · 北极星 +7.5%</span>
+    </div>
+    <button class="action-btn" onclick="openDecision('gm-4')">启动餐饮战略</button>
+  </div>
+</section>
+
+<!-- ═════════ 模块 7 · 合伙人收益 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">7</div>
+    <div class="section-title">我的合伙人收益</div>
+    <div class="section-tag">Partner</div>
+  </div>
+
+  <div class="income-big">
+    <div class="income-big-num">¥235,000</div>
+    <div class="income-big-lbl">本月已结算 · 大区 GM 5 星</div>
+  </div>
+
+  <div class="income-breakdown">
+    <div class="income-breakdown-row"><span class="income-bd-name">基础工资 (GM)</span><span class="income-bd-val">¥80,000</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">大区分成 (¥2B × 0.005%)</span><span class="income-bd-val">¥100,000</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">北极星达成奖 (78%)</span><span class="income-bd-val">¥30,000</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">5 品牌矩阵管理</span><span class="income-bd-val">¥15,000</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">跨大区资源调配奖</span><span class="income-bd-val">¥10,000</span></div>
+  </div>
+
+  <div class="compare-table">
+    <div class="compare-title">📊 全国 6 大区 GM 对比</div>
+    <div class="compare-row me">
+      <span class="compare-name">🥇 华东 · 刘大海 (我)</span>
+      <span class="compare-val">¥235k</span>
+      <span class="compare-diff">5 星</span>
+    </div>
+    <div class="compare-row">
+      <span class="compare-name">🥈 华北 · 张华北</span>
+      <span class="compare-val">¥180k</span>
+      <span class="compare-diff">-¥55k</span>
+    </div>
+    <div class="compare-row">
+      <span class="compare-name">🥉 华南 · 李华南</span>
+      <span class="compare-val">¥165k</span>
+      <span class="compare-diff">-¥70k</span>
+    </div>
+    <div class="compare-row">
+      <span class="compare-name">4️⃣ 西南 · 王西南</span>
+      <span class="compare-val">¥125k</span>
+      <span class="compare-diff">-¥110k</span>
+    </div>
+    <div class="compare-row">
+      <span class="compare-name">5️⃣ 西北 · 赵西北</span>
+      <span class="compare-val">¥98k</span>
+      <span class="compare-diff">-¥137k</span>
+    </div>
+    <div class="compare-row">
+      <span class="compare-name">6️⃣ 东北 · 钱东北 (新)</span>
+      <span class="compare-val">¥85k</span>
+      <span class="compare-diff">-¥150k</span>
+    </div>
+  </div>
+
+  <div class="partner-traits">
+    <div class="partner-traits-title">💎 我的合伙人 7 特征 · 大区视角</div>
+    <div class="partner-traits-list">
+      ✅ <b>我有边界</b> 华东 12 城 · 320+ 二批商 · 8M 家庭<br>
+      ✅ <b>我有权力</b> 大区年度 ¥170M 自批 (集团第 1)<br>
+      ✅ <b>我有资源</b> 3 MCTL + 12 CTL + 48 DOM<br>
+      ✅ <b>我有责任</b> 北极星基地 42% · 集团第 1<br>
+      ✅ <b>我有收益</b> ¥235k / 月 · 全国 GM 第 1<br>
+      ✅ <b>我有传承</b> 已培养 8 位 MCTL · 4 位升 GM 候选<br>
+      ✅ <b>我有支援</b> 集团 CMO + CEO 战略对齐
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 决策日志 ═════════ -->
+<section class="decision-log-section">
+  <div class="dlog-title">📝 大区级决策日志 · Agent 学习训练</div>
+  <div class="dlog-sub">晶体管 3 · 大区决策原子化 · 影响北极星 / 5 品牌 / 12 城市</div>
+  <div id="decision-log-list">
+    <div class="dlog-empty">本月暂无大区级决策 · 点击上方"举措"按钮触发</div>
+  </div>
+</section>
+
+<!-- ═════════ 跳工具 ═════════ -->
+<section class="tools-section">
+  <div class="tools-title">🔧 决策完成 → 跳工具</div>
+  <div style="font-size:10px;color:var(--text-3);margin-bottom:10px;font-family:'Space Mono',monospace">在驾驶舱内打开 · 右上 ✕ 关闭即回</div>
+  <div class="tools-grid">
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XM_GM_v1.1.html', '🚗 路上 XM · GM 大区战略巡视')">
+      <div class="tool-icon">🚗</div>
+      <div class="tool-info"><div class="tool-name">路上 · XM</div><div class="tool-desc">本周战略巡视</div></div>
+    </div>
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XL_GM_v1.1.html', '💰 一本账 XL · GM 大区财务')">
+      <div class="tool-icon">💰</div>
+      <div class="tool-info"><div class="tool-name">一本账 · XL</div><div class="tool-desc">北极星 + 5 品牌 + 12 城</div></div>
+    </div>
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XP_GM_v1.1.html', '👤 我的 XP · GM 5 星档案')">
+      <div class="tool-icon">👤</div>
+      <div class="tool-info"><div class="tool-name">我的 · XP</div><div class="tool-desc">档案 · 培养 · 等级</div></div>
+    </div>
+    <div class="tool-link" style="opacity:0.55;cursor:not-allowed;border-style:dashed" onclick="alert('🏪 店内 XD\n\nGM 大区级不直接使用 XD · 通过 DOM 看数据')">
+      <div class="tool-icon">🏪</div>
+      <div class="tool-info"><div class="tool-name">店内 · XD</div><div class="tool-desc">大区级不使用</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 大金返回按钮 -->
+<div style="margin:24px 14px 8px;text-align:center">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;color:var(--bg-0);text-decoration:none;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:12px 28px;border-radius:10px;font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(212,175,55,0.3)">
+    <span style="font-size:18px">←</span>
+    <span>回主页 · INFINITY OS 入口</span>
+  </a>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · L7 大区 GM 驾驶舱 · v1.1<br>
+  · 北极星追踪 + 12 城市热力图 + 5 品牌矩阵 ✅<br>
+  · 大区战略决策舱 (¥170M 自批权限) ✅<br>
+  · 6 大区 GM 对比 + 合伙人 7 特征 ✅<br>
+  Layer 1.3 演示 · 模拟数据 · 等 TL 真实化
+</div>
+
+<!-- 决策弹窗 -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<!-- iframe 工具 -->
+<div id="tool-iframe-wrapper" style="display:none;position:fixed;inset:0;z-index:2000;background:var(--bg-0)">
+  <div style="position:sticky;top:0;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10">
+    <button onclick="closeTool()" style="background:var(--bg-0);color:var(--gold);border:none;padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit">
+      <span style="font-size:16px">←</span><span>回 GM 驾驶舱</span>
+    </button>
+    <div id="tool-iframe-title" style="flex:1;color:var(--bg-0);font-weight:700;font-size:13px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+    <button onclick="closeTool()" style="background:transparent;color:var(--bg-0);border:1px solid var(--bg-0);padding:6px 10px;border-radius:6px;font-size:14px;cursor:pointer;font-weight:700">✕</button>
+  </div>
+  <iframe id="tool-iframe" src="" style="width:100%;height:calc(100vh - 56px);border:none;background:var(--bg-0)"></iframe>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const DECISIONS = {
+  'gm-1': {
+    title: '🚀 禾然有机 ¥80M 市场费投入',
+    who: 'GM 刘大海 · 华东大区',
+    what: '批准禾然有机 ¥80M 市场费 · 米其林 + 五星酒店 + 厨师 KOL · 上海标杆 → 华东复制',
+    why: '禾然蒸腾 +22% · 距 10% 目标差 4% · 上海标杆已验证 · 高端突围窗口',
+    impact: '投入: ¥80M (大区年度预算 47%) · 影响: +8M 瓶/年 · 北极星 +4%',
+    authority: 'GM 自主拍板 · 在 ¥170M 大区年度预算内 · 战略 SKU 推广权限',
+    nextStep: '→ 跳 XM 路上 · 添加"上海米其林合作启动" + "华东 12 城禾然推广路线"',
+    btnText: '批准投入', jumpTo: 'INFINITY_OS_INF-XM_GM_v1.1.html'
+  },
+  'gm-2': {
+    title: '🚀 合肥扶持加码 ¥12M',
+    who: 'GM 刘大海',
+    what: '合肥扶持加码 ¥12M · 上海标杆 SOP 全套复制 · MCTL 徐海明驻地督导',
+    why: '合肥 CTL 王勇 65 分 · 拖累华东片区 -8 分 · 主拖累点 · 需大区资源倾斜',
+    impact: '投入: ¥12M (弱城扶持基金内) · 影响: 合肥 65 → 75 · +12M 瓶/年',
+    authority: 'GM 自主拍板 · 跨城资源调配权限内',
+    nextStep: '→ 跳 XM 路上 · 添加"合肥驻地督导 + 王勇辅导"任务',
+    btnText: '批准扶持', jumpTo: 'INFINITY_OS_INF-XM_GM_v1.1.html'
+  },
+  'gm-3': {
+    title: '📞 六月鲜涨价 5% 申请',
+    who: 'GM 刘大海',
+    what: '六月鲜战略级涨价 5% · 全国统一 · 上海试点先行 · 报集团 CEO 批准',
+    why: '毛利提升 + 高端定位强化 · 上海标杆 92 分 · 渠道承受力测试 OK',
+    impact: '投入: 0 (谈判) · 影响: 毛利 +¥150M / 年 · 但有渠道阻力',
+    authority: 'GM 无独立拍板权 · 战略级品牌涨价需报集团 CEO',
+    nextStep: '→ 提交集团 CEO 审批 · GM 等待 2-4 周',
+    btnText: '提交审批', jumpTo: null
+  },
+  'gm-4': {
+    title: '🍜 餐饮 B 端深挖战略',
+    who: 'GM 刘大海',
+    what: '启动餐饮 B 端深挖 · 12 城 SR-RES + 连锁餐饮 KOL 矩阵 + 厨师培训项目',
+    why: '餐饮渠道缺口 -15M 瓶/年 · 调味品行业 B 端为主战场 · 渠道扩张机会',
+    impact: '投入: ¥25M (市场费内) · 影响: +15M 瓶/年 · 北极星 +7.5%',
+    authority: 'GM 自主拍板 · 大区战略 SKU 推广权限',
+    nextStep: '→ 跳 XM 路上 · 添加"米其林厨师 KOL + 连锁餐饮 KA 拓展"',
+    btnText: '启动战略', jumpTo: 'INFINITY_OS_INF-XM_GM_v1.1.html'
+  }
+};
+
+const decisionLog = [];
+
+function openCTL() {
+  if (confirm('打开上海 CTL 王志成驾驶舱?')) {
+    window.location.href = 'INFINITY_OS_驾驶舱_CTL_上海_v1.1.html';
+  }
+}
+
+function drillDown(name, detail) {
+  alert(`📍 ${name}\n\n${detail}\n\n[Layer 1.3 演示: 完整钻取下层驾驶舱待做]`);
+}
+
+function openTool(url, title) {
+  document.getElementById('tool-iframe-title').textContent = title;
+  document.getElementById('tool-iframe').src = url + '?embed=1';
+  document.getElementById('tool-iframe-wrapper').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTool() {
+  document.getElementById('tool-iframe-wrapper').style.display = 'none';
+  document.getElementById('tool-iframe').src = '';
+  document.body.style.overflow = '';
+}
+
+function openDecision(id) {
+  const d = DECISIONS[id];
+  if (!d) return;
+  const modal = document.getElementById('modal-content');
+  modal.innerHTML = `
+    <div class="modal-title">${d.title}</div>
+    <div class="modal-section"><div class="modal-section-label">Who · 决策人</div><div class="modal-section-content">${d.who}</div></div>
+    <div class="modal-section"><div class="modal-section-label">What · 决策内容</div><div class="modal-section-content">${d.what}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Why · 决策依据</div><div class="modal-section-content">${d.why}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Impact · 影响预估</div><div class="modal-section-content">${d.impact}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Authority · 决策权限</div><div class="modal-section-content">${d.authority}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Next · 自动联动</div><div class="modal-section-content">${d.nextStep}</div></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal()">取消</button>
+      <button class="modal-btn confirm" onclick="confirmDecision('${id}')">${d.btnText}</button>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+
+function confirmDecision(id) {
+  const d = DECISIONS[id];
+  closeModal();
+
+  const now = new Date();
+  const ts = now.getFullYear().toString().slice(2) +
+             (now.getMonth() + 1).toString().padStart(2, '0') +
+             now.getDate().toString().padStart(2, '0') + '-' +
+             now.getHours().toString().padStart(2, '0') +
+             now.getMinutes().toString().padStart(2, '0');
+  const logId = `DEC-${ts}-GM-${(decisionLog.length + 1).toString().padStart(3, '0')}`;
+
+  decisionLog.unshift({
+    id: logId,
+    title: d.title.replace(/^[🚨🚀📞🌿🍜] /, ''),
+    who: d.who,
+    when: now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+    impact: d.impact.split('·')[0].trim()
+  });
+  renderDecisionLog();
+
+  showToast(`✅ 大区级决策已记录 · ${logId} · Agent 学习中`);
+
+  setTimeout(() => {
+    if (d.jumpTo) {
+      setTimeout(() => {
+        if (confirm(`已记录大区决策\n${d.nextStep}\n\n现在跳到 路上 XM 执行?`)) {
+          openTool(d.jumpTo, '🚗 路上 XM · 执行 ' + d.title.replace(/^[🚨🚀📞🌿🍜] /, ''));
+        }
+      }, 800);
+    }
+  }, 1500);
+}
+
+function renderDecisionLog() {
+  const list = document.getElementById('decision-log-list');
+  if (decisionLog.length === 0) {
+    list.innerHTML = '<div class="dlog-empty">本月暂无大区级决策 · 点击上方"举措"按钮触发</div>';
+    return;
+  }
+  list.innerHTML = decisionLog.map(d => `
+    <div class="dlog-entry">
+      <div class="dlog-entry-id">${d.id} · ${d.when}</div>
+      <div class="dlog-entry-content"><b>${d.title}</b><br>${d.who} · ${d.impact}</div>
+    </div>
+  `).join('');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function updateTime() {
+  const n = new Date();
+  document.getElementById('now-time').textContent = n.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+}
+updateTime();
+setInterval(updateTime, 30000);
+
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+</script>
+</body>
+</html>
