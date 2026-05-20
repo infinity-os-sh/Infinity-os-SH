@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · DSR 一线驾驶舱 · v1.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907; --bg-1: #14110d; --bg-2: #1c1815; --bg-3: #251f1a;
+  --surface: #1a1612; --surface-2: #221d18;
+  --border: rgba(255, 220, 180, 0.08); --border-2: rgba(255, 220, 180, 0.15);
+  --text-0: #f4ede0; --text-1: #c8bda8; --text-2: #847868; --text-3: #524a40;
+  --gold: #d4af37; --gold-bright: #f5a623;
+  --green: #88c850; --amber: #f5a623; --red: #e94560;
+  --blue: #5d9cec; --purple: #a78bfa; --teal: #4ecdc4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg-0); color: var(--text-0); font-family: 'Noto Sans SC', sans-serif; min-height: 100vh; overflow-x: hidden; }
+@media (min-width: 600px) { body { max-width: 480px; margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.6); } }
+
+.layer-badge { background: rgba(233, 69, 96, 0.15); border-bottom: 1px solid rgba(233, 69, 96, 0.25); color: var(--red); font-size: 10px; padding: 6px 14px; text-align: center; font-family: 'Space Mono', monospace; }
+
+.hero { padding: 18px 14px 14px; background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%); border-bottom: 1px solid var(--border); }
+.hero-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.hero-row { display: flex; align-items: center; gap: 14px; }
+.hero-avatar { width: 60px; height: 60px; border-radius: 16px; background: linear-gradient(135deg, var(--blue), var(--teal)); display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; box-shadow: 0 6px 18px rgba(93, 156, 236, 0.3); }
+.hero-info { flex: 1; min-width: 0; }
+.hero-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; }
+.hero-title { font-size: 12px; color: var(--blue); margin-top: 2px; }
+.hero-scope { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+.hero-grade { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; color: var(--blue); flex-shrink: 0; padding: 4px 12px; background: rgba(93, 156, 236, 0.1); border-radius: 12px; border: 2px solid rgba(93, 156, 236, 0.3); }
+
+.cockpit-section { margin: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+.cockpit-section.priority { border-color: rgba(212, 175, 55, 0.25); background: linear-gradient(135deg, rgba(212, 175, 55, 0.04) 0%, var(--surface) 100%); }
+.cockpit-section.uber { border-color: rgba(233, 69, 96, 0.25); background: linear-gradient(135deg, rgba(233, 69, 96, 0.04) 0%, var(--surface) 100%); }
+.section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.section-num { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 13px; }
+.section-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; flex: 1; }
+.section-tag { font-family: 'Space Mono', monospace; font-size: 9px; padding: 2px 7px; background: rgba(212, 175, 55, 0.1); color: var(--gold); border-radius: 4px; font-weight: 700; }
+
+/* 升级进度条 */
+.upgrade-box { background: linear-gradient(135deg, rgba(93, 156, 236, 0.08), var(--bg-2)); border-radius: 12px; padding: 14px; text-align: center; }
+.upgrade-head { font-size: 12px; color: var(--blue); font-weight: 700; margin-bottom: 4px; }
+.upgrade-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 38px; color: var(--blue); line-height: 1; }
+.upgrade-label { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+.upgrade-bar { height: 8px; background: var(--bg-3); border-radius: 4px; margin: 12px 0 6px; overflow: hidden; position: relative; }
+.upgrade-bar-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--teal)); border-radius: 4px; }
+.upgrade-bar-target { position: absolute; top: -3px; height: 14px; width: 2px; background: var(--gold); }
+.upgrade-eta { font-size: 10px; color: var(--text-3); font-family: 'Space Mono', monospace; }
+
+/* 门店地图 */
+.store-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
+.store-stat { background: var(--bg-2); border-radius: 8px; padding: 10px 6px; text-align: center; border: 1px solid var(--border); }
+.store-stat.good { border-color: rgba(136, 200, 80, 0.3); background: rgba(136, 200, 80, 0.06); }
+.store-stat.warn { border-color: rgba(245, 166, 35, 0.3); background: rgba(245, 166, 35, 0.06); }
+.store-stat.bad { border-color: rgba(233, 69, 96, 0.3); background: rgba(233, 69, 96, 0.06); }
+.store-stat-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; }
+.store-stat-num.good { color: var(--green); }
+.store-stat-num.warn { color: var(--amber); }
+.store-stat-num.bad { color: var(--red); }
+.store-stat-lbl { font-size: 9px; color: var(--text-2); margin-top: 4px; }
+
+/* Uber 派单 SURGE */
+.surge-card { background: linear-gradient(135deg, rgba(233, 69, 96, 0.15) 0%, rgba(245, 166, 35, 0.08) 100%); border: 1px solid rgba(233, 69, 96, 0.3); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; }
+.surge-mult { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 32px; color: var(--red); flex-shrink: 0; }
+.surge-info { flex: 1; }
+.surge-title { font-weight: 700; font-size: 13px; color: var(--text-0); }
+.surge-desc { font-size: 11px; color: var(--text-2); margin-top: 3px; }
+
+/* 任务列表 (Uber 化) */
+.task-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 11px 12px; background: var(--bg-2); border-radius: 8px; margin-bottom: 6px; font-size: 11px; border-left: 3px solid var(--text-3); }
+.task-row.urgent { border-left-color: var(--red); background: linear-gradient(135deg, rgba(233, 69, 96, 0.05), var(--bg-2)); }
+.task-row.high { border-left-color: var(--amber); background: linear-gradient(135deg, rgba(245, 166, 35, 0.05), var(--bg-2)); }
+.task-row.normal { border-left-color: var(--blue); }
+.task-row.done { opacity: 0.55; border-left-color: var(--green); }
+.task-title { font-weight: 600; color: var(--text-0); font-size: 12px; }
+.task-meta { font-size: 10px; color: var(--text-2); margin-top: 2px; font-family: 'Space Mono', monospace; }
+.task-price { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; color: var(--gold); text-align: right; }
+.task-price-mult { font-size: 9px; color: var(--red); font-family: 'Space Mono', monospace; margin-top: 2px; }
+.task-action { margin-top: 6px; padding: 5px 12px; background: var(--gold); color: var(--bg-0); border-radius: 5px; font-size: 10px; font-weight: 700; display: inline-block; cursor: pointer; border: none; font-family: inherit; }
+.task-action.warn { background: var(--amber); }
+.task-action.bad { background: var(--red); color: white; }
+.task-action.done { background: rgba(136, 200, 80, 0.15); color: var(--green); }
+
+/* 互锁状态 */
+.lock-status-box { background: var(--bg-2); border-radius: 8px; padding: 10px 12px; font-size: 11px; color: var(--text-1); line-height: 1.8; }
+
+/* 向上传导 */
+.leverage-up { background: linear-gradient(135deg, rgba(78, 205, 196, 0.05), var(--bg-2)); border: 1px solid rgba(78, 205, 196, 0.2); border-radius: 10px; padding: 12px; border-left: 3px solid var(--teal); }
+.leverage-title { font-size: 12px; color: var(--teal); font-weight: 700; margin-bottom: 8px; }
+
+/* 异常 */
+.alert-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; background: rgba(245, 166, 35, 0.05); border-radius: 6px; margin-bottom: 4px; font-size: 11px; border-left: 3px solid var(--amber); }
+.alert-row.bad { background: rgba(233, 69, 96, 0.05); border-left-color: var(--red); }
+.alert-dot { font-size: 12px; flex-shrink: 0; }
+.alert-text { flex: 1; color: var(--text-1); line-height: 1.5; }
+
+/* Action */
+.action-card { background: var(--bg-2); border-radius: 10px; padding: 12px; margin-bottom: 8px; border-left: 3px solid var(--gold); }
+.action-head { font-size: 13px; font-weight: 700; color: var(--text-0); margin-bottom: 6px; }
+.action-desc { font-size: 11px; color: var(--text-1); line-height: 1.6; margin-bottom: 8px; }
+.action-impact { background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 8px 10px; font-size: 10px; color: var(--text-2); line-height: 1.6; margin-bottom: 10px; font-family: 'Space Mono', monospace; }
+.action-impact .plus { color: var(--green); }
+.action-btn { width: 100%; padding: 10px 14px; background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); border: none; border-radius: 8px; font-family: 'Noto Sans SC', sans-serif; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.action-btn:hover, .action-btn:active { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(212, 175, 55, 0.3); }
+
+/* 合伙人收益 */
+.income-big { text-align: center; padding: 16px 0 10px; background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(255, 124, 56, 0.04)); border-radius: 10px; margin-bottom: 12px; }
+.income-big-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 36px; color: var(--gold); line-height: 1; }
+.income-big-lbl { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+.income-future { background: rgba(78, 205, 196, 0.06); border: 1px solid rgba(78, 205, 196, 0.2); border-radius: 10px; padding: 10px 12px; text-align: center; margin-top: 8px; }
+.income-future-label { font-size: 10px; color: var(--teal); font-weight: 700; margin-bottom: 3px; }
+.income-future-val { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; color: var(--teal); }
+.income-future-sub { font-size: 10px; color: var(--text-2); margin-top: 3px; }
+
+.income-breakdown-row { display: flex; justify-content: space-between; padding: 6px 10px; background: var(--bg-2); border-radius: 5px; font-size: 11px; margin-bottom: 4px; }
+.income-bd-name { color: var(--text-1); }
+.income-bd-val { color: var(--green); font-family: 'Space Mono', monospace; font-weight: 700; }
+
+.partner-traits { background: rgba(78, 205, 196, 0.04); border-radius: 8px; padding: 10px; border: 1px solid rgba(78, 205, 196, 0.15); margin-top: 12px; }
+.partner-traits-title { font-size: 11px; color: var(--teal); font-weight: 700; margin-bottom: 6px; }
+.partner-traits-list { font-size: 11px; color: var(--text-1); line-height: 1.7; }
+
+/* 跳工具 */
+.tools-section { margin: 16px 14px; background: var(--surface); border: 1px solid var(--border-2); border-radius: 14px; padding: 14px; }
+.tools-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+.tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.tool-link { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 10px; transition: all 0.15s; cursor: pointer; }
+.tool-link:hover, .tool-link:active { border-color: var(--gold); background: var(--bg-3); transform: translateY(-1px); }
+.tool-icon { font-size: 22px; flex-shrink: 0; }
+.tool-info { flex: 1; min-width: 0; }
+.tool-name { font-size: 12px; font-weight: 700; color: var(--text-0); }
+.tool-desc { font-size: 9px; color: var(--text-2); margin-top: 2px; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border-2); border-radius: 16px; padding: 18px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; }
+.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--gold); margin-bottom: 12px; }
+.modal-section { margin-bottom: 12px; }
+.modal-section-label { font-size: 10px; color: var(--text-3); font-family: 'Space Mono', monospace; letter-spacing: 0.1em; margin-bottom: 4px; text-transform: uppercase; }
+.modal-section-content { font-size: 12px; color: var(--text-1); line-height: 1.6; background: var(--bg-2); padding: 10px; border-radius: 6px; }
+.modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+.modal-btn { flex: 1; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: 700; font-size: 12px; cursor: pointer; border: none; }
+.modal-btn.confirm { background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); }
+.modal-btn.cancel { background: var(--bg-3); color: var(--text-1); }
+
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: linear-gradient(135deg, var(--green), #5fa635); color: white; padding: 14px 20px; border-radius: 12px; font-size: 13px; font-weight: 600; z-index: 1001; opacity: 0; transition: all 0.3s; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); max-width: 90%; text-align: center; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.decision-log-section { margin: 12px 14px; background: linear-gradient(135deg, rgba(167, 139, 250, 0.06), var(--surface)); border: 1px solid rgba(167, 139, 250, 0.2); border-radius: 14px; padding: 14px; }
+.dlog-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--purple); margin-bottom: 4px; }
+.dlog-sub { font-size: 10px; color: var(--text-3); margin-bottom: 12px; font-family: 'Space Mono', monospace; }
+.dlog-empty { text-align: center; font-size: 11px; color: var(--text-3); padding: 16px; font-style: italic; }
+.dlog-entry { background: var(--bg-2); border-radius: 8px; padding: 10px; margin-bottom: 6px; font-size: 11px; border-left: 3px solid var(--purple); }
+.dlog-entry-id { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--purple); margin-bottom: 4px; }
+.dlog-entry-content { color: var(--text-1); line-height: 1.5; }
+
+.bottom-fix { padding: 18px 14px 32px; text-align: center; font-size: 10px; color: var(--text-3); }
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 · L1 DSR 一线驾驶舱 · 经销商雇 · Uber 化派单</div>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-top">
+    <a id="smart-back-top" href="index.html" style="color:var(--bg-0);text-decoration:none;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(212,175,55,0.3)">
+      <span style="font-size:16px">←</span><span id="smart-back-text-top">回主页</span>
+    </a>
+    <span style="color:var(--text-3);font-family:'Space Mono',monospace;font-size:11px">L1 DSR 驾驶舱 v1.1</span>
+    <span id="now-time" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-2)">--:--</span>
+  </div>
+  <div style="display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;font-family:'Space Mono',monospace;font-size:10px">
+    <a href="cockpit_L7_GM_east.html" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--gold);text-decoration:none">L7 GM ↗</a>
+    <a href="cockpit_L5_CTL_shanghai.html?from=DSR_王晓刚" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--gold);text-decoration:none">L5 CTL ↗</a>
+    <a href="cockpit_L3_DOM_huxi.html?from=DSR_王晓刚" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--gold);text-decoration:none">L3 DOM ↗</a>
+    <span style="padding:4px 8px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));color:var(--bg-0);border-radius:4px;flex-shrink:0;font-weight:700">★ L1 DSR (当前)</span>
+    <a href="cockpit_L1_DSR2.html" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--blue);text-decoration:none">L1 DSR-2 ↗</a>
+  </div>
+  <div class="hero-row">
+    <div class="hero-avatar">📦</div>
+    <div class="hero-info">
+      <div class="hero-name">王晓刚</div>
+      <div class="hero-title">DSR · 沪西华南调味品 雇</div>
+      <div class="hero-scope">80 门店 + 10 二批商 · 沪西华南全片区</div>
+    </div>
+    <div class="hero-grade" style="font-size:22px;padding:4px 10px">A 级 DSR</div>
+  </div>
+</div>
+
+<!-- ═════════ 模块 1 · 升 A 级冲刺 (DSR-2 灵魂目标) ═════════ -->
+<section class="cockpit-section priority">
+  <div class="section-header">
+    <div class="section-num">🎯</div>
+    <div class="section-title">升 S DSR · 经销商首席业代</div>
+    <div class="section-tag">Mission</div>
+  </div>
+  <div class="upgrade-box">
+    <div class="upgrade-head">A 级 DSR · 综合评分</div>
+    <div class="upgrade-num">85</div>
+    <div class="upgrade-label">/ S DSR 目标 92 · 还差 7 分</div>
+    <div class="upgrade-bar">
+      <div class="upgrade-bar-fill" style="width:85%"></div>
+      <div class="upgrade-bar-target" style="left:92%"></div>
+    </div>
+    <div class="upgrade-eta">预计 60 天达 S · 月薪 ¥9k → ¥14k (+¥5k)</div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 2 · 我的管辖范围 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <div class="section-title">我的管辖 · 80 门店 + 10 二批商</div>
+    <div class="section-tag">Scope</div>
+  </div>
+  <div style="background:var(--bg-2);border-radius:10px;padding:10px;font-size:11px;color:var(--text-1);line-height:1.6">
+    <b style="color:var(--gold)">沪西华南全片区</b><br>
+    雇主: 沪西华南调味品 (S 88) · 沈总<br>
+    欣和督导 DOM: 黄建国 (沪西 · 综合 82)<br>
+    协同: 4 个 DSR (同事) · 1 个 SFA 主管
+  </div>
+  <div class="store-stat-grid">
+    <div class="store-stat good">
+      <div class="store-stat-num good">72</div>
+      <div class="store-stat-lbl">健康门店</div>
+    </div>
+    <div class="store-stat warn">
+      <div class="store-stat-num warn">6</div>
+      <div class="store-stat-lbl">关注</div>
+    </div>
+    <div class="store-stat bad">
+      <div class="store-stat-num bad">2</div>
+      <div class="store-stat-lbl">异常</div>
+    </div>
+    <div class="store-stat">
+      <div class="store-stat-num" style="color:var(--gold)">¥1.6M</div>
+      <div class="store-stat-lbl">月销</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 3 · 今日 Uber 化派单 (DSR-2 核心) ═════════ -->
+<section class="cockpit-section uber">
+  <div class="section-header">
+    <div class="section-num" style="background:linear-gradient(135deg,var(--red),#c41538)">⚡</div>
+    <div class="section-title">今日 Uber 化派单</div>
+    <div class="section-tag" style="background:rgba(233,69,96,0.15);color:var(--red)">8 单</div>
+  </div>
+
+  <!-- SURGE 卡 -->
+  <div class="surge-card">
+    <div class="surge-mult">1.5×</div>
+    <div class="surge-info">
+      <div class="surge-title">出货 SURGE · 月末冲刺</div>
+      <div class="surge-desc">沈总月度 KPI 冲刺 · 经销商任务奖金 ×1.5 · 同时欣和 PK 奖金</div>
+    </div>
+  </div>
+
+  <!-- 任务列表 -->
+  <div class="task-row urgent">
+    <div>
+      <div class="task-title">🚨 紧急 · 沪西金桥二批商 月末压货</div>
+      <div class="task-meta">沈总指派 · 50 箱六月鲜 · 截止 18:00</div>
+      <button class="task-action bad" onclick="acceptTask('金桥压货', 580)">立即接单</button>
+    </div>
+    <div>
+      <div class="task-price">¥580</div>
+      <div class="task-price-mult">经销商高额任务</div>
+    </div>
+  </div>
+
+  <div class="task-row high">
+    <div>
+      <div class="task-title">⭐ 高优 · 大润发沪西店 禾然有机推广</div>
+      <div class="task-meta">欣和 PK 任务 · DOM 黄建国指派 · 货架陈列 + 拍照上传</div>
+      <button class="task-action warn" onclick="acceptTask('大润发 推广', 380)">抢单</button>
+    </div>
+    <div>
+      <div class="task-price">¥380</div>
+      <div class="task-price-mult" style="color:var(--amber)">欣和 PK 奖</div>
+    </div>
+  </div>
+
+  <div class="task-row normal">
+    <div>
+      <div class="task-title">普通 · 沪西闵行二批商 价格巡查</div>
+      <div class="task-meta">底价监控 · 价签 AI 拍照 · 12 终端</div>
+      <button class="task-action" onclick="acceptTask('价格巡查', 180)">抢单</button>
+    </div>
+    <div><div class="task-price">¥180</div></div>
+  </div>
+
+  <div class="task-row normal">
+    <div>
+      <div class="task-title">普通 · 全家沪西区 8 店 一物一码激活</div>
+      <div class="task-meta">DOM 激活季任务 · 8 终端 · 扫码教学</div>
+      <button class="task-action" onclick="acceptTask('一物一码', 240)">抢单</button>
+    </div>
+    <div><div class="task-price">¥240</div></div>
+  </div>
+
+  <div class="task-row done">
+    <div>
+      <div class="task-title">✓ 沪西华南 5 二批商 月度走访</div>
+      <div class="task-meta">14:30 完成 · 全部 A 级评价</div>
+      <button class="task-action done">已完成 ¥450</button>
+    </div>
+    <div><div class="task-price" style="color:var(--green)">¥450</div></div>
+  </div>
+
+  <div class="task-row done">
+    <div>
+      <div class="task-title">✓ 沃尔玛沪西店 月度堆头</div>
+      <div class="task-meta">11:00 完成 · 评分 5.0 ★</div>
+      <button class="task-action done">已完成 ¥300</button>
+    </div>
+    <div><div class="task-price" style="color:var(--green)">¥300</div></div>
+  </div>
+
+  <!-- 派单互锁状态 -->
+  <div class="lock-status-box" style="margin-top:10px">
+    <b style="color:var(--gold)">⚙️ 双 KPI 状态 · 经销商 + 欣和</b><br>
+    · <b style="color:var(--green)">经销商出货任务</b>: 4 / 6 (沈总 KPI 67%)<br>
+    · <b style="color:var(--green)">欣和 PK 任务</b>: 3 / 5 (DOM KPI 60%)<br>
+    · <b style="color:var(--amber)">月末冲刺剩 5 天</b>: 还需完成 4 任务<br>
+    · <b style="color:var(--blue)">系统建议</b>: 优先金桥压货 (¥580 高额单)
+  </div>
+</section>
+
+<!-- ═════════ 模块 4 · 向上传导 (我影响谁) ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num" style="background:linear-gradient(135deg,var(--teal),var(--blue))">⇡</div>
+    <div class="section-title">我影响了谁</div>
+    <div class="section-tag" style="background:rgba(78,205,196,0.15);color:var(--teal)">Leverage</div>
+  </div>
+  <div class="leverage-up">
+    <div class="leverage-title">我 DSR · 经销商雇 · 同时影响经销商和欣和两个体系</div>
+    <div style="font-size:11px;color:var(--text-1);line-height:1.7">
+      <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:5px">📤 经销商体系</div>
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>→ 雇主沈总 · 沪西华南</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">¥1.6M/月 出货 · ¥18M/年</span>
+      </div>
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>→ 10 二批商出货</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">透明度 +2.8%</span>
+      </div>
+      
+      <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 5px">📤 欣和体系</div>
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>→ DOM 黄建国 (沪西 82)</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">5 互锁 +2.5 分</span>
+      </div>
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>→ CTL 王志成 (上海 92)</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">城市 +0.4 分</span>
+      </div>
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;display:flex;justify-content:space-between">
+        <span>→ 北极星 200M 瓶</span><span style="font-family:'Space Mono',monospace;color:var(--gold);font-weight:700">19k 瓶/月 (2× DSR-2)</span>
+      </div>
+      <div style="margin-top:8px;padding:8px;background:rgba(78,205,196,0.06);border-radius:5px;font-size:10px;color:var(--text-2);font-family:'Space Mono',monospace">
+        💎 双 KPI · 双雇主 · DSR 是两个体系联动的关键纽带
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 5 · 异常清单 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <div class="section-title">我的异常清单</div>
+    <div class="section-tag">Alert</div>
+  </div>
+  <div class="alert-row bad">
+    <span class="alert-dot">🔴</span>
+    <span class="alert-text"><b>中山公园 D 级二批商 · DOM 待解约</b> · 影响我 KPI · 需立即配合 DOM 走访</span>
+  </div>
+  <div class="alert-row">
+    <span class="alert-dot">🟡</span>
+    <span class="alert-text"><b>经销商月末出货差 ¥250k</b> · 沈总月度 KPI 风险 · 需主推压货</span>
+  </div>
+  <div class="alert-row">
+    <span class="alert-dot">🟡</span>
+    <span class="alert-text"><b>欣和 PK 任务剩 2 项</b> · 一物一码激活 + 禾然推广 · 月底前完成</span>
+  </div>
+</section>
+
+<!-- ═════════ 模块 6 · 决策权限 (DSR-2 简化) ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <div class="section-title">我能做什么决定</div>
+    <div class="section-tag">Authority</div>
+  </div>
+  <div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:6px">✋ DSR 自主决定</div>
+  <div style="font-size:11px;color:var(--text-1);line-height:1.7;padding-left:14px">
+    ✋ 任务抢单 / 流标 (经销商单 + 欣和单)<br>
+    ✋ 80 门店走访路线<br>
+    ✋ 二批商辅导 + 培训<br>
+    ✋ 终端价格巡查 + 拍照上传
+  </div>
+  <div style="font-size:11px;color:var(--red);font-weight:700;margin:10px 0 6px">🚫 报上游处理</div>
+  <div style="font-size:11px;color:var(--text-1);line-height:1.7;padding-left:14px">
+    🚫 二批商解约 → 报沈总 + DOM<br>
+    🚫 KA 大单谈判 → 报沈总 + OM<br>
+    🚫 价格政策调整 → 报 DOM 黄建国<br>
+    🚫 跨区窜货 → 立即报 DOM
+  </div>
+</section>
+
+<!-- ═════════ 模块 7 · 升 A 举措 ═════════ -->
+<section class="cockpit-section priority">
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <div class="section-title">升 A 级举措</div>
+    <div class="section-tag">Action</div>
+  </div>
+
+  <div class="action-card">
+    <div class="action-head">🚀 举措 · 月末冲刺 6 任务全完成</div>
+    <div class="action-desc">经销商 2 + 欣和 4 = 6 单 · 5 天内全完成 · 双 KPI 达标</div>
+    <div class="action-impact">
+      <span class="plus">影响: 沈总 KPI 100% + 欣和 PK 100% · 升 S DSR 起步</span><br>
+      合计奖金: ¥1,400 + 月薪 ¥9k = ¥10.4k
+    </div>
+    <button class="action-btn" onclick="openDecision('dsr-1')">承诺执行</button>
+  </div>
+
+  <div class="action-card">
+    <div class="action-head">🚀 举措 · 配合 DOM 中山公园解约</div>
+    <div class="action-desc">DOM 黄建国本周走访中山公园 D 级 · 我配合提供完整资料 + 现场翻译</div>
+    <div class="action-impact">
+      <span class="plus">影响: 解约推进 +50% · DOM 评价 +5 分</span><br>
+      升 S DSR 加分 + DOM 推荐奖
+    </div>
+    <button class="action-btn" onclick="openDecision('dsr-2')">配合 DOM</button>
+  </div>
+</section>
+
+<!-- ═════════ 模块 8 · 合伙人收益 (一线) ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <div class="section-title">我的合伙人收益</div>
+    <div class="section-tag">Partner</div>
+  </div>
+  <div class="income-big">
+    <div class="income-big-num">¥9,000</div>
+    <div class="income-big-lbl">本月已结算 · 经销商工资 + 欣和奖金</div>
+  </div>
+
+  <div>
+    <div class="income-breakdown-row"><span class="income-bd-name">沈总基础工资 (A 级 DSR)</span><span class="income-bd-val">¥6,500</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">经销商月度任务奖</span><span class="income-bd-val">¥1,200</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">欣和 PK 奖金 (DOM 派)</span><span class="income-bd-val">¥800</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">一物一码激活奖</span><span class="income-bd-val">¥300</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">A 级 DSR 月度津贴</span><span class="income-bd-val">¥200</span></div>
+  </div>
+
+  <!-- 升 S 后预期 -->
+  <div class="income-future">
+    <div class="income-future-label">⭐ 升 S DSR 后预期 (60 天内)</div>
+    <div class="income-future-val">¥14,000 / 月</div>
+    <div class="income-future-sub">+¥5,000/月 (沈总 S 级工资 + 欣和首席 DSR 奖金)</div>
+  </div>
+
+  <div class="partner-traits">
+    <div class="partner-traits-title">💎 我的合伙人 7 特征 · DSR 双雇主</div>
+    <div class="partner-traits-list">
+      ✅ <b>我有边界</b> 沪西华南全片区 · 80 门店 + 10 二批商<br>
+      ✅ <b>我有权力</b> 任务自主 / 走访路线 / 二批商辅导<br>
+      ✅ <b>我有资源</b> 经销商 SFA 系统 + 欣和 INFINITY OS<br>
+      ✅ <b>我有责任</b> 双 KPI · 经销商 ¥1.6M/月 + 欣和 5 互锁<br>
+      ✅ <b>我有收益</b> ¥9k/月 · 升 S 后 ¥14k<br>
+      ✅ <b>我有传承</b> 带 4 名新 DSR · 1 名升 A<br>
+      ✅ <b>我有支援</b> 沈总 + DOM 黄建国 · 双背书
+    </div>
+  </div>
+</section>
+
+<!-- 决策日志 -->
+<section class="decision-log-section">
+  <div class="dlog-title">📝 我的决策日志</div>
+  <div class="dlog-sub">晶体管 3 · 一线决策原子化</div>
+  <div id="decision-log-list">
+    <div class="dlog-empty">本月暂无决策日志 · 点击"举措"按钮触发</div>
+  </div>
+</section>
+
+<!-- 跳工具 -->
+<section class="tools-section">
+  <div class="tools-title">🔧 决策 → 跳工具</div>
+  <div style="font-size:10px;color:var(--text-3);margin-bottom:10px;font-family:'Space Mono',monospace">在驾驶舱内打开 · 右上 ✕ 关闭即回</div>
+  <div class="tools-grid">
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XM_SFA_v1.1.html', '🚗 路上 · SFA app · 双 KPI 任务')">
+      <div class="tool-icon">🚗</div>
+      <div class="tool-info"><div class="tool-name">路上 · XM ★★</div><div class="tool-desc">SR + DSR 协作 · 双任务</div></div>
+    </div>
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XL_SFA_v1.1.html', '💰 一本账 · DSR 双账户')">
+      <div class="tool-icon">💰</div>
+      <div class="tool-info"><div class="tool-name">一本账 · XL</div><div class="tool-desc">工资 + 奖金 · 升 S 进度</div></div>
+    </div>
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XP_DSR_v1.1.html', '👤 我的 · DSR A 级档案')">
+      <div class="tool-icon">👤</div>
+      <div class="tool-info"><div class="tool-name">我的 · XP</div><div class="tool-desc">档案 · 等级 · 培训</div></div>
+    </div>
+    <div class="tool-link" style="border-color:rgba(167,139,250,0.4);background:linear-gradient(135deg,rgba(167,139,250,0.06),var(--bg-2))" onclick="alert('🏪 INF-XD · 现场盘点工具\\n\\nDSR-2 一线核心工具:\\n· 一物一码扫码 (升 A 关键)\\n· 价签 AI 识别\\n· 库存盘点上报\\n\\nDS 真试点 v6.7.10')">
+      <div class="tool-icon">🏪</div>
+      <div class="tool-info"><div class="tool-name">店内 · XD ★★</div><div class="tool-desc" style="color:var(--purple)">真试点 · 一线核心</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 大金返回 -->
+<div style="margin:24px 14px 8px;text-align:center">
+  <a id="smart-back-bottom" href="index.html" style="display:inline-flex;align-items:center;gap:8px;color:var(--bg-0);text-decoration:none;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:12px 28px;border-radius:10px;font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(212,175,55,0.3)">
+    <span style="font-size:18px">←</span>
+    <span id="smart-back-text-bottom">回主页 · INFINITY OS 入口</span>
+  </a>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · L1 DSR 一线驾驶舱 · v1.1<br>
+  · 经销商雇 · 双 KPI · 双雇主<br>
+  · DSR 是经销商和欣和体系联动纽带<br>
+  Layer 1.3 演示
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay"><div class="modal" id="modal-content"></div></div>
+
+<!-- iframe -->
+<div id="tool-iframe-wrapper" style="display:none;position:fixed;inset:0;z-index:2000;background:var(--bg-0)">
+  <div style="position:sticky;top:0;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10">
+    <button onclick="closeTool()" style="background:var(--bg-0);color:var(--gold);border:none;padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit">
+      <span style="font-size:16px">←</span><span>回我的驾驶舱</span>
+    </button>
+    <div id="tool-iframe-title" style="flex:1;color:var(--bg-0);font-weight:700;font-size:13px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+    <button onclick="closeTool()" style="background:transparent;color:var(--bg-0);border:1px solid var(--bg-0);padding:6px 10px;border-radius:6px;font-size:14px;cursor:pointer;font-weight:700">✕</button>
+  </div>
+  <iframe id="tool-iframe" src="" style="width:100%;height:calc(100vh - 56px);border:none;background:var(--bg-0)"></iframe>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// 智能返回
+(function setupSmartBack() {
+  const params = new URLSearchParams(location.search);
+  const from = params.get('from');
+  const backMap = {
+    'DOM_沪西': { url: 'cockpit_L3_DOM_huxi.html', label: '回 DOM 驾驶舱', labelLong: '回 DOM 沪西驾驶舱 · 黄建国' },
+    'CTL_上海': { url: 'cockpit_L5_CTL_shanghai.html', label: '回 CTL 驾驶舱', labelLong: '回 CTL 上海驾驶舱 · 王志成' },
+    'GM_华东': { url: 'cockpit_L7_GM_east.html', label: '回 GM 驾驶舱', labelLong: '回 GM 华东驾驶舱 · 刘大海' }
+  };
+  if (from && backMap[from]) {
+    const cfg = backMap[from];
+    document.getElementById('smart-back-top').href = cfg.url;
+    document.getElementById('smart-back-text-top').textContent = cfg.label;
+    document.getElementById('smart-back-bottom').href = cfg.url;
+    document.getElementById('smart-back-text-bottom').textContent = cfg.labelLong;
+  }
+})();
+
+const DECISIONS = {
+  'dsr-1': {
+    title: '🚀 月末冲刺 6 任务全完成',
+    who: 'DSR 王晓刚',
+    what: '5 天内完成剩余 4 任务 (经销商 2 + 欣和 PK 2)',
+    why: '双 KPI 达标 = 升 S DSR 起步分 · 经销商 + 欣和双重认可',
+    impact: '双 KPI 100% · 月薪 ¥9k → ¥10.4k · 升 S 路径加速',
+    authority: 'DSR 自主决策 · 经销商 + 欣和双轨任务',
+    nextStep: '→ 跳 SFA 路上 · 优化 6 任务路线',
+    btnText: '我承诺',
+    jumpTo: 'INFINITY_OS_INF-XM_SFA_v1.1.html'
+  },
+  'dsr-2': {
+    title: '🚀 配合 DOM 中山公园 D 级解约',
+    who: 'DSR 王晓刚',
+    what: '本周配合 DOM 黄建国走访中山公园老贸易 · 提供资料 + 翻译',
+    why: 'D 级解约推进 · DOM 任务配合 = 升 S DSR 加分项',
+    impact: 'DOM 评价 +5 分 · 升 S 加速 · 推荐奖金 ¥500',
+    authority: 'DSR 自主决策 · 配合上级',
+    nextStep: '→ 跳 SFA 路上 · 添加 DOM 联合走访',
+    btnText: '配合 DOM',
+    jumpTo: 'INFINITY_OS_INF-XM_SFA_v1.1.html'
+  }
+};
+
+const decisionLog = [];
+
+function acceptTask(name, price) {
+  showToast(`✅ 已抢单 · ${name} · ¥${price}`);
+  setTimeout(() => {
+    if (confirm(`抢单成功!\n\n${name} · ¥${price}\n\n现在跳 XM 路上 看任务详情?`)) {
+      openTool('INFINITY_OS_INF-XM_SFA_v1.1.html', '🚗 路上 · 执行 ' + name);
+    }
+  }, 1200);
+}
+
+function openTool(url, title) {
+  document.getElementById('tool-iframe-title').textContent = title;
+  document.getElementById('tool-iframe').src = url + '?embed=1';
+  document.getElementById('tool-iframe-wrapper').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTool() {
+  document.getElementById('tool-iframe-wrapper').style.display = 'none';
+  document.getElementById('tool-iframe').src = '';
+  document.body.style.overflow = '';
+}
+
+function openDecision(id) {
+  const d = DECISIONS[id]; if (!d) return;
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">${d.title}</div>
+    <div class="modal-section"><div class="modal-section-label">Who</div><div class="modal-section-content">${d.who}</div></div>
+    <div class="modal-section"><div class="modal-section-label">What</div><div class="modal-section-content">${d.what}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Why</div><div class="modal-section-content">${d.why}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Impact</div><div class="modal-section-content">${d.impact}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Authority</div><div class="modal-section-content">${d.authority}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Next</div><div class="modal-section-content">${d.nextStep}</div></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal()">取消</button>
+      <button class="modal-btn confirm" onclick="confirmDecision('${id}')">${d.btnText}</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+
+function confirmDecision(id) {
+  const d = DECISIONS[id]; closeModal();
+  const now = new Date();
+  const ts = now.getFullYear().toString().slice(2) + (now.getMonth()+1).toString().padStart(2,'0') + now.getDate().toString().padStart(2,'0') + '-' + now.getHours().toString().padStart(2,'0') + now.getMinutes().toString().padStart(2,'0');
+  const logId = `DEC-${ts}-DSR-${(decisionLog.length+1).toString().padStart(3,'0')}`;
+  decisionLog.unshift({ id: logId, title: d.title.replace(/^[🚨🚀] /, ''), who: d.who, when: now.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}), impact: d.impact.split('·')[0].trim() });
+  renderDecisionLog();
+  showToast(`✅ 决策已记录 · ${logId}`);
+  setTimeout(() => {
+    if (d.jumpTo) setTimeout(() => {
+      if (confirm(`已记录决策\n${d.nextStep}\n\n现在跳路上 XM ?`)) openTool(d.jumpTo, '🚗 路上 · 执行 ' + d.title.replace(/^[🚨🚀] /, ''));
+    }, 800);
+  }, 1500);
+}
+
+function renderDecisionLog() {
+  const list = document.getElementById('decision-log-list');
+  if (decisionLog.length === 0) { list.innerHTML = '<div class="dlog-empty">本月暂无决策日志 · 点击"举措"按钮触发</div>'; return; }
+  list.innerHTML = decisionLog.map(d => `<div class="dlog-entry"><div class="dlog-entry-id">${d.id} · ${d.when}</div><div class="dlog-entry-content"><b>${d.title}</b><br>${d.who} · ${d.impact}</div></div>`).join('');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function updateTime() {
+  const n = new Date();
+  document.getElementById('now-time').textContent = n.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+}
+updateTime(); setInterval(updateTime, 30000);
+
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+</script>
+</body>
+</html>

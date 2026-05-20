@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · SR 一线驾驶舱 · v1.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907; --bg-1: #14110d; --bg-2: #1c1815; --bg-3: #251f1a;
+  --surface: #1a1612; --surface-2: #221d18;
+  --border: rgba(255, 220, 180, 0.08); --border-2: rgba(255, 220, 180, 0.15);
+  --text-0: #f4ede0; --text-1: #c8bda8; --text-2: #847868; --text-3: #524a40;
+  --gold: #d4af37; --gold-bright: #f5a623;
+  --green: #88c850; --amber: #f5a623; --red: #e94560;
+  --blue: #5d9cec; --purple: #a78bfa; --teal: #4ecdc4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg-0); color: var(--text-0); font-family: 'Noto Sans SC', sans-serif; min-height: 100vh; overflow-x: hidden; }
+@media (min-width: 600px) { body { max-width: 480px; margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.6); } }
+
+.layer-badge { background: rgba(233, 69, 96, 0.15); border-bottom: 1px solid rgba(233, 69, 96, 0.25); color: var(--red); font-size: 10px; padding: 6px 14px; text-align: center; font-family: 'Space Mono', monospace; }
+
+.hero { padding: 18px 14px 14px; background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%); border-bottom: 1px solid var(--border); }
+.hero-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.hero-row { display: flex; align-items: center; gap: 14px; }
+.hero-avatar { width: 60px; height: 60px; border-radius: 16px; background: linear-gradient(135deg, var(--blue), var(--teal)); display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; box-shadow: 0 6px 18px rgba(93, 156, 236, 0.3); }
+.hero-info { flex: 1; min-width: 0; }
+.hero-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; }
+.hero-title { font-size: 12px; color: var(--blue); margin-top: 2px; }
+.hero-scope { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+.hero-grade { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; color: var(--blue); flex-shrink: 0; padding: 4px 12px; background: rgba(93, 156, 236, 0.1); border-radius: 12px; border: 2px solid rgba(93, 156, 236, 0.3); }
+
+.cockpit-section { margin: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+.cockpit-section.priority { border-color: rgba(212, 175, 55, 0.25); background: linear-gradient(135deg, rgba(212, 175, 55, 0.04) 0%, var(--surface) 100%); }
+.cockpit-section.uber { border-color: rgba(233, 69, 96, 0.25); background: linear-gradient(135deg, rgba(233, 69, 96, 0.04) 0%, var(--surface) 100%); }
+.section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.section-num { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 13px; }
+.section-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; flex: 1; }
+.section-tag { font-family: 'Space Mono', monospace; font-size: 9px; padding: 2px 7px; background: rgba(212, 175, 55, 0.1); color: var(--gold); border-radius: 4px; font-weight: 700; }
+
+/* 升级进度条 */
+.upgrade-box { background: linear-gradient(135deg, rgba(93, 156, 236, 0.08), var(--bg-2)); border-radius: 12px; padding: 14px; text-align: center; }
+.upgrade-head { font-size: 12px; color: var(--blue); font-weight: 700; margin-bottom: 4px; }
+.upgrade-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 38px; color: var(--blue); line-height: 1; }
+.upgrade-label { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+.upgrade-bar { height: 8px; background: var(--bg-3); border-radius: 4px; margin: 12px 0 6px; overflow: hidden; position: relative; }
+.upgrade-bar-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--teal)); border-radius: 4px; }
+.upgrade-bar-target { position: absolute; top: -3px; height: 14px; width: 2px; background: var(--gold); }
+.upgrade-eta { font-size: 10px; color: var(--text-3); font-family: 'Space Mono', monospace; }
+
+/* 门店地图 */
+.store-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
+.store-stat { background: var(--bg-2); border-radius: 8px; padding: 10px 6px; text-align: center; border: 1px solid var(--border); }
+.store-stat.good { border-color: rgba(136, 200, 80, 0.3); background: rgba(136, 200, 80, 0.06); }
+.store-stat.warn { border-color: rgba(245, 166, 35, 0.3); background: rgba(245, 166, 35, 0.06); }
+.store-stat.bad { border-color: rgba(233, 69, 96, 0.3); background: rgba(233, 69, 96, 0.06); }
+.store-stat-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; }
+.store-stat-num.good { color: var(--green); }
+.store-stat-num.warn { color: var(--amber); }
+.store-stat-num.bad { color: var(--red); }
+.store-stat-lbl { font-size: 9px; color: var(--text-2); margin-top: 4px; }
+
+/* Uber 派单 SURGE */
+.surge-card { background: linear-gradient(135deg, rgba(233, 69, 96, 0.15) 0%, rgba(245, 166, 35, 0.08) 100%); border: 1px solid rgba(233, 69, 96, 0.3); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; }
+.surge-mult { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 32px; color: var(--red); flex-shrink: 0; }
+.surge-info { flex: 1; }
+.surge-title { font-weight: 700; font-size: 13px; color: var(--text-0); }
+.surge-desc { font-size: 11px; color: var(--text-2); margin-top: 3px; }
+
+/* 任务列表 (Uber 化) */
+.task-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 11px 12px; background: var(--bg-2); border-radius: 8px; margin-bottom: 6px; font-size: 11px; border-left: 3px solid var(--text-3); }
+.task-row.urgent { border-left-color: var(--red); background: linear-gradient(135deg, rgba(233, 69, 96, 0.05), var(--bg-2)); }
+.task-row.high { border-left-color: var(--amber); background: linear-gradient(135deg, rgba(245, 166, 35, 0.05), var(--bg-2)); }
+.task-row.normal { border-left-color: var(--blue); }
+.task-row.done { opacity: 0.55; border-left-color: var(--green); }
+.task-title { font-weight: 600; color: var(--text-0); font-size: 12px; }
+.task-meta { font-size: 10px; color: var(--text-2); margin-top: 2px; font-family: 'Space Mono', monospace; }
+.task-price { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; color: var(--gold); text-align: right; }
+.task-price-mult { font-size: 9px; color: var(--red); font-family: 'Space Mono', monospace; margin-top: 2px; }
+.task-action { margin-top: 6px; padding: 5px 12px; background: var(--gold); color: var(--bg-0); border-radius: 5px; font-size: 10px; font-weight: 700; display: inline-block; cursor: pointer; border: none; font-family: inherit; }
+.task-action.warn { background: var(--amber); }
+.task-action.bad { background: var(--red); color: white; }
+.task-action.done { background: rgba(136, 200, 80, 0.15); color: var(--green); }
+
+/* 互锁状态 */
+.lock-status-box { background: var(--bg-2); border-radius: 8px; padding: 10px 12px; font-size: 11px; color: var(--text-1); line-height: 1.8; }
+
+/* 向上传导 */
+.leverage-up { background: linear-gradient(135deg, rgba(78, 205, 196, 0.05), var(--bg-2)); border: 1px solid rgba(78, 205, 196, 0.2); border-radius: 10px; padding: 12px; border-left: 3px solid var(--teal); }
+.leverage-title { font-size: 12px; color: var(--teal); font-weight: 700; margin-bottom: 8px; }
+
+/* 异常 */
+.alert-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; background: rgba(245, 166, 35, 0.05); border-radius: 6px; margin-bottom: 4px; font-size: 11px; border-left: 3px solid var(--amber); }
+.alert-row.bad { background: rgba(233, 69, 96, 0.05); border-left-color: var(--red); }
+.alert-dot { font-size: 12px; flex-shrink: 0; }
+.alert-text { flex: 1; color: var(--text-1); line-height: 1.5; }
+
+/* Action */
+.action-card { background: var(--bg-2); border-radius: 10px; padding: 12px; margin-bottom: 8px; border-left: 3px solid var(--gold); }
+.action-head { font-size: 13px; font-weight: 700; color: var(--text-0); margin-bottom: 6px; }
+.action-desc { font-size: 11px; color: var(--text-1); line-height: 1.6; margin-bottom: 8px; }
+.action-impact { background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 8px 10px; font-size: 10px; color: var(--text-2); line-height: 1.6; margin-bottom: 10px; font-family: 'Space Mono', monospace; }
+.action-impact .plus { color: var(--green); }
+.action-btn { width: 100%; padding: 10px 14px; background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); border: none; border-radius: 8px; font-family: 'Noto Sans SC', sans-serif; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.action-btn:hover, .action-btn:active { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(212, 175, 55, 0.3); }
+
+/* 合伙人收益 */
+.income-big { text-align: center; padding: 16px 0 10px; background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(255, 124, 56, 0.04)); border-radius: 10px; margin-bottom: 12px; }
+.income-big-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 36px; color: var(--gold); line-height: 1; }
+.income-big-lbl { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+.income-future { background: rgba(78, 205, 196, 0.06); border: 1px solid rgba(78, 205, 196, 0.2); border-radius: 10px; padding: 10px 12px; text-align: center; margin-top: 8px; }
+.income-future-label { font-size: 10px; color: var(--teal); font-weight: 700; margin-bottom: 3px; }
+.income-future-val { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; color: var(--teal); }
+.income-future-sub { font-size: 10px; color: var(--text-2); margin-top: 3px; }
+
+.income-breakdown-row { display: flex; justify-content: space-between; padding: 6px 10px; background: var(--bg-2); border-radius: 5px; font-size: 11px; margin-bottom: 4px; }
+.income-bd-name { color: var(--text-1); }
+.income-bd-val { color: var(--green); font-family: 'Space Mono', monospace; font-weight: 700; }
+
+.partner-traits { background: rgba(78, 205, 196, 0.04); border-radius: 8px; padding: 10px; border: 1px solid rgba(78, 205, 196, 0.15); margin-top: 12px; }
+.partner-traits-title { font-size: 11px; color: var(--teal); font-weight: 700; margin-bottom: 6px; }
+.partner-traits-list { font-size: 11px; color: var(--text-1); line-height: 1.7; }
+
+/* 跳工具 */
+.tools-section { margin: 16px 14px; background: var(--surface); border: 1px solid var(--border-2); border-radius: 14px; padding: 14px; }
+.tools-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+.tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.tool-link { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 10px; transition: all 0.15s; cursor: pointer; }
+.tool-link:hover, .tool-link:active { border-color: var(--gold); background: var(--bg-3); transform: translateY(-1px); }
+.tool-icon { font-size: 22px; flex-shrink: 0; }
+.tool-info { flex: 1; min-width: 0; }
+.tool-name { font-size: 12px; font-weight: 700; color: var(--text-0); }
+.tool-desc { font-size: 9px; color: var(--text-2); margin-top: 2px; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border-2); border-radius: 16px; padding: 18px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; }
+.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--gold); margin-bottom: 12px; }
+.modal-section { margin-bottom: 12px; }
+.modal-section-label { font-size: 10px; color: var(--text-3); font-family: 'Space Mono', monospace; letter-spacing: 0.1em; margin-bottom: 4px; text-transform: uppercase; }
+.modal-section-content { font-size: 12px; color: var(--text-1); line-height: 1.6; background: var(--bg-2); padding: 10px; border-radius: 6px; }
+.modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+.modal-btn { flex: 1; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: 700; font-size: 12px; cursor: pointer; border: none; }
+.modal-btn.confirm { background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); }
+.modal-btn.cancel { background: var(--bg-3); color: var(--text-1); }
+
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: linear-gradient(135deg, var(--green), #5fa635); color: white; padding: 14px 20px; border-radius: 12px; font-size: 13px; font-weight: 600; z-index: 1001; opacity: 0; transition: all 0.3s; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); max-width: 90%; text-align: center; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.decision-log-section { margin: 12px 14px; background: linear-gradient(135deg, rgba(167, 139, 250, 0.06), var(--surface)); border: 1px solid rgba(167, 139, 250, 0.2); border-radius: 14px; padding: 14px; }
+.dlog-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--purple); margin-bottom: 4px; }
+.dlog-sub { font-size: 10px; color: var(--text-3); margin-bottom: 12px; font-family: 'Space Mono', monospace; }
+.dlog-empty { text-align: center; font-size: 11px; color: var(--text-3); padding: 16px; font-style: italic; }
+.dlog-entry { background: var(--bg-2); border-radius: 8px; padding: 10px; margin-bottom: 6px; font-size: 11px; border-left: 3px solid var(--purple); }
+.dlog-entry-id { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--purple); margin-bottom: 4px; }
+.dlog-entry-content { color: var(--text-1); line-height: 1.5; }
+
+.bottom-fix { padding: 18px 14px 32px; text-align: center; font-size: 10px; color: var(--text-3); }
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 · L1 SR 一线驾驶舱 · 欣和雇 · 直营战略 KA</div>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-top">
+    <a id="smart-back-top" href="index.html" style="color:var(--bg-0);text-decoration:none;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(212,175,55,0.3)">
+      <span style="font-size:16px">←</span><span id="smart-back-text-top">回主页</span>
+    </a>
+    <span style="color:var(--text-3);font-family:'Space Mono',monospace;font-size:11px">L1 SR 驾驶舱 v1.1</span>
+    <span id="now-time" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-2)">--:--</span>
+  </div>
+  <div style="display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;font-family:'Space Mono',monospace;font-size:10px">
+    <a href="cockpit_L7_GM_east.html" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--gold);text-decoration:none">L7 GM ↗</a>
+    <a href="cockpit_L5_CTL_shanghai.html?from=SR_张明远" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--gold);text-decoration:none">L5 CTL ↗</a>
+    <span style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-3);flex-shrink:0;border:1px solid var(--border)" onclick="alert('L3 OM 驾驶舱 · 直营线 · 待做')">L3 OM</span>
+    <span style="padding:4px 8px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));color:var(--bg-0);border-radius:4px;flex-shrink:0;font-weight:700">★ L1 SR (当前·欣和雇)</span>
+    <a href="cockpit_L1_DSR.html" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--teal);text-decoration:none">L1 DSR</a>
+    <a href="cockpit_L1_DSR2.html" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--blue);text-decoration:none">L1 DSR-2</a>
+  </div>
+  <div class="hero-row">
+    <div class="hero-avatar">📦</div>
+    <div class="hero-info">
+      <div class="hero-name">张明远</div>
+      <div class="hero-title">SR · 欣和直营 · 战略 KA 经理</div>
+      <div class="hero-scope">6 战略 KA · 山姆/沃尔玛/Costco/盒马/永辉/家乐福 沪西区</div>
+    </div>
+    <div class="hero-grade" style="font-size:22px;padding:4px 10px;background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.4);color:var(--gold)">S 级 SR</div>
+  </div>
+</div>
+
+<!-- ═════════ 模块 1 · 升 A 级冲刺 (DSR-2 灵魂目标) ═════════ -->
+<section class="cockpit-section priority">
+  <div class="section-header">
+    <div class="section-num">🎯</div>
+    <div class="section-title">SR 战略 KA 经理 · 山姆 5 店统签</div>
+    <div class="section-tag">Mission</div>
+  </div>
+  <div class="upgrade-box">
+    <div class="upgrade-head">SR 综合 · 战略 KA 经理</div>
+    <div class="upgrade-num">94</div>
+    <div class="upgrade-label">/ 5 星 SR 目标 95 · 仅差 1 分 · 山姆统签突破点</div>
+    <div class="upgrade-bar">
+      <div class="upgrade-bar-fill" style="width:94%"></div>
+      <div class="upgrade-bar-target" style="left:95%"></div>
+    </div>
+    <div class="upgrade-eta">山姆 5 店统签若成 · 立即升 5 星 SR · 月薪 ¥18k → ¥25k (+¥7k) · ¥8M 战略 KA 奖金分成</div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 2 · 我的管辖范围 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <div class="section-title">我的管辖 · 6 战略 KA · 沪西区</div>
+    <div class="section-tag">Scope</div>
+  </div>
+  <div style="background:var(--bg-2);border-radius:10px;padding:10px;font-size:11px;color:var(--text-1);line-height:1.6">
+    <b style="color:var(--gold)">沪西区 · 战略 KA 直营线</b><br>
+    雇主: 欣和 (集团直营 · 月薪制)<br>
+    上级 OM: 林志远 (沪西 OM · 综合 85)<br>
+    上级 CTL: 王志成 (上海 92 · 跨线汇合)<br>
+    无 DOM 督导 (走直营线 · 不走经销商)
+  </div>
+  <div class="store-stat-grid">
+    <div class="store-stat good">
+      <div class="store-stat-num good">5</div>
+      <div class="store-stat-lbl">KA 健康</div>
+    </div>
+    <div class="store-stat warn">
+      <div class="store-stat-num warn">1</div>
+      <div class="store-stat-lbl">家乐福 ⚠</div>
+    </div>
+    <div class="store-stat">
+      <div class="store-stat-num" style="color:var(--gold)">¥3.2M</div>
+      <div class="store-stat-lbl">月销 KA</div>
+    </div>
+    <div class="store-stat">
+      <div class="store-stat-num" style="color:var(--gold)">¥38M</div>
+      <div class="store-stat-lbl">年销 KA</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 3 · 今日 Uber 化派单 (DSR-2 核心) ═════════ -->
+<section class="cockpit-section uber">
+  <div class="section-header">
+    <div class="section-num" style="background:linear-gradient(135deg,var(--red),#c41538)">⚡</div>
+    <div class="section-title">今日 Uber 化派单</div>
+    <div class="section-tag" style="background:rgba(233,69,96,0.15);color:var(--red)">8 单</div>
+  </div>
+
+  <!-- SURGE 卡 -->
+  <div class="surge-card">
+    <div class="surge-mult">1.5×</div>
+    <div class="surge-info">
+      <div class="surge-title">战略 KA 大单 SURGE · 山姆 5 店统签</div>
+      <div class="surge-desc">华东跨城合约 · MOM 主导 · MOM + CTL 资源支援 · 奖金分成 1%</div>
+    </div>
+  </div>
+
+  <!-- 任务列表 -->
+  <div class="task-row urgent">
+    <div>
+      <div class="task-title">🚨 紧急 · 山姆华东 5 店统签 谈判</div>
+      <div class="task-meta">MOM 联合 · 跨城 ¥8M/年 · 本周必出 term sheet</div>
+      <button class="task-action bad" onclick="acceptTask('山姆统签', 2000)">主导谈判</button>
+    </div>
+    <div>
+      <div class="task-price">¥2,000</div>
+      <div class="task-price-mult">战略 KA 大单</div>
+    </div>
+  </div>
+
+  <div class="task-row high">
+    <div>
+      <div class="task-title">⭐ 高优 · 家乐福账期延迟解决</div>
+      <div class="task-meta">家乐福 4 单延迟 30 天 · 需 KA 经理沟通财务</div>
+      <button class="task-action warn" onclick="acceptTask('家乐福账期', 800)">立即处理</button>
+    </div>
+    <div>
+      <div class="task-price">¥800</div>
+      <div class="task-price-mult" style="color:var(--amber)">KA 财务</div>
+    </div>
+  </div>
+
+  <div class="task-row high">
+    <div>
+      <div class="task-title">⭐ 高优 · 永辉精品店 禾然有机上架</div>
+      <div class="task-meta">高端突围战略 · 5 家试点 · 米其林联动</div>
+      <button class="task-action warn" onclick="acceptTask('永辉禾然', 600)">推进上架</button>
+    </div>
+    <div>
+      <div class="task-price">¥600</div>
+      <div class="task-price-mult" style="color:var(--amber)">禾然战略</div>
+    </div>
+  </div>
+
+  <div class="task-row normal">
+    <div>
+      <div class="task-title">普通 · 山姆沪西店 月度堆头</div>
+      <div class="task-meta">六月鲜 + 禾然组合 · 大门口黄金位 · 拍照验收</div>
+      <button class="task-action" onclick="acceptTask('山姆堆头', 400)">现场验收</button>
+    </div>
+    <div><div class="task-price">¥400</div></div>
+  </div>
+
+  <div class="task-row done">
+    <div>
+      <div class="task-title">✓ 沃尔玛沪西店 月度访谈</div>
+      <div class="task-meta">14:30 完成 · 采购经理满意度 5.0 ★</div>
+      <button class="task-action done">已完成 ¥800</button>
+    </div>
+    <div><div class="task-price" style="color:var(--green)">¥800</div></div>
+  </div>
+
+  <div class="task-row done">
+    <div>
+      <div class="task-title">✓ Costco 大包装 SKU 续约</div>
+      <div class="task-meta">11:00 完成 · 半年合约 ¥1.5M</div>
+      <button class="task-action done">已完成 ¥1,200</button>
+    </div>
+    <div><div class="task-price" style="color:var(--green)">¥1,200</div></div>
+  </div>
+
+  <!-- 派单互锁状态 -->
+  <div class="lock-status-box" style="margin-top:10px">
+    <b style="color:var(--gold)">⚙️ KA 战略状态 · 欣和单 KPI 但战略级</b><br>
+    · <b style="color:var(--green)">月销 KA</b>: ¥3.2M (目标 ¥3M · 107%) ✓<br>
+    · <b style="color:var(--gold)">山姆统签</b>: ¥8M/年 谈判中 (出 term sheet 70%)<br>
+    · <b style="color:var(--amber)">家乐福账期</b>: 延迟 30 天 ¥1.2M 待回款<br>
+    · <b style="color:var(--blue)">CTL 王志成建议</b>: 优先山姆统签 · 跨城战略合约
+  </div>
+</section>
+
+<!-- ═════════ 模块 4 · 向上传导 (我影响谁) ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num" style="background:linear-gradient(135deg,var(--teal),var(--blue))">⇡</div>
+    <div class="section-title">我影响了谁</div>
+    <div class="section-tag" style="background:rgba(78,205,196,0.15);color:var(--teal)">Leverage</div>
+  </div>
+  <div class="leverage-up">
+    <div class="leverage-title">我 SR · 欣和直营 · 战略 KA 经理 · 直接对集团 GM 负责</div>
+    <div style="font-size:11px;color:var(--text-1);line-height:1.7">
+      <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:5px">📤 欣和直营线 (我归属这条线)</div>
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>→ OM 林志远 (沪西)</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">¥3.2M/月 KA 出货</span>
+      </div>
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>→ MOM 陈博文 (上海)</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">山姆 5 店统签 +¥8M/年</span>
+      </div>
+      
+      <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 5px">📤 跨线影响 (双线汇合在 CTL)</div>
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>→ CTL 王志成 (上海 92)</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">城市 KA +¥3.2M · +5 分</span>
+      </div>
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>→ GM 刘大海 (华东)</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">大区 KA 战略 +¥38M/年</span>
+      </div>
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;display:flex;justify-content:space-between">
+        <span>→ 北极星 200M 瓶</span><span style="font-family:'Space Mono',monospace;color:var(--gold);font-weight:700">25k 瓶/月 (KA 战略级)</span>
+      </div>
+      <div style="margin-top:8px;padding:8px;background:rgba(78,205,196,0.06);border-radius:5px;font-size:10px;color:var(--text-2);font-family:'Space Mono',monospace">
+        💎 SR 是 KA 战略接触点 · 一笔统签影响整个大区
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 5 · 异常清单 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <div class="section-title">我的异常清单</div>
+    <div class="section-tag">Alert</div>
+  </div>
+  <div class="alert-row bad">
+    <span class="alert-dot">🔴</span>
+    <span class="alert-text"><b>家乐福 4 单账期延迟 30 天</b> · ¥1.2M 回款风险 · 急需 KA 经理介入</span>
+  </div>
+  <div class="alert-row">
+    <span class="alert-dot">🟡</span>
+    <span class="alert-text"><b>山姆统签谈判进度 70%</b> · MOM 配合 · 本周需出 term sheet · 战略级</span>
+  </div>
+  <div class="alert-row">
+    <span class="alert-dot">🟡</span>
+    <span class="alert-text"><b>永辉禾然有机上架慢</b> · 5 家试点中 3 家 · 需高端突围加速</span>
+  </div>
+</section>
+
+<!-- ═════════ 模块 6 · 决策权限 (DSR-2 简化) ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <div class="section-title">我能做什么决定</div>
+    <div class="section-tag">Authority</div>
+  </div>
+  <div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:6px">✋ SR 自主决定</div>
+  <div style="font-size:11px;color:var(--text-1);line-height:1.7;padding-left:14px">
+    ✋ 6 KA 客户日常走访 + 关系维护<br>
+    ✋ KA 单店 ≤¥50k 促销资源<br>
+    ✋ 货架陈列 + 堆头位置协商<br>
+    ✋ KA 月度合约执行 + 验收<br>
+    ✋ 一物一码 KA 数据采集
+  </div>
+  <div style="font-size:11px;color:var(--red);font-weight:700;margin:10px 0 6px">🚫 报上游处理</div>
+  <div style="font-size:11px;color:var(--text-1);line-height:1.7;padding-left:14px">
+    🚫 跨城统签 (山姆 5 店) → 报 MOM + MCTL<br>
+    🚫 战略大单 > ¥50k → 报 OM 林志远<br>
+    🚫 价格政策 (KA 渠道) → 报 CTL + GM<br>
+    🚫 新 SKU 引入 → 报集团品牌部
+  </div>
+</section>
+
+<!-- ═════════ 模块 7 · 升 A 举措 ═════════ -->
+<section class="cockpit-section priority">
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <div class="section-title">升 A 级举措</div>
+    <div class="section-tag">Action</div>
+  </div>
+
+  <div class="action-card">
+    <div class="action-head">🚀 举措 · 月末冲刺 6 任务全完成</div>
+    <div class="action-desc">经销商 2 + 欣和 4 = 6 单 · 5 天内全完成 · 双 KPI 达标</div>
+    <div class="action-impact">
+      <span class="plus">影响: 沈总 KPI 100% + 欣和 PK 100% · 升 S DSR 起步</span><br>
+      合计奖金: ¥1,400 + 月薪 ¥9k = ¥10.4k
+    </div>
+    <button class="action-btn" onclick="openDecision('sr-1')">承诺执行</button>
+  </div>
+
+  <div class="action-card">
+    <div class="action-head">🚀 举措 · 配合 DOM 中山公园解约</div>
+    <div class="action-desc">DOM 黄建国本周走访中山公园 D 级 · 我配合提供完整资料 + 现场翻译</div>
+    <div class="action-impact">
+      <span class="plus">影响: 解约推进 +50% · DOM 评价 +5 分</span><br>
+      升 S DSR 加分 + DOM 推荐奖
+    </div>
+    <button class="action-btn" onclick="openDecision('sr-2')">配合 DOM</button>
+  </div>
+</section>
+
+<!-- ═════════ 模块 8 · 合伙人收益 (一线) ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <div class="section-title">我的合伙人收益</div>
+    <div class="section-tag">Partner</div>
+  </div>
+  <div class="income-big">
+    <div class="income-big-num">¥18,000</div>
+    <div class="income-big-lbl">本月已结算 · 欣和月薪 + KA 奖金</div>
+  </div>
+
+  <div>
+    <div class="income-breakdown-row"><span class="income-bd-name">欣和基础月薪 (S 级 SR)</span><span class="income-bd-val">¥12,000</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">KA 月销达标奖 (107%)</span><span class="income-bd-val">¥2,500</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">Costco 续约奖金</span><span class="income-bd-val">¥1,500</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">永辉禾然推广奖</span><span class="income-bd-val">¥1,000</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">月度客户满意度奖</span><span class="income-bd-val">¥1,000</span></div>
+  </div>
+
+  <!-- 升 5 星 SR 后预期 -->
+  <div class="income-future">
+    <div class="income-future-label">⭐ 山姆统签成 + 升 5 星 SR (30 天)</div>
+    <div class="income-future-val">¥25,000 / 月 + ¥80k 一次</div>
+    <div class="income-future-sub">+¥7k 月薪 + 战略 KA 奖金分成 1% × ¥8M = ¥80k</div>
+  </div>
+
+  <div class="partner-traits">
+    <div class="partner-traits-title">💎 我的合伙人 7 特征 · SR 战略 KA</div>
+    <div class="partner-traits-list">
+      ✅ <b>我有边界</b> 沪西区 6 战略 KA · ¥38M/年<br>
+      ✅ <b>我有权力</b> KA 关系 / 单店 ≤¥50k 促销 / 货架陈列<br>
+      ✅ <b>我有资源</b> 欣和品牌矩阵 + OM 林志远背书<br>
+      ✅ <b>我有责任</b> 战略 KA 守土 · 山姆/沃尔玛/Costco<br>
+      ✅ <b>我有收益</b> ¥18k/月 · 山姆统签后 ¥25k + ¥80k<br>
+      ✅ <b>我有传承</b> 已培训 2 名候选 SR<br>
+      ✅ <b>我有支援</b> OM 林志远 + MOM 陈博文 + CTL 王志成
+    </div>
+  </div>
+</section>
+
+<!-- 决策日志 -->
+<section class="decision-log-section">
+  <div class="dlog-title">📝 我的决策日志</div>
+  <div class="dlog-sub">晶体管 3 · 一线决策原子化</div>
+  <div id="decision-log-list">
+    <div class="dlog-empty">本月暂无决策日志 · 点击"举措"按钮触发</div>
+  </div>
+</section>
+
+<!-- 跳工具 -->
+<section class="tools-section">
+  <div class="tools-title">🔧 决策 → 跳工具</div>
+  <div style="font-size:10px;color:var(--text-3);margin-bottom:10px;font-family:'Space Mono',monospace">在驾驶舱内打开 · 右上 ✕ 关闭即回</div>
+  <div class="tools-grid">
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XM_SFA_v1.1.html', '🚗 路上 · SFA app · KA 客户走访')">
+      <div class="tool-icon">🚗</div>
+      <div class="tool-info"><div class="tool-name">路上 · XM ★★</div><div class="tool-desc">6 战略 KA 周计划</div></div>
+    </div>
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XL_SFA_v1.1.html', '💰 一本账 · SR KA 业绩')">
+      <div class="tool-icon">💰</div>
+      <div class="tool-info"><div class="tool-name">一本账 · XL</div><div class="tool-desc">欣和工资 + 大单奖金</div></div>
+    </div>
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XP_DSR_v1.1.html', '👤 我的 · SR S 级档案')">
+      <div class="tool-icon">👤</div>
+      <div class="tool-info"><div class="tool-name">我的 · XP</div><div class="tool-desc">档案 · 等级 · 培训</div></div>
+    </div>
+    <div class="tool-link" style="border-color:rgba(167,139,250,0.4);background:linear-gradient(135deg,rgba(167,139,250,0.06),var(--bg-2))" onclick="alert('🏪 INF-XD · 现场盘点工具\\n\\nDSR-2 一线核心工具:\\n· 一物一码扫码 (升 A 关键)\\n· 价签 AI 识别\\n· 库存盘点上报\\n\\nDS 真试点 v6.7.10')">
+      <div class="tool-icon">🏪</div>
+      <div class="tool-info"><div class="tool-name">店内 · XD ★★</div><div class="tool-desc" style="color:var(--purple)">真试点 · 一线核心</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 大金返回 -->
+<div style="margin:24px 14px 8px;text-align:center">
+  <a id="smart-back-bottom" href="index.html" style="display:inline-flex;align-items:center;gap:8px;color:var(--bg-0);text-decoration:none;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:12px 28px;border-radius:10px;font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(212,175,55,0.3)">
+    <span style="font-size:18px">←</span>
+    <span id="smart-back-text-bottom">回主页 · INFINITY OS 入口</span>
+  </a>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · L1 SR 一线驾驶舱 · v1.1<br>
+  · 欣和直营 · 战略 KA 经理 · 走 OM 线<br>
+  · 单一雇主 · 战略级影响 · 大单导向<br>
+  Layer 1.3 演示
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay"><div class="modal" id="modal-content"></div></div>
+
+<!-- iframe -->
+<div id="tool-iframe-wrapper" style="display:none;position:fixed;inset:0;z-index:2000;background:var(--bg-0)">
+  <div style="position:sticky;top:0;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10">
+    <button onclick="closeTool()" style="background:var(--bg-0);color:var(--gold);border:none;padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit">
+      <span style="font-size:16px">←</span><span>回我的驾驶舱</span>
+    </button>
+    <div id="tool-iframe-title" style="flex:1;color:var(--bg-0);font-weight:700;font-size:13px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+    <button onclick="closeTool()" style="background:transparent;color:var(--bg-0);border:1px solid var(--bg-0);padding:6px 10px;border-radius:6px;font-size:14px;cursor:pointer;font-weight:700">✕</button>
+  </div>
+  <iframe id="tool-iframe" src="" style="width:100%;height:calc(100vh - 56px);border:none;background:var(--bg-0)"></iframe>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// 智能返回
+(function setupSmartBack() {
+  const params = new URLSearchParams(location.search);
+  const from = params.get('from');
+  const backMap = {
+    'OM_沪西': { url: 'cockpit_L3_OM_huxi.html', label: '回 OM 驾驶舱', labelLong: '回 OM 沪西驾驶舱 · 林志远' },
+    'DOM_沪西': { url: 'cockpit_L3_DOM_huxi.html', label: '回 DOM 驾驶舱', labelLong: '回 DOM 沪西驾驶舱 · 黄建国' },
+    'CTL_上海': { url: 'cockpit_L5_CTL_shanghai.html', label: '回 CTL 驾驶舱', labelLong: '回 CTL 上海驾驶舱 · 王志成' },
+    'GM_华东': { url: 'cockpit_L7_GM_east.html', label: '回 GM 驾驶舱', labelLong: '回 GM 华东驾驶舱 · 刘大海' }
+  };
+  if (from && backMap[from]) {
+    const cfg = backMap[from];
+    document.getElementById('smart-back-top').href = cfg.url;
+    document.getElementById('smart-back-text-top').textContent = cfg.label;
+    document.getElementById('smart-back-bottom').href = cfg.url;
+    document.getElementById('smart-back-text-bottom').textContent = cfg.labelLong;
+  }
+})();
+
+const DECISIONS = {
+  'sr-1': {
+    title: '🚀 山姆 5 店统签谈判主导',
+    who: 'SR 张明远 · 战略 KA 经理',
+    what: '本周主导山姆华东 5 店统签谈判 · MOM 陈博文 + CTL 王志成支援',
+    why: '战略 KA 大单 ¥8M/年 · 升 5 星 SR 关键 · 大区跨城战略级',
+    impact: '+¥8M/年战略合约 · 升 5 星 SR · 月薪 +¥7k + ¥80k 一次性',
+    authority: 'SR 主导谈判 · 终签需 MCTL/GM 审批',
+    nextStep: '→ 跳 SFA 路上 · 添加 5 城统签谈判日程',
+    btnText: '主导谈判',
+    jumpTo: 'INFINITY_OS_INF-XM_SFA_v1.1.html'
+  },
+  'sr-2': {
+    title: '🚀 家乐福账期 ¥1.2M 催收',
+    who: 'SR 张明远',
+    what: '家乐福 4 单延迟 30 天 ¥1.2M · KA 经理沟通 + 财务介入',
+    why: '现金流风险 · 经济互锁影响 · 月底前必须回款',
+    impact: '回款 ¥1.2M · 经济互锁 +3% · OM 评价 +5 分',
+    authority: 'SR 自主决策 · 启动财务流程',
+    nextStep: '→ 跳 SFA 路上 · 添加家乐福本周催收',
+    btnText: '立即催收',
+    jumpTo: 'INFINITY_OS_INF-XM_SFA_v1.1.html'
+  }
+};
+
+const decisionLog = [];
+
+function acceptTask(name, price) {
+  showToast(`✅ 已抢单 · ${name} · ¥${price}`);
+  setTimeout(() => {
+    if (confirm(`抢单成功!\n\n${name} · ¥${price}\n\n现在跳 XM 路上 看任务详情?`)) {
+      openTool('INFINITY_OS_INF-XM_SFA_v1.1.html', '🚗 路上 · 执行 ' + name);
+    }
+  }, 1200);
+}
+
+function openTool(url, title) {
+  document.getElementById('tool-iframe-title').textContent = title;
+  document.getElementById('tool-iframe').src = url + '?embed=1';
+  document.getElementById('tool-iframe-wrapper').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTool() {
+  document.getElementById('tool-iframe-wrapper').style.display = 'none';
+  document.getElementById('tool-iframe').src = '';
+  document.body.style.overflow = '';
+}
+
+function openDecision(id) {
+  const d = DECISIONS[id]; if (!d) return;
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">${d.title}</div>
+    <div class="modal-section"><div class="modal-section-label">Who</div><div class="modal-section-content">${d.who}</div></div>
+    <div class="modal-section"><div class="modal-section-label">What</div><div class="modal-section-content">${d.what}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Why</div><div class="modal-section-content">${d.why}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Impact</div><div class="modal-section-content">${d.impact}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Authority</div><div class="modal-section-content">${d.authority}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Next</div><div class="modal-section-content">${d.nextStep}</div></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal()">取消</button>
+      <button class="modal-btn confirm" onclick="confirmDecision('${id}')">${d.btnText}</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+
+function confirmDecision(id) {
+  const d = DECISIONS[id]; closeModal();
+  const now = new Date();
+  const ts = now.getFullYear().toString().slice(2) + (now.getMonth()+1).toString().padStart(2,'0') + now.getDate().toString().padStart(2,'0') + '-' + now.getHours().toString().padStart(2,'0') + now.getMinutes().toString().padStart(2,'0');
+  const logId = `DEC-${ts}-SR-${(decisionLog.length+1).toString().padStart(3,'0')}`;
+  decisionLog.unshift({ id: logId, title: d.title.replace(/^[🚨🚀] /, ''), who: d.who, when: now.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}), impact: d.impact.split('·')[0].trim() });
+  renderDecisionLog();
+  showToast(`✅ 决策已记录 · ${logId}`);
+  setTimeout(() => {
+    if (d.jumpTo) setTimeout(() => {
+      if (confirm(`已记录决策\n${d.nextStep}\n\n现在跳路上 XM ?`)) openTool(d.jumpTo, '🚗 路上 · 执行 ' + d.title.replace(/^[🚨🚀] /, ''));
+    }, 800);
+  }, 1500);
+}
+
+function renderDecisionLog() {
+  const list = document.getElementById('decision-log-list');
+  if (decisionLog.length === 0) { list.innerHTML = '<div class="dlog-empty">本月暂无决策日志 · 点击"举措"按钮触发</div>'; return; }
+  list.innerHTML = decisionLog.map(d => `<div class="dlog-entry"><div class="dlog-entry-id">${d.id} · ${d.when}</div><div class="dlog-entry-content"><b>${d.title}</b><br>${d.who} · ${d.impact}</div></div>`).join('');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function updateTime() {
+  const n = new Date();
+  document.getElementById('now-time').textContent = n.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+}
+updateTime(); setInterval(updateTime, 30000);
+
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+</script>
+</body>
+</html>

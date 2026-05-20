@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · OM 沪西驾驶舱 · v1.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907; --bg-1: #14110d; --bg-2: #1c1815; --bg-3: #251f1a;
+  --surface: #1a1612; --surface-2: #221d18;
+  --border: rgba(255, 220, 180, 0.08); --border-2: rgba(255, 220, 180, 0.15);
+  --text-0: #f4ede0; --text-1: #c8bda8; --text-2: #847868; --text-3: #524a40;
+  --gold: #d4af37; --gold-bright: #f5a623;
+  --green: #88c850; --amber: #f5a623; --red: #e94560;
+  --blue: #5d9cec; --purple: #a78bfa; --teal: #4ecdc4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg-0); color: var(--text-0); font-family: 'Noto Sans SC', sans-serif; min-height: 100vh; overflow-x: hidden; }
+@media (min-width: 600px) { body { max-width: 480px; margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.6); } }
+
+.layer-badge { background: rgba(233, 69, 96, 0.15); border-bottom: 1px solid rgba(233, 69, 96, 0.25); color: var(--red); font-size: 10px; padding: 6px 14px; text-align: center; font-family: 'Space Mono', monospace; }
+
+.hero { padding: 18px 14px 14px; background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%); border-bottom: 1px solid var(--border); }
+.hero-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.hero-row { display: flex; align-items: center; gap: 14px; }
+.hero-avatar { width: 60px; height: 60px; border-radius: 16px; background: linear-gradient(135deg, var(--blue), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; box-shadow: 0 6px 18px rgba(93, 156, 236, 0.3); }
+.hero-info { flex: 1; min-width: 0; }
+.hero-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; }
+.hero-title { font-size: 12px; color: var(--blue); margin-top: 2px; }
+.hero-scope { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+.hero-score { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 32px; color: var(--green); flex-shrink: 0; }
+
+.cockpit-section { margin: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+.cockpit-section.priority { border-color: rgba(212, 175, 55, 0.25); background: linear-gradient(135deg, rgba(212, 175, 55, 0.04) 0%, var(--surface) 100%); }
+.cockpit-section.kademo { border-color: rgba(93, 156, 236, 0.25); background: linear-gradient(135deg, rgba(93, 156, 236, 0.04) 0%, var(--surface) 100%); }
+.section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.section-num { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 13px; }
+.section-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; flex: 1; }
+.section-tag { font-family: 'Space Mono', monospace; font-size: 9px; padding: 2px 7px; background: rgba(212, 175, 55, 0.1); color: var(--gold); border-radius: 4px; font-weight: 700; }
+
+/* 6 KA 战略热力图 */
+.ka-card { background: var(--bg-2); border-radius: 10px; padding: 12px; margin-bottom: 8px; border-left: 3px solid var(--text-3); cursor: pointer; transition: all 0.15s; }
+.ka-card.good { border-left-color: var(--green); background: linear-gradient(135deg, rgba(136, 200, 80, 0.04), var(--bg-2)); }
+.ka-card.warn { border-left-color: var(--amber); background: linear-gradient(135deg, rgba(245, 166, 35, 0.04), var(--bg-2)); }
+.ka-card.bad { border-left-color: var(--red); background: linear-gradient(135deg, rgba(233, 69, 96, 0.05), var(--bg-2)); }
+.ka-card.strategic { border-left-color: var(--gold); background: linear-gradient(135deg, rgba(212, 175, 55, 0.06), var(--bg-2)); }
+.ka-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.ka-name { font-size: 13px; font-weight: 700; color: var(--text-0); display: flex; align-items: center; gap: 6px; }
+.ka-score { padding: 2px 8px; border-radius: 10px; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; }
+.ka-score.good { background: rgba(136, 200, 80, 0.15); color: var(--green); }
+.ka-score.warn { background: rgba(245, 166, 35, 0.15); color: var(--amber); }
+.ka-score.bad { background: rgba(233, 69, 96, 0.15); color: var(--red); }
+.ka-stat { font-size: 10px; color: var(--text-2); margin-top: 4px; font-family: 'Space Mono', monospace; }
+.ka-action { font-size: 10px; color: var(--gold); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border); }
+
+/* 跨线协同 */
+.cross-line-box { background: linear-gradient(135deg, rgba(167, 139, 250, 0.05), var(--bg-2)); border: 1px solid rgba(167, 139, 250, 0.2); border-radius: 10px; padding: 12px; }
+.cross-line-title { font-size: 11px; font-weight: 700; color: var(--purple); margin-bottom: 8px; }
+
+/* KA 经济互锁 */
+.kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
+.kpi-box { background: var(--bg-2); border-radius: 8px; padding: 10px; text-align: center; border: 1px solid var(--border); }
+.kpi-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; }
+.kpi-num.good { color: var(--green); }
+.kpi-num.warn { color: var(--amber); }
+.kpi-num.bad { color: var(--red); }
+.kpi-num.gold { color: var(--gold); }
+.kpi-lbl { font-size: 9px; color: var(--text-2); margin-top: 4px; }
+
+/* SR 团队 */
+.sr-row { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--bg-2); border-radius: 8px; margin-bottom: 5px; font-size: 11px; border-left: 3px solid var(--green); cursor: pointer; transition: all 0.15s; }
+.sr-row:hover { background: var(--bg-3); transform: translateX(2px); }
+.sr-avatar { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--blue), var(--teal)); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.sr-info { flex: 1; }
+.sr-name { color: var(--text-0); font-weight: 600; font-size: 12px; }
+.sr-meta { font-size: 9px; color: var(--text-2); margin-top: 2px; font-family: 'Space Mono', monospace; }
+.sr-stat { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--gold); font-weight: 700; text-align: right; }
+
+/* 异常 */
+.alert-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; background: rgba(233, 69, 96, 0.05); border-radius: 6px; margin-bottom: 4px; font-size: 11px; border-left: 3px solid var(--red); }
+.alert-row.warn { background: rgba(245, 166, 35, 0.05); border-left-color: var(--amber); }
+.alert-dot { font-size: 12px; flex-shrink: 0; }
+.alert-text { flex: 1; color: var(--text-1); line-height: 1.5; }
+
+/* Root */
+.root-cause-box { background: var(--bg-2); border-radius: 10px; padding: 12px; }
+.rc-question { font-size: 12px; font-weight: 700; color: var(--amber); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.rc-chain { display: flex; flex-direction: column; gap: 6px; font-size: 11px; line-height: 1.5; }
+.rc-step { display: flex; gap: 8px; color: var(--text-1); align-items: flex-start; }
+.rc-step-num { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 11px; color: var(--amber); flex-shrink: 0; width: 16px; }
+.rc-conclusion { margin-top: 10px; padding: 10px; background: rgba(233, 69, 96, 0.06); border-radius: 6px; border-left: 3px solid var(--red); font-size: 11px; color: var(--text-1); line-height: 1.6; }
+.rc-conclusion b { color: var(--red); }
+
+/* Opp */
+.opp-row { background: linear-gradient(135deg, rgba(136, 200, 80, 0.06) 0%, var(--bg-2) 100%); border-radius: 10px; padding: 12px; border-left: 3px solid var(--green); margin-bottom: 8px; }
+.opp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.opp-title { font-size: 13px; font-weight: 700; color: var(--text-0); }
+.opp-roi { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; color: var(--green); }
+.opp-desc { font-size: 11px; color: var(--text-1); line-height: 1.6; }
+.opp-impact { margin-top: 6px; font-size: 10px; color: var(--text-2); font-family: 'Space Mono', monospace; }
+
+/* Authority */
+.authority-block { margin-bottom: 12px; }
+.authority-label { font-size: 11px; font-weight: 700; margin-bottom: 6px; }
+.authority-label.can { color: var(--green); }
+.authority-label.cant { color: var(--red); }
+.authority-list { font-size: 11px; color: var(--text-1); line-height: 1.7; padding-left: 14px; }
+.authority-list li { list-style: none; position: relative; }
+.authority-list.can li::before { content: '✋'; position: absolute; left: -14px; }
+.authority-list.cant li::before { content: '🚫'; position: absolute; left: -14px; }
+.resource-pool { background: var(--bg-2); border-radius: 8px; padding: 10px; margin-top: 8px; }
+.resource-pool-title { font-size: 11px; color: var(--gold); font-weight: 700; margin-bottom: 6px; }
+.resource-line { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; color: var(--text-1); }
+.resource-line b { color: var(--gold); font-family: 'Space Mono', monospace; }
+
+/* Action */
+.action-card { background: var(--bg-2); border-radius: 10px; padding: 12px; margin-bottom: 8px; border-left: 3px solid var(--gold); }
+.action-card.warn { border-left-color: var(--amber); }
+.action-card.bad { border-left-color: var(--red); }
+.action-card.strategic { border-left-color: var(--purple); }
+.action-head { font-size: 13px; font-weight: 700; color: var(--text-0); margin-bottom: 6px; }
+.action-desc { font-size: 11px; color: var(--text-1); line-height: 1.6; margin-bottom: 8px; }
+.action-impact { background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 8px 10px; font-size: 10px; color: var(--text-2); line-height: 1.6; margin-bottom: 10px; font-family: 'Space Mono', monospace; }
+.action-impact .plus { color: var(--green); }
+.action-impact .neutral { color: var(--amber); }
+.action-impact .minus { color: var(--red); }
+.action-btn { width: 100%; padding: 10px 14px; background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); border: none; border-radius: 8px; font-family: 'Noto Sans SC', sans-serif; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.action-btn:hover, .action-btn:active { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(212, 175, 55, 0.3); }
+.action-btn.strategic { background: linear-gradient(135deg, var(--purple), #7c3aed); color: white; }
+.action-btn.report { background: linear-gradient(135deg, var(--blue), var(--teal)); color: white; }
+.action-btn.danger { background: linear-gradient(135deg, var(--red), #c41538); color: white; }
+
+/* 合伙人收益 */
+.income-big { text-align: center; padding: 16px 0 10px; background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(255, 124, 56, 0.04)); border-radius: 10px; margin-bottom: 12px; }
+.income-big-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 36px; color: var(--gold); line-height: 1; }
+.income-big-lbl { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+.income-breakdown { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.income-breakdown-row { display: flex; justify-content: space-between; padding: 6px 10px; background: var(--bg-2); border-radius: 5px; font-size: 11px; }
+.income-bd-name { color: var(--text-1); }
+.income-bd-val { color: var(--green); font-family: 'Space Mono', monospace; font-weight: 700; }
+.compare-table { background: var(--bg-2); border-radius: 8px; padding: 10px; margin-bottom: 12px; }
+.compare-title { font-size: 11px; color: var(--gold); font-weight: 700; margin-bottom: 8px; }
+.compare-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 5px 0; font-size: 11px; align-items: center; }
+.compare-row.me { background: rgba(212, 175, 55, 0.05); padding: 5px 8px; border-radius: 5px; font-weight: 700; }
+.compare-name { color: var(--text-1); }
+.compare-val { color: var(--text-0); font-family: 'Space Mono', monospace; font-weight: 700; }
+.compare-diff { font-size: 10px; color: var(--text-2); font-family: 'Space Mono', monospace; }
+.partner-traits { background: rgba(78, 205, 196, 0.04); border-radius: 8px; padding: 10px; border: 1px solid rgba(78, 205, 196, 0.15); }
+.partner-traits-title { font-size: 11px; color: var(--teal); font-weight: 700; margin-bottom: 6px; }
+.partner-traits-list { font-size: 11px; color: var(--text-1); line-height: 1.7; }
+
+/* 跳工具 */
+.tools-section { margin: 16px 14px; background: var(--surface); border: 1px solid var(--border-2); border-radius: 14px; padding: 14px; }
+.tools-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+.tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.tool-link { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 10px; transition: all 0.15s; cursor: pointer; }
+.tool-link:hover, .tool-link:active { border-color: var(--gold); background: var(--bg-3); transform: translateY(-1px); }
+.tool-icon { font-size: 22px; flex-shrink: 0; }
+.tool-info { flex: 1; min-width: 0; }
+.tool-name { font-size: 12px; font-weight: 700; color: var(--text-0); }
+.tool-desc { font-size: 9px; color: var(--text-2); margin-top: 2px; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border-2); border-radius: 16px; padding: 18px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; }
+.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--gold); margin-bottom: 12px; }
+.modal-section { margin-bottom: 12px; }
+.modal-section-label { font-size: 10px; color: var(--text-3); font-family: 'Space Mono', monospace; letter-spacing: 0.1em; margin-bottom: 4px; text-transform: uppercase; }
+.modal-section-content { font-size: 12px; color: var(--text-1); line-height: 1.6; background: var(--bg-2); padding: 10px; border-radius: 6px; }
+.modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+.modal-btn { flex: 1; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: 700; font-size: 12px; cursor: pointer; border: none; }
+.modal-btn.confirm { background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); }
+.modal-btn.cancel { background: var(--bg-3); color: var(--text-1); }
+
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: linear-gradient(135deg, var(--green), #5fa635); color: white; padding: 14px 20px; border-radius: 12px; font-size: 13px; font-weight: 600; z-index: 1001; opacity: 0; transition: all 0.3s; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); max-width: 90%; text-align: center; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.decision-log-section { margin: 12px 14px; background: linear-gradient(135deg, rgba(167, 139, 250, 0.06), var(--surface)); border: 1px solid rgba(167, 139, 250, 0.2); border-radius: 14px; padding: 14px; }
+.dlog-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--purple); margin-bottom: 4px; }
+.dlog-sub { font-size: 10px; color: var(--text-3); margin-bottom: 12px; font-family: 'Space Mono', monospace; }
+.dlog-empty { text-align: center; font-size: 11px; color: var(--text-3); padding: 16px; font-style: italic; }
+.dlog-entry { background: var(--bg-2); border-radius: 8px; padding: 10px; margin-bottom: 6px; font-size: 11px; border-left: 3px solid var(--purple); }
+.dlog-entry-id { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--purple); margin-bottom: 4px; }
+.dlog-entry-content { color: var(--text-1); line-height: 1.5; }
+
+.bottom-fix { padding: 18px 14px 32px; text-align: center; font-size: 10px; color: var(--text-3); }
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 · L3 OM 沪西驾驶舱 · 直营线 · 6 战略 KA</div>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-top">
+    <a id="smart-back-top" href="index.html" style="color:var(--bg-0);text-decoration:none;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(212,175,55,0.3)">
+      <span style="font-size:16px">←</span><span id="smart-back-text-top">回主页</span>
+    </a>
+    <span style="color:var(--text-3);font-family:'Space Mono',monospace;font-size:11px">L3 OM 驾驶舱 v1.1</span>
+    <span id="now-time" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-2)">--:--</span>
+  </div>
+  <div style="display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;font-family:'Space Mono',monospace;font-size:10px">
+    <a href="cockpit_L7_GM_east.html" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--gold);text-decoration:none">L7 GM ↗</a>
+    <span style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-3);flex-shrink:0;border:1px solid var(--border)" onclick="alert('L6 MCTL · 待做')">L6 MCTL</span>
+    <a href="cockpit_L5_CTL_shanghai.html?from=OM_沪西" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--gold);text-decoration:none">L5 CTL ↗</a>
+    <span style="padding:4px 8px;background:linear-gradient(135deg,var(--blue),var(--purple));color:white;border-radius:4px;flex-shrink:0;font-weight:700">★ L3 OM (当前·直营)</span>
+    <a href="cockpit_L3_DOM_huxi.html" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--gold);text-decoration:none">L3 DOM (经销商)</a>
+    <a href="cockpit_L1_SR.html?from=OM_沪西" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--blue);text-decoration:none">L1 SR ↗</a>
+  </div>
+  <div class="hero-row">
+    <div class="hero-avatar">🏆</div>
+    <div class="hero-info">
+      <div class="hero-name">林志远</div>
+      <div class="hero-title">OM · 沪西直营运营督导 · 资深</div>
+      <div class="hero-scope">沪西区 · 6 战略 KA · 3 SR 团队 · 与 DOM 平级</div>
+    </div>
+    <div class="hero-score">85</div>
+  </div>
+</div>
+
+<!-- ═════════ 模块 0 · 双线对照 (OM vs DOM) ═════════ -->
+<section class="cockpit-section kademo">
+  <div class="section-header">
+    <div class="section-num" style="background:linear-gradient(135deg,var(--blue),var(--purple))">⚖</div>
+    <div class="section-title">双线对照 · OM 直营 vs DOM 经销商</div>
+    <div class="section-tag" style="background:rgba(93,156,236,0.15);color:var(--blue)">Dual Line</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+    <div style="background:linear-gradient(135deg,rgba(93,156,236,0.08),var(--bg-2));border:1px solid rgba(93,156,236,0.25);border-radius:10px;padding:12px">
+      <div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:6px">🏆 我 · OM 直营线</div>
+      <div style="font-size:10px;color:var(--text-1);line-height:1.6">
+        雇主: 欣和直营<br>
+        管辖: 6 战略 KA<br>
+        团队: 3 SR<br>
+        月销: ¥38M / 年 · KA<br>
+        综合: 85
+      </div>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(212,175,55,0.06),var(--bg-2));border:1px solid rgba(212,175,55,0.2);border-radius:10px;padding:12px;cursor:pointer" onclick="if(confirm('打开 DOM 黄建国驾驶舱?')) window.location.href='cockpit_L3_DOM_huxi.html?from=OM_沪西';">
+      <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px">🏛 DOM 黄建国 · 经销商线 ↗</div>
+      <div style="font-size:10px;color:var(--text-1);line-height:1.6">
+        雇主: 欣和督导<br>
+        管辖: 4 经销商 · 28 二批商<br>
+        团队: 4 DSR<br>
+        月销: ¥39M / 年 · 分销<br>
+        综合: 82
+      </div>
+    </div>
+  </div>
+  <div style="background:rgba(78,205,196,0.06);border:1px solid rgba(78,205,196,0.15);border-radius:8px;padding:10px;font-size:11px;color:var(--text-1);line-height:1.6">
+    <b style="color:var(--teal)">双线汇合在 CTL 王志成 (上海 92)</b><br>
+    OM 大单 + DOM 透明 = 城市综合最强 · 但需要跨线协同
+  </div>
+</section>
+
+<!-- ═════════ 模块 1 · 6 战略 KA 热力图 ═════════ -->
+<section class="cockpit-section priority">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <div class="section-title">6 战略 KA · 沪西管辖</div>
+    <div class="section-tag">Scope</div>
+  </div>
+
+  <div class="ka-card strategic" onclick="drillDown('山姆 (战略 KA)', '¥12M/月 · 5 星 SR 张明远主攻\n· 续约谈判中 · 华东 5 店统签机会\n· 标杆 KA · 高端突围基地')">
+    <div class="ka-head">
+      <div class="ka-name">⭐ 山姆 <span style="color:var(--gold);font-size:10px">5 星 KA</span></div>
+      <div class="ka-score good">95</div>
+    </div>
+    <div class="ka-stat">¥12M/月 · 续约谈判中 · 跨城 5 店统签 ¥8M/年</div>
+    <div class="ka-action">📌 SR 张明远主导 · 报 MOM + MCTL</div>
+  </div>
+
+  <div class="ka-card good" onclick="drillDown('沃尔玛 (战略 KA)', '¥18M/年 · 38 店区域续约\n· 稳定大客户 · 健康度高')">
+    <div class="ka-head">
+      <div class="ka-name">沃尔玛</div>
+      <div class="ka-score good">90</div>
+    </div>
+    <div class="ka-stat">¥1.5M/月 · 38 店区域续约 · 健康</div>
+    <div class="ka-action">📌 SR 李娟主管 · 月度走访</div>
+  </div>
+
+  <div class="ka-card good" onclick="drillDown('盒马 (战略 KA)', '¥9M/年 · O2O 试点 · 30 分钟达\n· 新零售突围基地')">
+    <div class="ka-head">
+      <div class="ka-name">盒马 <span style="color:var(--teal);font-size:10px">O2O</span></div>
+      <div class="ka-score good">88</div>
+    </div>
+    <div class="ka-stat">¥9M/年 · O2O 30 分钟达 · 新零售标杆</div>
+    <div class="ka-action">📌 SR 王伟主管 · O2O 联动盒马</div>
+  </div>
+
+  <div class="ka-card warn" onclick="drillDown('Costco (战略 KA)', '¥6M/年 · 大包装专属 SKU\n· 续约稳定 · 突破空间')">
+    <div class="ka-head">
+      <div class="ka-name">Costco <span style="color:var(--amber);font-size:10px">大包装</span></div>
+      <div class="ka-score warn">78</div>
+    </div>
+    <div class="ka-stat">¥6M/年 · 大包装专属 SKU · 续约稳定</div>
+    <div class="ka-action">📌 SR 张明远管 · 半年合约续</div>
+  </div>
+
+  <div class="ka-card warn" onclick="drillDown('永辉精品 (战略 KA)', '¥4M/年 · 禾然有机突围基地\n· 高端布点中 · 5 家试点')">
+    <div class="ka-head">
+      <div class="ka-name">永辉精品 <span style="color:var(--green);font-size:10px">禾然</span></div>
+      <div class="ka-score warn">72</div>
+    </div>
+    <div class="ka-stat">¥4M/年 · 禾然有机突围 · 5 家试点中 3</div>
+    <div class="ka-action">📌 SR 张明远主推 · 米其林联动</div>
+  </div>
+
+  <div class="ka-card bad" onclick="drillDown('家乐福 (战略 KA · 异常)', '¥1.2M 4 单账期延迟 30 天\n· 经济互锁风险 · 急需 KA 经理介入')">
+    <div class="ka-head">
+      <div class="ka-name">家乐福 ⚠ <span style="color:var(--red);font-size:10px">账期</span></div>
+      <div class="ka-score bad">68</div>
+    </div>
+    <div class="ka-stat">¥1.2M 账期延迟 30 天 · 现金流风险</div>
+    <div class="ka-action">📌 SR 张明远本周催收 · 升级 OM 介入</div>
+  </div>
+
+  <!-- KA 经济指标 -->
+  <div style="font-size:11px;color:var(--gold);font-weight:700;margin:14px 0 8px">💼 KA 经济指标</div>
+  <div class="kpi-grid">
+    <div class="kpi-box"><div class="kpi-num gold">¥3.2M</div><div class="kpi-lbl">月销 KA</div></div>
+    <div class="kpi-box"><div class="kpi-num gold">¥38M</div><div class="kpi-lbl">年销 KA</div></div>
+    <div class="kpi-box"><div class="kpi-num warn">¥1.2M</div><div class="kpi-lbl">账期延迟</div></div>
+    <div class="kpi-box"><div class="kpi-num good">96%</div><div class="kpi-lbl">续约率</div></div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 2 · SR 团队管理 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <div class="section-title">SR 团队 · 3 SR 直属</div>
+    <div class="section-tag">Team</div>
+  </div>
+  <a href="cockpit_L1_SR.html?from=OM_沪西" style="text-decoration:none">
+    <div class="sr-row">
+      <div class="sr-avatar">👨‍💼</div>
+      <div class="sr-info">
+        <div class="sr-name">★ 张明远 · S 级 SR (5 星候选)</div>
+        <div class="sr-meta">山姆 + Costco + 永辉 · ¥18k 月薪 · 升 5 星冲刺中</div>
+      </div>
+      <div class="sr-stat">¥18M/年</div>
+    </div>
+  </a>
+  <div class="sr-row" onclick="alert('SR 李娟 · A 级 · ¥15k 月薪\\n沃尔玛主管 · 38 店区域续约稳定')">
+    <div class="sr-avatar">👩‍💼</div>
+    <div class="sr-info">
+      <div class="sr-name">李娟 · A 级 SR</div>
+      <div class="sr-meta">沃尔玛主管 · ¥15k 月薪 · 续约稳定</div>
+    </div>
+    <div class="sr-stat">¥18M/年</div>
+  </div>
+  <div class="sr-row" onclick="alert('SR 王伟 · A 级 · ¥14k 月薪\\n盒马 + O2O 新零售试点主管')">
+    <div class="sr-avatar">👨‍💼</div>
+    <div class="sr-info">
+      <div class="sr-name">王伟 · A 级 SR</div>
+      <div class="sr-meta">盒马 O2O 主管 · ¥14k 月薪 · 新零售突围</div>
+    </div>
+    <div class="sr-stat">¥9M/年</div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 3 · 跨线协同 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <div class="section-title">跨线协同 · 我影响谁</div>
+    <div class="section-tag" style="background:rgba(167,139,250,0.15);color:var(--purple)">Leverage</div>
+  </div>
+  <div class="cross-line-box">
+    <div class="cross-line-title">📤 直营线上传导</div>
+    <div style="font-size:11px;color:var(--text-1);line-height:1.7">
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>→ MOM 陈博文 (上海)</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">¥38M/年 · ¥3.2M/月</span>
+      </div>
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>→ CTL 王志成 (双线汇合)</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">城市 KA 50% · +5 分</span>
+      </div>
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>→ GM 刘大海 (大区)</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">华东 KA 12%</span>
+      </div>
+    </div>
+    <div class="cross-line-title" style="margin-top:10px">🤝 跨线协同 (与 DOM 经销商线)</div>
+    <div style="font-size:11px;color:var(--text-1);line-height:1.7">
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px">
+        <b>OM × DOM = CTL 双线汇合点</b><br>
+        盒马 O2O 配送由经销商体系支撑 · 我和 DOM 协调
+      </div>
+      <div style="padding:6px 8px;background:rgba(212,175,55,0.06);border-radius:5px;font-size:10px;color:var(--text-2);font-family:'Space Mono',monospace">
+        💎 我 OM 是双线汇合的 KA 接触点 · 与 DOM 协同 = 城市完整
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 4 · 异常清单 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <div class="section-title">KA 异常清单</div>
+    <div class="section-tag">Alert</div>
+  </div>
+  <div class="alert-row">
+    <span class="alert-dot">🔴</span>
+    <span class="alert-text"><b>家乐福 ¥1.2M 账期延迟 30 天</b> · 经济互锁风险 · 月底前必须回款 · SR 张明远本周催收</span>
+  </div>
+  <div class="alert-row warn">
+    <span class="alert-dot">🟡</span>
+    <span class="alert-text"><b>山姆华东 5 店统签谈判 70%</b> · 本周需出 term sheet · MOM 主导 · OM 配合</span>
+  </div>
+  <div class="alert-row warn">
+    <span class="alert-dot">🟡</span>
+    <span class="alert-text"><b>永辉禾然有机 3/5 店上架</b> · 高端突围进度慢 · 米其林联动机会未启</span>
+  </div>
+</section>
+
+<!-- ═════════ 模块 5 · 根因 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <div class="section-title">根因分析</div>
+    <div class="section-tag">Root</div>
+  </div>
+  <div class="root-cause-box">
+    <div class="rc-question">❓ 为什么沪西 OM 综合 85 而不是 90+?</div>
+    <div class="rc-chain">
+      <div class="rc-step"><span class="rc-step-num">①</span><span>主拖累: 家乐福账期延迟 (经济互锁 -5 分)</span></div>
+      <div class="rc-step"><span class="rc-step-num">②</span><span>次拖累: 永辉禾然上架慢 (战略目标 -3 分)</span></div>
+      <div class="rc-step"><span class="rc-step-num">③</span><span>未爆发: 山姆统签未成 (突破点 +5 分待激活)</span></div>
+      <div class="rc-step"><span class="rc-step-num">④</span><span>系统问题: KA 财务对接不够 · 账期管理被动</span></div>
+    </div>
+    <div class="rc-conclusion">
+      <b>近期可解</b>: 家乐福催收 30 天 + 永辉禾然加速 30 天<br>
+      <b>战略突破</b>: 山姆 5 店统签 · 跨城合约成 → +¥8M/年<br>
+      <b>OM 90+</b>: 短期 88 (账期解决) · 长期 92 (山姆成 + 禾然成)
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 6 · 机会 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">6</div>
+    <div class="section-title">KA 战略机会</div>
+    <div class="section-tag">Opp</div>
+  </div>
+  <div class="opp-row">
+    <div class="opp-head">
+      <span class="opp-title">🚀 山姆华东 5 店统签</span>
+      <span class="opp-roi">+¥8M/年</span>
+    </div>
+    <div class="opp-desc">上海 + 苏州 + 杭州 + 宁波 + 无锡 · MOM + 我主导 · 报 MCTL · 跨城战略</div>
+    <div class="opp-impact">影响: KA 50% → 65% · OM 综合 85 → 92 · 升级标杆 OM</div>
+  </div>
+  <div class="opp-row">
+    <div class="opp-head">
+      <span class="opp-title">🚀 永辉禾然全店扩展</span>
+      <span class="opp-roi">+¥2M/年</span>
+    </div>
+    <div class="opp-desc">5 家试点 → 15 家 · 米其林厨师 KOL 联动 · 高端突围</div>
+    <div class="opp-impact">影响: 禾然 KA 占比 +5% · 集团高端定位强化</div>
+  </div>
+  <div class="opp-row">
+    <div class="opp-head">
+      <span class="opp-title">🚀 盒马 O2O 30 分钟达扩 KA</span>
+      <span class="opp-roi">+¥1.5M/年</span>
+    </div>
+    <div class="opp-desc">盒马模式经验复制到山姆/永辉 · 即时零售突破</div>
+    <div class="opp-impact">影响: 即时零售占比 +3% · 数字化升级</div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 7 · 决策权限 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">7</div>
+    <div class="section-title">OM 决策权限</div>
+    <div class="section-tag">Authority</div>
+  </div>
+  <div class="authority-block">
+    <div class="authority-label can">✋ OM 自主拍板</div>
+    <ul class="authority-list can">
+      <li>KA 续约 (≤¥5M/年单 KA)</li>
+      <li>KA 月度促销资源 (≤¥200k)</li>
+      <li>KA 账期管理 (≤¥1M)</li>
+      <li>3 SR 任免 + 培养</li>
+      <li>KA 战略基金 ¥800k/季度</li>
+      <li>跨线协同 (与 DOM 协商资源)</li>
+    </ul>
+  </div>
+  <div class="authority-block">
+    <div class="authority-label cant">🚫 报 CTL / MOM 处理</div>
+    <ul class="authority-list cant">
+      <li>跨城统签 (山姆 5 店) → 报 MOM + MCTL</li>
+      <li>战略 KA 续约 >¥5M → 报 MOM + CTL</li>
+      <li>新 KA 引入 → 报 CTL</li>
+      <li>价格政策 KA 渠道 → 报 CTL</li>
+    </ul>
+  </div>
+  <div class="resource-pool">
+    <div class="resource-pool-title">💰 OM 季度资源池</div>
+    <div class="resource-line"><span>KA 战略基金</span><b>¥800,000</b></div>
+    <div class="resource-line"><span>KA 促销资源</span><b>¥600,000</b></div>
+    <div class="resource-line"><span>SR 团队激励</span><b>¥150,000</b></div>
+    <div class="resource-line"><span>账期周转金</span><b>¥1,000,000</b></div>
+    <div class="resource-line" style="border-top:1px solid var(--border);margin-top:6px;padding-top:8px"><span><b>季度自批权限</b></span><b style="color:var(--gold-bright)">¥2,550,000</b></div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 8 · 举措 ═════════ -->
+<section class="cockpit-section priority">
+  <div class="section-header">
+    <div class="section-num">8</div>
+    <div class="section-title">OM 战略举措</div>
+    <div class="section-tag">Action</div>
+  </div>
+
+  <div class="action-card bad">
+    <div class="action-head">🚨 举措 1 · 家乐福账期 ¥1.2M 强制催收</div>
+    <div class="action-desc">OM 升级介入 · 财务部联合催收 · 必要时启动法律程序</div>
+    <div class="action-impact">
+      <span class="plus">影响: 回款 ¥1.2M · 经济互锁 +5% · OM 综合 +3 分</span>
+    </div>
+    <button class="action-btn danger" onclick="openDecision('om-1')">强制催收</button>
+  </div>
+
+  <div class="action-card strategic">
+    <div class="action-head">📞 举措 2 · 山姆 5 店统签申请</div>
+    <div class="action-desc">主导 SR 张明远 · 报 MOM 陈博文 · MCTL 徐海明审批 · 跨城战略合约</div>
+    <div class="action-impact">
+      投入: 0 (谈判) · <span class="neutral">需报 MOM + MCTL</span><br>
+      <span class="plus">影响: +¥8M/年 · OM 升级标杆 · 5 星 OM 候选</span>
+    </div>
+    <button class="action-btn strategic" onclick="openDecision('om-2')">提交申请</button>
+  </div>
+
+  <div class="action-card">
+    <div class="action-head">🚀 举措 3 · 永辉禾然扩展 15 店</div>
+    <div class="action-desc">米其林厨师 KOL 联动 · 5 家试点 → 15 家 · 高端突围战略</div>
+    <div class="action-impact">
+      投入: ¥150k (战略基金内) · <span class="neutral">OM 自批</span><br>
+      <span class="plus">影响: 永辉 KA +¥2M/年 · 禾然集团 +3%</span>
+    </div>
+    <button class="action-btn" onclick="openDecision('om-3')">启动扩展</button>
+  </div>
+
+  <div class="action-card">
+    <div class="action-head">🚀 举措 4 · SR 张明远升 5 星推荐</div>
+    <div class="action-desc">山姆统签若成 → 推荐升 5 星 SR · 月薪 ¥18k → ¥25k · 大单分成</div>
+    <div class="action-impact">
+      投入: ¥10k (年度团队激励) · <span class="neutral">OM 自批</span><br>
+      <span class="plus">影响: 5 星 SR 培养 · 团队战斗力 +20%</span>
+    </div>
+    <button class="action-btn" onclick="openDecision('om-4')">推荐升级</button>
+  </div>
+</section>
+
+<!-- ═════════ 模块 9 · 合伙人收益 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">9</div>
+    <div class="section-title">OM 合伙人收益</div>
+    <div class="section-tag">Partner</div>
+  </div>
+  <div class="income-big">
+    <div class="income-big-num">¥38,000</div>
+    <div class="income-big-lbl">本月已结算 · OM 资深</div>
+  </div>
+  <div class="income-breakdown">
+    <div class="income-breakdown-row"><span class="income-bd-name">基础工资 (OM 资深)</span><span class="income-bd-val">¥22,000</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">KA 综合奖 (85 分)</span><span class="income-bd-val">¥8,000</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">KA 续约奖 (96%)</span><span class="income-bd-val">¥4,000</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">SR 培养奖 (3 SR)</span><span class="income-bd-val">¥3,000</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">战略 KA 维护奖</span><span class="income-bd-val">¥1,000</span></div>
+  </div>
+
+  <div class="compare-table">
+    <div class="compare-title">📊 4 沪 OM 对比 (直营线)</div>
+    <div class="compare-row me">
+      <span class="compare-name">🥇 沪西 · 林志远 (我)</span>
+      <span class="compare-val">¥38k</span><span class="compare-diff">85</span>
+    </div>
+    <div class="compare-row">
+      <span class="compare-name">🥈 沪东 · 周强</span>
+      <span class="compare-val">¥32k</span><span class="compare-diff">80</span>
+    </div>
+    <div class="compare-row">
+      <span class="compare-name">🥉 沪南 · 陈丽</span>
+      <span class="compare-val">¥30k</span><span class="compare-diff">78</span>
+    </div>
+    <div class="compare-row">
+      <span class="compare-name">4️⃣ 沪北 · 钱新</span>
+      <span class="compare-val">¥28k</span><span class="compare-diff">75</span>
+    </div>
+  </div>
+
+  <div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);border-radius:8px;padding:10px;margin-bottom:12px;text-align:center">
+    <div style="font-size:10px;color:var(--purple);font-weight:700;margin-bottom:4px">⭐ 山姆统签若成 + 升 5 星 OM</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--purple)">¥48,000 / 月 + ¥80k 一次</div>
+    <div style="font-size:10px;color:var(--text-2);margin-top:3px">+¥10k 月薪 + 跨城战略大单 1% 分成</div>
+  </div>
+
+  <div class="partner-traits">
+    <div class="partner-traits-title">💎 我的合伙人 7 特征 · OM 直营</div>
+    <div class="partner-traits-list">
+      ✅ <b>我有边界</b> 沪西区 · 6 战略 KA · ¥38M/年<br>
+      ✅ <b>我有权力</b> 季度 ¥2.55M 自批<br>
+      ✅ <b>我有资源</b> 3 SR 团队 + MOM 背书<br>
+      ✅ <b>我有责任</b> KA 战略守土 · 续约 96%<br>
+      ✅ <b>我有收益</b> ¥38k/月 · 山姆成 ¥48k + ¥80k<br>
+      ✅ <b>我有传承</b> 已培养 1 名 5 星 SR 候选<br>
+      ✅ <b>我有支援</b> MOM 陈博文 + CTL 王志成
+    </div>
+  </div>
+</section>
+
+<!-- 决策日志 -->
+<section class="decision-log-section">
+  <div class="dlog-title">📝 OM 决策日志 · 直营线</div>
+  <div class="dlog-sub">晶体管 3 · KA 决策原子化</div>
+  <div id="decision-log-list">
+    <div class="dlog-empty">本月暂无决策日志 · 点击"举措"按钮触发</div>
+  </div>
+</section>
+
+<!-- 跳工具 -->
+<section class="tools-section">
+  <div class="tools-title">🔧 决策 → 跳工具</div>
+  <div style="font-size:10px;color:var(--text-3);margin-bottom:10px;font-family:'Space Mono',monospace">在驾驶舱内打开 · 右上 ✕ 关闭即回</div>
+  <div class="tools-grid">
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XM_OM_v1.1.html', '🚗 路上 · OM KA 走访')">
+      <div class="tool-icon">🚗</div>
+      <div class="tool-info"><div class="tool-name">路上 · XM</div><div class="tool-desc">本周 KA 战略走访</div></div>
+    </div>
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XL_OM_v1.1.html', '💰 一本账 · OM KA 经济')">
+      <div class="tool-icon">💰</div>
+      <div class="tool-info"><div class="tool-name">一本账 · XL ★</div><div class="tool-desc">6 KA + 账期 + SR 团队</div></div>
+    </div>
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XP_OM_v1.1.html', '👤 我的 · OM 资深档案')">
+      <div class="tool-icon">👤</div>
+      <div class="tool-info"><div class="tool-name">我的 · XP</div><div class="tool-desc">档案 + 等级 + SR 培养</div></div>
+    </div>
+    <div class="tool-link" style="opacity:0.55;cursor:not-allowed;border-style:dashed" onclick="alert('🏪 OM 通过 SR 看 KA 现场数据\\n\\nXD 主要是 SR 一线使用')">
+      <div class="tool-icon">🏪</div>
+      <div class="tool-info"><div class="tool-name">店内 · XD</div><div class="tool-desc">SR 一线用 · OM 看数据</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 大金返回 -->
+<div style="margin:24px 14px 8px;text-align:center">
+  <a id="smart-back-bottom" href="index.html" style="display:inline-flex;align-items:center;gap:8px;color:var(--bg-0);text-decoration:none;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:12px 28px;border-radius:10px;font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(212,175,55,0.3)">
+    <span style="font-size:18px">←</span>
+    <span id="smart-back-text-bottom">回主页 · INFINITY OS 入口</span>
+  </a>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · L3 OM 沪西驾驶舱 · v1.1<br>
+  · 直营线 · 6 战略 KA · 与 DOM 平级<br>
+  · 双线汇合在 CTL · 跨线协同<br>
+  Layer 1.3 演示
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay"><div class="modal" id="modal-content"></div></div>
+
+<!-- iframe -->
+<div id="tool-iframe-wrapper" style="display:none;position:fixed;inset:0;z-index:2000;background:var(--bg-0)">
+  <div style="position:sticky;top:0;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10">
+    <button onclick="closeTool()" style="background:var(--bg-0);color:var(--gold);border:none;padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit">
+      <span style="font-size:16px">←</span><span>回 OM 驾驶舱</span>
+    </button>
+    <div id="tool-iframe-title" style="flex:1;color:var(--bg-0);font-weight:700;font-size:13px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+    <button onclick="closeTool()" style="background:transparent;color:var(--bg-0);border:1px solid var(--bg-0);padding:6px 10px;border-radius:6px;font-size:14px;cursor:pointer;font-weight:700">✕</button>
+  </div>
+  <iframe id="tool-iframe" src="" style="width:100%;height:calc(100vh - 56px);border:none;background:var(--bg-0)"></iframe>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function setupSmartBack() {
+  const params = new URLSearchParams(location.search);
+  const from = params.get('from');
+  const backMap = {
+    'CTL_上海': { url: 'cockpit_L5_CTL_shanghai.html', label: '回 CTL 驾驶舱', labelLong: '回 CTL 上海驾驶舱 · 王志成' },
+    'GM_华东': { url: 'cockpit_L7_GM_east.html', label: '回 GM 驾驶舱', labelLong: '回 GM 华东驾驶舱 · 刘大海' }
+  };
+  if (from && backMap[from]) {
+    const cfg = backMap[from];
+    document.getElementById('smart-back-top').href = cfg.url;
+    document.getElementById('smart-back-text-top').textContent = cfg.label;
+    document.getElementById('smart-back-bottom').href = cfg.url;
+    document.getElementById('smart-back-text-bottom').textContent = cfg.labelLong;
+  }
+})();
+
+const DECISIONS = {
+  'om-1': {
+    title: '🚨 家乐福 ¥1.2M 强制催收',
+    who: 'OM 林志远 · 沪西',
+    what: 'OM 升级介入家乐福账期 · 财务部联合 · 4 单 ¥1.2M 30 天延迟',
+    why: '经济互锁风险 · OM 综合 -5 分 · 月底前必须回款',
+    impact: '回款 ¥1.2M · 经济互锁 +5% · OM 综合 +3 分',
+    authority: 'OM 自主决策 · 账期管理 ≤¥1M (家乐福 ¥1.2M 略超 · 报 CTL 备案)',
+    nextStep: '→ 跳 XM 路上 · 添加家乐福本周强制催收 + 法律程序',
+    btnText: '启动催收', jumpTo: 'INFINITY_OS_INF-XM_OM_v1.1.html'
+  },
+  'om-2': {
+    title: '📞 山姆 5 店统签申请',
+    who: 'OM 林志远',
+    what: '主导 SR 张明远 · 报 MOM 陈博文 + MCTL 徐海明 · 山姆华东 5 店跨签',
+    why: 'KA 战略级 ¥8M/年 · OM 升级标杆 · 大区跨城战略',
+    impact: '+¥8M/年战略合约 · OM 升 5 星 · 月薪 +¥10k + ¥80k 分成',
+    authority: 'OM 无独立拍板权 · 跨城统签需 MOM + MCTL 双签',
+    nextStep: '→ 提交 MOM 审批队列 · 同时跳 XM 路上添加谈判日程',
+    btnText: '提交申请', jumpTo: 'INFINITY_OS_INF-XM_OM_v1.1.html'
+  },
+  'om-3': {
+    title: '🚀 永辉禾然扩展 15 店',
+    who: 'OM 林志远',
+    what: '永辉精品禾然有机 5 家试点 → 15 家扩展 · 米其林厨师 KOL 联动',
+    why: '集团高端突围战略 · 禾然 KA 占比仅 6% · 上海标杆',
+    impact: '投入: ¥150k (战略基金内) · 永辉 +¥2M/年 · 禾然 +3%',
+    authority: 'OM 自主拍板 · KA 战略基金权限内',
+    nextStep: '→ 跳 XM 路上 · 添加永辉 15 店巡回 + 米其林 KOL 谈判',
+    btnText: '启动扩展', jumpTo: 'INFINITY_OS_INF-XM_OM_v1.1.html'
+  },
+  'om-4': {
+    title: '🚀 SR 张明远升 5 星推荐',
+    who: 'OM 林志远',
+    what: '推荐 SR 张明远升 5 星 · 山姆统签若成 · 团队战斗力提升',
+    why: '张明远综合 94 · 山姆主导 · 永辉主推 · 沪西标杆 SR',
+    impact: '5 星 SR 培养 · 月薪 +¥7k + ¥80k 分成 · 团队 +20% 战斗力',
+    authority: 'OM 自主拍板 · SR 任免 + 培养权限',
+    nextStep: '→ 跳 XP 我的 · 提交 5 星 SR 推荐报告',
+    btnText: '提交推荐', jumpTo: 'INFINITY_OS_INF-XP_OM_v1.1.html'
+  }
+};
+
+const decisionLog = [];
+
+function drillDown(name, detail) {
+  alert(`📍 ${name}\n\n${detail}`);
+}
+
+function openTool(url, title) {
+  document.getElementById('tool-iframe-title').textContent = title;
+  document.getElementById('tool-iframe').src = url + '?embed=1';
+  document.getElementById('tool-iframe-wrapper').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTool() {
+  document.getElementById('tool-iframe-wrapper').style.display = 'none';
+  document.getElementById('tool-iframe').src = '';
+  document.body.style.overflow = '';
+}
+
+function openDecision(id) {
+  const d = DECISIONS[id]; if (!d) return;
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">${d.title}</div>
+    <div class="modal-section"><div class="modal-section-label">Who</div><div class="modal-section-content">${d.who}</div></div>
+    <div class="modal-section"><div class="modal-section-label">What</div><div class="modal-section-content">${d.what}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Why</div><div class="modal-section-content">${d.why}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Impact</div><div class="modal-section-content">${d.impact}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Authority</div><div class="modal-section-content">${d.authority}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Next</div><div class="modal-section-content">${d.nextStep}</div></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal()">取消</button>
+      <button class="modal-btn confirm" onclick="confirmDecision('${id}')">${d.btnText}</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+
+function confirmDecision(id) {
+  const d = DECISIONS[id]; closeModal();
+  const now = new Date();
+  const ts = now.getFullYear().toString().slice(2) + (now.getMonth()+1).toString().padStart(2,'0') + now.getDate().toString().padStart(2,'0') + '-' + now.getHours().toString().padStart(2,'0') + now.getMinutes().toString().padStart(2,'0');
+  const logId = `DEC-${ts}-OM-${(decisionLog.length+1).toString().padStart(3,'0')}`;
+  decisionLog.unshift({ id: logId, title: d.title.replace(/^[🚨🚀📞] /, ''), who: d.who, when: now.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}), impact: d.impact.split('·')[0].trim() });
+  renderDecisionLog();
+  showToast(`✅ OM 决策已记录 · ${logId}`);
+  setTimeout(() => {
+    if (d.jumpTo) setTimeout(() => {
+      if (confirm(`已记录决策\n${d.nextStep}\n\n现在跳工具执行?`)) openTool(d.jumpTo, '🚗 路上 · 执行 ' + d.title.replace(/^[🚨🚀📞] /, ''));
+    }, 800);
+  }, 1500);
+}
+
+function renderDecisionLog() {
+  const list = document.getElementById('decision-log-list');
+  if (decisionLog.length === 0) { list.innerHTML = '<div class="dlog-empty">本月暂无决策日志 · 点击"举措"按钮触发</div>'; return; }
+  list.innerHTML = decisionLog.map(d => `<div class="dlog-entry"><div class="dlog-entry-id">${d.id} · ${d.when}</div><div class="dlog-entry-content"><b>${d.title}</b><br>${d.who} · ${d.impact}</div></div>`).join('');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function updateTime() {
+  const n = new Date();
+  document.getElementById('now-time').textContent = n.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+}
+updateTime(); setInterval(updateTime, 30000);
+
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+</script>
+</body>
+</html>

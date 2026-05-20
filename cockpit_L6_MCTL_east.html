@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · MCTL 华东驾驶舱 · v1.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #0a0907; --bg-1: #14110d; --bg-2: #1c1815; --bg-3: #251f1a;
+  --surface: #1a1612; --surface-2: #221d18;
+  --border: rgba(255, 220, 180, 0.08); --border-2: rgba(255, 220, 180, 0.15);
+  --text-0: #f4ede0; --text-1: #c8bda8; --text-2: #847868; --text-3: #524a40;
+  --gold: #d4af37; --gold-bright: #f5a623;
+  --green: #88c850; --amber: #f5a623; --red: #e94560;
+  --blue: #5d9cec; --purple: #a78bfa; --teal: #4ecdc4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg-0); color: var(--text-0); font-family: 'Noto Sans SC', sans-serif; min-height: 100vh; overflow-x: hidden; }
+@media (min-width: 600px) { body { max-width: 480px; margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.6); } }
+
+.layer-badge { background: rgba(233, 69, 96, 0.15); border-bottom: 1px solid rgba(233, 69, 96, 0.25); color: var(--red); font-size: 10px; padding: 6px 14px; text-align: center; font-family: 'Space Mono', monospace; }
+
+.hero { padding: 18px 14px 14px; background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%); border-bottom: 1px solid var(--border); }
+.hero-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.hero-row { display: flex; align-items: center; gap: 14px; }
+.hero-avatar { width: 60px; height: 60px; border-radius: 16px; background: linear-gradient(135deg, var(--gold), #ff7c38); display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; box-shadow: 0 6px 18px rgba(212, 175, 55, 0.3); }
+.hero-info { flex: 1; min-width: 0; }
+.hero-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; }
+.hero-title { font-size: 12px; color: var(--gold); margin-top: 2px; }
+.hero-scope { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+.hero-score { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 32px; color: var(--amber); flex-shrink: 0; }
+
+.cockpit-section { margin: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+.cockpit-section.priority { border-color: rgba(212, 175, 55, 0.25); background: linear-gradient(135deg, rgba(212, 175, 55, 0.04) 0%, var(--surface) 100%); }
+.cockpit-section.alert { border-color: rgba(233, 69, 96, 0.25); background: linear-gradient(135deg, rgba(233, 69, 96, 0.04) 0%, var(--surface) 100%); }
+.section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.section-num { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 13px; }
+.section-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; flex: 1; }
+.section-tag { font-family: 'Space Mono', monospace; font-size: 9px; padding: 2px 7px; background: rgba(212, 175, 55, 0.1); color: var(--gold); border-radius: 4px; font-weight: 700; }
+
+/* 4 城市大卡片 (核心) */
+.city-big-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.city-big-card { background: var(--bg-2); border-radius: 12px; padding: 14px; cursor: pointer; transition: all 0.18s; border-left: 4px solid var(--text-3); position: relative; overflow: hidden; }
+.city-big-card.standard { border-left-color: var(--gold); background: linear-gradient(135deg, rgba(212, 175, 55, 0.06), var(--bg-2)); }
+.city-big-card.good { border-left-color: var(--green); background: linear-gradient(135deg, rgba(136, 200, 80, 0.05), var(--bg-2)); }
+.city-big-card.warn { border-left-color: var(--amber); background: linear-gradient(135deg, rgba(245, 166, 35, 0.05), var(--bg-2)); }
+.city-big-card.bad { border-left-color: var(--red); background: linear-gradient(135deg, rgba(233, 69, 96, 0.07), var(--bg-2)); }
+.city-big-card:hover, .city-big-card:active { background: var(--bg-3); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3); }
+.city-big-card.standard::after { content: '★ 标杆'; position: absolute; top: 8px; right: 8px; font-size: 9px; padding: 2px 6px; background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); border-radius: 4px; font-weight: 700; font-family: 'Space Mono', monospace; }
+.city-big-card.bad::after { content: '⚠ 拖累'; position: absolute; top: 8px; right: 8px; font-size: 9px; padding: 2px 6px; background: rgba(233, 69, 96, 0.2); color: var(--red); border-radius: 4px; font-weight: 700; font-family: 'Space Mono', monospace; }
+.city-big-name { font-size: 16px; font-weight: 700; color: var(--text-0); margin-bottom: 4px; }
+.city-big-ctl { font-size: 10px; color: var(--text-2); margin-bottom: 8px; font-family: 'Space Mono', monospace; }
+.city-big-score { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; line-height: 1; }
+.city-big-score.good { color: var(--green); }
+.city-big-score.warn { color: var(--amber); }
+.city-big-score.bad { color: var(--red); }
+.city-big-meta { font-size: 10px; color: var(--text-2); margin-top: 6px; font-family: 'Space Mono', monospace; }
+
+/* 标杆复制矩阵 */
+.copy-matrix { background: var(--bg-2); border-radius: 10px; padding: 12px; }
+.copy-title { font-size: 11px; color: var(--gold); font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.copy-source { background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), var(--bg-2)); border-radius: 8px; padding: 10px; margin-bottom: 8px; font-size: 11px; color: var(--text-1); border: 1px solid rgba(212, 175, 55, 0.2); }
+.copy-source b { color: var(--gold); }
+.copy-targets { display: flex; flex-direction: column; gap: 5px; }
+.copy-target { background: var(--bg-3); border-radius: 6px; padding: 8px 10px; font-size: 10px; color: var(--text-1); display: flex; justify-content: space-between; align-items: center; }
+.copy-progress { font-family: 'Space Mono', monospace; font-weight: 700; padding: 2px 6px; border-radius: 3px; font-size: 9px; }
+.copy-progress.good { background: rgba(136, 200, 80, 0.15); color: var(--green); }
+.copy-progress.warn { background: rgba(245, 166, 35, 0.15); color: var(--amber); }
+.copy-progress.bad { background: rgba(233, 69, 96, 0.15); color: var(--red); }
+
+/* 合肥扶持 · 重点强调 */
+.hefei-box { background: linear-gradient(135deg, rgba(233, 69, 96, 0.08), rgba(245, 166, 35, 0.04)); border: 1px solid rgba(233, 69, 96, 0.25); border-radius: 12px; padding: 14px; }
+.hefei-title { font-size: 13px; font-weight: 700; color: var(--red); margin-bottom: 10px; }
+.hefei-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
+.hefei-stat { background: rgba(0, 0, 0, 0.3); border-radius: 8px; padding: 10px; text-align: center; }
+.hefei-stat-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; }
+.hefei-stat-num.bad { color: var(--red); }
+.hefei-stat-num.gold { color: var(--gold); }
+.hefei-stat-num.good { color: var(--green); }
+.hefei-stat-lbl { font-size: 9px; color: var(--text-2); margin-top: 4px; }
+.hefei-action { background: rgba(0, 0, 0, 0.3); border-radius: 8px; padding: 10px; font-size: 11px; color: var(--text-1); line-height: 1.7; }
+.hefei-action b { color: var(--gold); }
+
+/* CTL 培养卡片 */
+.ctl-cultivate { background: var(--bg-2); border-radius: 10px; padding: 12px; }
+.ctl-row { display: flex; align-items: center; gap: 10px; padding: 8px; background: var(--bg-3); border-radius: 6px; margin-bottom: 5px; font-size: 11px; }
+.ctl-avatar { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.ctl-avatar.gold { background: linear-gradient(135deg, var(--gold), var(--gold-bright)); }
+.ctl-avatar.green { background: linear-gradient(135deg, var(--green), #5fa635); }
+.ctl-avatar.amber { background: linear-gradient(135deg, var(--amber), #ff7c38); }
+.ctl-avatar.red { background: linear-gradient(135deg, var(--red), #c41538); }
+.ctl-info { flex: 1; }
+.ctl-name { font-size: 11px; font-weight: 700; color: var(--text-0); }
+.ctl-stage { font-size: 9px; color: var(--text-2); margin-top: 2px; font-family: 'Space Mono', monospace; }
+.ctl-tag { font-family: 'Space Mono', monospace; font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 700; }
+
+/* 跨城资源 */
+.cross-city-flow { background: var(--bg-2); border-radius: 10px; padding: 12px; }
+.flow-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; padding: 8px; background: var(--bg-3); border-radius: 6px; margin-bottom: 5px; font-size: 11px; }
+.flow-from { text-align: right; color: var(--green); }
+.flow-arrow { font-size: 14px; color: var(--gold); }
+.flow-to { text-align: left; color: var(--red); }
+.flow-amount { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-2); text-align: center; padding-top: 4px; grid-column: 1 / -1; }
+
+/* Health */
+.health-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 10px; }
+.health-cell { background: var(--bg-2); border-radius: 6px; padding: 8px 4px; text-align: center; border: 1px solid var(--border); }
+.health-cell.good { border-color: rgba(136, 200, 80, 0.3); background: rgba(136, 200, 80, 0.06); }
+.health-cell.warn { border-color: rgba(245, 166, 35, 0.3); background: rgba(245, 166, 35, 0.06); }
+.health-cell.bad { border-color: rgba(233, 69, 96, 0.3); background: rgba(233, 69, 96, 0.06); }
+.health-pct { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; line-height: 1; }
+.health-pct.good { color: var(--green); }
+.health-pct.warn { color: var(--amber); }
+.health-pct.bad { color: var(--red); }
+.health-lbl { font-size: 9px; color: var(--text-2); margin-top: 3px; line-height: 1.2; }
+
+/* 异常 */
+.alert-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; background: rgba(233, 69, 96, 0.05); border-radius: 6px; margin-bottom: 4px; font-size: 11px; border-left: 3px solid var(--red); }
+.alert-row.warn { background: rgba(245, 166, 35, 0.05); border-left-color: var(--amber); }
+.alert-dot { font-size: 12px; flex-shrink: 0; }
+.alert-text { flex: 1; color: var(--text-1); line-height: 1.5; }
+
+/* 向上传导 */
+.leverage-up { background: linear-gradient(135deg, rgba(78, 205, 196, 0.05), var(--bg-2)); border: 1px solid rgba(78, 205, 196, 0.2); border-radius: 10px; padding: 12px; border-left: 3px solid var(--teal); }
+.leverage-title { font-size: 12px; color: var(--teal); font-weight: 700; margin-bottom: 8px; }
+
+/* Root */
+.root-cause-box { background: var(--bg-2); border-radius: 10px; padding: 12px; }
+.rc-question { font-size: 12px; font-weight: 700; color: var(--amber); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.rc-chain { display: flex; flex-direction: column; gap: 6px; font-size: 11px; line-height: 1.5; }
+.rc-step { display: flex; gap: 8px; color: var(--text-1); align-items: flex-start; }
+.rc-step-num { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 11px; color: var(--amber); flex-shrink: 0; width: 16px; }
+.rc-conclusion { margin-top: 10px; padding: 10px; background: rgba(233, 69, 96, 0.06); border-radius: 6px; border-left: 3px solid var(--red); font-size: 11px; color: var(--text-1); line-height: 1.6; }
+.rc-conclusion b { color: var(--red); }
+
+/* Opp */
+.opp-row { background: linear-gradient(135deg, rgba(136, 200, 80, 0.06) 0%, var(--bg-2) 100%); border-radius: 10px; padding: 12px; border-left: 3px solid var(--green); margin-bottom: 8px; }
+.opp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.opp-title { font-size: 13px; font-weight: 700; color: var(--text-0); }
+.opp-roi { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; color: var(--green); }
+.opp-desc { font-size: 11px; color: var(--text-1); line-height: 1.6; }
+.opp-impact { margin-top: 6px; font-size: 10px; color: var(--text-2); font-family: 'Space Mono', monospace; }
+
+/* Authority */
+.authority-block { margin-bottom: 12px; }
+.authority-label { font-size: 11px; font-weight: 700; margin-bottom: 6px; }
+.authority-label.can { color: var(--green); }
+.authority-label.cant { color: var(--red); }
+.authority-list { font-size: 11px; color: var(--text-1); line-height: 1.7; padding-left: 14px; }
+.authority-list li { list-style: none; position: relative; }
+.authority-list.can li::before { content: '✋'; position: absolute; left: -14px; }
+.authority-list.cant li::before { content: '🚫'; position: absolute; left: -14px; }
+.resource-pool { background: var(--bg-2); border-radius: 8px; padding: 10px; margin-top: 8px; }
+.resource-pool-title { font-size: 11px; color: var(--gold); font-weight: 700; margin-bottom: 6px; }
+.resource-line { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; color: var(--text-1); }
+.resource-line b { color: var(--gold); font-family: 'Space Mono', monospace; }
+
+/* Action */
+.action-card { background: var(--bg-2); border-radius: 10px; padding: 12px; margin-bottom: 8px; border-left: 3px solid var(--gold); }
+.action-card.warn { border-left-color: var(--amber); }
+.action-card.bad { border-left-color: var(--red); }
+.action-card.strategic { border-left-color: var(--purple); }
+.action-head { font-size: 13px; font-weight: 700; color: var(--text-0); margin-bottom: 6px; }
+.action-desc { font-size: 11px; color: var(--text-1); line-height: 1.6; margin-bottom: 8px; }
+.action-impact { background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 8px 10px; font-size: 10px; color: var(--text-2); line-height: 1.6; margin-bottom: 10px; font-family: 'Space Mono', monospace; }
+.action-impact .plus { color: var(--green); }
+.action-impact .neutral { color: var(--amber); }
+.action-impact .minus { color: var(--red); }
+.action-btn { width: 100%; padding: 10px 14px; background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); border: none; border-radius: 8px; font-family: 'Noto Sans SC', sans-serif; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.action-btn:hover, .action-btn:active { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(212, 175, 55, 0.3); }
+.action-btn.report { background: linear-gradient(135deg, var(--blue), var(--teal)); color: white; }
+.action-btn.danger { background: linear-gradient(135deg, var(--red), #c41538); color: white; }
+.action-btn.strategic { background: linear-gradient(135deg, var(--purple), #7c3aed); color: white; }
+
+/* 合伙人收益 */
+.income-big { text-align: center; padding: 16px 0 10px; background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(255, 124, 56, 0.04)); border-radius: 10px; margin-bottom: 12px; }
+.income-big-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 36px; color: var(--gold); line-height: 1; }
+.income-big-lbl { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+.income-breakdown { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.income-breakdown-row { display: flex; justify-content: space-between; padding: 6px 10px; background: var(--bg-2); border-radius: 5px; font-size: 11px; }
+.income-bd-name { color: var(--text-1); }
+.income-bd-val { color: var(--green); font-family: 'Space Mono', monospace; font-weight: 700; }
+.compare-table { background: var(--bg-2); border-radius: 8px; padding: 10px; margin-bottom: 12px; }
+.compare-title { font-size: 11px; color: var(--gold); font-weight: 700; margin-bottom: 8px; }
+.compare-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 5px 0; font-size: 11px; align-items: center; }
+.compare-row.me { background: rgba(212, 175, 55, 0.05); padding: 5px 8px; border-radius: 5px; font-weight: 700; }
+.compare-name { color: var(--text-1); }
+.compare-val { color: var(--text-0); font-family: 'Space Mono', monospace; font-weight: 700; }
+.compare-diff { font-size: 10px; color: var(--text-2); font-family: 'Space Mono', monospace; }
+.partner-traits { background: rgba(78, 205, 196, 0.04); border-radius: 8px; padding: 10px; border: 1px solid rgba(78, 205, 196, 0.15); }
+.partner-traits-title { font-size: 11px; color: var(--teal); font-weight: 700; margin-bottom: 6px; }
+.partner-traits-list { font-size: 11px; color: var(--text-1); line-height: 1.7; }
+
+/* 跳工具 */
+.tools-section { margin: 16px 14px; background: var(--surface); border: 1px solid var(--border-2); border-radius: 14px; padding: 14px; }
+.tools-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+.tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.tool-link { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 10px; transition: all 0.15s; cursor: pointer; }
+.tool-link:hover, .tool-link:active { border-color: var(--gold); background: var(--bg-3); transform: translateY(-1px); }
+.tool-icon { font-size: 22px; flex-shrink: 0; }
+.tool-info { flex: 1; min-width: 0; }
+.tool-name { font-size: 12px; font-weight: 700; color: var(--text-0); }
+.tool-desc { font-size: 9px; color: var(--text-2); margin-top: 2px; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border-2); border-radius: 16px; padding: 18px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; }
+.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--gold); margin-bottom: 12px; }
+.modal-section { margin-bottom: 12px; }
+.modal-section-label { font-size: 10px; color: var(--text-3); font-family: 'Space Mono', monospace; letter-spacing: 0.1em; margin-bottom: 4px; text-transform: uppercase; }
+.modal-section-content { font-size: 12px; color: var(--text-1); line-height: 1.6; background: var(--bg-2); padding: 10px; border-radius: 6px; }
+.modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+.modal-btn { flex: 1; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: 700; font-size: 12px; cursor: pointer; border: none; }
+.modal-btn.confirm { background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: var(--bg-0); }
+.modal-btn.cancel { background: var(--bg-3); color: var(--text-1); }
+
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: linear-gradient(135deg, var(--green), #5fa635); color: white; padding: 14px 20px; border-radius: 12px; font-size: 13px; font-weight: 600; z-index: 1001; opacity: 0; transition: all 0.3s; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); max-width: 90%; text-align: center; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.decision-log-section { margin: 12px 14px; background: linear-gradient(135deg, rgba(167, 139, 250, 0.06), var(--surface)); border: 1px solid rgba(167, 139, 250, 0.2); border-radius: 14px; padding: 14px; }
+.dlog-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--purple); margin-bottom: 4px; }
+.dlog-sub { font-size: 10px; color: var(--text-3); margin-bottom: 12px; font-family: 'Space Mono', monospace; }
+.dlog-empty { text-align: center; font-size: 11px; color: var(--text-3); padding: 16px; font-style: italic; }
+.dlog-entry { background: var(--bg-2); border-radius: 8px; padding: 10px; margin-bottom: 6px; font-size: 11px; border-left: 3px solid var(--purple); }
+.dlog-entry-id { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--purple); margin-bottom: 4px; }
+.dlog-entry-content { color: var(--text-1); line-height: 1.5; }
+
+.bottom-fix { padding: 18px 14px 32px; text-align: center; font-size: 10px; color: var(--text-3); }
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 · L6 MCTL 华东驾驶舱 · 4 城轮巡 · 标杆复制</div>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-top">
+    <a id="smart-back-top" href="index.html" style="color:var(--bg-0);text-decoration:none;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(212,175,55,0.3)">
+      <span style="font-size:16px">←</span><span id="smart-back-text-top">回主页</span>
+    </a>
+    <span style="color:var(--text-3);font-family:'Space Mono',monospace;font-size:11px">L6 MCTL 驾驶舱 v1.1</span>
+    <span id="now-time" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-2)">--:--</span>
+  </div>
+  <div style="display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;font-family:'Space Mono',monospace;font-size:10px">
+    <span style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-3);flex-shrink:0;border:1px solid var(--border);cursor:pointer" onclick="alert('L8 总部驾驶舱 · 待做')">L8 总部</span>
+    <a href="cockpit_L7_GM_east.html" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--gold);text-decoration:none">L7 GM ↗</a>
+    <span style="padding:4px 8px;background:linear-gradient(135deg,var(--gold),var(--gold-bright));color:var(--bg-0);border-radius:4px;flex-shrink:0;font-weight:700">★ L6 MCTL (当前)</span>
+    <a href="cockpit_L5_CTL_shanghai.html?from=MCTL_华东" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--gold);text-decoration:none">L5 CTL ↗</a>
+    <a href="cockpit_L3_DOM_huxi.html" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--border);text-decoration:none">L3 DOM</a>
+    <a href="cockpit_L3_OM_huxi.html" style="padding:4px 8px;background:var(--bg-3);border-radius:4px;color:var(--text-1);flex-shrink:0;border:1px solid var(--border);text-decoration:none">L3 OM</a>
+  </div>
+  <div class="hero-row">
+    <div class="hero-avatar">🌆</div>
+    <div class="hero-info">
+      <div class="hero-name">徐海明</div>
+      <div class="hero-title">MCTL · 华东片区督导 · 资深</div>
+      <div class="hero-scope">上海/杭州/苏州/合肥 · 4 城轮巡 · 1 MOM (跨城)</div>
+    </div>
+    <div class="hero-score">88</div>
+  </div>
+</div>
+
+<!-- ═════════ 模块 1 · 4 城市战略热力图 (核心) ═════════ -->
+<section class="cockpit-section priority">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <div class="section-title">4 城市战略热力图 · 我管辖</div>
+    <div class="section-tag">Scope</div>
+  </div>
+
+  <div class="city-big-grid">
+    <div class="city-big-card standard" onclick="if(confirm('打开上海 CTL 王志成驾驶舱?')) window.location.href='cockpit_L5_CTL_shanghai.html?from=MCTL_华东';">
+      <div class="city-big-name">上海</div>
+      <div class="city-big-ctl">CTL 王志成 · 5 星 ★</div>
+      <div class="city-big-score good">92</div>
+      <div class="city-big-meta">¥132M/月 · 华东第 1 · 标杆<br>5 互锁 + 6 KA + 28 二批商</div>
+    </div>
+
+    <div class="city-big-card good" onclick="drillDown('杭州 · 张丽萍', '综合 85 · CTL 张丽萍 · A 级 · MCTL 候选\\n¥72M/月 · 盒马腹地 · O2O 30 分钟达 · 新零售试点')">
+      <div class="city-big-name">杭州</div>
+      <div class="city-big-ctl">CTL 张丽萍 · A 级</div>
+      <div class="city-big-score good">85</div>
+      <div class="city-big-meta">¥72M/月 · 盒马腹地<br>O2O 试点 · MCTL 候选</div>
+    </div>
+
+    <div class="city-big-card warn" onclick="drillDown('苏州 · 李建华', '综合 78 · CTL 李建华 · B 级\\n¥58M/月 · 制造业基地 · 长三角\\n稳定但增速慢 · 需推动')">
+      <div class="city-big-name">苏州</div>
+      <div class="city-big-ctl">CTL 李建华 · B 级</div>
+      <div class="city-big-score warn">78</div>
+      <div class="city-big-meta">¥58M/月 · 长三角制造业<br>稳定但增速慢</div>
+    </div>
+
+    <div class="city-big-card bad" onclick="drillDown('合肥 · 王勇 ⚠', '综合 65 · CTL 王勇 · 新培育期\\n¥38M/月 · 4 家 D 级二批商集中\\n5 互锁仅 35% · 主拖累点 · MCTL 月度督导')">
+      <div class="city-big-name">合肥</div>
+      <div class="city-big-ctl">CTL 王勇 · 新 · 培育期</div>
+      <div class="city-big-score bad">65</div>
+      <div class="city-big-meta">¥38M/月 · 4 家 D 级集中<br>主拖累 -8 分 · 我月度督导</div>
+    </div>
+  </div>
+
+  <!-- 片区核心数据 -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px">
+    <div style="background:var(--bg-3);border-radius:6px;padding:8px 4px;text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--gold)">4</div>
+      <div style="font-size:9px;color:var(--text-2);margin-top:2px">CTL</div>
+    </div>
+    <div style="background:var(--bg-3);border-radius:6px;padding:8px 4px;text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--gold)">16</div>
+      <div style="font-size:9px;color:var(--text-2);margin-top:2px">DOM</div>
+    </div>
+    <div style="background:var(--bg-3);border-radius:6px;padding:8px 4px;text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--gold)">110+</div>
+      <div style="font-size:9px;color:var(--text-2);margin-top:2px">二批商</div>
+    </div>
+    <div style="background:var(--bg-3);border-radius:6px;padding:8px 4px;text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--gold)">¥300M</div>
+      <div style="font-size:9px;color:var(--text-2);margin-top:2px">月销</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 2 · 标杆复制矩阵 (MCTL 核心价值) ═════════ -->
+<section class="cockpit-section priority">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <div class="section-title">标杆复制矩阵 · MCTL 核心价值</div>
+    <div class="section-tag">Replicate</div>
+  </div>
+
+  <div class="copy-matrix">
+    <div class="copy-title">⭐ 上海标杆 SOP · 输出到 3 城</div>
+    <div class="copy-source">
+      <b>源标杆: 上海 (CTL 王志成 92 分)</b><br>
+      · 5 互锁 78/68/75/76/18 全推进体系<br>
+      · 28 二批商 ABCD 评级标准<br>
+      · PRISM 共创 5 场已验证<br>
+      · 一物一码激活 65% · 训练数据完整<br>
+      · 6 战略 KA 续约 96%
+    </div>
+
+    <div style="font-size:11px;color:var(--gold);font-weight:700;margin:10px 0 6px">→ 复制到 3 城进度</div>
+    <div class="copy-targets">
+      <div class="copy-target">
+        <span><b>杭州</b> · CTL 张丽萍 · 5 互锁推进</span>
+        <span class="copy-progress good">82% ✓</span>
+      </div>
+      <div class="copy-target">
+        <span><b>苏州</b> · CTL 李建华 · ABCD 评级</span>
+        <span class="copy-progress warn">65%</span>
+      </div>
+      <div class="copy-target">
+        <span><b>合肥</b> · CTL 王勇 · 完整 SOP 复制</span>
+        <span class="copy-progress bad">35% ⚠</span>
+      </div>
+    </div>
+
+    <div style="margin-top:10px;padding:10px;background:rgba(212,175,55,0.06);border-radius:6px;font-size:10px;color:var(--text-2);font-family:'Space Mono',monospace">
+      💎 MCTL 价值 = 不是自己跑业务 · 是把好经验复制到弱城
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 3 · 合肥扶持加码 (重点举措预览) ═════════ -->
+<section class="cockpit-section alert">
+  <div class="section-header">
+    <div class="section-num" style="background:linear-gradient(135deg,var(--red),#c41538)">!</div>
+    <div class="section-title">合肥扶持加码 · 主拖累点</div>
+    <div class="section-tag" style="background:rgba(233,69,96,0.15);color:var(--red)">Priority 1</div>
+  </div>
+
+  <div class="hefei-box">
+    <div class="hefei-title">🚨 合肥拖累华东 -8 分 · MCTL 当前最大挑战</div>
+
+    <div class="hefei-grid">
+      <div class="hefei-stat">
+        <div class="hefei-stat-num bad">65</div>
+        <div class="hefei-stat-lbl">综合 (vs 上海 92)</div>
+      </div>
+      <div class="hefei-stat">
+        <div class="hefei-stat-num bad">35%</div>
+        <div class="hefei-stat-lbl">数据互锁 (vs 上海 68%)</div>
+      </div>
+      <div class="hefei-stat">
+        <div class="hefei-stat-num gold">¥12M</div>
+        <div class="hefei-stat-lbl">已批扶持加码</div>
+      </div>
+      <div class="hefei-stat">
+        <div class="hefei-stat-num good">12 月</div>
+        <div class="hefei-stat-lbl">目标 65 → 80</div>
+      </div>
+    </div>
+
+    <div class="hefei-action">
+      <b>扶持方案 · GM 已批 ¥12M</b><br>
+      · 我月度驻地督导 (4 次/月)<br>
+      · 上海王志成 SOP 全套复制<br>
+      · 王勇 30 天驻沪学习<br>
+      · 派 1 名 DOM 高级支援合肥<br>
+      · 一物一码激活季 集中推动
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 4 · CTL 培养体系 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <div class="section-title">CTL 团队培养 · MCTL 责任</div>
+    <div class="section-tag">Cultivate</div>
+  </div>
+
+  <div class="ctl-cultivate">
+    <div class="ctl-row">
+      <div class="ctl-avatar gold">⭐</div>
+      <div class="ctl-info">
+        <div class="ctl-name">王志成 · 上海 · 5 星 CTL</div>
+        <div class="ctl-stage">已培养 · MCTL 候选 · 半年内可独立</div>
+      </div>
+      <span class="ctl-tag" style="background:rgba(212,175,55,0.15);color:var(--gold)">标杆</span>
+    </div>
+    <div class="ctl-row">
+      <div class="ctl-avatar green">✓</div>
+      <div class="ctl-info">
+        <div class="ctl-name">张丽萍 · 杭州 · A 级 CTL</div>
+        <div class="ctl-stage">培养中 · O2O 新零售突破 · 升 S 中</div>
+      </div>
+      <span class="ctl-tag" style="background:rgba(136,200,80,0.15);color:var(--green)">在培</span>
+    </div>
+    <div class="ctl-row">
+      <div class="ctl-avatar amber">→</div>
+      <div class="ctl-info">
+        <div class="ctl-name">李建华 · 苏州 · B 级 CTL</div>
+        <div class="ctl-stage">基础稳 · 需突破 · 长三角制造业</div>
+      </div>
+      <span class="ctl-tag" style="background:rgba(245,166,35,0.15);color:var(--amber)">推动</span>
+    </div>
+    <div class="ctl-row">
+      <div class="ctl-avatar red">⚠</div>
+      <div class="ctl-info">
+        <div class="ctl-name">王勇 · 合肥 · 新 CTL · 培育期</div>
+        <div class="ctl-stage">驻地督导 · 上海复制 · 12 月扭转</div>
+      </div>
+      <span class="ctl-tag" style="background:rgba(233,69,96,0.2);color:var(--red)">扶持</span>
+    </div>
+
+    <div style="margin-top:10px;padding:10px;background:rgba(78,205,196,0.06);border-radius:6px;font-size:10px;color:var(--text-2);text-align:center">
+      💎 MCTL 不是自己跑业务 · 是培养 4 个 CTL 都成 5 星
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 5 · 跨城资源调配 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <div class="section-title">跨城资源调配 · 强城帮弱城</div>
+    <div class="section-tag">Cross-City</div>
+  </div>
+
+  <div class="cross-city-flow">
+    <div class="flow-row">
+      <div class="flow-from">上海 (强 92)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-to">合肥 (弱 65)</div>
+      <div class="flow-amount">SOP 全套 + ¥12M 扶持基金 + 王勇驻沪 30 天</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-from">上海 (强 92)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-to">苏州 (中 78)</div>
+      <div class="flow-amount">ABCD 评级 SOP · DOM 互访 2 次/季</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-from">杭州 (新零售)</div>
+      <div class="flow-arrow">↔</div>
+      <div class="flow-to">上海 (新零售)</div>
+      <div class="flow-amount">盒马 O2O 经验互通 · 苏州试点</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-from">山姆 (5 城跨签)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-to">华东片区</div>
+      <div class="flow-amount">¥8M/年 跨城合约 · MOM 主导</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 6 · 向上传导 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">6</div>
+    <div class="section-title">向上传导 · MCTL 在大区的位置</div>
+    <div class="section-tag" style="background:rgba(78,205,196,0.15);color:var(--teal)">Leverage</div>
+  </div>
+
+  <div class="leverage-up">
+    <div class="leverage-title">我华东片区 → GM 刘大海 → 集团</div>
+    <div style="font-size:11px;color:var(--text-1);line-height:1.7">
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>→ GM 刘大海 (华东 91)</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">¥300M/月 · 大区第 1</span>
+      </div>
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>→ 集团北极星 200M 瓶</span><span style="font-family:'Space Mono',monospace;color:var(--gold);font-weight:700">华东 65M 瓶 · 32%</span>
+      </div>
+      <div style="padding:6px 8px;background:var(--bg-2);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>→ 5 品牌矩阵</span><span style="font-family:'Space Mono',monospace;color:var(--green);font-weight:700">六月鲜 + 禾然 试点首选</span>
+      </div>
+      <div style="margin-top:8px;padding:8px;background:rgba(78,205,196,0.06);border-radius:5px;font-size:10px;color:var(--text-2);font-family:'Space Mono',monospace">
+        💎 我是 GM 与 CTL 的桥梁 · 标杆经验上下流转的关键节点
+      </div>
+    </div>
+
+    <div style="margin-top:10px;padding:10px;background:rgba(233,69,96,0.05);border:1px solid rgba(233,69,96,0.2);border-radius:8px">
+      <div style="font-size:11px;color:var(--red);font-weight:700;margin-bottom:6px">⚠️ 如果合肥不能扭转</div>
+      <div style="font-size:11px;color:var(--text-1);line-height:1.6">
+        华东 91 → 86 · GM 月薪 -¥15k · 北极星 -3% · 集团战略受阻
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 7 · 健康度 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">7</div>
+    <div class="section-title">华东片区健康度</div>
+    <div class="section-tag">Health</div>
+  </div>
+  <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px">5 互锁 (4 城聚合)</div>
+  <div class="health-grid">
+    <div class="health-cell good"><div class="health-pct good">75%</div><div class="health-lbl">制度</div></div>
+    <div class="health-cell warn"><div class="health-pct warn">62%</div><div class="health-lbl">数据 ⚠</div></div>
+    <div class="health-cell good"><div class="health-pct good">72%</div><div class="health-lbl">信用</div></div>
+    <div class="health-cell good"><div class="health-pct good">74%</div><div class="health-lbl">经济</div></div>
+    <div class="health-cell bad"><div class="health-pct bad">20%</div><div class="health-lbl">学习</div></div>
+  </div>
+  <div style="background:var(--bg-2);border-radius:8px;padding:10px;font-size:11px;color:var(--text-1);line-height:1.6">
+    <b style="color:var(--gold)">华东片区综合 88 (4 城平均)</b><br>
+    主拉低: 合肥 65 · 数据互锁仅 35%<br>
+    主拉高: 上海 92 · 5 互锁标杆
+  </div>
+</section>
+
+<!-- ═════════ 模块 8 · 异常 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">8</div>
+    <div class="section-title">片区异常清单</div>
+    <div class="section-tag">Alert</div>
+  </div>
+  <div class="alert-row">
+    <span class="alert-dot">🔴</span>
+    <span class="alert-text"><b>合肥 65 分 · 主拖累</b> · 4 家 D 级二批商集中 · MCTL 月度督导加码</span>
+  </div>
+  <div class="alert-row warn">
+    <span class="alert-dot">🟡</span>
+    <span class="alert-text"><b>苏州 78 增速慢</b> · 长三角制造业基础好 · 需突破推动</span>
+  </div>
+  <div class="alert-row warn">
+    <span class="alert-dot">🟡</span>
+    <span class="alert-text"><b>学习互锁 20%</b> · 4 城决策日志几乎缺失 · 等 TL 后端</span>
+  </div>
+</section>
+
+<!-- ═════════ 模块 9 · 根因 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">9</div>
+    <div class="section-title">根因分析</div>
+    <div class="section-tag">Root</div>
+  </div>
+  <div class="root-cause-box">
+    <div class="rc-question">❓ 华东片区 88 分而非 92+ · 主因?</div>
+    <div class="rc-chain">
+      <div class="rc-step"><span class="rc-step-num">①</span><span>主拖累: 合肥 65 (-8 分)</span></div>
+      <div class="rc-step"><span class="rc-step-num">②</span><span>次拖累: 苏州 78 增速慢 (-3 分)</span></div>
+      <div class="rc-step"><span class="rc-step-num">③</span><span>根因 1: 合肥 CTL 王勇新培育 · 标杆复制慢</span></div>
+      <div class="rc-step"><span class="rc-step-num">④</span><span>根因 2: 苏州 CTL 李建华 B 级 · 突破驱动不足</span></div>
+      <div class="rc-step"><span class="rc-step-num">⑤</span><span>系统: MCTL 4 城轮巡频次不够 · 需密度增加</span></div>
+    </div>
+    <div class="rc-conclusion">
+      <b>12 月扭转</b>: 合肥 65 → 80 · 苏州 78 → 85 · 华东片区 88 → 92<br>
+      <b>关键</b>: 我必须把上海标杆 SOP 真正复制下去
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 10 · 机会 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">10</div>
+    <div class="section-title">片区战略机会</div>
+    <div class="section-tag">Opp</div>
+  </div>
+  <div class="opp-row">
+    <div class="opp-head">
+      <span class="opp-title">🚀 合肥扶持加码 ¥12M 落地</span>
+      <span class="opp-roi">+10 分</span>
+    </div>
+    <div class="opp-desc">已批 GM 资源 · 我月度驻地督导 + 上海 SOP 全套复制 + 王勇 30 天驻沪</div>
+    <div class="opp-impact">影响: 合肥 65 → 80 · 华东片区 88 → 91</div>
+  </div>
+  <div class="opp-row">
+    <div class="opp-head">
+      <span class="opp-title">🚀 山姆华东 5 店统签</span>
+      <span class="opp-roi">+¥8M/年</span>
+    </div>
+    <div class="opp-desc">跨城战略合约 · MOM 主导 · 4 城联动 · 我审批跨城</div>
+    <div class="opp-impact">影响: KA 突破 · 跨城战略级 · MCTL 升 5 星候选</div>
+  </div>
+  <div class="opp-row">
+    <div class="opp-head">
+      <span class="opp-title">🚀 杭州盒马 O2O 经验扩散</span>
+      <span class="opp-roi">+5 分</span>
+    </div>
+    <div class="opp-desc">杭州试点成 · 上海 + 苏州联动复制 · 30 分钟达即时零售</div>
+    <div class="opp-impact">影响: 新零售突破 · 华东片区 +3 分</div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 11 · 权限 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">11</div>
+    <div class="section-title">MCTL 决策权限</div>
+    <div class="section-tag">Authority</div>
+  </div>
+  <div class="authority-block">
+    <div class="authority-label can">✋ MCTL 自主拍板</div>
+    <ul class="authority-list can">
+      <li>跨城资源调配 ¥45M/季度</li>
+      <li>4 CTL 任免 + 培养</li>
+      <li>弱城扶持基金 (≤¥15M/年)</li>
+      <li>标杆复制 SOP 跨城推动</li>
+      <li>片区级促销节奏统筹</li>
+      <li>4 城轮巡督导计划</li>
+    </ul>
+  </div>
+  <div class="authority-block">
+    <div class="authority-label cant">🚫 报 GM 处理</div>
+    <ul class="authority-list cant">
+      <li>跨片区资源 → 报 GM 刘大海</li>
+      <li>跨大区战略合约 → 报 GM + 集团</li>
+      <li>战略级品牌调整 → 报 GM + CMO</li>
+      <li>大额预算 > ¥15M → 报 GM</li>
+    </ul>
+  </div>
+  <div class="resource-pool">
+    <div class="resource-pool-title">💰 季度资源池</div>
+    <div class="resource-line"><span>跨城调配基金</span><b>¥45,000,000</b></div>
+    <div class="resource-line"><span>弱城扶持 (合肥)</span><b>¥12,000,000</b></div>
+    <div class="resource-line"><span>CTL 培养 + 督导</span><b>¥3,000,000</b></div>
+    <div class="resource-line" style="border-top:1px solid var(--border);margin-top:6px;padding-top:8px"><span><b>季度自批权限</b></span><b style="color:var(--gold-bright)">¥60,000,000</b></div>
+  </div>
+</section>
+
+<!-- ═════════ 模块 12 · 举措 ═════════ -->
+<section class="cockpit-section priority">
+  <div class="section-header">
+    <div class="section-num">12</div>
+    <div class="section-title">MCTL 战略举措</div>
+    <div class="section-tag">Action</div>
+  </div>
+
+  <div class="action-card bad">
+    <div class="action-head">🚨 举措 1 · 合肥扶持加码立即落地</div>
+    <div class="action-desc">¥12M GM 已批 · 我月度驻地督导 + 上海标杆全套复制 + 王勇驻沪</div>
+    <div class="action-impact">
+      投入: ¥12M (扶持基金内) · <span class="neutral">MCTL 自批</span><br>
+      <span class="plus">影响: 合肥 65 → 80 · 华东片区 +3 分</span>
+    </div>
+    <button class="action-btn danger" onclick="openDecision('mctl-1')">立即落地</button>
+  </div>
+
+  <div class="action-card strategic">
+    <div class="action-head">📞 举措 2 · 山姆 5 店统签审批</div>
+    <div class="action-desc">MOM 提交跨城统签申请 · MCTL 审批 · 报 GM 备案</div>
+    <div class="action-impact">
+      投入: 0 (谈判) · <span class="neutral">MCTL 跨城权限内 · 报 GM 备案</span><br>
+      <span class="plus">影响: +¥8M/年 · 标杆 KA 跨城</span>
+    </div>
+    <button class="action-btn strategic" onclick="openDecision('mctl-2')">审批通过</button>
+  </div>
+
+  <div class="action-card">
+    <div class="action-head">🚀 举措 3 · 4 城轮巡密度加倍</div>
+    <div class="action-desc">从每月 1 次 → 每月 2 次 · 上海 1 + 杭州 1 + 苏州 1 + 合肥 2 (重点)</div>
+    <div class="action-impact">
+      投入: ¥800k (差旅 + 时间) · <span class="neutral">MCTL 自批</span><br>
+      <span class="plus">影响: 督导密度 +100% · 复制速度 +50%</span>
+    </div>
+    <button class="action-btn" onclick="openDecision('mctl-3')">启动新轮巡</button>
+  </div>
+
+  <div class="action-card">
+    <div class="action-head">🚀 举措 4 · 杭州张丽萍升 MCTL 候选</div>
+    <div class="action-desc">O2O 新零售突破 · 综合 85 · 推荐升 MCTL 候选 · 半年培养</div>
+    <div class="action-impact">
+      投入: ¥200k (培养 + 调研) · <span class="neutral">MCTL 自批</span><br>
+      <span class="plus">影响: 培养 1 MCTL · 我升 5 星 MCTL 加分</span>
+    </div>
+    <button class="action-btn" onclick="openDecision('mctl-4')">启动培养</button>
+  </div>
+</section>
+
+<!-- ═════════ 模块 13 · 合伙人收益 ═════════ -->
+<section class="cockpit-section">
+  <div class="section-header">
+    <div class="section-num">13</div>
+    <div class="section-title">MCTL 合伙人收益</div>
+    <div class="section-tag">Partner</div>
+  </div>
+  <div class="income-big">
+    <div class="income-big-num">¥101,000</div>
+    <div class="income-big-lbl">本月已结算 · 合肥拖累 -¥12k</div>
+  </div>
+  <div class="income-breakdown">
+    <div class="income-breakdown-row"><span class="income-bd-name">基础工资 (MCTL 资深)</span><span class="income-bd-val">¥55,000</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">片区综合奖 (88 分)</span><span class="income-bd-val">¥30,000</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">标杆复制奖 (3 城)</span><span class="income-bd-val">¥8,000</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">跨城资源调配奖</span><span class="income-bd-val">¥6,000</span></div>
+    <div class="income-breakdown-row"><span class="income-bd-name">合肥扶持加码奖 (额外)</span><span class="income-bd-val">¥2,000</span></div>
+  </div>
+
+  <div class="compare-table">
+    <div class="compare-title">📊 华东 3 MCTL 对比 (片区)</div>
+    <div class="compare-row me">
+      <span class="compare-name">🥇 我 · 徐海明 · 4 城轮巡</span>
+      <span class="compare-val">¥101k</span><span class="compare-diff">88</span>
+    </div>
+    <div class="compare-row">
+      <span class="compare-name">🥈 李华北 · 华北 4 城</span>
+      <span class="compare-val">¥118k</span><span class="compare-diff">95</span>
+    </div>
+    <div class="compare-row">
+      <span class="compare-name">🥉 王华南 · 华南 4 城</span>
+      <span class="compare-val">¥108k</span><span class="compare-diff">90</span>
+    </div>
+  </div>
+
+  <div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);border-radius:8px;padding:10px;margin-bottom:12px;text-align:center">
+    <div style="font-size:10px;color:var(--purple);font-weight:700;margin-bottom:4px">⭐ 合肥扶持成 + 华东 92 后 (12 月)</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--purple)">¥128,000 / 月</div>
+    <div style="font-size:10px;color:var(--text-2);margin-top:3px">超越华北 · 升 5 星 MCTL · 培养奖 + 标杆复制大奖</div>
+  </div>
+
+  <div class="partner-traits">
+    <div class="partner-traits-title">💎 我的合伙人 7 特征 · MCTL</div>
+    <div class="partner-traits-list">
+      ✅ <b>我有边界</b> 华东片区 4 城 · ¥300M/月<br>
+      ✅ <b>我有权力</b> 季度 ¥60M 自批<br>
+      ✅ <b>我有资源</b> 4 CTL + 16 DOM + 跨城基金<br>
+      ✅ <b>我有责任</b> 标杆复制 + 弱城扶持<br>
+      ✅ <b>我有收益</b> ¥101k · 12 月后 ¥128k<br>
+      ✅ <b>我有传承</b> 培养 4 CTL · 张丽萍 MCTL 候选<br>
+      ✅ <b>我有支援</b> GM 刘大海 + 集团 CMO
+    </div>
+  </div>
+</section>
+
+<!-- 决策日志 -->
+<section class="decision-log-section">
+  <div class="dlog-title">📝 MCTL 决策日志 · 片区级</div>
+  <div class="dlog-sub">晶体管 3 · 跨城资源调配 · 标杆复制决策原子化</div>
+  <div id="decision-log-list">
+    <div class="dlog-empty">本月暂无决策日志 · 点击"举措"按钮触发</div>
+  </div>
+</section>
+
+<!-- 跳工具 -->
+<section class="tools-section">
+  <div class="tools-title">🔧 决策 → 跳工具</div>
+  <div style="font-size:10px;color:var(--text-3);margin-bottom:10px;font-family:'Space Mono',monospace">在驾驶舱内打开 · 右上 ✕ 关闭即回</div>
+  <div class="tools-grid">
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XM_MCTL_v1.1.html', '🚗 路上 · 4 城轮巡督导')">
+      <div class="tool-icon">🚗</div>
+      <div class="tool-info"><div class="tool-name">路上 · XM ★</div><div class="tool-desc">4 城轮巡 + 督导计划</div></div>
+    </div>
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XL_MCTL_v1.1.html', '💰 一本账 · 片区财务')">
+      <div class="tool-icon">💰</div>
+      <div class="tool-info"><div class="tool-name">一本账 · XL</div><div class="tool-desc">4 城 P&L + 跨城资源</div></div>
+    </div>
+    <div class="tool-link" onclick="openTool('INFINITY_OS_INF-XP_MCTL_v1.1.html', '👤 我的 · MCTL 资深档案')">
+      <div class="tool-icon">👤</div>
+      <div class="tool-info"><div class="tool-name">我的 · XP</div><div class="tool-desc">档案 + CTL 培养树</div></div>
+    </div>
+    <div class="tool-link" style="opacity:0.55;cursor:not-allowed;border-style:dashed" onclick="alert('MCTL 不直接用 XD · 通过 CTL/DOM 看现场数据')">
+      <div class="tool-icon">🏪</div>
+      <div class="tool-info"><div class="tool-name">店内 · XD</div><div class="tool-desc">片区级不使用</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 大金返回 -->
+<div style="margin:24px 14px 8px;text-align:center">
+  <a id="smart-back-bottom" href="index.html" style="display:inline-flex;align-items:center;gap:8px;color:var(--bg-0);text-decoration:none;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:12px 28px;border-radius:10px;font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(212,175,55,0.3)">
+    <span style="font-size:18px">←</span>
+    <span id="smart-back-text-bottom">回主页 · INFINITY OS 入口</span>
+  </a>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · L6 MCTL 华东驾驶舱 · v1.1<br>
+  · 4 城轮巡 + 标杆复制 + 弱城扶持<br>
+  · MCTL 价值 = 把上海经验复制到 3 城<br>
+  Layer 1.3 演示
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay"><div class="modal" id="modal-content"></div></div>
+
+<!-- iframe -->
+<div id="tool-iframe-wrapper" style="display:none;position:fixed;inset:0;z-index:2000;background:var(--bg-0)">
+  <div style="position:sticky;top:0;background:linear-gradient(135deg,var(--gold),var(--gold-bright));padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10">
+    <button onclick="closeTool()" style="background:var(--bg-0);color:var(--gold);border:none;padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit">
+      <span style="font-size:16px">←</span><span>回 MCTL 驾驶舱</span>
+    </button>
+    <div id="tool-iframe-title" style="flex:1;color:var(--bg-0);font-weight:700;font-size:13px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+    <button onclick="closeTool()" style="background:transparent;color:var(--bg-0);border:1px solid var(--bg-0);padding:6px 10px;border-radius:6px;font-size:14px;cursor:pointer;font-weight:700">✕</button>
+  </div>
+  <iframe id="tool-iframe" src="" style="width:100%;height:calc(100vh - 56px);border:none;background:var(--bg-0)"></iframe>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function setupSmartBack() {
+  const params = new URLSearchParams(location.search);
+  const from = params.get('from');
+  const backMap = {
+    'GM_华东': { url: 'cockpit_L7_GM_east.html', label: '回 GM 驾驶舱', labelLong: '回 GM 华东驾驶舱 · 刘大海' }
+  };
+  if (from && backMap[from]) {
+    const cfg = backMap[from];
+    document.getElementById('smart-back-top').href = cfg.url;
+    document.getElementById('smart-back-text-top').textContent = cfg.label;
+    document.getElementById('smart-back-bottom').href = cfg.url;
+    document.getElementById('smart-back-text-bottom').textContent = cfg.labelLong;
+  }
+})();
+
+const DECISIONS = {
+  'mctl-1': {
+    title: '🚨 合肥扶持加码 ¥12M 立即落地',
+    who: 'MCTL 徐海明 · 华东片区',
+    what: '合肥扶持 ¥12M 落地 · 月度驻地督导 + SOP 复制 + 王勇驻沪 30 天',
+    why: '合肥 65 拖累 -8 分 · 主拖累 · 12 月扭转目标',
+    impact: '投入 ¥12M · 合肥 65 → 80 · 华东片区 88 → 91 · MCTL +5 分',
+    authority: 'MCTL 自主拍板 · 弱城扶持基金权限内',
+    nextStep: '→ 跳 XM 路上 · 添加合肥本月 2 次驻地督导',
+    btnText: '立即落地',
+    jumpTo: 'INFINITY_OS_INF-XM_MCTL_v1.1.html'
+  },
+  'mctl-2': {
+    title: '📞 山姆 5 店统签审批',
+    who: 'MCTL 徐海明',
+    what: '审批通过 MOM 陈博文山姆 5 店跨城统签 · 报 GM 备案',
+    why: 'KA 战略级 ¥8M/年 · 标杆 KA 跨城 · 华东战略级',
+    impact: '+¥8M/年 · 跨城战略 · 标杆 KA 复制',
+    authority: 'MCTL 自主拍板 · 跨城战略合约权限内 · 报 GM 备案',
+    nextStep: '→ 通知 MOM 推进 · GM 备案',
+    btnText: '审批通过',
+    jumpTo: null
+  },
+  'mctl-3': {
+    title: '🚀 4 城轮巡密度加倍',
+    who: 'MCTL 徐海明',
+    what: '4 城轮巡从每月 1 次升级为 2 次 · 合肥 2 次重点',
+    why: '督导密度 +100% · 标杆复制速度 +50% · 弱城扶持加速',
+    impact: '投入 ¥800k · 复制速度 +50% · 4 城综合 +3 分',
+    authority: 'MCTL 自主拍板 · 差旅时间自主安排',
+    nextStep: '→ 跳 XM 路上 · 重新规划 4 城月度轮巡',
+    btnText: '启动新轮巡',
+    jumpTo: 'INFINITY_OS_INF-XM_MCTL_v1.1.html'
+  },
+  'mctl-4': {
+    title: '🚀 张丽萍升 MCTL 候选',
+    who: 'MCTL 徐海明',
+    what: '推荐 杭州 CTL 张丽萍升 MCTL 候选 · O2O 新零售突破 · 半年培养',
+    why: '杭州综合 85 · O2O 标杆 · MCTL 培养接班人 · 我升 5 星加分',
+    impact: '培养 1 MCTL · 我升 5 星 MCTL · 团队战斗力 +30%',
+    authority: 'MCTL 自主拍板 · CTL 培养权限内',
+    nextStep: '→ 跳 XP 我的 · 提交张丽萍 MCTL 候选推荐',
+    btnText: '启动培养',
+    jumpTo: 'INFINITY_OS_INF-XP_MCTL_v1.1.html'
+  }
+};
+
+const decisionLog = [];
+
+function drillDown(name, detail) {
+  alert(`📍 ${name}\n\n${detail}`);
+}
+
+function openTool(url, title) {
+  document.getElementById('tool-iframe-title').textContent = title;
+  document.getElementById('tool-iframe').src = url + '?embed=1';
+  document.getElementById('tool-iframe-wrapper').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTool() {
+  document.getElementById('tool-iframe-wrapper').style.display = 'none';
+  document.getElementById('tool-iframe').src = '';
+  document.body.style.overflow = '';
+}
+
+function openDecision(id) {
+  const d = DECISIONS[id]; if (!d) return;
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">${d.title}</div>
+    <div class="modal-section"><div class="modal-section-label">Who</div><div class="modal-section-content">${d.who}</div></div>
+    <div class="modal-section"><div class="modal-section-label">What</div><div class="modal-section-content">${d.what}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Why</div><div class="modal-section-content">${d.why}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Impact</div><div class="modal-section-content">${d.impact}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Authority</div><div class="modal-section-content">${d.authority}</div></div>
+    <div class="modal-section"><div class="modal-section-label">Next</div><div class="modal-section-content">${d.nextStep}</div></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal()">取消</button>
+      <button class="modal-btn confirm" onclick="confirmDecision('${id}')">${d.btnText}</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+
+function confirmDecision(id) {
+  const d = DECISIONS[id]; closeModal();
+  const now = new Date();
+  const ts = now.getFullYear().toString().slice(2) + (now.getMonth()+1).toString().padStart(2,'0') + now.getDate().toString().padStart(2,'0') + '-' + now.getHours().toString().padStart(2,'0') + now.getMinutes().toString().padStart(2,'0');
+  const logId = `DEC-${ts}-MCTL-${(decisionLog.length+1).toString().padStart(3,'0')}`;
+  decisionLog.unshift({ id: logId, title: d.title.replace(/^[🚨🚀📞] /, ''), who: d.who, when: now.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}), impact: d.impact.split('·')[0].trim() });
+  renderDecisionLog();
+  showToast(`✅ MCTL 决策已记录 · ${logId}`);
+  setTimeout(() => {
+    if (d.jumpTo) setTimeout(() => {
+      if (confirm(`已记录决策\n${d.nextStep}\n\n现在跳工具执行?`)) openTool(d.jumpTo, '🚗 路上 · 执行 ' + d.title.replace(/^[🚨🚀📞] /, ''));
+    }, 800);
+  }, 1500);
+}
+
+function renderDecisionLog() {
+  const list = document.getElementById('decision-log-list');
+  if (decisionLog.length === 0) { list.innerHTML = '<div class="dlog-empty">本月暂无决策日志 · 点击"举措"按钮触发</div>'; return; }
+  list.innerHTML = decisionLog.map(d => `<div class="dlog-entry"><div class="dlog-entry-id">${d.id} · ${d.when}</div><div class="dlog-entry-content"><b>${d.title}</b><br>${d.who} · ${d.impact}</div></div>`).join('');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function updateTime() {
+  const n = new Date();
+  document.getElementById('now-time').textContent = n.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+}
+updateTime(); setInterval(updateTime, 30000);
+
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+</script>
+</body>
+</html>
