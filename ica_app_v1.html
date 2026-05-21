@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>美顾 App · ICA · 赵美玲</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg-0:#09090f; --bg-1:#13131c; --bg-2:#1a1a26; --bg-3:#22222f; --surface:#16161f; --border:rgba(255,255,255,0.06); --border-2:rgba(255,255,255,0.12); --text-0:#f4ede0; --text-1:#c8bda8; --text-2:#847868; --text-3:#524a40; --green:#88c850; --amber:#f5a623; --red:#e94560; --blue:#5d9cec; --purple:#a78bfa; --teal:#4ecdc4; --pink:#ec4899; --orange:#f97316; --gold:#d4af37; }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; font-family:'Noto Sans SC',sans-serif; }
+html, body { background:var(--bg-0); color:var(--text-0); min-height:100vh; overflow-x:hidden; }
+@media (min-width:600px) { body { max-width:420px; margin:0 auto; box-shadow:0 0 60px rgba(0,0,0,0.6); border-left:1px solid var(--border); border-right:1px solid var(--border); } }
+
+/* 顶部状态栏 */
+.layer-badge { background:rgba(167,139,250,0.15); border-bottom:1px solid rgba(167,139,250,0.25); color:var(--purple); font-size:10px; padding:5px 14px; text-align:center; font-family:'Space Mono',monospace; }
+
+/* 头像区 */
+.hero { padding:14px 16px 16px; background:linear-gradient(180deg,#2d1b4e,#1a1525); position:relative; }
+.hero-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.back-btn { color:white; text-decoration:none; background:rgba(255,255,255,0.1); padding:6px 12px; border-radius:8px; font-size:12px; backdrop-filter:blur(10px); }
+.clock { font-family:'Space Mono',monospace; font-size:11px; color:rgba(255,255,255,0.7); }
+.hero-row { display:flex; align-items:center; gap:12px; }
+.avatar-big { width:54px; height:54px; border-radius:50%; background:linear-gradient(135deg,#ec4899,#a78bfa); display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; border:2px solid rgba(255,255,255,0.2); }
+.hero-info { flex:1; }
+.hero-name { font-family:'Syne',sans-serif; font-weight:700; font-size:18px; color:white; }
+.hero-tag { display:flex; gap:6px; margin-top:4px; flex-wrap:wrap; }
+.tag-chip { font-size:9px; padding:2px 7px; border-radius:8px; font-family:'Space Mono',monospace; font-weight:700; }
+.tag-chip.s-grade { background:rgba(255,215,0,0.2); color:#ffd700; border:1px solid rgba(255,215,0,0.3); }
+.tag-chip.role { background:rgba(167,139,250,0.2); color:white; border:1px solid rgba(167,139,250,0.3); }
+.tag-chip.shop { background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.15); }
+
+/* 关键数据 · 今天能赚多少 */
+.income-card { margin:12px 14px; background:linear-gradient(135deg,#88c850,#5db830); border-radius:16px; padding:16px; color:white; position:relative; overflow:hidden; }
+.income-card::after { content:''; position:absolute; top:-20px; right:-20px; width:100px; height:100px; background:rgba(255,255,255,0.08); border-radius:50%; }
+.income-label { font-size:11px; opacity:0.9; font-family:'Space Mono',monospace; margin-bottom:6px; }
+.income-now { font-family:'Syne',sans-serif; font-weight:800; font-size:32px; line-height:1; }
+.income-unit { font-size:12px; opacity:0.8; margin-left:4px; }
+.income-row { display:flex; justify-content:space-between; gap:10px; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.2); }
+.income-sub { font-size:10px; opacity:0.9; }
+.income-sub b { font-size:14px; display:block; font-family:'Space Mono',monospace; }
+
+/* 5 模块 Tab 导航 */
+.tabs-nav { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin:12px 14px; position:sticky; top:0; z-index:10; background:var(--bg-0); padding:8px 0; }
+.tab-cell { padding:8px 4px; border-radius:8px; background:var(--bg-2); border:1px solid var(--border); text-align:center; cursor:pointer; transition:all 0.2s; }
+.tab-cell.active { background:rgba(167,139,250,0.15); border-color:var(--purple); }
+.tab-cell .tab-emoji { font-size:18px; display:block; }
+.tab-cell .tab-label { font-size:9px; color:var(--text-2); margin-top:2px; }
+.tab-cell.active .tab-label { color:var(--purple); font-weight:700; }
+
+/* 模块区 */
+.module { display:none; margin:0 14px; }
+.module.active { display:block; }
+
+/* === 模块 A · 收入 === */
+.income-detail { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:10px; }
+.income-detail-title { font-size:12px; font-weight:700; margin-bottom:10px; color:var(--text-0); }
+.income-uber-formula { background:var(--bg-3); border-radius:8px; padding:12px; font-family:'Space Mono',monospace; font-size:11px; color:var(--text-1); line-height:1.7; margin-bottom:10px; }
+.income-uber-formula b { color:var(--green); font-size:13px; }
+.income-row-item { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed var(--border); font-size:11px; }
+.income-row-item:last-child { border-bottom:none; }
+.income-row-item span:last-child { color:var(--green); font-family:'Space Mono',monospace; font-weight:700; }
+
+/* 收入预测 */
+.income-forecast { background:linear-gradient(135deg,rgba(136,200,80,0.05),var(--surface)); border:1px solid rgba(136,200,80,0.2); border-radius:12px; padding:14px; }
+.forecast-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; }
+.forecast-label { font-size:11px; color:var(--text-1); }
+.forecast-val { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; color:var(--green); }
+
+/* CB 信用分 */
+.cb-card { background:linear-gradient(135deg,#ffd700,#daa520); color:#1a1208; border-radius:12px; padding:14px; margin-top:10px; position:relative; }
+.cb-title { font-size:11px; font-weight:700; }
+.cb-score { font-family:'Syne',sans-serif; font-weight:800; font-size:36px; line-height:1; margin:6px 0; }
+.cb-bar { height:6px; background:rgba(0,0,0,0.15); border-radius:3px; overflow:hidden; margin:8px 0; }
+.cb-fill { height:100%; background:#1a1208; border-radius:3px; }
+.cb-tier { font-size:11px; font-weight:700; }
+.cb-perk { font-size:10px; margin-top:6px; line-height:1.5; opacity:0.85; }
+
+/* === 模块 B · 派单 === */
+.task-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:10px; }
+.task-stat { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center; }
+.task-stat-num { font-family:'Syne',sans-serif; font-weight:800; font-size:20px; }
+.task-stat-num.green { color:var(--green); }
+.task-stat-num.amber { color:var(--amber); }
+.task-stat-num.purple { color:var(--purple); }
+.task-stat-lbl { font-size:9px; color:var(--text-2); margin-top:2px; }
+
+.task-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:8px; border-left:3px solid var(--purple); }
+.task-card.urgent { border-left-color:var(--red); background:linear-gradient(135deg,rgba(233,69,96,0.04),var(--surface)); }
+.task-card.priority { border-left-color:var(--gold); background:linear-gradient(135deg,rgba(212,175,55,0.04),var(--surface)); }
+.task-card.done { opacity:0.5; border-left-color:var(--text-3); }
+.task-head { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px; }
+.task-title { font-size:13px; font-weight:700; flex:1; }
+.task-income { font-family:'Space Mono',monospace; font-size:14px; font-weight:700; color:var(--green); flex-shrink:0; }
+.task-meta { display:flex; gap:8px; flex-wrap:wrap; font-size:10px; color:var(--text-2); font-family:'Space Mono',monospace; margin-bottom:8px; }
+.task-meta-item { display:flex; align-items:center; gap:3px; }
+.task-meta-item.urgent-tag { color:var(--red); }
+.task-actions { display:flex; gap:6px; }
+.btn-primary { flex:1; background:linear-gradient(135deg,var(--purple),#7c3aed); color:white; border:none; padding:8px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; }
+.btn-secondary { background:var(--bg-3); color:var(--text-1); border:1px solid var(--border-2); padding:8px 12px; border-radius:6px; font-size:11px; cursor:pointer; }
+
+/* SKU 推荐 (今天推哪个赚最多) */
+.sku-recommend { margin-top:10px; padding:10px; background:linear-gradient(135deg,rgba(167,139,250,0.08),var(--surface)); border:1px solid rgba(167,139,250,0.25); border-radius:10px; }
+.sku-rec-title { font-size:10px; color:var(--purple); font-weight:700; font-family:'Space Mono',monospace; margin-bottom:6px; }
+.sku-rec-row { display:flex; justify-content:space-between; padding:5px 8px; background:var(--bg-2); border-radius:5px; margin-bottom:4px; font-size:11px; }
+.sku-rec-name { color:var(--text-1); }
+.sku-rec-pct { color:var(--green); font-family:'Space Mono',monospace; font-weight:700; }
+
+/* === 模块 C · 现场工具 === */
+.tool-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.tool-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; cursor:pointer; text-align:center; }
+.tool-card:active { background:var(--bg-2); }
+.tool-icon { font-size:32px; display:block; margin-bottom:8px; }
+.tool-name { font-size:12px; font-weight:700; }
+.tool-desc { font-size:9px; color:var(--text-2); margin-top:3px; line-height:1.4; }
+
+.tool-status { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px; margin-top:10px; }
+.tool-status-title { font-size:11px; color:var(--text-2); margin-bottom:8px; font-family:'Space Mono',monospace; }
+.tool-status-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:11px; border-bottom:1px dashed var(--border); }
+.tool-status-row:last-child { border-bottom:none; }
+.status-ok { color:var(--green); font-family:'Space Mono',monospace; font-weight:700; }
+.status-warn { color:var(--amber); font-family:'Space Mono',monospace; font-weight:700; }
+
+/* === 模块 D · AI 教练 === */
+.coach-card { background:linear-gradient(135deg,rgba(78,205,196,0.06),var(--surface)); border:1px solid rgba(78,205,196,0.25); border-radius:12px; padding:14px; margin-bottom:10px; }
+.coach-head { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.coach-icon { width:30px; height:30px; border-radius:8px; background:linear-gradient(135deg,var(--teal),#2dbdb4); display:flex; align-items:center; justify-content:center; font-size:16px; }
+.coach-title { font-size:12px; font-weight:700; flex:1; }
+.coach-confidence { font-size:9px; color:var(--teal); font-family:'Space Mono',monospace; background:rgba(78,205,196,0.15); padding:2px 6px; border-radius:8px; }
+.coach-text { font-size:11px; color:var(--text-1); line-height:1.7; }
+.coach-text b { color:var(--text-0); }
+.coach-source { font-size:9px; color:var(--text-3); margin-top:8px; padding-top:8px; border-top:1px solid var(--border); font-family:'Space Mono',monospace; }
+
+.scenario-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
+.scenario-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.scenario-time { font-size:10px; color:var(--gold); font-family:'Space Mono',monospace; font-weight:700; }
+.scenario-name { font-size:12px; font-weight:700; }
+.scenario-detail { font-size:11px; color:var(--text-1); line-height:1.6; }
+
+/* === 模块 E · 协作 === */
+.collab-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:8px; display:flex; align-items:center; gap:10px; cursor:pointer; }
+.collab-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.collab-icon.dsr { background:rgba(245,166,35,0.15); color:var(--amber); }
+.collab-icon.dom { background:rgba(212,175,55,0.15); color:var(--gold); }
+.collab-icon.boss { background:rgba(255,99,71,0.15); color:var(--red); }
+.collab-icon.peer { background:rgba(78,205,196,0.15); color:var(--teal); }
+.collab-info { flex:1; min-width:0; }
+.collab-name { font-size:12px; font-weight:700; }
+.collab-role { font-size:10px; color:var(--text-2); margin-top:2px; }
+.collab-badge { background:var(--red); color:white; min-width:18px; height:18px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; padding:0 5px; }
+
+.report-btn { width:100%; padding:14px; background:linear-gradient(135deg,var(--red),#aa1f3a); color:white; border:none; border-radius:12px; font-size:13px; font-weight:700; margin-top:10px; cursor:pointer; }
+.report-btn:active { transform:scale(0.98); }
+
+/* INFINITY OS 联动说明 */
+.os-link { margin:14px 14px; padding:12px; background:linear-gradient(135deg,rgba(167,139,250,0.04),var(--surface)); border:1px solid rgba(167,139,250,0.2); border-radius:12px; }
+.os-link-title { font-size:11px; color:var(--purple); font-weight:700; font-family:'Space Mono',monospace; margin-bottom:8px; }
+.os-link-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.os-link-cell { background:var(--bg-2); border-radius:6px; padding:6px 8px; font-size:10px; color:var(--text-1); text-decoration:none; }
+.os-link-cell b { color:var(--text-0); }
+
+.bottom-fix { padding:20px 14px 32px; text-align:center; font-size:10px; color:var(--text-3); }
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 · 一线工具 · ICA App v1.0 · DiDi 司机端</div>
+
+<!-- 头像 + 头部 -->
+<div class="hero">
+  <div class="hero-bar">
+    <a href="cockpit_L1_ICA.html" class="back-btn">← ICA 驾驶舱</a>
+    <span id="now-time" class="clock">--:--</span>
+  </div>
+  <div class="hero-row">
+    <div class="avatar-big">👩</div>
+    <div class="hero-info">
+      <div class="hero-name">赵美玲</div>
+      <div class="hero-tag">
+        <span class="tag-chip s-grade">⭐ S 级 · 90 分</span>
+        <span class="tag-chip role">美食顾问</span>
+      </div>
+      <div class="hero-tag" style="margin-top:4px">
+        <span class="tag-chip shop">📍 大润发沪西</span>
+        <span class="tag-chip shop">沈总雇</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 今天能赚多少 · 核心透明卡 -->
+<div class="income-card">
+  <div class="income-label">📊 今天预计收入</div>
+  <div>
+    <span class="income-now">¥385</span>
+    <span class="income-unit">/ 今日</span>
+  </div>
+  <div class="income-row">
+    <div class="income-sub">
+      已完成
+      <b>¥165</b>
+    </div>
+    <div class="income-sub">
+      在手 4 单
+      <b>¥220</b>
+    </div>
+    <div class="income-sub">
+      可抢 2 单
+      <b>+¥150</b>
+    </div>
+  </div>
+</div>
+
+<!-- 5 模块 Tab -->
+<div class="tabs-nav">
+  <div class="tab-cell active" onclick="switchTab('income')">
+    <span class="tab-emoji">💰</span>
+    <div class="tab-label">收入</div>
+  </div>
+  <div class="tab-cell" onclick="switchTab('tasks')">
+    <span class="tab-emoji">🎯</span>
+    <div class="tab-label">派单</div>
+  </div>
+  <div class="tab-cell" onclick="switchTab('tools')">
+    <span class="tab-emoji">📷</span>
+    <div class="tab-label">工具</div>
+  </div>
+  <div class="tab-cell" onclick="switchTab('coach')">
+    <span class="tab-emoji">🤖</span>
+    <div class="tab-label">教练</div>
+  </div>
+  <div class="tab-cell" onclick="switchTab('collab')">
+    <span class="tab-emoji">💬</span>
+    <div class="tab-label">协作</div>
+  </div>
+</div>
+
+<!-- ═══ 模块 A · 收入透明 ═══ -->
+<div class="module active" id="module-income">
+  <div class="income-detail">
+    <div class="income-detail-title">💎 我的收入怎么算的 (Uber 公式)</div>
+    <div class="income-uber-formula">
+      <b>每单收入 = 基础价 × CB分系数 × 门店级别 × SKU 权重 × 时段</b><br><br>
+      <span style="color:var(--text-2)">举例: 大润发沪西试饮</span><br>
+      ¥50 × 1.5(CB=90) × 1.3(S级店) × 2.0(禾然战略) × 1.2(下午高峰)<br>
+      = <b>¥234</b> · 一单
+    </div>
+    
+    <div class="income-detail-title" style="margin-top:14px">📋 今日已完成 (3 单)</div>
+    <div class="income-row-item">
+      <span>10:30 · 早班巡店 · 全 SKU 盘点</span>
+      <span>¥45</span>
+    </div>
+    <div class="income-row-item">
+      <span>11:45 · 缺货补货 · 4 SKU 通知</span>
+      <span>¥30</span>
+    </div>
+    <div class="income-row-item">
+      <span>13:20 · 主推试饮 · 禾然 280ml</span>
+      <span>¥90</span>
+    </div>
+    <div class="income-row-item" style="background:rgba(136,200,80,0.05);padding:8px;border-radius:6px;margin-top:6px">
+      <span><b>已完成小计</b></span>
+      <span><b>¥165</b></span>
+    </div>
+  </div>
+
+  <!-- 月度预测 -->
+  <div class="income-forecast">
+    <div class="income-detail-title">📈 本月预测收入</div>
+    <div class="forecast-row">
+      <span class="forecast-label">已完成 (1-20 日)</span>
+      <span class="forecast-val">¥4,820</span>
+    </div>
+    <div class="forecast-row">
+      <span class="forecast-label">剩余 10 天预测</span>
+      <span class="forecast-val">¥2,180</span>
+    </div>
+    <div class="forecast-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:8px">
+      <span class="forecast-label"><b>月底预计</b></span>
+      <span class="forecast-val" style="font-size:20px">¥7,000</span>
+    </div>
+    <div style="font-size:10px;color:var(--text-2);margin-top:8px;line-height:1.5">
+      💡 比上月 ¥6,200 多 ¥800 (+13%) · S 级保持
+    </div>
+  </div>
+
+  <!-- CB 信用分卡 -->
+  <div class="cb-card">
+    <div class="cb-title">⭐ 我的 CB 信用分</div>
+    <div class="cb-score">90</div>
+    <div class="cb-bar"><div class="cb-fill" style="width:90%"></div></div>
+    <div class="cb-tier">S 级美顾 · 单价系数 ×1.5</div>
+    <div class="cb-perk">
+      🎁 S 级特权:<br>
+      · 优先抢单 (S+ 门店任务)<br>
+      · 单价 ×1.5 (比 A 级多 50%)<br>
+      · 月底奖金池 +¥500
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 模块 B · 派单 ═══ -->
+<div class="module" id="module-tasks">
+  <div class="task-summary">
+    <div class="task-stat">
+      <div class="task-stat-num green">3</div>
+      <div class="task-stat-lbl">已完成</div>
+    </div>
+    <div class="task-stat">
+      <div class="task-stat-num amber">4</div>
+      <div class="task-stat-lbl">在手中</div>
+    </div>
+    <div class="task-stat">
+      <div class="task-stat-num purple">2</div>
+      <div class="task-stat-lbl">可抢</div>
+    </div>
+  </div>
+
+  <!-- 紧急单 -->
+  <div class="task-card urgent">
+    <div class="task-head">
+      <div class="task-title">🚨 紧急 · 禾然缺货补货</div>
+      <div class="task-income">¥80</div>
+    </div>
+    <div class="task-meta">
+      <span class="task-meta-item urgent-tag">⏰ 30 分钟内</span>
+      <span class="task-meta-item">📍 货架 B3</span>
+      <span class="task-meta-item">🌱 禾然 280ml × 12</span>
+    </div>
+    <div style="font-size:10px;color:var(--red);margin-bottom:8px;line-height:1.4">
+      DSR 王晓刚发现库存只剩 3 瓶 · 来源 DEC-2605-DSR-021
+    </div>
+    <div class="task-actions">
+      <button class="btn-primary">立即接单</button>
+      <button class="btn-secondary">转他人</button>
+    </div>
+  </div>
+
+  <!-- 高价值单 -->
+  <div class="task-card priority">
+    <div class="task-head">
+      <div class="task-title">⭐ 高价值 · 禾然试饮 (下午高峰)</div>
+      <div class="task-income">¥234</div>
+    </div>
+    <div class="task-meta">
+      <span class="task-meta-item">⏰ 16:00 - 17:30</span>
+      <span class="task-meta-item">📍 D5 试饮区</span>
+      <span class="task-meta-item">🌱 禾然 280ml</span>
+      <span class="task-meta-item">📊 ROI 3.2x</span>
+    </div>
+    
+    <!-- SKU 推荐 -->
+    <div class="sku-recommend">
+      <div class="sku-rec-title">🤖 我推哪个 SKU 赚最多 (今天)</div>
+      <div class="sku-rec-row">
+        <span class="sku-rec-name">🌱 禾然 280ml (Bet · 战略)</span>
+        <span class="sku-rec-pct">+ 50% 权重</span>
+      </div>
+      <div class="sku-rec-row">
+        <span class="sku-rec-name">⭐ 六月鲜 380ml (Strategic)</span>
+        <span class="sku-rec-pct">+ 30%</span>
+      </div>
+      <div class="sku-rec-row">
+        <span class="sku-rec-name">🛡 葱伴侣 200ml (维持)</span>
+        <span class="sku-rec-pct">+ 10%</span>
+      </div>
+    </div>
+    
+    <div class="task-actions" style="margin-top:10px">
+      <button class="btn-primary">立即接单</button>
+      <button class="btn-secondary">详情</button>
+    </div>
+  </div>
+
+  <!-- 常规单 -->
+  <div class="task-card">
+    <div class="task-head">
+      <div class="task-title">📦 货架陈列整理</div>
+      <div class="task-income">¥60</div>
+    </div>
+    <div class="task-meta">
+      <span class="task-meta-item">⏰ 灵活</span>
+      <span class="task-meta-item">📍 B3-B5</span>
+      <span class="task-meta-item">📐 黄金位调整</span>
+    </div>
+    <div class="task-actions">
+      <button class="btn-primary">接单</button>
+    </div>
+  </div>
+
+  <!-- 已完成 -->
+  <div class="task-card done">
+    <div class="task-head">
+      <div class="task-title">✅ 主推试饮 · 禾然 280ml</div>
+      <div class="task-income">¥90</div>
+    </div>
+    <div class="task-meta">
+      <span class="task-meta-item">13:20-14:30 完成</span>
+      <span class="task-meta-item">CB 分 +2</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 模块 C · 现场工具 ═══ -->
+<div class="module" id="module-tools">
+  <div class="tool-grid">
+    <div class="tool-card">
+      <span class="tool-icon">📷</span>
+      <div class="tool-name">货架识别</div>
+      <div class="tool-desc">拍 1 张 · 千问 VL<br>自动数排面 + 占比</div>
+    </div>
+    <div class="tool-card">
+      <span class="tool-icon">📦</span>
+      <div class="tool-name">库存盘点</div>
+      <div class="tool-desc">货架量 + 仓库量<br>触发 a/r/T 计算</div>
+    </div>
+    <div class="tool-card">
+      <span class="tool-icon">🔍</span>
+      <div class="tool-name">SKU 查询</div>
+      <div class="tool-desc">推这个 SKU<br>能赚多少 ¥</div>
+    </div>
+    <div class="tool-card">
+      <span class="tool-icon">📱</span>
+      <div class="tool-name">一物一码</div>
+      <div class="tool-desc">扫码激活<br>拉力信号 +35%</div>
+    </div>
+    <div class="tool-card">
+      <span class="tool-icon">🏷️</span>
+      <div class="tool-name">价签识别</div>
+      <div class="tool-desc">拍竞品价签<br>自动监控乱价</div>
+    </div>
+    <div class="tool-card">
+      <span class="tool-icon">📋</span>
+      <div class="tool-name">巡店清单</div>
+      <div class="tool-desc">今日 8 检查项<br>一键打卡完成</div>
+    </div>
+  </div>
+
+  <!-- 今日盘点状态 -->
+  <div class="tool-status">
+    <div class="tool-status-title">📊 今日盘点状态</div>
+    <div class="tool-status-row">
+      <span>⭐ 六月鲜 380ml</span>
+      <span class="status-ok">货架 32 / 仓 24 · ✓</span>
+    </div>
+    <div class="tool-status-row">
+      <span>🌱 禾然 280ml</span>
+      <span class="status-warn">货架 3 / 仓 0 · ⚠ 缺货</span>
+    </div>
+    <div class="tool-status-row">
+      <span>💰 味达美 500ml</span>
+      <span class="status-ok">货架 48 / 仓 12 · ✓</span>
+    </div>
+    <div class="tool-status-row">
+      <span>🛡 葱伴侣 200ml</span>
+      <span class="status-ok">货架 18 / 仓 6 · ✓</span>
+    </div>
+    <div class="tool-status-row">
+      <span>⚔️ 小康 360ml</span>
+      <span class="status-ok">货架 24 / 仓 6 · ✓</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 模块 D · AI 教练 ═══ -->
+<div class="module" id="module-coach">
+  <div class="coach-card">
+    <div class="coach-head">
+      <div class="coach-icon">🤖</div>
+      <div class="coach-title">AI 教练 · 今日话术建议</div>
+      <div class="coach-confidence">置信 87%</div>
+    </div>
+    <div class="coach-text">
+      <b>禾然试饮场景</b> (下午高峰)<br><br>
+      🗣 推荐话术:<br>
+      "亲~ 这款<b>禾然有机酱油</b>是我们的高端选择 · 比普通酱油更鲜更纯 · 米其林餐厅在用 · 今天试饮还能再优惠 ¥5 · 您拿一瓶试试?"<br><br>
+      🎯 关键词: 高端 · 米其林 · 优惠
+    </div>
+    <div class="coach-source">
+      💡 基于 1,247 个 ICA 成功案例 · S 级转化率 35%
+    </div>
+  </div>
+
+  <!-- 时段建议 -->
+  <div class="scenario-card">
+    <div class="scenario-head">
+      <div class="scenario-time">⏰ 16:00 - 17:30</div>
+      <div class="scenario-name">🌸 下午高峰 · 主妇集中</div>
+    </div>
+    <div class="scenario-detail">
+      建议: 主推禾然 (高端家庭客群)<br>
+      预期转化: 35% · 单单 ¥45+
+    </div>
+  </div>
+
+  <div class="scenario-card">
+    <div class="scenario-head">
+      <div class="scenario-time">⏰ 18:00 - 19:00</div>
+      <div class="scenario-name">🏠 下班高峰 · 上班族</div>
+    </div>
+    <div class="scenario-detail">
+      建议: 主推六月鲜 380ml (实用日常)<br>
+      预期转化: 28% · 单单 ¥30
+    </div>
+  </div>
+
+  <!-- 学习其他美顾 -->
+  <div class="coach-card">
+    <div class="coach-head">
+      <div class="coach-icon" style="background:linear-gradient(135deg,#ffd700,#daa520)">🏆</div>
+      <div class="coach-title">优秀同事 · 王小芳 (S+ 级 · 95 分)</div>
+      <div class="coach-confidence">月入 ¥9,500</div>
+    </div>
+    <div class="coach-text">
+      <b>王小芳的禾然话术</b>:<br><br>
+      "您看这个酱油 · 颜色是不是更清亮? 这就是有机的特点 · 没有添加剂 · 给孩子做菜更放心..."<br><br>
+      <b>关键技巧</b>: 强调"孩子" + "对比颜色"
+    </div>
+    <div class="coach-source">
+      💡 王小芳本月禾然销 +180 瓶 · 转化率 42%
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 模块 E · 协作 ═══ -->
+<div class="module" id="module-collab">
+  <div class="collab-card">
+    <div class="collab-icon dsr">🚚</div>
+    <div class="collab-info">
+      <div class="collab-name">王晓刚 · DSR</div>
+      <div class="collab-role">我的补货搭档 · A 级 · 沪西华南</div>
+    </div>
+    <div class="collab-badge">2</div>
+  </div>
+
+  <div class="collab-card">
+    <div class="collab-icon dom">👔</div>
+    <div class="collab-info">
+      <div class="collab-name">黄建国 · DOM</div>
+      <div class="collab-role">我的督导 · 沪西华南</div>
+    </div>
+    <div class="collab-badge">1</div>
+  </div>
+
+  <div class="collab-card">
+    <div class="collab-icon boss">💼</div>
+    <div class="collab-info">
+      <div class="collab-name">沈总 · 经销商老板</div>
+      <div class="collab-role">我的雇主 · 沪西华南经销商</div>
+    </div>
+  </div>
+
+  <div class="collab-card">
+    <div class="collab-icon peer">👥</div>
+    <div class="collab-info">
+      <div class="collab-name">本片区美顾群</div>
+      <div class="collab-role">5 个美顾 · 互助学习</div>
+    </div>
+    <div class="collab-badge">5</div>
+  </div>
+
+  <!-- 一键报告 -->
+  <button class="report-btn">🚨 一键报缺货 / 异常 / 机会</button>
+
+  <!-- 我对组织的贡献 -->
+  <div class="income-detail" style="margin-top:10px">
+    <div class="income-detail-title">📈 我对组织的贡献 (本月)</div>
+    <div class="income-row-item">
+      <span>大润发沪西门店 ROI</span>
+      <span style="color:var(--green)">+18%</span>
+    </div>
+    <div class="income-row-item">
+      <span>禾然 280ml 拉力</span>
+      <span style="color:var(--green)">+25%</span>
+    </div>
+    <div class="income-row-item">
+      <span>给沈总的月销贡献</span>
+      <span style="color:var(--green)">¥38k</span>
+    </div>
+    <div class="income-row-item">
+      <span>沈总给我的月薪</span>
+      <span style="color:var(--gold)">¥7,000</span>
+    </div>
+  </div>
+</div>
+
+<!-- INFINITY OS 联动说明 -->
+<div class="os-link">
+  <div class="os-link-title">🏛 我在 INFINITY OS 中的位置</div>
+  <div style="font-size:10px;color:var(--text-1);line-height:1.6;margin-bottom:8px">
+    我是<b style="color:var(--purple)">一线晶体管</b> · 责任链最底层 L1<br>
+    我影响 5 SKU 的拉力心跳 · 我的决策记录到决策日志<br>
+    我的 CB 分由信用互锁计算 · 我的收入由经济互锁分发
+  </div>
+  <div class="os-link-grid">
+    <a href="sku_6cards_v2.html" class="os-link-cell">⚛️ <b>SKU 6 卡</b><br>看 5 SKU 全国</a>
+    <a href="decision_log_v2.html" class="os-link-cell">📝 <b>决策日志</b><br>我的 3 决策</a>
+    <a href="cockpit_L1_ICA.html" class="os-link-cell">🎯 <b>ICA 驾驶舱</b><br>我的总览页</a>
+    <a href="middle_layer_engines.html" class="os-link-cell">⚙️ <b>7 引擎</b><br>机制原理</a>
+  </div>
+</div>
+
+<div class="bottom-fix">
+  美顾 App v1.0 · ICA · DiDi 司机端模式 · DS<br>
+  · 一线先动 · 赚得更多 · 干得更轻松<br>
+  · 专注最强项 (跑店/卖货/服务) · 其他给 Agent<br>
+  Layer 1.3 演示 · 数据模拟
+</div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-cell').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('module-' + name).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function updateTime() { document.getElementById('now-time').textContent = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' }); }
+updateTime(); setInterval(updateTime, 30000);
+</script>
+</body>
+</html>
