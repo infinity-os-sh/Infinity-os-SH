@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 晶体管层 · 决策日志 v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg-0:#0a0907; --bg-1:#14110d; --bg-2:#1c1815; --bg-3:#251f1a; --surface:#1a1612; --border:rgba(255,220,180,0.08); --border-2:rgba(255,220,180,0.15); --text-0:#f4ede0; --text-1:#c8bda8; --text-2:#847868; --text-3:#524a40; --gold:#d4af37; --gold-bright:#f5a623; --green:#88c850; --amber:#f5a623; --red:#e94560; --blue:#5d9cec; --purple:#a78bfa; --teal:#4ecdc4; }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { background:var(--bg-0); color:var(--text-0); font-family:'Noto Sans SC',sans-serif; min-height:100vh; overflow-x:hidden; }
+@media (min-width:600px) { body { max-width:480px; margin:0 auto; box-shadow:0 0 60px rgba(0,0,0,0.6); } }
+
+.layer-badge { background:rgba(78,205,196,0.15); border-bottom:1px solid rgba(78,205,196,0.25); color:var(--teal); font-size:10px; padding:6px 14px; text-align:center; font-family:'Space Mono',monospace; }
+
+.hero { padding:18px 14px 14px; background:linear-gradient(180deg,var(--bg-1),var(--bg-0)); border-bottom:1px solid var(--border); }
+.hero-top { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+.hero-row { display:flex; align-items:center; gap:14px; }
+.hero-avatar { width:60px; height:60px; border-radius:16px; background:linear-gradient(135deg,var(--teal),#2dbdb4); display:flex; align-items:center; justify-content:center; font-size:30px; flex-shrink:0; box-shadow:0 6px 18px rgba(78,205,196,0.3); }
+.hero-info { flex:1; min-width:0; }
+.hero-name { font-family:'Syne',sans-serif; font-weight:700; font-size:20px; }
+.hero-title { font-size:12px; color:var(--teal); margin-top:2px; }
+.hero-scope { font-size:11px; color:var(--text-2); margin-top:4px; line-height:1.5; }
+
+/* 切换 SKU 6 卡 */
+.cross-link { margin:12px 14px; background:linear-gradient(135deg,rgba(167,139,250,0.08),var(--surface)); border:1px solid rgba(167,139,250,0.25); border-radius:12px; padding:12px; display:flex; align-items:center; gap:10px; cursor:pointer; text-decoration:none; color:inherit; }
+.cross-link-icon { font-size:24px; }
+.cross-link-text { flex:1; }
+.cross-link-title { font-size:12px; color:var(--purple); font-weight:700; }
+.cross-link-sub { font-size:10px; color:var(--text-2); margin-top:2px; }
+
+/* 理论说明 */
+.theory-box { margin:12px 14px; background:linear-gradient(135deg,rgba(78,205,196,0.06),var(--surface)); border:1px solid rgba(78,205,196,0.2); border-radius:14px; padding:14px; }
+.theory-title { font-size:12px; color:var(--teal); font-weight:700; margin-bottom:8px; font-family:'Space Mono',monospace; }
+.theory-content { font-size:11px; color:var(--text-1); line-height:1.7; }
+.theory-content b { color:var(--teal); }
+
+/* 统计 */
+.stats-bar { margin:12px 14px; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.stat-cell { background:var(--bg-2); border:1px solid var(--border); border-radius:8px; padding:10px 6px; text-align:center; }
+.stat-num { font-family:'Syne',sans-serif; font-weight:800; font-size:18px; }
+.stat-num.teal { color:var(--teal); }
+.stat-num.green { color:var(--green); }
+.stat-num.amber { color:var(--amber); }
+.stat-num.red { color:var(--red); }
+.stat-lbl { font-size:9px; color:var(--text-2); margin-top:3px; }
+
+/* 决策卡 */
+.section-title { margin:14px 14px 8px; font-size:13px; font-weight:700; color:var(--text-0); display:flex; align-items:center; gap:6px; }
+.section-title-tag { font-size:9px; color:var(--text-3); font-family:'Space Mono',monospace; font-weight:600; }
+
+.decision-card { margin:8px 14px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; border-left:3px solid var(--teal); }
+.decision-card.verified { border-left-color:var(--green); }
+.decision-card.partial { border-left-color:var(--amber); }
+.decision-card.failed { border-left-color:var(--red); }
+.decision-card.pending { border-left-color:var(--blue); }
+
+.dc-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; gap:8px; }
+.dc-id { font-family:'Space Mono',monospace; font-size:10px; color:var(--text-3); }
+.dc-status { padding:3px 8px; border-radius:10px; font-family:'Space Mono',monospace; font-size:9px; font-weight:700; flex-shrink:0; }
+.dc-status.verified { background:rgba(136,200,80,0.15); color:var(--green); }
+.dc-status.partial { background:rgba(245,166,35,0.15); color:var(--amber); }
+.dc-status.failed { background:rgba(233,69,96,0.15); color:var(--red); }
+.dc-status.pending { background:rgba(93,156,236,0.15); color:var(--blue); }
+
+.dc-title { font-size:13px; font-weight:700; color:var(--text-0); margin-bottom:6px; line-height:1.4; }
+.dc-meta { font-size:10px; color:var(--text-2); margin-bottom:8px; font-family:'Space Mono',monospace; }
+
+.dc-fields { display:flex; flex-direction:column; gap:5px; }
+.dc-row { display:grid; grid-template-columns:54px 1fr; gap:8px; font-size:11px; line-height:1.5; }
+.dc-row-label { color:var(--text-3); font-family:'Space Mono',monospace; font-size:10px; padding-top:1px; }
+.dc-row-value { color:var(--text-1); }
+.dc-row-value b { color:var(--text-0); }
+
+/* SKU 反应键 */
+.sku-impact { margin-top:8px; padding:8px 10px; background:rgba(167,139,250,0.05); border:1px solid rgba(167,139,250,0.15); border-radius:8px; }
+.sku-impact-label { font-size:9px; color:var(--purple); font-family:'Space Mono',monospace; margin-bottom:5px; }
+.sku-impact-row { display:flex; justify-content:space-between; font-size:11px; padding:3px 0; color:var(--text-1); }
+.sku-impact-row b { color:var(--text-0); }
+.sku-impact-row .plus { color:var(--green); font-family:'Space Mono',monospace; font-weight:700; }
+.sku-impact-row .minus { color:var(--red); font-family:'Space Mono',monospace; font-weight:700; }
+.sku-impact-row .neutral { color:var(--text-2); font-family:'Space Mono',monospace; font-weight:700; }
+
+/* 时间轴回填 */
+.timeline { margin-top:10px; padding:10px; background:var(--bg-2); border-radius:8px; }
+.timeline-row { display:flex; align-items:center; gap:8px; font-size:10px; margin-bottom:5px; font-family:'Space Mono',monospace; }
+.timeline-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.timeline-dot.green { background:var(--green); }
+.timeline-dot.amber { background:var(--amber); }
+.timeline-dot.gray { background:var(--text-3); }
+.timeline-dot.blue { background:var(--blue); }
+.timeline-text { color:var(--text-1); flex:1; }
+.timeline-text b { color:var(--text-0); }
+
+/* AI 学习样本 */
+.learning-section { margin:14px 14px; background:linear-gradient(135deg,rgba(212,175,55,0.06),var(--surface)); border:1px solid rgba(212,175,55,0.2); border-radius:14px; padding:14px; }
+.learning-title { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:var(--gold); margin-bottom:10px; }
+.learning-rule { background:var(--bg-2); border-radius:8px; padding:10px 12px; margin-bottom:6px; font-size:11px; color:var(--text-1); line-height:1.6; border-left:3px solid var(--gold); }
+.learning-rule b { color:var(--gold); }
+.learning-meta { font-size:9px; color:var(--text-3); margin-top:5px; font-family:'Space Mono',monospace; }
+
+/* Schema */
+.schema-section { margin:14px 14px; background:var(--surface); border:1px solid var(--border-2); border-radius:14px; padding:14px; }
+.schema-title { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:var(--teal); margin-bottom:10px; }
+.schema-code { background:var(--bg-0); border-radius:8px; padding:12px; font-family:'Space Mono',monospace; font-size:10px; color:var(--text-1); line-height:1.6; overflow-x:auto; white-space:pre; }
+.schema-code .kw { color:var(--purple); }
+.schema-code .type { color:var(--blue); }
+.schema-code .str { color:var(--green); }
+.schema-code .comment { color:var(--text-3); }
+
+.bottom-fix { padding:18px 14px 32px; text-align:center; font-size:10px; color:var(--text-3); }
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 · 晶体管层 · 决策日志 v1.0 (Decision Log)</div>
+
+<div class="hero">
+  <div class="hero-top">
+    <a href="index.html" style="color:var(--bg-0);text-decoration:none;background:linear-gradient(135deg,var(--teal),#2dbdb4);padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(78,205,196,0.3)">
+      <span style="font-size:16px">←</span><span>回主页</span>
+    </a>
+    <span style="color:var(--text-3);font-family:'Space Mono',monospace;font-size:11px">决策日志 · v1.0</span>
+    <span id="now-time" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-2)">--:--</span>
+  </div>
+  <div class="hero-row">
+    <div class="hero-avatar">📝</div>
+    <div class="hero-info">
+      <div class="hero-name">决策日志</div>
+      <div class="hero-title">晶体管层 · 调味品 EDA 另一半</div>
+      <div class="hero-scope">每个决策 = 一个晶体管开关<br>30/90 天自动回填 · AI 真学习</div>
+    </div>
+  </div>
+</div>
+
+<!-- 切换到 SKU 6 卡 -->
+<a href="sku_6cards_v2.html" class="cross-link">
+  <div class="cross-link-icon">⚛️</div>
+  <div class="cross-link-text">
+    <div class="cross-link-title">⇄ 同时查看 SKU 6 卡 v2.0</div>
+    <div class="cross-link-sub">SKU + 决策 = 化学反应 · 通过 sku_id 字段双向打通</div>
+  </div>
+  <div style="color:var(--purple);font-size:18px">→</div>
+</a>
+
+<!-- 理论说明 -->
+<div class="theory-box">
+  <div class="theory-title">📝 核心认知 · 决策日志是什么</div>
+  <div class="theory-content">
+    <b>组织里每天发生大量决策 · 99% 消失了</b><br>
+    决策日志 = 把每个"决策瞬间"变成可学习的数据<br>
+    <br>
+    每条记录:<br>
+    · Who/What/Why/Impact 预期<br>
+    · 30 天后自动回填实际<br>
+    · 90 天后自动评估长期影响<br>
+    · AI 学到一条规律<br>
+    <br>
+    与 SKU 6 卡通过 sku_id 反应 = EDA 核反应堆
+  </div>
+</div>
+
+<!-- 全局统计 -->
+<div style="margin:12px 14px 6px;font-size:11px;color:var(--text-3);font-family:'Space Mono',monospace">📊 本月决策日志统计 (集团)</div>
+<div class="stats-bar">
+  <div class="stat-cell">
+    <div class="stat-num teal">147</div>
+    <div class="stat-lbl">总决策数</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num green">89</div>
+    <div class="stat-lbl">✓ 已验证</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num amber">31</div>
+    <div class="stat-lbl">部分达标</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num blue">27</div>
+    <div class="stat-lbl">待 30 天回填</div>
+  </div>
+</div>
+
+<!-- ════ 5 种审批流 (DECISION-001 v1.0) 说明 ════ -->
+<div style="margin:14px 14px;background:linear-gradient(135deg,rgba(167,139,250,0.04),var(--surface));border:1px solid rgba(167,139,250,0.2);border-radius:14px;padding:14px">
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--purple);margin-bottom:8px">🏛 5 种审批流 · DECISION-001 v1.0 (DS 2026-05-15 拍板)</div>
+  <div style="font-size:10px;color:var(--text-2);margin-bottom:10px;font-family:'Space Mono',monospace">每条决策日志必有 authority_pattern 字段·标记走哪种模型</div>
+  <div style="display:grid;grid-template-columns:1fr;gap:6px">
+    <div style="background:var(--bg-2);border-radius:6px;padding:8px;font-size:11px;color:var(--text-1);line-height:1.5;border-left:3px solid var(--red)">
+      <b style="color:var(--red)">🅰 模型 A · 公司先批</b> (战略 SKU > 50% · 新 SR · 风险大)
+    </div>
+    <div style="background:var(--bg-2);border-radius:6px;padding:8px;font-size:11px;color:var(--text-1);line-height:1.5;border-left:3px solid var(--teal)">
+      <b style="color:var(--teal)">🅱 模型 B · 老板先同意</b> (±5% · 成熟 SR + 老客户)
+    </div>
+    <div style="background:var(--bg-2);border-radius:6px;padding:8px;font-size:11px;color:var(--text-1);line-height:1.5;border-left:3px solid var(--blue)">
+      <b style="color:var(--blue)">🅲 模型 C · 双轨并行</b> (新经销商 · 15-30% · 风险敏感)
+    </div>
+    <div style="background:var(--bg-2);border-radius:6px;padding:8px;font-size:11px;color:var(--text-1);line-height:1.5;border-left:3px solid var(--amber)">
+      <b style="color:var(--amber)">🅳 模型 D · 老板承诺+公司跟踪</b> (KA 大单 · 5-15% · 有信用)
+    </div>
+    <div style="background:var(--bg-2);border-radius:6px;padding:8px;font-size:11px;color:var(--text-1);line-height:1.5;border-left:3px solid var(--purple)">
+      <b style="color:var(--purple)">🅴 模型 E · 分层</b> (战略 KA · 配阈值矩阵 · 复杂)
+    </div>
+  </div>
+</div>
+
+<!-- ════ 真实决策案例 1 · 黄建国加 ICA ════ -->
+<div class="section-title">
+  <span>📋 10 个真实决策样本</span>
+  <span class="section-title-tag">DEC-... 格式</span>
+</div>
+
+<div class="decision-card verified">
+  <div class="dc-head">
+    <span class="dc-id">DEC-2604-DOM-001</span><span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--teal);background:rgba(78,205,196,0.1);padding:2px 6px;border-radius:4px;margin-left:6px">🅱 模型 B · 老板先同意</span>
+    <span class="dc-status verified">✓ 30 天验证</span>
+  </div>
+  <div class="dc-title">武宁片区加 2 ICA · 拉力补强</div>
+  <div class="dc-meta">2026-04-07 14:32 · DOM 黄建国 · 沪西华南</div>
+  <div class="dc-fields">
+    <div class="dc-row">
+      <div class="dc-row-label">Who</div>
+      <div class="dc-row-value">黄建国 (DOM) · 与沈总商议</div>
+    </div>
+    <div class="dc-row">
+      <div class="dc-row-label">What</div>
+      <div class="dc-row-value">武宁片区加 2 ICA · 常驻大润发 / 家乐福</div>
+    </div>
+    <div class="dc-row">
+      <div class="dc-row-label">Why</div>
+      <div class="dc-row-value">武宁 35 门店 · 0 美顾 · 拉力薄弱</div>
+    </div>
+    <div class="dc-row">
+      <div class="dc-row-label">投入</div>
+      <div class="dc-row-value">¥14k / 月 (沈总出 · 2 ICA × ¥7k)</div>
+    </div>
+    <div class="dc-row">
+      <div class="dc-row-label">预期</div>
+      <div class="dc-row-value">拉力 +25% · 月销 +¥120k</div>
+    </div>
+  </div>
+  <!-- SKU + Org + Individual 反应键 (完整) -->
+  <div class="sku-impact">
+    <div class="sku-impact-label">🔗 affected_skus · 化学反应</div>
+    <div class="sku-impact-row"><span>六月鲜 380ml (Strategic)</span><span class="plus">+¥85k 拉力</span></div>
+    <div class="sku-impact-row"><span>禾然有机 280ml (Bet)</span><span class="plus">+¥35k 拉力</span></div>
+    <div class="sku-impact-row"><span>葱伴侣 200ml (Defensive)</span><span class="minus">-¥3k (被挤压)</span></div>
+  </div>
+  <div class="sku-impact" style="background:rgba(245,166,35,0.05);border-color:rgba(245,166,35,0.15)">
+    <div class="sku-impact-label" style="color:var(--gold)">🔗 affected_orgs · 组织影响</div>
+    <div class="sku-impact-row"><span>沪西华南经销商 (沈总)</span><span class="plus">月销 +¥120k</span></div>
+    <div class="sku-impact-row"><span>大润发沪西 (S 级门店)</span><span class="plus">拉力 +25%</span></div>
+    <div class="sku-impact-row"><span>家乐福沪西 (A 级门店)</span><span class="plus">拉力 +18%</span></div>
+  </div>
+  <div class="sku-impact" style="background:rgba(93,156,236,0.05);border-color:rgba(93,156,236,0.15)">
+    <div class="sku-impact-label" style="color:var(--blue)">🔗 affected_indvs · 个体影响</div>
+    <div class="sku-impact-row"><span>新 ICA 张某 (沈总雇)</span><span class="plus">月薪 ¥5k</span></div>
+    <div class="sku-impact-row"><span>新 ICA 李某 (沈总雇)</span><span class="plus">月薪 ¥4.5k</span></div>
+    <div class="sku-impact-row"><span>张丽 (DSR 新人)</span><span class="plus">武宁出货 +¥80k</span></div>
+  </div>
+  <!-- 时间轴 -->
+  <div class="timeline">
+    <div class="timeline-row"><div class="timeline-dot blue"></div><div class="timeline-text">2026-04-07 · 决策记录 · 沈总同意</div></div>
+    <div class="timeline-row"><div class="timeline-dot blue"></div><div class="timeline-text">2026-04-15 · 2 ICA 入职 · 大润发 + 家乐福</div></div>
+    <div class="timeline-row"><div class="timeline-dot green"></div><div class="timeline-text"><b>2026-05-07 · 30 天验证 ✓</b> 拉力 +28% (vs 预期 +25%)</div></div>
+    <div class="timeline-row"><div class="timeline-dot gray"></div><div class="timeline-text">2026-07-07 · 90 天复盘 (待执行)</div></div>
+  </div>
+  <div style="margin-top:8px;padding:8px 10px;background:rgba(136,200,80,0.06);border-radius:6px;font-size:10px;color:var(--text-1);line-height:1.5">
+    <b style="color:var(--green)">learn_score: 1.12 (实际/预期)</b><br>
+    AI 学习: <b>S 级门店 + Strategic SKU + 加 ICA · 成功率 +12%</b>
+  </div>
+</div>
+
+<!-- ════ 案例 2 · CTL 王志成 ════ -->
+<div class="decision-card verified">
+  <div class="dc-head">
+    <span class="dc-id">DEC-2603-CTL-008</span><span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--purple);background:rgba(167,139,250,0.1);padding:2px 6px;border-radius:4px;margin-left:6px">🅴 模型 E · 分层</span>
+    <span class="dc-status verified">✓ 90 天验证</span>
+  </div>
+  <div class="dc-title">山姆上海 5 店统签战略</div>
+  <div class="dc-meta">2026-02-15 09:18 · CTL 王志成 · 上海</div>
+  <div class="dc-fields">
+    <div class="dc-row">
+      <div class="dc-row-label">Who</div>
+      <div class="dc-row-value">王志成 (CTL) · 报 GM 刘大海批准</div>
+    </div>
+    <div class="dc-row">
+      <div class="dc-row-label">What</div>
+      <div class="dc-row-value">山姆上海 5 店统签 · 张明远 (SR) 主攻</div>
+    </div>
+    <div class="dc-row">
+      <div class="dc-row-label">Why</div>
+      <div class="dc-row-value">山姆会员复购率高 · 战略 KA 突破</div>
+    </div>
+    <div class="dc-row">
+      <div class="dc-row-label">投入</div>
+      <div class="dc-row-value">¥850k / 年 (堆头 + ICA + 试饮)</div>
+    </div>
+  </div>
+  <div class="sku-impact">
+    <div class="sku-impact-label">🔗 affected_skus (4 SKU)</div>
+    <div class="sku-impact-row"><span>六月鲜 380ml (大包装)</span><span class="plus">+¥320k/月</span></div>
+    <div class="sku-impact-row"><span>禾然有机 280ml</span><span class="plus">+¥85k/月</span></div>
+    <div class="sku-impact-row"><span>葱伴侣 200ml</span><span class="plus">+¥45k/月</span></div>
+    <div class="sku-impact-row"><span>味达美 500ml</span><span class="neutral">+¥12k/月</span></div>
+  </div>
+  <div class="sku-impact" style="background:rgba(245,166,35,0.05);border-color:rgba(245,166,35,0.15)">
+    <div class="sku-impact-label" style="color:var(--gold)">🔗 affected_orgs (5 山姆店)</div>
+    <div class="sku-impact-row"><span>山姆 5 店</span><span class="plus">堆头 + 端架</span></div>
+  </div>
+  <div class="sku-impact" style="background:rgba(93,156,236,0.05);border-color:rgba(93,156,236,0.15)">
+    <div class="sku-impact-label" style="color:var(--blue)">🔗 affected_indvs</div>
+    <div class="sku-impact-row"><span>张明远 (SR 山姆主攻)</span><span class="plus">月薪 +¥5k</span></div>
+  </div>
+  <div style="margin-top:8px;padding:8px 10px;background:rgba(136,200,80,0.06);border-radius:6px;font-size:10px;color:var(--text-1);line-height:1.5">
+    <b style="color:var(--green)">learn_score: 1.36 (大幅超预期)</b><br>
+    AI 学习: <b>山姆类 KA + 多 SKU 组合 · ROI 4x · 推荐扩展</b>
+  </div>
+</div>
+
+<!-- ════ 案例 3 · 禾然 Bet · 失败 ════ -->
+<div class="decision-card failed">
+  <div class="dc-head">
+    <span class="dc-id">DEC-2602-HQ-003</span><span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--red);background:rgba(233,69,96,0.1);padding:2px 6px;border-radius:4px;margin-left:6px">🅰 模型 A · 公司先批</span>
+    <span class="dc-status failed">✗ 部分失败</span>
+  </div>
+  <div class="dc-title">禾然有机 280ml 春节大促 (¥15M)</div>
+  <div class="dc-meta">2026-01-20 16:45 · 王董 + 集团 CMO</div>
+  <div class="dc-fields">
+    <div class="dc-row">
+      <div class="dc-row-label">Who</div>
+      <div class="dc-row-value">王董 (CEO) · CMO 提案 · 董事会同意</div>
+    </div>
+    <div class="dc-row">
+      <div class="dc-row-label">What</div>
+      <div class="dc-row-value">春节促销 · 全国线上线下 · ¥15M 投入</div>
+    </div>
+    <div class="dc-row">
+      <div class="dc-row-label">Why</div>
+      <div class="dc-row-value">禾然在 Growth 期 · 加速 r 爬升</div>
+    </div>
+    <div class="dc-row">
+      <div class="dc-row-label">预期</div>
+      <div class="dc-row-value">禾然 r 从 500 → 800 · ROI 1.5x</div>
+    </div>
+  </div>
+  <div class="sku-impact">
+    <div class="sku-impact-label">🔗 affected_skus · 实际结果</div>
+    <div class="sku-impact-row"><span>禾然有机 280ml</span><span class="minus">r=650 (未达 800)</span></div>
+  </div>
+  <div style="margin-top:8px;padding:8px 10px;background:rgba(233,69,96,0.06);border-radius:6px;font-size:10px;color:var(--text-1);line-height:1.5">
+    <b style="color:var(--red)">learn_score: 0.65 (未达标)</b><br>
+    AI 学习: <b>春节高端 SKU 大促 ROI 偏低 · 不如分到日常米其林</b><br>
+    教训: 禾然属于 Bet · 不适合"短期冲量"逻辑 · 应坚持长线
+  </div>
+</div>
+
+<!-- ════ 案例 4 · ICA 赵美玲 (一线决策也算晶体管) ════ -->
+<div class="decision-card verified">
+  <div class="dc-head">
+    <span class="dc-id">DEC-2605-ICA-024</span><span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--green);background:rgba(136,200,80,0.1);padding:2px 6px;border-radius:4px;margin-left:6px">自主权限内</span>
+    <span class="dc-status verified">✓ 7 天快验</span>
+  </div>
+  <div class="dc-title">每日下午 4 点主推禾然试饮</div>
+  <div class="dc-meta">2026-05-01 09:00 · ICA 赵美玲 · 大润发沪西</div>
+  <div class="dc-fields">
+    <div class="dc-row">
+      <div class="dc-row-label">Who</div>
+      <div class="dc-row-value">赵美玲 (ICA) · 自主决定</div>
+    </div>
+    <div class="dc-row">
+      <div class="dc-row-label">What</div>
+      <div class="dc-row-value">每周 3 次试饮 · 下午高峰时段</div>
+    </div>
+    <div class="dc-row">
+      <div class="dc-row-label">Why</div>
+      <div class="dc-row-value">禾然在 Bet 阶段 · 高端突围需 ICA 推</div>
+    </div>
+  </div>
+  <div class="sku-impact">
+    <div class="sku-impact-label">🔗 affected_skus · 7 天验证</div>
+    <div class="sku-impact-row"><span>禾然有机 280ml</span><span class="plus">+18 瓶/天</span></div>
+  </div>
+  <div style="margin-top:8px;padding:8px 10px;background:rgba(136,200,80,0.06);border-radius:6px;font-size:10px;color:var(--text-1);line-height:1.5">
+    <b style="color:var(--green)">即使是 ICA 一线决策也被记录</b><br>
+    1000 个类似试饮决策汇总 · AI 学到最佳时段 + 话术
+  </div>
+</div>
+
+<!-- ════ 案例 5 · 待回填 · 武宁加 ICA 后续 ════ -->
+<div class="decision-card pending">
+  <div class="dc-head">
+    <span class="dc-id">DEC-2605-DOM-018</span><span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);background:rgba(245,166,35,0.1);padding:2px 6px;border-radius:4px;margin-left:6px">🅳 模型 D · 老板承诺+跟踪</span>
+    <span class="dc-status pending">⏳ 待 30 天</span>
+  </div>
+  <div class="dc-title">一物一码激活季 · 沪西华南</div>
+  <div class="dc-meta">2026-05-15 11:20 · DOM 黄建国</div>
+  <div class="dc-fields">
+    <div class="dc-row">
+      <div class="dc-row-label">What</div>
+      <div class="dc-row-value">12 二批 + 80 门店全激活 · 30 天达 85%</div>
+    </div>
+    <div class="dc-row">
+      <div class="dc-row-label">预期</div>
+      <div class="dc-row-value">拉力信号 +35% · 推拉平衡 93→97%</div>
+    </div>
+  </div>
+  <div class="sku-impact">
+    <div class="sku-impact-label">🔗 affected_skus · 5 SKU 联动</div>
+    <div class="sku-impact-row"><span>六月鲜 380ml / 禾然 / 葱伴侣 / 味达美 / 小康</span><span class="neutral">待 30 天</span></div>
+  </div>
+  <div class="timeline">
+    <div class="timeline-row"><div class="timeline-dot blue"></div><div class="timeline-text">2026-05-15 · 决策记录</div></div>
+    <div class="timeline-row"><div class="timeline-dot gray"></div><div class="timeline-text">2026-06-15 · 30 天验证 (待)</div></div>
+    <div class="timeline-row"><div class="timeline-dot gray"></div><div class="timeline-text">2026-08-15 · 90 天复盘 (待)</div></div>
+  </div>
+</div>
+
+<!-- 还有 5 个决策略示 -->
+<div style="margin:12px 14px;background:var(--bg-2);border-radius:10px;padding:12px;font-size:11px;color:var(--text-2);line-height:1.7;border:1px dashed var(--border-2)">
+  <b style="color:var(--text-1)">+ 还有 5 个决策样本 (略)</b><br>
+  · DEC-2605-GM-007 · 刘大海拓展华东新城<br>
+  · DEC-2605-MCTL-008 · 徐海明优化片区结构<br>
+  · DEC-2605-OM-004 · 林志远拓展 KA 渠道<br>
+  · DEC-2605-SR-005 · 张明远主攻山姆<br>
+  · DEC-2605-DSR-010 · 李建华转 B 级二批商
+</div>
+
+<!-- AI 学习样本汇总 -->
+<div class="learning-section">
+  <div class="learning-title">🤖 AI 从决策日志学到的规律 (5 条)</div>
+  
+  <div class="learning-rule">
+    <b>规律 1 · ICA 投入回报</b><br>
+    S 级门店 + Strategic SKU + 加 ICA · 成功率 87%<br>
+    <span class="learning-meta">基于 23 个验证决策 · 置信度 91%</span>
+  </div>
+  
+  <div class="learning-rule">
+    <b>规律 2 · KA 多 SKU 组合</b><br>
+    山姆类 KA + 多 SKU 组合 · 平均 ROI 4.2x<br>
+    <span class="learning-meta">基于 8 个验证决策 · 置信度 78%</span>
+  </div>
+  
+  <div class="learning-rule">
+    <b>规律 3 · Bet 期 SKU 不宜促销</b><br>
+    Bet 期 SKU + 短期大促 · ROI 平均 0.7x (亏)<br>
+    <span class="learning-meta">基于 3 个失败案例 · 置信度 65%</span>
+  </div>
+  
+  <div class="learning-rule">
+    <b>规律 4 · 一物一码激活效应</b><br>
+    一物一码 65% → 85% · 拉力信号 +35%<br>
+    <span class="learning-meta">基于 12 个验证决策 · 置信度 84%</span>
+  </div>
+  
+  <div class="learning-rule">
+    <b>规律 5 · Defensive SKU 投入</b><br>
+    Defensive 类 SKU 加投入 · ROI < 1.5x (低效)<br>
+    <span class="learning-meta">基于 6 个验证决策 · 置信度 73%</span>
+  </div>
+  
+  <div style="margin-top:10px;padding:10px;background:var(--bg-2);border-radius:8px;font-size:10px;color:var(--text-1);line-height:1.6">
+    <b style="color:var(--gold)">⚡ AI 学习闭环</b><br>
+    每条决策 → 30/90 天回填 → 提取规律 → 推送给同类决策者<br>
+    现在: 学习互锁 15% · 100 样本累积<br>
+    目标: 学习互锁 60% · 500 样本 (12 个月)
+  </div>
+</div>
+
+<!-- ════ 4 脉络对应 ════ -->
+<div style="margin:14px 14px;background:linear-gradient(135deg,rgba(78,205,196,0.04),var(--surface));border:1px solid rgba(78,205,196,0.2);border-radius:14px;padding:14px">
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--teal);margin-bottom:10px">🌐 决策日志 = 信息脉络的填补 (4 脉络最深缺口)</div>
+  <div style="font-size:11px;color:var(--text-1);line-height:1.7">
+    memory 多次强调 · 4 脉络中:<br>
+    · <b style="color:var(--blue)">📦 货脉</b> ✅ 心跳系统支撑<br>
+    · <b style="color:var(--purple)">👥 人脉</b> ✅ 一本账 + 责任链支撑<br>
+    · <b style="color:var(--gold)">💰 钱脉</b> 🟡 部分 (应收账款已接)<br>
+    · <b style="color:var(--teal)">💡 信息脉</b> 🔴 几乎完全缺失 (memory 最深缺口)<br>
+    <br>
+    <b style="color:var(--text-0)">决策日志 = 信息脉络的核心填补</b><br>
+    每条决策 · 每条结果 · 每条 AI 学习 = bottom-up 反馈链
+  </div>
+</div>
+
+<!-- ════ 学习互锁 L1-L5 阶段 ════ -->
+<div style="margin:14px 14px;background:linear-gradient(135deg,rgba(212,175,55,0.04),var(--surface));border:1px solid rgba(212,175,55,0.2);border-radius:14px;padding:14px">
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--gold);margin-bottom:10px">📈 学习互锁 5 层节奏 (L1-L5)</div>
+  <div style="display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--text-1);line-height:1.6">
+    <div style="background:var(--bg-2);border-radius:6px;padding:8px;border-left:3px solid var(--blue)">
+      <b style="color:var(--blue)">L1 · 单次学习</b> (每事件) · 记录但不调参
+    </div>
+    <div style="background:var(--bg-2);border-radius:6px;padding:8px;border-left:3px solid var(--teal)">
+      <b style="color:var(--teal)">L2 · 日学习</b> (凌晨 02:00) · 微调 (置信度 >95% 自动)
+    </div>
+    <div style="background:var(--bg-2);border-radius:6px;padding:8px;border-left:3px solid var(--green)">
+      <b style="color:var(--green)">L3 · 周学习</b> (周日 23:00) · 规则调整建议 (人工审批)
+    </div>
+    <div style="background:var(--bg-2);border-radius:6px;padding:8px;border-left:3px solid var(--amber)">
+      <b style="color:var(--amber)">L4 · 月学习</b> (月底) · 飞轮转得怎么样
+    </div>
+    <div style="background:var(--bg-2);border-radius:6px;padding:8px;border-left:3px solid var(--purple)">
+      <b style="color:var(--purple)">L5 · 季学习</b> (DS 季度审计) · Agent 自主权 (需 500 样本)
+    </div>
+  </div>
+  <div style="margin-top:10px;padding:10px;background:var(--bg-2);border-radius:6px;font-size:10px;color:var(--text-1);line-height:1.6">
+    <b style="color:var(--gold)">📊 样本路径</b><br>
+    · 当前: 12 样本 · 学习互锁 15%<br>
+    · 100 样本: 部分参数调优 (L2)<br>
+    · 500 样本: 解锁 L5 Agent 自主权 (12 个月)<br>
+    · 滴滴学习对比: 几十亿样本/年 · 我们差距是时间不是技术
+  </div>
+</div>
+
+<!-- ════ 与 9 驾驶舱联动 ════ -->
+<div style="margin:14px 14px;background:linear-gradient(135deg,rgba(245,166,35,0.04),var(--surface));border:1px solid rgba(245,166,35,0.2);border-radius:14px;padding:14px">
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--gold);margin-bottom:10px">🔗 与 10 驾驶舱联动 (晶体管 ↔ 整片)</div>
+  <div style="font-size:11px;color:var(--text-1);line-height:1.7">
+    <b style="color:var(--text-0)">每个驾驶舱里的"举措"按钮 = 生成决策日志</b><br>
+    · L8 王董按钮 → DEC-{ts}-CEO-{seq}<br>
+    · L7 GM 按钮 → DEC-{ts}-GM-{seq}<br>
+    · L3 DOM 按钮 → DEC-{ts}-DOM-{seq}<br>
+    · L1 ICA 按钮 → DEC-{ts}-ICA-{seq}<br>
+    <br>
+    <b style="color:var(--gold)">完整闭环</b>:<br>
+    驾驶舱点击 → 决策日志记录 → SKU 影响 → 30/90 天回填 → AI 学习 → 推送优化建议
+  </div>
+</div>
+
+<!-- Schema 完整版 -->
+<div class="schema-section">
+  <div class="schema-title">⚛️ 决策日志 MySQL Schema v1.0</div>
+  <div style="font-size:10px;color:var(--text-2);margin-bottom:8px;font-family:'Space Mono',monospace;line-height:1.6">
+    给 TL 上来第一周即可启动<br>
+    与 SKU 6 卡通过 affected_skus 字段反应
+  </div>
+  <div class="schema-code"><span class="kw">CREATE TABLE</span> decision_log (
+  decision_id      <span class="type">VARCHAR(32)</span> PRIMARY KEY,
+                   <span class="comment">-- DEC-{ts}-{role}-{seq}</span>
+  
+  <span class="comment">-- WHO 谁决策</span>
+  decided_by       <span class="type">VARCHAR(32)</span> NOT NULL,
+  role             <span class="type">ENUM</span>(<span class="str">'CEO'</span>,<span class="str">'GM'</span>,<span class="str">'MCTL'</span>,<span class="str">'CTL'</span>,
+                        <span class="str">'DOM'</span>,<span class="str">'OM'</span>,<span class="str">'MOM'</span>,<span class="str">'SR'</span>,
+                        <span class="str">'DSR'</span>,<span class="str">'ICA'</span>,<span class="str">'其他'</span>),
+  org_scope        <span class="type">VARCHAR(64)</span>,
+  
+  <span class="comment">-- WHAT 做什么</span>
+  decision_type    <span class="type">ENUM</span>(<span class="str">'invest'</span>,<span class="str">'restructure'</span>,
+                        <span class="str">'staffing'</span>,<span class="str">'pricing'</span>,
+                        <span class="str">'channel'</span>,<span class="str">'sku_lifecycle'</span>,
+                        <span class="str">'promotion'</span>,<span class="str">'authority'</span>),
+  decision_text    <span class="type">TEXT</span> NOT NULL,
+  
+  <span class="comment">-- WHY 为什么</span>
+  reason_text      <span class="type">TEXT</span>,
+  trigger_event    <span class="type">VARCHAR(128)</span>,
+  
+  <span class="comment">-- 与 SKU 6 卡的关联 (核反应键)</span>
+  affected_skus    <span class="type">JSON</span>,
+                   <span class="comment">-- [{sku_id, impact_type, impact_value}]</span>
+  affected_orgs    <span class="type">JSON</span>,
+                   <span class="comment">-- [{org_id, impact}]</span>
+  affected_indvs   <span class="type">JSON</span>,
+                   <span class="comment">-- [{individual_id, impact}]</span>
+  
+  <span class="comment">-- IMPACT 影响 (预期 + 实际)</span>
+  impact_predict   <span class="type">JSON</span>,
+                   <span class="comment">-- {r_delta, a_delta, roi, time_horizon}</span>
+  impact_30d       <span class="type">JSON</span>,
+                   <span class="comment">-- 30 天回填 (自动)</span>
+  impact_90d       <span class="type">JSON</span>,
+                   <span class="comment">-- 90 天回填 (自动)</span>
+  
+  <span class="comment">-- AUTHORITY 权限</span>
+  authority        <span class="type">VARCHAR(32)</span>,
+  approved_by      <span class="type">VARCHAR(32)</span>,
+  approved_at      <span class="type">TIMESTAMP</span>,
+  
+  <span class="comment">-- 投入</span>
+  budget           <span class="type">DECIMAL(12,2)</span>,
+  budget_source    <span class="type">VARCHAR(32)</span>,
+  budget_period    <span class="type">VARCHAR(16)</span>,
+  
+  <span class="comment">-- 时间戳 + 学习状态</span>
+  created_at       <span class="type">TIMESTAMP</span> NOT NULL,
+  verify_30d_at    <span class="type">TIMESTAMP</span>,
+  verify_90d_at    <span class="type">TIMESTAMP</span>,
+  learn_status     <span class="type">ENUM</span>(<span class="str">'pending'</span>,<span class="str">'verified'</span>,
+                        <span class="str">'partial'</span>,<span class="str">'failed'</span>),
+  learn_score      <span class="type">DECIMAL(4,2)</span>,
+                   <span class="comment">-- 实际/预期 比率</span>
+  ai_lesson        <span class="type">TEXT</span>,
+                   <span class="comment">-- AI 自动提取的规律</span>
+  
+  <span class="comment">-- 索引</span>
+  INDEX (decided_by, created_at),
+  INDEX (role, decision_type),
+  INDEX (learn_status),
+  INDEX (verify_30d_at) <span class="comment">-- 定时任务用</span>
+);
+
+<span class="comment">-- 关联表 · 决策与 SKU 多对多</span>
+<span class="kw">CREATE TABLE</span> decision_sku_link (
+  decision_id      <span class="type">VARCHAR(32)</span>,
+  sku_id           <span class="type">VARCHAR(32)</span>,
+  impact_type      <span class="type">ENUM</span>(<span class="str">'positive'</span>,<span class="str">'negative'</span>,
+                        <span class="str">'neutral'</span>,<span class="str">'mixed'</span>),
+  impact_value     <span class="type">DECIMAL(12,2)</span>,
+                   <span class="comment">-- ¥ 或 % 影响</span>
+  
+  PRIMARY KEY (decision_id, sku_id),
+  FOREIGN KEY (decision_id) REFERENCES decision_log,
+  FOREIGN KEY (sku_id) REFERENCES sku_6cards
+);</div>
+  <div style="margin-top:10px;padding:10px;background:rgba(78,205,196,0.06);border-radius:6px;border:1px solid rgba(78,205,196,0.2);font-size:10px;color:var(--text-1);line-height:1.6">
+    <b style="color:var(--teal)">⚛️ 完整化学反应</b><br>
+    1. 决策记录 → INSERT decision_log<br>
+    2. 多 SKU 关联 → INSERT decision_sku_link<br>
+    3. 30 天定时任务 → 查 affected_skus 实际数据 → UPDATE impact_30d<br>
+    4. AI 计算 learn_score · 提取 ai_lesson<br>
+    5. 同类决策推送 ai_lesson (学习闭环)
+  </div>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · 晶体管层 · 决策日志 v1.0<br>
+  · 每个决策 = 一个晶体管开关<br>
+  · 与 SKU 6 卡通过 sku_id 反应<br>
+  · 30/90 天自动学习<br>
+  Layer 1.3 演示 · 数据模拟
+</div>
+
+<script>
+function updateTime() { document.getElementById('now-time').textContent = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' }); }
+updateTime(); setInterval(updateTime, 30000);
+</script>
+</body>
+</html>
