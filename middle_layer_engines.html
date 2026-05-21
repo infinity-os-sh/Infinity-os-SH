@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 中层 · 7 大引擎</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg-0:#0a0907; --bg-1:#14110d; --bg-2:#1c1815; --bg-3:#251f1a; --surface:#1a1612; --border:rgba(255,220,180,0.08); --border-2:rgba(255,220,180,0.15); --text-0:#f4ede0; --text-1:#c8bda8; --text-2:#847868; --text-3:#524a40; --gold:#d4af37; --gold-bright:#f5a623; --green:#88c850; --amber:#f5a623; --red:#e94560; --blue:#5d9cec; --purple:#a78bfa; --teal:#4ecdc4; --indigo:#6366f1; --pink:#ec4899; --orange:#f97316; }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { background:var(--bg-0); color:var(--text-0); font-family:'Noto Sans SC',sans-serif; min-height:100vh; overflow-x:hidden; }
+@media (min-width:600px) { body { max-width:480px; margin:0 auto; box-shadow:0 0 60px rgba(0,0,0,0.6); } }
+
+.layer-badge { background:rgba(93,156,236,0.15); border-bottom:1px solid rgba(93,156,236,0.25); color:var(--blue); font-size:10px; padding:6px 14px; text-align:center; font-family:'Space Mono',monospace; }
+
+.hero { padding:18px 14px 14px; background:linear-gradient(180deg,var(--bg-1),var(--bg-0)); border-bottom:1px solid var(--border); }
+.hero-top { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+.hero-row { display:flex; align-items:center; gap:14px; }
+.hero-avatar { width:60px; height:60px; border-radius:16px; background:linear-gradient(135deg,var(--blue),var(--indigo)); display:flex; align-items:center; justify-content:center; font-size:30px; flex-shrink:0; box-shadow:0 6px 18px rgba(93,156,236,0.3); }
+.hero-info { flex:1; min-width:0; }
+.hero-name { font-family:'Syne',sans-serif; font-weight:700; font-size:20px; }
+.hero-title { font-size:12px; color:var(--blue); margin-top:2px; }
+.hero-scope { font-size:11px; color:var(--text-2); margin-top:4px; line-height:1.5; }
+
+/* 3 层导航 */
+.nav-three { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin:12px 14px; }
+.nav-cell { padding:8px; border-radius:8px; text-align:center; text-decoration:none; font-size:10px; }
+.nav-cell.upper { background:rgba(212,175,55,0.08); border:1px solid rgba(212,175,55,0.25); color:var(--gold); }
+.nav-cell.middle { background:rgba(93,156,236,0.12); border:2px solid rgba(93,156,236,0.4); color:var(--blue); font-weight:700; }
+.nav-cell.lower { background:rgba(167,139,250,0.08); border:1px solid rgba(167,139,250,0.25); color:var(--purple); }
+.nav-cell .nav-emoji { font-size:14px; display:block; margin-bottom:3px; }
+.nav-cell .nav-label { display:block; font-family:'Space Mono',monospace; }
+
+/* 理论说明 */
+.theory-box { margin:12px 14px; background:linear-gradient(135deg,rgba(93,156,236,0.06),var(--surface)); border:1px solid rgba(93,156,236,0.2); border-radius:14px; padding:14px; }
+.theory-title { font-size:12px; color:var(--blue); font-weight:700; margin-bottom:8px; font-family:'Space Mono',monospace; }
+.theory-content { font-size:11px; color:var(--text-1); line-height:1.7; }
+.theory-content b { color:var(--blue); }
+
+/* 引擎 7 选 1 导航 */
+.engine-nav { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:12px 14px; position:sticky; top:0; z-index:10; background:var(--bg-0); padding:8px 0; }
+.engine-nav-cell { padding:6px 2px; border-radius:6px; background:var(--bg-2); border:1px solid var(--border); text-align:center; font-size:9px; cursor:pointer; color:var(--text-2); text-decoration:none; }
+.engine-nav-cell:active { background:var(--bg-3); }
+.engine-nav-cell .en-emoji { font-size:14px; display:block; margin-bottom:2px; }
+.engine-nav-cell .en-num { font-family:'Space Mono',monospace; font-weight:700; }
+
+/* 引擎卡 */
+.engine { margin:14px 14px; background:var(--surface); border:1px solid var(--border-2); border-radius:14px; padding:14px; scroll-margin-top:80px; }
+.engine.heart { border-left:4px solid var(--red); }
+.engine.pull { border-left:4px solid var(--teal); }
+.engine.dispatch { border-left:4px solid var(--blue); }
+.engine.chain { border-left:4px solid var(--gold); }
+.engine.locks { border-left:4px solid var(--purple); }
+.engine.butterfly { border-left:4px solid var(--orange); }
+.engine.calib { border-left:4px solid var(--green); }
+
+.engine-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; gap:8px; }
+.engine-title { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; color:var(--text-0); }
+.engine-num { font-family:'Space Mono',monospace; font-size:10px; color:var(--text-3); margin-bottom:2px; }
+.engine-status { padding:4px 8px; border-radius:10px; font-family:'Space Mono',monospace; font-size:9px; font-weight:700; flex-shrink:0; }
+.engine-status.deployed { background:rgba(136,200,80,0.15); color:var(--green); }
+.engine-status.partial { background:rgba(245,166,35,0.15); color:var(--amber); }
+.engine-status.spec { background:rgba(93,156,236,0.15); color:var(--blue); }
+
+.engine-tagline { font-size:11px; color:var(--text-2); margin-bottom:10px; line-height:1.5; }
+
+/* 公式展示 */
+.formula-box { background:var(--bg-3); border:1px solid var(--border); border-radius:8px; padding:12px; margin:8px 0; font-family:'Space Mono',monospace; font-size:12px; color:var(--text-0); text-align:center; }
+.formula-box b { color:var(--gold); font-size:14px; }
+
+/* 3 层水位 (心跳引擎) */
+.water-levels { display:flex; flex-direction:column; gap:6px; margin:10px 0; }
+.water-row { display:flex; gap:8px; padding:8px 10px; background:var(--bg-2); border-radius:6px; align-items:center; }
+.water-row.healthy { border-left:3px solid var(--green); }
+.water-row.warn { border-left:3px solid var(--amber); }
+.water-row.crit { border-left:3px solid var(--red); }
+.water-layer { font-family:'Space Mono',monospace; font-size:10px; color:var(--text-3); width:60px; flex-shrink:0; }
+.water-bar { flex:1; height:18px; background:var(--bg-3); border-radius:9px; overflow:hidden; position:relative; }
+.water-fill { height:100%; border-radius:9px; }
+.water-fill.green { background:linear-gradient(90deg,var(--green),#5db830); }
+.water-fill.amber { background:linear-gradient(90deg,var(--amber),#cc8800); }
+.water-fill.red { background:linear-gradient(90deg,var(--red),#aa1f3a); }
+.water-val { position:absolute; top:0; right:6px; line-height:18px; font-family:'Space Mono',monospace; font-size:10px; color:white; font-weight:700; }
+.water-label { font-family:'Space Mono',monospace; font-size:10px; color:var(--text-2); width:80px; text-align:right; flex-shrink:0; }
+
+/* 推拉对比 */
+.pull-push { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0; }
+.pp-col { padding:10px; border-radius:8px; }
+.pp-col.push { background:linear-gradient(135deg,rgba(245,166,35,0.08),var(--bg-2)); border:1px solid rgba(245,166,35,0.2); }
+.pp-col.pull { background:linear-gradient(135deg,rgba(78,205,196,0.08),var(--bg-2)); border:1px solid rgba(78,205,196,0.2); }
+.pp-label { font-family:'Space Mono',monospace; font-size:10px; margin-bottom:4px; }
+.pp-col.push .pp-label { color:var(--amber); }
+.pp-col.pull .pp-label { color:var(--teal); }
+.pp-val { font-family:'Syne',sans-serif; font-weight:800; font-size:20px; }
+.pp-col.push .pp-val { color:var(--amber); }
+.pp-col.pull .pp-val { color:var(--teal); }
+.pp-desc { font-size:10px; color:var(--text-2); margin-top:4px; line-height:1.4; }
+
+/* 派单 25 步 5 Phase */
+.phase-row { display:flex; gap:4px; margin:8px 0; }
+.phase-cell { flex:1; padding:8px 4px; background:var(--bg-2); border-radius:6px; text-align:center; font-size:9px; border:1px solid var(--border); }
+.phase-cell.active { background:rgba(93,156,236,0.1); border-color:rgba(93,156,236,0.3); color:var(--blue); }
+.phase-cell .ph-num { font-family:'Syne',sans-serif; font-weight:800; font-size:14px; display:block; }
+.phase-cell .ph-name { display:block; line-height:1.3; margin-top:2px; }
+.phase-cell .ph-steps { font-family:'Space Mono',monospace; font-size:8px; color:var(--text-3); margin-top:2px; }
+
+.didi-analogy { background:linear-gradient(135deg,rgba(93,156,236,0.06),var(--bg-2)); border:1px solid rgba(93,156,236,0.2); border-radius:8px; padding:10px; font-size:10px; color:var(--text-1); line-height:1.6; margin-top:8px; }
+.didi-analogy b { color:var(--blue); }
+
+/* 责任链 8 层 */
+.chain-row { display:flex; flex-direction:column; gap:3px; margin:10px 0; }
+.chain-node { display:flex; gap:8px; align-items:center; padding:6px 10px; background:var(--bg-2); border-radius:6px; font-size:11px; }
+.chain-level { font-family:'Space Mono',monospace; font-size:9px; color:var(--gold); width:30px; font-weight:700; }
+.chain-role { color:var(--text-0); flex:1; font-weight:600; }
+.chain-name { color:var(--text-2); font-size:10px; }
+.chain-arrow { color:var(--text-3); text-align:center; font-family:'Space Mono',monospace; font-size:10px; }
+
+/* 5 互锁 */
+.locks-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:10px 0; }
+.lock-cell { background:var(--bg-2); border:1px solid var(--border); border-radius:8px; padding:10px; }
+.lock-cell.制度 { border-left:3px solid var(--gold); }
+.lock-cell.数据 { border-left:3px solid var(--blue); }
+.lock-cell.信用 { border-left:3px solid var(--green); }
+.lock-cell.经济 { border-left:3px solid var(--amber); }
+.lock-cell.学习 { border-left:3px solid var(--purple); }
+.lock-name { font-size:12px; font-weight:700; color:var(--text-0); margin-bottom:4px; }
+.lock-pct { font-family:'Syne',sans-serif; font-weight:800; font-size:20px; }
+.lock-pct.high { color:var(--green); }
+.lock-pct.mid { color:var(--amber); }
+.lock-pct.low { color:var(--red); }
+.lock-desc { font-size:10px; color:var(--text-2); margin-top:4px; line-height:1.4; }
+
+/* 蝴蝶效应 3 类 */
+.fly-grid { display:flex; flex-direction:column; gap:6px; margin:10px 0; }
+.fly-row { display:flex; gap:10px; padding:10px; background:var(--bg-2); border-radius:8px; align-items:flex-start; }
+.fly-row.A { border-left:3px solid var(--red); }
+.fly-row.B { border-left:3px solid var(--amber); }
+.fly-row.C { border-left:3px solid var(--purple); }
+.fly-letter { font-family:'Syne',sans-serif; font-weight:800; font-size:24px; width:28px; flex-shrink:0; }
+.fly-row.A .fly-letter { color:var(--red); }
+.fly-row.B .fly-letter { color:var(--amber); }
+.fly-row.C .fly-letter { color:var(--purple); }
+.fly-info { flex:1; }
+.fly-name { font-size:12px; font-weight:700; color:var(--text-0); margin-bottom:3px; }
+.fly-desc { font-size:10px; color:var(--text-2); line-height:1.5; }
+
+/* A 值校准 */
+.calib-flow { display:flex; flex-direction:column; gap:6px; margin:10px 0; }
+.calib-step { display:flex; gap:10px; padding:8px 10px; background:var(--bg-2); border-radius:6px; align-items:center; }
+.calib-time { font-family:'Space Mono',monospace; font-size:10px; color:var(--green); width:60px; font-weight:700; flex-shrink:0; }
+.calib-action { font-size:11px; color:var(--text-1); flex:1; }
+.calib-action b { color:var(--text-0); }
+
+/* 完成度 */
+.progress-meter { display:flex; align-items:center; gap:8px; margin-top:10px; padding:8px 10px; background:var(--bg-3); border-radius:8px; }
+.progress-bar { flex:1; height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:3px; }
+.progress-pct { font-family:'Space Mono',monospace; font-size:11px; font-weight:700; }
+
+/* 联动说明 */
+.link-box { margin-top:10px; padding:10px; background:linear-gradient(135deg,rgba(167,139,250,0.05),var(--bg-2)); border:1px solid rgba(167,139,250,0.2); border-radius:8px; font-size:10px; color:var(--text-1); line-height:1.6; }
+.link-box b { color:var(--purple); }
+
+/* 底部 */
+.bottom-summary { margin:14px 14px; padding:14px; background:linear-gradient(135deg,rgba(93,156,236,0.04),var(--surface)); border:1px solid rgba(93,156,236,0.2); border-radius:14px; }
+.bottom-title { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:var(--blue); margin-bottom:10px; }
+.bottom-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:11px; color:var(--text-1); border-bottom:1px dashed var(--border); }
+.bottom-row:last-child { border-bottom:none; }
+.bottom-row b { color:var(--text-0); }
+
+.bottom-fix { padding:18px 14px 32px; text-align:center; font-size:10px; color:var(--text-3); }
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 · 中层 · 功能模块 (Module Layer) · 7 大引擎</div>
+
+<div class="hero">
+  <div class="hero-top">
+    <a href="index.html" style="color:white;text-decoration:none;background:linear-gradient(135deg,var(--blue),var(--indigo));padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(93,156,236,0.3)">
+      <span style="font-size:16px">←</span><span>回主页</span>
+    </a>
+    <span style="color:var(--text-3);font-family:'Space Mono',monospace;font-size:11px">中层 · v1.0</span>
+    <span id="now-time" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-2)">--:--</span>
+  </div>
+  <div class="hero-row">
+    <div class="hero-avatar">⚙️</div>
+    <div class="hero-info">
+      <div class="hero-name">7 大引擎</div>
+      <div class="hero-title">中层 · 调味品 EDA 功能模块</div>
+      <div class="hero-scope">连接上层战略 ↔ 底层晶体管的"运转机制"<br>没有引擎 · 战略和原子是断的</div>
+    </div>
+  </div>
+</div>
+
+<!-- EDA 三层导航 -->
+<div class="nav-three">
+  <a href="cockpit_L8_HQ.html" class="nav-cell upper">
+    <span class="nav-emoji">🟢</span>
+    <span class="nav-label">上层<br>10 驾驶舱</span>
+  </a>
+  <a href="#" class="nav-cell middle">
+    <span class="nav-emoji">⚙️</span>
+    <span class="nav-label">中层 (本页)<br>7 大引擎</span>
+  </a>
+  <a href="sku_6cards_v2.html" class="nav-cell lower">
+    <span class="nav-emoji">⚛️</span>
+    <span class="nav-label">底层<br>SKU + 决策</span>
+  </a>
+</div>
+
+<!-- 理论说明 -->
+<div class="theory-box">
+  <div class="theory-title">⚙️ 中层是什么 · 黄仁勋 EDA 类比</div>
+  <div class="theory-content">
+    <b>中层 = 调味品 EDA 的"功能模块"</b><br>
+    芯片设计里有 ALU / 内存控制器 / IO 总线<br>
+    INFINITY OS 里有 心跳 / 推拉 / 派单 / 5 互锁<br>
+    <br>
+    上层告诉你"去哪" · 底层是"原子"<br>
+    中层是<b>把原子组装起来运转的机制</b><br>
+    <br>
+    没有引擎 · 北极星和 SKU 是断的
+  </div>
+</div>
+
+<!-- 7 引擎导航 -->
+<div class="engine-nav">
+  <a href="#heart" class="engine-nav-cell"><span class="en-emoji">💓</span><span class="en-num">①</span></a>
+  <a href="#pull" class="engine-nav-cell"><span class="en-emoji">⇄</span><span class="en-num">②</span></a>
+  <a href="#dispatch" class="engine-nav-cell"><span class="en-emoji">🎯</span><span class="en-num">③</span></a>
+  <a href="#chain" class="engine-nav-cell"><span class="en-emoji">🔗</span><span class="en-num">④</span></a>
+  <a href="#locks" class="engine-nav-cell"><span class="en-emoji">🔒</span><span class="en-num">⑤</span></a>
+  <a href="#butterfly" class="engine-nav-cell"><span class="en-emoji">🦋</span><span class="en-num">⑥</span></a>
+  <a href="#calib" class="engine-nav-cell"><span class="en-emoji">🎯</span><span class="en-num">⑦</span></a>
+</div>
+
+<!-- ════ 引擎 ① · 心跳引擎 ════ -->
+<div class="engine heart" id="heart">
+  <div class="engine-head">
+    <div>
+      <div class="engine-num">ENGINE 01</div>
+      <div class="engine-title">💓 心跳引擎</div>
+    </div>
+    <div class="engine-status partial">35% · 待 TL</div>
+  </div>
+  <div class="engine-tagline">a/r/T 心跳公式 · 三层水位 · 全系统跨层通用基准</div>
+  
+  <div class="formula-box">
+    <b>a = r × T</b><br>
+    <span style="color:var(--text-2);font-size:11px;margin-top:6px;display:block">
+    a = 周转周期销量 · r = 日销率 · T = 周转周期天数
+    </span>
+  </div>
+  
+  <div style="font-size:11px;color:var(--text-1);margin:10px 0;line-height:1.6">
+    <b style="color:var(--red)">三层水位设计</b> · 不同层级 a 倍数不同
+  </div>
+  
+  <div class="water-levels">
+    <div class="water-row healthy">
+      <div class="water-layer">零售层</div>
+      <div class="water-bar"><div class="water-fill green" style="width:75%"></div><div class="water-val">2.3a</div></div>
+      <div class="water-label">3a 满 → 2a 警</div>
+    </div>
+    <div class="water-row warn">
+      <div class="water-layer">经销商</div>
+      <div class="water-bar"><div class="water-fill amber" style="width:55%"></div><div class="water-val">1.1a</div></div>
+      <div class="water-label">2a 满 → 1a 警</div>
+    </div>
+    <div class="water-row crit">
+      <div class="water-layer">分销商</div>
+      <div class="water-bar"><div class="water-fill red" style="width:20%"></div><div class="water-val">0.2a</div></div>
+      <div class="water-label">1a 满 → 0 即补</div>
+    </div>
+  </div>
+  
+  <div class="link-box">
+    <b>🔗 联动</b><br>
+    · 上联 → 主页/驾驶舱看 SKU 健康度<br>
+    · 下联 → 读 <a href="sku_6cards_v2.html" style="color:var(--purple)">SKU 6 卡</a> 的 r/a/T 字段<br>
+    · 异常 → 触发 ⑥ 蝴蝶效应 + ⑦ A 值校准
+  </div>
+  
+  <div class="progress-meter">
+    <div style="font-size:10px;color:var(--text-2)">公式 ✓ · 三层水位 ✓ · 真数据待接</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:35%;background:var(--amber)"></div></div>
+    <div class="progress-pct" style="color:var(--amber)">35%</div>
+  </div>
+</div>
+
+<!-- ════ 引擎 ② · 推拉模式 ════ -->
+<div class="engine pull" id="pull">
+  <div class="engine-head">
+    <div>
+      <div class="engine-num">ENGINE 02</div>
+      <div class="engine-title">⇄ 推拉模式</div>
+    </div>
+    <div class="engine-status deployed">90% · 已落地</div>
+  </div>
+  <div class="engine-tagline">推力 (经销商进货) ↔ 拉力 (消费者购买) · 平衡 = 健康</div>
+  
+  <div class="pull-push">
+    <div class="pp-col push">
+      <div class="pp-label">推力 (Push)</div>
+      <div class="pp-val">¥298M</div>
+      <div class="pp-desc">经销商进货金额<br>本月 (+5% vs 上月)</div>
+    </div>
+    <div class="pp-col pull">
+      <div class="pp-label">拉力 (Pull)</div>
+      <div class="pp-val">¥287M</div>
+      <div class="pp-desc">消费者实购金额<br>本月 (+8% vs 上月)</div>
+    </div>
+  </div>
+  
+  <div class="formula-box" style="margin-top:8px">
+    <span style="font-size:11px;color:var(--text-2)">推拉平衡度 =</span><br>
+    <b>min(推, 拉) ÷ max(推, 拉) = 96.3%</b><br>
+    <span style="color:var(--green);font-size:11px">健康 (≥ 90% 即良好)</span>
+  </div>
+  
+  <div style="font-size:11px;color:var(--text-1);margin:10px 0;line-height:1.6;padding:10px;background:var(--bg-2);border-radius:6px">
+    <b style="color:var(--teal)">🌟 推拉的 4 种异常状态</b><br>
+    · <b style="color:var(--red)">推 >> 拉</b>: 经销商压货 (蝴蝶效应 A)<br>
+    · <b style="color:var(--amber)">推 << 拉</b>: 供货不足 · 缺货<br>
+    · <b style="color:var(--green)">推 ≈ 拉 (高量)</b>: 健康增长<br>
+    · <b style="color:var(--text-2)">推 ≈ 拉 (低量)</b>: 萎缩
+  </div>
+  
+  <div class="link-box">
+    <b>🔗 联动</b><br>
+    · 推力数据来源 → SAP ERP 出库流水<br>
+    · 拉力数据来源 → 汉询日销 + POS<br>
+    · 异常 → 触发 ⑥ 蝴蝶效应 + 生成决策日志
+  </div>
+  
+  <div class="progress-meter">
+    <div style="font-size:10px;color:var(--text-2)">v1.2 已落地 · 4 大区 demo · 真数据待接 10%</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:90%;background:var(--teal)"></div></div>
+    <div class="progress-pct" style="color:var(--teal)">90%</div>
+  </div>
+</div>
+
+<!-- ════ 引擎 ③ · 派单互锁 25 步 ════ -->
+<div class="engine dispatch" id="dispatch">
+  <div class="engine-head">
+    <div>
+      <div class="engine-num">ENGINE 03</div>
+      <div class="engine-title">🎯 派单互锁 25 步</div>
+    </div>
+    <div class="engine-status spec">25% · 规格完整 · 待 TL</div>
+  </div>
+  <div class="engine-tagline">DiDi 双 APP 撮合模型 · 5 Phase × 25 Step · 15 后端服务</div>
+  
+  <div class="phase-row">
+    <div class="phase-cell active">
+      <span class="ph-num">1</span>
+      <span class="ph-name">派单触发</span>
+      <span class="ph-steps">step 1-5</span>
+    </div>
+    <div class="phase-cell active">
+      <span class="ph-num">2</span>
+      <span class="ph-name">SFA 显示</span>
+      <span class="ph-steps">step 6-9</span>
+    </div>
+    <div class="phase-cell active">
+      <span class="ph-num">3</span>
+      <span class="ph-name">美顾响应</span>
+      <span class="ph-steps">step 10-13</span>
+    </div>
+    <div class="phase-cell active">
+      <span class="ph-num">4</span>
+      <span class="ph-name">执行落地</span>
+      <span class="ph-steps">step 14-19</span>
+    </div>
+    <div class="phase-cell active">
+      <span class="ph-num">5</span>
+      <span class="ph-name">反馈学习</span>
+      <span class="ph-steps">step 20-25</span>
+    </div>
+  </div>
+  
+  <div class="didi-analogy">
+    <b>📱 DiDi 双 APP 类比 · DS 锁定的核心模型</b><br>
+    美顾 APP (经销商雇 · 8000 人) ↔ 司机 APP<br>
+    SFA APP (欣和 DSR · 2000 人) ↔ 乘客 APP<br>
+    1 个平台 · 2 个入口 · 互锁运转
+  </div>
+  
+  <div style="font-size:11px;color:var(--text-1);margin:10px 0;line-height:1.6;padding:10px;background:var(--bg-2);border-radius:6px">
+    <b style="color:var(--blue)">5 重互锁</b><br>
+    ① 派单互锁 (最关键)<br>
+    ② 数据互锁<br>
+    ③ 评价互锁<br>
+    ④ 激励互锁<br>
+    ⑤ 学习互锁
+  </div>
+  
+  <div class="link-box">
+    <b>🔗 联动</b><br>
+    · 派单决策 → 生成<a href="decision_log_v2.html" style="color:var(--teal)">决策日志</a>记录<br>
+    · 派单考虑 → 读<a href="sku_6cards_v2.html" style="color:var(--purple)">SKU 6 卡</a>健康度排优先<br>
+    · 15 后端服务 → TL 第一周第一个 Epic
+  </div>
+  
+  <div class="progress-meter">
+    <div style="font-size:10px;color:var(--text-2)">25 步规格完成 · HTML 28KB + Word 17.5KB · 待 TL</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:25%;background:var(--blue)"></div></div>
+    <div class="progress-pct" style="color:var(--blue)">25%</div>
+  </div>
+</div>
+
+<!-- ════ 引擎 ④ · 责任链 ════ -->
+<div class="engine chain" id="chain">
+  <div class="engine-head">
+    <div>
+      <div class="engine-num">ENGINE 04</div>
+      <div class="engine-title">🔗 责任链 (8 层)</div>
+    </div>
+    <div class="engine-status deployed">85% · 10 驾驶舱</div>
+  </div>
+  <div class="engine-tagline">CEO → 一线 ICA · 上下传导 + 双向汇报</div>
+  
+  <div class="chain-row">
+    <div class="chain-node">
+      <span class="chain-level">L8</span>
+      <span class="chain-role">CEO</span>
+      <span class="chain-name">王董</span>
+    </div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-node">
+      <span class="chain-level">L7</span>
+      <span class="chain-role">GM</span>
+      <span class="chain-name">刘大海 (华东)</span>
+    </div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-node">
+      <span class="chain-level">L6</span>
+      <span class="chain-role">MCTL</span>
+      <span class="chain-name">徐海明</span>
+    </div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-node">
+      <span class="chain-level">L5</span>
+      <span class="chain-role">CTL</span>
+      <span class="chain-name">王志成 (上海)</span>
+    </div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-node">
+      <span class="chain-level">L3</span>
+      <span class="chain-role">DOM / OM</span>
+      <span class="chain-name">黄建国 / 林志远</span>
+    </div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-node">
+      <span class="chain-level">L1</span>
+      <span class="chain-role">SR / DSR / ICA</span>
+      <span class="chain-name">张明远 / 王晓刚 / 赵美玲</span>
+    </div>
+  </div>
+  
+  <div class="link-box">
+    <b>🔗 联动</b><br>
+    · 每层都有驾驶舱 (10 个)<br>
+    · 数据自动逐层汇总 + 下达<br>
+    · 决策日志的 role 字段 = 责任链节点
+  </div>
+  
+  <div class="progress-meter">
+    <div style="font-size:10px;color:var(--text-2)">10 驾驶舱完整 · 4 个已嵌晶体管</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:85%;background:var(--gold)"></div></div>
+    <div class="progress-pct" style="color:var(--gold)">85%</div>
+  </div>
+</div>
+
+<!-- ════ 引擎 ⑤ · 5 互锁中枢 ════ -->
+<div class="engine locks" id="locks">
+  <div class="engine-head">
+    <div>
+      <div class="engine-num">ENGINE 05</div>
+      <div class="engine-title">🔒 5 互锁中枢</div>
+    </div>
+    <div class="engine-status partial">30% · 4 已设计</div>
+  </div>
+  <div class="engine-tagline">制度 / 数据 / 信用 / 经济 / 学习 · INFINITY OS 完整生命体</div>
+  
+  <div class="locks-grid">
+    <div class="lock-cell 制度">
+      <div class="lock-name">⚖️ 制度互锁</div>
+      <div class="lock-pct high">60%</div>
+      <div class="lock-desc">5 审批流 DECISION-001 v1.0</div>
+    </div>
+    <div class="lock-cell 数据">
+      <div class="lock-name">📊 数据互锁</div>
+      <div class="lock-pct mid">40%</div>
+      <div class="lock-desc">25 步规格完成 · 待真数据</div>
+    </div>
+    <div class="lock-cell 信用">
+      <div class="lock-name">⭐ 信用互锁</div>
+      <div class="lock-pct mid">35%</div>
+      <div class="lock-desc">CB 分 + learn_score 设计</div>
+    </div>
+    <div class="lock-cell 经济">
+      <div class="lock-name">💰 经济互锁</div>
+      <div class="lock-pct mid">35%</div>
+      <div class="lock-desc">激励池资金流向 + Uber 公式</div>
+    </div>
+    <div class="lock-cell 学习" style="grid-column:1/-1">
+      <div class="lock-name">🤖 学习互锁 (L1-L5)</div>
+      <div class="lock-pct low">15%</div>
+      <div class="lock-desc">12 → 100 → 500 样本 · 12 个月解锁 L5</div>
+    </div>
+  </div>
+  
+  <div class="link-box">
+    <b>🔗 联动</b><br>
+    · 5 互锁 = INFINITY OS 完整生命体<br>
+    · 缺一锁 · 系统失活<br>
+    · 53 后端服务 = TL 6 个月路线图
+  </div>
+  
+  <div class="progress-meter">
+    <div style="font-size:10px;color:var(--text-2)">4 互锁设计完成 · 学习互锁是最长路径</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:30%;background:var(--purple)"></div></div>
+    <div class="progress-pct" style="color:var(--purple)">30%</div>
+  </div>
+</div>
+
+<!-- ════ 引擎 ⑥ · 蝴蝶效应 ════ -->
+<div class="engine butterfly" id="butterfly">
+  <div class="engine-head">
+    <div>
+      <div class="engine-num">ENGINE 06</div>
+      <div class="engine-title">🦋 蝴蝶效应</div>
+    </div>
+    <div class="engine-status spec">20% · 规则完整</div>
+  </div>
+  <div class="engine-tagline">A/B/C 三类畸变检测 · 跨节点连锁传导 · 提前 2-3 节点拦截</div>
+  
+  <div class="fly-grid">
+    <div class="fly-row A">
+      <div class="fly-letter">A</div>
+      <div class="fly-info">
+        <div class="fly-name">压货畸变 (Push Distortion)</div>
+        <div class="fly-desc">
+          经销商压货 / 刷量 → 推 >> 拉<br>
+          症状: 库存 > 3a · 推拉差 > 15%<br>
+          本月检测: 2 例 (上海 1 + 北京 1)
+        </div>
+      </div>
+    </div>
+    <div class="fly-row B">
+      <div class="fly-letter">B</div>
+      <div class="fly-info">
+        <div class="fly-name">促销畸变 (Promotion Distortion)</div>
+        <div class="fly-desc">
+          短期促销扭曲 → r 异常飙升后回落<br>
+          症状: r 突变 > 50% · 不可持续<br>
+          本月检测: 1 例 (禾然春节)
+        </div>
+      </div>
+    </div>
+    <div class="fly-row C">
+      <div class="fly-letter">C</div>
+      <div class="fly-info">
+        <div class="fly-name">窜货畸变 (Cross-Channel Distortion)</div>
+        <div class="fly-desc">
+          灰市 / 低价 / 跨区窜货<br>
+          症状: 价格异常 + 渠道流向异常<br>
+          本月检测: 3 例 (需价签识别 A23)
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="link-box">
+    <b>🔗 联动</b><br>
+    · 读 ① 心跳引擎 的 r/a/T 异常信号<br>
+    · 读 ② 推拉引擎 的差额信号<br>
+    · 触发 → 生成<a href="decision_log_v2.html" style="color:var(--teal)">决策日志</a> + 推送企微
+  </div>
+  
+  <div class="progress-meter">
+    <div style="font-size:10px;color:var(--text-2)">3 类畸变规则完整 · 自动触发待 TL</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:20%;background:var(--orange)"></div></div>
+    <div class="progress-pct" style="color:var(--orange)">20%</div>
+  </div>
+</div>
+
+<!-- ════ 引擎 ⑦ · A 值校准 ════ -->
+<div class="engine calib" id="calib">
+  <div class="engine-head">
+    <div>
+      <div class="engine-num">ENGINE 07</div>
+      <div class="engine-title">🎯 A 值校准</div>
+    </div>
+    <div class="engine-status spec">25% · 规格完整</div>
+  </div>
+  <div class="engine-tagline">心跳地基维护 · 三重验证 · 周一 06:00 自动运行</div>
+  
+  <div class="calib-flow">
+    <div class="calib-step">
+      <div class="calib-time">06:00</div>
+      <div class="calib-action"><b>读真数据</b>: 汉询日销 + Dcloud 出库 + POS 流水</div>
+    </div>
+    <div class="calib-step">
+      <div class="calib-time">06:30</div>
+      <div class="calib-action"><b>三重验证</b>: P1 直供路径 + P2 分销路径分别算 r</div>
+    </div>
+    <div class="calib-step">
+      <div class="calib-time">07:00</div>
+      <div class="calib-action"><b>排除假信号</b>: 断货 / 促销 / 节假日扰动</div>
+    </div>
+    <div class="calib-step">
+      <div class="calib-time">07:30</div>
+      <div class="calib-action"><b>更新 SKU 6 卡</b>: 把新 r 写入每个 SKU 节点</div>
+    </div>
+    <div class="calib-step">
+      <div class="calib-time">08:00</div>
+      <div class="calib-action"><b>触发 ⑥ 蝴蝶检测</b>: 用新 r 重算异常</div>
+    </div>
+  </div>
+  
+  <div class="link-box">
+    <b>🔗 联动 (顺序不可逆 · DS 锁定)</b><br>
+    · ⑦ A 值校准 (06:00) → 提供新 r<br>
+    · ⑥ 蝴蝶效应 (07:00) → 用新 r 检测<br>
+    · ③ 派单互锁 (08:00) → 用结果派单
+  </div>
+  
+  <div class="progress-meter">
+    <div style="font-size:10px;color:var(--text-2)">算法完整 · 三重验证规则完成 · 待 TL 实现</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:25%;background:var(--green)"></div></div>
+    <div class="progress-pct" style="color:var(--green)">25%</div>
+  </div>
+</div>
+
+<!-- 底部汇总 -->
+<div class="bottom-summary">
+  <div class="bottom-title">📊 中层 7 大引擎 · 完成度汇总</div>
+  <div class="bottom-row">
+    <span>② 推拉模式</span>
+    <span><b style="color:var(--teal)">90%</b></span>
+  </div>
+  <div class="bottom-row">
+    <span>④ 责任链 (8 层)</span>
+    <span><b style="color:var(--gold)">85%</b></span>
+  </div>
+  <div class="bottom-row">
+    <span>① 心跳引擎</span>
+    <span><b style="color:var(--red)">35%</b></span>
+  </div>
+  <div class="bottom-row">
+    <span>⑤ 5 互锁中枢</span>
+    <span><b style="color:var(--purple)">30%</b></span>
+  </div>
+  <div class="bottom-row">
+    <span>⑦ A 值校准</span>
+    <span><b style="color:var(--green)">25%</b></span>
+  </div>
+  <div class="bottom-row">
+    <span>③ 派单互锁 25 步</span>
+    <span><b style="color:var(--blue)">25%</b></span>
+  </div>
+  <div class="bottom-row">
+    <span>⑥ 蝴蝶效应</span>
+    <span><b style="color:var(--orange)">20%</b></span>
+  </div>
+  <div class="bottom-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border-2)">
+    <span style="font-weight:700"><b>中层平均</b></span>
+    <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--blue)">44%</span>
+  </div>
+  
+  <div style="margin-top:10px;padding:10px;background:var(--bg-2);border-radius:6px;font-size:10px;color:var(--text-1);line-height:1.6">
+    <b style="color:var(--blue)">📍 中层是当前最大缺口</b><br>
+    上层 ✅ 100% · 底层 ✅ 100% · 中层 🟡 44%<br>
+    TL 上来后 · 53 后端服务 6 个月路线<br>
+    完成后 · INFINITY OS = Layer 3 真 Agent
+  </div>
+</div>
+
+<!-- INFINITY OS 完整位置 -->
+<div class="bottom-summary" style="background:linear-gradient(135deg,rgba(212,175,55,0.04),var(--surface));border-color:rgba(212,175,55,0.2)">
+  <div class="bottom-title" style="color:var(--gold)">🏛 中层在 INFINITY OS 的位置</div>
+  <div style="font-size:11px;color:var(--text-1);line-height:1.7">
+    <b style="color:var(--text-0)">向上联动</b>:<br>
+    · 7 引擎驱动 10 驾驶舱 (CEO 看到的数据来自引擎)<br>
+    <br>
+    <b style="color:var(--text-0)">向下联动</b>:<br>
+    · 心跳引擎读 SKU 6 卡的 r/a/T<br>
+    · 派单引擎读决策日志的 authority<br>
+    <br>
+    <b style="color:var(--text-0)">化学反应</b>:<br>
+    每次心跳异常 → 蝴蝶检测 → A 值校准 → 派单调整 → 决策记录 → AI 学习<br>
+    完整的"代谢循环"
+  </div>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · 中层 · 7 大引擎 v1.0 · DS<br>
+  · 调味品 EDA 的"功能模块"<br>
+  · 上承战略 · 下载晶体管<br>
+  Layer 1.3 演示 · 待 TL 落地
+</div>
+
+<script>
+function updateTime() { document.getElementById('now-time').textContent = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' }); }
+updateTime(); setInterval(updateTime, 30000);
+</script>
+</body>
+</html>
