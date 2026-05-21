@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 晶体管层 · SKU 6 卡 v2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg-0:#0a0907; --bg-1:#14110d; --bg-2:#1c1815; --bg-3:#251f1a; --surface:#1a1612; --border:rgba(255,220,180,0.08); --border-2:rgba(255,220,180,0.15); --text-0:#f4ede0; --text-1:#c8bda8; --text-2:#847868; --text-3:#524a40; --gold:#d4af37; --gold-bright:#f5a623; --green:#88c850; --amber:#f5a623; --red:#e94560; --blue:#5d9cec; --purple:#a78bfa; --teal:#4ecdc4; }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { background:var(--bg-0); color:var(--text-0); font-family:'Noto Sans SC',sans-serif; min-height:100vh; overflow-x:hidden; }
+@media (min-width:600px) { body { max-width:480px; margin:0 auto; box-shadow:0 0 60px rgba(0,0,0,0.6); } }
+
+.layer-badge { background:rgba(167,139,250,0.15); border-bottom:1px solid rgba(167,139,250,0.25); color:var(--purple); font-size:10px; padding:6px 14px; text-align:center; font-family:'Space Mono',monospace; }
+
+.hero { padding:18px 14px 14px; background:linear-gradient(180deg,var(--bg-1),var(--bg-0)); border-bottom:1px solid var(--border); }
+.hero-top { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+.hero-row { display:flex; align-items:center; gap:14px; }
+.hero-avatar { width:60px; height:60px; border-radius:16px; background:linear-gradient(135deg,var(--purple),#7c3aed); display:flex; align-items:center; justify-content:center; font-size:30px; flex-shrink:0; box-shadow:0 6px 18px rgba(167,139,250,0.3); }
+.hero-info { flex:1; min-width:0; }
+.hero-name { font-family:'Syne',sans-serif; font-weight:700; font-size:20px; }
+.hero-title { font-size:12px; color:var(--purple); margin-top:2px; }
+.hero-scope { font-size:11px; color:var(--text-2); margin-top:4px; line-height:1.5; }
+
+/* 理论说明 */
+.theory-box { margin:12px 14px; background:linear-gradient(135deg,rgba(167,139,250,0.06),var(--surface)); border:1px solid rgba(167,139,250,0.2); border-radius:14px; padding:14px; }
+.theory-title { font-size:12px; color:var(--purple); font-weight:700; margin-bottom:8px; font-family:'Space Mono',monospace; }
+.theory-content { font-size:11px; color:var(--text-1); line-height:1.7; }
+.theory-content b { color:var(--purple); }
+
+/* 5 品牌矩阵 */
+.brands-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin:12px 14px; }
+.brand-cell { background:var(--bg-2); border:1px solid var(--border); border-radius:8px; padding:8px 4px; text-align:center; }
+.brand-emoji { font-size:18px; margin-bottom:3px; }
+.brand-name { font-size:10px; font-weight:700; color:var(--text-0); }
+.brand-role { font-size:8px; color:var(--purple); margin-top:2px; font-family:'Space Mono',monospace; }
+
+/* SKU 卡片 */
+.sku-section { margin:14px 14px; background:var(--surface); border:1px solid var(--border-2); border-radius:14px; overflow:hidden; }
+.sku-section.healthy { border-left:4px solid var(--green); }
+.sku-section.warning { border-left:4px solid var(--amber); }
+.sku-section.danger { border-left:4px solid var(--red); }
+
+.sku-header { padding:14px 16px; background:linear-gradient(135deg,var(--bg-1),var(--surface)); border-bottom:1px solid var(--border); }
+.sku-header-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.sku-name { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; color:var(--text-0); }
+.sku-status { padding:4px 10px; border-radius:12px; font-family:'Space Mono',monospace; font-size:10px; font-weight:700; }
+.sku-status.healthy { background:rgba(136,200,80,0.15); color:var(--green); }
+.sku-status.warning { background:rgba(245,166,35,0.15); color:var(--amber); }
+.sku-status.danger { background:rgba(233,69,96,0.15); color:var(--red); }
+.sku-tagline { font-size:11px; color:var(--text-2); }
+
+/* 6 卡网格 */
+.cards-grid { padding:12px; display:flex; flex-direction:column; gap:8px; }
+.card { background:var(--bg-2); border:1px solid var(--border); border-radius:10px; padding:11px 12px; }
+.card-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.card-num { width:22px; height:22px; border-radius:6px; background:linear-gradient(135deg,var(--purple),#7c3aed); color:white; display:flex; align-items:center; justify-content:center; font-family:'Syne',sans-serif; font-weight:800; font-size:11px; flex-shrink:0; }
+.card-title { font-size:12px; font-weight:700; color:var(--text-0); flex:1; }
+.card-tag { font-size:9px; color:var(--purple); font-family:'Space Mono',monospace; padding:2px 6px; background:rgba(167,139,250,0.1); border-radius:4px; }
+.card-tag.gold { color:var(--gold); background:rgba(212,175,55,0.1); }
+.card-tag.red { color:var(--red); background:rgba(233,69,96,0.1); }
+.card-tag.amber { color:var(--amber); background:rgba(245,166,35,0.1); }
+.card-tag.green { color:var(--green); background:rgba(136,200,80,0.1); }
+.card-body { font-size:11px; color:var(--text-1); line-height:1.6; }
+.card-body b { color:var(--text-0); font-weight:600; }
+
+/* 心跳显示 (r/a/T) */
+.heartbeat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:6px; }
+.hb-cell { background:var(--bg-3); border-radius:6px; padding:8px; text-align:center; }
+.hb-label { font-size:9px; color:var(--text-2); margin-bottom:3px; font-family:'Space Mono',monospace; }
+.hb-value { font-family:'Syne',sans-serif; font-weight:800; font-size:16px; color:var(--purple); }
+.hb-value.green { color:var(--green); }
+.hb-value.amber { color:var(--amber); }
+.hb-value.red { color:var(--red); }
+.hb-unit { font-size:9px; color:var(--text-3); margin-top:2px; }
+
+/* 心跳实际 vs 目标 */
+.hb-compare { display:flex; justify-content:space-between; gap:8px; margin-top:8px; padding:8px; background:var(--bg-3); border-radius:6px; }
+.hb-compare-cell { flex:1; text-align:center; }
+.hb-compare-label { font-size:9px; color:var(--text-2); margin-bottom:3px; }
+.hb-compare-val { font-family:'Space Mono',monospace; font-size:13px; font-weight:700; }
+.hb-compare-val.target { color:var(--text-2); }
+.hb-compare-val.actual.good { color:var(--green); }
+.hb-compare-val.actual.warn { color:var(--amber); }
+.hb-compare-val.actual.bad { color:var(--red); }
+.hb-arrow { display:flex; align-items:center; color:var(--text-3); font-family:'Space Mono',monospace; }
+
+/* 投入项 */
+.invest-row { display:flex; justify-content:space-between; padding:5px 8px; background:var(--bg-3); border-radius:5px; margin-bottom:4px; font-size:11px; }
+.invest-name { color:var(--text-1); }
+.invest-val { color:var(--gold); font-family:'Space Mono',monospace; font-weight:700; }
+
+/* 个体绑定 */
+.individual-row { display:flex; justify-content:space-between; padding:5px 8px; background:var(--bg-3); border-radius:5px; margin-bottom:4px; font-size:11px; }
+.individual-name { color:var(--text-1); }
+.individual-val { color:var(--green); font-family:'Space Mono',monospace; font-weight:700; }
+
+/* 危险线 */
+.danger-line { background:rgba(233,69,96,0.05); border-left:3px solid var(--red); padding:8px 10px; border-radius:6px; margin-bottom:4px; font-size:11px; color:var(--text-1); }
+.danger-line.warning { background:rgba(245,166,35,0.05); border-left-color:var(--amber); }
+.danger-line.ok { background:rgba(136,200,80,0.05); border-left-color:var(--green); }
+.danger-line b { color:var(--red); }
+.danger-line.warning b { color:var(--amber); }
+.danger-line.ok b { color:var(--green); }
+
+/* 集团 P&L 汇总 */
+.summary-section { margin:14px 14px; background:linear-gradient(135deg,rgba(212,175,55,0.06),var(--surface)); border:1px solid rgba(212,175,55,0.2); border-radius:14px; padding:14px; }
+.summary-title { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:var(--gold); margin-bottom:10px; }
+.summary-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.summary-cell { background:var(--bg-2); border-radius:8px; padding:10px; }
+.summary-num { font-family:'Syne',sans-serif; font-weight:800; font-size:18px; color:var(--gold); }
+.summary-num.green { color:var(--green); }
+.summary-num.amber { color:var(--amber); }
+.summary-num.red { color:var(--red); }
+.summary-lbl { font-size:10px; color:var(--text-2); margin-top:3px; }
+
+/* 决策日志 schema */
+.schema-section { margin:14px 14px; background:var(--surface); border:1px solid var(--border-2); border-radius:14px; padding:14px; }
+.schema-title { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:var(--teal); margin-bottom:10px; }
+.schema-code { background:var(--bg-0); border-radius:8px; padding:12px; font-family:'Space Mono',monospace; font-size:10px; color:var(--text-1); line-height:1.6; overflow-x:auto; white-space:pre; }
+.schema-code .kw { color:var(--purple); }
+.schema-code .type { color:var(--blue); }
+.schema-code .str { color:var(--green); }
+.schema-code .comment { color:var(--text-3); }
+
+.bottom-fix { padding:18px 14px 32px; text-align:center; font-size:10px; color:var(--text-3); }
+</style>
+</head>
+<body>
+
+<div class="layer-badge">⚠ Layer 1.3 · 晶体管层 (Atomic Layer) · SKU 6 卡 v2.0</div>
+
+<div class="hero">
+  <div class="hero-top">
+    <a href="index.html" style="color:white;text-decoration:none;background:linear-gradient(135deg,var(--purple),#7c3aed);padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(167,139,250,0.3)">
+      <span style="font-size:16px">←</span><span>回主页</span>
+    </a>
+    <span style="color:var(--text-3);font-family:'Space Mono',monospace;font-size:11px">晶体管 · v2.0</span>
+    <span id="now-time" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-2)">--:--</span>
+  </div>
+  <div class="hero-row">
+    <div class="hero-avatar">⚛️</div>
+    <div class="hero-info">
+      <div class="hero-name">SKU 6 卡 v2.0</div>
+      <div class="hero-title">晶体管层 · 调味品 EDA 底层原子</div>
+      <div class="hero-scope">每个 SKU = 有心跳节奏 + 危险线的生命体<br>每个阶段都有该有的 r/a/T 心率</div>
+    </div>
+  </div>
+</div>
+
+<!-- 理论说明 -->
+<div class="theory-box">
+  <div class="theory-title">⚛️ 核心认知 · 黄仁勋 EDA 理论</div>
+  <div class="theory-content">
+    <b>SKU 不是商品 · 不是属性表</b><br>
+    SKU 是有"生命阶段 + 代谢心跳 + 危险线"的活体<br>
+    <br>
+    每个 SKU 在不同阶段都有<b>该有的心跳</b> (r/a/T)<br>
+    每个阶段都有<b>该烧的钱</b>和<b>该达标的时间</b><br>
+    不达标 = SKU 在"病重" · 必须立刻就医<br>
+    <br>
+    与决策日志双向打通 = 调味品 EDA 的核反应堆
+  </div>
+</div>
+
+<!-- 5 品牌矩阵 -->
+<div style="margin:12px 14px 6px;font-size:11px;color:var(--text-3);font-family:'Space Mono',monospace">5 品牌矩阵 · 每品牌的 SKU 角色定位</div>
+<div class="brands-grid">
+  <div class="brand-cell">
+    <div class="brand-emoji">⭐</div>
+    <div class="brand-name">六月鲜</div>
+    <div class="brand-role">Strategic</div>
+  </div>
+  <div class="brand-cell">
+    <div class="brand-emoji">💰</div>
+    <div class="brand-name">味达美</div>
+    <div class="brand-role">Cash Cow</div>
+  </div>
+  <div class="brand-cell">
+    <div class="brand-emoji">🌱</div>
+    <div class="brand-name">禾然</div>
+    <div class="brand-role">Bet</div>
+  </div>
+  <div class="brand-cell">
+    <div class="brand-emoji">🛡️</div>
+    <div class="brand-name">葱伴侣</div>
+    <div class="brand-role">Defensive</div>
+  </div>
+  <div class="brand-cell">
+    <div class="brand-emoji">⚔️</div>
+    <div class="brand-name">小康</div>
+    <div class="brand-role">Intercept</div>
+  </div>
+</div>
+
+<!-- ════ SKU 1 · 六月鲜 380ml · Strategic Mature 🟢 ════ -->
+<div class="sku-section healthy">
+  <div class="sku-header">
+    <div class="sku-header-top">
+      <div class="sku-name">⭐ 六月鲜 380ml 经典款</div>
+      <div class="sku-status healthy">🟢 健康</div>
+    </div>
+    <div class="sku-tagline">Strategic · Mature 期 (18 个月) · 北极星核心旗舰</div>
+  </div>
+
+  <div class="cards-grid">
+    <!-- 第 1 卡 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">1</div>
+        <div class="card-title">角色 (Role)</div>
+        <div class="card-tag gold">Strategic</div>
+      </div>
+      <div class="card-body">
+        <b>战略型 SKU</b> · 北极星核心旗舰<br>
+        定位: 高端突围 · 拉动品牌升级 · 抢占心智
+      </div>
+    </div>
+
+    <!-- 第 2 卡 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">2</div>
+        <div class="card-title">生命周期阶段</div>
+        <div class="card-tag green">Mature · scaling</div>
+      </div>
+      <div class="card-body">
+        当前: <b>成熟期 · 持续扩张</b><br>
+        已停留: 18 个月 · 下次评估: 2026-08-01
+      </div>
+    </div>
+
+    <!-- 第 3 卡 · 心跳目标 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">3</div>
+        <div class="card-title">心跳目标 (Heartbeat)</div>
+        <div class="card-tag">r / a / T</div>
+      </div>
+      <div class="card-body">
+        <div class="heartbeat-grid">
+          <div class="hb-cell">
+            <div class="hb-label">r 日销率</div>
+            <div class="hb-value">5,000</div>
+            <div class="hb-unit">瓶 / 天</div>
+          </div>
+          <div class="hb-cell">
+            <div class="hb-label">a 周销量</div>
+            <div class="hb-value">150K</div>
+            <div class="hb-unit">瓶 / T</div>
+          </div>
+          <div class="hb-cell">
+            <div class="hb-label">T 周期</div>
+            <div class="hb-value">30</div>
+            <div class="hb-unit">天</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--text-2)">
+          财务: 边际 50% · 净利 35% · 渗透 40%
+        </div>
+      </div>
+    </div>
+
+    <!-- 第 4 卡 · 投入 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">4</div>
+        <div class="card-title">阶段投入 (Investment)</div>
+        <div class="card-tag gold">¥230M / 年</div>
+      </div>
+      <div class="card-body">
+        <div class="invest-row"><span class="invest-name">品牌广告</span><span class="invest-val">¥150M / 年</span></div>
+        <div class="invest-row"><span class="invest-name">终端促销</span><span class="invest-val">¥80M / 年</span></div>
+        <div style="margin-top:6px;font-size:10px;color:var(--text-2)">
+          <b style="color:var(--green)">ROI 目标 5x</b> · 不在烧钱期 · 低维持投入
+        </div>
+      </div>
+    </div>
+
+    <!-- 第 5 卡 · 实际产出 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">5</div>
+        <div class="card-title">实际产出 (Output)</div>
+        <div class="card-tag green">本月 ✓</div>
+      </div>
+      <div class="card-body">
+        <!-- 心跳实际 vs 目标 -->
+        <div class="hb-compare">
+          <div class="hb-compare-cell">
+            <div class="hb-compare-label">r 目标</div>
+            <div class="hb-compare-val target">5,000</div>
+          </div>
+          <div class="hb-arrow">→</div>
+          <div class="hb-compare-cell">
+            <div class="hb-compare-label">r 实际</div>
+            <div class="hb-compare-val actual good">5,200</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--text-2)">
+          营收 ¥360M · 边际 50% · <b style="color:var(--green)">ROI 实际 4.8x</b>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--purple);font-family:'Space Mono',monospace">
+          🔗 个体绑定 (本月)
+        </div>
+        <div class="individual-row"><span class="individual-name">张明远 (SR · 山姆)</span><span class="individual-val">¥3,200</span></div>
+        <div class="individual-row"><span class="individual-name">王晓刚 (DSR · 沪西)</span><span class="individual-val">¥1,500</span></div>
+        <div class="individual-row"><span class="individual-name">赵美玲 (ICA · 大润发)</span><span class="individual-val">¥850</span></div>
+      </div>
+    </div>
+
+    <!-- 第 6 卡 · 危险线 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">6</div>
+        <div class="card-title">危险线 + 退出条件</div>
+        <div class="card-tag green">全部健康</div>
+      </div>
+      <div class="card-body">
+        <div class="danger-line ok">
+          <b>✓ 心跳危险线</b><br>
+          r 跌破 3,500 / 30 天 → 警报 · 当前 5,200 · 安全
+        </div>
+        <div class="danger-line ok">
+          <b>✓ ROI 危险线</b><br>
+          ROI 连续 3 月 < 3x → 警报 · 当前 4.8x · 安全
+        </div>
+        <div class="danger-line ok">
+          <b>✓ 渗透危险线</b><br>
+          渗透率 < 30% → 警报 · 当前 40% · 安全
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SKU 2 · 禾然有机 280ml · Bet Growth 🟡 ════ -->
+<div class="sku-section warning">
+  <div class="sku-header">
+    <div class="sku-header-top">
+      <div class="sku-name">🌱 禾然有机 280ml</div>
+      <div class="sku-status warning">🟡 警告</div>
+    </div>
+    <div class="sku-tagline">Bet · Growth 期 (已 14 个月) · 距危险线 4 月</div>
+  </div>
+
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">1</div>
+        <div class="card-title">角色 (Role)</div>
+        <div class="card-tag" style="color:var(--purple);background:rgba(167,139,250,0.1)">Bet</div>
+      </div>
+      <div class="card-body">
+        <b>战略赌注 SKU</b> · 高端突围 + 健康赛道<br>
+        定位: 米其林联动 · 中产消费升级 · 未来增长点
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">2</div>
+        <div class="card-title">生命周期阶段</div>
+        <div class="card-tag amber">Growth · 扭亏中</div>
+      </div>
+      <div class="card-body">
+        当前: <b>成长期 · 等待 r 爬升</b><br>
+        已停留: 14 个月 / 烧钱上限 24 月 · <b style="color:var(--amber)">还剩 10 月</b>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">3</div>
+        <div class="card-title">心跳目标 (爬升中)</div>
+        <div class="card-tag amber">r 慢</div>
+      </div>
+      <div class="card-body">
+        <div class="heartbeat-grid">
+          <div class="hb-cell">
+            <div class="hb-label">r 目标 24 月</div>
+            <div class="hb-value amber">800</div>
+            <div class="hb-unit">瓶 / 天</div>
+          </div>
+          <div class="hb-cell">
+            <div class="hb-label">a 周销目标</div>
+            <div class="hb-value amber">24K</div>
+            <div class="hb-unit">瓶 / T</div>
+          </div>
+          <div class="hb-cell">
+            <div class="hb-label">T 周期</div>
+            <div class="hb-value">30</div>
+            <div class="hb-unit">天</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--text-2)">
+          财务目标: 24 月内 ROI ≥ 1 · 边际 40%
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">4</div>
+        <div class="card-title">阶段投入 (烧钱期)</div>
+        <div class="card-tag gold">¥80M / 年</div>
+      </div>
+      <div class="card-body">
+        <div class="invest-row"><span class="invest-name">品牌广告 (高端)</span><span class="invest-val">¥40M / 年</span></div>
+        <div class="invest-row"><span class="invest-name">米其林联动</span><span class="invest-val">¥20M / 年</span></div>
+        <div class="invest-row"><span class="invest-name">ICA 试饮投入</span><span class="invest-val">¥20M / 年</span></div>
+        <div style="margin-top:6px;font-size:10px;color:var(--amber)">
+          <b>ROI 目标 2x</b> · 当前 0.8x · <b style="color:var(--amber)">烧钱期 14/24 月</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">5</div>
+        <div class="card-title">实际产出 (慢)</div>
+        <div class="card-tag amber">未达标</div>
+      </div>
+      <div class="card-body">
+        <div class="hb-compare">
+          <div class="hb-compare-cell">
+            <div class="hb-compare-label">r 目标</div>
+            <div class="hb-compare-val target">800</div>
+          </div>
+          <div class="hb-arrow">→</div>
+          <div class="hb-compare-cell">
+            <div class="hb-compare-label">r 实际</div>
+            <div class="hb-compare-val actual warn">650</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--amber)">
+          营收 ¥45M · 边际 30% · <b>ROI 实际 0.8 (亏损中)</b>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--purple);font-family:'Space Mono',monospace">
+          🔗 个体绑定 (本月)
+        </div>
+        <div class="individual-row"><span class="individual-name">王晓刚 (DSR)</span><span class="individual-val">¥600</span></div>
+        <div class="individual-row"><span class="individual-name">赵美玲 (ICA · 试饮)</span><span class="individual-val">¥400</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">6</div>
+        <div class="card-title">危险线 + 触发动作</div>
+        <div class="card-tag amber">距危险 4 月</div>
+      </div>
+      <div class="card-body">
+        <div class="danger-line warning">
+          <b>⚠ 烧钱期危险线 (主要)</b><br>
+          18 月 r 没爬到 1,000 → 强制评估<br>
+          当前: 14 月 · r 650 → <b>4 月内必须破 1,000</b>
+        </div>
+        <div class="danger-line warning">
+          <b>⚠ ROI 持续恶化</b><br>
+          连续 3 月 ROI < 1 → 警报<br>
+          当前: 已连续 6 月 ROI < 1 (设计期允许)
+        </div>
+        <div class="danger-line ok">
+          <b>✓ 米其林反馈优秀</b><br>
+          3 家米其林餐厅复购 · 高端信号良好
+        </div>
+        <div style="margin-top:8px;padding:8px;background:rgba(245,166,35,0.06);border-radius:5px;font-size:10px;color:var(--text-1);line-height:1.5">
+          🚨 <b style="color:var(--amber)">AI 建议</b>:<br>
+          · 加速 ICA 投入 (3 月内 r 必破 1,000)<br>
+          · 否则触发危险线 · 强制评估转型 / 退场
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SKU 3 · 葱伴侣 200ml · Defensive Mature 🟢 ════ -->
+<div class="sku-section healthy">
+  <div class="sku-header">
+    <div class="sku-header-top">
+      <div class="sku-name">🛡️ 葱伴侣 200ml</div>
+      <div class="sku-status healthy">🟢 健康</div>
+    </div>
+    <div class="sku-tagline">Defensive · Mature 期 (已 5 年) · 北方利基守土</div>
+  </div>
+
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">1</div>
+        <div class="card-title">角色 (Role)</div>
+        <div class="card-tag" style="color:var(--blue);background:rgba(93,156,236,0.1)">Defensive</div>
+      </div>
+      <div class="card-body">
+        <b>利基防御 SKU</b> · 北方葱酱市场守土<br>
+        定位: 不指望增长 · 守住份额 · 不让竞品破局
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">2</div>
+        <div class="card-title">生命周期阶段</div>
+        <div class="card-tag green">Mature · 维持</div>
+      </div>
+      <div class="card-body">
+        当前: <b>成熟期 · 长期维持</b><br>
+        已停留: 5 年 · 心跳波动 < 5% (稳定)
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">3</div>
+        <div class="card-title">心跳目标 (持平)</div>
+        <div class="card-tag green">维持</div>
+      </div>
+      <div class="card-body">
+        <div class="heartbeat-grid">
+          <div class="hb-cell">
+            <div class="hb-label">r 目标</div>
+            <div class="hb-value">1,200</div>
+            <div class="hb-unit">瓶 / 天</div>
+          </div>
+          <div class="hb-cell">
+            <div class="hb-label">a 周销</div>
+            <div class="hb-value">36K</div>
+            <div class="hb-unit">瓶 / T</div>
+          </div>
+          <div class="hb-cell">
+            <div class="hb-label">T 周期</div>
+            <div class="hb-value">30</div>
+            <div class="hb-unit">天</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--text-2)">
+          财务: 边际 45% · 净利 30% · 北方 60% 渗透
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">4</div>
+        <div class="card-title">阶段投入 (低维持)</div>
+        <div class="card-tag gold">¥30M / 年</div>
+      </div>
+      <div class="card-body">
+        <div class="invest-row"><span class="invest-name">品牌广告 (北方)</span><span class="invest-val">¥15M / 年</span></div>
+        <div class="invest-row"><span class="invest-name">渠道维护</span><span class="invest-val">¥15M / 年</span></div>
+        <div style="margin-top:6px;font-size:10px;color:var(--green)">
+          <b>ROI 目标 3x</b> · 当前 3.2x ✓ · 不增加投入
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">5</div>
+        <div class="card-title">实际产出 (达标)</div>
+        <div class="card-tag green">✓ 守土</div>
+      </div>
+      <div class="card-body">
+        <div class="hb-compare">
+          <div class="hb-compare-cell">
+            <div class="hb-compare-label">r 目标</div>
+            <div class="hb-compare-val target">1,200</div>
+          </div>
+          <div class="hb-arrow">→</div>
+          <div class="hb-compare-cell">
+            <div class="hb-compare-label">r 实际</div>
+            <div class="hb-compare-val actual good">1,180</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--text-2)">
+          营收 ¥85M · 边际 45% · <b style="color:var(--green)">ROI 实际 3.2x</b>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--purple);font-family:'Space Mono',monospace">
+          🔗 北方个体绑定 (本月)
+        </div>
+        <div class="individual-row"><span class="individual-name">SR · 北方 (8 人)</span><span class="individual-val">¥4,000</span></div>
+        <div class="individual-row"><span class="individual-name">DSR · 北方 (24 人)</span><span class="individual-val">¥800/人</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-num">6</div>
+        <div class="card-title">危险线 + 退出条件</div>
+        <div class="card-tag green">守土稳</div>
+      </div>
+      <div class="card-body">
+        <div class="danger-line ok">
+          <b>✓ 心跳危险线</b><br>
+          r 跌破 900 / 3 月 → 退场评估 · 当前 1,180 · 安全
+        </div>
+        <div class="danger-line ok">
+          <b>✓ 竞品压力</b><br>
+          海天/李锦记侵蚀 < 5% → 警报 · 当前 2% · 守住
+        </div>
+        <div class="danger-line ok">
+          <b>✓ 边际守住</b><br>
+          边际 < 35% → 警报 · 当前 45% · 健康
+        </div>
+        <div style="margin-top:8px;padding:8px;background:rgba(136,200,80,0.06);border-radius:5px;font-size:10px;color:var(--text-1);line-height:1.5">
+          💎 <b style="color:var(--green)">策略</b>:<br>
+          · 不增加投入 · 维持现状<br>
+          · 守住北方利基 · 给主战略 SKU 让路
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 集团 SKU 汇总 -->
+<div class="summary-section">
+  <div class="summary-title">📊 5 品牌 · SKU 健康度汇总 (本月)</div>
+  <div class="summary-grid">
+    <div class="summary-cell">
+      <div class="summary-num green">38</div>
+      <div class="summary-lbl">🟢 健康 SKU</div>
+    </div>
+    <div class="summary-cell">
+      <div class="summary-num amber">11</div>
+      <div class="summary-lbl">🟡 警告 SKU</div>
+    </div>
+    <div class="summary-cell">
+      <div class="summary-num red">3</div>
+      <div class="summary-lbl">🔴 危险 SKU</div>
+    </div>
+    <div class="summary-cell">
+      <div class="summary-num">52</div>
+      <div class="summary-lbl">在售总数</div>
+    </div>
+  </div>
+  <div style="margin-top:10px;padding:10px;background:var(--bg-2);border-radius:8px;font-size:10px;color:var(--text-1);line-height:1.6">
+    <b style="color:var(--gold)">本月集团 P&L (SKU 6 卡汇总)</b><br>
+    · 营收 ¥330M · 边际 ¥152M (46%)<br>
+    · 投入 ¥45M · ROI 3.4x<br>
+    · 距北极星: 已完成 56% / 200M 瓶
+  </div>
+</div>
+
+<!-- 决策日志 MySQL Schema -->
+<div class="schema-section">
+  <div class="schema-title">⚛️ 决策日志 MySQL Schema (草案 v1)</div>
+  <div style="font-size:10px;color:var(--text-2);margin-bottom:8px;font-family:'Space Mono',monospace;line-height:1.6">
+    晶体管的另一半 · 与 SKU 6 卡通过 sku_id 反应<br>
+    每条决策 = 一个晶体管开关 · 30/90 天自动回填
+  </div>
+  <div class="schema-code"><span class="kw">CREATE TABLE</span> decision_log (
+  decision_id   <span class="type">VARCHAR(32)</span> PRIMARY KEY,
+                <span class="comment">-- DEC-{ts}-{role}-{seq}</span>
+  
+  <span class="comment">-- WHO 谁决策</span>
+  decided_by    <span class="type">VARCHAR(32)</span> NOT NULL,
+                <span class="comment">-- 个体 ID (黄建国)</span>
+  role          <span class="type">VARCHAR(16)</span> NOT NULL,
+                <span class="comment">-- DOM/CTL/SR/ICA...</span>
+  org_scope     <span class="type">VARCHAR(64)</span>,
+                <span class="comment">-- 沪西华南</span>
+  
+  <span class="comment">-- WHAT 做什么</span>
+  decision_type <span class="type">ENUM</span>(
+    <span class="str">'invest'</span>,<span class="str">'restructure'</span>,<span class="str">'staffing'</span>,
+    <span class="str">'pricing'</span>,<span class="str">'channel'</span>,<span class="str">'sku_lifecycle'</span>),
+  decision_text <span class="type">TEXT</span> NOT NULL,
+  
+  <span class="comment">-- WHY 为什么</span>
+  reason_text   <span class="type">TEXT</span>,
+  trigger_event <span class="type">VARCHAR(128)</span>,
+  
+  <span class="comment">-- 与 SKU 6 卡的关联 (核反应)</span>
+  affected_skus <span class="type">JSON</span>,
+                <span class="comment">-- [{sku_id, impact_type}]</span>
+  
+  <span class="comment">-- IMPACT 影响 (预期 + 实际)</span>
+  impact_predict <span class="type">JSON</span>,
+                <span class="comment">-- {r_delta, a_delta, roi}</span>
+  impact_actual  <span class="type">JSON</span>,
+                <span class="comment">-- 30/90 天自动回填</span>
+  
+  <span class="comment">-- AUTHORITY 权限</span>
+  authority     <span class="type">VARCHAR(32)</span>,
+                <span class="comment">-- self/manager/board</span>
+  approved_by   <span class="type">VARCHAR(32)</span>,
+  
+  <span class="comment">-- 投入</span>
+  budget        <span class="type">DECIMAL(12,2)</span>,
+  budget_source <span class="type">VARCHAR(32)</span>,
+  
+  <span class="comment">-- 时间戳 + 学习状态</span>
+  created_at    <span class="type">TIMESTAMP</span> NOT NULL,
+  verify_30d_at <span class="type">TIMESTAMP</span>,
+  verify_90d_at <span class="type">TIMESTAMP</span>,
+  learn_status  <span class="type">ENUM</span>(
+    <span class="str">'pending'</span>,<span class="str">'verified'</span>,<span class="str">'failed'</span>,<span class="str">'partial'</span>),
+  learn_score   <span class="type">DECIMAL(4,2)</span>,
+                <span class="comment">-- 实际/预期 比率</span>
+  
+  INDEX (decided_by, created_at),
+  INDEX (role, decision_type),
+  INDEX (learn_status)
+);</div>
+  <div style="margin-top:10px;padding:10px;background:rgba(78,205,196,0.06);border-radius:6px;border:1px solid rgba(78,205,196,0.2);font-size:10px;color:var(--text-1);line-height:1.6">
+    <b style="color:var(--teal)">⚛️ 化学反应公式</b><br>
+    每条 decision_log.affected_skus 引用 sku_6cards.sku_id<br>
+    每个 SKU 6 卡的"实际产出"自动汇总相关决策<br>
+    30/90 天后自动回填 impact_actual + learn_score<br>
+    → 决策可学习 · SKU 可追溯 · AI 可进化
+  </div>
+</div>
+
+<div class="bottom-fix">
+  INFINITY OS · 晶体管层 · SKU 6 卡 v2.0<br>
+  · 每个 SKU = 有心跳的生命体<br>
+  · 决策日志 × SKU 6 卡 = 调味品 EDA 核反应堆<br>
+  Layer 1.3 演示 · 数据模拟
+</div>
+
+<script>
+function updateTime() { document.getElementById('now-time').textContent = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' }); }
+updateTime(); setInterval(updateTime, 30000);
+</script>
+</body>
+</html>
