@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>全链路信号流 · 三层钢筋 · INFINITY OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void: #060912;
+  --deep: #0b1020;
+  --panel: #111a30;
+  --panel2: #18233f;
+  --line: rgba(120,170,255,0.1);
+  --line2: rgba(120,170,255,0.22);
+  --txt: #e6eeff;
+  --txt2: #93a6cc;
+  --txt3: #5a6b8c;
+  --flow: #3d9eff;       /* 信号蓝 */
+  --flow-bright: #6cc0ff;
+  --flow-dim: rgba(61,158,255,0.12);
+  --up: #ff7b54;          /* 向上反馈 · 橙 */
+  --down: #3ddc84;        /* 向下翻译 · 绿 */
+  --gold: #f5c451;
+  --purple: #b08fd8;
+  --pink: #ec4899;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { background:var(--void); color:var(--txt); font-family:'Noto Sans SC',sans-serif; min-height:100vh; overflow-x:hidden; }
+body {
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(61,158,255,0.08), transparent 50%),
+    radial-gradient(circle at 0% 100%, rgba(176,143,216,0.05), transparent 40%);
+}
+@media (min-width:780px){ body{ max-width:760px; margin:0 auto; border-left:1px solid var(--line); border-right:1px solid var(--line);} }
+
+.badge { background:linear-gradient(90deg, var(--flow-dim), transparent); border-bottom:1px solid var(--line2); color:var(--flow); font-size:11px; padding:7px 18px; font-family:'JetBrains Mono',monospace; letter-spacing:0.05em; }
+
+/* HERO */
+.hero { padding:40px 22px 28px; border-bottom:1px solid var(--line); position:relative; overflow:hidden; }
+.hero-kicker { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--flow); letter-spacing:0.25em; text-transform:uppercase; margin-bottom:14px; }
+.hero-title { font-family:'Orbitron',sans-serif; font-weight:900; font-size:30px; line-height:1.1; letter-spacing:0.02em; }
+.hero-title .zh { font-family:'Noto Sans SC',sans-serif; display:block; font-size:26px; margin-top:6px; }
+.hero-sub { font-size:13px; color:var(--txt2); line-height:1.8; margin-top:14px; }
+.hero-sub b { color:var(--flow-bright); }
+.hero-ver { display:inline-block; margin-top:14px; padding:5px 12px; border:1px solid var(--line2); border-radius:2px; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--txt2); }
+
+/* 为什么需要 */
+.why { margin:22px; padding:20px; background:linear-gradient(135deg, var(--panel), var(--deep)); border:1px solid var(--line2); border-left:3px solid var(--gold); }
+.why-label { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--gold); letter-spacing:0.15em; margin-bottom:10px; }
+.why-body { font-size:13px; line-height:1.9; color:var(--txt2); }
+.why-body b { color:var(--txt); }
+.why-body .steel { color:var(--gold); font-weight:700; }
+
+.section { padding:30px 22px; border-bottom:1px solid var(--line); }
+.section-num { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--txt3); letter-spacing:0.1em; }
+.section-title { font-family:'Orbitron',sans-serif; font-weight:800; font-size:21px; margin:6px 0 4px; }
+.section-zh { font-family:'Noto Sans SC',sans-serif; font-weight:900; }
+.section-desc { font-size:13px; color:var(--txt2); line-height:1.7; margin-bottom:20px; }
+
+/* 双向标签 */
+.dual-legend { display:flex; gap:10px; margin-bottom:18px; }
+.legend-item { flex:1; padding:10px 12px; border-radius:4px; font-size:11px; text-align:center; font-family:'JetBrains Mono',monospace; }
+.legend-down { background:rgba(61,220,132,0.1); border:1px solid rgba(61,220,132,0.3); color:var(--down); }
+.legend-up { background:rgba(255,123,84,0.1); border:1px solid rgba(255,123,84,0.3); color:var(--up); }
+
+/* 信号流管道 · 11 节点 */
+.pipe { position:relative; padding-left:42px; }
+.pipe::before { content:''; position:absolute; left:18px; top:14px; bottom:14px; width:2px; background:linear-gradient(180deg, var(--down) 0%, var(--flow) 50%, var(--up) 100%); }
+.node { position:relative; margin-bottom:8px; padding:13px 16px; background:var(--panel); border:1px solid var(--line); border-radius:6px; }
+.node::before { content:''; position:absolute; left:-31px; top:50%; transform:translateY(-50%); width:12px; height:12px; border-radius:50%; background:var(--flow); box-shadow:0 0 10px var(--flow); border:2px solid var(--void); }
+.node-strategy::before { background:var(--gold); box-shadow:0 0 10px var(--gold); }
+.node-output::before { background:var(--down); box-shadow:0 0 10px var(--down); }
+.node-num { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--txt3); }
+.node-name { font-size:14px; font-weight:700; margin:2px 0 3px; }
+.node-layer { display:inline-block; font-family:'JetBrains Mono',monospace; font-size:9px; padding:1px 7px; border-radius:8px; margin-left:6px; vertical-align:middle; }
+.nl-top { background:rgba(245,196,81,0.15); color:var(--gold); }
+.nl-mid { background:var(--flow-dim); color:var(--flow); }
+.nl-bot { background:rgba(61,220,132,0.12); color:var(--down); }
+.node-desc { font-size:11px; color:var(--txt2); line-height:1.6; }
+
+/* 中间分隔:翻译/反馈转折点 */
+.turn { margin:14px 0 14px 42px; padding:10px 14px; background:rgba(61,158,255,0.06); border:1px dashed var(--line2); border-radius:4px; font-size:11px; color:var(--flow-bright); font-family:'JetBrains Mono',monospace; text-align:center; }
+
+/* 时钟金字塔 */
+.clock-pyramid { display:flex; flex-direction:column; gap:4px; align-items:center; margin:10px 0; }
+.clock-layer { padding:14px 16px; border-radius:6px; position:relative; display:flex; align-items:center; justify-content:space-between; gap:12px; transition:transform 0.2s; }
+.clock-layer:hover { transform:scale(1.02); }
+.cl-1 { width:100%; background:linear-gradient(90deg, rgba(61,220,132,0.12), var(--panel)); border:1px solid rgba(61,220,132,0.3); }
+.cl-2 { width:88%; background:linear-gradient(90deg, rgba(108,192,255,0.1), var(--panel)); border:1px solid rgba(108,192,255,0.3); }
+.cl-3 { width:76%; background:linear-gradient(90deg, rgba(236,72,153,0.1), var(--panel)); border:1px solid rgba(236,72,153,0.3); }
+.cl-4 { width:64%; background:linear-gradient(90deg, rgba(176,143,216,0.1), var(--panel)); border:1px solid rgba(176,143,216,0.3); }
+.cl-5 { width:52%; background:linear-gradient(90deg, rgba(245,196,81,0.12), var(--panel)); border:1px solid rgba(245,196,81,0.3); }
+.clock-left { }
+.clock-layer-name { font-size:13px; font-weight:700; }
+.clock-layer-role { font-size:10px; color:var(--txt3); font-family:'JetBrains Mono',monospace; margin-top:2px; }
+.clock-freq { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; white-space:nowrap; }
+.cl-1 .clock-freq{color:var(--down);} .cl-2 .clock-freq{color:var(--flow-bright);} .cl-3 .clock-freq{color:var(--pink);} .cl-4 .clock-freq{color:var(--purple);} .cl-5 .clock-freq{color:var(--gold);}
+
+.clock-note { margin-top:16px; padding:14px 16px; background:var(--panel); border:1px solid var(--line); border-radius:6px; font-size:12px; color:var(--txt2); line-height:1.8; }
+.clock-note b { color:var(--flow-bright); }
+
+/* 信息脉络 */
+.veins { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
+.vein { padding:12px 14px; border-radius:6px; background:var(--panel); border:1px solid var(--line); }
+.vein-name { font-size:13px; font-weight:700; margin-bottom:4px; }
+.vein-status { font-size:10px; font-family:'JetBrains Mono',monospace; }
+.vein.goods .vein-name{color:var(--down);} .vein.cash .vein-name{color:var(--gold);} .vein.people .vein-name{color:var(--purple);} .vein.info .vein-name{color:var(--flow-bright);}
+.vein.info { grid-column:1/-1; border-color:var(--line2); background:linear-gradient(135deg, var(--flow-dim), var(--panel)); }
+.vein-ok { color:var(--down); } .vein-new { color:var(--flow); }
+
+/* 钢筋总结 */
+.steel-box { margin:0 22px 22px; padding:20px; background:linear-gradient(135deg, rgba(245,196,81,0.06), var(--deep)); border:1px solid rgba(245,196,81,0.25); border-radius:8px; }
+.steel-title { font-family:'Orbitron',sans-serif; font-weight:800; font-size:15px; color:var(--gold); margin-bottom:12px; }
+.steel-row { font-size:12px; color:var(--txt2); line-height:1.9; }
+.steel-row b { color:var(--txt); }
+
+.links { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
+.link-cell { padding:12px; background:var(--panel); border:1px solid var(--line); text-decoration:none; color:var(--txt); font-size:12px; }
+.link-cell:hover { border-color:var(--line2); }
+.link-cell b { color:var(--flow-bright); }
+.link-cell .ls { font-size:10px; color:var(--txt3); font-family:'JetBrains Mono',monospace; margin-top:3px; }
+
+.back { display:inline-flex; align-items:center; gap:8px; margin:20px 22px 0; padding:10px 16px; background:var(--panel); border:1px solid var(--line2); color:var(--txt); text-decoration:none; font-size:13px; font-family:'JetBrains Mono',monospace; }
+.back:hover { border-color:var(--flow); color:var(--flow); }
+.footer { padding:28px 22px 44px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--txt3); line-height:1.8; }
+</style>
+</head>
+<body>
+
+<div class="badge">⚡ INFINITY OS · 跨层 · 全链路信号流 · 三层钢筋 · LAYER 1.3</div>
+
+<div class="hero">
+  <div class="hero-kicker">Cross-Layer · Signal Flow · The Rebar</div>
+  <div class="hero-title">SIGNAL FLOW<span class="zh">全链路信号流 · 三层钢筋</span></div>
+  <div class="hero-sub">
+    我们讲透了"每层是什么" · 但"层与层怎么咬合"一直没落地。<br>
+    这是贯穿三层的 <b>钢筋</b> — 让砖(晶体管)、墙(引擎)、楼顶(驾驶舱)<br>
+    焊成一个咬合的整体。
+  </div>
+  <div class="hero-ver">v1.0 · 2026-05-22 · DS · P1 跨层钢筋</div>
+</div>
+
+<!-- 为什么需要 -->
+<div class="why">
+  <div class="why-label">WHY THIS · 为什么需要钢筋</div>
+  <div class="why-body">
+    过去问题的最大根 = <b>碎片化</b>。<br>
+    做了驾驶舱(顶层) · 做了引擎图纸(中层) · 但<br>
+    底层信号上不去 · 顶层战略下不来 · 各层是孤岛。<br><br>
+    结果: <b>总是卡住 · 48 个整合问题 · 信息脉络缺失</b>。<br><br>
+    <span class="steel">钢筋 = 贯穿三层的双向信号流</span><br>
+    它一通 · 三层焊成整体 · 改任一层都知道上下游。
+  </div>
+</div>
+
+<!-- 全链路信号流 -->
+<div class="section">
+  <div class="section-num">SECTION 01 · THE FLOW</div>
+  <div class="section-title section-zh">全链路信号流 · 11 节点双向</div>
+  <div class="section-desc">承上启下不是口号 · 是一条双向链路:向下把战略翻译成动作 · 向上把信号汇成决策。</div>
+
+  <div class="dual-legend">
+    <div class="legend-item legend-down">▼ 向下翻译 · 战略→动作</div>
+    <div class="legend-item legend-up">▲ 向上反馈 · 信号→决策</div>
+  </div>
+
+  <div class="pipe">
+    <div class="node node-strategy">
+      <div class="node-num">01 · 起点</div>
+      <div class="node-name">战略目标<span class="node-layer nl-top">顶层</span></div>
+      <div class="node-desc">这个 SKU 进上海 · 第一年覆盖多少门店 · 多少营收 · 什么心智</div>
+    </div>
+    <div class="node">
+      <div class="node-num">02</div>
+      <div class="node-name">SKU 生命周期阶段<span class="node-layer nl-top">顶层→中层</span></div>
+      <div class="node-desc">这个 SKU 现在在导入/成长/成熟? 决定用哪套标准</div>
+    </div>
+    <div class="node">
+      <div class="node-num">03</div>
+      <div class="node-name">城市区域推进路径<span class="node-layer nl-mid">中层·起搏器</span></div>
+      <div class="node-desc">1 区域点亮 → 3-5 区域复制 → 全城覆盖 (第 8 引擎)</div>
+    </div>
+    <div class="node">
+      <div class="node-num">04</div>
+      <div class="node-name">阶段闸门指标<span class="node-layer nl-mid">中层·逻辑门</span></div>
+      <div class="node-desc">3 个月达标才能过闸 · 投资 60-80%→35-50%→25%</div>
+    </div>
+    <div class="node">
+      <div class="node-num">05</div>
+      <div class="node-name">门店级 SKU 状态信号<span class="node-layer nl-bot">底层·晶体管</span></div>
+      <div class="node-desc">是否上架/有货/陈列/动销/复购/毛利 · 6 个晶体管</div>
+    </div>
+    <div class="node node-output">
+      <div class="node-num">06 · 一线动作</div>
+      <div class="node-name">人员动作 + 资源投入<span class="node-layer nl-bot">底层·执行</span></div>
+      <div class="node-desc">美顾施加电压 → 晶体管导通 · 进货/陈列/试饮/补货</div>
+    </div>
+
+    <div class="turn">━━ ▲ 到此触底 · 信号开始向上反馈 ▲ ━━</div>
+
+    <div class="node">
+      <div class="node-num">07</div>
+      <div class="node-name">数据回传 (血液)<span class="node-layer nl-bot">底层→中层</span></div>
+      <div class="node-desc">上架率/动销率/补货率/复购率 · 喂养判断</div>
+    </div>
+    <div class="node">
+      <div class="node-num">08</div>
+      <div class="node-name">过闸判断<span class="node-layer nl-mid">中层·逻辑门</span></div>
+      <div class="node-desc">是否达标? 是否过闸? 是否纠偏? (AND/OR/NOT)</div>
+    </div>
+    <div class="node">
+      <div class="node-num">09</div>
+      <div class="node-name">投资调整<span class="node-layer nl-mid">中层·起搏器</span></div>
+      <div class="node-desc">达标→加投复制 · 漏电→降投 · 衰竭→退出</div>
+    </div>
+    <div class="node">
+      <div class="node-num">10</div>
+      <div class="node-name">复制扩张<span class="node-layer nl-mid">中层→顶层</span></div>
+      <div class="node-desc">打法可复制 → 进下一批区域 → 城市覆盖</div>
+    </div>
+    <div class="node node-strategy">
+      <div class="node-num">11 · 终点</div>
+      <div class="node-name">收入 / 利润 / 品牌资产<span class="node-layer nl-top">顶层</span></div>
+      <div class="node-desc">回到战略 · 北极星推进 · 形成下一轮目标</div>
+    </div>
+  </div>
+</div>
+
+<!-- 时钟金字塔 -->
+<div class="section">
+  <div class="section-num">SECTION 02 · THE CLOCK</div>
+  <div class="section-title section-zh">时钟金字塔 · 时间尺度咬合</div>
+  <div class="section-desc">三层不只是空间层级 · 更是时间尺度层级。快层喂慢层 · 慢层指导快层 · 不同心跳频率咬合 · 系统才"活"。</div>
+
+  <div class="clock-pyramid">
+    <div class="clock-layer cl-1">
+      <div class="clock-left">
+        <div class="clock-layer-name">L1 晶体管层</div>
+        <div class="clock-layer-role">SKU 状态采集 · 一线 App</div>
+      </div>
+      <div class="clock-freq">秒 / 天</div>
+    </div>
+    <div class="clock-layer cl-2">
+      <div class="clock-left">
+        <div class="clock-layer-name">L2 逻辑门层</div>
+        <div class="clock-layer-role">判断 · 价值/经营/周期门</div>
+      </div>
+      <div class="clock-freq">天 / 周</div>
+    </div>
+    <div class="clock-layer cl-3">
+      <div class="clock-left">
+        <div class="clock-layer-name">L3 电路层</div>
+        <div class="clock-layer-role">起搏器 · 阶段推进 · A值校准周一06:00</div>
+      </div>
+      <div class="clock-freq">月 / 季</div>
+    </div>
+    <div class="clock-layer cl-4">
+      <div class="clock-left">
+        <div class="clock-layer-name">L4 模块层</div>
+        <div class="clock-layer-role">生命周期管理 · 门店/渠道</div>
+      </div>
+      <div class="clock-freq">季 / 年</div>
+    </div>
+    <div class="clock-layer cl-5">
+      <div class="clock-left">
+        <div class="clock-layer-name">L5 芯片层</div>
+        <div class="clock-layer-role">战略演化 · 北极星 · 全国复制</div>
+      </div>
+      <div class="clock-freq">年</div>
+    </div>
+  </div>
+
+  <div class="clock-note">
+    <b>为什么这个重要</b><br>
+    · 一线 App 采集晶体管 → 必须<b>实时</b> (秒/天)<br>
+    · 派单 A 值校准周一 06:00 → <b>周期</b> (周/月)<br>
+    · 驾驶舱看北极星 → <b>长期</b> (年)<br><br>
+    用错时间尺度 = 灾难:<br>
+    · 战略天天改 (顶层用了底层频率) = 团队疲于奔命<br>
+    · 门店一年才看一次 (底层用了顶层频率) = 信号丢失
+  </div>
+</div>
+
+<!-- 信息脉络 -->
+<div class="section">
+  <div class="section-num">SECTION 03 · THE 4TH VEIN</div>
+  <div class="section-title section-zh">信息脉络 · 第 4 条脉络复活</div>
+  <div class="section-desc">4 脉络里 · 货/钱/人都有载体 · 唯独信息脉络"几乎完全缺失"。这条全链路信号流 · 就是信息脉络的载体。</div>
+
+  <div class="veins">
+    <div class="vein goods">
+      <div class="vein-name">① 货脉络</div>
+      <div class="vein-status vein-ok">✓ 有载体 (IPO0-13)</div>
+    </div>
+    <div class="vein cash">
+      <div class="vein-name">② 钱脉络</div>
+      <div class="vein-status vein-ok">✓ 有载体 (反向时滞)</div>
+    </div>
+    <div class="vein people">
+      <div class="vein-name">③ 人脉络</div>
+      <div class="vein-status vein-ok">✓ 有载体 (责任链+Uber)</div>
+    </div>
+    <div class="vein info">
+      <div class="vein-name">④ 信息脉络 ★</div>
+      <div class="vein-status vein-new">⚡ 本图 = 信息脉络载体 · 从缺失 → 复活</div>
+    </div>
+  </div>
+
+  <div class="clock-note" style="margin-top:14px;">
+    <b>信息脉络 = 自下而上的反馈链</b> (节点 07→11)<br>
+    门店状态信号 → 数据回传 → 过闸判断 → 投资调整 → 战略<br>
+    它一通 · 消费者端的变化才能传导到生产计划 (反向信号链)
+  </div>
+</div>
+
+<!-- 钢筋总结 -->
+<div class="steel-box">
+  <div class="steel-title">🔩 钢筋 · 为什么不会再卡住</div>
+  <div class="steel-row">
+    过去 = 砖(晶体管) + 墙(引擎) + 楼顶(驾驶舱) · <b>但没钢筋</b><br>
+    → 一震就裂 (48 个整合问题) · 信号传不通 (卡住)<br><br>
+    现在 = <b>双向信号流 + 时钟金字塔</b> 贯穿三层<br>
+    → 改任一层 · 立刻看到上下游<br>
+    → 不会再"改一处坏一片"<br>
+    → 不会再"战略落不了地 / 信号上不去"
+  </div>
+</div>
+
+<!-- 链接 -->
+<div class="section" style="border-bottom:none;">
+  <div class="section-num">NAVIGATION</div>
+  <div class="section-title section-zh">连接三层</div>
+  <div class="links">
+    <a href="index.html" class="link-cell"><b>🏛 主页</b><div class="ls">INFINITY OS 入口</div></a>
+    <a href="INFINITY_OS_SKU_Chip_Schema_v1.html" class="link-cell"><b>⚛️ 底层 Schema</b><div class="ls">晶体管+逻辑门</div></a>
+    <a href="middle_layer_engines.html" class="link-cell"><b>⚙️ 中层 8 引擎</b><div class="ls">含起搏器</div></a>
+    <a href="cockpit_L8_HQ.html" class="link-cell"><b>🟢 顶层驾驶舱</b><div class="ls">L8 王董</div></a>
+  </div>
+</div>
+
+<a href="index.html" class="back">← 返回 INFINITY OS 主页</a>
+
+<div class="footer">
+  INFINITY OS · 全链路信号流 · 三层钢筋 v1.0 · DS · 2026-05-22<br><br>
+  从"一堆漂亮的层" → "一个咬合的整体"<br>
+  · 双向信号流是钢筋 · 时钟金字塔是节拍 · 信息脉络是第 4 条血脉 ·<br>
+  Layer 1.3 演示态 · 跨层规范 · 待 TL 落地
+</div>
+
+</body>
+</html>

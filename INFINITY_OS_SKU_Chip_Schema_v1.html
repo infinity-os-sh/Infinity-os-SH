@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SKU 经营芯片模型 · 底层 Schema v1.0 · INFINITY OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0a0e0a;
+  --panel: #0f1410;
+  --panel2: #151b16;
+  --panel3: #1c241d;
+  --line: rgba(180,220,180,0.1);
+  --line2: rgba(180,220,180,0.2);
+  --paper: #e8ead8;
+  --paper2: #b8c4ad;
+  --paper3: #6b7864;
+  --silicon: #3ddc84;       /* 导通 · 绿 */
+  --silicon-dim: rgba(61,220,132,0.12);
+  --weak: #d4a843;          /* 弱电流 · 琥珀 */
+  --leak: #e07b39;          /* 漏电 · 橙 */
+  --short: #e54848;         /* 短路 · 红 */
+  --amp: #4db8ff;           /* 放大器 · 蓝 */
+  --off: #4a544a;           /* 关 · 灰 */
+  --gold: #c9a84a;
+  --purple: #b08fd8;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { background:var(--ink); color:var(--paper); font-family:'Noto Serif SC',serif; min-height:100vh; overflow-x:hidden; }
+body {
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(61,220,132,0.05), transparent 40%),
+    radial-gradient(circle at 88% 92%, rgba(77,184,255,0.04), transparent 45%),
+    repeating-linear-gradient(0deg, transparent, transparent 38px, rgba(180,220,180,0.012) 38px, rgba(180,220,180,0.012) 39px);
+}
+@media (min-width:780px){ body{ max-width:760px; margin:0 auto; border-left:1px solid var(--line); border-right:1px solid var(--line);} }
+
+.wafer-badge { background:linear-gradient(90deg, rgba(61,220,132,0.12), transparent); border-bottom:1px solid var(--line2); color:var(--silicon); font-size:11px; padding:7px 18px; font-family:'JetBrains Mono',monospace; letter-spacing:0.04em; }
+
+/* HERO */
+.hero { padding:40px 22px 30px; border-bottom:1px solid var(--line); position:relative; overflow:hidden; }
+.hero::before { content:'⚛'; position:absolute; top:-30px; right:-10px; font-size:180px; opacity:0.04; color:var(--silicon); }
+.hero-kicker { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--silicon); letter-spacing:0.25em; text-transform:uppercase; margin-bottom:14px; }
+.hero-title { font-family:'Fraunces',serif; font-weight:900; font-size:38px; line-height:1.05; letter-spacing:-0.01em; margin-bottom:6px; }
+.hero-title .cn { font-family:'Noto Serif SC',serif; }
+.hero-sub { font-size:13px; color:var(--paper3); font-family:'JetBrains Mono',monospace; margin-top:10px; }
+.hero-version { display:inline-block; margin-top:16px; padding:5px 12px; border:1px solid var(--line2); border-radius:2px; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--paper2); }
+
+/* 一句话定义 */
+.definition { margin:22px; padding:24px; background:linear-gradient(135deg, var(--panel2), var(--panel)); border:1px solid var(--line2); border-left:3px solid var(--silicon); position:relative; }
+.definition-label { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--silicon); letter-spacing:0.15em; margin-bottom:14px; }
+.definition-body { font-size:16px; line-height:2.1; font-weight:500; }
+.definition-body .key { color:var(--silicon); font-weight:700; border-bottom:1px solid rgba(61,220,132,0.3); }
+
+/* Section */
+.section { padding:30px 22px; border-bottom:1px solid var(--line); }
+.section-num { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--paper3); letter-spacing:0.1em; }
+.section-title { font-family:'Fraunces',serif; font-weight:700; font-size:25px; margin:6px 0 4px; }
+.section-zh { font-family:'Noto Serif SC',serif; }
+.section-desc { font-size:13px; color:var(--paper2); line-height:1.7; margin-bottom:20px; }
+
+/* 五层塔 */
+.tower { display:flex; flex-direction:column; gap:3px; }
+.tower-layer { padding:16px 18px; border:1px solid var(--line2); position:relative; transition:all 0.3s; cursor:default; display:flex; align-items:center; gap:16px; }
+.tower-layer:hover { transform:translateX(4px); }
+.tl-5 { background:linear-gradient(90deg, rgba(201,168,74,0.1), var(--panel)); border-left:3px solid var(--gold); }
+.tl-4 { background:linear-gradient(90deg, rgba(176,143,216,0.08), var(--panel)); border-left:3px solid var(--purple); margin:0 5px; }
+.tl-3 { background:linear-gradient(90deg, rgba(77,184,255,0.08), var(--panel)); border-left:3px solid var(--amp); margin:0 10px; }
+.tl-2 { background:linear-gradient(90deg, rgba(212,168,67,0.08), var(--panel)); border-left:3px solid var(--weak); margin:0 15px; }
+.tl-1 { background:linear-gradient(90deg, rgba(61,220,132,0.1), var(--panel)); border-left:3px solid var(--silicon); margin:0 20px; }
+.tl-code { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; width:34px; flex-shrink:0; }
+.tl-5 .tl-code{color:var(--gold);} .tl-4 .tl-code{color:var(--purple);} .tl-3 .tl-code{color:var(--amp);} .tl-2 .tl-code{color:var(--weak);} .tl-1 .tl-code{color:var(--silicon);}
+.tl-body { flex:1; }
+.tl-name { font-size:15px; font-weight:700; margin-bottom:2px; }
+.tl-detail { font-size:11px; color:var(--paper3); font-family:'JetBrains Mono',monospace; }
+.tower-arrow { text-align:center; color:var(--paper3); font-size:14px; padding:2px; }
+
+/* 晶体管定义公式 */
+.formula { margin:18px 0; padding:20px; background:var(--ink); border:1px dashed var(--line2); text-align:center; font-family:'JetBrains Mono',monospace; }
+.formula-main { font-size:15px; color:var(--silicon); font-weight:700; line-height:1.8; }
+.formula-eq { color:var(--paper2); font-size:13px; margin-top:10px; }
+
+/* 状态点网格 */
+.states-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+@media (max-width:560px){ .states-grid{ grid-template-columns:1fr; } }
+.state-card { padding:14px 16px; background:var(--panel2); border:1px solid var(--line); position:relative; }
+.state-num { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--paper3); }
+.state-q { font-size:14px; font-weight:600; margin:4px 0 8px; }
+.state-switch { display:inline-block; padding:3px 10px; border-radius:2px; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; }
+.sw-onoff { background:var(--silicon-dim); color:var(--silicon); border:1px solid rgba(61,220,132,0.3); }
+.sw-strong { background:rgba(212,168,67,0.12); color:var(--weak); border:1px solid rgba(212,168,67,0.3); }
+
+/* 电流状态表 */
+.current-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
+.current-table th { text-align:left; padding:10px 12px; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--paper3); letter-spacing:0.1em; border-bottom:1px solid var(--line2); text-transform:uppercase; }
+.current-table td { padding:11px 12px; border-bottom:1px solid var(--line); }
+.current-table tr:last-child td { border-bottom:none; }
+.ct-state { font-weight:600; }
+.ct-lang { font-family:'JetBrains Mono',monospace; font-size:12px; }
+.dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:8px; vertical-align:middle; }
+.d-off{background:var(--off);} .d-noflow{background:var(--off);box-shadow:0 0 0 2px rgba(74,84,74,0.3);} .d-weak{background:var(--weak);} .d-strong{background:var(--silicon);box-shadow:0 0 6px var(--silicon);} .d-leak{background:var(--leak);} .d-short{background:var(--short);box-shadow:0 0 6px var(--short);} .d-amp{background:var(--amp);box-shadow:0 0 6px var(--amp);}
+
+/* 逻辑门 */
+.gate-type { margin-bottom:16px; padding:16px 18px; background:var(--panel2); border:1px solid var(--line); border-left:3px solid var(--line2); }
+.gate-type.value { border-left-color:var(--purple); }
+.gate-type.ops { border-left-color:var(--amp); }
+.gate-type.lifecycle { border-left-color:var(--silicon); }
+.gate-cat { font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.1em; margin-bottom:8px; }
+.gate-type.value .gate-cat{color:var(--purple);} .gate-type.ops .gate-cat{color:var(--amp);} .gate-type.lifecycle .gate-cat{color:var(--silicon);}
+.gate-q { font-size:12px; color:var(--paper2); margin-bottom:10px; font-style:italic; }
+.gate-formula { font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.9; color:var(--paper2); background:var(--ink); padding:10px 12px; border-radius:2px; }
+.gate-formula .op { color:var(--amp); font-weight:700; }
+.gate-formula .result { color:var(--silicon); font-weight:700; }
+
+/* 经营门清单 */
+.ops-gate { padding:12px 14px; border:1px solid var(--line); margin-bottom:8px; background:var(--panel); }
+.ops-gate-name { font-size:13px; font-weight:700; color:var(--amp); margin-bottom:6px; }
+.ops-gate-logic { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--paper2); line-height:1.7; }
+.ops-gate-logic .and { color:var(--amp); }
+
+/* 生命周期 */
+.lifecycle-flow { display:flex; align-items:center; gap:4px; margin:16px 0; overflow-x:auto; padding-bottom:8px; }
+.lc-stage { flex-shrink:0; padding:8px 12px; border:1px solid var(--line2); border-radius:2px; font-size:12px; font-weight:600; white-space:nowrap; }
+.lc-arrow { color:var(--paper3); flex-shrink:0; }
+.lc-import{ color:var(--silicon); border-color:rgba(61,220,132,0.3);}
+.lc-grow{ color:var(--amp); border-color:rgba(77,184,255,0.3);}
+.lc-mature{ color:var(--gold); border-color:rgba(201,168,74,0.3);}
+.lc-decline{ color:var(--leak); border-color:rgba(224,123,57,0.3);}
+.lc-renew{ color:var(--purple); border-color:rgba(176,143,216,0.3);}
+.lc-exit{ color:var(--paper3); border-color:var(--line2);}
+
+.lc-detail { margin-bottom:10px; padding:14px 16px; background:var(--panel2); border:1px solid var(--line); }
+.lc-detail-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.lc-detail-name { font-size:14px; font-weight:700; }
+.lc-detail-goal { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--paper3); }
+.lc-detail-gate { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--paper2); line-height:1.7; }
+
+/* 生命力 */
+.vitality-formula { padding:18px; background:var(--ink); border:1px dashed var(--line2); font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.9; color:var(--paper2); text-align:center; margin-bottom:16px; }
+.vitality-formula .v { color:var(--silicon); font-weight:700; }
+.grade-row { display:flex; align-items:center; gap:12px; padding:10px 14px; border:1px solid var(--line); margin-bottom:6px; background:var(--panel); }
+.grade-badge { font-family:'Fraunces',serif; font-weight:900; font-size:22px; width:36px; text-align:center; flex-shrink:0; }
+.g-s{color:var(--silicon);} .g-a{color:var(--amp);} .g-b{color:var(--gold);} .g-c{color:var(--leak);} .g-d{color:var(--short);}
+.grade-info { flex:1; }
+.grade-mean { font-size:13px; font-weight:600; }
+.grade-action { font-size:11px; color:var(--paper3); font-family:'JetBrains Mono',monospace; margin-top:2px; }
+
+/* 整合关系 */
+.integ { padding:14px 16px; background:var(--panel2); border:1px solid var(--line); margin-bottom:8px; }
+.integ-head { font-size:13px; font-weight:700; color:var(--silicon); margin-bottom:6px; }
+.integ-body { font-size:12px; color:var(--paper2); line-height:1.7; }
+.integ-body b { color:var(--paper); }
+
+/* 数据字段 */
+.schema-block { background:var(--ink); border:1px solid var(--line2); border-radius:3px; padding:16px; font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.8; overflow-x:auto; }
+.schema-block .comment { color:var(--paper3); }
+.schema-block .key { color:var(--amp); }
+.schema-block .type { color:var(--weak); }
+.schema-block .val { color:var(--silicon); }
+
+/* 链接 */
+.links { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
+.link-cell { padding:12px; background:var(--panel2); border:1px solid var(--line); text-decoration:none; color:var(--paper); font-size:12px; transition:all 0.2s; }
+.link-cell:hover { border-color:var(--line2); background:var(--panel3); }
+.link-cell b { color:var(--silicon); }
+.link-cell .lc-sub { font-size:10px; color:var(--paper3); font-family:'JetBrains Mono',monospace; margin-top:3px; }
+
+.footer { padding:30px 22px 44px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--paper3); line-height:1.8; }
+.back-home { display:inline-flex; align-items:center; gap:8px; margin:20px 22px 0; padding:10px 16px; background:var(--panel2); border:1px solid var(--line2); color:var(--paper); text-decoration:none; font-size:13px; font-family:'JetBrains Mono',monospace; }
+.back-home:hover { border-color:var(--silicon); color:var(--silicon); }
+</style>
+</head>
+<body>
+
+<div class="wafer-badge">⚛ INFINITY OS · 底层 Schema · LAYER 1.3 演示态 · 经营芯片基础规范</div>
+
+<div class="hero">
+  <div class="hero-kicker">Foundation Schema · Bottom Layer</div>
+  <div class="hero-title"><span class="cn">SKU 经营芯片模型</span></div>
+  <div class="hero-title" style="font-size:20px; color:var(--paper3); font-weight:500;">SKU-Based Business Chip Model</div>
+  <div class="hero-sub">// 不是管理 SKU · 而是管理一颗由千万级状态信号组成的经营芯片</div>
+  <div class="hero-version">v1.1 · 2026-05-22 · DS · 价值门补三维+组合门</div>
+</div>
+
+<!-- 最强定义 -->
+<div class="definition">
+  <div class="definition-label">CANONICAL DEFINITION · 最强定义</div>
+  <div class="definition-body">
+    以 <span class="key">SKU</span> 为核心 ·
+    以 <span class="key">SKU 状态点</span> 为晶体管 ·
+    以 <span class="key">生命周期标准</span> 为逻辑门 ·
+    以 <span class="key">经营 SOP 与算法</span> 为电路 ·
+    以 <span class="key">公司经营系统</span> 为芯片。
+  </div>
+</div>
+
+<!-- 五层架构 -->
+<div class="section">
+  <div class="section-num">SECTION 01</div>
+  <div class="section-title section-zh">五层架构 · The Five Layers</div>
+  <div class="section-desc">从最小状态信号 · 到公司经营操作系统 · 严格的层级组合 · 不是随意堆砌。</div>
+
+  <div class="tower">
+    <div class="tower-layer tl-5">
+      <div class="tl-code">L5</div>
+      <div class="tl-body">
+        <div class="tl-name">芯片层 · 公司经营系统</div>
+        <div class="tl-detail">INFINITY OS / 产品经营芯片</div>
+      </div>
+    </div>
+    <div class="tower-arrow">▲</div>
+    <div class="tower-layer tl-4">
+      <div class="tl-code">L4</div>
+      <div class="tl-body">
+        <div class="tl-name">模块层 · 经营模块</div>
+        <div class="tl-detail">生命周期管理 / 门店运营 / 渠道货盘</div>
+      </div>
+    </div>
+    <div class="tower-arrow">▲</div>
+    <div class="tower-layer tl-3">
+      <div class="tl-code">L3</div>
+      <div class="tl-body">
+        <div class="tl-name">电路层 · SOP 与算法</div>
+        <div class="tl-detail">补货 SOP / 新品导入 SOP / 淘汰 SOP</div>
+      </div>
+    </div>
+    <div class="tower-arrow">▲</div>
+    <div class="tower-layer tl-2">
+      <div class="tl-code">L2</div>
+      <div class="tl-body">
+        <div class="tl-name">逻辑门层 · 判断规则</div>
+        <div class="tl-detail">价值门 / 经营门 / 生命周期门</div>
+      </div>
+    </div>
+    <div class="tower-arrow">▲</div>
+    <div class="tower-layer tl-1">
+      <div class="tl-code">L1</div>
+      <div class="tl-body">
+        <div class="tl-name">晶体管层 · SKU 状态点</div>
+        <div class="tl-detail">是否上架 / 是否有货 / 是否动销 ...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- L1 晶体管层 -->
+<div class="section">
+  <div class="section-num">SECTION 02 · LAYER 1</div>
+  <div class="section-title section-zh">晶体管层 · SKU 状态点</div>
+  <div class="section-desc">晶体管不是 SKU 本身（太静态）· 而是 SKU 在具体场景中的<b>状态</b>。这才有"开/关/强/弱"。</div>
+
+  <div class="formula">
+    <div class="formula-main">SKU × 门店 × 时间 × 生命周期阶段 × 状态</div>
+    <div class="formula-eq">= 一个经营晶体管</div>
+  </div>
+
+  <div class="states-grid">
+    <div class="state-card">
+      <div class="state-num">TR-01</div>
+      <div class="state-q">是否上架?</div>
+      <span class="state-switch sw-onoff">ON / OFF</span>
+    </div>
+    <div class="state-card">
+      <div class="state-num">TR-02</div>
+      <div class="state-q">是否有货?</div>
+      <span class="state-switch sw-onoff">ON / OFF</span>
+    </div>
+    <div class="state-card">
+      <div class="state-num">TR-03</div>
+      <div class="state-q">陈列是否达标?</div>
+      <span class="state-switch sw-strong">强 / 弱</span>
+    </div>
+    <div class="state-card">
+      <div class="state-num">TR-04</div>
+      <div class="state-q">是否动销?</div>
+      <span class="state-switch sw-onoff">ON / OFF</span>
+    </div>
+    <div class="state-card">
+      <div class="state-num">TR-05</div>
+      <div class="state-q">是否复购?</div>
+      <span class="state-switch sw-onoff">ON / OFF</span>
+    </div>
+    <div class="state-card">
+      <div class="state-num">TR-06</div>
+      <div class="state-q">毛利是否达标?</div>
+      <span class="state-switch sw-strong">强 / 弱</span>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;">
+    <div class="section-num" style="margin-bottom:10px;">晶体管语言 · 7 种电流状态</div>
+    <table class="current-table">
+      <thead><tr><th>经营状态</th><th>晶体管语言</th></tr></thead>
+      <tbody>
+        <tr><td class="ct-state">未上架</td><td class="ct-lang"><span class="dot d-off"></span>OFF · 关</td></tr>
+        <tr><td class="ct-state">已上架但无动销</td><td class="ct-lang"><span class="dot d-noflow"></span>接入但无电流</td></tr>
+        <tr><td class="ct-state">有动销但弱</td><td class="ct-lang"><span class="dot d-weak"></span>弱电流</td></tr>
+        <tr><td class="ct-state">动销强 · 补货快</td><td class="ct-lang"><span class="dot d-strong"></span>强电流</td></tr>
+        <tr><td class="ct-state">高投入无产出</td><td class="ct-lang"><span class="dot d-leak"></span>漏电 ⚠</td></tr>
+        <tr><td class="ct-state">价格乱 · 库存乱</td><td class="ct-lang"><span class="dot d-short"></span>短路 🔥</td></tr>
+        <tr><td class="ct-state">带动系列增长</td><td class="ct-lang"><span class="dot d-amp"></span>放大器 ★</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- L2 逻辑门层 -->
+<div class="section">
+  <div class="section-num">SECTION 03 · LAYER 2</div>
+  <div class="section-title section-zh">逻辑门层 · 三类判断门</div>
+  <div class="section-desc">单个晶体管只是状态 · 多个状态组合判断才产生意义。逻辑门有三类：为谁创造价值（WHY）· 是否触发动作（WHETHER）· 什么阶段判断（WHEN）。</div>
+
+  <div class="gate-type value">
+    <div class="gate-cat">A 类 · 价值门 · WHY · 三维 × 四角色</div>
+    <div class="gate-q">这个状态点 · 对谁创造什么价值? (商业/能力/人文 三维都要算)</div>
+    <div class="gate-formula" style="margin-bottom:12px;">
+      <span class="op">关键:</span> 只算商业 = 管理工具 (一线抵触)<br>
+      <span class="op">三维都算:</span> = 价值放大平台 (一线愿用)
+    </div>
+
+    <table class="current-table" style="margin-top:6px;">
+      <thead><tr><th>角色</th><th>商业 (利益)</th><th>能力 (成长)</th><th>人文 (意义)</th></tr></thead>
+      <tbody>
+        <tr><td class="ct-state">品牌商</td><td style="font-size:11px;color:var(--paper2);">营收/份额/北极星</td><td style="font-size:11px;color:var(--amp);">品牌资产/数据/定价权</td><td style="font-size:11px;color:var(--purple);">让中国家庭吃好酱油</td></tr>
+        <tr><td class="ct-state">消费者</td><td style="font-size:11px;color:var(--paper2);">花对钱/性价比</td><td style="font-size:11px;color:var(--amp);">做好菜/健康选择</td><td style="font-size:11px;color:var(--purple);">家人健康/对家的爱</td></tr>
+        <tr><td class="ct-state">零售商</td><td style="font-size:11px;color:var(--paper2);">坪效/毛利/周转</td><td style="font-size:11px;color:var(--amp);">品类管理力/客流</td><td style="font-size:11px;color:var(--purple);">社区好货/口碑</td></tr>
+        <tr><td class="ct-state">经销商</td><td style="font-size:11px;color:var(--paper2);">差价/回款/周转</td><td style="font-size:11px;color:var(--amp);">渠道掌控/覆盖力</td><td style="font-size:11px;color:var(--purple);">养活团队/长期信任</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="gate-type value" style="border-left-color:var(--gold);">
+    <div class="gate-cat" style="color:var(--gold);">A+ 类 · 组合价值门 · 揭示商业模式本质</div>
+    <div class="gate-q">两个/三个角色组合 · 产生的协同价值 (1+1&gt;2)?</div>
+    <div class="gate-formula">
+      <span class="op">双角色门 (6 个):</span><br>
+      品牌×消费 = 品牌信任门 (AIQL 路径)<br>
+      品牌×经销 = <span class="result">合伙人门 ★ Constitution 核心</span><br>
+      经销×消费 = <span class="result">最后一公里门 ★ 美顾价值</span><br>
+      品牌×零售 / 零售×消费 / 经销×零售<br><br>
+      <span class="op">三角门 (2 个):</span><br>
+      品牌×零售×消费 = <span class="result">P1 直供闭环门</span><br>
+      品牌×经销×消费 = <span class="result">P2 分销闭环门</span><br><br>
+      <span class="op">好决策 = 让所有门同时为正 (正和博弈)</span>
+    </div>
+  </div>
+
+  <div class="gate-type ops">
+    <div class="gate-cat">B 类 · 经营门 · WHETHER · AND/OR/NOT/IF-THEN</div>
+    <div class="gate-q">这个状态 · 是否达到下一步动作条件?</div>
+    <div class="gate-formula">
+      <span class="op">AND</span> 门: 全满足才进下一步 (加预算/评样板)<br>
+      <span class="op">OR</span> 门: 满足其一就触发 (补货/异常预警)<br>
+      <span class="op">NOT</span> 门: 不达标就纠偏 (陈列整改/价格稽核)<br>
+      <span class="op">IF-THEN</span> 门: 某组合就执行 (智能补货)
+    </div>
+  </div>
+
+  <div class="gate-type lifecycle">
+    <div class="gate-cat">C 类 · 生命周期门 · WHEN</div>
+    <div class="gate-q">同一状态点 · 不同阶段 · 判断标准不同?</div>
+    <div class="gate-formula">
+      导入期看生命信号 · 成长期看放大能力<br>
+      成熟期看收入利润 · 衰退期看资源占用<br>
+      <span class="result">生命周期决定判断标准</span>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;">
+    <div class="section-num" style="margin-bottom:10px;">经营门清单 · 5 个核心</div>
+
+    <div class="ops-gate">
+      <div class="ops-gate-name">有效上架门</div>
+      <div class="ops-gate-logic">有条码 <span class="and">AND</span> 有库存 <span class="and">AND</span> 有货架位 <span class="and">AND</span> 有价签</div>
+    </div>
+    <div class="ops-gate">
+      <div class="ops-gate-name">有效陈列门</div>
+      <div class="ops-gate-logic">主货架达标 <span class="and">AND</span> 第二陈列达标 <span class="and">AND</span> 价格正确 <span class="and">AND</span> 消费者看得到</div>
+    </div>
+    <div class="ops-gate">
+      <div class="ops-gate-name">有效动销门</div>
+      <div class="ops-gate-logic">有销售 <span class="and">AND</span> 非一次性压货 <span class="and">AND</span> 非异常促销 <span class="and">AND</span> 可持续补货</div>
+    </div>
+    <div class="ops-gate">
+      <div class="ops-gate-name">有效投入门 ★ 防乱投关键</div>
+      <div class="ops-gate-logic">门店等级达标 <span class="and">AND</span> SKU 阶段对 <span class="and">AND</span> 人群匹配 <span class="and">AND</span> 履约达标 <span class="and">AND</span> 可追踪</div>
+    </div>
+    <div class="ops-gate">
+      <div class="ops-gate-name">有效补货门</div>
+      <div class="ops-gate-logic">库存低于安全线 <span class="and">OR</span> 动销加速 <span class="and">OR</span> 活动临近 <span class="and">OR</span> 战略门店要求</div>
+    </div>
+  </div>
+</div>
+
+<!-- 生命周期 -->
+<div class="section">
+  <div class="section-num">SECTION 04 · LIFECYCLE</div>
+  <div class="section-title section-zh">生命周期 · 6 阶段 × 阶段逻辑门</div>
+  <div class="section-desc">SKU 是生命体。同一 SKU 在不同阶段 · 不能用同一把尺子评价。生命周期决定判断标准 · 逻辑门决定资源去向。</div>
+
+  <div class="lifecycle-flow">
+    <span class="lc-stage lc-import">导入期</span>
+    <span class="lc-arrow">→</span>
+    <span class="lc-stage lc-grow">成长期</span>
+    <span class="lc-arrow">→</span>
+    <span class="lc-stage lc-mature">成熟期</span>
+    <span class="lc-arrow">→</span>
+    <span class="lc-stage lc-decline">衰退期</span>
+    <span class="lc-arrow">→</span>
+    <span class="lc-stage lc-renew">焕新期</span>
+    <span class="lc-arrow">/</span>
+    <span class="lc-stage lc-exit">淘汰期</span>
+  </div>
+
+  <div class="lc-detail">
+    <div class="lc-detail-head"><div class="lc-detail-name" style="color:var(--silicon)">导入期 · 生命信号门</div><div class="lc-detail-goal">验证市场接受度</div></div>
+    <div class="lc-detail-gate">上架 AND 首购 AND 正反馈 AND 初步动销 AND 价格可接受 = 继续培育</div>
+  </div>
+  <div class="lc-detail">
+    <div class="lc-detail-head"><div class="lc-detail-name" style="color:var(--amp)">成长期 · 放大门</div><div class="lc-detail-goal">快速放大渗透</div></div>
+    <div class="lc-detail-gate">动销增长 AND 补货加快 AND 复购出现 AND 陈列可复制 = 加大投入</div>
+  </div>
+  <div class="lc-detail">
+    <div class="lc-detail-head"><div class="lc-detail-name" style="color:var(--gold)">成熟期 · 现金流门</div><div class="lc-detail-goal">稳定收入利润</div></div>
+    <div class="lc-detail-gate">收入稳 AND 毛利达标 AND 周转健康 AND 价格秩序稳 = 核心现金流 SKU</div>
+  </div>
+  <div class="lc-detail">
+    <div class="lc-detail-head"><div class="lc-detail-name" style="color:var(--leak)">衰退期 · 保留/淘汰门</div><div class="lc-detail-goal">控制投入</div></div>
+    <div class="lc-detail-gate">动销降 AND 毛利降 AND 无战略 = 淘汰 · 但有防御价值 = 低投入保留</div>
+  </div>
+  <div class="lc-detail">
+    <div class="lc-detail-head"><div class="lc-detail-name" style="color:var(--purple)">焕新期 · 重启门</div><div class="lc-detail-goal">重新激活</div></div>
+    <div class="lc-detail-gate">品牌信任在 AND 品类需求在 AND 可重塑 AND 渠道愿推 = 焕新重启</div>
+  </div>
+  <div class="lc-detail">
+    <div class="lc-detail-head"><div class="lc-detail-name" style="color:var(--paper3)">淘汰期 · 退出门</div><div class="lc-detail-goal">清退释放资源</div></div>
+    <div class="lc-detail-gate">停止新增投入 · 清库存 · 替换 · 释放组织注意力</div>
+  </div>
+</div>
+
+<!-- 生命力 -->
+<div class="section">
+  <div class="section-num">SECTION 05 · VITALITY</div>
+  <div class="section-title section-zh">SKU 生命力 · 7 维度 × 5 等级</div>
+  <div class="section-desc">生命力不是单一销量 · 而是综合指数。它决定一个 SKU 该被加资源还是被淘汰。</div>
+
+  <div class="vitality-formula">
+    <span class="v">SKU 生命力</span> = 阶段匹配度 × 动销能力 × 利润能力<br>
+    × 复购能力 × 渠道适配力 × 品牌资产力 × 投入产出效率
+  </div>
+
+  <div class="grade-row">
+    <div class="grade-badge g-s">S</div>
+    <div class="grade-info"><div class="grade-mean">强生命力</div><div class="grade-action">加资源 · 复制 · 做样板</div></div>
+  </div>
+  <div class="grade-row">
+    <div class="grade-badge g-a">A</div>
+    <div class="grade-info"><div class="grade-mean">成长生命力</div><div class="grade-action">继续培育 · 扩大覆盖</div></div>
+  </div>
+  <div class="grade-row">
+    <div class="grade-badge g-b">B</div>
+    <div class="grade-info"><div class="grade-mean">稳定生命力</div><div class="grade-action">稳定经营 · 控制投入</div></div>
+  </div>
+  <div class="grade-row">
+    <div class="grade-badge g-c">C</div>
+    <div class="grade-info"><div class="grade-mean">弱生命力</div><div class="grade-action">纠偏 · 观察 · 限制投入</div></div>
+  </div>
+  <div class="grade-row">
+    <div class="grade-badge g-d">D</div>
+    <div class="grade-info"><div class="grade-mean">低生命力</div><div class="grade-action">清退 · 替换 · 停止投入</div></div>
+  </div>
+</div>
+
+<!-- 整合 -->
+<div class="section">
+  <div class="section-num">SECTION 06 · INTEGRATION</div>
+  <div class="section-title section-zh">与 INFINITY OS 已有体系整合</div>
+  <div class="section-desc">这个底层 Schema 不是另起炉灶 · 而是把已有体系统一到晶体管模型之下。</div>
+
+  <div class="integ">
+    <div class="integ-head">↔ 与 SKU 6 卡的关系</div>
+    <div class="integ-body">SKU 6 卡（角色/阶段/目标/投入/产出/退出）在 <b>L4 模块层</b>。它是晶体管 + 逻辑门<b>组合</b>出来的"功能单元"。本 Schema 是它<b>之下</b>的更细颗粒。</div>
+  </div>
+  <div class="integ">
+    <div class="integ-head">↔ 与心跳 a/r/T 的关系</div>
+    <div class="integ-body">r/a/T 是"是否动销"晶体管的<b>电流读数</b>（血液）· 用来喂养判断。数据不是晶体管 · 数据是流过晶体管的营养。</div>
+  </div>
+  <div class="integ">
+    <div class="integ-head">↔ 与 98 交叉点 / IPO0-13 的关系</div>
+    <div class="integ-body">每个交叉点（SKU × 渠道 × 节点）= 一组晶体管的<b>位置</b>。IPO8 拜访 / IPO9 陈列 / IPO10 动销 = 三组晶体管信号。</div>
+  </div>
+  <div class="integ">
+    <div class="integ-head">↔ 与决策日志的关系</div>
+    <div class="integ-body">决策日志的 affected_skus 本质是在算"这个决策让哪些晶体管的价值门 + · 哪些 −"。决策日志 = 逻辑门输出的记录。</div>
+  </div>
+</div>
+
+<!-- 数据字段 -->
+<div class="section">
+  <div class="section-num">SECTION 07 · DATA SCHEMA</div>
+  <div class="section-title section-zh">晶体管数据字段 · 给 TL 建表用</div>
+  <div class="section-desc">让模型可落地 · 不停留在比喻。这是后端建表的字段定义参考。</div>
+
+  <div class="schema-block">
+<span class="comment">// 一个经营晶体管 = 一行记录</span><br>
+<span class="key">transistor_id</span>: <span class="type">string</span>  <span class="comment">// sku × store × date × state_type</span><br>
+<span class="key">sku_id</span>: <span class="type">string</span>      <span class="comment">// 六月鲜380ml</span><br>
+<span class="key">store_id</span>: <span class="type">string</span>    <span class="comment">// 大润发沪西</span><br>
+<span class="key">date</span>: <span class="type">date</span><br>
+<span class="key">lifecycle_stage</span>: <span class="type">enum</span> <span class="comment">// 导入/成长/成熟/衰退/焕新/淘汰</span><br>
+<span class="key">state_type</span>: <span class="type">enum</span>   <span class="comment">// 上架/有货/陈列/动销/复购/毛利</span><br>
+<span class="key">state_value</span>: <span class="type">enum</span>  <span class="comment">// OFF/弱/强/漏电/短路/放大器</span><br>
+<span class="key">r_value</span>: <span class="type">float</span>     <span class="comment">// 电流读数(血液) · 日销率</span><br>
+<span class="key">vitality_grade</span>: <span class="type">enum</span> <span class="comment">// S/A/B/C/D</span><br>
+<span class="key">controlled_by</span>: <span class="type">string</span> <span class="comment">// 哪个美顾施加电压</span>
+  </div>
+</div>
+
+<!-- 链接 -->
+<div class="section">
+  <div class="section-num">SECTION 08 · NAVIGATION</div>
+  <div class="section-title section-zh">连接 INFINITY OS 全栈</div>
+  <div class="links">
+    <a href="index.html" class="link-cell"><b>🏛 主页</b><div class="lc-sub">INFINITY OS 入口</div></a>
+    <a href="sku_6cards_v2.html" class="link-cell"><b>📇 SKU 6 卡</b><div class="lc-sub">L4 模块层 · 功能单元</div></a>
+    <a href="middle_layer_engines.html" class="link-cell"><b>⚙️ 7 引擎</b><div class="lc-sub">L3-L4 · 电路/模块</div></a>
+    <a href="decision_log_v2.html" class="link-cell"><b>📝 决策日志</b><div class="lc-sub">逻辑门输出记录</div></a>
+  </div>
+</div>
+
+<a href="index.html" class="back-home">← 返回 INFINITY OS 主页</a>
+
+<div class="footer">
+  INFINITY OS · SKU 经营芯片模型 · 底层 Schema v1.1<br>
+  SKU-Based Business Chip Model · DS · 2026-05-22<br><br>
+  生命周期决定判断标准 · 逻辑门决定资源去向 · 经营电路决定 SKU 生命力<br>
+  · 不是管理 SKU · 而是管理一颗经营芯片 ·<br>
+  Layer 1.3 演示态 · 规范定义 · 待 TL 落地建表
+</div>
+
+</body>
+</html>
