@@ -1907,32 +1907,24 @@ body.bf-active .main{top:120px !important;transition:top 0.3s}
       <div class="recog-row"><span>数量盘点</span><em id="xdSopVlCount" style="color:var(--green)">30 瓶 · 94% 精度</em></div>
     </div>
 
-    <!-- 手填生产日期(阶段1) -->
+    <!-- 手填生产日期(阶段1·屏4同款·动态渲染该位识别的SKU) -->
     <div class="manual-date-form">
       <div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        📝 请手填生产日期 <span class="photo-archive-tag">📸 同时存档训练 AI</span>
+        📝 请手填生产日期
+        <span class="photo-archive-tag">📸 同时存档训练 AI</span>
+        <span class="photo-archive-tag" style="background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.25);color:var(--purple)">🔍 每个 SKU 独立扫码</span>
       </div>
-      <div class="sku-block">
-        <div class="sku-block-hdr">
-          <div class="sku-block-name">六月鲜380ml <span class="sku-tag" id="xdSopSkuTag">此位 18 瓶</span></div>
-          <div class="sku-block-actions"><button class="sku-scan-btn" onclick="xdFlash('🔍 扫码·演示')">🔍 扫码</button></div>
-        </div>
-        <div class="batch-row">
-          <span class="batch-row-num">1</span>
-          <input class="batch-input" type="number" placeholder="数量" min="1" max="999">
-          <span class="batch-sep">·</span>
-          <input class="batch-input" type="number" placeholder="YY" min="24" max="30">
-          <span class="batch-sep">/</span>
-          <input class="batch-input" type="number" placeholder="MM" min="1" max="12">
-          <span class="batch-sep">/</span>
-          <input class="batch-input" type="number" placeholder="DD" min="1" max="31">
-        </div>
+      <div style="font-size:11px;color:var(--purple);background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);padding:8px 10px;border-radius:8px;margin-bottom:8px;line-height:1.5">
+        <strong>🔍 每个 SKU 独立扫码 (一瓶一码)</strong><br>
+        <span style="font-size:10px;color:var(--t2)">紫色 [🔍 扫码] = 一物一码可扫·灰色 [⌨ 手填] = 非一物一码需手填</span>
       </div>
+      <!-- 动态SKU块·JS用屏4同款模板填充 -->
+      <div id="xdSopDateBlocks"></div>
     </div>
 
     <div class="photo-actions" style="margin-top:8px">
       <button class="big-btn green" onclick="xdSopDateDone()" style="margin:0;flex:2">✓ 完成 · <span id="xdSopNextLabel">下一个</span> →</button>
-      <button class="big-btn dim" onclick="xdSopDateDone()" style="margin:0;flex:1;font-size:12px">→ 跳过日期</button>
+      <button class="big-btn dim" onclick="xdSopDateDone(true)" style="margin:0;flex:1;font-size:12px">→ 跳过日期</button>
     </div>
   </div>
 
@@ -6542,7 +6534,10 @@ function completeWarehouseInput(){
 const SKU_CONFIG = {
   1: {name: '极鲜 500ml', total: 36, isUniCode: true},   // 一物一码
   2: {name: '极鲜 280ml', total: 24, isUniCode: false},  // 非一物一码
-  3: {name: '禾然有机',   total: 36, isUniCode: true}     // 一物一码
+  3: {name: '禾然有机',   total: 36, isUniCode: true},    // 一物一码
+  // v6.7.11 · 加的陈列位SKU(键101+·与主货架1/2/3隔离·扫码复用)
+  101: {name: '六月鲜380ml', total: 30, isUniCode: true},
+  102: {name: '六月鲜·红烧专用', total: 20, isUniCode: true}
 };
 
 // V5.1 · 加一批次
@@ -6808,6 +6803,13 @@ function mockShelfScanSkuSuccess(){
     ],
     3: [
       {q: 12, y: 26, m: 3, d: 20}
+    ],
+    101: [
+      {q: 18, y: 26, m: 3, d: 12},
+      {q: 12, y: 26, m: 4, d: 8}
+    ],
+    102: [
+      {q: 20, y: 26, m: 3, d: 18}
     ]
   };
   const batches = skuShelfMockMap[sku] || [{q: 24, y: 26, m: 3, d: 1}];
@@ -7502,8 +7504,10 @@ function xdSopRender(){
 }
 function xdSopTake(){
   // 演示(Layer1.3):拍照=模拟·点了直接进识别+日期屏·不依赖系统相机回调(iPad可能不触发)
-  var sku = Math.floor(Math.random()*3)+2, qty = Math.floor(Math.random()*40)+10;
-  xdExtraPos[xdSopIdx].shot = { sku: sku, qty: qty };
+  var qty = Math.floor(Math.random()*40)+10;
+  // 该位识别出的SKU(数量由位类型决定·识别数=实际渲染块数·保持一致)
+  var posSkus = xdSopPosSkus(xdExtraPos[xdSopIdx].name, qty);
+  xdExtraPos[xdSopIdx].shot = { sku: posSkus.length, qty: qty, skus: posSkus };
   // 同时尝试调真相机存档(不阻塞流程·成功失败都已进识别屏)
   try{
     var input = document.getElementById('xdSopCamera');
@@ -7515,7 +7519,7 @@ function xdSopTake(){
     }
     input.value=''; input.click();
   }catch(e){}
-  xdSopShowDate(sku, qty);   // 关键:点拍照立即进识别+日期屏(和主货架一样)
+  xdSopShowDate(posSkus.length, qty);   // 识别数=SKU块数·一致
 }
 function xdSopSkip(){ xdSopNext(); }   // 整个位跳过(连拍带日期)
 // 拍完 → 识别+手填生产日期屏(遵守3阶段·阶段1手填)
@@ -7527,14 +7531,71 @@ function xdSopShowDate(sku, qty){
   set('xdSopDateCount', 'SOP '+sopNum+' / '+total);
   set('xdSopVlSku', sku+' SKU · '+(85+Math.floor(Math.random()*6))+'% 精度');
   set('xdSopVlCount', qty+' 瓶 · '+(93+Math.floor(Math.random()*5))+'% 精度');
-  set('xdSopSkuTag', '此位 '+qty+' 瓶');
   set('xdSopNextLabel', (xdSopIdx+1 < xdExtraPos.length) ? '下一个' : '看反馈');
   var bar = document.getElementById('xdSopDateBar');
   if(bar) bar.style.width = Math.round((sopNum/total)*100)+'%';
+  // 渲染该位识别的SKU块 = 屏4一字不差同款模板 + 复用原生 addShelfBatch/openShelfScanSku
+  // 用xdSopTake已识别的SKU(不重算·保证识别数=块数一致)
+  var posSkus = (p.shot && p.shot.skus) ? p.shot.skus : xdSopPosSkus(p.name, qty);
+  p.skus = posSkus;
+  var box = document.getElementById('xdSopDateBlocks');
+  if(box){
+    box.innerHTML = posSkus.map(function(s){
+      var k = s.cfgKey;  // 101/102...
+      var cfg = SKU_CONFIG[k];
+      var scanBtn = cfg.isUniCode
+        ? '<button class="sku-scan-btn" id="shelfScanBtn'+k+'" onclick="openShelfScanSku('+k+')">🔍 扫码</button>'
+        : '<button class="sku-scan-btn manual" disabled>⌨ 手填</button>';
+      return ''
+        + '<div class="sku-block" id="shelfBlock'+k+'">'
+        +   '<div class="sku-block-hdr">'
+        +     '<div class="sku-block-name">'+s.name+' <span class="sku-tag">此位 '+s.qty+' 瓶</span></div>'
+        +     '<div class="sku-block-actions">'+scanBtn+'</div>'
+        +   '</div>'
+        +   '<div id="shelfBatchList'+k+'">'
+        +     '<div class="batch-row" data-shelf-sku="'+k+'" data-batch="1">'
+        +       '<span class="batch-row-num">1</span>'
+        +       '<input class="batch-input" type="number" placeholder="数量" min="1" max="999" id="d'+k+'q1">'
+        +       '<span class="batch-sep">·</span>'
+        +       '<input class="batch-input" type="number" placeholder="YY" min="24" max="30" id="d'+k+'y">'
+        +       '<span class="batch-sep">/</span>'
+        +       '<input class="batch-input" type="number" placeholder="MM" min="1" max="12" id="d'+k+'m">'
+        +       '<span class="batch-sep">/</span>'
+        +       '<input class="batch-input" type="number" placeholder="DD" min="1" max="31" id="d'+k+'d">'
+        +     '</div>'
+        +   '</div>'
+        +   '<button class="batch-add" onclick="addShelfBatch('+k+')">+ 加批次 <span class="batch-add-hint">此位同 SKU 不同批</span></button>'
+        + '</div>';
+    }).join('');
+  }
   goScreen('-xdsop-date');
 }
+// 加的位 → 该位识别出的SKU(演示层·按位类型给主力SKU·真实层由INF-VL识别)
+function xdSopPosSkus(posName, qty){
+  if(posName.indexOf('肉柜')>=0) return [{cfgKey:102, name:'六月鲜·红烧专用', qty:qty}];
+  return [{cfgKey:101, name:'六月鲜380ml', qty:qty}];  // 蔬菜/端架/堆头等默认主力
+}
 // 日期填完(或跳过日期)→ 下一个SOP / 全拍完去屏6
-function xdSopDateDone(){ xdFlash('✅ '+xdExtraPos[xdSopIdx].name+' 完成'); xdSopNext(); }
+function xdSopDateDone(skip){
+  var p = xdExtraPos[xdSopIdx];
+  // 收集该位每个SKU的日期(和主货架completeDateInput同逻辑·遍历动态SKU不写死i<=3)
+  if(!skip && p.skus){
+    var dates = [], allFilled = true;
+    p.skus.forEach(function(s){
+      var k = s.cfgKey;
+      var y = (document.getElementById('d'+k+'y')||{}).value;
+      var m = (document.getElementById('d'+k+'m')||{}).value;
+      var d = (document.getElementById('d'+k+'d')||{}).value;
+      if(!y || !m || !d) allFilled = false;
+      dates.push({sku:s.name, y:y, m:m, d:d});
+    });
+    p.dates = dates;
+    if(!allFilled){
+      if(!confirm('生产日期未填全·继续吗?\n\n(实际场景必须填全·此处为演示宽松)')) return;
+    }
+  }
+  xdFlash('✅ '+p.name+' 完成'); xdSopNext();
+}
 function xdSopNext(){
   xdSopIdx++;
   if(xdSopIdx < xdExtraPos.length){
