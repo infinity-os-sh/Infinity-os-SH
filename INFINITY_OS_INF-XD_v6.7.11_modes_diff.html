@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>INFINITY OS · INF-XD v6.7.11-fix5 · 现场盘点 (后仓拍照留屏·完成才进SOP)</title>
+<title>INFINITY OS · INF-XD v6.7.11-fix6 · 现场盘点 (去confirm卡顿·按钮文案·多SKU)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1841,7 +1841,7 @@ body.bf-active .main{top:120px !important;transition:top 0.3s}
     
     <!-- 底部双按钮 -->
     <div class="photo-actions" style="margin-top:8px">
-      <button class="big-btn green" onclick="completeWarehouseInput()" style="margin:0;flex:2">✓ 完成 · 看反馈 →</button>
+      <button class="big-btn green" id="warehouseNextBtn" onclick="completeWarehouseInput()" style="margin:0;flex:2">✓ 完成 · 看反馈 →</button>
       <button class="big-btn dim" onclick="skipPhoto(2)" style="margin:0;flex:1;font-size:12px">→ 跳过</button>
     </div>
   </div>
@@ -6259,6 +6259,13 @@ function goScreen(n){
     } else {
       toggleBfDemoSwitcher(false);
     }
+    // v6.7.11-fix6 · 进后仓屏5·若有加的陈列位·完成按钮文案改"下一个"
+    if(n===5){
+      var wbtn = document.getElementById('warehouseNextBtn');
+      if(wbtn && typeof xdExtraPos !== 'undefined'){
+        wbtn.innerHTML = xdExtraPos.length>0 ? '✓ 完成 · 下一个 →' : '✓ 完成 · 看反馈 →';
+      }
+    }
     
     // V6.7 · 主管巡店中·更新 banner + 注入提示卡
     if(typeof onScreenChange === 'function') onScreenChange();
@@ -6514,11 +6521,7 @@ function completeWarehouseInput(){
   }
   
   if(allBatches.length === 0){
-    const ok = confirm('后仓批次未填·继续吗?\n\n(演示宽松·实际场景必须填)');
-    if(!ok) return;
-  } else if(!allValid){
-    const ok = confirm('部分批次未填全·或合计不匹配·继续吗?\n\n点 [是] 继续 · [否] 留下修正');
-    if(!ok) return;
+    console.log('[fix6] 后仓批次未填·演示宽松直接走(不弹confirm·避免iPad点击不灵敏)');
   }
   
   State.warehouseBatches = allBatches;
@@ -7568,8 +7571,11 @@ function xdSopShowDate(sku, qty){
 }
 // 加的位 → 该位识别出的SKU(演示层·按位类型给主力SKU·真实层由INF-VL识别)
 function xdSopPosSkus(posName, qty){
+  // 加的位识别出的SKU(演示层·按位类型给合理SKU·真实层由INF-VL识别)
   if(posName.indexOf('肉柜')>=0) return [{cfgKey:102, name:'六月鲜·红烧专用', qty:qty}];
-  return [{cfgKey:101, name:'六月鲜380ml', qty:qty}];  // 蔬菜/端架/堆头等默认主力
+  if(posName.indexOf('火锅')>=0) return [{cfgKey:101, name:'六月鲜380ml', qty:Math.ceil(qty*0.6)},{cfgKey:102, name:'六月鲜·红烧专用', qty:Math.floor(qty*0.4)}];
+  if(posName.indexOf('端架')>=0 || posName.indexOf('堆头')>=0) return [{cfgKey:101, name:'六月鲜380ml', qty:Math.ceil(qty*0.7)},{cfgKey:102, name:'六月鲜·红烧专用', qty:Math.floor(qty*0.3)}];
+  return [{cfgKey:101, name:'六月鲜380ml', qty:qty}];  // 蔬菜/收银台/冷冻等·单主力SKU(正常·该位通常只摆1个主力)
 }
 // 日期填完(或跳过日期)→ 下一个SOP / 全拍完去屏6
 function xdSopDateDone(skip){
@@ -7586,9 +7592,7 @@ function xdSopDateDone(skip){
       dates.push({sku:s.name, y:y, m:m, d:d});
     });
     p.dates = dates;
-    if(!allFilled){
-      if(!confirm('生产日期未填全·继续吗?\n\n(实际场景必须填全·此处为演示宽松)')) return;
-    }
+    // 演示层·日期没填全也直接走(不弹confirm·避免不灵敏)
   }
   xdFlash('✅ '+p.name+' 完成'); xdSopNext();
 }
