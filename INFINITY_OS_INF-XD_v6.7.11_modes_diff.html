@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>INFINITY OS · INF-XD v6.7.11-fix7 · 现场盘点 (全流程零confirm·扫码1行)</title>
+<title>INFINITY OS · INF-XD v6.7.11-fix8 · 现场盘点 (加位对齐主货架·消除误触·阶段可切)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1846,7 +1846,7 @@ body.bf-active .main{top:120px !important;transition:top 0.3s}
     </div>
   </div>
 
-  <!-- ─────── 屏 xdSOP · 动态陈列位拍摄(v6.7.11·加的位排进SOP) ─────── -->
+  <!-- ─────── 屏 xdSOP · 动态陈列位拍摄(v6.7.11·对齐主货架s3) ─────── -->
   <div class="screen" id="s-xdsop">
     <div class="progress">
       <span class="progress-step" id="xdSopStep">T2 · 极简模式</span>
@@ -1854,12 +1854,14 @@ body.bf-active .main{top:120px !important;transition:top 0.3s}
     </div>
     <div class="progress-bar"><div class="progress-fill" id="xdSopBar" style="width:80%"></div></div>
     <div class="big-title" style="font-size:15px">SOP <span id="xdSopNum">3</span> · 拍 <span id="xdSopName" style="color:var(--amber)">蔬菜区</span></div>
-    <div class="big-sub">请对准 <strong id="xdSopName2" style="color:var(--amber)">蔬菜区</strong> · 拍完 INF-VL 识别 SKU + 数量</div>
-    <div class="photo-area" id="xdSopPhotoArea" onclick="xdSopTake()">
+    <div class="big-sub">请对准 <strong id="xdSopName2" style="color:var(--amber)">蔬菜区</strong> · 拍完 INF-VL 识别 SKU + 数量 + 生产日期</div>
+    <!-- 拍照区·展示用(不可点·消除误触)·拍照只通过底部按钮 -->
+    <div class="photo-area" id="xdSopPhotoArea">
       <div class="photo-icon">📷</div>
-      <div class="photo-hint">点击 · 拍 [<span id="xdSopName3">蔬菜区</span>]</div>
-      <div class="photo-tip">本店选拍位 · 对准这个陈列位横向拍全</div>
+      <div class="photo-hint">点下方按钮 · 拍 [<span id="xdSopName3">蔬菜区</span>]</div>
+      <div class="photo-tip">对准这个陈列位 · 横向拍全 · 涵盖六月鲜所有排面</div>
     </div>
+    <!-- 底部双按钮(和主货架s3一致·唯一拍照入口) -->
     <div class="photo-actions">
       <button class="big-btn amber" onclick="xdSopTake()" style="margin:0;flex:2">📷 拍 <span id="xdSopName4">蔬菜区</span></button>
       <button class="big-btn dim" onclick="xdSopSkip()" style="margin:0;flex:1;font-size:12px">→ 跳过</button>
@@ -1874,18 +1876,18 @@ body.bf-active .main{top:120px !important;transition:top 0.3s}
     </div>
     <div class="progress-bar"><div class="progress-fill" id="xdSopDateBar" style="width:85%"></div></div>
 
-    <!-- 阶段切换器(与主货架同·DS演示用) -->
+    <!-- 阶段切换器(与主货架同·可点击切换) -->
     <div class="stage-switcher">
       <span class="stage-switcher-label">📅 识别阶段</span>
-      <button class="stage-btn active">阶段1·手填</button>
-      <button class="stage-btn">阶段2·AI辅助</button>
-      <button class="stage-btn">阶段3·AI主导</button>
+      <button class="stage-btn active" id="xdStageBtn1" onclick="xdSopSwitchStage(1)">阶段1·手填</button>
+      <button class="stage-btn" id="xdStageBtn2" onclick="xdSopSwitchStage(2)">阶段2·AI辅助</button>
+      <button class="stage-btn" id="xdStageBtn3" onclick="xdSopSwitchStage(3)">阶段3·AI主导</button>
     </div>
-    <div class="stage-info s1">
-      <span class="stage-info-icon">⚠</span>
+    <div class="stage-info s1" id="xdStageInfo">
+      <span class="stage-info-icon" id="xdStageIcon">⚠</span>
       <div>
-        <div class="stage-info-title">当前阶段 1 · INF-VL 训练中</div>
-        <div class="stage-info-desc">SKU + 数量已成熟·生产日期请手填 + 拍照存档(后续 AI 自动识别)</div>
+        <div class="stage-info-title" id="xdStageTitle">当前阶段 1 · INF-VL 训练中</div>
+        <div class="stage-info-desc" id="xdStageDesc">SKU + 数量已成熟·生产日期请手填 + 拍照存档(后续 AI 自动识别)</div>
       </div>
     </div>
 
@@ -7519,6 +7521,17 @@ function xdSopTake(){
   xdSopShowDate(posSkus.length, qty);   // 识别数=SKU块数·一致
 }
 function xdSopSkip(){ xdSopNext(); }   // 整个位跳过(连拍带日期)
+// 加位阶段切换(对齐主货架switchStage·自包含)
+function xdSopSwitchStage(n){
+  for(var i=1;i<=3;i++){ var b=document.getElementById('xdStageBtn'+i); if(b) b.classList.toggle('active', i===n); }
+  var info=document.getElementById('xdStageInfo'), ic=document.getElementById('xdStageIcon'),
+      ti=document.getElementById('xdStageTitle'), de=document.getElementById('xdStageDesc');
+  if(!info) return;
+  info.classList.remove('s1','s2','s3'); info.classList.add('s'+n);
+  if(n===1){ ic.textContent='⚠'; ti.textContent='当前阶段 1 · INF-VL 训练中'; de.textContent='SKU + 数量已成熟·生产日期请手填 + 拍照存档(后续 AI 自动识别)'; }
+  else if(n===2){ ic.textContent='🤖'; ti.textContent='阶段 2 · AI 辅助识别'; de.textContent='AI 给出候选日期·美顾确认/修正·修正反训练 AI(TL上线后6个月)'; }
+  else { ic.textContent='✨'; ti.textContent='阶段 3 · AI 主导识别'; de.textContent='AI 自动识别≥95%·低于80%才人工复核(12-18个月后)'; }
+}
 // 拍完 → 识别+手填生产日期屏(遵守3阶段·阶段1手填)
 function xdSopShowDate(sku, qty){
   var p = xdExtraPos[xdSopIdx];
