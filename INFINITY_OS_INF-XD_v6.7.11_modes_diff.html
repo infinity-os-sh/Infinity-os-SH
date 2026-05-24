@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>INFINITY OS · INF-XD v6.7.11-fix12 · 现场盘点 (签退清空防串店·全边界无误)</title>
+<title>INFINITY OS · INF-XD v6.7.11-fix15 · 现场盘点 (三屏+加SKU·扫码手输·一次记住)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1627,6 +1627,9 @@ body.bf-active .main{top:120px !important;transition:top 0.3s}
         </div>
         <button class="batch-add" onclick="addShelfBatch(3)" ontouchstart="this.style.opacity='0.7'" ontouchend="this.style.opacity='1'">+ 加批次 <span class="batch-add-hint">货架不同批</span></button>
       </div>
+      <!-- v6.7.11 · 主货架补录AI漏识别的SKU -->
+      <div id="xdAddedMain"></div>
+      <button class="batch-add" style="width:100%;margin-top:4px;border-style:dashed" onclick="xdAddSkuContext('main')">＋ 加 SKU <span class="batch-add-hint">AI 漏识别的·货架还有别的六月鲜</span></button>
     </div>
     
     <!-- 阶段 2 · AI 候选 + 美顾确认 -->
@@ -1836,6 +1839,9 @@ body.bf-active .main{top:120px !important;transition:top 0.3s}
       
       <div style="font-size:9px;color:var(--t3);margin-top:4px;padding:0 2px;line-height:1.5">💡 一物一码 SKU 可扫码自动填·非一物一码需手填</div>
     </div>
+    <!-- v6.7.11 · 后仓补录AI漏识别的SKU -->
+    <div id="xdAddedWh"></div>
+    <button class="batch-add" style="width:100%;margin-top:4px;border-style:dashed" onclick="xdAddSkuContext('warehouse')">＋ 加 SKU <span class="batch-add-hint">AI 漏识别的·后仓还有别的六月鲜</span></button>
     
 <!-- V5.5 · scan-overlay 已移到 body 末尾 -->
     
@@ -1855,15 +1861,21 @@ body.bf-active .main{top:120px !important;transition:top 0.3s}
     <div class="progress-bar"><div class="progress-fill" id="xdSopBar" style="width:80%"></div></div>
     <div class="big-title" style="font-size:15px">SOP <span id="xdSopNum">3</span> · 拍 <span id="xdSopName" style="color:var(--amber)">蔬菜区</span></div>
     <div class="big-sub">请对准 <strong id="xdSopName2" style="color:var(--amber)">蔬菜区</strong> · 拍完 INF-VL 识别 SKU + 数量 + 生产日期</div>
-    <!-- 拍照区·展示用(不可点·消除误触)·拍照只通过底部按钮 -->
-    <div class="photo-area" id="xdSopPhotoArea">
+    <!-- 拍照区·和主货架s3完全一致:中间可点(短按拍·长按上报)·真调系统相机 -->
+    <div class="photo-area" id="xdSopPhotoArea"
+         ontouchstart="photoStart(event, 3)"
+         ontouchend="photoEnd(event, 3)"
+         ontouchcancel="photoEnd(event, 3)"
+         onmousedown="photoStart(event, 3)"
+         onmouseup="photoEnd(event, 3)"
+         onmouseleave="photoEnd(event, 3)">
       <div class="photo-icon">📷</div>
-      <div class="photo-hint">点下方按钮 · 拍 [<span id="xdSopName3">蔬菜区</span>]</div>
-      <div class="photo-tip">对准这个陈列位 · 横向拍全 · 涵盖六月鲜所有排面</div>
+      <div class="photo-hint">点击 · 拍 [<span id="xdSopName3">蔬菜区</span>]</div>
+      <div class="photo-tip">对准这个陈列位 · 横向拍全 · 涵盖六月鲜所有排面<br><br><em style="color:var(--amber);font-style:normal">💡 长按 = 上报异常</em></div>
     </div>
-    <!-- 底部双按钮(和主货架s3一致·唯一拍照入口) -->
+    <!-- 底部双按钮(和主货架s3一致) -->
     <div class="photo-actions">
-      <button class="big-btn amber" onclick="xdSopTake()" style="margin:0;flex:2">📷 拍 <span id="xdSopName4">蔬菜区</span></button>
+      <button class="big-btn amber" onclick="takePhoto(3)" style="margin:0;flex:2">📷 拍 <span id="xdSopName4">蔬菜区</span></button>
       <button class="big-btn dim" onclick="xdSopSkip()" style="margin:0;flex:1;font-size:12px">→ 跳过</button>
     </div>
   </div>
@@ -1920,6 +1932,8 @@ body.bf-active .main{top:120px !important;transition:top 0.3s}
       </div>
       <!-- 动态SKU块·JS用屏4同款模板填充 -->
       <div id="xdSopDateBlocks"></div>
+      <!-- v6.7.11 · 美顾补录AI漏识别的SKU(传感器纠正AI) -->
+      <button class="batch-add" style="width:100%;margin-top:4px;border-style:dashed" onclick="xdAddSkuContext('extra')">＋ 加 SKU <span class="batch-add-hint">AI 漏识别的·此位还有别的六月鲜</span></button>
     </div>
 
     <div class="photo-actions" style="margin-top:8px">
@@ -6285,7 +6299,9 @@ function goScreen(n){
       if(wbtn && typeof xdExtraPos !== 'undefined'){
         wbtn.innerHTML = xdExtraPos.length>0 ? '✓ 完成 · 下一个 →' : '✓ 完成 · 看反馈 →';
       }
+      if(typeof xdRenderAddedSkus==='function') xdRenderAddedSkus('warehouse');
     }
+    if(n===4 && typeof xdRenderAddedSkus==='function') xdRenderAddedSkus('main');
     
     // V6.7 · 主管巡店中·更新 banner + 注入提示卡
     if(typeof onScreenChange === 'function') onScreenChange();
@@ -6558,7 +6574,10 @@ const SKU_CONFIG = {
   3: {name: '禾然有机',   total: 36, isUniCode: true},    // 一物一码
   // v6.7.11 · 加的陈列位SKU(键101+·与主货架1/2/3隔离·扫码复用)
   101: {name: '六月鲜380ml', total: 13, isUniCode: true},
-  102: {name: '六月鲜·红烧专用', total: 20, isUniCode: true}
+  102: {name: '六月鲜·红烧专用', total: 20, isUniCode: true},
+  103: {name: '六月鲜500ml', total: 0, isUniCode: true},
+  104: {name: '六月鲜·特级1L', total: 0, isUniCode: true},
+  105: {name: '六月鲜·轻盐', total: 0, isUniCode: true}
 };
 
 // V5.1 · 加一批次
@@ -6968,7 +6987,7 @@ function takePhoto(stage){
           // 屏 4 显示真照片
           updatePhoto4Preview(State.photo1);
           goScreen(4);
-        } else {
+        } else if(stage === 2){
           State.photo2 = ev.target.result;
           // v6.7.11-fix5 · 后仓拍照后留屏5·不跳·让用户继续填批次/扫码·点"完成·看反馈"才走→才拦截进SOP
           var s5pa = document.querySelector('#s5 .photo-area');
@@ -6980,6 +6999,10 @@ function takePhoto(stage){
             if(s5t) s5t.innerHTML = '照片已存档训练库 · 填完批次点「完成·看反馈」';
           }
           // 不跳屏·留在屏5
+        } else if(stage === 3){
+          // v6.7.11 · 加位拍照=和主货架完全一致的真相机·拍完进识别屏
+          State.photoXd = ev.target.result;
+          if(typeof xdSopAfterPhoto === 'function') xdSopAfterPhoto();
         }
       };
       reader.readAsDataURL(file);
@@ -7375,7 +7398,7 @@ function finishVisit(){
     setTimeout(() => {
       State.butterflyShown = false;
       // v6.7.11 · 签退清空加的陈列位·防止带到下一家店
-      if(typeof xdExtraPos !== 'undefined'){ xdExtraPos = []; if(typeof xdRenderExtraPos==='function') try{xdRenderExtraPos();}catch(e){} }
+      if(typeof xdExtraPos !== 'undefined'){ xdExtraPos = []; if(typeof xdRenderExtraPos==='function') try{xdRenderExtraPos();}catch(e){} } if(typeof xdLearnedSkus !== 'undefined'){ xdLearnedSkus = {main:[],warehouse:[]}; }
       goScreen(1);
       // V6.7 · 切回主管视图
       applyRoleView(savedRole);
@@ -7388,7 +7411,7 @@ function finishVisit(){
   setTimeout(()=>{
     State.butterflyShown = false;
     // v6.7.11 · 签退清空加的陈列位·防止带到下一家店
-    if(typeof xdExtraPos !== 'undefined'){ xdExtraPos = []; if(typeof xdRenderExtraPos==='function') try{xdRenderExtraPos();}catch(e){} }
+    if(typeof xdExtraPos !== 'undefined'){ xdExtraPos = []; if(typeof xdRenderExtraPos==='function') try{xdRenderExtraPos();}catch(e){} } if(typeof xdLearnedSkus !== 'undefined'){ xdLearnedSkus = {main:[],warehouse:[]}; }
     bootApp();
   }, 1500);
 }
@@ -7544,7 +7567,11 @@ function xdSopRender(){
   if(pa) pa.classList.remove('taken');
 }
 function xdSopTake(){
-  // 演示(Layer1.3):拍照=模拟·点了直接进识别+日期屏·不弹系统相机(真机弹相机会和跳屏冲突)
+  // v6.7.11 · 加位拍照=和主货架完全一致·调真系统相机(takePhoto stage3)·拍完进识别屏
+  if(typeof takePhoto === 'function') takePhoto(3);
+}
+function xdSopAfterPhoto(){
+  // 拍照成功后处理:算识别结果+进识别屏
   // qty由该位SKU标准量决定(固定·非随机)·保证识别/SKU块/扫码三处数字一致
   var posSkus = xdSopPosSkus(xdExtraPos[xdSopIdx].name, 0);
   var totalQty = posSkus.reduce(function(s,x){return s+x.qty;}, 0);
@@ -7583,35 +7610,125 @@ function xdSopShowDate(sku, qty){
   p.skus = posSkus;
   var box = document.getElementById('xdSopDateBlocks');
   if(box){
-    box.innerHTML = posSkus.map(function(s){
-      var k = s.cfgKey;  // 101/102...
-      var cfg = SKU_CONFIG[k];
-      var scanBtn = cfg.isUniCode
-        ? '<button class="sku-scan-btn" id="shelfScanBtn'+k+'" onclick="openShelfScanSku('+k+')">🔍 扫码</button>'
-        : '<button class="sku-scan-btn manual" disabled>⌨ 手填</button>';
-      return ''
-        + '<div class="sku-block" id="shelfBlock'+k+'">'
-        +   '<div class="sku-block-hdr">'
-        +     '<div class="sku-block-name">'+s.name+' <span class="sku-tag">此位 '+s.qty+' 瓶</span></div>'
-        +     '<div class="sku-block-actions">'+scanBtn+'</div>'
-        +   '</div>'
-        +   '<div id="shelfBatchList'+k+'">'
-        +     '<div class="batch-row" data-shelf-sku="'+k+'" data-batch="1">'
-        +       '<span class="batch-row-num">1</span>'
-        +       '<input class="batch-input" type="number" placeholder="数量" min="1" max="999" id="d'+k+'q1">'
-        +       '<span class="batch-sep">·</span>'
-        +       '<input class="batch-input" type="number" placeholder="YY" min="24" max="30" id="d'+k+'y">'
-        +       '<span class="batch-sep">/</span>'
-        +       '<input class="batch-input" type="number" placeholder="MM" min="1" max="12" id="d'+k+'m">'
-        +       '<span class="batch-sep">/</span>'
-        +       '<input class="batch-input" type="number" placeholder="DD" min="1" max="31" id="d'+k+'d">'
-        +     '</div>'
-        +   '</div>'
-        +   '<button class="batch-add" onclick="addShelfBatch('+k+')">+ 加批次 <span class="batch-add-hint">此位同 SKU 不同批</span></button>'
-        + '</div>';
-    }).join('');
+    box.innerHTML = posSkus.map(function(s){ return xdSopSkuBlockHTML(s); }).join('');
   }
   goScreen('-xdsop-date');
+}
+// 单个SKU块HTML(屏4同款·xdSopShowDate和"+加SKU"共用)
+function xdSopSkuBlockHTML(s){
+  var k = s.cfgKey;
+  var cfg = SKU_CONFIG[k];
+  var scanBtn = (cfg && cfg.isUniCode)
+    ? '<button class="sku-scan-btn" id="shelfScanBtn'+k+'" onclick="openShelfScanSku('+k+')">🔍 扫码</button>'
+    : '<button class="sku-scan-btn manual" disabled>⌨ 手填</button>';
+  var qtyTag = (s.qty>0) ? '此位 '+s.qty+' 瓶' : '美顾补录';
+  return ''
+    + '<div class="sku-block" id="shelfBlock'+k+'">'
+    +   '<div class="sku-block-hdr">'
+    +     '<div class="sku-block-name">'+s.name+' <span class="sku-tag">'+qtyTag+'</span></div>'
+    +     '<div class="sku-block-actions">'+scanBtn+'</div>'
+    +   '</div>'
+    +   '<div id="shelfBatchList'+k+'">'
+    +     '<div class="batch-row" data-shelf-sku="'+k+'" data-batch="1">'
+    +       '<span class="batch-row-num">1</span>'
+    +       '<input class="batch-input" type="number" placeholder="数量" min="1" max="999" id="d'+k+'q1">'
+    +       '<span class="batch-sep">·</span>'
+    +       '<input class="batch-input" type="number" placeholder="YY" min="24" max="30" id="d'+k+'y">'
+    +       '<span class="batch-sep">/</span>'
+    +       '<input class="batch-input" type="number" placeholder="MM" min="1" max="12" id="d'+k+'m">'
+    +       '<span class="batch-sep">/</span>'
+    +       '<input class="batch-input" type="number" placeholder="DD" min="1" max="31" id="d'+k+'d">'
+    +     '</div>'
+    +   '</div>'
+    +   '<button class="batch-add" onclick="addShelfBatch('+k+')">+ 加批次 <span class="batch-add-hint">此位同 SKU 不同批</span></button>'
+    + '</div>';
+}
+// "+加SKU"·美顾补录AI漏识别的SKU(弹六月鲜列表·排除已在此位的)
+// ===== 通用"+加SKU"系统(主货架/后仓/加位共用·扫码+手输+快选·加一次记住) =====
+var xdLearnedSkus = { main:[], warehouse:[] };  // 本店已学习的额外SKU·演示会话内·真实持久化待TL后端
+var _xdSkuCtx = 'extra';
+var ADD_SKU_POOL = [101,102,103,104,105];  // 可补录的六月鲜系列
+function xdAddSkuContext(ctx){ _xdSkuCtx = ctx; xdSopOpenSkuPicker(); }
+function xdGetCtxSkus(ctx){
+  if(ctx==='extra'){ var p=xdExtraPos[xdSopIdx]; return (p&&p.shot&&p.shot.skus?p.shot.skus:[]).map(function(s){return s.cfgKey;}); }
+  return (xdLearnedSkus[ctx]||[]).map(function(s){return s.cfgKey;});
+}
+function xdSopOpenSkuPicker(){
+  var ctx=_xdSkuCtx;
+  var existing = xdGetCtxSkus(ctx);
+  var avail = ADD_SKU_POOL.filter(function(k){return existing.indexOf(k)<0;});
+  var m = document.getElementById('xdSkuPicker');
+  if(!m){
+    m = document.createElement('div'); m.id='xdSkuPicker';
+    m.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.66);backdrop-filter:blur(4px);display:flex;align-items:flex-end';
+    m.onclick=function(e){ if(e.target===m) xdSopCloseSkuPicker(); };
+    document.body.appendChild(m);
+  }
+  var quick = avail.map(function(k){ return '<div class="xd-pick" onclick="xdSopAddSku('+k+')">🧴 '+SKU_CONFIG[k].name+'</div>'; }).join('');
+  if(!quick) quick='<div style="grid-column:1/-1;text-align:center;color:var(--t3);font-size:12px;padding:10px">六月鲜系列都已在此 ✓</div>';
+  m.innerHTML='<div style="width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-top:1px solid var(--line2);border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:82vh;overflow-y:auto">'
+    +'<div style="text-align:center;margin-bottom:10px"><div style="width:36px;height:4px;background:var(--line2);border-radius:2px;margin:0 auto 12px"></div>'
+    +'<div style="font-size:15px;font-weight:700;color:var(--t1)">加 AI 漏识别的 SKU</div>'
+    +'<div style="font-size:11px;color:var(--t3);margin-top:3px">扫码 / 手输 / 快选 · 加一次系统记住·下次自动有</div></div>'
+    +'<button class="big-btn amber" style="margin:0 0 10px" onclick="xdScanSku()">📷 扫码识别 SKU</button>'
+    +'<div style="display:flex;gap:8px;margin-bottom:14px"><input id="xdSkuManualName" placeholder="或手动输入 SKU 名称" style="flex:1;padding:10px 12px;background:var(--bg);border:1px solid var(--line2);border-radius:10px;color:var(--t1);font-size:13px;box-sizing:border-box"><button class="big-btn dim" style="margin:0;flex:none;padding:0 18px" onclick="xdManualSku()">加</button></div>'
+    +'<div style="font-size:10px;color:var(--t3);margin-bottom:6px">常用六月鲜·点选:</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px">'+quick+'</div>'
+    +'<button class="big-btn dim" style="margin-top:16px" onclick="xdSopCloseSkuPicker()">取消</button></div>';
+  m.style.display='flex';
+}
+function xdSopCloseSkuPicker(){ var m=document.getElementById('xdSkuPicker'); if(m) m.style.display='none'; }
+function xdScanSku(){  // 扫码=演示模拟·扫到第一个还没加的六月鲜
+  var avail=ADD_SKU_POOL.filter(function(k){return xdGetCtxSkus(_xdSkuCtx).indexOf(k)<0;});
+  if(avail.length===0){ xdSopCloseSkuPicker(); if(typeof xdFlash==='function')xdFlash('六月鲜系列都已在此'); return; }
+  xdSopAddSku(avail[0]);
+}
+function xdManualSku(){
+  var i=document.getElementById('xdSkuManualName'); var name=i?i.value.trim():'';
+  if(name) xdSopAddSku(null, name);
+}
+function xdSopAddSku(cfgKey, customName){
+  var ctx=_xdSkuCtx;
+  var name = cfgKey ? SKU_CONFIG[cfgKey].name : customName;
+  if(ctx==='extra'){
+    var p = xdExtraPos[xdSopIdx]; if(!p || !p.shot){ xdSopCloseSkuPicker(); return; }
+    if(!p.shot.skus) p.shot.skus=[];
+    if(cfgKey && p.shot.skus.some(function(s){return s.cfgKey===cfgKey;})){ xdSopCloseSkuPicker(); return; }
+    var ns={cfgKey:cfgKey, name:name, qty:0, custom:!cfgKey};
+    p.shot.skus.push(ns); p.skus=p.shot.skus;
+    var box=document.getElementById('xdSopDateBlocks');
+    if(box) box.insertAdjacentHTML('beforeend', xdSopSkuBlockHTML(ns));
+    var vs=document.getElementById('xdSopVlSku'); if(vs) vs.textContent=p.shot.skus.length+' SKU · 含美顾补录';
+  } else {
+    if(!xdLearnedSkus[ctx]) xdLearnedSkus[ctx]=[];
+    if(cfgKey && xdLearnedSkus[ctx].some(function(s){return s.cfgKey===cfgKey;})){ xdSopCloseSkuPicker(); return; }
+    xdLearnedSkus[ctx].push({cfgKey:cfgKey, name:name, qty:0, custom:!cfgKey});
+    xdRenderAddedSkus(ctx);
+  }
+  xdSopCloseSkuPicker();
+  if(typeof xdFlash==='function') xdFlash('＋ '+name+' · 已记入本店清单·下次自动');
+}
+// 主货架/后仓·渲染补录SKU到独立容器(进屏自动调=体现"记住")
+function xdRenderAddedSkus(ctx){
+  var box=document.getElementById(ctx==='main'?'xdAddedMain':'xdAddedWh'); if(!box) return;
+  var list=xdLearnedSkus[ctx]||[];
+  if(list.length===0){ box.innerHTML=''; return; }
+  box.innerHTML = '<div style="font-size:10px;color:var(--purple);margin:8px 0 4px">✓ 美顾补录·系统已记住(下次自动·真实持久化待TL后端)</div>'
+    + list.map(function(s){
+      var id='as_'+ctx+'_'+(s.cfgKey||'c');
+      return '<div class="sku-block" id="'+id+'" style="border-color:rgba(167,139,250,0.3)">'
+        +'<div class="sku-block-hdr"><div class="sku-block-name">'+s.name+' <span class="sku-tag" style="background:rgba(167,139,250,0.12);border-color:rgba(167,139,250,0.3);color:var(--purple)">美顾补录·已记住</span></div>'
+        +'<div class="sku-block-actions"><button class="sku-scan-btn" style="background:rgba(255,95,95,0.1);border-color:rgba(255,95,95,0.3);color:var(--red)" onclick="xdRemoveAddedSku(\''+ctx+'\','+(s.cfgKey||"null")+')">✕</button></div></div>'
+        +'<div class="batch-row" style="margin-top:6px"><span class="batch-row-num">1</span>'
+        +'<input class="batch-input" type="number" placeholder="数量" min="1" max="999" id="'+id+'_q">'
+        +'<span class="batch-sep">·</span><input class="batch-input" type="number" placeholder="YY" id="'+id+'_y">'
+        +'<span class="batch-sep">/</span><input class="batch-input" type="number" placeholder="MM" id="'+id+'_m">'
+        +'<span class="batch-sep">/</span><input class="batch-input" type="number" placeholder="DD" id="'+id+'_d"></div></div>';
+    }).join('');
+}
+function xdRemoveAddedSku(ctx, cfgKey){
+  if(xdLearnedSkus[ctx]) xdLearnedSkus[ctx]=xdLearnedSkus[ctx].filter(function(s){return s.cfgKey!==cfgKey;});
+  xdRenderAddedSkus(ctx);
 }
 // 加的位 → 该位识别出的SKU(演示层·按位类型给主力SKU·真实层由INF-VL识别)
 function xdSopPosSkus(posName, _ignored){
