@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>INFINITY OS · ICA app V2.1 · 美顾·赵美玲 (强闭环·签退结算·去下一家陷阱·收入全联动)</title>
+<title>INFINITY OS · ICA app V2.1 · 美顾·赵美玲 (强闭环·进店精简头部·签退/退出恢复·按钮全可达)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -223,11 +223,11 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans SC',sans-serif
 </head>
 <body>
 
-<div class="plan-banner" style="background:linear-gradient(90deg,var(--amber),#ff7c38);color:#000">∞ INFINITY OS · ICA app V2.0 · 美顾=晶体管信号源 · 做这件事→SKU状态好→收入+¥</div>
+<div class="plan-banner" id="planBanner" style="background:linear-gradient(90deg,var(--amber),#ff7c38);color:#000">∞ INFINITY OS · ICA app V2.1 · 美顾=晶体管信号源 · 做这件事→SKU状态好→收入+¥</div>
 
 <!-- 永久顶栏·锚(同A·永远在) -->
 <div class="topbar">
-  <div class="tb-row1">
+  <div class="tb-row1" id="tbRow1">
     <div class="tb-id" onclick="go('cockpit',null)">
       <div class="tb-ava">👩‍🍳</div>
       <div>
@@ -241,7 +241,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans SC',sans-serif
     <div class="tb-m on" id="modeXM" onclick="switchMode('xm')">📱 路上</div>
     <div class="tb-m" id="modeXD" onclick="switchMode('xd')">🔧 店内 XD</div>
   </div>
-  <div class="tb-money">
+  <div class="tb-money" id="tbMoney">
     <span>今日已赚 <b id="tbTotal">¥386</b></span>
     <span class="t3" id="tbBreak">在手¥220 · 可抢¥249</span>
   </div>
@@ -328,7 +328,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans SC',sans-serif
     
   </div>
   <iframe id="xdFrame" src="INFINITY_OS_INF-XD_v6.7.11_modes_diff.html"
-    style="width:100%;height:calc(100vh - 175px);min-height:460px;border:none;display:block;background:#0d0f14"
+    style="width:100%;height:calc(100vh - 200px);min-height:520px;border:none;display:block;background:#0d0f14"
     title="INF-XD 现场盘点"></iframe>
   <div style="text-align:center;color:var(--txt3);font-size:10px;padding:6px 8px;background:var(--card2)">
     盘完在店内走到「✓本次拜访完成」(签退)→ 自动落袋回路上 · 中途退出此单不结算
@@ -639,6 +639,11 @@ function switchMode(mode){
   if(mode==='xm'&&tabs[0]) tabs[0].classList.add('on');
   if(mode==='xd'&&tabs[1]) tabs[1].classList.add('on');
   syncMode(mode);
+  // 根本修复·进店内XD精简头部(隐藏banner/用户行/收入条)·给iframe最大高度·避免INF-XD底部按钮被挤出
+  var inXD = (mode==='xd');
+  var pb=document.getElementById('planBanner'); if(pb) pb.style.display=inXD?'none':'';
+  var r1=document.getElementById('tbRow1'); if(r1) r1.style.display=inXD?'none':'';
+  var tm=document.getElementById('tbMoney'); if(tm) tm.style.display=inXD?'none':'';
   window.scrollTo(0,0);
 }
 // 顶栏模式高亮(只有路上/店内时高亮对应)
@@ -721,6 +726,8 @@ function xdGoInspect(id){
   // 抢的单→进店执行(INF-XD)·记住这单·签退后自动结算(Uber:送达=结算)
   S.activeJob = id;
   switchMode('xd');
+  // 每次进店都从打卡起点重新开始(不停在上次退出的屏·避免跨单串状态)
+  var f=document.getElementById('xdFrame'); if(f) f.src=f.src;
   toast('🔧 进店盘点中 · 拍货架/录库存/填日期 → 签退自动落袋');
 }
 // ②a 签退自动结算(Uber法则:盘点签退=送达=自动结算·不需点完成·防刷)
@@ -729,7 +736,7 @@ function settleJob(id){
   const t = S.prog.splice(i,1)[0];
   S.done += t.money; S.doneCount++; S.activeJob = null;
   renderProg(); refreshMoney('done');
-  const firstTab = document.querySelector('.tabbar .tab'); go('xm', firstTab);
+  switchMode('xm');  // 用switchMode·恢复被隐藏的头部(banner/收入条)
   toast(`💰 盘点签退·真实信号已发·自动落袋+¥${t.money} · 今日¥${S.done}`);
 }
 // 监听INF-XD签退(postMessage)→自动结算当前进店盘点的单
@@ -737,9 +744,8 @@ window.addEventListener('message', function(e){
   if(e && e.data && e.data.type==='xd_finish' && S.activeJob){ settleJob(S.activeJob); }
 });
 function xdBack(){
-  // 返回工作台 → 切回路上XM
-  const firstTab = document.querySelector('.tabbar .tab');
-  go('xm', firstTab);
+  // 中途退出 → 切回路上XM(用switchMode·恢复被隐藏的头部)
+  switchMode('xm');
   toast('‹ 中途退出 · 未签退 · 此单未结算·仍在进行中');
 }
 function xdNext(){
