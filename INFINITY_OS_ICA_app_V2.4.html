@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>INFINITY OS · ICA app V2.4 · 美顾·赵美玲 (看板→去救闭环·点救活直接抢对应单)</title>
+<title>INFINITY OS · ICA app V2.4 · 美顾·赵美玲 (看板→去救→救活后看板自洽·开关变ON生命力升)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -557,12 +557,12 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans SC',sans-serif
         <div class="skuv-states"><div class="skuv-sw on">上架<span class="sw-s">●</span></div><div class="skuv-sw on">有货<span class="sw-s">●</span></div><div class="skuv-sw on">陈列<span class="sw-s">●</span></div><div class="skuv-sw on">动销<span class="sw-s">●</span></div><div class="skuv-sw on">复购<span class="sw-s">●</span></div><div class="skuv-sw on">毛利<span class="sw-s">●</span></div></div>
         <div class="sku-rat">r=85/天 · 本月2550瓶 · ¥76.5k · 6状态全 ON · 维持即可</div>
       </div>
-      <div class="skuv weak">
+      <div class="skuv weak" id="skuvHeran">
         <div class="skuv-top"><div class="skuv-ic">🌿</div><div class="skuv-name">禾然 280ml · 试饮重点</div><div class="skuv-life lo">生命力 弱 48</div></div>
         <div class="skuv-states"><div class="skuv-sw on">上架<span class="sw-s">●</span></div><div class="skuv-sw off">有货<span class="sw-s">○</span></div><div class="skuv-sw off">陈列<span class="sw-s">○</span></div><div class="skuv-sw off">动销<span class="sw-s">○</span></div><div class="skuv-sw on">复购<span class="sw-s">●</span></div><div class="skuv-sw on">毛利<span class="sw-s">●</span></div></div>
         <div class="skuv-act"><span class="skuv-act-txt">⚡ 该救:有货/陈列/动销 3 开关 OFF</span><span class="skuv-act-money" onclick="rescueSku('g2')" style="cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:rgba(61,220,132,0.4)">救活 +¥150 →</span></div>
       </div>
-      <div class="skuv">
+      <div class="skuv" id="skuvWeida">
         <div class="skuv-top"><div class="skuv-ic">💰</div><div class="skuv-name">味达美 · 维持</div><div class="skuv-life mid">生命力 中 70</div></div>
         <div class="skuv-states"><div class="skuv-sw on">上架<span class="sw-s">●</span></div><div class="skuv-sw on">有货<span class="sw-s">●</span></div><div class="skuv-sw off">陈列<span class="sw-s">○</span></div><div class="skuv-sw on">动销<span class="sw-s">●</span></div><div class="skuv-sw on">复购<span class="sw-s">●</span></div><div class="skuv-sw on">毛利<span class="sw-s">●</span></div></div>
         <div class="skuv-act"><span class="skuv-act-txt">⚡ 该救:陈列 1 开关 OFF</span><span class="skuv-act-money" onclick="rescueSku('g3')" style="cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:rgba(61,220,132,0.4)">救活 +¥12 →</span></div>
@@ -646,8 +646,8 @@ const S = {
   // 抢单池
   pool: [
     {id:'g1', cls:'surge', tag:'×3.0 紧急 · 2:48', money:87, store:'步步高西郊店', desc:'极鲜500ml库存0.8a急需补陈列', signal:'极鲜500ml×西郊 · 陈列达标 OFF→ON'},
-    {id:'g2', cls:'', tag:'×2.0 高优 · 5:30', money:150, store:'步步高西郊店', desc:'5位消费者试吃·禾然推广', signal:'禾然×西郊 · 动销 弱→强'},
-    {id:'g3', cls:'', tag:'×1.0 普通 · 12:15', money:12, store:'步步高西郊店', desc:'味达美×4瓶补货', signal:'味达美×西郊 · 有货 OFF→ON'}
+    {id:'g2', cls:'', tag:'×2.0 高优 · 5:30', money:150, store:'步步高西郊店', desc:'5位消费者试吃·禾然推广', signal:'禾然×西郊 · 有货+陈列+动销 OFF→ON'},
+    {id:'g3', cls:'', tag:'×1.0 普通 · 12:15', money:12, store:'步步高西郊店', desc:'味达美×4瓶补货', signal:'味达美×西郊 · 陈列 OFF→ON'}
   ],
   // 陈列位(六月鲜380ml) - 动态
   positions: [
@@ -781,6 +781,7 @@ function settleJob(id){
   S.done += t.money; S.doneCount++; S.activeJob = null;
   // CB信用分微涨(完成单·真实信号→成长)
   S.cb = Math.round((( S.cb||4.78) + 0.02)*100)/100;
+  updateSkuBoard(id);  // 救活后·看板对应SKU开关变ON·生命力升·"该救"消失(闭环自洽)
   renderProg(); refreshMoney('done');
   showSettleSummary(t);  // Uber式·本单落袋小结(看钱+看改善的SKU状态)
 }
@@ -815,6 +816,24 @@ function showSettleSummary(t){
 function closeSettleSummary(){
   var m=document.getElementById('settleModal'); if(m) m.style.display='none';
   switchMode('xm');  // 回路上·恢复头部·接着抢下一单(Uber式·不打断节奏)
+}
+// 救活后·看板对应SKU的OFF开关变ON·生命力升·"该救"变"已救活"(闭环自洽·美顾救完看板真的变了)
+function updateSkuBoard(jobId){
+  var map = { g2:'skuvHeran', g3:'skuvWeida' };  // g2救禾然·g3救味达美
+  var cardId = map[jobId]; if(!cardId) return;
+  var card = document.getElementById(cardId); if(!card) return;
+  // 所有OFF开关变ON
+  card.querySelectorAll('.skuv-sw.off').forEach(function(sw){
+    sw.classList.remove('off'); sw.classList.add('on');
+    var s=sw.querySelector('.sw-s'); if(s) s.textContent='●';
+  });
+  card.classList.remove('weak');
+  // 生命力升为强·改文案
+  var life = card.querySelector('.skuv-life');
+  if(life){ life.className='skuv-life hi'; life.textContent='生命力 强 90 ✓救活'; }
+  // "该救"行→"已救活"
+  var act = card.querySelector('.skuv-act');
+  if(act){ act.innerHTML='<span style="color:var(--green);font-weight:700">✓ 已救活 · 6状态全 ON</span><span class="skuv-act-money">已落袋</span>'; }
 }
 // 监听INF-XD签退(postMessage)→自动结算当前进店盘点的单
 window.addEventListener('message', function(e){
