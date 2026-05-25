@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>INFINITY OS · INF-XD v6.7.11-fix28 · 现场盘点 (🦋效应小标·底部右角·展开往上弹不挡绿钮)</title>
+<title>INFINITY OS · INF-XD v6.7.11-fix29 · 现场盘点 (签退传真实盘点SKU清单回ICA·数据驱动看板)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -7465,8 +7465,23 @@ function finishVisit(){
   }
   
   alert('✓ 本次拜访完成\n\n贡献 92 瓶推单 ¥9,080\nincome_share 10% · 月底奖金结算\nCB 4.78 → 4.80\n\n切回 APP 模式 (T4 离店后)\n(美顾 v2.9 APP 模式由 INF-XD 嵌入框架对接)');
-  // v6.7.11 · 嵌入ICA时·签退→postMessage通知父窗口自动结算(Uber:送达=结算·不需点完成)
-  try{ if(window.parent && window.parent!==window) window.parent.postMessage({type:'xd_finish'}, '*'); }catch(e){}
+  // v6.7.11 · 嵌入ICA时·签退→postMessage传真实盘点数据(数据从INF-XD流回ICA看板)
+  try{
+    if(window.parent && window.parent!==window){
+      // 收集本次真实盘到的SKU(主货架shelfBlock1/2/3 + 补录)
+      var inspectedSkus = [];
+      try {
+        ['shelfBlock1','shelfBlock2','shelfBlock3'].forEach(function(bid){
+          var b=document.getElementById(bid);
+          if(b){ var nm=b.querySelector('.sku-block-name'); if(nm) inspectedSkus.push(nm.textContent.trim().split(' ')[0]); }
+        });
+        if(typeof xdLearnedSkus!=='undefined'){
+          (xdLearnedSkus.main||[]).forEach(function(s){ inspectedSkus.push((s.name||'').split(' ')[0]); });
+        }
+      } catch(e){}
+      window.parent.postMessage({type:'xd_finish', store:'步步高西郊店', skus:inspectedSkus, bottles:92}, '*');
+    }
+  }catch(e){}
   setTimeout(()=>{
     State.butterflyShown = false;
     // v6.7.11 · 签退清空加的陈列位·防止带到下一家店
