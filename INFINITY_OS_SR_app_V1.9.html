@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · SR 零售业代 V1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0f14; --bg2:#141821; --card:#1a1f2b; --card2:#222836;
+  --line:rgba(255,255,255,0.07); --line2:rgba(255,255,255,0.14);
+  --txt:#eef2f8; --txt2:#9aa5b8; --txt3:#5d6678; --txt3s:#6b7488;
+  --amber:#f5a623; --amber2:#ffce6b;
+  --green:#3ddc84; --red:#ff5f5f; --blue:#5d9cec; --purple:#a78bfa; --teal:#4ecdc4;
+  --blue-d:rgba(93,156,236,0.13); --green-d:rgba(61,220,132,0.1); --red-d:rgba(255,95,95,0.1); --amber-d:rgba(245,166,35,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);font-family:'Noto Sans SC',sans-serif;max-width:430px;margin:0 auto;padding-bottom:72px;min-height:100vh}
+
+/* 方案标识 */
+.plan-banner{background:linear-gradient(90deg,var(--teal),#2a9d8f);color:#04110a;text-align:center;padding:7px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:0.03em}
+
+/* demo note */
+.demo-note{background:rgba(93,156,236,0.08);border:1px solid rgba(93,156,236,0.2);border-radius:10px;padding:9px 12px;font-size:10.5px;color:var(--txt2);line-height:1.6;margin-bottom:12px}
+.demo-note b{color:var(--teal)}
+
+/* 顶栏 */
+.topbar{position:sticky;top:0;z-index:90;background:rgba(13,15,20,0.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:10px 14px}
+.tb-row1{display:flex;align-items:center;justify-content:space-between}
+.tb-id{display:flex;align-items:center;gap:9px;cursor:pointer}
+.tb-ava{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--teal),#2a9d8f);display:flex;align-items:center;justify-content:center;font-size:17px;color:#04110a;font-weight:800}
+.tb-name{font-size:14px;font-weight:700;line-height:1.2}
+.tb-sub{font-size:10px;color:var(--txt3);font-family:'JetBrains Mono',monospace}
+.tb-up{font-size:10px;color:var(--teal);border:1px solid rgba(78,205,196,0.3);border-radius:10px;padding:3px 9px}
+
+/* 屏 */
+.screen{display:none;padding:14px}
+.screen.on{display:block;animation:f .2s ease}
+@keyframes f{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+h2.sc-t{font-size:13px;font-weight:700;margin-bottom:3px}
+.sc-sub{font-size:11px;color:var(--txt3);margin-bottom:12px}
+
+/* 满分三数条(复用ICA·SR版) */
+.score-bar3{background:var(--bg2);border-radius:13px;padding:14px;margin-bottom:14px;border:1px solid var(--line)}
+.score-3n{display:flex;justify-content:space-between;text-align:center;margin-bottom:10px}
+.score-3n>div{flex:1}
+.score-3v{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;line-height:1}
+.score-3l{font-size:10px;color:var(--txt3);margin-top:4px;line-height:1.3}
+.score-prog{height:7px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden}
+.score-prog-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),var(--teal));transition:width .5s}
+.score-hint{font-size:10px;color:var(--txt3);margin-top:8px;line-height:1.5}
+
+/* 路线统计条 */
+.route-stat{display:flex;gap:8px;margin-bottom:14px}
+.rs-c{flex:1;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:10px 8px;text-align:center}
+.rs-v{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;line-height:1}
+.rs-l{font-size:9px;color:var(--txt3);margin-top:3px}
+
+/* 门店卡(路线上每家店) */
+.store{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:10px;position:relative;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s}
+.store:active{transform:scale(.985)}
+.store::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px}
+.store.done::before{background:var(--green)}
+.store.todo::before{background:var(--teal)}
+.store-top{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.store-mode-ic{width:38px;height:38px;border-radius:11px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.store-info{flex:1;min-width:0}
+.store-name{font-size:14px;font-weight:700;line-height:1.2;display:flex;align-items:center;gap:6px}
+.store-mode{font-size:10px;color:var(--teal);margin-top:2px}
+.store-seq{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3);flex-shrink:0}
+
+/* 有无美顾标签 */
+.tag-ica{font-size:9px;font-weight:700;padding:2px 7px;border-radius:7px;white-space:nowrap}
+.tag-ica.has{background:rgba(245,166,35,0.15);color:var(--amber)}
+.tag-ica.no{background:rgba(78,205,196,0.15);color:var(--teal)}
+
+.store-body{display:flex;align-items:center;justify-content:space-between;padding-top:9px;border-top:1px solid var(--line)}
+.store-task{font-size:11px;color:var(--txt2);line-height:1.5;flex:1}
+.store-task b{color:var(--txt)}
+.store-sku-warn{color:var(--red);font-weight:700}
+.store-go{font-size:11px;font-weight:700;color:var(--teal);padding:7px 13px;border:1px solid rgba(78,205,196,0.3);border-radius:9px;background:rgba(78,205,196,0.08);white-space:nowrap;flex-shrink:0}
+.store.done .store-go{color:var(--green);border-color:rgba(61,220,132,0.3);background:rgba(61,220,132,0.08)}
+
+/* 进店分流页 */
+.enter-hd{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.enter-back{font-size:13px;color:var(--teal);cursor:pointer}
+.enter-mode{width:44px;height:44px;border-radius:12px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:22px}
+.enter-info{flex:1}
+.enter-name{font-size:16px;font-weight:700}
+.enter-meta{font-size:10px;color:var(--txt3);margin-top:2px}
+
+.branch-card{border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--line)}
+.branch-card.has{background:linear-gradient(135deg,rgba(245,166,35,0.07),var(--card));border-color:rgba(245,166,35,0.22)}
+.branch-card.no{background:linear-gradient(135deg,rgba(78,205,196,0.07),var(--card));border-color:rgba(78,205,196,0.22)}
+.branch-h{font-size:13px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.branch-h.has{color:var(--amber)}
+.branch-h.no{color:var(--teal)}
+.branch-d{font-size:11.5px;color:var(--txt2);line-height:1.7;margin-bottom:12px}
+.branch-d b{color:var(--txt)}
+
+/* SKU状态行(进店看到的·6开关简版) */
+.skurow{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:7px}
+.skurow-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.skurow-name{font-size:12px;font-weight:700}
+.skurow-life{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px}
+.skurow-life.hi{background:rgba(61,220,132,0.15);color:var(--green)}
+.skurow-life.lo{background:rgba(255,95,95,0.15);color:var(--red)}
+.skurow-sw{display:flex;gap:5px}
+/* 三层因果链(买得到→看得到→乐得买) */
+.layers{display:flex;align-items:stretch;gap:4px;flex-wrap:wrap}
+.layer{flex:1;min-width:0;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:7px 6px;transition:opacity .2s}
+.layer.loff{opacity:0.92}
+.layer-hd{display:flex;align-items:center;gap:3px;margin-bottom:5px}
+.layer-ic{font-size:12px}
+.layer-nm{font-size:10px;font-weight:700;flex:1;white-space:nowrap}
+.layer-st{font-size:11px;font-weight:700;color:var(--txt3)}
+.layer.lon .layer-st{color:var(--green)}
+.layer-sw{display:flex;gap:4px}
+.layer-arrow{display:flex;align-items:center;color:var(--txt3);font-size:13px;font-weight:700;flex-shrink:0}
+@media(max-width:430px){.layer-nm{font-size:9px}.layer-arrow{font-size:11px}}
+/* IF-THEN诊断 */
+.diag-trigger{margin-top:8px;font-size:11px;color:var(--purple);background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);border-radius:9px;padding:9px 11px;cursor:pointer;line-height:1.5;text-align:center}
+.diag-trigger:active{background:rgba(167,139,250,0.18)}
+.diag-done{margin-top:8px;font-size:11px;color:var(--purple);background:rgba(167,139,250,0.08);border-radius:9px;padding:8px 11px;line-height:1.5}
+.diag-done b{color:var(--txt)}
+.diag-opt{display:flex;align-items:center;gap:11px;background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.diag-opt:active{border-color:var(--purple)}
+.diag-opt-ic{font-size:20px;flex-shrink:0}
+.diag-opt-k{font-size:13px;font-weight:700}
+.diag-opt-d{font-size:10px;color:var(--txt3);margin-top:2px;line-height:1.4}
+.sw{flex:1;text-align:center;padding:5px 2px;border-radius:7px;background:rgba(255,255,255,0.03);border:1px solid var(--line)}
+.sw-s{font-size:10px;line-height:1}
+.sw-on .sw-s{color:var(--green)}
+.sw-off .sw-s{color:var(--red)}
+.sw-n{font-size:8px;color:var(--txt3);margin-top:3px}
+/* 阶段徽章+重点开关高亮(按生命周期阶段评判状态) */
+.stage-badge{font-size:9px;font-weight:700;padding:1px 7px;border-radius:7px;white-space:nowrap;margin-left:4px}
+.skurow-stagehint{font-size:9.5px;color:var(--txt3s,#6b7488);margin:5px 0 7px;line-height:1.4}
+.sw.sw-key{box-shadow:0 0 0 1.5px var(--amber);position:relative}
+.sw-star{color:var(--amber);font-size:7px;margin-left:1px}
+.sw.sw-key.sw-off{background:rgba(245,166,35,0.12)}
+/* 商业模式打法(进店顶部) + 开关业态提示 */
+.mode-play{display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,rgba(78,205,196,0.1),var(--card));border:1px solid rgba(78,205,196,0.25);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.mode-play-ic{font-size:22px;flex-shrink:0}
+.mode-play-t{font-size:12px;font-weight:700;color:var(--teal)}
+.mode-play-d{font-size:11px;color:var(--txt2);margin-top:2px}
+.sku-modehint{font-size:10px;color:var(--teal);background:rgba(78,205,196,0.08);border-radius:7px;padding:5px 9px;margin:0 0 7px;line-height:1.5}
+
+.branch-btn{width:100%;padding:13px;border-radius:11px;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;touch-action:manipulation}
+.branch-btn.has{background:var(--amber);color:#1a1205}
+.branch-btn.no{background:var(--teal);color:#04110a}
+
+/* placeholder for other tabs */
+.ph{text-align:center;padding:50px 20px;color:var(--txt3)}
+.ph-ic{font-size:40px;margin-bottom:12px}
+.ph-t{font-size:14px;color:var(--txt2);margin-bottom:6px}
+.ph-d{font-size:11px;line-height:1.6}
+/* 一本账 */
+.bk-sec{font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:10px}
+.bk-row{display:flex;align-items:center;gap:11px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-bottom:7px}
+.bk-row.todo{opacity:0.55}
+.bk-ic{width:34px;height:34px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.bk-mid{flex:1;min-width:0}
+.bk-name{font-size:13px;font-weight:700;line-height:1.2}
+.bk-meta{font-size:10px;color:var(--txt3);margin-top:3px}
+.bk-meta .mode{color:var(--teal)}
+.bk-money{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:800;flex-shrink:0}
+.bk-money.got{color:var(--green)}
+.bk-money.zero{color:var(--txt3)}
+.bk-money.todo{color:var(--amber)}
+.bk-mode-row{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:6px}
+.bk-mode-ic{font-size:16px;width:22px;text-align:center;flex-shrink:0}
+.bk-mode-mid{flex:1}
+.bk-mode-nm{font-size:12px;font-weight:700}
+.bk-mode-cnt{font-size:10px;color:var(--txt3);margin-top:1px}
+.bk-mode-money{text-align:right;flex-shrink:0}
+.bk-mode-got{font-size:13px;font-weight:800;color:var(--green)}
+.bk-mode-full{font-size:9px;color:var(--txt3)}
+.bk-mode-bar{height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;margin-top:5px}
+.bk-mode-fill{height:100%;border-radius:2px;background:var(--teal)}
+/* 我的·SR画像 */
+.my-card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px;margin-bottom:11px}
+.my-hd{display:flex;align-items:center;gap:11px;margin-bottom:13px}
+.my-ava{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--teal),#2a9d8f);display:flex;align-items:center;justify-content:center;font-size:16px;color:#04110a;font-weight:800}
+.my-name{font-size:15px;font-weight:700}
+.my-sub{font-size:11px;color:var(--txt3);margin-top:2px}
+.my-stats{display:flex;gap:8px}
+.my-st{flex:1;background:var(--bg2);border-radius:10px;padding:10px;text-align:center}
+.my-st-v{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:800;color:var(--teal)}
+.my-st-l{font-size:9px;color:var(--txt3);margin-top:3px}
+.my-sec{font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:4px}
+.my-sub2{font-size:10px;color:var(--txt3);margin-bottom:10px}
+.my-mode{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.my-mode:last-child{border-bottom:none}
+.my-mode-r{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt2)}
+.my-anchor{background:linear-gradient(135deg,rgba(167,139,250,0.08),var(--card));border-color:rgba(167,139,250,0.22)}
+.my-anchor-d{font-size:11.5px;color:var(--txt2);line-height:1.7}
+.my-anchor-d b{color:var(--txt)}
+.my-anchor-flow{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--purple);margin-top:10px;padding:9px 11px;background:rgba(0,0,0,0.25);border-radius:8px;line-height:1.7}
+
+/* tabbar */
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(13,15,20,0.97);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;z-index:95}
+.tab{flex:1;text-align:center;padding:9px 0 10px;cursor:pointer;border:none;background:none;color:var(--txt3);font-family:inherit}
+.tab.on{color:var(--teal)}
+.tab-ic{font-size:19px;line-height:1}
+.tab-l{font-size:10px;margin-top:3px}
+
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--line2);border-radius:11px;padding:11px 18px;font-size:12px;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none;max-width:360px;text-align:center;line-height:1.5}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="plan-banner">SR 零售业代 · V1.9 IF-THEN诊断逻辑门 · 乐得买○→诊断障碍(SR=解决问题的人)</div>
+
+<!-- 顶栏 -->
+<div class="topbar">
+  <div class="tb-row1">
+    <div class="tb-id" onclick="go('my',null)">
+      <div class="tb-ava">SR</div>
+      <div>
+        <div class="tb-name">李伟 · 零售业代</div>
+        <div class="tb-sub">SR · 浦东直营区 · 会员仓储+大卖场</div>
+      </div>
+    </div>
+    <div class="tb-up">DOM督导 ▸</div>
+  </div>
+</div>
+
+<!-- ═══ 路线 ═══ -->
+<div class="screen on" id="s-route">
+  <h2 class="sc-t">🗺️ XM · 今日拜访路线</h2>
+  <div class="sc-sub">按商业模式分类 · 进每家店确保 SKU 状态</div>
+
+  <div class="demo-note">💡 演示数据。SR 按<b>门店商业模式</b>专业化（会员仓储/大卖场…），进店按<b>有无美顾</b>分流：有美顾→巡查确保，没美顾→自己拨开关。底层都是同一套晶体管。真实数据待 TL 后端。</div>
+
+  <!-- 满分三数条 -->
+  <div class="score-bar3">
+    <div class="score-3n">
+      <div><div class="score-3v" style="color:var(--txt)" id="srFull">¥420</div><div class="score-3l">今日满分<br>该做全做对</div></div>
+      <div><div class="score-3v" style="color:var(--green)" id="srGot">¥168</div><div class="score-3l">已得<br>做对的</div></div>
+      <div><div class="score-3v" style="color:var(--amber)" id="srGap">¥252</div><div class="score-3l">差距<br>没做对的</div></div>
+    </div>
+    <div class="score-prog"><div class="score-prog-fill" id="srProg" style="width:40%"></div></div>
+    <div class="score-hint" id="srHint">💡 还有 3 家店没拜访 · 把每家 SKU 状态拨对 = 拿满分</div>
+  </div>
+
+  <!-- 路线统计 -->
+  <div class="route-stat">
+    <div class="rs-c"><div class="rs-v" style="color:var(--teal)" id="rsTotal">5</div><div class="rs-l">今日店数</div></div>
+    <div class="rs-c"><div class="rs-v" style="color:var(--green)" id="rsDone">2</div><div class="rs-l">已拜访</div></div>
+    <div class="rs-c"><div class="rs-v" style="color:var(--amber)" id="rsLeft">3</div><div class="rs-l">待拜访</div></div>
+    <div class="rs-c"><div class="rs-v" style="color:var(--red)" id="rsWarn">7</div><div class="rs-l">SKU待救</div></div>
+  </div>
+
+  <div id="storeList"></div>
+</div>
+
+<!-- ═══ 进店分流页 ═══ -->
+<div class="screen" id="s-enter">
+  <div class="enter-hd">
+    <span class="enter-back" onclick="go('route',null)">‹ 路线</span>
+    <div class="enter-mode" id="enMode">🏬</div>
+    <div class="enter-info">
+      <div class="enter-name" id="enName">—</div>
+      <div class="enter-meta" id="enMeta">—</div>
+    </div>
+  </div>
+  <div id="enterBody"></div>
+</div>
+
+<!-- ═══ 店内盘点(无美顾店·SR自己拨开关·复用ICA店内) ═══ -->
+<div class="screen" id="s-inspect">
+  <div class="enter-hd">
+    <span class="enter-back" onclick="go('enter',null)">‹ 返回</span>
+    <div class="enter-mode" id="inMode">🏪</div>
+    <div class="enter-info">
+      <div class="enter-name" id="inName">—</div>
+      <div class="enter-meta">🔍 XD 店询点 · 速览决策 + 真盘点采集</div>
+    </div>
+  </div>
+  <div class="demo-note">💡 <b>① 速览</b>（下方）：按阶段/业态看这店该拨什么，<b>快速决策</b>。<b>② 真盘点</b>：点下方按钮进 INF-XD 拍照·录库存，<b>签退后自动落袋</b>（真盘点数据决定 SKU 状态，和美顾同一套，不用手动拨）。</div>
+  <div id="inspectBody"></div>
+  <button class="branch-btn no" id="xdRealBtn" style="margin-top:8px" onclick="openXD()">🔍 进 INF-XD 真盘点 · 盘完自动落袋</button>
+  <button class="branch-btn" id="inspectDone" style="margin-top:8px;background:var(--card2);color:var(--txt2);border:1px solid var(--line)" onclick="finishInspect()">或：跳过真盘点 · 按速览直接落袋</button>
+</div>
+
+<!-- ═══ XD · INF-XD真盘点(iframe·和美顾共用同一工具) ═══ -->
+<div class="screen" id="s-xd">
+  <div class="enter-hd">
+    <span class="enter-back" onclick="closeXD()">‹ 返回速览</span>
+    <div class="enter-info">
+      <div class="enter-name" id="xdName">🔍 INF-XD 店内真盘点</div>
+      <div class="enter-meta">拍照 · 录库存 · 数据回流（与美顾共用）</div>
+    </div>
+  </div>
+  <iframe id="xdFrame" src="INFINITY_OS_INF-XD_v6.7.11_modes_diff.html" style="width:100%;height:calc(100vh - 120px);border:1px solid var(--line);border-radius:12px;background:var(--bg2)"></iframe>
+</div>
+
+<!-- ═══ 一本账(占位·下一步复用ICA) ═══ -->
+<div class="screen" id="s-book">
+  <h2 class="sc-t">📒 XL · 一本账</h2>
+  <div class="sc-sub">满分 vs 实得 vs 差距 · 逐店明细 · 按商业模式</div>
+
+  <!-- 满分三数(和路线一致) -->
+  <div class="score-bar3">
+    <div class="score-3n">
+      <div><div class="score-3v" style="color:var(--txt)" id="bkFull">¥376</div><div class="score-3l">今日满分</div></div>
+      <div><div class="score-3v" style="color:var(--green)" id="bkGot">¥168</div><div class="score-3l">已得</div></div>
+      <div><div class="score-3v" style="color:var(--amber)" id="bkGap">¥208</div><div class="score-3l">差距</div></div>
+    </div>
+    <div class="score-prog"><div class="score-prog-fill" id="bkProg" style="width:45%"></div></div>
+  </div>
+
+  <!-- 逐店明细 -->
+  <div class="bk-sec">📋 逐店明细 · 今天每家赚多少</div>
+  <div id="bookLedger"></div>
+
+  <!-- 按商业模式汇总 -->
+  <div class="bk-sec" style="margin-top:16px">🏬 按商业模式 · SR 专长分布</div>
+  <div id="bookByMode"></div>
+</div>
+
+<!-- ═══ 我的(占位) ═══ -->
+<div class="screen" id="s-my">
+  <h2 class="sc-t">👤 XP · 我的 · SR 画像</h2>
+  <div class="sc-sub">从 SKU×店状态反推贡献</div>
+  <div id="myBody"></div>
+</div>
+
+<!-- tabbar -->
+<div class="tabbar">
+  <button class="tab on" id="tab-route" onclick="go('route',this)"><div class="tab-ic">🗺️</div><div class="tab-l">XM 路上</div></button>
+  <button class="tab" id="tab-book" onclick="go('book',this)"><div class="tab-ic">📒</div><div class="tab-l">XL 一本账</div></button>
+  <button class="tab" id="tab-my" onclick="go('my',this)"><div class="tab-ic">👤</div><div class="tab-l">XP 我的</div></button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 落袋小结弹窗(SR版·改善了哪些SKU状态→所以赚这笔钱) -->
+<!-- 诊断动销障碍弹窗(IF-THEN逻辑门·乐得买○) -->
+<div id="diagModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.72);backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:22px">
+  <div style="width:100%;max-width:360px;background:var(--card);border:1.5px solid var(--purple);border-radius:20px;padding:22px 20px">
+    <div style="text-align:center;font-size:13px;font-weight:700;color:var(--purple);margin-bottom:4px">🔍 诊断动销障碍</div>
+    <div id="diagSku" style="text-align:center;font-size:11px;color:var(--txt3);margin-bottom:6px">—</div>
+    <div style="font-size:11px;color:var(--txt2);line-height:1.6;background:var(--bg2);border-radius:10px;padding:10px 12px;margin-bottom:14px">买得到✓ 看得到✓ <b style="color:var(--txt)">但就是没动销</b> —— 障碍在哪？选一个，记录后用于学习（因果模型）。</div>
+    <div id="diagOpts"></div>
+    <button onclick="closeDiag()" style="width:100%;margin-top:6px;background:var(--card2);color:var(--txt2);border:1px solid var(--line);border-radius:11px;padding:11px;font-size:12px;font-family:inherit;cursor:pointer">取消</button>
+  </div>
+</div>
+
+<div id="settleModal" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.72);backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:22px">
+  <div style="width:100%;max-width:350px;background:var(--card);border:1.5px solid var(--teal);border-radius:20px;padding:24px 20px;box-shadow:0 16px 50px rgba(78,205,196,0.25);animation:f .3s ease">
+    <div style="text-align:center;font-size:12px;color:var(--txt2);margin-bottom:4px" id="smStore">—</div>
+    <div style="text-align:center;font-family:'Syne',sans-serif;font-size:44px;font-weight:800;color:var(--teal);line-height:1.1" id="smMoney">+¥0</div>
+    <div style="text-align:center;font-size:11px;color:var(--txt3);margin-bottom:16px" id="smSrc">—</div>
+    <div id="smSignal" style="background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.25);border-radius:12px;padding:13px;margin-bottom:14px;display:none">
+      <div style="font-size:10px;color:var(--txt3);margin-bottom:7px">你改善的 SKU 状态（晶体管 → 收入）：</div>
+      <div id="smSignalList" style="font-size:13px;color:var(--txt);font-weight:700;line-height:1.6"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:11px 14px;background:var(--bg2);border-radius:11px;margin-bottom:16px">
+      <span style="font-size:11px;color:var(--txt2)">今日累计</span>
+      <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--teal)" id="smTotal">¥0</span>
+    </div>
+    <button onclick="closeSettle()" style="width:100%;background:var(--teal);border:none;color:#04110a;border-radius:12px;padding:14px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;touch-action:manipulation">继续拜访路线 →</button>
+  </div>
+</div>
+
+<script>
+// ── 演示数据:今日路线5家店(按商业模式·有无美顾) ──
+var STORES = [
+  {id:'s1', name:'山姆会员店浦东', mode:'会员仓储', modeIc:'🏬', hasIca:true,  done:true, settled:true, seq:'09:00',
+   task:'巡查确保 · 美顾已拨', skuWarn:0, full:60, earned:60,
+   skus:[]},
+  {id:'s2', name:'大润发沪西店', mode:'大卖场', modeIc:'🏢', hasIca:false, done:true, settled:true, seq:'10:30',
+   task:'已自拨 · 3 SKU 改善', skuWarn:0, full:108, earned:108, skus:[]},
+  {id:'s3', name:'罗森便利(联洋店)', mode:'便利店', modeIc:'🏪', hasIca:false, done:false, seq:'13:00',
+   task:'2 个 SKU 状态弱', skuWarn:2, full:76, earned:0,
+   skus:[
+     {name:'极鲜500ml', stage:'mature', life:'lo', sw:[1,1,0,0,1,1]},
+     {name:'味达美', stage:'mature', life:'lo', sw:[1,0,1,1,1,0]}
+   ]},
+  {id:'s4', name:'钱大妈(锦绣路)', mode:'社区超市', modeIc:'🏘️', hasIca:false, done:false, seq:'14:30',
+   task:'3 个 SKU 状态弱 · 近效期', skuWarn:3, full:94, earned:0,
+   skus:[
+     {name:'禾然有机', stage:'intro', life:'lo', sw:[1,0,0,0,1,1]},
+     {name:'六月鲜380', stage:'grow', life:'lo', sw:[1,1,0,0,0,1]},
+     {name:'葱伴侣', stage:'grow', life:'lo', sw:[1,1,1,0,0,1]}
+   ]},
+  {id:'s5', name:'山姆会员店金桥', mode:'会员仓储', modeIc:'🏬', hasIca:true, done:false, seq:'16:00',
+   task:'巡查确保 · 美顾待补位', skuWarn:2, full:82, earned:0,
+   skus:[
+     {name:'极鲜500ml大包装', stage:'mature', life:'lo', sw:[1,1,0,1,1,0]},
+     {name:'禾然有机', stage:'intro', life:'lo', sw:[1,0,1,0,1,1]}
+   ]}
+];
+var SW_NAMES = ['上架','有货','陈列','动销','复购','毛利'];
+// 三层因果链(DS模型: 买得到→看得到→乐得买)·6开关分3层·左→右递进
+var LAYERS = [
+  {key:'buy',  name:'买得到', ic:'🛒', sub:'根基·不缺货', sw:[0,1],   color:'#5b9dff', note:'上架+有货·没这层后面全白搭'},
+  {key:'see',  name:'看得到', ic:'👁️', sub:'主攻·有卖点/吸引力/调性', sw:[2], color:'#a78bfa', note:'陈列=被看见且被打动'},
+  {key:'sell', name:'乐得买', ic:'🛍️', sub:'结果·唯一考卷', sw:[3,4,5], color:'#3ddc84', note:'动销+复购+毛利·检验前两层做对没'}
+];
+function swLayer(i){ // 开关i属于哪层
+  for(var L=0;L<LAYERS.length;L++){ if(LAYERS[L].sw.indexOf(i)>=0) return LAYERS[L]; }
+  return LAYERS[0];
+}
+// 阶段配置:阶段决定"该阶段重点开关"(满分=拨亮这些)·和顶层框架一致
+// 开关索引: 0上架 1有货 2陈列 3动销 4复购 5毛利
+var STAGE = {
+  intro:  {name:'导入期', ic:'🌱', color:'#5b9dff', key:[0,2],   note:'重上架·陈列(动销OFF正常)'},
+  grow:   {name:'成长期', ic:'📈', color:'#3ddc84', key:[3,4],   note:'重动销·复购(上量)'},
+  mature: {name:'成熟期', ic:'🏔️', color:'#f5a623', key:[3,4,5], note:'重动销·复购·毛利(动销OFF=病危)'}
+};
+// 算SKU在"它所在阶段标准下"的强弱: 看重点开关有几个OFF
+function skuStageEval(sk){
+  var st = STAGE[sk.stage] || STAGE.mature;
+  var keyOff = st.key.filter(function(i){ return !sk.sw[i]; });  // 重点开关里OFF的
+  return { stage:st, keyOff:keyOff, weak: keyOff.length>0 };
+}
+
+// 商业模式配置(设计B):阶段管"看哪些开关"·模式管"这开关做对长什么样"
+// 开关索引: 0上架 1有货 2陈列 3动销 4复购 5毛利
+var MODE_PLAY = {
+  '会员仓储': { ic:'🏬', play:'大包装 · 会员爆品 · 堆头',
+    sw:['大包装上架','整箱备货','堆头大包装陈列','会员爆品周转','大客复购','大包装高毛利'] },
+  '大卖场':   { ic:'🏢', play:'端架堆头 · KA客情 · 账期',
+    sw:['全品上架','安全库存','端架/黄金位陈列','KA走量动销','促销带复购','账期内高毛利'] },
+  '便利店':   { ic:'🏪', play:'动线位 · 小包装 · 即食',
+    sw:['小包装上架','勤补防断','动线黄金位陈列','即食高频动销','便利复购','小包装毛利'] },
+  '社区超市': { ic:'🏘️', play:'高频补货 · 生鲜搭配 · 近效期',
+    sw:['日配上架','高频补货防断','生鲜搭配陈列','高频动销','社区粘性复购','近效期管理'] }
+};
+function modeSwName(mode, i){
+  var m = MODE_PLAY[mode];
+  return (m && m.sw[i]) ? m.sw[i] : ['上架','有货','陈列','动销','复购','毛利'][i];
+}
+
+function go(scr, el){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('s-'+scr).classList.add('on');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  var tb=document.getElementById('tab-'+scr); if(tb) tb.classList.add('on');
+  if(scr==='book') renderBook();
+  if(scr==='my') renderMy();
+  window.scrollTo(0,0);
+}
+
+function renderRoute(){
+  var html='';
+  STORES.forEach(function(s){
+    var stateClass = s.done?'done':'todo';
+    var icaTag = s.hasIca
+      ? '<span class="tag-ica has">🍳 有美顾</span>'
+      : '<span class="tag-ica no">SR 自拨</span>';
+    var taskHtml = s.skuWarn>0
+      ? s.task.replace(/(\d+ 个 SKU)/, '<span class="store-sku-warn">$1</span>')
+      : '<b>'+s.task+'</b>';
+    var goLabel = s.done ? '✓ 已拜访' : (s.hasIca?'巡查确保 ›':'进店拨开关 ›');
+    html += '<div class="store '+stateClass+'" onclick="enterStore(\''+s.id+'\')">'
+      + '<div class="store-top">'
+      +   '<div class="store-mode-ic">'+s.modeIc+'</div>'
+      +   '<div class="store-info"><div class="store-name">'+s.name+' '+icaTag+'</div>'
+      +     '<div class="store-mode">'+s.mode+'</div></div>'
+      +   '<div class="store-seq">'+s.seq+'</div>'
+      + '</div>'
+      + '<div class="store-body"><div class="store-task">'+taskHtml+'</div>'
+      +   '<div class="store-go">'+goLabel+'</div></div>'
+      + '</div>';
+  });
+  document.getElementById('storeList').innerHTML = html;
+}
+
+function enterStore(sid){
+  var s = STORES.find(function(x){return x.id===sid;});
+  if(!s) return;
+  document.getElementById('enMode').textContent = s.modeIc;
+  document.getElementById('enName').textContent = s.name;
+  document.getElementById('enMeta').textContent = s.mode + ' · ' + s.seq + ' · ' + (s.hasIca?'有美顾':'无美顾');
+
+  var body='';
+  var _mp = MODE_PLAY[s.mode];
+  if(_mp){ body += '<div class="mode-play"><span class="mode-play-ic">'+_mp.ic+'</span><div><div class="mode-play-t">'+s.mode+' · 打法</div><div class="mode-play-d">'+_mp.play+'</div></div></div>'; }
+  if(s.hasIca){
+    // 有美顾→巡查确保分流
+    body += '<div class="branch-card has">'
+      + '<div class="branch-h has">🍳 有美顾的店 · 巡查确保</div>'
+      + '<div class="branch-d">这家店有美顾常驻拨开关。你的职责是<b>巡查确保</b>状态达标，不亲自拨 —— 看美顾拨得怎样，差的地方<b>督促/补位</b>。</div>';
+    if(s.skus.length){
+      body += '<div style="font-size:10px;color:var(--txt3);margin-bottom:7px">美顾待补位的 SKU：</div>';
+      body += renderSkus(s.skus, s.mode);
+    } else {
+      body += '<div style="font-size:11px;color:var(--green);margin-bottom:12px">✓ 美顾已拨好 · 状态达标</div>';
+    }
+    body += '<button class="branch-btn has" onclick="confirmStore(\''+s.id+'\')">✓ 确认巡查 · 状态达标</button>';
+    body += '</div>';
+  } else {
+    // 没美顾→自己拨(复用ICA)
+    body += '<div class="branch-card no">'
+      + '<div class="branch-h no">🔧 没美顾的店 · 自己拨开关</div>'
+      + '<div class="branch-d">这家店没人常驻。你<b>自己当美顾的手</b>，亲自拨开关（和 ICA 美顾同一套店内逻辑）。下一步进店内盘点。</div>';
+    body += renderSkus(s.skus, s.mode);
+    body += '<button class="branch-btn no" onclick="confirmStore(\''+s.id+'\')">🔧 进店内盘点 · 拨开关</button>';
+    body += '</div>';
+  }
+  document.getElementById('enterBody').innerHTML = body;
+  go('enter', null);
+}
+
+function renderSkus(skus, mode){
+  if(!skus.length) return '';
+  var h='';
+  skus.forEach(function(sk){
+    var ev = skuStageEval(sk); var st = ev.stage;
+    var keySet={}; st.key.forEach(function(k){ keySet[k]=1; });
+    // 三层因果分组(和盘点页一致·只读)
+    var sw='<div class="layers">';
+    LAYERS.forEach(function(L, Li){
+      var cells='';
+      L.sw.forEach(function(i){
+        var on=sk.sw[i], isKey=keySet[i];
+        var cls=(on?'sw-on':'sw-off')+(isKey?' sw-key':'');
+        cells += '<div class="sw '+cls+'"><div class="sw-s">'+(on?'●':'○')+'</div><div class="sw-n">'+SW_NAMES[i]+(isKey?'<span class="sw-star">★</span>':'')+'</div></div>';
+      });
+      var layerOn = L.sw.every(function(i){ return sk.sw[i]; });
+      sw += '<div class="layer '+(layerOn?'lon':'loff')+'" style="border-color:'+L.color+'44">'
+        + '<div class="layer-hd"><span class="layer-ic">'+L.ic+'</span>'
+        + '<span class="layer-nm" style="color:'+L.color+'">'+L.name+'</span>'
+        + '<span class="layer-st">'+(layerOn?'✓':'○')+'</span></div>'
+        + '<div class="layer-sw">'+cells+'</div></div>';
+      if(Li<LAYERS.length-1) sw += '<div class="layer-arrow">→</div>';
+    });
+    sw += '</div>';
+    var lifeC = ev.weak?'lo':'hi';
+    var lifeT = ev.weak ? ('弱 · 重点'+ev.keyOff.length+'项待拨') : '强 · 该阶段达标';
+    // 业态专属·重点OFF开关该拨的样子(和盘点页一致)
+    var keyOffNames = ev.keyOff.map(function(i){ return modeSwName(mode, i); });
+    var mp = MODE_PLAY[mode];
+    var keyHint = (keyOffNames.length && mp)
+      ? '<div class="sku-modehint">'+mp.ic+' 该补:'+keyOffNames.join(' · ')+'</div>'
+      : '';
+    h += '<div class="skurow"><div class="skurow-top"><div class="skurow-name">'+sk.name
+      + ' <span class="stage-badge" style="background:'+st.color+'22;color:'+st.color+'">'+st.ic+' '+st.name+'</span></div>'
+      + '<div class="skurow-life '+lifeC+'">'+lifeT+'</div></div>'
+      + '<div class="skurow-stagehint">'+st.note+'</div>'
+      + keyHint
+      + '<div class="skurow-sw">'+sw+'</div></div>';
+  });
+  return h;
+}
+
+function confirmStore(sid){
+  var s = STORES.find(function(x){return x.id===sid;});
+  if(!s) return;
+  if(s.settled){ toast('「'+s.name+'」今天已拜访过'); go('route',document.getElementById('tab-route')); return; }
+  if(s.hasIca){
+    // 有美顾→巡查确保·直接落袋
+    settleStore(s, '巡查确保');
+  } else {
+    // 无美顾→进店内盘点页(SR自己拨开关)
+    enterInspect(s);
+  }
+}
+
+// 无美顾店·进店内盘点(SR自己拨开关·复用ICA店内逻辑)
+var curInspect = null;
+function enterInspect(s){
+  curInspect = s;
+  document.getElementById('inMode').textContent = s.modeIc;
+  document.getElementById('inName').textContent = s.name;
+  // 深拷贝SKU状态(拨开关改这份·确认才落)
+  s._work = s.skus.map(function(sk){ return {name:sk.name, stage:sk.stage, life:sk.life, sw:sk.sw.slice()}; });
+  renderInspect();
+  go('inspect', null);
+}
+
+function renderInspect(){
+  if(!curInspect) return;
+  var mode = curInspect.mode;
+  var mp = MODE_PLAY[mode];
+  var html='';
+  // 顶部:本店商业模式打法(SR专业化提示)
+  if(mp){
+    html += '<div class="mode-play"><span class="mode-play-ic">'+mp.ic+'</span>'
+      +'<div><div class="mode-play-t">'+mode+' · 打法</div>'
+      +'<div class="mode-play-d">'+mp.play+'</div></div></div>';
+  }
+  curInspect._work.forEach(function(sk, si){
+    var ev = skuStageEval(sk);          // 按阶段评:重点开关哪些OFF
+    var st = ev.stage;
+    var keySet = {}; st.key.forEach(function(k){ keySet[k]=1; });
+    // 6开关按三层因果分组渲染(买得到→看得到→乐得买)
+    var sw='<div class="layers">';
+    LAYERS.forEach(function(L, Li){
+      var cells='';
+      L.sw.forEach(function(i){
+        var on=sk.sw[i], isKey=keySet[i];
+        var cls=(on?'sw-on':'sw-off')+(isKey?' sw-key':'');
+        cells += '<div class="sw '+cls+'" onclick="toggleSw('+si+','+i+')" style="cursor:pointer;touch-action:manipulation">'
+          + '<div class="sw-s">'+(on?'●':'○')+'</div><div class="sw-n">'+SW_NAMES[i]+(isKey?'<span class="sw-star">★</span>':'')+'</div></div>';
+      });
+      // 该层是否全亮
+      var layerOn = L.sw.every(function(i){ return sk.sw[i]; });
+      sw += '<div class="layer '+(layerOn?'lon':'loff')+'" style="border-color:'+L.color+'44">'
+        + '<div class="layer-hd"><span class="layer-ic">'+L.ic+'</span>'
+        + '<span class="layer-nm" style="color:'+L.color+'">'+L.name+'</span>'
+        + '<span class="layer-st">'+(layerOn?'✓':'○')+'</span></div>'
+        + '<div class="layer-sw">'+cells+'</div></div>';
+      if(Li<LAYERS.length-1) sw += '<div class="layer-arrow">→</div>';
+    });
+    sw += '</div>';
+    // 重点开关里OFF的·显示"在这个业态做对长什么样"(设计B核心)
+    var keyOffNames = ev.keyOff.map(function(i){ return modeSwName(mode, i); });
+    var keyHint = keyOffNames.length
+      ? '<div class="sku-modehint">'+mp.ic+' 该拨:'+keyOffNames.join(' · ')+'</div>'
+      : '';
+    var weak = ev.weak;
+    var lifeC = weak?'lo':'hi';
+    var lifeT = weak ? ('弱 · 重点'+ev.keyOff.length+'项待拨') : '强 · 该阶段达标';
+    // IF-THEN逻辑门: 买得到✓+看得到✓+乐得买○(动销OFF) → 诊断障碍
+    var diagHtml = '';
+    if(sk.sw[0] && sk.sw[1] && sk.sw[2] && !sk.sw[3]){
+      diagHtml = sk._diag
+        ? '<div class="diag-done">✓ 已诊断动销障碍:<b>'+sk._diag+'问题</b></div>'
+        : '<div class="diag-trigger" onclick="openDiag('+si+')">🔍 买得到✓看得到✓ 但没动销 → 点击诊断障碍</div>';
+    }
+    html += '<div class="skurow">'
+      + '<div class="skurow-top"><div class="skurow-name">'+sk.name
+      + ' <span class="stage-badge" style="background:'+st.color+'22;color:'+st.color+'">'+st.ic+' '+st.name+'</span></div>'
+      + '<div class="skurow-life '+lifeC+'">'+lifeT+'</div></div>'
+      + '<div class="skurow-stagehint">'+st.note+'</div>'
+      + keyHint
+      + '<div class="skurow-sw">'+sw+'</div>'
+      + diagHtml + '</div>';
+  });
+  document.getElementById('inspectBody').innerHTML = html;
+}
+
+function toggleSw(si, i){
+  if(!curInspect) return;
+  // 只能OFF→ON(拨亮·模拟改善动作)·已ON不动
+  if(!curInspect._work[si].sw[i]){
+    curInspect._work[si].sw[i] = 1;
+    renderInspect();
+  }
+}
+
+// IF-THEN诊断: 4类动销障碍(对应买得到→看得到→乐得买因果链)
+var DIAG_TYPES = [
+  {k:'陈列', ic:'👁️', d:'看得到没真做好(位置/卖点没传达)'},
+  {k:'价格', ic:'💰', d:'自己定价高 / 竞品低价'},
+  {k:'竞品', ic:'⚔️', d:'竞品促销 / 挤压排面'},
+  {k:'认知', ic:'🧠', d:'消费者不认 / 没习惯'}
+];
+var _diagSi = -1;
+function openDiag(si){
+  if(!curInspect) return;
+  _diagSi = si;
+  var sk = curInspect._work[si];
+  document.getElementById('diagSku').textContent = sk.name + ' · 已上架有货有陈列·但无动销';
+  var html='';
+  DIAG_TYPES.forEach(function(t){
+    html += '<div class="diag-opt" onclick="pickDiag(\''+t.k+'\')">'
+      + '<span class="diag-opt-ic">'+t.ic+'</span>'
+      + '<div><div class="diag-opt-k">'+t.k+'问题</div><div class="diag-opt-d">'+t.d+'</div></div></div>';
+  });
+  document.getElementById('diagOpts').innerHTML = html;
+  document.getElementById('diagModal').style.display = 'flex';
+}
+function pickDiag(k){
+  if(_diagSi>=0 && curInspect){
+    curInspect._work[_diagSi]._diag = k;  // 记录障碍诊断(为因果模型积数据)
+    renderInspect();
+  }
+  document.getElementById('diagModal').style.display = 'none';
+  toast('✓ 已记录障碍诊断:'+k+'问题（用于学习）');
+}
+function closeDiag(){ document.getElementById('diagModal').style.display='none'; }
+
+// XD真盘点: 打开INF-XD(和美顾共用同一工具)
+function openXD(){  if(!curInspect){ toast('请先从路线进店'); return; }
+  document.getElementById('xdName').textContent = '🔍 '+curInspect.name+' · INF-XD 真盘点';
+  go('xd', null);
+}
+function closeXD(){ go('inspect', null); }
+// 监听INF-XD签退(postMessage)→把真盘点结果带回(演示:标记已真盘点)
+window.addEventListener('message', function(e){
+  if(e && e.data && e.data.type==='xd_finish' && curInspect){
+    var s = curInspect;
+    // INF-XD真盘点完成 = 该店所有弱重点开关已被采集改善(真盘点驱动·非手动拨)
+    var fixedSignals=[];
+    s._work.forEach(function(wsk){
+      var ev = skuStageEval(wsk);
+      ev.keyOff.forEach(function(i){
+        wsk.sw[i] = 1;  // 真盘点改善该重点开关
+        fixedSignals.push(wsk);
+      });
+    });
+    // 把真盘点结果写回·并直接落袋(像ICA·盘完即结算·不用再手动)
+    s._xdDone = true;
+    finishInspect();  // 落袋(此时所有重点已拨亮·拿满分)
+  }
+});
+
+function finishInspect(){
+  var s = curInspect;
+  if(!s) return;
+  var _mode = s.mode;
+  // 按生命周期阶段判断:只有"拨亮该阶段重点开关"才算真改善·才给分
+  var keyFixed=0;      // 拨亮的重点开关数(真改善·给分)
+  var otherFixed=0;    // 拨亮的非重点开关数(顺手做·不主给分)
+  var ensured=0;       // 该阶段重点开关"本就全ON"的SKU数(确保达标)
+  var stillWeak=0;     // 该阶段重点开关"还有OFF没拨"的SKU数(没做对)
+  var signals=[]; var weakHints=[];
+  s._work.forEach(function(wsk, si){
+    var st = STAGE[wsk.stage] || STAGE.mature;
+    var keySet={}; st.key.forEach(function(k){ keySet[k]=1; });
+    var fixedKey=[], fixedOther=[];
+    wsk.sw.forEach(function(on,i){
+      if(on && !s.skus[si].sw[i]){  // 这开关从OFF被拨成ON
+        if(keySet[i]){ keyFixed++; fixedKey.push(modeSwName(_mode,i)); }
+        else { otherFixed++; fixedOther.push(modeSwName(_mode,i)); }
+      }
+    });
+    if(fixedKey.length) signals.push(wsk.name+'('+st.name+') · 重点'+fixedKey.join('+')+' OFF→ON');
+    else if(fixedOther.length) signals.push(wsk.name+'('+st.name+') · '+fixedOther.join('+')+' OFF→ON');
+    // 拨完后·该阶段重点开关还有没有OFF?
+    var ev2 = skuStageEval(wsk);
+    if(ev2.weak){ stillWeak++; weakHints.push(wsk.name+'('+st.name+'·还差'+ev2.keyOff.map(function(i){return modeSwName(_mode,i);}).join('/')+')'); }
+    else if(fixedKey.length===0){ ensured++; }  // 没拨重点但重点全ON=确保达标
+  });
+  s.skus = s._work;
+  // 收入逻辑(按框架): 真改善(重点)×18 + 顺手(非重点)×6 + 确保达标×10
+  // 重点OFF未拨=没做对=不额外给分(只可能拿到确保分)
+  var money = keyFixed*18 + otherFixed*6 + ensured*10;
+  var srcLabel;
+  if(keyFixed>0) srcLabel = 'SR自拨 · 真改善'+keyFixed+'项重点';
+  else if(ensured>0 && stillWeak===0) srcLabel = 'SR自拨 · 确保达标';
+  else if(stillWeak>0) srcLabel = 'SR自拨 · 还有重点没拨';
+  else srcLabel = 'SR自拨 · 顺手改善';
+  settleStore(s, srcLabel, keyFixed, signals, {ensured:ensured, stillWeak:stillWeak, weakHints:weakHints, money:money});
+}
+
+// 落袋小结(有美顾巡查 / 无美顾自拨 都走这)
+function settleStore(s, srcLabel, fixedCount, signals, info){
+  if(s.settled){ toast('「'+s.name+'」今天已拜访过'); go('route',document.getElementById('tab-route')); return; }
+  s.done = true; s.settled = true;
+  // 有美顾巡查=确保该店满分价值; 无美顾自拨=按阶段算的money(info.money)
+  var money = s.hasIca ? s.full : ((info && info.money!=null) ? info.money : 0);
+  s.earned = money;
+  s.skuWarn = (info && info.stillWeak) ? info.stillWeak : 0;  // 还有重点没拨的SKU继续标待救
+  s.task = srcLabel;
+  renderRoute(); refreshSummary();
+  var totalGot=0; STORES.forEach(function(x){ totalGot+=(x.earned||0); });
+  document.getElementById('smStore').textContent = s.name + ' · ' + s.mode;
+  document.getElementById('smMoney').textContent = '+¥'+money;
+  document.getElementById('smSrc').textContent = srcLabel;
+  document.getElementById('smTotal').textContent = '¥'+totalGot;
+  var sig=document.getElementById('smSignal');
+  var sigHtml='';
+  if(signals && signals.length){
+    sigHtml = signals.map(function(x){return '✓ '+x;}).join('<br>');
+  } else if(s.hasIca){
+    sigHtml = '✓ 巡查确保 · 美顾拨的状态已达标';
+  } else if(info && info.ensured>0){
+    sigHtml = '✓ 该店重点开关本就达标 · 确保达标('+info.ensured+'个SKU)';
+  }
+  // 还有重点没拨的·提示去补(按框架:重点OFF不拨=没做对)
+  if(info && info.stillWeak>0 && info.weakHints && info.weakHints.length){
+    sigHtml += (sigHtml?'<br>':'') + '<span style="color:var(--red)">⚠ 还差:'+info.weakHints.join('；')+'</span>';
+  }
+  if(sigHtml){ sig.style.display='block'; document.getElementById('smSignalList').innerHTML = sigHtml; }
+  else { sig.style.display='none'; }
+  document.getElementById('settleModal').style.display='flex';
+}
+function closeSettle(){
+  document.getElementById('settleModal').style.display='none';
+  go('route',document.getElementById('tab-route'));
+}
+
+// 实时算所有汇总(从STORES算·修复落袋后数字不联动)
+function refreshSummary(){
+  var total=STORES.length, done=0, warn=0, got=0, full=0;
+  STORES.forEach(function(s){
+    if(s.done) done++;
+    warn += (s.skuWarn||0);
+    got += (s.earned||0);
+    full += (s.full||0);
+  });
+  var gap = Math.max(0, full-got);
+  set('rsTotal', total); set('rsDone', done); set('rsLeft', total-done); set('rsWarn', warn);
+  set('srFull','¥'+full); set('srGot','¥'+got); set('srGap', gap>0?('¥'+gap):'✓达成');
+  var pf=document.getElementById('srProg'); if(pf) pf.style.width=Math.min(100,Math.round(got/full*100))+'%';
+  var sh=document.getElementById('srHint');
+  if(sh){
+    if(gap<=0){ sh.innerHTML='🎉 今日满分!路线上每家店都拜访到位'; pf.style.background='var(--green)'; }
+    else { var left=total-done; sh.innerHTML='💡 还有 '+left+' 家店没拜访 · 把每家 SKU 状态拨对 = 拿满分'; }
+  }
+}
+function set(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
+
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(window._tt); window._tt=setTimeout(function(){t.classList.remove('show');},2200);
+}
+
+// 按阶段算"这家店拨到最好能拿多少"(满分=该店所有SKU完全做对·和收入公式自洽)
+function computeStoreFull(s){
+  if(s.hasIca) return s.full;  // 有美顾店=巡查价值·保留原full
+  if(!s.skus || !s.skus.length) return s.full || 0;
+  var total=0;
+  s.skus.forEach(function(sk){
+    var ev = skuStageEval(sk);
+    total += ev.keyOff.length>0 ? ev.keyOff.length*18 : 10;
+  });
+  return total;
+}
+
+// 一本账渲染:满分三数+逐店明细+按商业模式汇总
+function renderBook(){
+  var full=0, got=0, done=0;
+  STORES.forEach(function(s){ full+=(s.full||0); got+=(s.earned||0); if(s.settled)done++; });
+  var gap=Math.max(0,full-got);
+  setTxt('bkFull','¥'+full); setTxt('bkGot','¥'+got); setTxt('bkGap', gap>0?('¥'+gap):'✓达成');
+  var bp=document.getElementById('bkProg'); if(bp) bp.style.width=Math.min(100,Math.round(got/full*100))+'%';
+  // 逐店明细
+  var html='';
+  STORES.forEach(function(s){
+    if(s.settled){
+      var cls = s.earned>0?'got':'zero';
+      html += '<div class="bk-row"><div class="bk-ic">'+s.modeIc+'</div>'
+        +'<div class="bk-mid"><div class="bk-name">'+s.name+'</div>'
+        +'<div class="bk-meta"><span class="mode">'+s.mode+'</span> · '+(s.task||'已拜访')+'</div></div>'
+        +'<div class="bk-money '+cls+'">+¥'+(s.earned||0)+'</div></div>';
+    } else {
+      html += '<div class="bk-row todo"><div class="bk-ic">'+s.modeIc+'</div>'
+        +'<div class="bk-mid"><div class="bk-name">'+s.name+'</div>'
+        +'<div class="bk-meta"><span class="mode">'+s.mode+'</span> · 待拜访</div></div>'
+        +'<div class="bk-money todo">满¥'+(s.full||0)+'</div></div>';
+    }
+  });
+  document.getElementById('bookLedger').innerHTML = html;
+  // 按商业模式汇总
+  var modes={};
+  STORES.forEach(function(s){
+    if(!modes[s.mode]) modes[s.mode]={ic:s.modeIc, cnt:0, got:0, full:0};
+    modes[s.mode].cnt++; modes[s.mode].got+=(s.earned||0); modes[s.mode].full+=(s.full||0);
+  });
+  var mhtml='';
+  Object.keys(modes).forEach(function(k){
+    var m=modes[k]; var pct=m.full?Math.round(m.got/m.full*100):0;
+    mhtml += '<div class="bk-mode-row"><span class="bk-mode-ic">'+m.ic+'</span>'
+      +'<div class="bk-mode-mid"><div class="bk-mode-nm">'+k+'</div>'
+      +'<div class="bk-mode-cnt">'+m.cnt+'家店 · 完成度'+pct+'%</div>'
+      +'<div class="bk-mode-bar"><div class="bk-mode-fill" style="width:'+pct+'%"></div></div></div>'
+      +'<div class="bk-mode-money"><div class="bk-mode-got">¥'+m.got+'</div><div class="bk-mode-full">/满'+m.full+'</div></div></div>';
+  });
+  document.getElementById('bookByMode').innerHTML = mhtml;
+}
+function setTxt(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+
+// 我的·SR画像渲染(从SKU×店状态反推贡献)
+function renderMy(){
+  var el=document.getElementById('myBody'); if(!el) return;
+  var done=0, total=STORES.length, got=0, full=0, ica=0, self=0;
+  var modeSet={};
+  STORES.forEach(function(s){
+    if(s.settled) done++;
+    got+=(s.earned||0); full+=(s.full||0);
+    modeSet[s.mode]=1;
+    if(s.hasIca) ica++; else self++;
+  });
+  var html='';
+  // 画像头
+  html += '<div class="my-card"><div class="my-hd"><div class="my-ava">SR</div>'
+    +'<div><div class="my-name">李伟 · 零售业代</div><div class="my-sub">浦东直营区 · 今日'+done+'/'+total+'店</div></div></div>'
+    +'<div class="my-stats"><div class="my-st"><div class="my-st-v">¥'+got+'</div><div class="my-st-l">今日实得</div></div>'
+    +'<div class="my-st"><div class="my-st-v">'+Math.round(got/full*100)+'%</div><div class="my-st-l">满分完成度</div></div>'
+    +'<div class="my-st"><div class="my-st-v">'+Object.keys(modeSet).length+'</div><div class="my-st-l">商业模式</div></div></div></div>';
+  // 商业模式专长(从负责的店反推)
+  var modes={};
+  STORES.forEach(function(s){ if(!modes[s.mode])modes[s.mode]={cnt:0,got:0,full:0,ic:s.modeIc}; modes[s.mode].cnt++; modes[s.mode].got+=(s.earned||0); modes[s.mode].full+=(s.full||0); });
+  html += '<div class="my-card"><div class="my-sec">🏬 我的商业模式专长</div><div class="my-sub2">从负责的店·反推我在哪类店强</div>';
+  Object.keys(modes).sort(function(a,b){return modes[b].got-modes[a].got;}).forEach(function(k){
+    var m=modes[k]; var pct=m.full?Math.round(m.got/m.full*100):0;
+    html += '<div class="my-mode"><span>'+m.ic+' '+k+'</span><span class="my-mode-r">'+m.cnt+'店 · ¥'+m.got+' ('+pct+'%)</span></div>';
+  });
+  html += '</div>';
+  // 状态为锚反推画像(理念说明)
+  html += '<div class="my-card my-anchor"><div class="my-sec">◈ 状态是锚 · 反推贡献</div>'
+    +'<div class="my-anchor-d">我的画像不是"打了多少卡"·而是<b>我让多少个 SKU×店状态变好</b>。同一个状态可能多人共担(美顾+我)·系统以状态为主·再算我的那份贡献。</div>'
+    +'<div class="my-anchor-flow">巡查确保 '+ica+' 店 · 自己拨开关 '+self+' 店<br>→ 改善的 SKU 状态 = 我的真实贡献</div></div>';
+  el.innerHTML = html;
+}
+
+// init
+// 重算无美顾店满分·让满分基准与按阶段收入公式自洽(s1/s2已settled·保留其earned/full)
+STORES.forEach(function(s){ if(!s.hasIca && !s.settled) s.full = computeStoreFull(s); });
+renderRoute();
+refreshSummary();
+</script>
+</body>
+</html>
