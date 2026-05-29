@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinity-os://gt-store/v0.1/pos-sync.schema.json",
+  "title": "L0 POS 自动同步采集契约",
+  "description": "GT社区店 POS 系统每日批量推送·SKU 销售数据·喂养 S06动销/S07复购/S08断货/S10利润 等晶体管",
+  "type": "object",
+  "required": ["sync_id", "synced_at", "store_id", "sync_period", "sku_sales"],
+  "properties": {
+    "sync_id": {"type": "string", "pattern": "^POS_[0-9]{14}_[A-Z0-9]{4}$"},
+    "synced_at": {"type": "string", "format": "date-time"},
+    "store_id": {"type": "string", "pattern": "^[A-Z]{2}_GT_CVS_[0-9]{3,6}$"},
+    "pos_system": {
+      "type": "string",
+      "enum": ["weiquan", "siyuan", "fanmei", "haier", "other"],
+      "description": "POS系统厂商·欣和实际对接的几家"
+    },
+    "sync_period": {
+      "type": "object",
+      "required": ["from", "to"],
+      "properties": {
+        "from": {"type": "string", "format": "date-time"},
+        "to": {"type": "string", "format": "date-time"}
+      }
+    },
+    "sku_sales": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sku_id", "units_sold", "revenue"],
+        "properties": {
+          "sku_id": {"type": "string"},
+          "units_sold": {"type": "integer", "minimum": 0},
+          "revenue": {"type": "number", "minimum": 0},
+          "avg_price": {"type": "number", "minimum": 0},
+          "current_stock": {"type": "integer", "minimum": 0, "description": "POS 反查的当前库存·喂养 S02/S08"},
+          "transaction_count": {"type": "integer", "minimum": 0, "description": "交易笔数·和 units_sold 一起判断是否真实动销(排除一次性大单压货)"},
+          "unique_buyers_est": {"type": "integer", "minimum": 0, "description": "去重买家数·喂养 S07复购"},
+          "stockout_hours": {"type": "integer", "minimum": 0, "description": "本期断货小时数·喂养 S08"}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinity-os://gt-store/v0.1/l0-to-l1-mapping.schema.json",
+  "title": "L0 → L1 映射规则 · 数据如何变成晶体管信号",
+  "description": "这是 Step 1 的核心交付·定义不同采集源的数据·按什么规则合并成 L1 transistor_signals 表的一行·这一层错·上层全废",
+
+  "principle": "同一晶体管可来自多源·按可信度优先级合并·而非简单覆盖",
+
+  "transistor_mappings": {
+    "S01_on_shelf": {
+      "definition": "SKU 在门店有可销售位置",
+      "data_type": "boolean",
+      "sources_priority": [
+        {"source": "image_ai_recognition", "field": "results[].signals.S01_on_shelf", "weight": 0.7, "condition": "confidence >= 0.85 AND stage != stage_1"},
+        {"source": "sales_rep_input", "field": "sku_observations[].transistor_signals.S01_on_shelf.value", "weight": 1.0, "condition": "always"},
+        {"source": "pos_sync", "field": "sku_sales[].units_sold > 0", "weight": 0.5, "condition": "fallback only", "comment": "有销售必有上架·但反过来不成立"}
+      ],
+      "merge_rule": "取 weight 最高且有数据的源·销售员手动 weight=1.0 永远优先",
+      "ttl_hours": 168,
+      "agent_action_if_false": "提示销售员争取上架 / 判断是否目标门店错误 / 判断价格包装问题"
+    },
+
+    "S02_in_stock": {
+      "definition": "门店库存数量 > 0",
+      "data_type": "boolean",
+      "sources_priority": [
+        {"source": "pos_sync", "field": "sku_sales[].current_stock > 0", "weight": 1.0, "condition": "POS有库存反查"},
+        {"source": "sales_rep_input", "field": "sku_observations[].transistor_signals.S02_in_stock.value", "weight": 0.9, "condition": "POS缺时回退"},
+        {"source": "image_ai_recognition", "field": "results[].signals.facings_count > 0", "weight": 0.6, "condition": "粗略推断·有排面不等于有库存"}
+      ],
+      "merge_rule": "POS 优先·销售员次之·AI 仅辅助",
+      "ttl_hours": 24,
+      "agent_action_if_false": "生成补货建议 → 触发供应链 Agent"
+    },
+
+    "S03_main_shelf": {
+      "definition": "SKU 位于门店核心主陈列区域",
+      "data_type": "boolean",
+      "sources_priority": [
+        {"source": "image_ai_recognition", "field": "results[].signals.S03_main_shelf", "weight": 0.9, "condition": "confidence >= 0.85"},
+        {"source": "sales_rep_input", "field": "sku_observations[].transistor_signals.S03_main_shelf.value", "weight": 1.0, "condition": "always"}
+      ],
+      "merge_rule": "销售员优先·AI 是其补充验证",
+      "ttl_hours": 168
+    },
+
+    "S04_second_display": {
+      "definition": "SKU 存在堆头/端架/收银台等额外曝光位",
+      "data_type": "boolean",
+      "sources_priority": [
+        {"source": "sales_rep_input", "field": "sku_observations[].transistor_signals.S04_second_display.value", "weight": 1.0},
+        {"source": "image_ai_recognition", "field": "results[].signals.S04_second_display", "weight": 0.7}
+      ],
+      "ttl_hours": 168
+    },
+
+    "S05_has_price_tag": {
+      "definition": "SKU 价格可被消费者清晰识别",
+      "data_type": "boolean",
+      "sources_priority": [
+        {"source": "image_ai_recognition", "field": "results[].signals.S05_price_tag_visible", "weight": 0.8, "condition": "需要 inventory-v4 或价签识别模型·当前缺口"},
+        {"source": "sales_rep_input", "field": "sku_observations[].transistor_signals.S05_has_price_tag.value", "weight": 1.0}
+      ],
+      "ttl_hours": 168,
+      "agent_action_if_false": "无价签 → 消费者不敢买 → 转化率下降"
+    },
+
+    "S06_has_sellout": {
+      "definition": "7 天内存在真实销售·排除压货/假单/异常促销",
+      "data_type": "boolean",
+      "sources_priority": [
+        {"source": "pos_sync", "field": "sku_sales[].units_sold > 0 AND sku_sales[].transaction_count >= 2", "weight": 1.0, "condition": "POS 是唯一可信源"},
+        {"source": "sales_rep_input", "field": "sku_observations[].transistor_signals.S06_has_sellout.value", "weight": 0.6, "condition": "POS 缺时回退·销售员靠老板说·不完全可信"}
+      ],
+      "merge_rule": "POS 绝对优先·销售员仅作POS缺时备份",
+      "ttl_hours": 24,
+      "critical": true,
+      "comment": "动销是唯一考卷·这个信号必须准·宁缺勿假"
+    },
+
+    "S07_repurchase": {
+      "definition": "消费者再次购买·成长期生命力关键",
+      "data_type": "boolean",
+      "sources_priority": [
+        {"source": "pos_sync", "field": "sku_sales[].unique_buyers_est 同比/环比变化", "weight": 0.9, "condition": "需要会员/手机号去重"},
+        {"source": "sales_rep_input", "field": "sku_observations[].transistor_signals.S07_repurchase.evidence", "weight": 0.5, "condition": "证据型·非定量"}
+      ],
+      "ttl_hours": 168,
+      "comment": "复购计算需要至少 30 天数据·初次接入前2周无法判断"
+    },
+
+    "S08_stockout": {
+      "definition": "门店有需求但库存为0·与 S02 互补:S02=当前有货·S08=过去断过",
+      "data_type": "boolean",
+      "sources_priority": [
+        {"source": "pos_sync", "field": "sku_sales[].stockout_hours > 0", "weight": 1.0},
+        {"source": "sales_rep_input", "field": "sku_observations[].transistor_signals.S08_stockout.value", "weight": 0.9}
+      ],
+      "ttl_hours": 24,
+      "agent_action_if_true": "判断根因:经销商无货 / 门店未下单 / 配送问题 → 触发供应链Agent",
+      "downstream_signal": "S08_stockout.root_cause_guess 直接喂给 L7 行动引擎"
+    },
+
+    "S09_owner_recommends": {
+      "definition": "老板主动推荐 SKU·GT 社区店关键晶体管·业态专属",
+      "data_type": "boolean",
+      "sources_priority": [
+        {"source": "sales_rep_input", "field": "sku_observations[].transistor_signals.S09_owner_recommends.value", "weight": 1.0, "condition": "只能销售员观察·无其他源"}
+      ],
+      "ttl_hours": 720,
+      "comment": "GT 业态专属·L2 成长期门必需·会员店/O2O/折扣店换其他业态专属晶体管"
+    },
+
+    "S10_profit_meet_target": {
+      "definition": "SKU 利润达到门店与公司要求",
+      "data_type": "boolean",
+      "sources_priority": [
+        {"source": "pos_sync", "field": "sku_sales[].avg_price 与 sku_products.gross_margin 计算", "weight": 1.0, "condition": "后台计算·不需采集"},
+        {"source": "sales_rep_input", "field": "sku_observations[].transistor_signals.S10_profit_meet_target.value", "weight": 0.4, "condition": "销售员估算·参考值"}
+      ],
+      "ttl_hours": 720
+    }
+  },
+
+  "data_freshness_rule": {
+    "description": "TTL过期后该信号视为'未知'·不可使用·必须重新采集",
+    "default_ttl_hours": 168,
+    "critical_signals_ttl_hours": 24,
+    "principle": "宁可标'未知'·不可用过期数据骗 Agent"
+  },
+
+  "conflict_resolution": {
+    "description": "多源数据冲突时的解决规则",
+    "rules": [
+      "①weight 高者胜",
+      "②同 weight 时·新者胜(timestamp)",
+      "③POS 与销售员冲突且差异显著·标记 conflict=true·喂 L8 学习引擎",
+      "④AI confidence < 0.85 时·必须人工 verify 才接受"
+    ]
+  }
+}

@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinity-os://gt-store/v0.1/sales-rep-input.schema.json",
+  "title": "L0 销售员手动录入采集契约",
+  "description": "GT社区店 Pro App · 销售员进店检查 SKU 状态时的录入数据·这是 L0 感知层最主要的采集源·对应 DS ⑩前端结构 P5 SKU检查页",
+  "type": "object",
+  "required": [
+    "submission_id",
+    "submitted_at",
+    "submitted_by",
+    "store_id",
+    "channel_type",
+    "sku_observations"
+  ],
+  "properties": {
+    "submission_id": {
+      "type": "string",
+      "pattern": "^SUB_[0-9]{14}_[A-Z0-9]{6}$",
+      "description": "提交唯一ID·格式 SUB_YYYYMMDDHHMMSS_RANDOM6",
+      "examples": ["SUB_20260529143022_A1B2C3"]
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "提交时间·ISO 8601·UTC"
+    },
+    "submitted_by": {
+      "type": "object",
+      "required": ["user_id", "role"],
+      "properties": {
+        "user_id": {"type": "string", "examples": ["SR_001234"]},
+        "role": {
+          "type": "string",
+          "enum": ["GT_SR", "GT_DSR", "ICA", "ICA_BOSS_HIRED", "ICA_TEMP"],
+          "description": "角色严格限定·参考记忆#16/#30用户分类"
+        },
+        "name": {"type": "string", "examples": ["张三"]}
+      }
+    },
+    "store_id": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}_GT_CVS_[0-9]{3,6}$",
+      "description": "门店ID·参考 DS ⑪表2 stores",
+      "examples": ["SH_GT_CVS_001"]
+    },
+    "channel_type": {
+      "type": "string",
+      "const": "GT_CVS",
+      "description": "本契约只服务 GT社区店·第一个细胞·参考 DS ⑪表3 channels"
+    },
+    "geo_check": {
+      "type": "object",
+      "description": "防作弊·签到时的GPS定位·参考派单互锁防作弊机制",
+      "properties": {
+        "lat": {"type": "number"},
+        "lng": {"type": "number"},
+        "accuracy_m": {"type": "number"},
+        "is_within_geofence": {"type": "boolean"}
+      }
+    },
+    "sku_observations": {
+      "type": "array",
+      "minItems": 1,
+      "description": "本次检查的SKU状态观察清单·每个SKU一条·对应10个晶体管 S01-S10",
+      "items": {
+        "$ref": "#/$defs/SkuObservation"
+      }
+    },
+    "store_level_notes": {
+      "type": "object",
+      "description": "门店级别的观察·非SKU级·参考 DS 主文件 P2 进入门店",
+      "properties": {
+        "owner_mood": {"type": "string", "enum": ["positive", "neutral", "negative", "absent"]},
+        "competitor_promo_seen": {"type": "boolean"},
+        "competitor_notes": {"type": "string", "maxLength": 500},
+        "general_notes": {"type": "string", "maxLength": 1000}
+      }
+    }
+  },
+  "$defs": {
+    "SkuObservation": {
+      "type": "object",
+      "required": ["sku_id", "transistor_signals", "observed_at"],
+      "properties": {
+        "sku_id": {
+          "type": "string",
+          "pattern": "^[A-Z]+_[A-Z0-9_]+$",
+          "examples": ["JYX_LIGHT_500"],
+          "description": "SKU ID·参考 DS ⑪表1 sku_products"
+        },
+        "observed_at": {"type": "string", "format": "date-time"},
+        "transistor_signals": {
+          "type": "object",
+          "description": "10个经营晶体管 S01-S10·每个对应一个状态信号·参考 DS ②晶体管字典",
+          "required": ["S01_on_shelf", "S02_in_stock", "S06_has_sellout"],
+          "properties": {
+            "S01_on_shelf": {
+              "type": "object",
+              "required": ["value", "source"],
+              "properties": {
+                "value": {"type": "boolean", "description": "是否上架·SKU在门店有可销售位置"},
+                "source": {"type": "string", "enum": ["manual", "photo_ai", "shelf_scan"]},
+                "confidence": {"type": "number", "minimum": 0, "maximum": 1, "description": "AI识别置信度·手动录入时=1.0"}
+              }
+            },
+            "S02_in_stock": {
+              "type": "object",
+              "required": ["value"],
+              "properties": {
+                "value": {"type": "boolean", "description": "是否有库存·门店库存数量>0"},
+                "qty_estimate": {"type": "integer", "minimum": 0, "description": "估计库存数·可选"},
+                "source": {"type": "string", "enum": ["manual", "photo_ai", "pos", "inventory_system"]}
+              }
+            },
+            "S03_main_shelf": {
+              "type": "object",
+              "properties": {
+                "value": {"type": "boolean", "description": "是否主货架·SKU位于门店核心主陈列区域"},
+                "source": {"type": "string", "enum": ["manual", "photo_ai"]},
+                "photo_url": {"type": "string", "format": "uri"}
+              }
+            },
+            "S04_second_display": {
+              "type": "object",
+              "properties": {
+                "value": {"type": "boolean", "description": "是否第二陈列·堆头/端架/收银台等额外曝光"},
+                "display_type": {"type": "string", "enum": ["dump_bin", "endcap", "checkout", "island", "none"]},
+                "photo_url": {"type": "string", "format": "uri"}
+              }
+            },
+            "S05_has_price_tag": {
+              "type": "object",
+              "properties": {
+                "value": {"type": "boolean", "description": "是否有价签·价格可被消费者清晰识别"},
+                "shelf_price": {"type": "number", "minimum": 0, "description": "货架价"},
+                "promo_price": {"type": "number", "minimum": 0, "description": "促销价·无则同shelf_price"},
+                "source": {"type": "string", "enum": ["manual", "price_tag_ai"]}
+              }
+            },
+            "S06_has_sellout": {
+              "type": "object",
+              "required": ["value"],
+              "properties": {
+                "value": {"type": "boolean", "description": "是否动销·7天内存在真实销售·排除压货/假单"},
+                "units_last_7d": {"type": "integer", "minimum": 0},
+                "source": {"type": "string", "enum": ["pos", "manual_inquiry", "owner_report"]}
+              }
+            },
+            "S07_repurchase": {
+              "type": "object",
+              "properties": {
+                "value": {"type": "boolean", "description": "是否复购·消费者再次购买·成长期关键信号"},
+                "evidence": {"type": "string", "description": "证据·如老板说有固定客来买"}
+              }
+            },
+            "S08_stockout": {
+              "type": "object",
+              "properties": {
+                "value": {"type": "boolean", "description": "是否断货·门店有需求但库存为0"},
+                "stockout_days": {"type": "integer", "minimum": 0},
+                "root_cause_guess": {
+                  "type": "string",
+                  "enum": ["distributor_oos", "owner_not_ordered", "delivery_delay", "unknown"],
+                  "description": "断货根因猜测·喂给 Agent 推理·参考 DS③ 推理引擎"
+                }
+              }
+            },
+            "S09_owner_recommends": {
+              "type": "object",
+              "properties": {
+                "value": {"type": "boolean", "description": "是否老板推荐·GT社区店关键晶体管·老板=超级导购"},
+                "recommend_level": {"type": "string", "enum": ["proactive", "if_asked", "neutral", "negative"]}
+              }
+            },
+            "S10_profit_meet_target": {
+              "type": "object",
+              "properties": {
+                "value": {"type": "boolean", "description": "是否利润达标·SKU利润达到门店与公司要求"},
+                "gross_margin_pct": {"type": "number", "minimum": 0, "maximum": 1}
+              }
+            }
+          }
+        },
+        "photos": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": {"type": "string", "format": "uri"},
+              "type": {"type": "string", "enum": ["shelf", "price_tag", "second_display", "stockout", "competitor", "other"]},
+              "captured_at": {"type": "string", "format": "date-time"}
+            }
+          }
+        },
+        "observation_notes": {"type": "string", "maxLength": 500}
+      }
+    }
+  }
+}
