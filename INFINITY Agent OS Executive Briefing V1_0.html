@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 战略会汇报</title>
+<style>
+:root {
+  --ink:#1a1d24; --ink2:#3d434f; --ink3:#6b7384; --ink4:#9aa0ad;
+  --line:#e6e2d8; --line2:#d8d3c5;
+  --paper:#faf8f2; --card:#ffffff;
+  --gold:#a8801c; --gold2:#8a6a18; --burgundy:#6b2c2c;
+  --sage:#5f7a5e; --slate:#3d5468; --rust:#9c5430;
+  --accent:#a8801c;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:"Songti SC","STSong","Noto Serif CJK SC",Georgia,serif;
+  line-height:1.7;font-size:18px;
+  background-image:radial-gradient(circle at 1px 1px,rgba(168,128,28,0.05) 1px,transparent 0);
+  background-size:24px 24px;
+  touch-action:pan-y;
+}
+
+/* 容器 */
+.deck{
+  width:100vw;height:100vh;position:relative;overflow:hidden;
+}
+.slide{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  padding:48px 56px 72px;
+  display:flex;flex-direction:column;
+  opacity:0;transform:translateX(40px);
+  transition:opacity 0.4s ease,transform 0.4s ease;
+  pointer-events:none;overflow-y:auto;
+}
+.slide.active{opacity:1;transform:translateX(0);pointer-events:auto}
+.slide.prev{transform:translateX(-40px)}
+
+/* 顶部条:页码+章节 */
+.topbar{
+  position:absolute;top:18px;left:56px;right:56px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:-apple-system,sans-serif;font-size:10px;
+  color:var(--ink3);letter-spacing:0.2em;font-weight:600;
+}
+.topbar .ch{color:var(--gold2)}
+.topbar .num{font-family:"Times New Roman",serif;font-style:italic;font-size:13px}
+
+/* 底部导航(始终可见) */
+.nav-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(250,248,242,0.95);backdrop-filter:blur(10px);
+  border-top:1px solid var(--line2);
+  padding:12px 24px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:-apple-system,sans-serif;font-size:13px;
+  z-index:100;
+}
+.nav-btn{
+  background:none;border:1px solid var(--ink);color:var(--ink);
+  padding:8px 18px;cursor:pointer;font-family:inherit;font-size:12px;
+  letter-spacing:0.08em;font-weight:600;
+  transition:all 0.15s;
+}
+.nav-btn:hover:not(:disabled){background:var(--ink);color:#fff}
+.nav-btn:disabled{opacity:0.3;cursor:not-allowed}
+.nav-progress{
+  display:flex;gap:5px;
+}
+.nav-dot{
+  width:18px;height:3px;background:var(--line2);cursor:pointer;
+  transition:background 0.2s;
+}
+.nav-dot.active{background:var(--gold)}
+
+/* === Slide 内通用样式 === */
+.cover-slide{justify-content:center;text-align:center;align-items:center}
+.cover-slide .stamp{
+  display:inline-block;font-family:-apple-system,sans-serif;
+  font-size:11px;letter-spacing:0.4em;color:var(--gold2);
+  border:1px solid var(--gold2);padding:6px 14px;margin-bottom:32px;
+  font-weight:600;
+}
+.cover-slide h1{
+  font-size:46px;line-height:1.2;font-weight:700;margin-bottom:18px;
+  letter-spacing:0.02em;
+}
+.cover-slide .subtitle{
+  font-size:20px;color:var(--ink2);font-weight:400;letter-spacing:0.05em;
+  margin-bottom:36px;
+}
+.cover-slide .meta{
+  font-family:-apple-system,sans-serif;font-size:12px;color:var(--ink3);
+  letter-spacing:0.1em;line-height:2;
+}
+.cover-slide .meta b{color:var(--ink)}
+
+/* H2 标题 */
+.slide h2{
+  font-size:36px;line-height:1.3;font-weight:700;margin-bottom:8px;
+  letter-spacing:0.01em;
+}
+.slide h2 .accent{color:var(--gold2)}
+.slide .lede{
+  font-size:17px;color:var(--ink2);line-height:1.7;margin-bottom:28px;
+  font-style:italic;
+}
+
+/* 段落 */
+.slide p{font-size:17px;color:var(--ink2);line-height:1.85;margin-bottom:14px}
+.slide strong{color:var(--ink);font-weight:700}
+.slide em{color:var(--gold2);font-style:normal;font-weight:600}
+
+/* 北极星卡 */
+.north-star{
+  background:linear-gradient(180deg,#fefcf5 0%,#f9f5e8 100%);
+  border:2px solid var(--ink);padding:32px 36px;margin:24px 0;
+  position:relative;text-align:center;
+}
+.north-star::before{
+  content:"";position:absolute;top:8px;left:8px;right:8px;bottom:8px;
+  border:1px solid var(--line2);pointer-events:none;
+}
+.north-star .label{
+  font-family:-apple-system,sans-serif;font-size:11px;letter-spacing:0.3em;
+  color:var(--burgundy);font-weight:700;text-transform:uppercase;
+  margin-bottom:8px;
+}
+.north-star .target{
+  font-size:32px;font-weight:700;line-height:1.4;color:var(--ink);
+  margin:12px 0;
+}
+.north-star .target .big{font-size:54px;color:var(--gold2);font-weight:800;font-family:"Times New Roman",serif}
+.north-star .sub{font-size:14px;color:var(--ink2);font-family:-apple-system,sans-serif;margin-top:8px}
+
+/* 数字卡组 */
+.metrics{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px;margin:24px 0;
+}
+.metric{
+  background:var(--card);border:1px solid var(--line);padding:24px 18px;
+  text-align:center;
+}
+.metric.highlight{border:2px solid var(--gold);background:linear-gradient(180deg,#fffbeb,#fff)}
+.metric .num{
+  font-family:"Times New Roman",serif;font-style:italic;font-weight:700;
+  font-size:48px;color:var(--gold2);line-height:1;margin-bottom:8px;
+}
+.metric.highlight .num{font-size:54px}
+.metric .lbl{
+  font-size:13px;color:var(--ink2);font-family:-apple-system,sans-serif;
+  line-height:1.5;
+}
+
+/* 时间轴 */
+.timeline{margin:20px 0;border-left:2px solid var(--ink);padding-left:0}
+.tl-item{
+  padding:14px 0 14px 28px;position:relative;
+}
+.tl-item::before{
+  content:"";position:absolute;left:-7px;top:22px;
+  width:12px;height:12px;border:2px solid var(--ink);background:var(--paper);
+  border-radius:50%;
+}
+.tl-item.done::before{background:var(--sage);border-color:var(--sage)}
+.tl-item.now::before{background:var(--gold);border-color:var(--gold);
+  box-shadow:0 0 0 6px rgba(168,128,28,0.18)}
+.tl-item .label{
+  font-family:-apple-system,sans-serif;font-size:11px;letter-spacing:0.15em;
+  color:var(--ink3);font-weight:700;
+}
+.tl-item.done .label{color:var(--sage)}
+.tl-item.now .label{color:var(--gold2)}
+.tl-item .title{font-size:18px;font-weight:700;margin:2px 0 4px;color:var(--ink)}
+.tl-item .desc{font-size:14px;color:var(--ink2);font-family:-apple-system,sans-serif;line-height:1.6}
+
+/* 大字引语 */
+.pull-quote{
+  font-size:30px;line-height:1.5;color:var(--ink);font-weight:700;
+  padding:24px 0 24px 32px;border-left:4px solid var(--gold);
+  margin:24px 0;font-style:italic;
+}
+.pull-quote .by{
+  display:block;font-size:13px;color:var(--ink3);font-style:normal;font-weight:400;
+  margin-top:10px;letter-spacing:0.1em;font-family:-apple-system,sans-serif;
+}
+
+/* 数据流可视化 */
+.data-flow{
+  background:var(--card);border:1px solid var(--line2);padding:28px 32px;
+  font-family:"SF Mono",monospace;font-size:13px;line-height:2;
+  color:var(--ink2);overflow-x:auto;margin:20px 0;
+}
+.data-flow .step{color:var(--gold2);font-weight:700}
+.data-flow .arr{color:var(--ink3)}
+.data-flow .data{color:var(--sage);font-style:italic}
+.data-flow .out{color:var(--burgundy);font-weight:700;background:#fff5f5;padding:2px 6px}
+
+/* 风险/对比卡 */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:24px 0}
+.split-card{padding:24px;border:1px solid var(--line2)}
+.split-card.bad{background:#fdf6f4;border-color:var(--burgundy)}
+.split-card.good{background:#f4f8f4;border-color:var(--sage)}
+.split-card .hd{
+  font-family:-apple-system,sans-serif;font-size:11px;letter-spacing:0.2em;
+  font-weight:700;margin-bottom:14px;text-transform:uppercase;
+}
+.split-card.bad .hd{color:var(--burgundy)}
+.split-card.good .hd{color:var(--sage)}
+.split-card h3{font-size:20px;font-weight:700;margin-bottom:8px}
+.split-card ul{padding-left:18px;margin-top:8px}
+.split-card li{font-size:14px;color:var(--ink2);font-family:-apple-system,sans-serif;line-height:1.7;margin-bottom:4px}
+
+/* 决策卡 */
+.decision{
+  background:linear-gradient(135deg,#fffbeb,#fef3c7,#fffbeb);
+  border:3px solid var(--gold);padding:36px 40px;margin:24px 0;
+  position:relative;
+}
+.decision::before{
+  content:"⚑";position:absolute;top:-2px;right:24px;
+  background:var(--gold);color:#fff;padding:8px 12px;font-size:18px;
+}
+.decision .hd{
+  font-family:-apple-system,sans-serif;font-size:12px;letter-spacing:0.3em;
+  color:var(--gold2);font-weight:700;margin-bottom:12px;text-transform:uppercase;
+}
+.decision h3{font-size:32px;font-weight:700;margin-bottom:14px;color:var(--ink)}
+.decision .what{font-size:18px;color:var(--ink2);line-height:1.7;font-family:"Songti SC",serif;margin-bottom:18px}
+.decision .why{
+  background:rgba(255,255,255,0.6);padding:18px 22px;border-left:3px solid var(--gold);
+  font-size:14px;color:var(--ink2);font-family:-apple-system,sans-serif;line-height:1.7;
+}
+.decision .why strong{color:var(--ink)}
+
+/* 落款 */
+.colophon-slide{justify-content:center;text-align:center;align-items:center}
+.colophon-slide .seal{
+  display:inline-block;width:60px;height:60px;border:3px solid var(--burgundy);
+  color:var(--burgundy);font-family:"Songti SC",serif;font-size:24px;font-weight:700;
+  line-height:54px;margin-bottom:24px;
+}
+.colophon-slide h2{font-size:42px;margin-bottom:16px}
+.colophon-slide .text{font-size:18px;color:var(--ink2);line-height:1.9;font-family:"Songti SC",serif;max-width:540px}
+
+/* iPad 提示 */
+.hint{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(26,29,36,0.9);color:#fff;padding:14px 22px;
+  font-family:-apple-system,sans-serif;font-size:13px;
+  pointer-events:none;opacity:0;transition:opacity 0.3s;z-index:200;
+}
+.hint.show{opacity:1}
+
+@media (max-width: 768px){
+  .slide{padding:36px 24px 80px}
+  .cover-slide h1{font-size:34px}
+  .cover-slide .subtitle{font-size:16px}
+  .slide h2{font-size:26px}
+  .slide .lede{font-size:15px}
+  .slide p{font-size:15px}
+  .pull-quote{font-size:22px}
+  .north-star .target{font-size:22px}
+  .north-star .target .big{font-size:38px}
+  .metric .num{font-size:36px}
+  .metric.highlight .num{font-size:42px}
+  .decision h3{font-size:22px}
+  .decision .what{font-size:15px}
+  .split{grid-template-columns:1fr}
+  .topbar{left:24px;right:24px}
+  .data-flow{padding:18px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<!-- Slide 1: Cover -->
+<div class="slide cover-slide active" data-num="01">
+  <div class="topbar"><span></span><span class="num">01 / 12</span></div>
+  <div class="stamp">EXECUTIVE BRIEFING · 2026 Q2</div>
+  <h1>INFINITY <span style="color:var(--gold2)">OS</span></h1>
+  <div class="subtitle">经营操作系统 · 战略汇报 · 15 分钟版</div>
+  <div class="meta">
+    <b>主题</b> · 第一个经营细胞跑通 · 申请加速决策<br>
+    <b>呈送</b> · 集团 / 事业部领导<br>
+    <b>署名</b> · DS · 2026-05-30
+  </div>
+</div>
+
+<!-- Slide 2: 北极星不变 -->
+<div class="slide" data-num="02">
+  <div class="topbar"><span class="ch">I · WHY · 北极星</span><span class="num">02 / 12</span></div>
+  <h2>北极星 · <span class="accent">没有改变</span></h2>
+  <p class="lede">这一切都是为了一个目标。</p>
+
+  <div class="north-star">
+    <div class="label">NORTH STAR</div>
+    <div class="target">
+      六月鲜 <span class="big">200M</span> 瓶<br>
+      <span class="big">¥4B</span> RMB
+    </div>
+    <div class="sub">渗透 4000 万家庭 · 覆盖 337 城</div>
+  </div>
+
+  <p style="text-align:center;font-size:15px;color:var(--ink3);font-family:-apple-system,sans-serif;margin-top:20px">
+    INFINITY OS 是<em>这个目标的执行放大器</em><br>
+    让 100 人团队做到 1000 人的执行效果
+  </p>
+</div>
+
+<!-- Slide 3: 行业窗口 -->
+<div class="slide" data-num="03">
+  <div class="topbar"><span class="ch">I · WHY · 窗口期</span><span class="num">03 / 12</span></div>
+  <h2>窗口正在打开 · <span class="accent">且会关闭</span></h2>
+
+  <div style="margin:20px 0">
+    <p style="font-size:18px"><strong>市场两极化已成定局</strong>:高端追求品质,中低端贴身肉搏。</p>
+    <p style="font-size:18px"><strong>AI 转型窗口期</strong>:海天、李锦记迟早会做,但他们体量大、转身慢。</p>
+    <p style="font-size:18px"><strong>欣和的位置</strong>:跳过 3.0,直接做 4.0 经营 OS。</p>
+  </div>
+
+  <div class="pull-quote">
+    速度 &gt; 完美 · 快错快改
+    <span class="by">— 欣和赢法 = 每个维度强一点点叠加成大的强,前提:每个"一点点"必须真实</span>
+  </div>
+</div>
+
+<!-- Slide 4: 现状·5个月走过来 -->
+<div class="slide" data-num="04">
+  <div class="topbar"><span class="ch">II · WHAT · 现状</span><span class="num">04 / 12</span></div>
+  <h2>5 个月走过来 · <span class="accent">从概念到工程</span></h2>
+  <p class="lede">不是PPT,是可运行代码。</p>
+
+  <div class="timeline">
+    <div class="tl-item done">
+      <div class="label">2026 Q1 · 探索期</div>
+      <div class="title">9 版 SR App · 渠道适配架构 V1.1</div>
+      <div class="desc">在错的底层上做了很多·暴露了"管销售"思维的天花板</div>
+    </div>
+    <div class="tl-item done">
+      <div class="label">2026 04 · 底层切换</div>
+      <div class="title">DS V0.1 十文件 · 锚定 SKU 生命力</div>
+      <div class="desc">从"管销售"切到"养 SKU 生命"·世界观级别的纠正</div>
+    </div>
+    <div class="tl-item done">
+      <div class="label">2026 05 · 工程化</div>
+      <div class="title">DS ⑧ Step 1-5 · L0-L8 全部跑通</div>
+      <div class="desc">数据契约 / 经营晶体管 DB / 规则引擎 / 行动 API / 资源调度</div>
+    </div>
+    <div class="tl-item now">
+      <div class="label">2026 05-30 · 今天</div>
+      <div class="title">GT 社区店第一个经营细胞 · 完整闭环</div>
+      <div class="desc">一个 SR 拍照 → SAP 单据号 · 全程可追溯</div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 5: 真实成果·数字 -->
+<div class="slide" data-num="05">
+  <div class="topbar"><span class="ch">II · WHAT · 已完成</span><span class="num">05 / 12</span></div>
+  <h2>已建成的 · <span class="accent">不夸大</span></h2>
+
+  <div class="metrics">
+    <div class="metric highlight"><div class="num">5/5</div><div class="lbl">DS ⑧ 工程化路线<br>全部完成</div></div>
+    <div class="metric"><div class="num">9</div><div class="lbl">数据库表<br>L1 经营晶体管</div></div>
+    <div class="metric"><div class="num">7</div><div class="lbl">RESTful API<br>覆盖 L0-L8</div></div>
+    <div class="metric"><div class="num">67</div><div class="lbl">端到端测试<br>全部通过</div></div>
+    <div class="metric"><div class="num">10</div><div class="lbl">经营晶体管<br>S01-S10 全字典</div></div>
+    <div class="metric"><div class="num">0</div><div class="lbl">已知 bug<br>已知遗留</div></div>
+  </div>
+
+  <p style="text-align:center;margin-top:18px;font-size:14px;color:var(--ink3);font-family:-apple-system,sans-serif">
+    全部代码已在 GitHub Pages · 团队/TL/DBA/合作方 7 个链接可直查
+  </p>
+</div>
+
+<!-- Slide 6: 一个真实场景·SR 到 SAP -->
+<div class="slide" data-num="06">
+  <div class="topbar"><span class="ch">III · HOW · 真实案例</span><span class="num">06 / 12</span></div>
+  <h2>一个真实场景 · <span class="accent">SR 拍照 到 SAP 单据</span></h2>
+  <p class="lede">六月鲜轻盐 500ml · 上海浦东 A 社区店 · 完整跑通(已端到端验证)</p>
+
+  <div class="data-flow">
+<span class="step">SR 张三</span> 进店拍照 · 录入 10 项 SKU 状态
+   <span class="arr">↓</span>
+<span class="step">L1 入库</span> 进 transistor_signals 表 · <span class="data">追溯ID SUB_xxx</span>
+   <span class="arr">↓</span>
+<span class="step">L2 评估</span> 判定:导入期 <span style="color:var(--burgundy)">FAIL</span> · 失败信号:无动销
+   <span class="arr">↓</span>
+<span class="step">L7 推理</span> 4 条根因:老板不推 / 不在主货架 / 价签缺 / 消费者认知
+   <span class="arr">↓</span>
+<span class="step">L7 行动</span> 自动生成 4 条建议 + 2 条资源申请
+   <span class="arr">↓</span>
+<span class="step">L8 调度</span> DOM 批准 → 调用 SAP Finance
+   <span class="arr">↓</span>
+<span class="step">出口</span> <span class="out">SAP_20260530_57757</span> · 企业系统真单据
+  </div>
+
+  <p style="text-align:center;font-size:18px;font-weight:700;margin-top:18px;color:var(--ink)">
+    一个 SR 的现场观察 · 自动变成 SAP 单据 · <span style="color:var(--gold2)">全程可追溯</span>
+  </p>
+</div>
+
+<!-- Slide 7: 为什么这个架构能撑住欣和 -->
+<div class="slide" data-num="07">
+  <div class="topbar"><span class="ch">III · HOW · 架构价值</span><span class="num">07 / 12</span></div>
+  <h2>为什么这套架构 · <span class="accent">能撑住欣和</span></h2>
+
+  <div style="margin:24px 0">
+    <p><strong>第一</strong> · 锚在 SKU 生命力 —— 不是销售员考核,不是销量数字,是<em>SKU 在某个门店活得怎么样</em>。这是世界观级别的差异。海天/李锦记如果照抄,也得先经历这个认知转变。</p>
+
+    <p><strong>第二</strong> · 业态扩展只改 3 层 —— 加 O2O / 会员店 / 大卖场 / 餐饮,只改 L1+L2+L3,上层 L4-L9 零改动。<em>第一个细胞跑通后,后面每个业态 2-3 周</em>。</p>
+
+    <p><strong>第三</strong> · 自主与对齐平衡 —— Agent 自主处理小事(¥500 内自动批),大事必须 DOM/CTL 把关。<em>不是无人化,是放大化</em>。</p>
+
+    <p><strong>第四</strong> · 真正的 OS · 不是 IT 工具 —— 不是又一个 SFA、又一个 BI,是缝合数据+品牌独立+合伙人制+SKU绑定的<em>经营操作系统</em>。</p>
+  </div>
+</div>
+
+<!-- Slide 8: 当前位置·诚实标 -->
+<div class="slide" data-num="08">
+  <div class="topbar"><span class="ch">IV · WHERE · 诚实坐标</span><span class="num">08 / 12</span></div>
+  <h2>我们在哪里 · <span class="accent">诚实标注</span></h2>
+  <p class="lede">不夸大现状,但路线清晰。</p>
+
+  <div style="background:var(--card);border:1px solid var(--line);padding:24px 28px;margin:20px 0">
+    <table style="width:100%;font-family:-apple-system,sans-serif;font-size:14px">
+      <tr style="border-bottom:1px solid var(--line)">
+        <td style="padding:10px 0;color:var(--ink3);width:35%"><strong>架构维度</strong></td>
+        <td style="padding:10px 0;color:var(--ink)">L0-L8 工程化完成 · L3/L4/L5 留给细胞复制时</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--line)">
+        <td style="padding:10px 0;color:var(--ink3)"><strong>成熟度</strong></td>
+        <td style="padding:10px 0;color:var(--ink)">当前 <em>S2</em>(动态简报)→ 下一个 S3(跨会话 Agent)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--line)">
+        <td style="padding:10px 0;color:var(--ink3)"><strong>外部对接</strong></td>
+        <td style="padding:10px 0;color:var(--ink)">Mock SAP/钉钉(真返单据号)· 等 TL 接真</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--line)">
+        <td style="padding:10px 0;color:var(--ink3)"><strong>业态覆盖</strong></td>
+        <td style="padding:10px 0;color:var(--ink)">GT 社区店(第一个细胞)· 待复制 O2O / 会员店 / 大卖场</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;color:var(--ink3)"><strong>团队</strong></td>
+        <td style="padding:10px 0;color:var(--ink)"><em>缺 Tech Lead · 是当前最大瓶颈</em></td>
+      </tr>
+    </table>
+  </div>
+
+  <p style="font-size:14px;color:var(--ink3);font-family:-apple-system,sans-serif;text-align:center">
+    核心信息:架构已成 · 工程化已完 · <em>缺真接系统的人</em>
+  </p>
+</div>
+
+<!-- Slide 9: 不做的代价 vs 做的收益 -->
+<div class="slide" data-num="09">
+  <div class="topbar"><span class="ch">V · RISK · 两个未来</span><span class="num">09 / 12</span></div>
+  <h2>两个未来 · <span class="accent">选哪个?</span></h2>
+
+  <div class="split">
+    <div class="split-card bad">
+      <div class="hd">⚠ 如果停在这里</div>
+      <h3>停留在 Layer 1.3</h3>
+      <ul>
+        <li>架构完成 · 但永远是演示态</li>
+        <li>Mock 不变真 · 数据不真流</li>
+        <li>第二个细胞动力不足 · 模板浪费</li>
+        <li>海天/李锦记 12-18 月内会做 · 窗口关闭</li>
+        <li>6 个月后回看 · 等于没做</li>
+      </ul>
+    </div>
+    <div class="split-card good">
+      <div class="hd">✓ 如果加速</div>
+      <h3>3 个月进 S3 Agent</h3>
+      <ul>
+        <li>TL 入职 · 1 个月接真 SAP Finance</li>
+        <li>3 个月内 · GT 社区店真数据流</li>
+        <li>6 个月 · 复制到 O2O / 会员店</li>
+        <li>12 个月 · 5 业态全覆盖 · 1000 家试点门店</li>
+        <li>窗口期内拉开与同业差距</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 10: 决策点 -->
+<div class="slide" data-num="10">
+  <div class="topbar"><span class="ch">VI · ASK · 决策</span><span class="num">10 / 12</span></div>
+  <h2>申请决策</h2>
+
+  <div class="decision">
+    <div class="hd">RESOLUTION</div>
+    <h3>批准 Tech Lead 招聘启动</h3>
+    <div class="what">
+      把 Mock 换成真 SAP / 钉钉 / 企微 · 让 Agent 决策真触发企业动作。
+      <br><br>
+      <strong>能力要求</strong>:Java Spring Boot + MySQL + SAP RFC/OData 集成经验 · 食品快消行业优先。
+    </div>
+    <div class="why">
+      <strong>为什么是现在</strong>:Step 1-5 工程化产出 = TL 入职第一天就能开干的现成起点。
+      所有代码、契约、测试已准备好,无需从零起步,TL 进入即可冲刺。
+      <br><br>
+      <strong>预计</strong>:招聘 1 个月 · 入职后 1 个月接通第一个真 SAP 接口 · 3 个月内 GT 真数据流。
+    </div>
+  </div>
+</div>
+
+<!-- Slide 11: 12 个月路线图 -->
+<div class="slide" data-num="11">
+  <div class="topbar"><span class="ch">VII · ROADMAP · 12 月</span><span class="num">11 / 12</span></div>
+  <h2>12 个月路线图 · <span class="accent">从 Mock 到全球</span></h2>
+
+  <div class="timeline" style="margin-top:24px">
+    <div class="tl-item now">
+      <div class="label">现在 · M0</div>
+      <div class="title">L0-L8 工程化完成 · Layer 1.3</div>
+      <div class="desc">所有代码已就位 · 等 TL 入职</div>
+    </div>
+    <div class="tl-item">
+      <div class="label">M1-M3</div>
+      <div class="title">TL 入职 · 第一个真接入</div>
+      <div class="desc">SAP Finance 接真 · MySQL 生产部署 · GT 试点 5 家门店</div>
+    </div>
+    <div class="tl-item">
+      <div class="label">M3-M6</div>
+      <div class="title">S3 真 Agent</div>
+      <div class="desc">跨会话 Agent · 企微推送 · 100 家试点 · 500 学习样本积累</div>
+    </div>
+    <div class="tl-item">
+      <div class="label">M6-M9</div>
+      <div class="title">第二/三个细胞</div>
+      <div class="desc">O2O + 会员店复制 · 验证细胞模板成立</div>
+    </div>
+    <div class="tl-item">
+      <div class="label">M9-M12</div>
+      <div class="title">S4 主动 Agent · 1000 家门店</div>
+      <div class="desc">Agent 主动预警 · 5 业态全覆盖 · 真正放大效应</div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 12: 落款 -->
+<div class="slide colophon-slide" data-num="12">
+  <div class="topbar"><span class="ch">⌘ FIN</span><span class="num">12 / 12</span></div>
+  <div class="seal">DS</div>
+  <h2>地基已成 · 等一个 TL</h2>
+  <div class="text" style="margin-top:24px">
+    第一个经营细胞跑通 · 5 Step 全过 · 67 个端到端测试通过<br><br>
+    <strong>现在需要的不是设计,是执行</strong><br><br>
+    申请批准:<em>Tech Lead 招聘启动</em>
+  </div>
+  <div style="margin-top:48px;font-family:-apple-system,sans-serif;font-size:11px;color:var(--ink3);letter-spacing:0.15em;line-height:2">
+    <div>署名 DS · 2026-05-30</div>
+    <div>完整资料 · github.io/Infinity-os-SH/Overview</div>
+    <div>请翻回任意一页讨论细节</div>
+  </div>
+</div>
+
+</div>
+
+<!-- 底部导航 -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn">← 上一页</button>
+  <div class="nav-progress" id="progress"></div>
+  <button class="nav-btn" id="nextBtn">下一页 →</button>
+</div>
+
+<div class="hint" id="hint">← 上一页    下一页 →</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
+let currentSlide = 0;
+
+// 构造进度点
+const progress = document.getElementById('progress');
+for (let i = 0; i < totalSlides; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+  dot.onclick = () => goTo(i);
+  progress.appendChild(dot);
+}
+const dots = document.querySelectorAll('.nav-dot');
+
+function updateUI(){
+  slides.forEach((s, i) => {
+    s.classList.remove('active', 'prev');
+    if (i === currentSlide) s.classList.add('active');
+    else if (i < currentSlide) s.classList.add('prev');
+  });
+  dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+  document.getElementById('prevBtn').disabled = currentSlide === 0;
+  document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+}
+
+function next(){ if (currentSlide < totalSlides - 1) { currentSlide++; updateUI(); } }
+function prev(){ if (currentSlide > 0) { currentSlide--; updateUI(); } }
+function goTo(i){ currentSlide = i; updateUI(); }
+
+document.getElementById('prevBtn').onclick = prev;
+document.getElementById('nextBtn').onclick = next;
+
+// 初始化 UI 状态(让首页 prevBtn disabled)
+updateUI();
+
+// 键盘
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') next();
+  if (e.key === 'ArrowLeft') prev();
+});
+
+// 触屏滑动
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, {passive:true});
+document.addEventListener('touchend', e => {
+  const diff = e.changedTouches[0].screenX - touchStartX;
+  if (Math.abs(diff) > 60) {
+    if (diff < 0) next(); else prev();
+  }
+}, {passive:true});
+
+// 首次进入显示提示
+const hint = document.getElementById('hint');
+setTimeout(() => { hint.classList.add('show'); }, 800);
+setTimeout(() => { hint.classList.remove('show'); }, 3000);
+</script>
+
+</body>
+</html>
