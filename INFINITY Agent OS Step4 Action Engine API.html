@@ -1,0 +1,3214 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INFINITY Agent OS · Step 4 · L7 行动建议 API</title>
+<style>
+:root{--ink:#1a1d24;--ink2:#3d434f;--ink3:#6b7384;--ink4:#9aa0ad;
+--line:#e6e2d8;--paper:#faf8f2;--card:#fff;
+--gold:#a8801c;--gold2:#8a6a18;--burgundy:#6b2c2c;
+--rust:#9c5430;
+--code-bg:#1d2026;--code-fg:#d8dde8;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--paper);color:var(--ink);font-family:"Songti SC","STSong","Noto Serif CJK SC",Georgia,serif;
+line-height:1.75;font-size:16px;padding:0 0 80px;
+background-image:radial-gradient(circle at 1px 1px,rgba(168,128,28,0.04) 1px,transparent 0);background-size:24px 24px}
+.wrap{max-width:880px;margin:0 auto;padding:0 22px}
+.cover{padding:40px 0 24px;border-bottom:1px solid var(--ink);margin-bottom:14px}
+.cover .stamp{display:inline-block;font-family:-apple-system,sans-serif;font-size:10px;letter-spacing:0.4em;
+color:var(--rust);border:1px solid var(--rust);padding:4px 10px;margin-bottom:18px;font-weight:600}
+.cover h1{font-size:30px;line-height:1.25;font-weight:700;margin-bottom:8px}
+.cover h1 .sub{display:block;font-size:16px;font-weight:400;color:var(--ink2);margin-top:6px}
+.cover .meta{margin-top:18px;font-family:-apple-system,sans-serif;font-size:11px;color:var(--ink3);letter-spacing:0.06em;line-height:1.9}
+.cover .meta b{color:var(--ink)}
+.toc{background:var(--card);border:1px solid var(--line);padding:16px 20px;margin:18px 0 24px}
+.toc h3{font-family:-apple-system,sans-serif;font-size:11px;letter-spacing:0.25em;color:var(--gold2);text-transform:uppercase;font-weight:700;margin-bottom:10px}
+.toc a{display:flex;gap:10px;padding:7px 0;color:var(--ink);text-decoration:none;font-family:-apple-system,sans-serif;font-size:14px;border-bottom:1px dashed var(--line);align-items:center}
+.toc a:last-child{border:none}
+.toc a:hover{color:var(--gold2)}
+.toc a .tn{flex:1}
+.toc a .ts{font-size:11px;color:var(--ink4);font-family:-apple-system,sans-serif}
+.filebox{background:var(--card);border:1px solid var(--line);margin-bottom:10px;overflow:hidden}
+.filebox.star{border-left:3px solid var(--gold)}
+.filehd{padding:12px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;font-family:-apple-system,sans-serif;background:var(--card);user-select:none;list-style:none}
+.filehd::-webkit-details-marker{display:none}
+.filebox[open] .filehd{border-bottom:1px solid var(--line);background:#fdfaf2}
+.filehd .ic{font-size:18px}
+.filehd .fname{font-family:"SF Mono",monospace;font-size:13px;color:var(--ink2);font-weight:600}
+.filehd .flabel{font-size:14px;color:var(--ink);font-weight:600;flex:1;font-family:"Songti SC",serif}
+.filehd .fsize{font-size:11px;color:var(--ink4)}
+.filehd .arrow{color:var(--ink4);font-size:11px;transition:transform 0.2s}
+.filebox[open] .filehd .arrow{transform:rotate(180deg)}
+.ftools{padding:8px 18px;background:#faf6e8;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.btn-copy{background:var(--ink);color:#fff;border:none;padding:5px 12px;font-family:-apple-system,sans-serif;font-size:11px;cursor:pointer;letter-spacing:0.05em}
+.btn-copy:hover{background:var(--gold2)}
+.btn-copy.copied{background:var(--burgundy)}
+.lang-tag{font-family:-apple-system,sans-serif;font-size:10px;letter-spacing:0.1em;color:var(--ink3);margin-left:auto;font-weight:600}
+.code{background:var(--code-bg);color:var(--code-fg);padding:18px 20px;font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:12px;line-height:1.65;overflow-x:auto;white-space:pre}
+.tk{color:#d9a441} .ts{color:#7fb88f} .tn{color:#9ab8d8} .tc{color:#7c8699;font-style:italic} .td{color:#c5a9d8}
+.md-content{padding:20px 24px;font-size:15px;line-height:1.78}
+.md-content h2{font-size:22px;margin:18px 0 10px;font-family:"Songti SC",serif;color:var(--ink)}
+.md-content h3{font-size:17px;margin:18px 0 8px;color:var(--gold2);font-family:-apple-system,sans-serif;font-weight:700}
+.md-content h4{font-size:15px;margin:14px 0 6px;color:var(--ink);font-family:-apple-system,sans-serif;font-weight:700}
+.md-content p{margin-bottom:12px;color:var(--ink2)}
+.md-content ul{margin:8px 0 14px;padding-left:22px}
+.md-content li{margin-bottom:4px;color:var(--ink2)}
+.md-content blockquote{border-left:3px solid var(--gold);padding:8px 14px;margin:10px 0;color:var(--ink2);background:#fdfaf2;font-size:14px}
+.md-content code.inline{background:#f0e8d4;color:var(--gold2);padding:1px 6px;font-family:"SF Mono",monospace;font-size:13px}
+.md-content pre.codeblock{background:#1d2026;color:#d8dde8;padding:14px 18px;font-size:12px;line-height:1.7;overflow-x:auto;font-family:"SF Mono",monospace;margin:10px 0;white-space:pre}
+.md-content table.md-tbl{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;font-family:-apple-system,sans-serif}
+.md-content .md-tbl th{background:var(--ink);color:#fff;padding:8px 10px;text-align:left;font-weight:600;font-size:11px;letter-spacing:0.05em}
+.md-content .md-tbl td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--ink2);vertical-align:top}
+.md-content strong{color:var(--ink);font-weight:700}
+.notice{background:linear-gradient(180deg,#fdf0ea,#fff);border:2px solid var(--rust);padding:18px 22px;margin:18px 0 24px}
+.notice .nt{font-family:-apple-system,sans-serif;font-size:11px;letter-spacing:0.2em;color:var(--rust);font-weight:700;margin-bottom:6px;text-transform:uppercase}
+.notice .nd{font-size:14px;color:var(--ink);line-height:1.65}
+.colophon{margin-top:40px;padding-top:20px;border-top:1px solid var(--ink);font-family:-apple-system,sans-serif;font-size:11px;color:var(--ink3);text-align:center;line-height:2;letter-spacing:0.06em}
+.colophon b{color:var(--ink)}
+@media (max-width:640px){.wrap{padding:0 14px}.cover h1{font-size:24px}.filehd{padding:10px 12px;gap:8px;flex-wrap:wrap}.filehd .fname{font-size:11px;width:100%}.filehd .flabel{font-size:13px}.code{font-size:11px;padding:14px;line-height:1.55}.md-content{padding:14px 16px;font-size:14px}}
+</style></head><body>
+<div class="wrap">
+<div class="cover">
+  <div class="stamp">DS ⑧ STEP 4 · L7 ENGINE + API</div>
+  <h1>L7 行动建议引擎 + RESTful API<span class="sub">INFINITY Agent OS · L7 · Agent 从"会判断"走到"会动作"</span></h1>
+  <div class="meta">
+    <b>定位</b> · DS ⑧ Step 4 工程化产出 · L7 行动建议 · 5 RESTful API<br>
+    <b>层次</b> · L2 评估 → L7 推理+建议 → L8 资源申请<br>
+    <b>状态</b> · 19/19 端到端测试通过 · L0→L7 真闭环<br>
+    <b>下一步</b> · Step 5 = 资源调度接口(L8)
+  </div>
+</div>
+<div class="notice">
+  <div class="nt">这是什么 · 关键升级</div>
+  <div class="nd">
+    把 DS ③ 5 层引擎 + DS ⑩ 5 个 API 落成<strong>真起 server·真发 HTTP·真验 DB</strong>的工程实现。<br><br>
+    <strong>★ 完成标准升级</strong>: 吸取 Step 3 教训(SQLite mock 漏字段·绿测过但跨 Step 崩),Step 4 要求<strong>端到端验证</strong>才算完成。19/19 端到端测试通过·L0→L1→L2→L7→L8 真贯通。
+  </div>
+</div>
+<div class="toc"><h3>文件清单</h3>
+  <a href="#sec-0"><span style="font-size:16px">📖</span><span class="tn">说明</span><span class="ts">README.md · 4,134字</span></a>
+  <a href="#sec-1"><span style="font-size:16px">🧠</span><span class="tn">L7 引擎(5层) ★</span><span class="ts">action_engine.py · 23,620字</span></a>
+  <a href="#sec-2"><span style="font-size:16px">🌐</span><span class="tn">Flask API(5 端点)</span><span class="ts">app.py · 10,111字</span></a>
+  <a href="#sec-3"><span style="font-size:16px">🧪</span><span class="tn">端到端测试(19/19过)</span><span class="ts">test_e2e.py · 12,744字</span></a></div>
+<details class="filebox" id="sec-0" open>
+  <summary class="filehd">
+    <span class="ic">📖</span><span class="fname">README.md</span>
+    <span class="flabel">说明</span><span class="fsize">4,134 字符</span>
+    <span class="arrow">▼</span>
+  </summary>
+  <div class="fcontent">
+    <div class="ftools">
+      <button class="btn-copy" onclick="copyContent('sec-0')">📋 复制全文</button>
+      <span class="lang-tag">MARKDOWN</span>
+    </div>
+    <div class="raw-content" data-content="# INFINITY Agent OS · Step 4 · L7 行动建议 API
+
+&gt; **DS ⑧ Step 4 工程化产出** —— L7 行动建议引擎可运行 + 5 个 RESTful API · 19/19 端到端测试通过。
+
+---
+
+## 它是什么
+
+把 DS ③《Agent 行动建议引擎》5 层 1:1 实现 + 按 DS ⑩《Pro App 前端结构》开 5 个 RESTful API。**Agent 从&quot;会判断&quot;走到了&quot;会动作&quot;**。
+
+```
+L0 数据 → L1 入库 → L2 评估 → L7 推理 → L7 建议 → L8 申请
+   ↑           ↑           ↑            ↑           ↑           ↑
+POST /signals  ─  POST /gates/evaluate  ─  POST /reasoning  ─  POST /actions  ─  POST /resources/request
+```
+
+---
+
+## 文件清单
+
+| 文件 | 用途 | 谁用 |
+|---|---|---|
+| `action_engine.py` | L7 5 层引擎 · 4 个核心类 ★ | 后端/TL |
+| `app.py` | Flask · 5 个 RESTful 端点 | 前端/集成 |
+| `test_e2e.py` | 端到端测试(完成标准) | QA/CI |
+
+---
+
+## L7 五层结构(按 DS ③)
+
+### ① ProblemIdentifier · 问题识别
+从 `gate_results` 失败信号 → 分级问题(high/medium/low)
+
+```python
+# 示例: gate_result 含 [&#x27;s06_has_sellout&#x27;] →
+Problem(problem_type=&quot;no_sellout&quot;, severity=&quot;high&quot;, ...)
+```
+
+### ② CauseReasoner · 原因推理
+一个问题反推多个候选根因,各带 confidence:
+
+```
+&quot;无动销&quot; 可能因为:
+  · owner_no_recommend (0.85) · 老板不推荐·GT 关键
+  · display_weak       (0.70) · 不在主货架
+  · no_price_tag       (0.65) · 价签缺失
+  · consumer_unknown   (0.50) · 消费者认知 (兜底)
+```
+
+### ③ LifecycleAssessor · 生命周期判断
+判断是否触发阶段迁移:
+
+```
+导入期 · 持续 3 次 high 失败 → 考虑淘汰(decline)
+成长期 · 出现 high 失败       → 降回导入期
+成熟期 · 任何失败             → 警示降级
+```
+
+### ④ ActionRecommender · 行动建议
+基于(问题, 原因)→ 具体行动 + assigned_role + 目标晶体管 + 截止日:
+
+```
+owner_no_recommend →
+  · [high] owner_training &quot;组织老板培训·攻克 S09&quot;·assigned: GT_SR·3天
+  · [normal] owner_visit &quot;增加客情拜访&quot;·assigned: GT_SR·7天
+```
+
+### ⑤ ResourceOrchestrator · 资源调度
+判断行动是否需要资源 → 生成 `resource_requests`:
+
+```
+promo            → promo_budget    ¥500  · DOM 审批
+get_main_shelf   → display_fee     ¥1200 · DOM 审批
+supply_replenish → supply_replenish 无金额 · DOM 审批
+```
+
+---
+
+## 5 个 API(按 DS ⑩)
+
+| 端点 | 用途 | 输入 | 输出 |
+|---|---|---|---|
+| `POST /signals` | L0 信号入库 | sku_id/store_id/captured_at/s01-s10 | signal_id |
+| `POST /gates/evaluate` | L2 门评估 | sku_id/store_id | verdict + failed_signals |
+| `POST /reasoning` | 推理链路 | gate_result_id | problems + causes 链 |
+| `POST /actions` | L7 完整流水 | gate_result_id | actions + resources |
+| `POST /resources/request` | 单条资源申请 | action_id/resource_type | request_id |
+
+辅助:
+- `GET /` · 服务信息
+- `GET /health` · 健康检查
+
+---
+
+## 端到端测试结果
+
+**这是 Step 4 的完成标准** —— 不是局部绿测,是真起 server、真发 HTTP、真验 DB。
+
+```
+═════════════════════════════════════════════════
+E2E 测试 · 健康检查           2/2 ✅
+① POST /signals               3/3 ✅
+② POST /gates/evaluate         4/4 ✅
+③ POST /reasoning              3/3 ✅
+④ POST /actions                5/5 ✅
+⑤ POST /resources/request     1/1 ✅
+★ 终极验证·完整闭环           1/1 ✅
+─────────────────────────────────────────────────
+总计: 19/19 通过 · 0 失败 · L0→L7 真贯通
+═════════════════════════════════════════════════
+```
+
+完整数据链:
+
+```
+L1 signals       = 1   (POST /signals 写入)
+L2 gate_results  = 1   (POST /gates/evaluate 写入)
+L7 actions       = 4   (POST /actions 写入·按 priority 排序)
+L8 resources     = 3   (L7 内部触发 2 条 + POST /resources/request 1 条)
+```
+
+---
+
+## 怎么跑
+
+```bash
+# 1. 装依赖
+pip install flask
+
+# 2. 跑端到端测试(推荐·一键全验证)
+python3 test_e2e.py
+
+# 3. 单独起 server
+INFINITY_DB=/tmp/infinity_os.db PORT=8001 python3 app.py
+
+# 4. 在另一终端测试
+curl -X POST http://127.0.0.1:8001/signals \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;sku_id&quot;:&quot;JYX_LIGHT_500&quot;,&quot;store_id&quot;:&quot;SH_GT_CVS_001&quot;,...}&#x27;
+```
+
+---
+
+## 设计要点
+
+### ① 完全数据驱动(继承 Step 3)
+- 行动模板用 `CAUSE_TO_ACTIONS` 字典维护
+- 添加新行动类型 = 加一行 · 不动核心代码
+- 未来可改成 DB 表 · L8 学习引擎可自动迭代
+
+### ② 一个问题 → 多个候选原因 → 打组合拳
+- 不是&quot;一对一映射&quot;
+- 是&quot;基于多原因生成组合行动建议&quot;
+- 体现 Agent 的多维思考
+
+### ③ 推理透明性
+- `/reasoning` 端点专门返回推理链路
+- 不写库 · 纯查询 · 给前端展示用
+- 每个原因带 confidence + evidence + description
+- 让 SR/管理层能看懂 Agent 为何这么建议
+
+### ④ 完成标准从&quot;绿测&quot;升级到&quot;端到端&quot;
+- 吸取 Step 3 教训(SQLite mock 漏字段·绿测过但跨 Step 不通)
+- 这次要求:真起 server · 真发 HTTP · 真验 DB
+- 端到端通才算完成 · 不能再&quot;局部绿测就交付&quot;
+
+---
+
+## 边界(本 Step **不做**)
+
+- ❌ **不做** 资源调度真执行 → Step 5(接 SAP/审批流)
+- ❌ **不做** 多门联动 → 留 L4 渠道 Agent 做
+- ❌ **不做** 自动学习 → 留 L8 自主经营引擎
+- ❌ **不做** 中文 LLM 推理 → 当前是规则推理 · 未来可叠 LLM 层
+
+---
+
+## 下一步
+
+**Step 5 · 供应链资源调度接口** —— 把 `resource_requests` 接到真实审批流(SAP/钉钉/企微),让 Agent 的判断真正变成企业动作。这是 L0-L8 闭环的最后一环。
+
+---
+
+**INFINITY Agent OS · 新地基 · L7 行动引擎 + API**  
+署名 DS · 2026-05-29 · 定位:S2 × L0~L7 · Layer 1.3 · 对外不可说成 Agent
+"><div class="md-content"><h2>INFINITY Agent OS · Step 4 · L7 行动建议 API</h2>
+<blockquote><strong>DS ⑧ Step 4 工程化产出</strong> —— L7 行动建议引擎可运行 + 5 个 RESTful API · 19/19 端到端测试通过。</blockquote>
+<p>---</p>
+<h3>它是什么</h3>
+<p>把 DS ③《Agent 行动建议引擎》5 层 1:1 实现 + 按 DS ⑩《Pro App 前端结构》开 5 个 RESTful API。<strong>Agent 从&quot;会判断&quot;走到了&quot;会动作&quot;</strong>。</p>
+<pre class="codeblock">L0 数据 → L1 入库 → L2 评估 → L7 推理 → L7 建议 → L8 申请
+   ↑           ↑           ↑            ↑           ↑           ↑
+POST /signals  ─  POST /gates/evaluate  ─  POST /reasoning  ─  POST /actions  ─  POST /resources/request
+</pre>
+<p>---</p>
+<h3>文件清单</h3>
+<table class="md-tbl">
+<tr><th>文件</th><th>用途</th><th>谁用</th></tr>
+<tr><td><code class="inline">action_engine.py</code></td><td>L7 5 层引擎 · 4 个核心类 ★</td><td>后端/TL</td></tr>
+<tr><td><code class="inline">app.py</code></td><td>Flask · 5 个 RESTful 端点</td><td>前端/集成</td></tr>
+<tr><td><code class="inline">test_e2e.py</code></td><td>端到端测试(完成标准)</td><td>QA/CI</td></tr>
+</table>
+<p>---</p>
+<h3>L7 五层结构(按 DS ③)</h3>
+<h4>① ProblemIdentifier · 问题识别</h4>
+从 <code class="inline">gate_results</code> 失败信号 → 分级问题(high/medium/low)
+<pre class="codeblock"># 示例: gate_result 含 [&#x27;s06_has_sellout&#x27;] →
+Problem(problem_type=&quot;no_sellout&quot;, severity=&quot;high&quot;, ...)
+</pre>
+<h4>② CauseReasoner · 原因推理</h4>
+一个问题反推多个候选根因,各带 confidence:
+<pre class="codeblock">&quot;无动销&quot; 可能因为:
+  · owner_no_recommend (0.85) · 老板不推荐·GT 关键
+  · display_weak       (0.70) · 不在主货架
+  · no_price_tag       (0.65) · 价签缺失
+  · consumer_unknown   (0.50) · 消费者认知 (兜底)
+</pre>
+<h4>③ LifecycleAssessor · 生命周期判断</h4>
+判断是否触发阶段迁移:
+<pre class="codeblock">导入期 · 持续 3 次 high 失败 → 考虑淘汰(decline)
+成长期 · 出现 high 失败       → 降回导入期
+成熟期 · 任何失败             → 警示降级
+</pre>
+<h4>④ ActionRecommender · 行动建议</h4>
+基于(问题, 原因)→ 具体行动 + assigned_role + 目标晶体管 + 截止日:
+<pre class="codeblock">owner_no_recommend →
+  · [high] owner_training &quot;组织老板培训·攻克 S09&quot;·assigned: GT_SR·3天
+  · [normal] owner_visit &quot;增加客情拜访&quot;·assigned: GT_SR·7天
+</pre>
+<h4>⑤ ResourceOrchestrator · 资源调度</h4>
+判断行动是否需要资源 → 生成 <code class="inline">resource_requests</code>:
+<pre class="codeblock">promo            → promo_budget    ¥500  · DOM 审批
+get_main_shelf   → display_fee     ¥1200 · DOM 审批
+supply_replenish → supply_replenish 无金额 · DOM 审批
+</pre>
+<p>---</p>
+<h3>5 个 API(按 DS ⑩)</h3>
+<table class="md-tbl">
+<tr><th>端点</th><th>用途</th><th>输入</th><th>输出</th></tr>
+<tr><td><code class="inline">POST /signals</code></td><td>L0 信号入库</td><td>sku_id/store_id/captured_at/s01-s10</td><td>signal_id</td></tr>
+<tr><td><code class="inline">POST /gates/evaluate</code></td><td>L2 门评估</td><td>sku_id/store_id</td><td>verdict + failed_signals</td></tr>
+<tr><td><code class="inline">POST /reasoning</code></td><td>推理链路</td><td>gate_result_id</td><td>problems + causes 链</td></tr>
+<tr><td><code class="inline">POST /actions</code></td><td>L7 完整流水</td><td>gate_result_id</td><td>actions + resources</td></tr>
+<tr><td><code class="inline">POST /resources/request</code></td><td>单条资源申请</td><td>action_id/resource_type</td><td>request_id</td></tr>
+</table>
+<p>辅助:
+<ul><li><code class="inline">GET /</code> · 服务信息</li>
+<li><code class="inline">GET /health</code> · 健康检查</li></ul></p>
+<p>---</p>
+<h3>端到端测试结果</h3>
+<p><strong>这是 Step 4 的完成标准</strong> —— 不是局部绿测,是真起 server、真发 HTTP、真验 DB。</p>
+<pre class="codeblock">═════════════════════════════════════════════════
+E2E 测试 · 健康检查           2/2 ✅
+① POST /signals               3/3 ✅
+② POST /gates/evaluate         4/4 ✅
+③ POST /reasoning              3/3 ✅
+④ POST /actions                5/5 ✅
+⑤ POST /resources/request     1/1 ✅
+★ 终极验证·完整闭环           1/1 ✅
+─────────────────────────────────────────────────
+总计: 19/19 通过 · 0 失败 · L0→L7 真贯通
+═════════════════════════════════════════════════
+</pre>
+<p>完整数据链:</p>
+<pre class="codeblock">L1 signals       = 1   (POST /signals 写入)
+L2 gate_results  = 1   (POST /gates/evaluate 写入)
+L7 actions       = 4   (POST /actions 写入·按 priority 排序)
+L8 resources     = 3   (L7 内部触发 2 条 + POST /resources/request 1 条)
+</pre>
+<p>---</p>
+<h3>怎么跑</h3>
+<pre class="codeblock"># 1. 装依赖
+pip install flask
+<h2>2. 跑端到端测试(推荐·一键全验证)</h2>
+python3 test_e2e.py
+<h2>3. 单独起 server</h2>
+INFINITY_DB=/tmp/infinity_os.db PORT=8001 python3 app.py
+<h2>4. 在另一终端测试</h2>
+curl -X POST http://127.0.0.1:8001/signals \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;sku_id&quot;:&quot;JYX_LIGHT_500&quot;,&quot;store_id&quot;:&quot;SH_GT_CVS_001&quot;,...}&#x27;
+</pre>
+<p>---</p>
+<h3>设计要点</h3>
+<h4>① 完全数据驱动(继承 Step 3)</h4>
+<ul><li>行动模板用 <code class="inline">CAUSE_TO_ACTIONS</code> 字典维护</li>
+<li>添加新行动类型 = 加一行 · 不动核心代码</li>
+<li>未来可改成 DB 表 · L8 学习引擎可自动迭代</li></ul>
+<h4>② 一个问题 → 多个候选原因 → 打组合拳</h4>
+<ul><li>不是&quot;一对一映射&quot;</li>
+<li>是&quot;基于多原因生成组合行动建议&quot;</li>
+<li>体现 Agent 的多维思考</li></ul>
+<h4>③ 推理透明性</h4>
+<ul><li><code class="inline">/reasoning</code> 端点专门返回推理链路</li>
+<li>不写库 · 纯查询 · 给前端展示用</li>
+<li>每个原因带 confidence + evidence + description</li>
+<li>让 SR/管理层能看懂 Agent 为何这么建议</li></ul>
+<h4>④ 完成标准从&quot;绿测&quot;升级到&quot;端到端&quot;</h4>
+<ul><li>吸取 Step 3 教训(SQLite mock 漏字段·绿测过但跨 Step 不通)</li>
+<li>这次要求:真起 server · 真发 HTTP · 真验 DB</li>
+<li>端到端通才算完成 · 不能再&quot;局部绿测就交付&quot;</li></ul>
+<p>---</p>
+<h3>边界(本 Step <strong>不做</strong>)</h3>
+<ul><li>❌ <strong>不做</strong> 资源调度真执行 → Step 5(接 SAP/审批流)</li>
+<li>❌ <strong>不做</strong> 多门联动 → 留 L4 渠道 Agent 做</li>
+<li>❌ <strong>不做</strong> 自动学习 → 留 L8 自主经营引擎</li>
+<li>❌ <strong>不做</strong> 中文 LLM 推理 → 当前是规则推理 · 未来可叠 LLM 层</li></ul>
+<p>---</p>
+<h3>下一步</h3>
+<p><strong>Step 5 · 供应链资源调度接口</strong> —— 把 <code class="inline">resource_requests</code> 接到真实审批流(SAP/钉钉/企微),让 Agent 的判断真正变成企业动作。这是 L0-L8 闭环的最后一环。</p>
+<p>---</p>
+<p><strong>INFINITY Agent OS · 新地基 · L7 行动引擎 + API</strong>  
+署名 DS · 2026-05-29 · 定位:S2 × L0~L7 · Layer 1.3 · 对外不可说成 Agent
+</p></div></div>
+  </div>
+</details>
+
+<details class="filebox star" id="sec-1" >
+  <summary class="filehd">
+    <span class="ic">🧠</span><span class="fname">action_engine.py</span>
+    <span class="flabel">L7 引擎(5层) ★</span><span class="fsize">23,620 字符</span>
+    <span class="arrow">▼</span>
+  </summary>
+  <div class="fcontent">
+    <div class="ftools">
+      <button class="btn-copy" onclick="copyContent('sec-1')">📋 复制全文</button>
+      <span class="lang-tag">PYTHON</span>
+    </div>
+    <div class="raw-content" data-content="&quot;&quot;&quot;
+INFINITY Agent OS · Step 4 · L7 行动建议引擎
+================================================
+按 DS ③《Agent 行动建议引擎 V0.1》5 层 1:1 实现
+
+5 层结构(DS ③):
+  ① 问题识别       Problem identification
+  ② 原因推理       Cause reasoning
+  ③ 生命周期判断   Lifecycle stage assessment
+  ④ 行动建议       Action recommendation
+  ⑤ 资源调度       Resource orchestration
+
+输入: gate_results 表中 result=fail 或 uncertain 的记录
+输出: agent_actions 表 + resource_requests 表
+
+不做(留给 Step 5):
+  ✗ 资源调度真执行(只是把申请落到 resource_requests · L8 接)
+  ✗ 多门联动(导入门→成长门自动迁移·留 L4 渠道Agent)
+
+铁律: 严守底层 SKU 生命力 · 行动是为&quot;让SKU活下去/活得好&quot;
+署名 DS · 2026-05-29
+&quot;&quot;&quot;
+
+from __future__ import annotations
+import json
+import sqlite3
+from dataclasses import dataclass, field, asdict
+from datetime import datetime, timedelta
+from typing import Any, Optional
+
+
+# ============================================================
+# 数据模型
+# ============================================================
+
+@dataclass
+class Problem:
+    &quot;&quot;&quot;L7-①·识别出的问题&quot;&quot;&quot;
+    sku_id: str
+    store_id: str
+    channel_type: str
+    lifecycle_stage: str
+    severity: str  # high / medium / low
+    problem_type: str  # missing_sellout / stockout / no_owner_recommend / 等
+    failed_signals: list[str]
+    uncertain_signals: list[str] = field(default_factory=list)
+    gate_result_id: Optional[int] = None
+    signal_id: Optional[int] = None
+
+
+@dataclass
+class Cause:
+    &quot;&quot;&quot;L7-②·推理出的原因&quot;&quot;&quot;
+    cause_type: str  # consumer_unknown / price_high / display_weak / etc.
+    confidence: float  # 0-1
+    evidence: list[str]
+    description: str
+
+
+@dataclass
+class ActionRecommendation:
+    &quot;&quot;&quot;L7-④·具体行动建议&quot;&quot;&quot;
+    action_type: str
+    action_text: str
+    priority: str  # high / normal / low
+    assigned_role: str  # GT_SR / DOM / DSR / etc.
+    target_signal: str  # 攻克哪个晶体管
+    due_in_days: int
+    expected_outcome: str
+
+
+@dataclass
+class ResourceRequest:
+    &quot;&quot;&quot;L7-⑤·触发的资源申请&quot;&quot;&quot;
+    resource_type: str  # promo_budget / display_fee / training / supply_replenish
+    resource_amount: Optional[float]
+    request_reason: str
+    approver_role: str
+
+
+# ============================================================
+# L7-① 问题识别(Problem Identification)
+# ============================================================
+
+class ProblemIdentifier:
+    &quot;&quot;&quot;
+    从 gate_results 中识别&quot;真问题&quot;
+    
+    不是所有 fail 都是真问题·要分级别:
+    · S06 无动销 = 高严重(生命信号缺失·核心)
+    · S03 不在主货架 = 中(可改善)
+    · S04 无第二陈列 = 低(锦上添花)
+    &quot;&quot;&quot;
+
+    # 失败晶体管 → 问题类型映射(可扩展)
+    SIGNAL_TO_PROBLEM = {
+        &quot;s01_on_shelf&quot;:         (&quot;not_listed&quot;,          &quot;high&quot;),
+        &quot;s02_in_stock&quot;:         (&quot;stockout_current&quot;,    &quot;high&quot;),
+        &quot;s06_has_sellout&quot;:      (&quot;no_sellout&quot;,          &quot;high&quot;),
+        &quot;s07_repurchase&quot;:       (&quot;no_repurchase&quot;,       &quot;medium&quot;),
+        &quot;s08_stockout&quot;:         (&quot;recent_stockout&quot;,     &quot;high&quot;),
+        &quot;s09_owner_recommends&quot;: (&quot;owner_neutral&quot;,       &quot;medium&quot;),
+        &quot;s03_main_shelf&quot;:       (&quot;not_main_shelf&quot;,      &quot;medium&quot;),
+        &quot;s04_second_display&quot;:   (&quot;no_second_display&quot;,   &quot;low&quot;),
+        &quot;s05_has_price_tag&quot;:    (&quot;price_tag_missing&quot;,   &quot;medium&quot;),
+        &quot;s10_profit_target&quot;:    (&quot;profit_below_target&quot;, &quot;medium&quot;),
+    }
+
+    def identify(self, gate_result_row: dict) -&gt; list[Problem]:
+        &quot;&quot;&quot;从一行 gate_results 识别问题·一行可能含多个问题&quot;&quot;&quot;
+        if gate_result_row[&quot;result&quot;] == &quot;pass&quot;:
+            return []  # pass 无问题
+        
+        failed = json.loads(gate_result_row.get(&quot;failed_signals&quot;) or &quot;[]&quot;)
+        problems = []
+        
+        for signal_str in failed:
+            # 处理 &quot;s06_has_sellout=0 (actual=1)&quot; 这种带表达式的
+            signal_name = signal_str.split(&quot;=&quot;)[0].split(&quot;&gt;&quot;)[0].split(&quot;&lt;&quot;)[0].strip()
+            
+            mapping = self.SIGNAL_TO_PROBLEM.get(signal_name)
+            if not mapping:
+                continue
+            problem_type, severity = mapping
+            
+            problems.append(Problem(
+                sku_id=gate_result_row[&quot;sku_id&quot;],
+                store_id=gate_result_row[&quot;store_id&quot;],
+                channel_type=gate_result_row[&quot;channel_type&quot;],
+                lifecycle_stage=gate_result_row[&quot;lifecycle_stage&quot;],
+                severity=severity,
+                problem_type=problem_type,
+                failed_signals=[signal_name],
+                gate_result_id=gate_result_row.get(&quot;result_id&quot;),
+                signal_id=gate_result_row.get(&quot;signal_id&quot;),
+            ))
+        
+        # 处理 uncertain(数据缺失)·也是问题但类型特殊
+        if gate_result_row[&quot;result&quot;] == &quot;uncertain&quot;:
+            problems.append(Problem(
+                sku_id=gate_result_row[&quot;sku_id&quot;],
+                store_id=gate_result_row[&quot;store_id&quot;],
+                channel_type=gate_result_row[&quot;channel_type&quot;],
+                lifecycle_stage=gate_result_row[&quot;lifecycle_stage&quot;],
+                severity=&quot;medium&quot;,
+                problem_type=&quot;data_missing&quot;,
+                failed_signals=[],
+                uncertain_signals=json.loads(gate_result_row.get(&quot;failed_signals&quot;) or &quot;[]&quot;),
+                gate_result_id=gate_result_row.get(&quot;result_id&quot;),
+                signal_id=gate_result_row.get(&quot;signal_id&quot;),
+            ))
+        
+        return problems
+
+
+# ============================================================
+# L7-② 原因推理(Cause Reasoning)
+# ============================================================
+
+class CauseReasoner:
+    &quot;&quot;&quot;
+    从问题反推根因
+    
+    一个问题(如&quot;无动销&quot;)可能有多个根因:
+      - 消费者不知道 → 营销/认知
+      - 价格太高 → 价格策略
+      - 陈列差 → 看不到 → 物理动作
+      - 老板不推 → 客情/培训
+    
+    输出多个候选 cause·各自带 confidence
+    &quot;&quot;&quot;
+
+    def reason(self, problem: Problem, signal_row: dict = None) -&gt; list[Cause]:
+        &quot;&quot;&quot;
+        基于问题类型 + 当前信号上下文·推理可能原因
+        signal_row: 同时刻的完整晶体管信号·给推理提供更多上下文
+        &quot;&quot;&quot;
+        causes = []
+        sig = signal_row or {}
+        
+        if problem.problem_type == &quot;no_sellout&quot;:
+            # S06 无动销 · 多种可能根因
+            
+            # 根因 1: 没人推荐(S09) — 高置信
+            if sig.get(&quot;s09_owner_recommends&quot;) == 0:
+                causes.append(Cause(
+                    cause_type=&quot;owner_no_recommend&quot;,
+                    confidence=0.85,
+                    evidence=[&quot;S09 老板不推荐 · GT 社区店关键&quot;],
+                    description=&quot;老板没有主动向消费者推荐·缺少&#x27;超级导购&#x27;力量&quot;
+                ))
+            
+            # 根因 2: 看不到(S03 主货架) — 中
+            if sig.get(&quot;s03_main_shelf&quot;) == 0:
+                causes.append(Cause(
+                    cause_type=&quot;display_weak&quot;,
+                    confidence=0.70,
+                    evidence=[&quot;S03 不在主货架 · 消费者看不到&quot;],
+                    description=&quot;陈列位置弱 · 消费者注意力不到&quot;
+                ))
+            
+            # 根因 3: 价签缺(S05) — 中
+            if sig.get(&quot;s05_has_price_tag&quot;) == 0:
+                causes.append(Cause(
+                    cause_type=&quot;no_price_tag&quot;,
+                    confidence=0.65,
+                    evidence=[&quot;S05 无价签 · 消费者犹豫&quot;],
+                    description=&quot;价签缺失 · 消费者不知价格不敢买&quot;
+                ))
+            
+            # 根因 4: 消费者认知 — 兜底(无具体证据时)
+            if not causes:
+                causes.append(Cause(
+                    cause_type=&quot;consumer_unknown&quot;,
+                    confidence=0.50,
+                    evidence=[&quot;缺乏更具体的失败信号&quot;],
+                    description=&quot;可能是消费者认知问题 · 需要采集更多数据&quot;
+                ))
+        
+        elif problem.problem_type == &quot;stockout_current&quot; or problem.problem_type == &quot;recent_stockout&quot;:
+            # 断货 · 看 root_cause_guess 字段
+            root = sig.get(&quot;s08_root_cause&quot;, &quot;unknown&quot;)
+            cause_map = {
+                &quot;distributor_oos&quot;: (&quot;supply_chain&quot;, 0.90, &quot;经销商无货 · 供应链问题&quot;),
+                &quot;owner_not_ordered&quot;: (&quot;owner_neglect&quot;, 0.85, &quot;门店老板未下单 · 客情/培训问题&quot;),
+                &quot;delivery_delay&quot;: (&quot;logistics&quot;, 0.80, &quot;配送延迟 · 物流问题&quot;),
+            }
+            ct, cf, desc = cause_map.get(root, (&quot;unknown&quot;, 0.40, &quot;断货原因未知 · 需 SR 调查&quot;))
+            causes.append(Cause(
+                cause_type=ct, confidence=cf,
+                evidence=[f&quot;S08 断货 · 根因猜测={root}&quot;],
+                description=desc
+            ))
+        
+        elif problem.problem_type == &quot;owner_neutral&quot;:
+            causes.append(Cause(
+                cause_type=&quot;owner_relationship_weak&quot;,
+                confidence=0.75,
+                evidence=[&quot;S09 老板态度 neutral&quot;],
+                description=&quot;老板对此 SKU 中立 · 需要客情+培训提升认同&quot;
+            ))
+        
+        elif problem.problem_type == &quot;no_repurchase&quot;:
+            causes.append(Cause(
+                cause_type=&quot;product_experience&quot;,
+                confidence=0.60,
+                evidence=[&quot;S07 无复购&quot;],
+                description=&quot;消费者尝试后没回购 · 可能口感/价格/包装问题&quot;
+            ))
+        
+        elif problem.problem_type == &quot;data_missing&quot;:
+            causes.append(Cause(
+                cause_type=&quot;data_gap&quot;,
+                confidence=1.0,
+                evidence=[&quot;关键信号未采集&quot;],
+                description=&quot;缺数据·Agent 无法判断·先补采集&quot;
+            ))
+        
+        # 兜底
+        if not causes:
+            causes.append(Cause(
+                cause_type=&quot;generic&quot;,
+                confidence=0.30,
+                evidence=[f&quot;problem_type={problem.problem_type}&quot;],
+                description=&quot;原因未明 · 需 SR 现场调研&quot;
+            ))
+        
+        return causes
+
+
+# ============================================================
+# L7-③ 生命周期判断(Lifecycle Stage Assessment)
+# ============================================================
+
+class LifecycleAssessor:
+    &quot;&quot;&quot;
+    根据问题严重程度 + 生命周期 · 判断是否触发阶段迁移
+    
+    例如:
+      · 导入期持续 FAIL → 维持导入期·继续做小步动作
+      · 成长期 FAIL → 降级回导入期(回炉重练)
+      · 成熟期 FAIL → 降级回成长期(警示·避免成熟阶段衰退)
+    &quot;&quot;&quot;
+
+    def assess(self, problem: Problem, history_fail_count: int = 0) -&gt; dict:
+        &quot;&quot;&quot;
+        返回阶段迁移建议
+        {
+          &quot;should_transition&quot;: bool,
+          &quot;new_stage&quot;: str or None,
+          &quot;reason&quot;: str
+        }
+        &quot;&quot;&quot;
+        stage = problem.lifecycle_stage
+        sev = problem.severity
+        
+        # 导入期 · 严重失败累计 3 次 → 考虑淘汰
+        if stage == &quot;intro&quot;:
+            if history_fail_count &gt;= 3 and sev == &quot;high&quot;:
+                return {
+                    &quot;should_transition&quot;: True,
+                    &quot;new_stage&quot;: &quot;decline&quot;,
+                    &quot;reason&quot;: &quot;导入期持续 3 次以上 high 级失败 · 考虑淘汰&quot;
+                }
+            return {&quot;should_transition&quot;: False, &quot;new_stage&quot;: None,
+                    &quot;reason&quot;: &quot;导入期 fail 正常 · 维持继续培育&quot;}
+        
+        # 成长期 · 严重 fail → 降回导入期
+        if stage == &quot;growth&quot; and sev == &quot;high&quot;:
+            return {
+                &quot;should_transition&quot;: True,
+                &quot;new_stage&quot;: &quot;intro&quot;,
+                &quot;reason&quot;: &quot;成长期出现 high 级 fail · 降级回炉&quot;
+            }
+        
+        # 成熟期 · 任何 fail → 警示·降回成长期
+        if stage == &quot;mature&quot; and sev in (&quot;high&quot;, &quot;medium&quot;):
+            return {
+                &quot;should_transition&quot;: True,
+                &quot;new_stage&quot;: &quot;growth&quot;,
+                &quot;reason&quot;: &quot;成熟期出现 fail · 警示性降级·防衰退&quot;
+            }
+        
+        return {&quot;should_transition&quot;: False, &quot;new_stage&quot;: None, &quot;reason&quot;: &quot;无需阶段迁移&quot;}
+
+
+# ============================================================
+# L7-④ 行动建议(Action Recommendation)
+# ============================================================
+
+class ActionRecommender:
+    &quot;&quot;&quot;
+    基于(问题, 原因, 阶段)三元组 → 具体行动建议
+    
+    一个问题可能生成多个动作(打组合拳)
+    &quot;&quot;&quot;
+
+    # 根因类型 → 行动模板
+    CAUSE_TO_ACTIONS = {
+        &quot;owner_no_recommend&quot;: [
+            {
+                &quot;action_type&quot;: &quot;owner_training&quot;,
+                &quot;text&quot;: &quot;组织老板培训 · 教会老王如何向家庭客推荐·攻克 S09 老板推荐&quot;,
+                &quot;priority&quot;: &quot;high&quot;, &quot;role&quot;: &quot;GT_SR&quot;, &quot;signal&quot;: &quot;s09_owner_recommends&quot;,
+                &quot;days&quot;: 3, &quot;outcome&quot;: &quot;S09 老板推荐 = proactive&quot;
+            },
+            {
+                &quot;action_type&quot;: &quot;owner_visit&quot;,
+                &quot;text&quot;: &quot;增加客情拜访 · 建立老板对品牌信任&quot;,
+                &quot;priority&quot;: &quot;normal&quot;, &quot;role&quot;: &quot;GT_SR&quot;, &quot;signal&quot;: &quot;s09_owner_recommends&quot;,
+                &quot;days&quot;: 7, &quot;outcome&quot;: &quot;老板态度从 neutral 转 positive&quot;
+            },
+        ],
+        &quot;display_weak&quot;: [
+            {
+                &quot;action_type&quot;: &quot;get_main_shelf&quot;,
+                &quot;text&quot;: &quot;争取主货架陈列位 · 消费者看得到才能动销&quot;,
+                &quot;priority&quot;: &quot;high&quot;, &quot;role&quot;: &quot;GT_SR&quot;, &quot;signal&quot;: &quot;s03_main_shelf&quot;,
+                &quot;days&quot;: 14, &quot;outcome&quot;: &quot;S03 主货架 = true&quot;
+            },
+            {
+                &quot;action_type&quot;: &quot;get_second_display&quot;,
+                &quot;text&quot;: &quot;争取第二陈列位(收银台/堆头) · 增加曝光&quot;,
+                &quot;priority&quot;: &quot;normal&quot;, &quot;role&quot;: &quot;GT_SR&quot;, &quot;signal&quot;: &quot;s04_second_display&quot;,
+                &quot;days&quot;: 14, &quot;outcome&quot;: &quot;S04 第二陈列 = true&quot;
+            },
+        ],
+        &quot;no_price_tag&quot;: [
+            {
+                &quot;action_type&quot;: &quot;fix_price_tag&quot;,
+                &quot;text&quot;: &quot;立即补价签 · 让消费者敢买&quot;,
+                &quot;priority&quot;: &quot;high&quot;, &quot;role&quot;: &quot;GT_SR&quot;, &quot;signal&quot;: &quot;s05_has_price_tag&quot;,
+                &quot;days&quot;: 1, &quot;outcome&quot;: &quot;S05 价签 = true&quot;
+            },
+        ],
+        &quot;consumer_unknown&quot;: [
+            {
+                &quot;action_type&quot;: &quot;tasting&quot;,
+                &quot;text&quot;: &quot;组织试吃活动 · 让消费者尝到口感差异 · 攻克 S06 动销&quot;,
+                &quot;priority&quot;: &quot;high&quot;, &quot;role&quot;: &quot;GT_SR&quot;, &quot;signal&quot;: &quot;s06_has_sellout&quot;,
+                &quot;days&quot;: 7, &quot;outcome&quot;: &quot;S06 7天内动销首单&quot;
+            },
+            {
+                &quot;action_type&quot;: &quot;promo&quot;,
+                &quot;text&quot;: &quot;短期促销降低尝试门槛 · 价签上加&#x27;新品体验价&#x27;&quot;,
+                &quot;priority&quot;: &quot;normal&quot;, &quot;role&quot;: &quot;DOM&quot;, &quot;signal&quot;: &quot;s06_has_sellout&quot;,
+                &quot;days&quot;: 10, &quot;outcome&quot;: &quot;S06 周销 ≥ 5 瓶&quot;
+            },
+        ],
+        &quot;supply_chain&quot;: [
+            {
+                &quot;action_type&quot;: &quot;supply_replenish&quot;,
+                &quot;text&quot;: &quot;紧急通知经销商补货 · 攻克 S02 库存&quot;,
+                &quot;priority&quot;: &quot;high&quot;, &quot;role&quot;: &quot;DOM&quot;, &quot;signal&quot;: &quot;s02_in_stock&quot;,
+                &quot;days&quot;: 1, &quot;outcome&quot;: &quot;S02 库存恢复 ≥ 6&quot;
+            },
+        ],
+        &quot;owner_neglect&quot;: [
+            {
+                &quot;action_type&quot;: &quot;owner_reminder&quot;,
+                &quot;text&quot;: &quot;提醒老板下单 · 检查为何漏单&quot;,
+                &quot;priority&quot;: &quot;high&quot;, &quot;role&quot;: &quot;GT_SR&quot;, &quot;signal&quot;: &quot;s02_in_stock&quot;,
+                &quot;days&quot;: 1, &quot;outcome&quot;: &quot;老板下次自主下单&quot;
+            },
+        ],
+        &quot;logistics&quot;: [
+            {
+                &quot;action_type&quot;: &quot;check_delivery&quot;,
+                &quot;text&quot;: &quot;查物流配送 · 找断货真因&quot;,
+                &quot;priority&quot;: &quot;high&quot;, &quot;role&quot;: &quot;DOM&quot;, &quot;signal&quot;: &quot;s02_in_stock&quot;,
+                &quot;days&quot;: 2, &quot;outcome&quot;: &quot;配送恢复&quot;
+            },
+        ],
+        &quot;owner_relationship_weak&quot;: [
+            {
+                &quot;action_type&quot;: &quot;relationship_building&quot;,
+                &quot;text&quot;: &quot;深度客情 · 找老板痛点 · 用其他SKU绑定提升整体信任&quot;,
+                &quot;priority&quot;: &quot;normal&quot;, &quot;role&quot;: &quot;GT_SR&quot;, &quot;signal&quot;: &quot;s09_owner_recommends&quot;,
+                &quot;days&quot;: 14, &quot;outcome&quot;: &quot;客情度 + 1 级&quot;
+            },
+        ],
+        &quot;product_experience&quot;: [
+            {
+                &quot;action_type&quot;: &quot;user_research&quot;,
+                &quot;text&quot;: &quot;调研为何不复购 · 问老板回头客反馈&quot;,
+                &quot;priority&quot;: &quot;normal&quot;, &quot;role&quot;: &quot;GT_SR&quot;, &quot;signal&quot;: &quot;s07_repurchase&quot;,
+                &quot;days&quot;: 14, &quot;outcome&quot;: &quot;拿到≥5 条消费者反馈&quot;
+            },
+        ],
+        &quot;data_gap&quot;: [
+            {
+                &quot;action_type&quot;: &quot;data_collection&quot;,
+                &quot;text&quot;: &quot;下次进店补采集缺失信号 · 让 Agent 能判断&quot;,
+                &quot;priority&quot;: &quot;normal&quot;, &quot;role&quot;: &quot;GT_SR&quot;, &quot;signal&quot;: &quot;&quot;,
+                &quot;days&quot;: 7, &quot;outcome&quot;: &quot;数据完整&quot;
+            },
+        ],
+    }
+
+    def recommend(self, problem: Problem, causes: list[Cause]) -&gt; list[ActionRecommendation]:
+        &quot;&quot;&quot;基于问题 + 多个候选原因 · 生成行动建议(去重·按 priority 排)&quot;&quot;&quot;
+        actions = []
+        seen_types = set()
+        
+        for cause in causes:
+            templates = self.CAUSE_TO_ACTIONS.get(cause.cause_type, [])
+            for tpl in templates:
+                if tpl[&quot;action_type&quot;] in seen_types:
+                    continue
+                seen_types.add(tpl[&quot;action_type&quot;])
+                actions.append(ActionRecommendation(
+                    action_type=tpl[&quot;action_type&quot;],
+                    action_text=tpl[&quot;text&quot;],
+                    priority=tpl[&quot;priority&quot;],
+                    assigned_role=tpl[&quot;role&quot;],
+                    target_signal=tpl[&quot;signal&quot;],
+                    due_in_days=tpl[&quot;days&quot;],
+                    expected_outcome=tpl[&quot;outcome&quot;],
+                ))
+        
+        # 按 priority 排:high → normal → low
+        priority_order = {&quot;high&quot;: 0, &quot;normal&quot;: 1, &quot;low&quot;: 2}
+        actions.sort(key=lambda a: priority_order.get(a.priority, 99))
+        return actions
+
+
+# ============================================================
+# L7-⑤ 资源调度(Resource Orchestration)
+# ============================================================
+
+class ResourceOrchestrator:
+    &quot;&quot;&quot;
+    判断行动是否需要申请资源·生成 resource_requests
+    
+    不是所有行动都需要资源:
+      · 老板培训 → 不需要预算(SR 自己做)
+      · 短期促销 → 需要 promo_budget
+      · 试吃 → 需要 试吃品+物料预算
+      · 紧急补货 → 需要 触发供应链
+    &quot;&quot;&quot;
+
+    # action_type → 资源类型 + 默认金额
+    ACTION_TO_RESOURCE = {
+        &quot;promo&quot;:              (&quot;promo_budget&quot;,     500.00, &quot;DOM&quot;),
+        &quot;tasting&quot;:            (&quot;promo_budget&quot;,     300.00, &quot;DOM&quot;),
+        &quot;get_second_display&quot;: (&quot;display_fee&quot;,      800.00, &quot;DOM&quot;),
+        &quot;get_main_shelf&quot;:     (&quot;display_fee&quot;,     1200.00, &quot;DOM&quot;),
+        &quot;supply_replenish&quot;:   (&quot;supply_replenish&quot;, None,   &quot;DOM&quot;),
+        &quot;user_research&quot;:      (&quot;research_budget&quot;,  200.00, &quot;DOM&quot;),
+    }
+
+    def orchestrate(self, action: ActionRecommendation, problem: Problem) -&gt; Optional[ResourceRequest]:
+        &quot;&quot;&quot;看这动作要不要资源·返回 None 表示不需要&quot;&quot;&quot;
+        mapping = self.ACTION_TO_RESOURCE.get(action.action_type)
+        if not mapping:
+            return None
+        
+        resource_type, amount, approver = mapping
+        return ResourceRequest(
+            resource_type=resource_type,
+            resource_amount=amount,
+            request_reason=(
+                f&quot;{problem.lifecycle_stage} 阶段 · {action.action_text[:30]}... · &quot;
+                f&quot;目标: {action.expected_outcome}&quot;
+            ),
+            approver_role=approver,
+        )
+
+
+# ============================================================
+# 主引擎 · 串起5层
+# ============================================================
+
+class ActionEngine:
+    &quot;&quot;&quot;
+    L7 行动建议引擎主入口
+    
+    输入: gate_result_id (来自 Step 3 L2 引擎)
+    输出: actions + resource_requests(写库)
+    &quot;&quot;&quot;
+
+    def __init__(self, db_path: str):
+        self.db_path = db_path
+        self.identifier = ProblemIdentifier()
+        self.reasoner = CauseReasoner()
+        self.assessor = LifecycleAssessor()
+        self.recommender = ActionRecommender()
+        self.orchestrator = ResourceOrchestrator()
+
+    def _conn(self):
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+    def process(self, gate_result_id: int) -&gt; dict:
+        &quot;&quot;&quot;
+        对一条 gate_results 执行 L7 完整 5 层流水
+        返回完整推理链路·写库副作用
+        &quot;&quot;&quot;
+        with self._conn() as c:
+            row = c.execute(
+                &quot;SELECT * FROM gate_results WHERE result_id=?&quot;,
+                (gate_result_id,)
+            ).fetchone()
+        
+        if not row:
+            return {&quot;error&quot;: f&quot;gate_result_id {gate_result_id} not found&quot;}
+        
+        gate_result = dict(row)
+        gate_result[&quot;result_id&quot;] = gate_result_id
+        
+        # 取关联的信号(原因推理需要更多上下文)
+        signal_row = {}
+        if gate_result.get(&quot;signal_id&quot;):
+            with self._conn() as c:
+                sr = c.execute(
+                    &quot;SELECT * FROM transistor_signals WHERE signal_id=?&quot;,
+                    (gate_result[&quot;signal_id&quot;],)
+                ).fetchone()
+                if sr:
+                    signal_row = dict(sr)
+        
+        # 历史失败次数(给阶段判断用)
+        history_fails = self._count_history_fails(
+            gate_result[&quot;sku_id&quot;], gate_result[&quot;store_id&quot;]
+        )
+        
+        # ─── L7 5 层推理 ───
+        # ① 问题识别
+        problems = self.identifier.identify(gate_result)
+        if not problems:
+            return {
+                &quot;gate_result_id&quot;: gate_result_id,
+                &quot;verdict&quot;: &quot;pass·无需行动&quot;,
+                &quot;problems&quot;: [], &quot;actions&quot;: [], &quot;resources&quot;: []
+            }
+        
+        all_actions = []
+        all_resources = []
+        all_causes_chain = []
+        lifecycle_decisions = []
+        
+        for problem in problems:
+            # ② 原因推理
+            causes = self.reasoner.reason(problem, signal_row)
+            # ③ 生命周期判断
+            ls_decision = self.assessor.assess(problem, history_fails)
+            # ④ 行动建议
+            actions = self.recommender.recommend(problem, causes)
+            
+            # 落 actions 入库
+            for action in actions:
+                action_id = self._save_action(gate_result_id, problem, action)
+                # ⑤ 资源调度
+                resource = self.orchestrator.orchestrate(action, problem)
+                if resource:
+                    self._save_resource(action_id, problem, resource)
+                    all_resources.append({**asdict(resource), &quot;action_id&quot;: action_id})
+                all_actions.append({**asdict(action), &quot;action_id&quot;: action_id})
+            
+            all_causes_chain.append({
+                &quot;problem&quot;: asdict(problem),
+                &quot;causes&quot;: [asdict(c) for c in causes],
+            })
+            lifecycle_decisions.append(ls_decision)
+        
+        return {
+            &quot;gate_result_id&quot;: gate_result_id,
+            &quot;sku_id&quot;: gate_result[&quot;sku_id&quot;],
+            &quot;store_id&quot;: gate_result[&quot;store_id&quot;],
+            &quot;lifecycle_stage&quot;: gate_result[&quot;lifecycle_stage&quot;],
+            &quot;verdict&quot;: gate_result[&quot;result&quot;],
+            &quot;problems_count&quot;: len(problems),
+            &quot;actions_count&quot;: len(all_actions),
+            &quot;resources_count&quot;: len(all_resources),
+            &quot;reasoning_chain&quot;: all_causes_chain,
+            &quot;lifecycle_decisions&quot;: lifecycle_decisions,
+            &quot;actions&quot;: all_actions,
+            &quot;resources&quot;: all_resources,
+        }
+
+    def _count_history_fails(self, sku_id: str, store_id: str) -&gt; int:
+        with self._conn() as c:
+            row = c.execute(
+                &quot;&quot;&quot;SELECT COUNT(*) FROM gate_results 
+                   WHERE sku_id=? AND store_id=? AND result=&#x27;fail&#x27;&quot;&quot;&quot;,
+                (sku_id, store_id)
+            ).fetchone()
+        return row[0] if row else 0
+
+    def _save_action(self, gate_result_id: int, problem: Problem, action: ActionRecommendation) -&gt; int:
+        due_at = (datetime.utcnow() + timedelta(days=action.due_in_days)).isoformat() + &quot;Z&quot;
+        with self._conn() as c:
+            cursor = c.execute(
+                &quot;&quot;&quot;INSERT INTO agent_actions
+                   (gate_result_id, sku_id, store_id, action_type, action_text, priority,
+                    assigned_to, status, due_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, &#x27;pending&#x27;, ?)&quot;&quot;&quot;,
+                (gate_result_id, problem.sku_id, problem.store_id,
+                 action.action_type, action.action_text, action.priority,
+                 action.assigned_role, due_at)
+            )
+            c.commit()
+            return cursor.lastrowid
+
+    def _save_resource(self, action_id: int, problem: Problem, res: ResourceRequest) -&gt; int:
+        with self._conn() as c:
+            cursor = c.execute(
+                &quot;&quot;&quot;INSERT INTO resource_requests
+                   (action_id, sku_id, store_id, resource_type, resource_amount,
+                    request_reason, approver_role, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, &#x27;pending&#x27;)&quot;&quot;&quot;,
+                (action_id, problem.sku_id, problem.store_id,
+                 res.resource_type, res.resource_amount,
+                 res.request_reason, res.approver_role)
+            )
+            c.commit()
+            return cursor.lastrowid
+
+
+# ============================================================
+# 单例运行
+# ============================================================
+
+if __name__ == &quot;__main__&quot;:
+    import sys
+    if len(sys.argv) &lt; 3:
+        print(&quot;用法: python action_engine.py &lt;db_path&gt; &lt;gate_result_id&gt;&quot;)
+        sys.exit(1)
+    
+    engine = ActionEngine(sys.argv[1])
+    result = engine.process(int(sys.argv[2]))
+    
+    print(&quot;=&quot; * 70)
+    print(&quot;INFINITY Agent OS · L7 行动建议引擎 · 输出&quot;)
+    print(&quot;=&quot; * 70)
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+"><pre class="code lang-py"><span class="ts">&quot;&quot;</span>&quot;
+INFINITY Agent OS · Step <span class="tn">4</span> · L7 行动建议引擎
+================================================
+按 DS ③《Agent 行动建议引擎 V0.<span class="tn">1</span>》<span class="tn">5</span> 层 <span class="tn">1</span>:<span class="tn">1</span> 实现
+
+<span class="tn">5</span> 层结构(DS ③):
+  ① 问题识别       Problem identification
+  ② 原因推理       Cause reasoning
+  ③ 生命周期判断   Lifecycle stage assessment
+  ④ 行动建议       Action recommendation
+  ⑤ 资源调度       Resource orchestration
+
+输入: gate_results 表中 result=fail 或 uncertain 的记录
+输出: agent_actions 表 + resource_requests 表
+
+不做(留给 Step <span class="tn">5</span>):
+  ✗ 资源调度真执行(只是把申请落到 resource_requests · L8 接)
+  ✗ 多门联动(导入门→成长门自动迁移·留 L4 渠道Agent)
+
+铁律: 严守底层 SKU 生命力 · 行动是为<span class="ts">&quot;让SKU活下去/活得好&quot;</span>
+署名 DS · <span class="tn">2026</span>-<span class="tn">05</span>-<span class="tn">29</span>
+<span class="ts">&quot;&quot;</span>&quot;
+
+<span <span class="tk">class</span>="tk">from</span> __future__ <span <span class="tk">class</span>="tk">import</span> annotations
+<span <span class="tk">class</span>="tk">import</span> json
+<span <span class="tk">class</span>="tk">import</span> sqlite3
+<span <span class="tk">class</span>="tk">from</span> dataclasses <span <span class="tk">class</span>="tk">import</span> dataclass, field, asdict
+<span <span class="tk">class</span>="tk">from</span> datetime <span <span class="tk">class</span>="tk">import</span> datetime, timedelta
+<span <span class="tk">class</span>="tk">from</span> typing <span <span class="tk">class</span>="tk">import</span> Any, Optional
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># 数据模型</span>
+<span class="tc"># ============================================================</span>
+
+<span class="td">@dataclass</span>
+<span class="tk">class</span> Problem:
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;L7-①·识别出的问题&quot;</span><span class="ts">&quot;&quot;</span>
+    sku_id: str
+    store_id: str
+    channel_type: str
+    lifecycle_stage: str
+    severity: str  <span class="tc"># high / medium / low</span>
+    problem_type: str  <span class="tc"># missing_sellout / stockout / no_owner_recommend / 等</span>
+    failed_signals: list[str]
+    uncertain_signals: list[str] = field(default_factory=list)
+    gate_result_id: Optional[int] = <span class="tk">None</span>
+    signal_id: Optional[int] = <span class="tk">None</span>
+
+
+<span class="td">@dataclass</span>
+<span class="tk">class</span> Cause:
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;L7-②·推理出的原因&quot;</span><span class="ts">&quot;&quot;</span>
+    cause_type: str  <span class="tc"># consumer_unknown / price_high / display_weak / etc.</span>
+    confidence: float  <span class="tc"># <span class="tn">0</span>-<span class="tn">1</span></span>
+    evidence: list[str]
+    description: str
+
+
+<span class="td">@dataclass</span>
+<span class="tk">class</span> ActionRecommendation:
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;L7-④·具体行动建议&quot;</span><span class="ts">&quot;&quot;</span>
+    action_type: str
+    action_text: str
+    priority: str  <span class="tc"># high / normal / low</span>
+    assigned_role: str  <span class="tc"># GT_SR / DOM / DSR / etc.</span>
+    target_signal: str  <span class="tc"># 攻克哪个晶体管</span>
+    due_in_days: int
+    expected_outcome: str
+
+
+<span class="td">@dataclass</span>
+<span class="tk">class</span> ResourceRequest:
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;L7-⑤·触发的资源申请&quot;</span><span class="ts">&quot;&quot;</span>
+    resource_type: str  <span class="tc"># promo_budget / display_fee / training / supply_replenish</span>
+    resource_amount: Optional[float]
+    request_reason: str
+    approver_role: str
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># L7-① 问题识别(Problem Identification)</span>
+<span class="tc"># ============================================================</span>
+
+<span class="tk">class</span> ProblemIdentifier:
+    <span class="ts">&quot;&quot;</span>&quot;
+    从 gate_results 中识别<span class="ts">&quot;真问题&quot;</span>
+    
+    不是所有 fail 都是真问题·要分级别:
+    · S06 无动销 = 高严重(生命信号缺失·核心)
+    · S03 不在主货架 = 中(可改善)
+    · S04 无第二陈列 = 低(锦上添花)
+    <span class="ts">&quot;&quot;</span>&quot;
+
+    <span class="tc"># 失败晶体管 → 问题类型映射(可扩展)</span>
+    SIGNAL_TO_PROBLEM = {
+        <span class="ts">&quot;s01_on_shelf&quot;</span>:         (<span class="ts">&quot;not_listed&quot;</span>,          <span class="ts">&quot;high&quot;</span>),
+        <span class="ts">&quot;s02_in_stock&quot;</span>:         (<span class="ts">&quot;stockout_current&quot;</span>,    <span class="ts">&quot;high&quot;</span>),
+        <span class="ts">&quot;s06_has_sellout&quot;</span>:      (<span class="ts">&quot;no_sellout&quot;</span>,          <span class="ts">&quot;high&quot;</span>),
+        <span class="ts">&quot;s07_repurchase&quot;</span>:       (<span class="ts">&quot;no_repurchase&quot;</span>,       <span class="ts">&quot;medium&quot;</span>),
+        <span class="ts">&quot;s08_stockout&quot;</span>:         (<span class="ts">&quot;recent_stockout&quot;</span>,     <span class="ts">&quot;high&quot;</span>),
+        <span class="ts">&quot;s09_owner_recommends&quot;</span>: (<span class="ts">&quot;owner_neutral&quot;</span>,       <span class="ts">&quot;medium&quot;</span>),
+        <span class="ts">&quot;s03_main_shelf&quot;</span>:       (<span class="ts">&quot;not_main_shelf&quot;</span>,      <span class="ts">&quot;medium&quot;</span>),
+        <span class="ts">&quot;s04_second_display&quot;</span>:   (<span class="ts">&quot;no_second_display&quot;</span>,   <span class="ts">&quot;low&quot;</span>),
+        <span class="ts">&quot;s05_has_price_tag&quot;</span>:    (<span class="ts">&quot;price_tag_missing&quot;</span>,   <span class="ts">&quot;medium&quot;</span>),
+        <span class="ts">&quot;s10_profit_target&quot;</span>:    (<span class="ts">&quot;profit_below_target&quot;</span>, <span class="ts">&quot;medium&quot;</span>),
+    }
+
+    <span <span class="tk">class</span>="tk">def</span> identify(<span class="tk">self</span>, gate_result_row: dict) -&gt; list[Problem]:
+        <span class="ts">&quot;&quot;</span><span class="ts">&quot;从一行 gate_results 识别问题·一行可能含多个问题&quot;</span><span class="ts">&quot;&quot;</span>
+        <span class="tk">if</span> gate_result_row[<span class="ts">&quot;result&quot;</span>] == <span class="ts">&quot;<span class="tk">pass</span>&quot;</span>:
+            <span class="tk">return</span> []  <span class="tc"># <span class="tk">pass</span> 无问题</span>
+        
+        failed = json.loads(gate_result_row.get(<span class="ts">&quot;failed_signals&quot;</span>) <span class="tk">or</span> <span class="ts">&quot;[]&quot;</span>)
+        problems = []
+        
+        <span class="tk">for</span> signal_str <span class="tk">in</span> failed:
+            <span class="tc"># 处理 <span class="ts">&quot;s06_has_sellout=<span class="tn">0</span> (actual=<span class="tn">1</span>)&quot;</span> 这种带表达式的</span>
+            signal_name = signal_str.split(<span class="ts">&quot;=&quot;</span>)[<span class="tn">0</span>].split(&quot;&gt;<span class="ts">&quot;)[<span class="tn">0</span>].split(&quot;</span>&lt;&quot;)[<span class="tn">0</span>].strip()
+            
+            mapping = <span class="tk">self</span>.SIGNAL_TO_PROBLEM.get(signal_name)
+            <span class="tk">if</span> <span class="tk">not</span> mapping:
+                <span class="tk">continue</span>
+            problem_type, severity = mapping
+            
+            problems.append(Problem(
+                sku_id=gate_result_row[<span class="ts">&quot;sku_id&quot;</span>],
+                store_id=gate_result_row[<span class="ts">&quot;store_id&quot;</span>],
+                channel_type=gate_result_row[<span class="ts">&quot;channel_type&quot;</span>],
+                lifecycle_stage=gate_result_row[<span class="ts">&quot;lifecycle_stage&quot;</span>],
+                severity=severity,
+                problem_type=problem_type,
+                failed_signals=[signal_name],
+                gate_result_id=gate_result_row.get(<span class="ts">&quot;result_id&quot;</span>),
+                signal_id=gate_result_row.get(<span class="ts">&quot;signal_id&quot;</span>),
+            ))
+        
+        <span class="tc"># 处理 uncertain(数据缺失)·也是问题但类型特殊</span>
+        <span class="tk">if</span> gate_result_row[<span class="ts">&quot;result&quot;</span>] == <span class="ts">&quot;uncertain&quot;</span>:
+            problems.append(Problem(
+                sku_id=gate_result_row[<span class="ts">&quot;sku_id&quot;</span>],
+                store_id=gate_result_row[<span class="ts">&quot;store_id&quot;</span>],
+                channel_type=gate_result_row[<span class="ts">&quot;channel_type&quot;</span>],
+                lifecycle_stage=gate_result_row[<span class="ts">&quot;lifecycle_stage&quot;</span>],
+                severity=<span class="ts">&quot;medium&quot;</span>,
+                problem_type=<span class="ts">&quot;data_missing&quot;</span>,
+                failed_signals=[],
+                uncertain_signals=json.loads(gate_result_row.get(<span class="ts">&quot;failed_signals&quot;</span>) <span class="tk">or</span> <span class="ts">&quot;[]&quot;</span>),
+                gate_result_id=gate_result_row.get(<span class="ts">&quot;result_id&quot;</span>),
+                signal_id=gate_result_row.get(<span class="ts">&quot;signal_id&quot;</span>),
+            ))
+        
+        <span class="tk">return</span> problems
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># L7-② 原因推理(Cause Reasoning)</span>
+<span class="tc"># ============================================================</span>
+
+<span class="tk">class</span> CauseReasoner:
+    <span class="ts">&quot;&quot;</span>&quot;
+    从问题反推根因
+    
+    一个问题(如<span class="ts">&quot;无动销&quot;</span>)可能有多个根因:
+      - 消费者不知道 → 营销/认知
+      - 价格太高 → 价格策略
+      - 陈列差 → 看不到 → 物理动作
+      - 老板不推 → 客情/培训
+    
+    输出多个候选 cause·各自带 confidence
+    <span class="ts">&quot;&quot;</span>&quot;
+
+    <span <span class="tk">class</span>="tk">def</span> reason(<span class="tk">self</span>, problem: Problem, signal_row: dict = <span class="tk">None</span>) -&gt; list[Cause]:
+        <span class="ts">&quot;&quot;</span>&quot;
+        基于问题类型 + 当前信号上下文·推理可能原因
+        signal_row: 同时刻的完整晶体管信号·给推理提供更多上下文
+        <span class="ts">&quot;&quot;</span>&quot;
+        causes = []
+        sig = signal_row <span class="tk">or</span> {}
+        
+        <span class="tk">if</span> problem.problem_type == <span class="ts">&quot;no_sellout&quot;</span>:
+            <span class="tc"># S06 无动销 · 多种可能根因</span>
+            
+            <span class="tc"># 根因 <span class="tn">1</span>: 没人推荐(S09) — 高置信</span>
+            <span class="tk">if</span> sig.get(<span class="ts">&quot;s09_owner_recommends&quot;</span>) == <span class="tn">0</span>:
+                causes.append(Cause(
+                    cause_type=<span class="ts">&quot;owner_no_recommend&quot;</span>,
+                    confidence=<span class="tn">0.85</span>,
+                    evidence=[<span class="ts">&quot;S09 老板不推荐 · GT 社区店关键&quot;</span>],
+                    description=&quot;老板没有主动向消费者推荐·缺少<span class="ts">&<span class="tc">#x27;超级导购&#x27;</span>力量&quot;</span>
+                ))
+            
+            <span class="tc"># 根因 <span class="tn">2</span>: 看不到(S03 主货架) — 中</span>
+            <span class="tk">if</span> sig.get(<span class="ts">&quot;s03_main_shelf&quot;</span>) == <span class="tn">0</span>:
+                causes.append(Cause(
+                    cause_type=<span class="ts">&quot;display_weak&quot;</span>,
+                    confidence=<span class="tn">0.70</span>,
+                    evidence=[<span class="ts">&quot;S03 不在主货架 · 消费者看不到&quot;</span>],
+                    description=<span class="ts">&quot;陈列位置弱 · 消费者注意力不到&quot;</span>
+                ))
+            
+            <span class="tc"># 根因 <span class="tn">3</span>: 价签缺(S05) — 中</span>
+            <span class="tk">if</span> sig.get(<span class="ts">&quot;s05_has_price_tag&quot;</span>) == <span class="tn">0</span>:
+                causes.append(Cause(
+                    cause_type=<span class="ts">&quot;no_price_tag&quot;</span>,
+                    confidence=<span class="tn">0.65</span>,
+                    evidence=[<span class="ts">&quot;S05 无价签 · 消费者犹豫&quot;</span>],
+                    description=<span class="ts">&quot;价签缺失 · 消费者不知价格不敢买&quot;</span>
+                ))
+            
+            <span class="tc"># 根因 <span class="tn">4</span>: 消费者认知 — 兜底(无具体证据时)</span>
+            <span class="tk">if</span> <span class="tk">not</span> causes:
+                causes.append(Cause(
+                    cause_type=<span class="ts">&quot;consumer_unknown&quot;</span>,
+                    confidence=<span class="tn">0.50</span>,
+                    evidence=[<span class="ts">&quot;缺乏更具体的失败信号&quot;</span>],
+                    description=<span class="ts">&quot;可能是消费者认知问题 · 需要采集更多数据&quot;</span>
+                ))
+        
+        <span class="tk">elif</span> problem.problem_type == <span class="ts">&quot;stockout_current&quot;</span> <span class="tk">or</span> problem.problem_type == <span class="ts">&quot;recent_stockout&quot;</span>:
+            <span class="tc"># 断货 · 看 root_cause_guess 字段</span>
+            root = sig.get(<span class="ts">&quot;s08_root_cause&quot;</span>, <span class="ts">&quot;unknown&quot;</span>)
+            cause_map = {
+                <span class="ts">&quot;distributor_oos&quot;</span>: (<span class="ts">&quot;supply_chain&quot;</span>, <span class="tn">0.90</span>, <span class="ts">&quot;经销商无货 · 供应链问题&quot;</span>),
+                <span class="ts">&quot;owner_not_ordered&quot;</span>: (<span class="ts">&quot;owner_neglect&quot;</span>, <span class="tn">0.85</span>, <span class="ts">&quot;门店老板未下单 · 客情/培训问题&quot;</span>),
+                <span class="ts">&quot;delivery_delay&quot;</span>: (<span class="ts">&quot;logistics&quot;</span>, <span class="tn">0.80</span>, <span class="ts">&quot;配送延迟 · 物流问题&quot;</span>),
+            }
+            ct, cf, desc = cause_map.get(root, (<span class="ts">&quot;unknown&quot;</span>, <span class="tn">0.40</span>, <span class="ts">&quot;断货原因未知 · 需 SR 调查&quot;</span>))
+            causes.append(Cause(
+                cause_type=ct, confidence=cf,
+                evidence=[f<span class="ts">&quot;S08 断货 · 根因猜测={root}&quot;</span>],
+                description=desc
+            ))
+        
+        <span class="tk">elif</span> problem.problem_type == <span class="ts">&quot;owner_neutral&quot;</span>:
+            causes.append(Cause(
+                cause_type=<span class="ts">&quot;owner_relationship_weak&quot;</span>,
+                confidence=<span class="tn">0.75</span>,
+                evidence=[<span class="ts">&quot;S09 老板态度 neutral&quot;</span>],
+                description=<span class="ts">&quot;老板对此 SKU 中立 · 需要客情+培训提升认同&quot;</span>
+            ))
+        
+        <span class="tk">elif</span> problem.problem_type == <span class="ts">&quot;no_repurchase&quot;</span>:
+            causes.append(Cause(
+                cause_type=<span class="ts">&quot;product_experience&quot;</span>,
+                confidence=<span class="tn">0.60</span>,
+                evidence=[<span class="ts">&quot;S07 无复购&quot;</span>],
+                description=<span class="ts">&quot;消费者尝试后没回购 · 可能口感/价格/包装问题&quot;</span>
+            ))
+        
+        <span class="tk">elif</span> problem.problem_type == <span class="ts">&quot;data_missing&quot;</span>:
+            causes.append(Cause(
+                cause_type=<span class="ts">&quot;data_gap&quot;</span>,
+                confidence=<span class="tn">1.0</span>,
+                evidence=[<span class="ts">&quot;关键信号未采集&quot;</span>],
+                description=<span class="ts">&quot;缺数据·Agent 无法判断·先补采集&quot;</span>
+            ))
+        
+        <span class="tc"># 兜底</span>
+        <span class="tk">if</span> <span class="tk">not</span> causes:
+            causes.append(Cause(
+                cause_type=<span class="ts">&quot;generic&quot;</span>,
+                confidence=<span class="tn">0.30</span>,
+                evidence=[f<span class="ts">&quot;problem_type={problem.problem_type}&quot;</span>],
+                description=<span class="ts">&quot;原因未明 · 需 SR 现场调研&quot;</span>
+            ))
+        
+        <span class="tk">return</span> causes
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># L7-③ 生命周期判断(Lifecycle Stage Assessment)</span>
+<span class="tc"># ============================================================</span>
+
+<span class="tk">class</span> LifecycleAssessor:
+    <span class="ts">&quot;&quot;</span>&quot;
+    根据问题严重程度 + 生命周期 · 判断是否触发阶段迁移
+    
+    例如:
+      · 导入期持续 FAIL → 维持导入期·继续做小步动作
+      · 成长期 FAIL → 降级回导入期(回炉重练)
+      · 成熟期 FAIL → 降级回成长期(警示·避免成熟阶段衰退)
+    <span class="ts">&quot;&quot;</span>&quot;
+
+    <span <span class="tk">class</span>="tk">def</span> assess(<span class="tk">self</span>, problem: Problem, history_fail_count: int = <span class="tn">0</span>) -&gt; dict:
+        <span class="ts">&quot;&quot;</span>&quot;
+        返回阶段迁移建议
+        {
+          <span class="ts">&quot;should_transition&quot;</span>: bool,
+          <span class="ts">&quot;new_stage&quot;</span>: str <span class="tk">or</span> <span class="tk">None</span>,
+          <span class="ts">&quot;reason&quot;</span>: str
+        }
+        <span class="ts">&quot;&quot;</span>&quot;
+        stage = problem.lifecycle_stage
+        sev = problem.severity
+        
+        <span class="tc"># 导入期 · 严重失败累计 <span class="tn">3</span> 次 → 考虑淘汰</span>
+        <span class="tk">if</span> stage == <span class="ts">&quot;intro&quot;</span>:
+            <span class="tk">if</span> history_fail_count &gt;= <span class="tn">3</span> <span class="tk">and</span> sev == <span class="ts">&quot;high&quot;</span>:
+                <span class="tk">return</span> {
+                    <span class="ts">&quot;should_transition&quot;</span>: <span class="tk">True</span>,
+                    <span class="ts">&quot;new_stage&quot;</span>: <span class="ts">&quot;decline&quot;</span>,
+                    <span class="ts">&quot;reason&quot;</span>: <span class="ts">&quot;导入期持续 <span class="tn">3</span> 次以上 high 级失败 · 考虑淘汰&quot;</span>
+                }
+            <span class="tk">return</span> {<span class="ts">&quot;should_transition&quot;</span>: <span class="tk">False</span>, <span class="ts">&quot;new_stage&quot;</span>: <span class="tk">None</span>,
+                    <span class="ts">&quot;reason&quot;</span>: <span class="ts">&quot;导入期 fail 正常 · 维持继续培育&quot;</span>}
+        
+        <span class="tc"># 成长期 · 严重 fail → 降回导入期</span>
+        <span class="tk">if</span> stage == <span class="ts">&quot;growth&quot;</span> <span class="tk">and</span> sev == <span class="ts">&quot;high&quot;</span>:
+            <span class="tk">return</span> {
+                <span class="ts">&quot;should_transition&quot;</span>: <span class="tk">True</span>,
+                <span class="ts">&quot;new_stage&quot;</span>: <span class="ts">&quot;intro&quot;</span>,
+                <span class="ts">&quot;reason&quot;</span>: <span class="ts">&quot;成长期出现 high 级 fail · 降级回炉&quot;</span>
+            }
+        
+        <span class="tc"># 成熟期 · 任何 fail → 警示·降回成长期</span>
+        <span class="tk">if</span> stage == <span class="ts">&quot;mature&quot;</span> <span class="tk">and</span> sev <span class="tk">in</span> (<span class="ts">&quot;high&quot;</span>, <span class="ts">&quot;medium&quot;</span>):
+            <span class="tk">return</span> {
+                <span class="ts">&quot;should_transition&quot;</span>: <span class="tk">True</span>,
+                <span class="ts">&quot;new_stage&quot;</span>: <span class="ts">&quot;growth&quot;</span>,
+                <span class="ts">&quot;reason&quot;</span>: <span class="ts">&quot;成熟期出现 fail · 警示性降级·防衰退&quot;</span>
+            }
+        
+        <span class="tk">return</span> {<span class="ts">&quot;should_transition&quot;</span>: <span class="tk">False</span>, <span class="ts">&quot;new_stage&quot;</span>: <span class="tk">None</span>, <span class="ts">&quot;reason&quot;</span>: <span class="ts">&quot;无需阶段迁移&quot;</span>}
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># L7-④ 行动建议(Action Recommendation)</span>
+<span class="tc"># ============================================================</span>
+
+<span class="tk">class</span> ActionRecommender:
+    <span class="ts">&quot;&quot;</span>&quot;
+    基于(问题, 原因, 阶段)三元组 → 具体行动建议
+    
+    一个问题可能生成多个动作(打组合拳)
+    <span class="ts">&quot;&quot;</span>&quot;
+
+    <span class="tc"># 根因类型 → 行动模板</span>
+    CAUSE_TO_ACTIONS = {
+        <span class="ts">&quot;owner_no_recommend&quot;</span>: [
+            {
+                <span class="ts">&quot;action_type&quot;</span>: <span class="ts">&quot;owner_training&quot;</span>,
+                <span class="ts">&quot;text&quot;</span>: <span class="ts">&quot;组织老板培训 · 教会老王如何向家庭客推荐·攻克 S09 老板推荐&quot;</span>,
+                <span class="ts">&quot;priority&quot;</span>: <span class="ts">&quot;high&quot;</span>, <span class="ts">&quot;role&quot;</span>: <span class="ts">&quot;GT_SR&quot;</span>, <span class="ts">&quot;signal&quot;</span>: <span class="ts">&quot;s09_owner_recommends&quot;</span>,
+                <span class="ts">&quot;days&quot;</span>: <span class="tn">3</span>, <span class="ts">&quot;outcome&quot;</span>: <span class="ts">&quot;S09 老板推荐 = proactive&quot;</span>
+            },
+            {
+                <span class="ts">&quot;action_type&quot;</span>: <span class="ts">&quot;owner_visit&quot;</span>,
+                <span class="ts">&quot;text&quot;</span>: <span class="ts">&quot;增加客情拜访 · 建立老板对品牌信任&quot;</span>,
+                <span class="ts">&quot;priority&quot;</span>: <span class="ts">&quot;normal&quot;</span>, <span class="ts">&quot;role&quot;</span>: <span class="ts">&quot;GT_SR&quot;</span>, <span class="ts">&quot;signal&quot;</span>: <span class="ts">&quot;s09_owner_recommends&quot;</span>,
+                <span class="ts">&quot;days&quot;</span>: <span class="tn">7</span>, <span class="ts">&quot;outcome&quot;</span>: <span class="ts">&quot;老板态度从 neutral 转 positive&quot;</span>
+            },
+        ],
+        <span class="ts">&quot;display_weak&quot;</span>: [
+            {
+                <span class="ts">&quot;action_type&quot;</span>: <span class="ts">&quot;get_main_shelf&quot;</span>,
+                <span class="ts">&quot;text&quot;</span>: <span class="ts">&quot;争取主货架陈列位 · 消费者看得到才能动销&quot;</span>,
+                <span class="ts">&quot;priority&quot;</span>: <span class="ts">&quot;high&quot;</span>, <span class="ts">&quot;role&quot;</span>: <span class="ts">&quot;GT_SR&quot;</span>, <span class="ts">&quot;signal&quot;</span>: <span class="ts">&quot;s03_main_shelf&quot;</span>,
+                <span class="ts">&quot;days&quot;</span>: <span class="tn">14</span>, <span class="ts">&quot;outcome&quot;</span>: <span class="ts">&quot;S03 主货架 = true&quot;</span>
+            },
+            {
+                <span class="ts">&quot;action_type&quot;</span>: <span class="ts">&quot;get_second_display&quot;</span>,
+                <span class="ts">&quot;text&quot;</span>: <span class="ts">&quot;争取第二陈列位(收银台/堆头) · 增加曝光&quot;</span>,
+                <span class="ts">&quot;priority&quot;</span>: <span class="ts">&quot;normal&quot;</span>, <span class="ts">&quot;role&quot;</span>: <span class="ts">&quot;GT_SR&quot;</span>, <span class="ts">&quot;signal&quot;</span>: <span class="ts">&quot;s04_second_display&quot;</span>,
+                <span class="ts">&quot;days&quot;</span>: <span class="tn">14</span>, <span class="ts">&quot;outcome&quot;</span>: <span class="ts">&quot;S04 第二陈列 = true&quot;</span>
+            },
+        ],
+        <span class="ts">&quot;no_price_tag&quot;</span>: [
+            {
+                <span class="ts">&quot;action_type&quot;</span>: <span class="ts">&quot;fix_price_tag&quot;</span>,
+                <span class="ts">&quot;text&quot;</span>: <span class="ts">&quot;立即补价签 · 让消费者敢买&quot;</span>,
+                <span class="ts">&quot;priority&quot;</span>: <span class="ts">&quot;high&quot;</span>, <span class="ts">&quot;role&quot;</span>: <span class="ts">&quot;GT_SR&quot;</span>, <span class="ts">&quot;signal&quot;</span>: <span class="ts">&quot;s05_has_price_tag&quot;</span>,
+                <span class="ts">&quot;days&quot;</span>: <span class="tn">1</span>, <span class="ts">&quot;outcome&quot;</span>: <span class="ts">&quot;S05 价签 = true&quot;</span>
+            },
+        ],
+        <span class="ts">&quot;consumer_unknown&quot;</span>: [
+            {
+                <span class="ts">&quot;action_type&quot;</span>: <span class="ts">&quot;tasting&quot;</span>,
+                <span class="ts">&quot;text&quot;</span>: <span class="ts">&quot;组织试吃活动 · 让消费者尝到口感差异 · 攻克 S06 动销&quot;</span>,
+                <span class="ts">&quot;priority&quot;</span>: <span class="ts">&quot;high&quot;</span>, <span class="ts">&quot;role&quot;</span>: <span class="ts">&quot;GT_SR&quot;</span>, <span class="ts">&quot;signal&quot;</span>: <span class="ts">&quot;s06_has_sellout&quot;</span>,
+                <span class="ts">&quot;days&quot;</span>: <span class="tn">7</span>, <span class="ts">&quot;outcome&quot;</span>: <span class="ts">&quot;S06 7天内动销首单&quot;</span>
+            },
+            {
+                <span class="ts">&quot;action_type&quot;</span>: <span class="ts">&quot;promo&quot;</span>,
+                <span class="ts">&quot;text&quot;</span>: &quot;短期促销降低尝试门槛 · 价签上加<span class="ts">&<span class="tc">#x27;新品体验价&#x27;</span>&quot;,</span>
+                <span class="ts">&quot;priority&quot;</span>: <span class="ts">&quot;normal&quot;</span>, <span class="ts">&quot;role&quot;</span>: <span class="ts">&quot;DOM&quot;</span>, <span class="ts">&quot;signal&quot;</span>: <span class="ts">&quot;s06_has_sellout&quot;</span>,
+                <span class="ts">&quot;days&quot;</span>: <span class="tn">10</span>, <span class="ts">&quot;outcome&quot;</span>: <span class="ts">&quot;S06 周销 ≥ <span class="tn">5</span> 瓶&quot;</span>
+            },
+        ],
+        <span class="ts">&quot;supply_chain&quot;</span>: [
+            {
+                <span class="ts">&quot;action_type&quot;</span>: <span class="ts">&quot;supply_replenish&quot;</span>,
+                <span class="ts">&quot;text&quot;</span>: <span class="ts">&quot;紧急通知经销商补货 · 攻克 S02 库存&quot;</span>,
+                <span class="ts">&quot;priority&quot;</span>: <span class="ts">&quot;high&quot;</span>, <span class="ts">&quot;role&quot;</span>: <span class="ts">&quot;DOM&quot;</span>, <span class="ts">&quot;signal&quot;</span>: <span class="ts">&quot;s02_in_stock&quot;</span>,
+                <span class="ts">&quot;days&quot;</span>: <span class="tn">1</span>, <span class="ts">&quot;outcome&quot;</span>: <span class="ts">&quot;S02 库存恢复 ≥ <span class="tn">6</span>&quot;</span>
+            },
+        ],
+        <span class="ts">&quot;owner_neglect&quot;</span>: [
+            {
+                <span class="ts">&quot;action_type&quot;</span>: <span class="ts">&quot;owner_reminder&quot;</span>,
+                <span class="ts">&quot;text&quot;</span>: <span class="ts">&quot;提醒老板下单 · 检查为何漏单&quot;</span>,
+                <span class="ts">&quot;priority&quot;</span>: <span class="ts">&quot;high&quot;</span>, <span class="ts">&quot;role&quot;</span>: <span class="ts">&quot;GT_SR&quot;</span>, <span class="ts">&quot;signal&quot;</span>: <span class="ts">&quot;s02_in_stock&quot;</span>,
+                <span class="ts">&quot;days&quot;</span>: <span class="tn">1</span>, <span class="ts">&quot;outcome&quot;</span>: <span class="ts">&quot;老板下次自主下单&quot;</span>
+            },
+        ],
+        <span class="ts">&quot;logistics&quot;</span>: [
+            {
+                <span class="ts">&quot;action_type&quot;</span>: <span class="ts">&quot;check_delivery&quot;</span>,
+                <span class="ts">&quot;text&quot;</span>: <span class="ts">&quot;查物流配送 · 找断货真因&quot;</span>,
+                <span class="ts">&quot;priority&quot;</span>: <span class="ts">&quot;high&quot;</span>, <span class="ts">&quot;role&quot;</span>: <span class="ts">&quot;DOM&quot;</span>, <span class="ts">&quot;signal&quot;</span>: <span class="ts">&quot;s02_in_stock&quot;</span>,
+                <span class="ts">&quot;days&quot;</span>: <span class="tn">2</span>, <span class="ts">&quot;outcome&quot;</span>: <span class="ts">&quot;配送恢复&quot;</span>
+            },
+        ],
+        <span class="ts">&quot;owner_relationship_weak&quot;</span>: [
+            {
+                <span class="ts">&quot;action_type&quot;</span>: <span class="ts">&quot;relationship_building&quot;</span>,
+                <span class="ts">&quot;text&quot;</span>: <span class="ts">&quot;深度客情 · 找老板痛点 · 用其他SKU绑定提升整体信任&quot;</span>,
+                <span class="ts">&quot;priority&quot;</span>: <span class="ts">&quot;normal&quot;</span>, <span class="ts">&quot;role&quot;</span>: <span class="ts">&quot;GT_SR&quot;</span>, <span class="ts">&quot;signal&quot;</span>: <span class="ts">&quot;s09_owner_recommends&quot;</span>,
+                <span class="ts">&quot;days&quot;</span>: <span class="tn">14</span>, <span class="ts">&quot;outcome&quot;</span>: <span class="ts">&quot;客情度 + <span class="tn">1</span> 级&quot;</span>
+            },
+        ],
+        <span class="ts">&quot;product_experience&quot;</span>: [
+            {
+                <span class="ts">&quot;action_type&quot;</span>: <span class="ts">&quot;user_research&quot;</span>,
+                <span class="ts">&quot;text&quot;</span>: <span class="ts">&quot;调研为何不复购 · 问老板回头客反馈&quot;</span>,
+                <span class="ts">&quot;priority&quot;</span>: <span class="ts">&quot;normal&quot;</span>, <span class="ts">&quot;role&quot;</span>: <span class="ts">&quot;GT_SR&quot;</span>, <span class="ts">&quot;signal&quot;</span>: <span class="ts">&quot;s07_repurchase&quot;</span>,
+                <span class="ts">&quot;days&quot;</span>: <span class="tn">14</span>, <span class="ts">&quot;outcome&quot;</span>: <span class="ts">&quot;拿到≥<span class="tn">5</span> 条消费者反馈&quot;</span>
+            },
+        ],
+        <span class="ts">&quot;data_gap&quot;</span>: [
+            {
+                <span class="ts">&quot;action_type&quot;</span>: <span class="ts">&quot;data_collection&quot;</span>,
+                <span class="ts">&quot;text&quot;</span>: <span class="ts">&quot;下次进店补采集缺失信号 · 让 Agent 能判断&quot;</span>,
+                <span class="ts">&quot;priority&quot;</span>: <span class="ts">&quot;normal&quot;</span>, <span class="ts">&quot;role&quot;</span>: <span class="ts">&quot;GT_SR&quot;</span>, <span class="ts">&quot;signal&quot;</span>: <span class="ts">&quot;&quot;</span>,
+                <span class="ts">&quot;days&quot;</span>: <span class="tn">7</span>, <span class="ts">&quot;outcome&quot;</span>: <span class="ts">&quot;数据完整&quot;</span>
+            },
+        ],
+    }
+
+    <span <span class="tk">class</span>="tk">def</span> recommend(<span class="tk">self</span>, problem: Problem, causes: list[Cause]) -&gt; list[ActionRecommendation]:
+        <span class="ts">&quot;&quot;</span><span class="ts">&quot;基于问题 + 多个候选原因 · 生成行动建议(去重·按 priority 排)&quot;</span><span class="ts">&quot;&quot;</span>
+        actions = []
+        seen_types = set()
+        
+        <span class="tk">for</span> cause <span class="tk">in</span> causes:
+            templates = <span class="tk">self</span>.CAUSE_TO_ACTIONS.get(cause.cause_type, [])
+            <span class="tk">for</span> tpl <span class="tk">in</span> templates:
+                <span class="tk">if</span> tpl[<span class="ts">&quot;action_type&quot;</span>] <span class="tk">in</span> seen_types:
+                    <span class="tk">continue</span>
+                seen_types.add(tpl[<span class="ts">&quot;action_type&quot;</span>])
+                actions.append(ActionRecommendation(
+                    action_type=tpl[<span class="ts">&quot;action_type&quot;</span>],
+                    action_text=tpl[<span class="ts">&quot;text&quot;</span>],
+                    priority=tpl[<span class="ts">&quot;priority&quot;</span>],
+                    assigned_role=tpl[<span class="ts">&quot;role&quot;</span>],
+                    target_signal=tpl[<span class="ts">&quot;signal&quot;</span>],
+                    due_in_days=tpl[<span class="ts">&quot;days&quot;</span>],
+                    expected_outcome=tpl[<span class="ts">&quot;outcome&quot;</span>],
+                ))
+        
+        <span class="tc"># 按 priority 排:high → normal → low</span>
+        priority_order = {<span class="ts">&quot;high&quot;</span>: <span class="tn">0</span>, <span class="ts">&quot;normal&quot;</span>: <span class="tn">1</span>, <span class="ts">&quot;low&quot;</span>: <span class="tn">2</span>}
+        actions.sort(key=<span class="tk">lambda</span> a: priority_order.get(a.priority, <span class="tn">99</span>))
+        <span class="tk">return</span> actions
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># L7-⑤ 资源调度(Resource Orchestration)</span>
+<span class="tc"># ============================================================</span>
+
+<span class="tk">class</span> ResourceOrchestrator:
+    <span class="ts">&quot;&quot;</span>&quot;
+    判断行动是否需要申请资源·生成 resource_requests
+    
+    不是所有行动都需要资源:
+      · 老板培训 → 不需要预算(SR 自己做)
+      · 短期促销 → 需要 promo_budget
+      · 试吃 → 需要 试吃品+物料预算
+      · 紧急补货 → 需要 触发供应链
+    <span class="ts">&quot;&quot;</span>&quot;
+
+    <span class="tc"># action_type → 资源类型 + 默认金额</span>
+    ACTION_TO_RESOURCE = {
+        <span class="ts">&quot;promo&quot;</span>:              (<span class="ts">&quot;promo_budget&quot;</span>,     <span class="tn">500.00</span>, <span class="ts">&quot;DOM&quot;</span>),
+        <span class="ts">&quot;tasting&quot;</span>:            (<span class="ts">&quot;promo_budget&quot;</span>,     <span class="tn">300.00</span>, <span class="ts">&quot;DOM&quot;</span>),
+        <span class="ts">&quot;get_second_display&quot;</span>: (<span class="ts">&quot;display_fee&quot;</span>,      <span class="tn">800.00</span>, <span class="ts">&quot;DOM&quot;</span>),
+        <span class="ts">&quot;get_main_shelf&quot;</span>:     (<span class="ts">&quot;display_fee&quot;</span>,     <span class="tn">1200.00</span>, <span class="ts">&quot;DOM&quot;</span>),
+        <span class="ts">&quot;supply_replenish&quot;</span>:   (<span class="ts">&quot;supply_replenish&quot;</span>, <span class="tk">None</span>,   <span class="ts">&quot;DOM&quot;</span>),
+        <span class="ts">&quot;user_research&quot;</span>:      (<span class="ts">&quot;research_budget&quot;</span>,  <span class="tn">200.00</span>, <span class="ts">&quot;DOM&quot;</span>),
+    }
+
+    <span <span class="tk">class</span>="tk">def</span> orchestrate(<span class="tk">self</span>, action: ActionRecommendation, problem: Problem) -&gt; Optional[ResourceRequest]:
+        <span class="ts">&quot;&quot;</span><span class="ts">&quot;看这动作要不要资源·返回 <span class="tk">None</span> 表示不需要&quot;</span><span class="ts">&quot;&quot;</span>
+        mapping = <span class="tk">self</span>.ACTION_TO_RESOURCE.get(action.action_type)
+        <span class="tk">if</span> <span class="tk">not</span> mapping:
+            <span class="tk">return</span> <span class="tk">None</span>
+        
+        resource_type, amount, approver = mapping
+        <span class="tk">return</span> ResourceRequest(
+            resource_type=resource_type,
+            resource_amount=amount,
+            request_reason=(
+                f<span class="ts">&quot;{problem.lifecycle_stage} 阶段 · {action.action_text[:<span class="tn">30</span>]}... · &quot;</span>
+                f<span class="ts">&quot;目标: {action.expected_outcome}&quot;</span>
+            ),
+            approver_role=approver,
+        )
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># 主引擎 · 串起5层</span>
+<span class="tc"># ============================================================</span>
+
+<span class="tk">class</span> ActionEngine:
+    <span class="ts">&quot;&quot;</span>&quot;
+    L7 行动建议引擎主入口
+    
+    输入: gate_result_id (来自 Step <span class="tn">3</span> L2 引擎)
+    输出: actions + resource_requests(写库)
+    <span class="ts">&quot;&quot;</span>&quot;
+
+    <span <span class="tk">class</span>="tk">def</span> __init__(<span class="tk">self</span>, db_path: str):
+        <span class="tk">self</span>.db_path = db_path
+        <span class="tk">self</span>.identifier = ProblemIdentifier()
+        <span class="tk">self</span>.reasoner = CauseReasoner()
+        <span class="tk">self</span>.assessor = LifecycleAssessor()
+        <span class="tk">self</span>.recommender = ActionRecommender()
+        <span class="tk">self</span>.orchestrator = ResourceOrchestrator()
+
+    <span <span class="tk">class</span>="tk">def</span> _conn(<span class="tk">self</span>):
+        conn = sqlite3.connect(<span class="tk">self</span>.db_path)
+        conn.row_factory = sqlite3.Row
+        <span class="tk">return</span> conn
+
+    <span <span class="tk">class</span>="tk">def</span> process(<span class="tk">self</span>, gate_result_id: int) -&gt; dict:
+        <span class="ts">&quot;&quot;</span>&quot;
+        对一条 gate_results 执行 L7 完整 <span class="tn">5</span> 层流水
+        返回完整推理链路·写库副作用
+        <span class="ts">&quot;&quot;</span>&quot;
+        <span class="tk">with</span> <span class="tk">self</span>._conn() <span class="tk">as</span> c:
+            row = c.execute(
+                <span class="ts">&quot;SELECT * FROM gate_results WHERE result_id=?&quot;</span>,
+                (gate_result_id,)
+            ).fetchone()
+        
+        <span class="tk">if</span> <span class="tk">not</span> row:
+            <span class="tk">return</span> {<span class="ts">&quot;error&quot;</span>: f<span class="ts">&quot;gate_result_id {gate_result_id} <span class="tk">not</span> found&quot;</span>}
+        
+        gate_result = dict(row)
+        gate_result[<span class="ts">&quot;result_id&quot;</span>] = gate_result_id
+        
+        <span class="tc"># 取关联的信号(原因推理需要更多上下文)</span>
+        signal_row = {}
+        <span class="tk">if</span> gate_result.get(<span class="ts">&quot;signal_id&quot;</span>):
+            <span class="tk">with</span> <span class="tk">self</span>._conn() <span class="tk">as</span> c:
+                sr = c.execute(
+                    <span class="ts">&quot;SELECT * FROM transistor_signals WHERE signal_id=?&quot;</span>,
+                    (gate_result[<span class="ts">&quot;signal_id&quot;</span>],)
+                ).fetchone()
+                <span class="tk">if</span> sr:
+                    signal_row = dict(sr)
+        
+        <span class="tc"># 历史失败次数(给阶段判断用)</span>
+        history_fails = <span class="tk">self</span>._count_history_fails(
+            gate_result[<span class="ts">&quot;sku_id&quot;</span>], gate_result[<span class="ts">&quot;store_id&quot;</span>]
+        )
+        
+        <span class="tc"># ─── L7 <span class="tn">5</span> 层推理 ───</span>
+        <span class="tc"># ① 问题识别</span>
+        problems = <span class="tk">self</span>.identifier.identify(gate_result)
+        <span class="tk">if</span> <span class="tk">not</span> problems:
+            <span class="tk">return</span> {
+                <span class="ts">&quot;gate_result_id&quot;</span>: gate_result_id,
+                <span class="ts">&quot;verdict&quot;</span>: <span class="ts">&quot;<span class="tk">pass</span>·无需行动&quot;</span>,
+                <span class="ts">&quot;problems&quot;</span>: [], <span class="ts">&quot;actions&quot;</span>: [], <span class="ts">&quot;resources&quot;</span>: []
+            }
+        
+        all_actions = []
+        all_resources = []
+        all_causes_chain = []
+        lifecycle_decisions = []
+        
+        <span class="tk">for</span> problem <span class="tk">in</span> problems:
+            <span class="tc"># ② 原因推理</span>
+            causes = <span class="tk">self</span>.reasoner.reason(problem, signal_row)
+            <span class="tc"># ③ 生命周期判断</span>
+            ls_decision = <span class="tk">self</span>.assessor.assess(problem, history_fails)
+            <span class="tc"># ④ 行动建议</span>
+            actions = <span class="tk">self</span>.recommender.recommend(problem, causes)
+            
+            <span class="tc"># 落 actions 入库</span>
+            <span class="tk">for</span> action <span class="tk">in</span> actions:
+                action_id = <span class="tk">self</span>._save_action(gate_result_id, problem, action)
+                <span class="tc"># ⑤ 资源调度</span>
+                resource = <span class="tk">self</span>.orchestrator.orchestrate(action, problem)
+                <span class="tk">if</span> resource:
+                    <span class="tk">self</span>._save_resource(action_id, problem, resource)
+                    all_resources.append({**asdict(resource), <span class="ts">&quot;action_id&quot;</span>: action_id})
+                all_actions.append({**asdict(action), <span class="ts">&quot;action_id&quot;</span>: action_id})
+            
+            all_causes_chain.append({
+                <span class="ts">&quot;problem&quot;</span>: asdict(problem),
+                <span class="ts">&quot;causes&quot;</span>: [asdict(c) <span class="tk">for</span> c <span class="tk">in</span> causes],
+            })
+            lifecycle_decisions.append(ls_decision)
+        
+        <span class="tk">return</span> {
+            <span class="ts">&quot;gate_result_id&quot;</span>: gate_result_id,
+            <span class="ts">&quot;sku_id&quot;</span>: gate_result[<span class="ts">&quot;sku_id&quot;</span>],
+            <span class="ts">&quot;store_id&quot;</span>: gate_result[<span class="ts">&quot;store_id&quot;</span>],
+            <span class="ts">&quot;lifecycle_stage&quot;</span>: gate_result[<span class="ts">&quot;lifecycle_stage&quot;</span>],
+            <span class="ts">&quot;verdict&quot;</span>: gate_result[<span class="ts">&quot;result&quot;</span>],
+            <span class="ts">&quot;problems_count&quot;</span>: len(problems),
+            <span class="ts">&quot;actions_count&quot;</span>: len(all_actions),
+            <span class="ts">&quot;resources_count&quot;</span>: len(all_resources),
+            <span class="ts">&quot;reasoning_chain&quot;</span>: all_causes_chain,
+            <span class="ts">&quot;lifecycle_decisions&quot;</span>: lifecycle_decisions,
+            <span class="ts">&quot;actions&quot;</span>: all_actions,
+            <span class="ts">&quot;resources&quot;</span>: all_resources,
+        }
+
+    <span <span class="tk">class</span>="tk">def</span> _count_history_fails(<span class="tk">self</span>, sku_id: str, store_id: str) -&gt; int:
+        <span class="tk">with</span> <span class="tk">self</span>._conn() <span class="tk">as</span> c:
+            row = c.execute(
+                <span class="ts">&quot;&quot;</span>&quot;SELECT COUNT(*) FROM gate_results 
+                   WHERE sku_id=? AND store_id=? AND result=<span class="ts">&<span class="tc">#x27;fail&#x27;</span><span class="ts">&quot;&quot;</span>&quot;,</span>
+                (sku_id, store_id)
+            ).fetchone()
+        <span class="tk">return</span> row[<span class="tn">0</span>] <span class="tk">if</span> row <span class="tk">else</span> <span class="tn">0</span>
+
+    <span <span class="tk">class</span>="tk">def</span> _save_action(<span class="tk">self</span>, gate_result_id: int, problem: Problem, action: ActionRecommendation) -&gt; int:
+        due_at = (datetime.utcnow() + timedelta(days=action.due_in_days)).isoformat() + <span class="ts">&quot;Z&quot;</span>
+        <span class="tk">with</span> <span class="tk">self</span>._conn() <span class="tk">as</span> c:
+            cursor = c.execute(
+                <span class="ts">&quot;&quot;</span>&quot;INSERT INTO agent_actions
+                   (gate_result_id, sku_id, store_id, action_type, action_text, priority,
+                    assigned_to, status, due_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, <span class="ts">&<span class="tc">#x27;pending&#x27;</span>, ?)<span class="ts">&quot;&quot;</span>&quot;,</span>
+                (gate_result_id, problem.sku_id, problem.store_id,
+                 action.action_type, action.action_text, action.priority,
+                 action.assigned_role, due_at)
+            )
+            c.commit()
+            <span class="tk">return</span> cursor.lastrowid
+
+    <span <span class="tk">class</span>="tk">def</span> _save_resource(<span class="tk">self</span>, action_id: int, problem: Problem, res: ResourceRequest) -&gt; int:
+        <span class="tk">with</span> <span class="tk">self</span>._conn() <span class="tk">as</span> c:
+            cursor = c.execute(
+                <span class="ts">&quot;&quot;</span>&quot;INSERT INTO resource_requests
+                   (action_id, sku_id, store_id, resource_type, resource_amount,
+                    request_reason, approver_role, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, <span class="ts">&<span class="tc">#x27;pending&#x27;</span>)<span class="ts">&quot;&quot;</span>&quot;,</span>
+                (action_id, problem.sku_id, problem.store_id,
+                 res.resource_type, res.resource_amount,
+                 res.request_reason, res.approver_role)
+            )
+            c.commit()
+            <span class="tk">return</span> cursor.lastrowid
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># 单例运行</span>
+<span class="tc"># ============================================================</span>
+
+<span class="tk">if</span> __name__ == <span class="ts">&quot;__main__&quot;</span>:
+    <span <span class="tk">class</span>="tk">import</span> sys
+    <span class="tk">if</span> len(sys.argv) &lt; <span class="tn">3</span>:
+        print(&quot;用法: python action_engine.py &lt;db_path&gt; &lt;gate_result_id&gt;&quot;)
+        sys.exit(<span class="tn">1</span>)
+    
+    engine = ActionEngine(sys.argv[<span class="tn">1</span>])
+    result = engine.process(int(sys.argv[<span class="tn">2</span>]))
+    
+    print(<span class="ts">&quot;=&quot;</span> * <span class="tn">70</span>)
+    print(<span class="ts">&quot;INFINITY Agent OS · L7 行动建议引擎 · 输出&quot;</span>)
+    print(<span class="ts">&quot;=&quot;</span> * <span class="tn">70</span>)
+    print(json.dumps(result, indent=<span class="tn">2</span>, ensure_ascii=<span class="tk">False</span>))
+</pre></div>
+  </div>
+</details>
+
+<details class="filebox" id="sec-2" >
+  <summary class="filehd">
+    <span class="ic">🌐</span><span class="fname">app.py</span>
+    <span class="flabel">Flask API(5 端点)</span><span class="fsize">10,111 字符</span>
+    <span class="arrow">▼</span>
+  </summary>
+  <div class="fcontent">
+    <div class="ftools">
+      <button class="btn-copy" onclick="copyContent('sec-2')">📋 复制全文</button>
+      <span class="lang-tag">PYTHON</span>
+    </div>
+    <div class="raw-content" data-content="&quot;&quot;&quot;
+INFINITY Agent OS · Step 4 · HTTP API
+======================================
+按 DS ⑩《GT 社区店 Pro App 前端结构》5 API 设计:
+
+  POST /signals               接收 L0 原始信号(销售员录入/POS/AI识别)
+  POST /gates/evaluate        触发 L2 门评估
+  POST /reasoning             调 L6 推理(本Step简化为L7的②③层)
+  POST /actions               输出 L7 行动建议
+  POST /resources/request     触发 L8 资源调度
+
+技术: Flask · JSON in/out · 严格按 schema 校验
+启动: python app.py · 默认 8001 端口
+
+铁律: 严守底层 SKU 生命力 · API 是 Agent 大脑的对外接口·不是 app 接口
+署名 DS · 2026-05-29
+&quot;&quot;&quot;
+
+from __future__ import annotations
+import json
+import os
+import sys
+import sqlite3
+from datetime import datetime, timedelta
+from pathlib import Path
+
+from flask import Flask, request, jsonify
+
+# 接 Step 3 引擎
+sys.path.insert(0, str(Path(__file__).parent.parent / &quot;step3_logic_gate_engine&quot;))
+sys.path.insert(0, str(Path(__file__).parent))
+from engine import AgentEngine
+from action_engine import ActionEngine
+
+
+app = Flask(__name__)
+DB_PATH = os.environ.get(&quot;INFINITY_DB&quot;, &quot;/tmp/infinity_os_api.db&quot;)
+
+
+# ============================================================
+# 健康检查
+# ============================================================
+
+@app.get(&quot;/&quot;)
+def root():
+    return jsonify({
+        &quot;service&quot;: &quot;INFINITY Agent OS · L0-L7 API&quot;,
+        &quot;version&quot;: &quot;v0.1&quot;,
+        &quot;endpoints&quot;: [
+            &quot;POST /signals&quot;,
+            &quot;POST /gates/evaluate&quot;,
+            &quot;POST /reasoning&quot;,
+            &quot;POST /actions&quot;,
+            &quot;POST /resources/request&quot;,
+            &quot;GET  /health&quot;,
+        ],
+        &quot;note&quot;: &quot;Layer 1.3 · 演示态 · 真实生产请接 MySQL+Java&quot;
+    })
+
+
+@app.get(&quot;/health&quot;)
+def health():
+    try:
+        with sqlite3.connect(DB_PATH) as c:
+            row = c.execute(&quot;SELECT COUNT(*) FROM transistor_signals&quot;).fetchone()
+        return jsonify({&quot;ok&quot;: True, &quot;db&quot;: DB_PATH, &quot;signals&quot;: row[0]})
+    except Exception as e:
+        return jsonify({&quot;ok&quot;: False, &quot;error&quot;: str(e)}), 500
+
+
+# ============================================================
+# ① POST /signals — 接收 L0 原始信号(来自销售员/POS/AI)
+# ============================================================
+
+@app.post(&quot;/signals&quot;)
+def post_signals():
+    &quot;&quot;&quot;
+    接收 L0 数据·按 Step 1 的契约 schema·落到 transistor_signals 表
+    
+    简化版: 接收已经合并好的晶体管信号(假设 L0→L1 ETL 在客户端做)
+    生产版: 应接 Step 1 的销售员/POS/AI 三种契约·此处做 ETL
+    &quot;&quot;&quot;
+    data = request.get_json(force=True)
+    
+    required = [&quot;sku_id&quot;, &quot;store_id&quot;, &quot;channel_type&quot;, &quot;captured_at&quot;, &quot;source&quot;]
+    missing = [k for k in required if k not in data]
+    if missing:
+        return jsonify({&quot;error&quot;: &quot;missing fields&quot;, &quot;fields&quot;: missing}), 400
+    
+    # 默认 TTL 24 小时(关键信号)
+    ttl = data.get(&quot;ttl_expires_at&quot;) or (
+        (datetime.utcnow() + timedelta(hours=24)).isoformat() + &quot;Z&quot;
+    )
+    
+    cols = [&quot;sku_id&quot;, &quot;store_id&quot;, &quot;channel_type&quot;, &quot;captured_at&quot;, &quot;source&quot;,
+            &quot;source_submission_id&quot;, &quot;ttl_expires_at&quot;]
+    
+    # 加 10 个晶体管字段·凡data里有的都收
+    transistor_fields = [
+        &quot;s01_on_shelf&quot;, &quot;s02_in_stock&quot;, &quot;s02_qty&quot;,
+        &quot;s03_main_shelf&quot;, &quot;s04_second_display&quot;, &quot;s04_display_type&quot;,
+        &quot;s05_has_price_tag&quot;, &quot;s05_shelf_price&quot;, &quot;s05_promo_price&quot;,
+        &quot;s06_has_sellout&quot;, &quot;s06_units_7d&quot;, &quot;s06_txn_count_7d&quot;,
+        &quot;s07_repurchase&quot;, &quot;s07_unique_buyers&quot;,
+        &quot;s08_stockout&quot;, &quot;s08_stockout_days&quot;, &quot;s08_root_cause&quot;,
+        &quot;s09_owner_recommends&quot;, &quot;s09_recommend_level&quot;,
+        &quot;s10_profit_target&quot;, &quot;s10_gross_margin&quot;,
+    ]
+    
+    final_cols = cols + [f for f in transistor_fields if f in data]
+    values = []
+    for col in final_cols:
+        if col == &quot;ttl_expires_at&quot;:
+            values.append(ttl)
+        else:
+            v = data.get(col)
+            # bool 转 int
+            if isinstance(v, bool):
+                v = 1 if v else 0
+            values.append(v)
+    
+    placeholders = &quot;,&quot;.join(&quot;?&quot; * len(final_cols))
+    
+    with sqlite3.connect(DB_PATH) as c:
+        cursor = c.execute(
+            f&quot;INSERT INTO transistor_signals ({&#x27;,&#x27;.join(final_cols)}) VALUES ({placeholders})&quot;,
+            values
+        )
+        c.commit()
+        signal_id = cursor.lastrowid
+    
+    return jsonify({
+        &quot;ok&quot;: True,
+        &quot;signal_id&quot;: signal_id,
+        &quot;message&quot;: f&quot;信号已收 · L0 → L1 入库&quot;,
+        &quot;next_step&quot;: f&quot;调 POST /gates/evaluate with signal_id={signal_id}&quot;
+    }), 201
+
+
+# ============================================================
+# ② POST /gates/evaluate — 触发 L2 门评估
+# ============================================================
+
+@app.post(&quot;/gates/evaluate&quot;)
+def evaluate_gate():
+    &quot;&quot;&quot;
+    触发 L2 规则引擎评估某 SKU × 门店最新信号
+    &quot;&quot;&quot;
+    data = request.get_json(force=True)
+    sku_id = data.get(&quot;sku_id&quot;)
+    store_id = data.get(&quot;store_id&quot;)
+    if not sku_id or not store_id:
+        return jsonify({&quot;error&quot;: &quot;需要 sku_id 和 store_id&quot;}), 400
+    
+    engine = AgentEngine(DB_PATH)
+    result = engine.run(sku_id, store_id)
+    
+    if result is None:
+        return jsonify({
+            &quot;error&quot;: &quot;找不到信号/生命周期/门&quot;,
+            &quot;hint&quot;: &quot;确保 transistor_signals/sku_lifecycle/logic_gates 都有数据&quot;
+        }), 404
+    
+    # 取刚写入的 gate_result_id
+    with sqlite3.connect(DB_PATH) as c:
+        row = c.execute(
+            &quot;SELECT MAX(result_id) FROM gate_results WHERE sku_id=? AND store_id=?&quot;,
+            (sku_id, store_id)
+        ).fetchone()
+        gate_result_id = row[0]
+    
+    return jsonify({
+        &quot;ok&quot;: True,
+        &quot;gate_result_id&quot;: gate_result_id,
+        &quot;verdict&quot;: result.result,
+        &quot;lifecycle_stage&quot;: result.lifecycle_stage,
+        &quot;reason&quot;: result.reason,
+        &quot;failed_signals&quot;: result.failed_signals,
+        &quot;uncertain_signals&quot;: result.uncertain_signals,
+        &quot;next_step&quot;: (
+            f&quot;调 POST /actions with gate_result_id={gate_result_id}&quot;
+            if result.result != &quot;pass&quot;
+            else &quot;pass · 无需行动&quot;
+        )
+    })
+
+
+# ============================================================
+# ③ POST /reasoning — L6 推理(本Step简化:输出原因推理)
+# ============================================================
+
+@app.post(&quot;/reasoning&quot;)
+def reasoning():
+    &quot;&quot;&quot;
+    给一个 gate_result · 输出推理链路(问题+原因+生命周期判断)
+    
+    不写库·纯查询·给前端展示用·或 LLM 调用观察推理透明性
+    &quot;&quot;&quot;
+    data = request.get_json(force=True)
+    gate_result_id = data.get(&quot;gate_result_id&quot;)
+    if not gate_result_id:
+        return jsonify({&quot;error&quot;: &quot;需要 gate_result_id&quot;}), 400
+    
+    engine = ActionEngine(DB_PATH)
+    
+    # 跑 L7 的 ①②③ 层·但不写库·只返推理链
+    with sqlite3.connect(DB_PATH) as c:
+        c.row_factory = sqlite3.Row
+        gr = c.execute(&quot;SELECT * FROM gate_results WHERE result_id=?&quot;, (gate_result_id,)).fetchone()
+        if not gr:
+            return jsonify({&quot;error&quot;: &quot;gate_result not found&quot;}), 404
+        gr = dict(gr); gr[&quot;result_id&quot;] = gate_result_id
+        
+        sig = {}
+        if gr.get(&quot;signal_id&quot;):
+            sr = c.execute(&quot;SELECT * FROM transistor_signals WHERE signal_id=?&quot;, (gr[&quot;signal_id&quot;],)).fetchone()
+            if sr: sig = dict(sr)
+    
+    problems = engine.identifier.identify(gr)
+    hist = engine._count_history_fails(gr[&quot;sku_id&quot;], gr[&quot;store_id&quot;])
+    
+    chain = []
+    for p in problems:
+        causes = engine.reasoner.reason(p, sig)
+        ls = engine.assessor.assess(p, hist)
+        chain.append({
+            &quot;problem_type&quot;: p.problem_type,
+            &quot;severity&quot;: p.severity,
+            &quot;failed_signals&quot;: p.failed_signals,
+            &quot;causes&quot;: [{&quot;type&quot;: c.cause_type, &quot;confidence&quot;: c.confidence, &quot;description&quot;: c.description} for c in causes],
+            &quot;lifecycle_decision&quot;: ls,
+        })
+    
+    return jsonify({
+        &quot;ok&quot;: True,
+        &quot;gate_result_id&quot;: gate_result_id,
+        &quot;problems_count&quot;: len(problems),
+        &quot;reasoning_chain&quot;: chain,
+        &quot;history_fails&quot;: hist,
+    })
+
+
+# ============================================================
+# ④ POST /actions — 输出 L7 行动建议(写库)
+# ============================================================
+
+@app.post(&quot;/actions&quot;)
+def generate_actions():
+    &quot;&quot;&quot;
+    完整 L7 5 层流水·输出行动建议+资源申请·写库
+    &quot;&quot;&quot;
+    data = request.get_json(force=True)
+    gate_result_id = data.get(&quot;gate_result_id&quot;)
+    if not gate_result_id:
+        return jsonify({&quot;error&quot;: &quot;需要 gate_result_id&quot;}), 400
+    
+    engine = ActionEngine(DB_PATH)
+    result = engine.process(gate_result_id)
+    
+    if &quot;error&quot; in result:
+        return jsonify(result), 404
+    
+    return jsonify({
+        &quot;ok&quot;: True,
+        **result,
+        &quot;next_step&quot;: (
+            f&quot;调 POST /resources/request 审批 {result[&#x27;resources_count&#x27;]} 项资源&quot;
+            if result.get(&quot;resources_count&quot;, 0) &gt; 0
+            else &quot;无需资源调度&quot;
+        )
+    })
+
+
+# ============================================================
+# ⑤ POST /resources/request — 资源调度(Step 5 真做·这里只到入库)
+# ============================================================
+
+@app.post(&quot;/resources/request&quot;)
+def request_resource():
+    &quot;&quot;&quot;
+    单条资源申请·让管理层 app 拿了能审批
+    
+    Step 4 范围:把申请落到 resource_requests 表·status=pending
+    Step 5 真做: 接 SAP/审批流·实际触发动作
+    &quot;&quot;&quot;
+    data = request.get_json(force=True)
+    required = [&quot;action_id&quot;, &quot;sku_id&quot;, &quot;store_id&quot;, &quot;resource_type&quot;]
+    missing = [k for k in required if k not in data]
+    if missing:
+        return jsonify({&quot;error&quot;: &quot;missing fields&quot;, &quot;fields&quot;: missing}), 400
+    
+    with sqlite3.connect(DB_PATH) as c:
+        cursor = c.execute(
+            &quot;&quot;&quot;INSERT INTO resource_requests
+               (action_id, sku_id, store_id, resource_type, resource_amount,
+                request_reason, approver_role, status)
+               VALUES (?, ?, ?, ?, ?, ?, ?, &#x27;pending&#x27;)&quot;&quot;&quot;,
+            (data[&quot;action_id&quot;], data[&quot;sku_id&quot;], data[&quot;store_id&quot;],
+             data[&quot;resource_type&quot;], data.get(&quot;resource_amount&quot;),
+             data.get(&quot;request_reason&quot;, &quot;&quot;), data.get(&quot;approver_role&quot;, &quot;DOM&quot;))
+        )
+        c.commit()
+        request_id = cursor.lastrowid
+    
+    return jsonify({
+        &quot;ok&quot;: True,
+        &quot;request_id&quot;: request_id,
+        &quot;status&quot;: &quot;pending&quot;,
+        &quot;message&quot;: &quot;资源申请已落表 · 待 Step 5 接审批流&quot;
+    }), 201
+
+
+# ============================================================
+# 启动
+# ============================================================
+
+if __name__ == &quot;__main__&quot;:
+    port = int(os.environ.get(&quot;PORT&quot;, 8001))
+    print(f&quot;INFINITY Agent OS · API · 监听 0.0.0.0:{port}&quot;)
+    print(f&quot;DB: {DB_PATH}&quot;)
+    app.run(host=&quot;0.0.0.0&quot;, port=port, debug=False)
+"><pre class="code lang-py"><span class="ts">&quot;&quot;</span>&quot;
+INFINITY Agent OS · Step <span class="tn">4</span> · HTTP API
+======================================
+按 DS ⑩《GT 社区店 Pro App 前端结构》<span class="tn">5</span> API 设计:
+
+  POST /signals               接收 L0 原始信号(销售员录入/POS/AI识别)
+  POST /gates/evaluate        触发 L2 门评估
+  POST /reasoning             调 L6 推理(本Step简化为L7的②③层)
+  POST /actions               输出 L7 行动建议
+  POST /resources/request     触发 L8 资源调度
+
+技术: Flask · JSON <span class="tk">in</span>/out · 严格按 schema 校验
+启动: python app.py · 默认 <span class="tn">8001</span> 端口
+
+铁律: 严守底层 SKU 生命力 · API 是 Agent 大脑的对外接口·不是 app 接口
+署名 DS · <span class="tn">2026</span>-<span class="tn">05</span>-<span class="tn">29</span>
+<span class="ts">&quot;&quot;</span>&quot;
+
+<span <span class="tk">class</span>="tk">from</span> __future__ <span <span class="tk">class</span>="tk">import</span> annotations
+<span <span class="tk">class</span>="tk">import</span> json
+<span <span class="tk">class</span>="tk">import</span> os
+<span <span class="tk">class</span>="tk">import</span> sys
+<span <span class="tk">class</span>="tk">import</span> sqlite3
+<span <span class="tk">class</span>="tk">from</span> datetime <span <span class="tk">class</span>="tk">import</span> datetime, timedelta
+<span <span class="tk">class</span>="tk">from</span> pathlib <span <span class="tk">class</span>="tk">import</span> Path
+
+<span <span class="tk">class</span>="tk">from</span> flask <span <span class="tk">class</span>="tk">import</span> Flask, request, jsonify
+
+<span class="tc"># 接 Step <span class="tn">3</span> 引擎</span>
+sys.path.insert(<span class="tn">0</span>, str(Path(__file__).parent.parent / <span class="ts">&quot;step3_logic_gate_engine&quot;</span>))
+sys.path.insert(<span class="tn">0</span>, str(Path(__file__).parent))
+<span <span class="tk">class</span>="tk">from</span> engine <span <span class="tk">class</span>="tk">import</span> AgentEngine
+<span <span class="tk">class</span>="tk">from</span> action_engine <span <span class="tk">class</span>="tk">import</span> ActionEngine
+
+
+app = Flask(__name__)
+DB_PATH = os.environ.get(<span class="ts">&quot;INFINITY_DB&quot;</span>, <span class="ts">&quot;/tmp/infinity_os_api.db&quot;</span>)
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># 健康检查</span>
+<span class="tc"># ============================================================</span>
+
+<span class="td">@app</span>.get(<span class="ts">&quot;/&quot;</span>)
+<span <span class="tk">class</span>="tk">def</span> root():
+    <span class="tk">return</span> jsonify({
+        <span class="ts">&quot;service&quot;</span>: <span class="ts">&quot;INFINITY Agent OS · L0-L7 API&quot;</span>,
+        <span class="ts">&quot;version&quot;</span>: <span class="ts">&quot;v0.<span class="tn">1</span>&quot;</span>,
+        <span class="ts">&quot;endpoints&quot;</span>: [
+            <span class="ts">&quot;POST /signals&quot;</span>,
+            <span class="ts">&quot;POST /gates/evaluate&quot;</span>,
+            <span class="ts">&quot;POST /reasoning&quot;</span>,
+            <span class="ts">&quot;POST /actions&quot;</span>,
+            <span class="ts">&quot;POST /resources/request&quot;</span>,
+            <span class="ts">&quot;GET  /health&quot;</span>,
+        ],
+        <span class="ts">&quot;note&quot;</span>: <span class="ts">&quot;Layer <span class="tn">1.3</span> · 演示态 · 真实生产请接 MySQL+Java&quot;</span>
+    })
+
+
+<span class="td">@app</span>.get(<span class="ts">&quot;/health&quot;</span>)
+<span <span class="tk">class</span>="tk">def</span> health():
+    <span class="tk">try</span>:
+        <span class="tk">with</span> sqlite3.connect(DB_PATH) <span class="tk">as</span> c:
+            row = c.execute(<span class="ts">&quot;SELECT COUNT(*) FROM transistor_signals&quot;</span>).fetchone()
+        <span class="tk">return</span> jsonify({<span class="ts">&quot;ok&quot;</span>: <span class="tk">True</span>, <span class="ts">&quot;db&quot;</span>: DB_PATH, <span class="ts">&quot;signals&quot;</span>: row[<span class="tn">0</span>]})
+    <span class="tk">except</span> Exception <span class="tk">as</span> e:
+        <span class="tk">return</span> jsonify({<span class="ts">&quot;ok&quot;</span>: <span class="tk">False</span>, <span class="ts">&quot;error&quot;</span>: str(e)}), <span class="tn">500</span>
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># ① POST /signals — 接收 L0 原始信号(来自销售员/POS/AI)</span>
+<span class="tc"># ============================================================</span>
+
+<span class="td">@app</span>.post(<span class="ts">&quot;/signals&quot;</span>)
+<span <span class="tk">class</span>="tk">def</span> post_signals():
+    <span class="ts">&quot;&quot;</span>&quot;
+    接收 L0 数据·按 Step <span class="tn">1</span> 的契约 schema·落到 transistor_signals 表
+    
+    简化版: 接收已经合并好的晶体管信号(假设 L0→L1 ETL 在客户端做)
+    生产版: 应接 Step <span class="tn">1</span> 的销售员/POS/AI 三种契约·此处做 ETL
+    <span class="ts">&quot;&quot;</span>&quot;
+    data = request.get_json(force=<span class="tk">True</span>)
+    
+    required = [<span class="ts">&quot;sku_id&quot;</span>, <span class="ts">&quot;store_id&quot;</span>, <span class="ts">&quot;channel_type&quot;</span>, <span class="ts">&quot;captured_at&quot;</span>, <span class="ts">&quot;source&quot;</span>]
+    missing = [k <span class="tk">for</span> k <span class="tk">in</span> required <span class="tk">if</span> k <span class="tk">not</span> <span class="tk">in</span> data]
+    <span class="tk">if</span> missing:
+        <span class="tk">return</span> jsonify({<span class="ts">&quot;error&quot;</span>: <span class="ts">&quot;missing fields&quot;</span>, <span class="ts">&quot;fields&quot;</span>: missing}), <span class="tn">400</span>
+    
+    <span class="tc"># 默认 TTL <span class="tn">24</span> 小时(关键信号)</span>
+    ttl = data.get(<span class="ts">&quot;ttl_expires_at&quot;</span>) <span class="tk">or</span> (
+        (datetime.utcnow() + timedelta(hours=<span class="tn">24</span>)).isoformat() + <span class="ts">&quot;Z&quot;</span>
+    )
+    
+    cols = [<span class="ts">&quot;sku_id&quot;</span>, <span class="ts">&quot;store_id&quot;</span>, <span class="ts">&quot;channel_type&quot;</span>, <span class="ts">&quot;captured_at&quot;</span>, <span class="ts">&quot;source&quot;</span>,
+            <span class="ts">&quot;source_submission_id&quot;</span>, <span class="ts">&quot;ttl_expires_at&quot;</span>]
+    
+    <span class="tc"># 加 <span class="tn">10</span> 个晶体管字段·凡data里有的都收</span>
+    transistor_fields = [
+        <span class="ts">&quot;s01_on_shelf&quot;</span>, <span class="ts">&quot;s02_in_stock&quot;</span>, <span class="ts">&quot;s02_qty&quot;</span>,
+        <span class="ts">&quot;s03_main_shelf&quot;</span>, <span class="ts">&quot;s04_second_display&quot;</span>, <span class="ts">&quot;s04_display_type&quot;</span>,
+        <span class="ts">&quot;s05_has_price_tag&quot;</span>, <span class="ts">&quot;s05_shelf_price&quot;</span>, <span class="ts">&quot;s05_promo_price&quot;</span>,
+        <span class="ts">&quot;s06_has_sellout&quot;</span>, <span class="ts">&quot;s06_units_7d&quot;</span>, <span class="ts">&quot;s06_txn_count_7d&quot;</span>,
+        <span class="ts">&quot;s07_repurchase&quot;</span>, <span class="ts">&quot;s07_unique_buyers&quot;</span>,
+        <span class="ts">&quot;s08_stockout&quot;</span>, <span class="ts">&quot;s08_stockout_days&quot;</span>, <span class="ts">&quot;s08_root_cause&quot;</span>,
+        <span class="ts">&quot;s09_owner_recommends&quot;</span>, <span class="ts">&quot;s09_recommend_level&quot;</span>,
+        <span class="ts">&quot;s10_profit_target&quot;</span>, <span class="ts">&quot;s10_gross_margin&quot;</span>,
+    ]
+    
+    final_cols = cols + [f <span class="tk">for</span> f <span class="tk">in</span> transistor_fields <span class="tk">if</span> f <span class="tk">in</span> data]
+    values = []
+    <span class="tk">for</span> col <span class="tk">in</span> final_cols:
+        <span class="tk">if</span> col == <span class="ts">&quot;ttl_expires_at&quot;</span>:
+            values.append(ttl)
+        <span class="tk">else</span>:
+            v = data.get(col)
+            <span class="tc"># bool 转 int</span>
+            <span class="tk">if</span> isinstance(v, bool):
+                v = <span class="tn">1</span> <span class="tk">if</span> v <span class="tk">else</span> <span class="tn">0</span>
+            values.append(v)
+    
+    placeholders = <span class="ts">&quot;,&quot;</span>.join(<span class="ts">&quot;?&quot;</span> * len(final_cols))
+    
+    <span class="tk">with</span> sqlite3.connect(DB_PATH) <span class="tk">as</span> c:
+        cursor = c.execute(
+            f&quot;INSERT INTO transistor_signals ({<span class="ts">&<span class="tc">#x27;,&#x27;</span>.join(final_cols)}) VALUES ({placeholders})&quot;,</span>
+            values
+        )
+        c.commit()
+        signal_id = cursor.lastrowid
+    
+    <span class="tk">return</span> jsonify({
+        <span class="ts">&quot;ok&quot;</span>: <span class="tk">True</span>,
+        <span class="ts">&quot;signal_id&quot;</span>: signal_id,
+        <span class="ts">&quot;message&quot;</span>: f<span class="ts">&quot;信号已收 · L0 → L1 入库&quot;</span>,
+        <span class="ts">&quot;next_step&quot;</span>: f<span class="ts">&quot;调 POST /gates/evaluate <span class="tk">with</span> signal_id={signal_id}&quot;</span>
+    }), <span class="tn">201</span>
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># ② POST /gates/evaluate — 触发 L2 门评估</span>
+<span class="tc"># ============================================================</span>
+
+<span class="td">@app</span>.post(<span class="ts">&quot;/gates/evaluate&quot;</span>)
+<span <span class="tk">class</span>="tk">def</span> evaluate_gate():
+    <span class="ts">&quot;&quot;</span>&quot;
+    触发 L2 规则引擎评估某 SKU × 门店最新信号
+    <span class="ts">&quot;&quot;</span>&quot;
+    data = request.get_json(force=<span class="tk">True</span>)
+    sku_id = data.get(<span class="ts">&quot;sku_id&quot;</span>)
+    store_id = data.get(<span class="ts">&quot;store_id&quot;</span>)
+    <span class="tk">if</span> <span class="tk">not</span> sku_id <span class="tk">or</span> <span class="tk">not</span> store_id:
+        <span class="tk">return</span> jsonify({<span class="ts">&quot;error&quot;</span>: <span class="ts">&quot;需要 sku_id 和 store_id&quot;</span>}), <span class="tn">400</span>
+    
+    engine = AgentEngine(DB_PATH)
+    result = engine.run(sku_id, store_id)
+    
+    <span class="tk">if</span> result <span class="tk">is</span> <span class="tk">None</span>:
+        <span class="tk">return</span> jsonify({
+            <span class="ts">&quot;error&quot;</span>: <span class="ts">&quot;找不到信号/生命周期/门&quot;</span>,
+            <span class="ts">&quot;hint&quot;</span>: <span class="ts">&quot;确保 transistor_signals/sku_lifecycle/logic_gates 都有数据&quot;</span>
+        }), <span class="tn">404</span>
+    
+    <span class="tc"># 取刚写入的 gate_result_id</span>
+    <span class="tk">with</span> sqlite3.connect(DB_PATH) <span class="tk">as</span> c:
+        row = c.execute(
+            <span class="ts">&quot;SELECT MAX(result_id) FROM gate_results WHERE sku_id=? AND store_id=?&quot;</span>,
+            (sku_id, store_id)
+        ).fetchone()
+        gate_result_id = row[<span class="tn">0</span>]
+    
+    <span class="tk">return</span> jsonify({
+        <span class="ts">&quot;ok&quot;</span>: <span class="tk">True</span>,
+        <span class="ts">&quot;gate_result_id&quot;</span>: gate_result_id,
+        <span class="ts">&quot;verdict&quot;</span>: result.result,
+        <span class="ts">&quot;lifecycle_stage&quot;</span>: result.lifecycle_stage,
+        <span class="ts">&quot;reason&quot;</span>: result.reason,
+        <span class="ts">&quot;failed_signals&quot;</span>: result.failed_signals,
+        <span class="ts">&quot;uncertain_signals&quot;</span>: result.uncertain_signals,
+        <span class="ts">&quot;next_step&quot;</span>: (
+            f<span class="ts">&quot;调 POST /actions <span class="tk">with</span> gate_result_id={gate_result_id}&quot;</span>
+            <span class="tk">if</span> result.result != <span class="ts">&quot;<span class="tk">pass</span>&quot;</span>
+            <span class="tk">else</span> <span class="ts">&quot;<span class="tk">pass</span> · 无需行动&quot;</span>
+        )
+    })
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># ③ POST /reasoning — L6 推理(本Step简化:输出原因推理)</span>
+<span class="tc"># ============================================================</span>
+
+<span class="td">@app</span>.post(<span class="ts">&quot;/reasoning&quot;</span>)
+<span <span class="tk">class</span>="tk">def</span> reasoning():
+    <span class="ts">&quot;&quot;</span>&quot;
+    给一个 gate_result · 输出推理链路(问题+原因+生命周期判断)
+    
+    不写库·纯查询·给前端展示用·或 LLM 调用观察推理透明性
+    <span class="ts">&quot;&quot;</span>&quot;
+    data = request.get_json(force=<span class="tk">True</span>)
+    gate_result_id = data.get(<span class="ts">&quot;gate_result_id&quot;</span>)
+    <span class="tk">if</span> <span class="tk">not</span> gate_result_id:
+        <span class="tk">return</span> jsonify({<span class="ts">&quot;error&quot;</span>: <span class="ts">&quot;需要 gate_result_id&quot;</span>}), <span class="tn">400</span>
+    
+    engine = ActionEngine(DB_PATH)
+    
+    <span class="tc"># 跑 L7 的 ①②③ 层·但不写库·只返推理链</span>
+    <span class="tk">with</span> sqlite3.connect(DB_PATH) <span class="tk">as</span> c:
+        c.row_factory = sqlite3.Row
+        gr = c.execute(<span class="ts">&quot;SELECT * FROM gate_results WHERE result_id=?&quot;</span>, (gate_result_id,)).fetchone()
+        <span class="tk">if</span> <span class="tk">not</span> gr:
+            <span class="tk">return</span> jsonify({<span class="ts">&quot;error&quot;</span>: <span class="ts">&quot;gate_result <span class="tk">not</span> found&quot;</span>}), <span class="tn">404</span>
+        gr = dict(gr); gr[<span class="ts">&quot;result_id&quot;</span>] = gate_result_id
+        
+        sig = {}
+        <span class="tk">if</span> gr.get(<span class="ts">&quot;signal_id&quot;</span>):
+            sr = c.execute(<span class="ts">&quot;SELECT * FROM transistor_signals WHERE signal_id=?&quot;</span>, (gr[<span class="ts">&quot;signal_id&quot;</span>],)).fetchone()
+            <span class="tk">if</span> sr: sig = dict(sr)
+    
+    problems = engine.identifier.identify(gr)
+    hist = engine._count_history_fails(gr[<span class="ts">&quot;sku_id&quot;</span>], gr[<span class="ts">&quot;store_id&quot;</span>])
+    
+    chain = []
+    <span class="tk">for</span> p <span class="tk">in</span> problems:
+        causes = engine.reasoner.reason(p, sig)
+        ls = engine.assessor.assess(p, hist)
+        chain.append({
+            <span class="ts">&quot;problem_type&quot;</span>: p.problem_type,
+            <span class="ts">&quot;severity&quot;</span>: p.severity,
+            <span class="ts">&quot;failed_signals&quot;</span>: p.failed_signals,
+            <span class="ts">&quot;causes&quot;</span>: [{<span class="ts">&quot;type&quot;</span>: c.cause_type, <span class="ts">&quot;confidence&quot;</span>: c.confidence, <span class="ts">&quot;description&quot;</span>: c.description} <span class="tk">for</span> c <span class="tk">in</span> causes],
+            <span class="ts">&quot;lifecycle_decision&quot;</span>: ls,
+        })
+    
+    <span class="tk">return</span> jsonify({
+        <span class="ts">&quot;ok&quot;</span>: <span class="tk">True</span>,
+        <span class="ts">&quot;gate_result_id&quot;</span>: gate_result_id,
+        <span class="ts">&quot;problems_count&quot;</span>: len(problems),
+        <span class="ts">&quot;reasoning_chain&quot;</span>: chain,
+        <span class="ts">&quot;history_fails&quot;</span>: hist,
+    })
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># ④ POST /actions — 输出 L7 行动建议(写库)</span>
+<span class="tc"># ============================================================</span>
+
+<span class="td">@app</span>.post(<span class="ts">&quot;/actions&quot;</span>)
+<span <span class="tk">class</span>="tk">def</span> generate_actions():
+    <span class="ts">&quot;&quot;</span>&quot;
+    完整 L7 <span class="tn">5</span> 层流水·输出行动建议+资源申请·写库
+    <span class="ts">&quot;&quot;</span>&quot;
+    data = request.get_json(force=<span class="tk">True</span>)
+    gate_result_id = data.get(<span class="ts">&quot;gate_result_id&quot;</span>)
+    <span class="tk">if</span> <span class="tk">not</span> gate_result_id:
+        <span class="tk">return</span> jsonify({<span class="ts">&quot;error&quot;</span>: <span class="ts">&quot;需要 gate_result_id&quot;</span>}), <span class="tn">400</span>
+    
+    engine = ActionEngine(DB_PATH)
+    result = engine.process(gate_result_id)
+    
+    <span class="tk">if</span> <span class="ts">&quot;error&quot;</span> <span class="tk">in</span> result:
+        <span class="tk">return</span> jsonify(result), <span class="tn">404</span>
+    
+    <span class="tk">return</span> jsonify({
+        <span class="ts">&quot;ok&quot;</span>: <span class="tk">True</span>,
+        **result,
+        <span class="ts">&quot;next_step&quot;</span>: (
+            f&quot;调 POST /resources/request 审批 {result[<span class="ts">&<span class="tc">#x27;resources_count&#x27;</span>]} 项资源&quot;</span>
+            <span class="tk">if</span> result.get(<span class="ts">&quot;resources_count&quot;</span>, <span class="tn">0</span>) &gt; <span class="tn">0</span>
+            <span class="tk">else</span> <span class="ts">&quot;无需资源调度&quot;</span>
+        )
+    })
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># ⑤ POST /resources/request — 资源调度(Step <span class="tn">5</span> 真做·这里只到入库)</span>
+<span class="tc"># ============================================================</span>
+
+<span class="td">@app</span>.post(<span class="ts">&quot;/resources/request&quot;</span>)
+<span <span class="tk">class</span>="tk">def</span> request_resource():
+    <span class="ts">&quot;&quot;</span>&quot;
+    单条资源申请·让管理层 app 拿了能审批
+    
+    Step <span class="tn">4</span> 范围:把申请落到 resource_requests 表·status=pending
+    Step <span class="tn">5</span> 真做: 接 SAP/审批流·实际触发动作
+    <span class="ts">&quot;&quot;</span>&quot;
+    data = request.get_json(force=<span class="tk">True</span>)
+    required = [<span class="ts">&quot;action_id&quot;</span>, <span class="ts">&quot;sku_id&quot;</span>, <span class="ts">&quot;store_id&quot;</span>, <span class="ts">&quot;resource_type&quot;</span>]
+    missing = [k <span class="tk">for</span> k <span class="tk">in</span> required <span class="tk">if</span> k <span class="tk">not</span> <span class="tk">in</span> data]
+    <span class="tk">if</span> missing:
+        <span class="tk">return</span> jsonify({<span class="ts">&quot;error&quot;</span>: <span class="ts">&quot;missing fields&quot;</span>, <span class="ts">&quot;fields&quot;</span>: missing}), <span class="tn">400</span>
+    
+    <span class="tk">with</span> sqlite3.connect(DB_PATH) <span class="tk">as</span> c:
+        cursor = c.execute(
+            <span class="ts">&quot;&quot;</span>&quot;INSERT INTO resource_requests
+               (action_id, sku_id, store_id, resource_type, resource_amount,
+                request_reason, approver_role, status)
+               VALUES (?, ?, ?, ?, ?, ?, ?, <span class="ts">&<span class="tc">#x27;pending&#x27;</span>)<span class="ts">&quot;&quot;</span>&quot;,</span>
+            (data[<span class="ts">&quot;action_id&quot;</span>], data[<span class="ts">&quot;sku_id&quot;</span>], data[<span class="ts">&quot;store_id&quot;</span>],
+             data[<span class="ts">&quot;resource_type&quot;</span>], data.get(<span class="ts">&quot;resource_amount&quot;</span>),
+             data.get(<span class="ts">&quot;request_reason&quot;</span>, <span class="ts">&quot;&quot;</span>), data.get(<span class="ts">&quot;approver_role&quot;</span>, <span class="ts">&quot;DOM&quot;</span>))
+        )
+        c.commit()
+        request_id = cursor.lastrowid
+    
+    <span class="tk">return</span> jsonify({
+        <span class="ts">&quot;ok&quot;</span>: <span class="tk">True</span>,
+        <span class="ts">&quot;request_id&quot;</span>: request_id,
+        <span class="ts">&quot;status&quot;</span>: <span class="ts">&quot;pending&quot;</span>,
+        <span class="ts">&quot;message&quot;</span>: <span class="ts">&quot;资源申请已落表 · 待 Step <span class="tn">5</span> 接审批流&quot;</span>
+    }), <span class="tn">201</span>
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># 启动</span>
+<span class="tc"># ============================================================</span>
+
+<span class="tk">if</span> __name__ == <span class="ts">&quot;__main__&quot;</span>:
+    port = int(os.environ.get(<span class="ts">&quot;PORT&quot;</span>, <span class="tn">8001</span>))
+    print(f<span class="ts">&quot;INFINITY Agent OS · API · 监听 <span class="tn">0.0</span>.<span class="tn">0.0</span>:{port}&quot;</span>)
+    print(f<span class="ts">&quot;DB: {DB_PATH}&quot;</span>)
+    app.run(host=<span class="ts">&quot;<span class="tn">0.0</span>.<span class="tn">0.0</span>&quot;</span>, port=port, debug=<span class="tk">False</span>)
+</pre></div>
+  </div>
+</details>
+
+<details class="filebox" id="sec-3" >
+  <summary class="filehd">
+    <span class="ic">🧪</span><span class="fname">test_e2e.py</span>
+    <span class="flabel">端到端测试(19/19过)</span><span class="fsize">12,744 字符</span>
+    <span class="arrow">▼</span>
+  </summary>
+  <div class="fcontent">
+    <div class="ftools">
+      <button class="btn-copy" onclick="copyContent('sec-3')">📋 复制全文</button>
+      <span class="lang-tag">PYTHON</span>
+    </div>
+    <div class="raw-content" data-content="&quot;&quot;&quot;
+INFINITY Agent OS · Step 4 · 端到端测试(完成标准)
+====================================================
+不是单元测试·是真正的端到端:
+  ① 起 Flask API server(本地 8001)
+  ② 真发 HTTP 请求 POST /signals · /gates/evaluate · /actions
+  ③ 验证数据库里真有数据流动
+  ④ 验证 L0 → L1 → L2 → L7 全链贯通
+
+完成标准: 一次跑通·所有 5 个端点工作·DB 数据真流动
+铁律(吸取 Step 3 教训):&quot;端到端验证才算完成·局部绿测不算&quot;
+&quot;&quot;&quot;
+
+import json
+import os
+import sqlite3
+import subprocess
+import sys
+import time
+from datetime import datetime, timedelta
+from pathlib import Path
+
+import urllib.request
+import urllib.error
+
+DB_PATH = &quot;/tmp/infinity_os_e2e.db&quot;
+API_BASE = &quot;http://127.0.0.1:8001&quot;
+
+
+# ============================================================
+# 准备数据库 schema
+# ============================================================
+
+SCHEMA = &quot;&quot;&quot;
+DROP TABLE IF EXISTS transistor_signals;
+DROP TABLE IF EXISTS sku_lifecycle;
+DROP TABLE IF EXISTS logic_gates;
+DROP TABLE IF EXISTS gate_results;
+DROP TABLE IF EXISTS agent_actions;
+DROP TABLE IF EXISTS resource_requests;
+
+CREATE TABLE transistor_signals (
+  signal_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sku_id TEXT NOT NULL, store_id TEXT NOT NULL, channel_type TEXT NOT NULL,
+  captured_at TEXT NOT NULL, ttl_expires_at TEXT, source TEXT, source_submission_id TEXT,
+  s01_on_shelf INTEGER, s02_in_stock INTEGER, s02_qty INTEGER,
+  s03_main_shelf INTEGER, s04_second_display INTEGER, s04_display_type TEXT,
+  s05_has_price_tag INTEGER, s05_shelf_price REAL, s05_promo_price REAL,
+  s06_has_sellout INTEGER, s06_units_7d INTEGER, s06_txn_count_7d INTEGER,
+  s07_repurchase INTEGER, s07_unique_buyers INTEGER,
+  s08_stockout INTEGER, s08_stockout_days INTEGER, s08_root_cause TEXT,
+  s09_owner_recommends INTEGER, s09_recommend_level TEXT,
+  s10_profit_target INTEGER, s10_gross_margin REAL,
+  has_conflict INTEGER DEFAULT 0, conflict_notes TEXT
+);
+CREATE TABLE sku_lifecycle (
+  sku_id TEXT NOT NULL, store_id TEXT NOT NULL, channel_type TEXT NOT NULL,
+  lifecycle_stage TEXT NOT NULL, PRIMARY KEY (sku_id, store_id)
+);
+CREATE TABLE logic_gates (
+  gate_id TEXT PRIMARY KEY, channel_type TEXT NOT NULL, lifecycle_stage TEXT NOT NULL,
+  gate_name TEXT NOT NULL, gate_logic TEXT NOT NULL, pass_action TEXT, fail_action TEXT,
+  description TEXT, version TEXT DEFAULT &#x27;v0.1&#x27;, status TEXT DEFAULT &#x27;active&#x27;
+);
+CREATE TABLE gate_results (
+  result_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  signal_id INTEGER, gate_id TEXT, sku_id TEXT, store_id TEXT, channel_type TEXT,
+  lifecycle_stage TEXT, result TEXT, reason TEXT, failed_signals TEXT, evaluated_at TEXT
+);
+CREATE TABLE agent_actions (
+  action_id INTEGER PRIMARY KEY AUTOINCREMENT, gate_result_id INTEGER,
+  sku_id TEXT, store_id TEXT, action_type TEXT, action_text TEXT,
+  priority TEXT, assigned_to TEXT, status TEXT DEFAULT &#x27;pending&#x27;,
+  due_at TEXT, completed_at TEXT, effectiveness_score INTEGER,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE resource_requests (
+  request_id INTEGER PRIMARY KEY AUTOINCREMENT, action_id INTEGER,
+  sku_id TEXT, store_id TEXT, resource_type TEXT, resource_amount REAL,
+  request_reason TEXT, approver_role TEXT, status TEXT DEFAULT &#x27;pending&#x27;,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+&quot;&quot;&quot;
+
+
+def init_db():
+    &quot;&quot;&quot;建库 + 设置基础数据(生命周期 + 门规则)&quot;&quot;&quot;
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+    
+    conn = sqlite3.connect(DB_PATH)
+    conn.executescript(SCHEMA)
+    
+    # 设置 SKU 生命周期
+    conn.execute(
+        &quot;INSERT INTO sku_lifecycle VALUES (?,?,?,?)&quot;,
+        (&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;, &quot;GT_CVS&quot;, &quot;intro&quot;)
+    )
+    
+    # 设置导入门规则
+    conn.execute(
+        &quot;&quot;&quot;INSERT INTO logic_gates 
+           (gate_id, channel_type, lifecycle_stage, gate_name, gate_logic,
+            pass_action, fail_action, description, version, status)
+           VALUES (?,?,?,?,?,?,?,?,?,?)&quot;&quot;&quot;,
+        (&quot;GATE_GT_CVS_INTRO&quot;, &quot;GT_CVS&quot;, &quot;intro&quot;, &quot;导入期生命信号门&quot;,
+         json.dumps({&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [&quot;s01_on_shelf&quot;, &quot;s02_in_stock&quot;, &quot;s06_has_sellout&quot;]}),
+         &quot;进入成长门&quot;, &quot;L7 介入&quot;, &quot;三个生命信号必须同时满足&quot;,
+         &quot;v0.1&quot;, &quot;active&quot;)
+    )
+    conn.commit()
+    conn.close()
+    print(f&quot;✅ DB 初始化完成: {DB_PATH}&quot;)
+
+
+# ============================================================
+# HTTP 客户端
+# ============================================================
+
+def http_post(path: str, payload: dict) -&gt; dict:
+    req = urllib.request.Request(
+        API_BASE + path,
+        data=json.dumps(payload).encode(&quot;utf-8&quot;),
+        headers={&quot;Content-Type&quot;: &quot;application/json&quot;},
+        method=&quot;POST&quot;,
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return json.loads(resp.read().decode(&quot;utf-8&quot;))
+    except urllib.error.HTTPError as e:
+        return {&quot;_status&quot;: e.code, &quot;_error&quot;: e.read().decode(&quot;utf-8&quot;)}
+
+
+def http_get(path: str) -&gt; dict:
+    try:
+        with urllib.request.urlopen(API_BASE + path, timeout=10) as resp:
+            return json.loads(resp.read().decode(&quot;utf-8&quot;))
+    except urllib.error.HTTPError as e:
+        return {&quot;_status&quot;: e.code, &quot;_error&quot;: e.read().decode(&quot;utf-8&quot;)}
+
+
+# ============================================================
+# 主测试流程
+# ============================================================
+
+def banner(text, char=&quot;═&quot;):
+    print()
+    print(char * 70)
+    print(f&quot;  {text}&quot;)
+    print(char * 70)
+
+
+def wait_for_api(max_wait=10):
+    &quot;&quot;&quot;等 API 启动&quot;&quot;&quot;
+    for i in range(max_wait):
+        try:
+            r = http_get(&quot;/health&quot;)
+            if r.get(&quot;ok&quot;):
+                return True
+        except Exception:
+            pass
+        time.sleep(1)
+    return False
+
+
+def run_e2e():
+    &quot;&quot;&quot;端到端测试·返回 True=全过&quot;&quot;&quot;
+    passed = []
+    failed = []
+    
+    def check(name, condition, detail=&quot;&quot;):
+        if condition:
+            passed.append(name)
+            print(f&quot;  ✅ {name}&quot;)
+            if detail: print(f&quot;     {detail}&quot;)
+        else:
+            failed.append(name)
+            print(f&quot;  ❌ {name}&quot;)
+            if detail: print(f&quot;     {detail}&quot;)
+    
+    # ─── 健康检查 ───
+    banner(&quot;E2E 测试·健康检查&quot;)
+    r = http_get(&quot;/health&quot;)
+    check(&quot;API 健康&quot;, r.get(&quot;ok&quot;) is True, f&quot;db={r.get(&#x27;db&#x27;)}&quot;)
+    check(&quot;数据库可读&quot;, &quot;signals&quot; in r, f&quot;signals={r.get(&#x27;signals&#x27;)}&quot;)
+    
+    # ─── ① POST /signals ───
+    banner(&quot;① POST /signals · L0 数据进 L1&quot;)
+    payload = {
+        &quot;sku_id&quot;: &quot;JYX_LIGHT_500&quot;,
+        &quot;store_id&quot;: &quot;SH_GT_CVS_001&quot;,
+        &quot;channel_type&quot;: &quot;GT_CVS&quot;,
+        &quot;captured_at&quot;: datetime.utcnow().isoformat() + &quot;Z&quot;,
+        &quot;source&quot;: &quot;sales_rep&quot;,
+        &quot;source_submission_id&quot;: &quot;SUB_E2E_TEST_001&quot;,
+        # 经典主场景: 上架/有库存 但 没动销
+        &quot;s01_on_shelf&quot;: True,
+        &quot;s02_in_stock&quot;: True,
+        &quot;s02_qty&quot;: 6,
+        &quot;s03_main_shelf&quot;: False,
+        &quot;s05_has_price_tag&quot;: True,
+        &quot;s06_has_sellout&quot;: False,
+        &quot;s09_owner_recommends&quot;: False,
+        &quot;s10_profit_target&quot;: True,
+    }
+    r = http_post(&quot;/signals&quot;, payload)
+    check(&quot;信号成功入库&quot;, r.get(&quot;ok&quot;) is True, f&quot;signal_id={r.get(&#x27;signal_id&#x27;)}&quot;)
+    check(&quot;返回下一步指引&quot;, &quot;next_step&quot; in r, r.get(&quot;next_step&quot;, &quot;&quot;))
+    signal_id = r.get(&quot;signal_id&quot;)
+    
+    # 验 DB 真有数据
+    with sqlite3.connect(DB_PATH) as c:
+        cnt = c.execute(&quot;SELECT COUNT(*) FROM transistor_signals&quot;).fetchone()[0]
+    check(&quot;DB 中真有信号&quot;, cnt == 1, f&quot;实际 {cnt} 条&quot;)
+    
+    # ─── ② POST /gates/evaluate ───
+    banner(&quot;② POST /gates/evaluate · L2 门评估&quot;)
+    r = http_post(&quot;/gates/evaluate&quot;, {
+        &quot;sku_id&quot;: &quot;JYX_LIGHT_500&quot;, &quot;store_id&quot;: &quot;SH_GT_CVS_001&quot;
+    })
+    check(&quot;评估返回成功&quot;, r.get(&quot;ok&quot;) is True)
+    check(&quot;判定 = fail (因 S06 无动销)&quot;, r.get(&quot;verdict&quot;) == &quot;fail&quot;,
+          f&quot;verdict={r.get(&#x27;verdict&#x27;)}&quot;)
+    check(&quot;失败晶体管 = s06&quot;, &quot;s06_has_sellout&quot; in (r.get(&quot;failed_signals&quot;) or []),
+          f&quot;failed_signals={r.get(&#x27;failed_signals&#x27;)}&quot;)
+    gate_result_id = r.get(&quot;gate_result_id&quot;)
+    
+    with sqlite3.connect(DB_PATH) as c:
+        cnt = c.execute(&quot;SELECT COUNT(*) FROM gate_results&quot;).fetchone()[0]
+    check(&quot;gate_results 真写库&quot;, cnt == 1, f&quot;实际 {cnt} 条&quot;)
+    
+    # ─── ③ POST /reasoning ───
+    banner(&quot;③ POST /reasoning · 推理链路&quot;)
+    r = http_post(&quot;/reasoning&quot;, {&quot;gate_result_id&quot;: gate_result_id})
+    check(&quot;推理返回成功&quot;, r.get(&quot;ok&quot;) is True)
+    check(&quot;识别 ≥ 1 个问题&quot;, r.get(&quot;problems_count&quot;, 0) &gt;= 1,
+          f&quot;problems_count={r.get(&#x27;problems_count&#x27;)}&quot;)
+    chain = r.get(&quot;reasoning_chain&quot;, [])
+    check(&quot;推理链有原因分析&quot;, any(c.get(&quot;causes&quot;) for c in chain),
+          f&quot;chain[0].causes={chain[0].get(&#x27;causes&#x27;, []) if chain else []}&quot;)
+    if chain and chain[0].get(&quot;causes&quot;):
+        for c in chain[0][&quot;causes&quot;][:2]:
+            print(f&quot;     原因: {c[&#x27;type&#x27;]} · 置信={c[&#x27;confidence&#x27;]} · {c[&#x27;description&#x27;]}&quot;)
+    
+    # ─── ④ POST /actions ───
+    banner(&quot;④ POST /actions · L7 完整流水&quot;)
+    r = http_post(&quot;/actions&quot;, {&quot;gate_result_id&quot;: gate_result_id})
+    check(&quot;行动建议生成成功&quot;, r.get(&quot;ok&quot;) is True)
+    check(&quot;行动数 ≥ 1&quot;, r.get(&quot;actions_count&quot;, 0) &gt;= 1,
+          f&quot;actions_count={r.get(&#x27;actions_count&#x27;)}&quot;)
+    check(&quot;资源申请生成&quot;, r.get(&quot;resources_count&quot;, 0) &gt;= 1,
+          f&quot;resources_count={r.get(&#x27;resources_count&#x27;)}&quot;)
+    
+    if r.get(&quot;actions&quot;):
+        print(&quot;     生成的行动:&quot;)
+        for a in r[&quot;actions&quot;][:3]:
+            print(f&quot;       · [{a[&#x27;priority&#x27;]}] {a[&#x27;action_type&#x27;]} → {a[&#x27;action_text&#x27;][:40]}...&quot;)
+    
+    if r.get(&quot;resources&quot;):
+        print(&quot;     生成的资源申请:&quot;)
+        for res in r[&quot;resources&quot;]:
+            print(f&quot;       · {res[&#x27;resource_type&#x27;]} ¥{res.get(&#x27;resource_amount&#x27;)} ({res[&#x27;approver_role&#x27;]})&quot;)
+    
+    with sqlite3.connect(DB_PATH) as c:
+        a_cnt = c.execute(&quot;SELECT COUNT(*) FROM agent_actions&quot;).fetchone()[0]
+        r_cnt = c.execute(&quot;SELECT COUNT(*) FROM resource_requests&quot;).fetchone()[0]
+    check(f&quot;agent_actions 写库&quot;, a_cnt &gt;= 1, f&quot;实际 {a_cnt} 条&quot;)
+    check(f&quot;resource_requests 写库&quot;, r_cnt &gt;= 1, f&quot;实际 {r_cnt} 条&quot;)
+    
+    # ─── ⑤ POST /resources/request(单条新增) ───
+    banner(&quot;⑤ POST /resources/request · 单条资源申请&quot;)
+    r = http_post(&quot;/resources/request&quot;, {
+        &quot;action_id&quot;: 1,
+        &quot;sku_id&quot;: &quot;JYX_LIGHT_500&quot;,
+        &quot;store_id&quot;: &quot;SH_GT_CVS_001&quot;,
+        &quot;resource_type&quot;: &quot;extra_test&quot;,
+        &quot;resource_amount&quot;: 100.0,
+        &quot;request_reason&quot;: &quot;E2E 测试单独建一条资源申请&quot;,
+        &quot;approver_role&quot;: &quot;DOM&quot;
+    })
+    check(&quot;单条资源申请成功&quot;, r.get(&quot;ok&quot;) is True, f&quot;request_id={r.get(&#x27;request_id&#x27;)}&quot;)
+    
+    # ─── 终极验证: L0→L7 数据闭环完整 ───
+    banner(&quot;★ 终极验证·L0 → L1 → L2 → L7 完整闭环&quot;)
+    with sqlite3.connect(DB_PATH) as c:
+        signals = c.execute(&quot;SELECT COUNT(*) FROM transistor_signals&quot;).fetchone()[0]
+        gates = c.execute(&quot;SELECT COUNT(*) FROM gate_results&quot;).fetchone()[0]
+        actions = c.execute(&quot;SELECT COUNT(*) FROM agent_actions&quot;).fetchone()[0]
+        resources = c.execute(&quot;SELECT COUNT(*) FROM resource_requests&quot;).fetchone()[0]
+    
+    print(f&quot;\n  L1 signals       = {signals}&quot;)
+    print(f&quot;  L2 gate_results  = {gates}&quot;)
+    print(f&quot;  L7 actions       = {actions}&quot;)
+    print(f&quot;  L8 resources     = {resources}&quot;)
+    print()
+    check(&quot;完整数据流贯通&quot;, signals &gt; 0 and gates &gt; 0 and actions &gt; 0 and resources &gt; 0,
+          &quot;★ L0 → L1 → L2 → L7 → resource_requests 全链有数据&quot;)
+    
+    # 拉一条完整链路
+    with sqlite3.connect(DB_PATH) as c:
+        c.row_factory = sqlite3.Row
+        action_row = c.execute(
+            &quot;&quot;&quot;SELECT aa.action_text, aa.priority, gr.reason as gate_reason
+               FROM agent_actions aa
+               JOIN gate_results gr ON aa.gate_result_id = gr.result_id
+               LIMIT 1&quot;&quot;&quot;
+        ).fetchone()
+    if action_row:
+        print(f&quot;\n  完整数据链示例:&quot;)
+        print(f&quot;  L2 判定: {action_row[&#x27;gate_reason&#x27;]}&quot;)
+        print(f&quot;  L7 建议: [{action_row[&#x27;priority&#x27;]}] {action_row[&#x27;action_text&#x27;]}&quot;)
+    
+    # 总结
+    banner(f&quot;测试总结: {len(passed)} 通过 / {len(failed)} 失败&quot;)
+    if not failed:
+        print(&quot;  🎯 端到端全部通过·Step 4 完成标准达成&quot;)
+        return True
+    else:
+        print(f&quot;  ❌ 失败项: {failed}&quot;)
+        return False
+
+
+# ============================================================
+# 起 Server + 跑测试
+# ============================================================
+
+def main():
+    init_db()
+    
+    # 起 Flask server(子进程)
+    print(&quot;\n启动 Flask API server...&quot;)
+    env = os.environ.copy()
+    env[&quot;INFINITY_DB&quot;] = DB_PATH
+    env[&quot;PORT&quot;] = &quot;8001&quot;
+    
+    proc = subprocess.Popen(
+        [sys.executable, str(Path(__file__).parent / &quot;app.py&quot;)],
+        env=env,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    
+    try:
+        if not wait_for_api(max_wait=10):
+            print(&quot;❌ API server 未启动&quot;)
+            stdout, stderr = proc.communicate(timeout=2)
+            print(&quot;stdout:&quot;, stdout.decode()[:500])
+            print(&quot;stderr:&quot;, stderr.decode()[:500])
+            return False
+        
+        print(&quot;✅ API server 已起·端口 8001\n&quot;)
+        
+        ok = run_e2e()
+        return ok
+    finally:
+        proc.terminate()
+        try:
+            proc.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+        print(&quot;\n✅ API server 已关闭&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    ok = main()
+    sys.exit(0 if ok else 1)
+"><pre class="code lang-py"><span class="ts">&quot;&quot;</span>&quot;
+INFINITY Agent OS · Step <span class="tn">4</span> · 端到端测试(完成标准)
+====================================================
+不是单元测试·是真正的端到端:
+  ① 起 Flask API server(本地 <span class="tn">8001</span>)
+  ② 真发 HTTP 请求 POST /signals · /gates/evaluate · /actions
+  ③ 验证数据库里真有数据流动
+  ④ 验证 L0 → L1 → L2 → L7 全链贯通
+
+完成标准: 一次跑通·所有 <span class="tn">5</span> 个端点工作·DB 数据真流动
+铁律(吸取 Step <span class="tn">3</span> 教训):<span class="ts">&quot;端到端验证才算完成·局部绿测不算&quot;</span>
+<span class="ts">&quot;&quot;</span>&quot;
+
+<span <span class="tk">class</span>="tk">import</span> json
+<span <span class="tk">class</span>="tk">import</span> os
+<span <span class="tk">class</span>="tk">import</span> sqlite3
+<span <span class="tk">class</span>="tk">import</span> subprocess
+<span <span class="tk">class</span>="tk">import</span> sys
+<span <span class="tk">class</span>="tk">import</span> time
+<span <span class="tk">class</span>="tk">from</span> datetime <span <span class="tk">class</span>="tk">import</span> datetime, timedelta
+<span <span class="tk">class</span>="tk">from</span> pathlib <span <span class="tk">class</span>="tk">import</span> Path
+
+<span <span class="tk">class</span>="tk">import</span> urllib.request
+<span <span class="tk">class</span>="tk">import</span> urllib.error
+
+DB_PATH = <span class="ts">&quot;/tmp/infinity_os_e2e.db&quot;</span>
+API_BASE = <span class="ts">&quot;http://<span class="tn">127.0</span>.<span class="tn">0.1</span>:<span class="tn">8001</span>&quot;</span>
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># 准备数据库 schema</span>
+<span class="tc"># ============================================================</span>
+
+SCHEMA = <span class="ts">&quot;&quot;</span>&quot;
+DROP TABLE IF EXISTS transistor_signals;
+DROP TABLE IF EXISTS sku_lifecycle;
+DROP TABLE IF EXISTS logic_gates;
+DROP TABLE IF EXISTS gate_results;
+DROP TABLE IF EXISTS agent_actions;
+DROP TABLE IF EXISTS resource_requests;
+
+CREATE TABLE transistor_signals (
+  signal_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sku_id TEXT NOT NULL, store_id TEXT NOT NULL, channel_type TEXT NOT NULL,
+  captured_at TEXT NOT NULL, ttl_expires_at TEXT, source TEXT, source_submission_id TEXT,
+  s01_on_shelf INTEGER, s02_in_stock INTEGER, s02_qty INTEGER,
+  s03_main_shelf INTEGER, s04_second_display INTEGER, s04_display_type TEXT,
+  s05_has_price_tag INTEGER, s05_shelf_price REAL, s05_promo_price REAL,
+  s06_has_sellout INTEGER, s06_units_7d INTEGER, s06_txn_count_7d INTEGER,
+  s07_repurchase INTEGER, s07_unique_buyers INTEGER,
+  s08_stockout INTEGER, s08_stockout_days INTEGER, s08_root_cause TEXT,
+  s09_owner_recommends INTEGER, s09_recommend_level TEXT,
+  s10_profit_target INTEGER, s10_gross_margin REAL,
+  has_conflict INTEGER DEFAULT <span class="tn">0</span>, conflict_notes TEXT
+);
+CREATE TABLE sku_lifecycle (
+  sku_id TEXT NOT NULL, store_id TEXT NOT NULL, channel_type TEXT NOT NULL,
+  lifecycle_stage TEXT NOT NULL, PRIMARY KEY (sku_id, store_id)
+);
+CREATE TABLE logic_gates (
+  gate_id TEXT PRIMARY KEY, channel_type TEXT NOT NULL, lifecycle_stage TEXT NOT NULL,
+  gate_name TEXT NOT NULL, gate_logic TEXT NOT NULL, pass_action TEXT, fail_action TEXT,
+  description TEXT, version TEXT DEFAULT <span class="ts">&<span class="tc">#x27;v0.<span class="tn">1</span>&#x27;</span>, status TEXT DEFAULT <span class="ts">&#x27;active&#x27;</span></span>
+);
+CREATE TABLE gate_results (
+  result_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  signal_id INTEGER, gate_id TEXT, sku_id TEXT, store_id TEXT, channel_type TEXT,
+  lifecycle_stage TEXT, result TEXT, reason TEXT, failed_signals TEXT, evaluated_at TEXT
+);
+CREATE TABLE agent_actions (
+  action_id INTEGER PRIMARY KEY AUTOINCREMENT, gate_result_id INTEGER,
+  sku_id TEXT, store_id TEXT, action_type TEXT, action_text TEXT,
+  priority TEXT, assigned_to TEXT, status TEXT DEFAULT <span class="ts">&<span class="tc">#x27;pending&#x27;</span>,</span>
+  due_at TEXT, completed_at TEXT, effectiveness_score INTEGER,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE resource_requests (
+  request_id INTEGER PRIMARY KEY AUTOINCREMENT, action_id INTEGER,
+  sku_id TEXT, store_id TEXT, resource_type TEXT, resource_amount REAL,
+  request_reason TEXT, approver_role TEXT, status TEXT DEFAULT <span class="ts">&<span class="tc">#x27;pending&#x27;</span>,</span>
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+<span class="ts">&quot;&quot;</span>&quot;
+
+
+<span <span class="tk">class</span>="tk">def</span> init_db():
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;建库 + 设置基础数据(生命周期 + 门规则)&quot;</span><span class="ts">&quot;&quot;</span>
+    <span class="tk">if</span> os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+    
+    conn = sqlite3.connect(DB_PATH)
+    conn.executescript(SCHEMA)
+    
+    <span class="tc"># 设置 SKU 生命周期</span>
+    conn.execute(
+        <span class="ts">&quot;INSERT INTO sku_lifecycle VALUES (?,?,?,?)&quot;</span>,
+        (<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>, <span class="ts">&quot;GT_CVS&quot;</span>, <span class="ts">&quot;intro&quot;</span>)
+    )
+    
+    <span class="tc"># 设置导入门规则</span>
+    conn.execute(
+        <span class="ts">&quot;&quot;</span>&quot;INSERT INTO logic_gates 
+           (gate_id, channel_type, lifecycle_stage, gate_name, gate_logic,
+            pass_action, fail_action, description, version, status)
+           VALUES (?,?,?,?,?,?,?,?,?,?)<span class="ts">&quot;&quot;</span>&quot;,
+        (<span class="ts">&quot;GATE_GT_CVS_INTRO&quot;</span>, <span class="ts">&quot;GT_CVS&quot;</span>, <span class="ts">&quot;intro&quot;</span>, <span class="ts">&quot;导入期生命信号门&quot;</span>,
+         json.dumps({<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;AND&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [<span class="ts">&quot;s01_on_shelf&quot;</span>, <span class="ts">&quot;s02_in_stock&quot;</span>, <span class="ts">&quot;s06_has_sellout&quot;</span>]}),
+         <span class="ts">&quot;进入成长门&quot;</span>, <span class="ts">&quot;L7 介入&quot;</span>, <span class="ts">&quot;三个生命信号必须同时满足&quot;</span>,
+         <span class="ts">&quot;v0.<span class="tn">1</span>&quot;</span>, <span class="ts">&quot;active&quot;</span>)
+    )
+    conn.commit()
+    conn.close()
+    print(f<span class="ts">&quot;✅ DB 初始化完成: {DB_PATH}&quot;</span>)
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># HTTP 客户端</span>
+<span class="tc"># ============================================================</span>
+
+<span <span class="tk">class</span>="tk">def</span> http_post(path: str, payload: dict) -&gt; dict:
+    req = urllib.request.Request(
+        API_BASE + path,
+        data=json.dumps(payload).encode(<span class="ts">&quot;utf-<span class="tn">8</span>&quot;</span>),
+        headers={<span class="ts">&quot;Content-Type&quot;</span>: <span class="ts">&quot;application/json&quot;</span>},
+        method=<span class="ts">&quot;POST&quot;</span>,
+    )
+    <span class="tk">try</span>:
+        <span class="tk">with</span> urllib.request.urlopen(req, timeout=<span class="tn">10</span>) <span class="tk">as</span> resp:
+            <span class="tk">return</span> json.loads(resp.read().decode(<span class="ts">&quot;utf-<span class="tn">8</span>&quot;</span>))
+    <span class="tk">except</span> urllib.error.HTTPError <span class="tk">as</span> e:
+        <span class="tk">return</span> {<span class="ts">&quot;_status&quot;</span>: e.code, <span class="ts">&quot;_error&quot;</span>: e.read().decode(<span class="ts">&quot;utf-<span class="tn">8</span>&quot;</span>)}
+
+
+<span <span class="tk">class</span>="tk">def</span> http_get(path: str) -&gt; dict:
+    <span class="tk">try</span>:
+        <span class="tk">with</span> urllib.request.urlopen(API_BASE + path, timeout=<span class="tn">10</span>) <span class="tk">as</span> resp:
+            <span class="tk">return</span> json.loads(resp.read().decode(<span class="ts">&quot;utf-<span class="tn">8</span>&quot;</span>))
+    <span class="tk">except</span> urllib.error.HTTPError <span class="tk">as</span> e:
+        <span class="tk">return</span> {<span class="ts">&quot;_status&quot;</span>: e.code, <span class="ts">&quot;_error&quot;</span>: e.read().decode(<span class="ts">&quot;utf-<span class="tn">8</span>&quot;</span>)}
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># 主测试流程</span>
+<span class="tc"># ============================================================</span>
+
+<span <span class="tk">class</span>="tk">def</span> banner(text, char=<span class="ts">&quot;═&quot;</span>):
+    print()
+    print(char * <span class="tn">70</span>)
+    print(f<span class="ts">&quot;  {text}&quot;</span>)
+    print(char * <span class="tn">70</span>)
+
+
+<span <span class="tk">class</span>="tk">def</span> wait_for_api(max_wait=<span class="tn">10</span>):
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;等 API 启动&quot;</span><span class="ts">&quot;&quot;</span>
+    <span class="tk">for</span> i <span class="tk">in</span> range(max_wait):
+        <span class="tk">try</span>:
+            r = http_get(<span class="ts">&quot;/health&quot;</span>)
+            <span class="tk">if</span> r.get(<span class="ts">&quot;ok&quot;</span>):
+                <span class="tk">return</span> <span class="tk">True</span>
+        <span class="tk">except</span> Exception:
+            <span class="tk">pass</span>
+        time.sleep(<span class="tn">1</span>)
+    <span class="tk">return</span> <span class="tk">False</span>
+
+
+<span <span class="tk">class</span>="tk">def</span> run_e2e():
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;端到端测试·返回 <span class="tk">True</span>=全过&quot;</span><span class="ts">&quot;&quot;</span>
+    passed = []
+    failed = []
+    
+    <span <span class="tk">class</span>="tk">def</span> check(name, condition, detail=<span class="ts">&quot;&quot;</span>):
+        <span class="tk">if</span> condition:
+            passed.append(name)
+            print(f<span class="ts">&quot;  ✅ {name}&quot;</span>)
+            <span class="tk">if</span> detail: print(f<span class="ts">&quot;     {detail}&quot;</span>)
+        <span class="tk">else</span>:
+            failed.append(name)
+            print(f<span class="ts">&quot;  ❌ {name}&quot;</span>)
+            <span class="tk">if</span> detail: print(f<span class="ts">&quot;     {detail}&quot;</span>)
+    
+    <span class="tc"># ─── 健康检查 ───</span>
+    banner(<span class="ts">&quot;E2E 测试·健康检查&quot;</span>)
+    r = http_get(<span class="ts">&quot;/health&quot;</span>)
+    check(<span class="ts">&quot;API 健康&quot;</span>, r.get(<span class="ts">&quot;ok&quot;</span>) <span class="tk">is</span> <span class="tk">True</span>, f&quot;db={r.get(<span class="ts">&<span class="tc">#x27;db&#x27;</span>)}&quot;)</span>
+    check(<span class="ts">&quot;数据库可读&quot;</span>, <span class="ts">&quot;signals&quot;</span> <span class="tk">in</span> r, f&quot;signals={r.get(<span class="ts">&<span class="tc">#x27;signals&#x27;</span>)}&quot;)</span>
+    
+    <span class="tc"># ─── ① POST /signals ───</span>
+    banner(<span class="ts">&quot;① POST /signals · L0 数据进 L1&quot;</span>)
+    payload = {
+        <span class="ts">&quot;sku_id&quot;</span>: <span class="ts">&quot;JYX_LIGHT_500&quot;</span>,
+        <span class="ts">&quot;store_id&quot;</span>: <span class="ts">&quot;SH_GT_CVS_001&quot;</span>,
+        <span class="ts">&quot;channel_type&quot;</span>: <span class="ts">&quot;GT_CVS&quot;</span>,
+        <span class="ts">&quot;captured_at&quot;</span>: datetime.utcnow().isoformat() + <span class="ts">&quot;Z&quot;</span>,
+        <span class="ts">&quot;source&quot;</span>: <span class="ts">&quot;sales_rep&quot;</span>,
+        <span class="ts">&quot;source_submission_id&quot;</span>: <span class="ts">&quot;SUB_E2E_TEST_001&quot;</span>,
+        <span class="tc"># 经典主场景: 上架/有库存 但 没动销</span>
+        <span class="ts">&quot;s01_on_shelf&quot;</span>: <span class="tk">True</span>,
+        <span class="ts">&quot;s02_in_stock&quot;</span>: <span class="tk">True</span>,
+        <span class="ts">&quot;s02_qty&quot;</span>: <span class="tn">6</span>,
+        <span class="ts">&quot;s03_main_shelf&quot;</span>: <span class="tk">False</span>,
+        <span class="ts">&quot;s05_has_price_tag&quot;</span>: <span class="tk">True</span>,
+        <span class="ts">&quot;s06_has_sellout&quot;</span>: <span class="tk">False</span>,
+        <span class="ts">&quot;s09_owner_recommends&quot;</span>: <span class="tk">False</span>,
+        <span class="ts">&quot;s10_profit_target&quot;</span>: <span class="tk">True</span>,
+    }
+    r = http_post(<span class="ts">&quot;/signals&quot;</span>, payload)
+    check(<span class="ts">&quot;信号成功入库&quot;</span>, r.get(<span class="ts">&quot;ok&quot;</span>) <span class="tk">is</span> <span class="tk">True</span>, f&quot;signal_id={r.get(<span class="ts">&<span class="tc">#x27;signal_id&#x27;</span>)}&quot;)</span>
+    check(<span class="ts">&quot;返回下一步指引&quot;</span>, <span class="ts">&quot;next_step&quot;</span> <span class="tk">in</span> r, r.get(<span class="ts">&quot;next_step&quot;</span>, <span class="ts">&quot;&quot;</span>))
+    signal_id = r.get(<span class="ts">&quot;signal_id&quot;</span>)
+    
+    <span class="tc"># 验 DB 真有数据</span>
+    <span class="tk">with</span> sqlite3.connect(DB_PATH) <span class="tk">as</span> c:
+        cnt = c.execute(<span class="ts">&quot;SELECT COUNT(*) FROM transistor_signals&quot;</span>).fetchone()[<span class="tn">0</span>]
+    check(<span class="ts">&quot;DB 中真有信号&quot;</span>, cnt == <span class="tn">1</span>, f<span class="ts">&quot;实际 {cnt} 条&quot;</span>)
+    
+    <span class="tc"># ─── ② POST /gates/evaluate ───</span>
+    banner(<span class="ts">&quot;② POST /gates/evaluate · L2 门评估&quot;</span>)
+    r = http_post(<span class="ts">&quot;/gates/evaluate&quot;</span>, {
+        <span class="ts">&quot;sku_id&quot;</span>: <span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;store_id&quot;</span>: <span class="ts">&quot;SH_GT_CVS_001&quot;</span>
+    })
+    check(<span class="ts">&quot;评估返回成功&quot;</span>, r.get(<span class="ts">&quot;ok&quot;</span>) <span class="tk">is</span> <span class="tk">True</span>)
+    check(<span class="ts">&quot;判定 = fail (因 S06 无动销)&quot;</span>, r.get(<span class="ts">&quot;verdict&quot;</span>) == <span class="ts">&quot;fail&quot;</span>,
+          f&quot;verdict={r.get(<span class="ts">&<span class="tc">#x27;verdict&#x27;</span>)}&quot;)</span>
+    check(<span class="ts">&quot;失败晶体管 = s06&quot;</span>, <span class="ts">&quot;s06_has_sellout&quot;</span> <span class="tk">in</span> (r.get(<span class="ts">&quot;failed_signals&quot;</span>) <span class="tk">or</span> []),
+          f&quot;failed_signals={r.get(<span class="ts">&<span class="tc">#x27;failed_signals&#x27;</span>)}&quot;)</span>
+    gate_result_id = r.get(<span class="ts">&quot;gate_result_id&quot;</span>)
+    
+    <span class="tk">with</span> sqlite3.connect(DB_PATH) <span class="tk">as</span> c:
+        cnt = c.execute(<span class="ts">&quot;SELECT COUNT(*) FROM gate_results&quot;</span>).fetchone()[<span class="tn">0</span>]
+    check(<span class="ts">&quot;gate_results 真写库&quot;</span>, cnt == <span class="tn">1</span>, f<span class="ts">&quot;实际 {cnt} 条&quot;</span>)
+    
+    <span class="tc"># ─── ③ POST /reasoning ───</span>
+    banner(<span class="ts">&quot;③ POST /reasoning · 推理链路&quot;</span>)
+    r = http_post(<span class="ts">&quot;/reasoning&quot;</span>, {<span class="ts">&quot;gate_result_id&quot;</span>: gate_result_id})
+    check(<span class="ts">&quot;推理返回成功&quot;</span>, r.get(<span class="ts">&quot;ok&quot;</span>) <span class="tk">is</span> <span class="tk">True</span>)
+    check(<span class="ts">&quot;识别 ≥ <span class="tn">1</span> 个问题&quot;</span>, r.get(<span class="ts">&quot;problems_count&quot;</span>, <span class="tn">0</span>) &gt;= <span class="tn">1</span>,
+          f&quot;problems_count={r.get(<span class="ts">&<span class="tc">#x27;problems_count&#x27;</span>)}&quot;)</span>
+    chain = r.get(<span class="ts">&quot;reasoning_chain&quot;</span>, [])
+    check(<span class="ts">&quot;推理链有原因分析&quot;</span>, any(c.get(<span class="ts">&quot;causes&quot;</span>) <span class="tk">for</span> c <span class="tk">in</span> chain),
+          f&quot;chain[<span class="tn">0</span>].causes={chain[<span class="tn">0</span>].get(<span class="ts">&<span class="tc">#x27;causes&#x27;</span>, []) <span class="tk">if</span> chain <span class="tk">else</span> []}&quot;)</span>
+    <span class="tk">if</span> chain <span class="tk">and</span> chain[<span class="tn">0</span>].get(<span class="ts">&quot;causes&quot;</span>):
+        <span class="tk">for</span> c <span class="tk">in</span> chain[<span class="tn">0</span>][<span class="ts">&quot;causes&quot;</span>][:<span class="tn">2</span>]:
+            print(f&quot;     原因: {c[<span class="ts">&<span class="tc">#x27;type&#x27;</span>]} · 置信={c[<span class="ts">&#x27;confidence&#x27;</span>]} · {c[<span class="ts">&#x27;description&#x27;</span>]}&quot;)</span>
+    
+    <span class="tc"># ─── ④ POST /actions ───</span>
+    banner(<span class="ts">&quot;④ POST /actions · L7 完整流水&quot;</span>)
+    r = http_post(<span class="ts">&quot;/actions&quot;</span>, {<span class="ts">&quot;gate_result_id&quot;</span>: gate_result_id})
+    check(<span class="ts">&quot;行动建议生成成功&quot;</span>, r.get(<span class="ts">&quot;ok&quot;</span>) <span class="tk">is</span> <span class="tk">True</span>)
+    check(<span class="ts">&quot;行动数 ≥ <span class="tn">1</span>&quot;</span>, r.get(<span class="ts">&quot;actions_count&quot;</span>, <span class="tn">0</span>) &gt;= <span class="tn">1</span>,
+          f&quot;actions_count={r.get(<span class="ts">&<span class="tc">#x27;actions_count&#x27;</span>)}&quot;)</span>
+    check(<span class="ts">&quot;资源申请生成&quot;</span>, r.get(<span class="ts">&quot;resources_count&quot;</span>, <span class="tn">0</span>) &gt;= <span class="tn">1</span>,
+          f&quot;resources_count={r.get(<span class="ts">&<span class="tc">#x27;resources_count&#x27;</span>)}&quot;)</span>
+    
+    <span class="tk">if</span> r.get(<span class="ts">&quot;actions&quot;</span>):
+        print(<span class="ts">&quot;     生成的行动:&quot;</span>)
+        <span class="tk">for</span> a <span class="tk">in</span> r[<span class="ts">&quot;actions&quot;</span>][:<span class="tn">3</span>]:
+            print(f&quot;       · [{a[<span class="ts">&<span class="tc">#x27;priority&#x27;</span>]}] {a[<span class="ts">&#x27;action_type&#x27;</span>]} → {a[<span class="ts">&#x27;action_text&#x27;</span>][:<span class="tn">40</span>]}...&quot;)</span>
+    
+    <span class="tk">if</span> r.get(<span class="ts">&quot;resources&quot;</span>):
+        print(<span class="ts">&quot;     生成的资源申请:&quot;</span>)
+        <span class="tk">for</span> res <span class="tk">in</span> r[<span class="ts">&quot;resources&quot;</span>]:
+            print(f&quot;       · {res[<span class="ts">&<span class="tc">#x27;resource_type&#x27;</span>]} ¥{res.get(<span class="ts">&#x27;resource_amount&#x27;</span>)} ({res[<span class="ts">&#x27;approver_role&#x27;</span>]})&quot;)</span>
+    
+    <span class="tk">with</span> sqlite3.connect(DB_PATH) <span class="tk">as</span> c:
+        a_cnt = c.execute(<span class="ts">&quot;SELECT COUNT(*) FROM agent_actions&quot;</span>).fetchone()[<span class="tn">0</span>]
+        r_cnt = c.execute(<span class="ts">&quot;SELECT COUNT(*) FROM resource_requests&quot;</span>).fetchone()[<span class="tn">0</span>]
+    check(f<span class="ts">&quot;agent_actions 写库&quot;</span>, a_cnt &gt;= <span class="tn">1</span>, f<span class="ts">&quot;实际 {a_cnt} 条&quot;</span>)
+    check(f<span class="ts">&quot;resource_requests 写库&quot;</span>, r_cnt &gt;= <span class="tn">1</span>, f<span class="ts">&quot;实际 {r_cnt} 条&quot;</span>)
+    
+    <span class="tc"># ─── ⑤ POST /resources/request(单条新增) ───</span>
+    banner(<span class="ts">&quot;⑤ POST /resources/request · 单条资源申请&quot;</span>)
+    r = http_post(<span class="ts">&quot;/resources/request&quot;</span>, {
+        <span class="ts">&quot;action_id&quot;</span>: <span class="tn">1</span>,
+        <span class="ts">&quot;sku_id&quot;</span>: <span class="ts">&quot;JYX_LIGHT_500&quot;</span>,
+        <span class="ts">&quot;store_id&quot;</span>: <span class="ts">&quot;SH_GT_CVS_001&quot;</span>,
+        <span class="ts">&quot;resource_type&quot;</span>: <span class="ts">&quot;extra_test&quot;</span>,
+        <span class="ts">&quot;resource_amount&quot;</span>: <span class="tn">100.0</span>,
+        <span class="ts">&quot;request_reason&quot;</span>: <span class="ts">&quot;E2E 测试单独建一条资源申请&quot;</span>,
+        <span class="ts">&quot;approver_role&quot;</span>: <span class="ts">&quot;DOM&quot;</span>
+    })
+    check(<span class="ts">&quot;单条资源申请成功&quot;</span>, r.get(<span class="ts">&quot;ok&quot;</span>) <span class="tk">is</span> <span class="tk">True</span>, f&quot;request_id={r.get(<span class="ts">&<span class="tc">#x27;request_id&#x27;</span>)}&quot;)</span>
+    
+    <span class="tc"># ─── 终极验证: L0→L7 数据闭环完整 ───</span>
+    banner(<span class="ts">&quot;★ 终极验证·L0 → L1 → L2 → L7 完整闭环&quot;</span>)
+    <span class="tk">with</span> sqlite3.connect(DB_PATH) <span class="tk">as</span> c:
+        signals = c.execute(<span class="ts">&quot;SELECT COUNT(*) FROM transistor_signals&quot;</span>).fetchone()[<span class="tn">0</span>]
+        gates = c.execute(<span class="ts">&quot;SELECT COUNT(*) FROM gate_results&quot;</span>).fetchone()[<span class="tn">0</span>]
+        actions = c.execute(<span class="ts">&quot;SELECT COUNT(*) FROM agent_actions&quot;</span>).fetchone()[<span class="tn">0</span>]
+        resources = c.execute(<span class="ts">&quot;SELECT COUNT(*) FROM resource_requests&quot;</span>).fetchone()[<span class="tn">0</span>]
+    
+    print(f<span class="ts">&quot;\n  L1 signals       = {signals}&quot;</span>)
+    print(f<span class="ts">&quot;  L2 gate_results  = {gates}&quot;</span>)
+    print(f<span class="ts">&quot;  L7 actions       = {actions}&quot;</span>)
+    print(f<span class="ts">&quot;  L8 resources     = {resources}&quot;</span>)
+    print()
+    check(<span class="ts">&quot;完整数据流贯通&quot;</span>, signals &gt; <span class="tn">0</span> <span class="tk">and</span> gates &gt; <span class="tn">0</span> <span class="tk">and</span> actions &gt; <span class="tn">0</span> <span class="tk">and</span> resources &gt; <span class="tn">0</span>,
+          <span class="ts">&quot;★ L0 → L1 → L2 → L7 → resource_requests 全链有数据&quot;</span>)
+    
+    <span class="tc"># 拉一条完整链路</span>
+    <span class="tk">with</span> sqlite3.connect(DB_PATH) <span class="tk">as</span> c:
+        c.row_factory = sqlite3.Row
+        action_row = c.execute(
+            <span class="ts">&quot;&quot;</span>&quot;SELECT aa.action_text, aa.priority, gr.reason <span class="tk">as</span> gate_reason
+               FROM agent_actions aa
+               JOIN gate_results gr ON aa.gate_result_id = gr.result_id
+               LIMIT <span class="tn">1</span><span class="ts">&quot;&quot;</span>&quot;
+        ).fetchone()
+    <span class="tk">if</span> action_row:
+        print(f<span class="ts">&quot;\n  完整数据链示例:&quot;</span>)
+        print(f&quot;  L2 判定: {action_row[<span class="ts">&<span class="tc">#x27;gate_reason&#x27;</span>]}&quot;)</span>
+        print(f&quot;  L7 建议: [{action_row[<span class="ts">&<span class="tc">#x27;priority&#x27;</span>]}] {action_row[<span class="ts">&#x27;action_text&#x27;</span>]}&quot;)</span>
+    
+    <span class="tc"># 总结</span>
+    banner(f<span class="ts">&quot;测试总结: {len(passed)} 通过 / {len(failed)} 失败&quot;</span>)
+    <span class="tk">if</span> <span class="tk">not</span> failed:
+        print(<span class="ts">&quot;  🎯 端到端全部通过·Step <span class="tn">4</span> 完成标准达成&quot;</span>)
+        <span class="tk">return</span> <span class="tk">True</span>
+    <span class="tk">else</span>:
+        print(f<span class="ts">&quot;  ❌ 失败项: {failed}&quot;</span>)
+        <span class="tk">return</span> <span class="tk">False</span>
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># 起 Server + 跑测试</span>
+<span class="tc"># ============================================================</span>
+
+<span <span class="tk">class</span>="tk">def</span> main():
+    init_db()
+    
+    <span class="tc"># 起 Flask server(子进程)</span>
+    print(<span class="ts">&quot;\n启动 Flask API server...&quot;</span>)
+    env = os.environ.copy()
+    env[<span class="ts">&quot;INFINITY_DB&quot;</span>] = DB_PATH
+    env[<span class="ts">&quot;PORT&quot;</span>] = <span class="ts">&quot;<span class="tn">8001</span>&quot;</span>
+    
+    proc = subprocess.Popen(
+        [sys.executable, str(Path(__file__).parent / <span class="ts">&quot;app.py&quot;</span>)],
+        env=env,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    
+    <span class="tk">try</span>:
+        <span class="tk">if</span> <span class="tk">not</span> wait_for_api(max_wait=<span class="tn">10</span>):
+            print(<span class="ts">&quot;❌ API server 未启动&quot;</span>)
+            stdout, stderr = proc.communicate(timeout=<span class="tn">2</span>)
+            print(<span class="ts">&quot;stdout:&quot;</span>, stdout.decode()[:<span class="tn">500</span>])
+            print(<span class="ts">&quot;stderr:&quot;</span>, stderr.decode()[:<span class="tn">500</span>])
+            <span class="tk">return</span> <span class="tk">False</span>
+        
+        print(<span class="ts">&quot;✅ API server 已起·端口 <span class="tn">8001</span>\n&quot;</span>)
+        
+        ok = run_e2e()
+        <span class="tk">return</span> ok
+    finally:
+        proc.terminate()
+        <span class="tk">try</span>:
+            proc.wait(timeout=<span class="tn">3</span>)
+        <span class="tk">except</span> subprocess.TimeoutExpired:
+            proc.kill()
+        print(<span class="ts">&quot;\n✅ API server 已关闭&quot;</span>)
+
+
+<span class="tk">if</span> __name__ == <span class="ts">&quot;__main__&quot;</span>:
+    ok = main()
+    sys.exit(<span class="tn">0</span> <span class="tk">if</span> ok <span class="tk">else</span> <span class="tn">1</span>)
+</pre></div>
+  </div>
+</details>
+<div class="colophon">
+  <p><b>INFINITY Agent OS · Step 4 · L7 引擎 + API V0.1</b></p>
+  <p>署名 DS · 2026-05-29 · 定位:S2 × L0~L7 · Layer 1.3</p>
+  <p>严守 DS ⑧ 警告:不抢 Step 5 · 不再加 L4-L9 概念层</p>
+  <p style="margin-top:14px;font-size:10px">19/19 端到端测试 · 完整闭环 L0→L7 · 接 Step 5 资源调度准备就绪</p>
+</div></div>
+<script>
+function copyContent(id){
+  const el = document.querySelector('#'+id+' .raw-content');
+  const text = el.dataset.content;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.querySelector('#'+id+' .btn-copy');
+    const orig = btn.textContent;
+    btn.textContent = '✓ 已复制'; btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent = orig; btn.classList.remove('copied'); }, 1800);
+  });
+}
+document.querySelectorAll('.toc a').forEach(a=>{
+  a.addEventListener('click', e=>{
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if(target){ target.open = true; target.scrollIntoView({behavior:'smooth', block:'start'}); }
+  });
+});
+</script></body></html>

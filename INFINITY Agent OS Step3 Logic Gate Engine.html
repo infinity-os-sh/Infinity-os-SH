@@ -1,0 +1,2857 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INFINITY Agent OS · Step 3 · L2 规则引擎</title>
+<style>
+:root{--ink:#1a1d24;--ink2:#3d434f;--ink3:#6b7384;--ink4:#9aa0ad;
+--line:#e6e2d8;--paper:#faf8f2;--card:#fff;
+--gold:#a8801c;--gold2:#8a6a18;--burgundy:#6b2c2c;--sage:#5f7a5e;
+--code-bg:#1d2026;--code-fg:#d8dde8;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--paper);color:var(--ink);font-family:"Songti SC","STSong","Noto Serif CJK SC",Georgia,serif;
+line-height:1.75;font-size:16px;padding:0 0 80px;
+background-image:radial-gradient(circle at 1px 1px,rgba(168,128,28,0.04) 1px,transparent 0);background-size:24px 24px}
+.wrap{max-width:880px;margin:0 auto;padding:0 22px}
+.cover{padding:40px 0 24px;border-bottom:1px solid var(--ink);margin-bottom:14px}
+.cover .stamp{display:inline-block;font-family:-apple-system,sans-serif;font-size:10px;letter-spacing:0.4em;
+color:var(--sage);border:1px solid var(--sage);padding:4px 10px;margin-bottom:18px;font-weight:600}
+.cover h1{font-size:30px;line-height:1.25;font-weight:700;margin-bottom:8px}
+.cover h1 .sub{display:block;font-size:16px;font-weight:400;color:var(--ink2);margin-top:6px}
+.cover .meta{margin-top:18px;font-family:-apple-system,sans-serif;font-size:11px;color:var(--ink3);letter-spacing:0.06em;line-height:1.9}
+.cover .meta b{color:var(--ink)}
+.toc{background:var(--card);border:1px solid var(--line);padding:16px 20px;margin:18px 0 24px}
+.toc h3{font-family:-apple-system,sans-serif;font-size:11px;letter-spacing:0.25em;color:var(--gold2);text-transform:uppercase;font-weight:700;margin-bottom:10px}
+.toc a{display:flex;gap:10px;padding:7px 0;color:var(--ink);text-decoration:none;font-family:-apple-system,sans-serif;font-size:14px;border-bottom:1px dashed var(--line);align-items:center}
+.toc a:last-child{border:none}
+.toc a:hover{color:var(--gold2)}
+.toc a .tn{flex:1}
+.toc a .ts{font-size:11px;color:var(--ink4);font-family:-apple-system,sans-serif}
+.filebox{background:var(--card);border:1px solid var(--line);margin-bottom:10px;overflow:hidden}
+.filebox.star{border-left:3px solid var(--gold)}
+.filehd{padding:12px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;font-family:-apple-system,sans-serif;background:var(--card);user-select:none;list-style:none}
+.filehd::-webkit-details-marker{display:none}
+.filebox[open] .filehd{border-bottom:1px solid var(--line);background:#fdfaf2}
+.filehd .ic{font-size:18px}
+.filehd .fname{font-family:"SF Mono",monospace;font-size:13px;color:var(--ink2);font-weight:600}
+.filehd .flabel{font-size:14px;color:var(--ink);font-weight:600;flex:1;font-family:"Songti SC",serif}
+.filehd .fsize{font-size:11px;color:var(--ink4)}
+.filehd .arrow{color:var(--ink4);font-size:11px;transition:transform 0.2s}
+.filebox[open] .filehd .arrow{transform:rotate(180deg)}
+.ftools{padding:8px 18px;background:#faf6e8;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.btn-copy{background:var(--ink);color:#fff;border:none;padding:5px 12px;font-family:-apple-system,sans-serif;font-size:11px;cursor:pointer;letter-spacing:0.05em}
+.btn-copy:hover{background:var(--gold2)}
+.btn-copy.copied{background:var(--burgundy)}
+.lang-tag{font-family:-apple-system,sans-serif;font-size:10px;letter-spacing:0.1em;color:var(--ink3);margin-left:auto;font-weight:600}
+.code{background:var(--code-bg);color:var(--code-fg);padding:18px 20px;font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:12px;line-height:1.65;overflow-x:auto;white-space:pre}
+.tk{color:#d9a441} .ts{color:#7fb88f} .tn{color:#9ab8d8} .tc{color:#7c8699;font-style:italic} .td{color:#c5a9d8}
+.md-content{padding:20px 24px;font-size:15px;line-height:1.78}
+.md-content h2{font-size:22px;margin:18px 0 10px;font-family:"Songti SC",serif;color:var(--ink)}
+.md-content h3{font-size:17px;margin:18px 0 8px;color:var(--gold2);font-family:-apple-system,sans-serif;font-weight:700}
+.md-content h4{font-size:15px;margin:14px 0 6px;color:var(--ink);font-family:-apple-system,sans-serif;font-weight:700}
+.md-content p{margin-bottom:12px;color:var(--ink2)}
+.md-content ul{margin:8px 0 14px;padding-left:22px}
+.md-content li{margin-bottom:4px;color:var(--ink2)}
+.md-content blockquote{border-left:3px solid var(--gold);padding:8px 14px;margin:10px 0;color:var(--ink2);background:#fdfaf2;font-size:14px}
+.md-content code.inline{background:#f0e8d4;color:var(--gold2);padding:1px 6px;font-family:"SF Mono",monospace;font-size:13px}
+.md-content pre.codeblock{background:#1d2026;color:#d8dde8;padding:14px 18px;font-size:12px;line-height:1.7;overflow-x:auto;font-family:"SF Mono",monospace;margin:10px 0;white-space:pre}
+.md-content table.md-tbl{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;font-family:-apple-system,sans-serif}
+.md-content .md-tbl th{background:var(--ink);color:#fff;padding:8px 10px;text-align:left;font-weight:600;font-size:11px;letter-spacing:0.05em}
+.md-content .md-tbl td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--ink2);vertical-align:top}
+.md-content strong{color:var(--ink);font-weight:700}
+.notice{background:linear-gradient(180deg,#eef4ee,#fff);border:2px solid var(--sage);padding:18px 22px;margin:18px 0 24px}
+.notice .nt{font-family:-apple-system,sans-serif;font-size:11px;letter-spacing:0.2em;color:var(--sage);font-weight:700;margin-bottom:6px;text-transform:uppercase}
+.notice .nd{font-size:14px;color:var(--ink);line-height:1.65}
+.colophon{margin-top:40px;padding-top:20px;border-top:1px solid var(--ink);font-family:-apple-system,sans-serif;font-size:11px;color:var(--ink3);text-align:center;line-height:2;letter-spacing:0.06em}
+.colophon b{color:var(--ink)}
+@media (max-width:640px){.wrap{padding:0 14px}.cover h1{font-size:24px}.filehd{padding:10px 12px;gap:8px;flex-wrap:wrap}.filehd .fname{font-size:11px;width:100%}.filehd .flabel{font-size:13px}.code{font-size:11px;padding:14px;line-height:1.55}.md-content{padding:14px 16px;font-size:14px}}
+</style></head><body>
+<div class="wrap">
+<div class="cover">
+  <div class="stamp">DS ⑧ STEP 3 · L2 ENGINE</div>
+  <h1>生命周期逻辑门规则引擎<span class="sub">INFINITY Agent OS · L2 · 21 个测试全过 · 可运行</span></h1>
+  <div class="meta">
+    <b>定位</b> · DS ⑧ Step 3 工程化产出 · L2 规则评估器<br>
+    <b>层次</b> · L1 信号 → L2 门 → 输出 gate_results · 接 L3-L7<br>
+    <b>状态</b> · 21/21 测试通过 · 4 场景 demo 跑通<br>
+    <b>下一步</b> · Step 4 = Agent 行动建议 API (L7)
+  </div>
+</div>
+<div class="notice">
+  <div class="nt">这是什么</div>
+  <div class="nd">
+    把 DS ⑫《规则引擎伪代码》变成<strong>真能跑的代码</strong>。读 L1 信号 + 生命周期 + 门规则 · 输出 PASS/FAIL/UNCERTAIN。<br><br>
+    <strong>关键诚实性</strong>:三态判断·"没采集到"不当"失败"·避免错误投入。<strong>21 个测试全过</strong>·包括AND/OR/NOT/嵌套/阈值/三态/写库/边界。
+  </div>
+</div>
+<div class="toc"><h3>文件清单</h3>
+  <a href="#sec-0"><span style="font-size:16px">📖</span><span class="tn">说明</span><span class="ts">README.md · 3,392字</span></a>
+  <a href="#sec-1"><span style="font-size:16px">⚙️</span><span class="tn">规则引擎核心 ★</span><span class="ts">engine.py · 18,861字</span></a>
+  <a href="#sec-2"><span style="font-size:16px">🧪</span><span class="tn">21 个测试(全过)</span><span class="ts">test_engine.py · 14,175字</span></a>
+  <a href="#sec-3"><span style="font-size:16px">🎬</span><span class="tn">4 个场景演示</span><span class="ts">demo.py · 6,255字</span></a></div>
+<details class="filebox" id="sec-0" open>
+  <summary class="filehd">
+    <span class="ic">📖</span>
+    <span class="fname">README.md</span>
+    <span class="flabel">说明</span>
+    <span class="fsize">3,392 字符</span>
+    <span class="arrow">▼</span>
+  </summary>
+  <div class="fcontent">
+    <div class="ftools">
+      <button class="btn-copy" onclick="copyContent('sec-0')">📋 复制全文</button>
+      <span class="lang-tag">MARKDOWN</span>
+    </div>
+    <div class="raw-content" data-content="# INFINITY Agent OS · Step 3 · 生命周期逻辑门规则引擎
+
+&gt; **DS ⑧ Step 3 工程化产出** —— L2 规则引擎可运行 · 按 DS ⑫ 伪代码 1:1 实现 · 21 个测试 100% 通过。
+
+---
+
+## 它是什么
+
+把 DS ⑫《规则引擎伪代码 V0.1》变成**真能跑的 Python 代码**:
+- 读 L1 `transistor_signals` 最新信号
+- 读 `sku_lifecycle` 当前阶段
+- 读 `logic_gates` 对应门规则(JSON 表达)
+- 评估 → 输出 `gate_results`
+
+**这是 Agent 第一次&quot;开始思考&quot;** —— 从信号到判断的转换器。
+
+---
+
+## 文件清单
+
+| 文件 | 用途 | 谁用 |
+|---|---|---|
+| `engine.py` | 规则引擎核心 · `AgentEngine` 主类 + `GateEvaluator` ★ | 后端/TL |
+| `test_engine.py` | 21 个测试用例 · SQLite mock + 单元/集成 | 测试/QA |
+| `demo.py` | 4 个真实场景演示 · 完整闭环 | 团队/管理层 |
+
+---
+
+## 引擎能做什么
+
+### 1. 复合规则评估
+
+JSON 规则 → Python 评估,支持:
+
+```python
+# AND - 全部必须满足
+{&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [&quot;s01_on_shelf&quot;, &quot;s02_in_stock&quot;, &quot;s06_has_sellout&quot;]}
+
+# OR - 任意一个满足
+{&quot;rule&quot;: &quot;OR&quot;, &quot;conditions&quot;: [&quot;s03_main_shelf&quot;, &quot;s04_second_display&quot;]}
+
+# NOT - 反转
+{&quot;rule&quot;: &quot;NOT&quot;, &quot;condition&quot;: &quot;s08_stockout&quot;}
+
+# 嵌套
+{&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [
+    &quot;s01_on_shelf&quot;,
+    {&quot;rule&quot;: &quot;OR&quot;, &quot;conditions&quot;: [&quot;s03_main_shelf&quot;, &quot;s04_second_display&quot;]}
+]}
+
+# 阈值比较
+&quot;s06_units_7d&gt;=10&quot;
+&quot;s10_gross_margin&gt;0.3&quot;
+&quot;s08_stockout=0&quot;
+```
+
+### 2. 三态判断(关键诚实性)
+
+- ✅ **PASS** · 所有条件满足
+- ❌ **FAIL** · 至少一个条件明确失败
+- ⚠️ **UNCERTAIN** · 关键信号未采集 → 不假装判断
+
+&gt; 这是 Agent 诚实性的工程实现 —— **&quot;没采集到&quot;不等于&quot;是 false&quot;**,Agent 不能把未知当失败,否则会推动错误的行动决策。
+
+### 3. 完整 Agent 闭环
+
+```python
+engine = AgentEngine(db_path)
+result = engine.run(sku_id=&quot;JYX_LIGHT_500&quot;, store_id=&quot;SH_GT_CVS_001&quot;)
+
+# result.result          # &quot;pass&quot; / &quot;fail&quot; / &quot;uncertain&quot;
+# result.failed_signals  # [&quot;s06_has_sellout&quot;]
+# result.uncertain_signals
+# result.reason          # 人类可读说明
+# 已自动写入 gate_results 表
+```
+
+---
+
+## 测试结果
+
+```
+单元测试 (直测 GateEvaluator):     11/11 通过
+集成测试 (经 SQLite DB):           10/10 通过
+─────────────────────────────────────────
+总计:                              21/21 通过 · 0 失败
+```
+
+测试覆盖:
+- AND/OR/NOT 各种组合
+- 嵌套规则
+- 阈值比较(&gt;=, &lt;, =, &gt; 等)
+- PASS/FAIL/UNCERTAIN 三态
+- 阈值边界(等于、临界值)
+- 写库验证
+- 三个生命周期门(intro/growth/mature)
+
+---
+
+## Demo 演示场景
+
+`demo.py` 跑 4 个真实场景,六月鲜轻盐 500ml 在上海浦东A社区便利店:
+
+| 场景 | 生命周期 | 信号状况 | Agent 判断 |
+|---|---|---|---|
+| ① 刚上架 | intro | S01✓ S02✓ S06✗ | ❌ FAIL · 攻克 S06 动销 |
+| ② 已动销 | growth | 4 项全 ✓ | ✅ PASS · 进成熟门 |
+| ③ 突然断货 | mature | S08 断货 | ❌ FAIL · 紧急补货 |
+| ④ 数据不全 | intro | S06 未采集 | ⚠️ UNCERTAIN · 请补录 |
+
+&gt; 同一个 SKU,同一家店,生命周期不同,Agent 判断**完全不同**。这就是&quot;生命力底层&quot;的真正威力。
+
+---
+
+## 怎么跑
+
+```bash
+# 1. 跑全部测试
+python3 test_engine.py
+
+# 2. 跑演示
+python3 demo.py
+
+# 3. 单例运行
+python3 engine.py /tmp/infinity_os_test.db
+```
+
+---
+
+## 设计要点
+
+### ① 规则用 JSON 存,不写死在代码里
+- `logic_gates.gate_logic` 字段是 JSON,业务可自助配置
+- L8 学习层未来可以**自动迭代规则**(版本化,A/B test)
+
+### ② 三态判断保护 Agent 诚实
+- 字段为 `None`(未采集)→ uncertain · 不蒙
+- 字段明确 `false` → fail · 信号成立但不通过
+- 这两种 Agent 行动建议完全不同(补录 vs 行动)
+
+### ③ 短路求值
+- OR 找到一个 PASS 就停,不必跑完所有条件
+- AND 找到一个明确 FAIL 也短路(性能 + 清晰)
+
+### ④ 完全数据驱动
+- 加新门 = INSERT logic_gates · 不改代码
+- 改阈值 = UPDATE gate_logic JSON · 不改代码
+- 加新业态 = 新业态的 logic_gates 行 · 代码 0 改动
+
+---
+
+## 边界(本 Step **不做**)
+
+严守 DS ⑧ 警告:
+
+- ❌ **不做** 行动建议生成 → Step 4 L7 引擎
+- ❌ **不做** 资源调度触发 → Step 5 L8 接口
+- ❌ **不做** HTTP API · 当前是 Python 类直接调
+- ❌ **不做** 多门联动评估(导入→成长→成熟自动迁移)→ Step 4
+
+---
+
+## 下一步
+
+**Step 4 · Agent 行动建议 API** —— 把 `gate_results` 接入 L7 行动建议引擎(DS ③),按 DS ⑩ 的 5 个 API 设计:
+- `POST /signals` 接收 L0 信号
+- `POST /gates/evaluate` 触发 L2 评估
+- `POST /reasoning` 调 L6 推理
+- `POST /actions` 输出 L7 行动建议
+- `POST /resources/request` 触发 L8 资源调度
+
+---
+
+**INFINITY Agent OS · 新地基 · L2 规则引擎**
+署名 DS · 2026-05-29 · 定位:S2 × L0~L2 · Layer 1.3 · 对外不可说成 Agent
+"><div class="md-content"><h2>INFINITY Agent OS · Step 3 · 生命周期逻辑门规则引擎</h2>
+<blockquote><strong>DS ⑧ Step 3 工程化产出</strong> —— L2 规则引擎可运行 · 按 DS ⑫ 伪代码 1:1 实现 · 21 个测试 100% 通过。</blockquote>
+<p>---</p>
+<h3>它是什么</h3>
+<p>把 DS ⑫《规则引擎伪代码 V0.1》变成<strong>真能跑的 Python 代码</strong>:
+<ul><li>读 L1 <code class="inline">transistor_signals</code> 最新信号</li>
+<li>读 <code class="inline">sku_lifecycle</code> 当前阶段</li>
+<li>读 <code class="inline">logic_gates</code> 对应门规则(JSON 表达)</li>
+<li>评估 → 输出 <code class="inline">gate_results</code></li></ul></p>
+<p><strong>这是 Agent 第一次&quot;开始思考&quot;</strong> —— 从信号到判断的转换器。</p>
+<p>---</p>
+<h3>文件清单</h3>
+<table class="md-tbl">
+<tr><th>文件</th><th>用途</th><th>谁用</th></tr>
+<tr><td><code class="inline">engine.py</code></td><td>规则引擎核心 · <code class="inline">AgentEngine</code> 主类 + <code class="inline">GateEvaluator</code> ★</td><td>后端/TL</td></tr>
+<tr><td><code class="inline">test_engine.py</code></td><td>21 个测试用例 · SQLite mock + 单元/集成</td><td>测试/QA</td></tr>
+<tr><td><code class="inline">demo.py</code></td><td>4 个真实场景演示 · 完整闭环</td><td>团队/管理层</td></tr>
+</table>
+<p>---</p>
+<h3>引擎能做什么</h3>
+<h4>1. 复合规则评估</h4>
+<p>JSON 规则 → Python 评估,支持:</p>
+<pre class="codeblock"># AND - 全部必须满足
+{&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [&quot;s01_on_shelf&quot;, &quot;s02_in_stock&quot;, &quot;s06_has_sellout&quot;]}
+<h2>OR - 任意一个满足</h2>
+{&quot;rule&quot;: &quot;OR&quot;, &quot;conditions&quot;: [&quot;s03_main_shelf&quot;, &quot;s04_second_display&quot;]}
+<h2>NOT - 反转</h2>
+{&quot;rule&quot;: &quot;NOT&quot;, &quot;condition&quot;: &quot;s08_stockout&quot;}
+<h2>嵌套</h2>
+{&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [
+    &quot;s01_on_shelf&quot;,
+    {&quot;rule&quot;: &quot;OR&quot;, &quot;conditions&quot;: [&quot;s03_main_shelf&quot;, &quot;s04_second_display&quot;]}
+]}
+<h2>阈值比较</h2>
+&quot;s06_units_7d&gt;=10&quot;
+&quot;s10_gross_margin&gt;0.3&quot;
+&quot;s08_stockout=0&quot;
+</pre>
+<h4>2. 三态判断(关键诚实性)</h4>
+<ul><li>✅ <strong>PASS</strong> · 所有条件满足</li>
+<li>❌ <strong>FAIL</strong> · 至少一个条件明确失败</li>
+<li>⚠️ <strong>UNCERTAIN</strong> · 关键信号未采集 → 不假装判断</li></ul>
+<blockquote>这是 Agent 诚实性的工程实现 —— <strong>&quot;没采集到&quot;不等于&quot;是 false&quot;</strong>,Agent 不能把未知当失败,否则会推动错误的行动决策。</blockquote>
+<h4>3. 完整 Agent 闭环</h4>
+<pre class="codeblock">engine = AgentEngine(db_path)
+result = engine.run(sku_id=&quot;JYX_LIGHT_500&quot;, store_id=&quot;SH_GT_CVS_001&quot;)
+<h2>result.result          # &quot;pass&quot; / &quot;fail&quot; / &quot;uncertain&quot;</h2>
+<h2>result.failed_signals  # [&quot;s06_has_sellout&quot;]</h2>
+<h2>result.uncertain_signals</h2>
+<h2>result.reason          # 人类可读说明</h2>
+<h2>已自动写入 gate_results 表</h2>
+</pre>
+<p>---</p>
+<h3>测试结果</h3>
+<pre class="codeblock">单元测试 (直测 GateEvaluator):     11/11 通过
+集成测试 (经 SQLite DB):           10/10 通过
+─────────────────────────────────────────
+总计:                              21/21 通过 · 0 失败
+</pre>
+<p>测试覆盖:
+<ul><li>AND/OR/NOT 各种组合</li>
+<li>嵌套规则</li>
+<li>阈值比较(&gt;=, &lt;, =, &gt; 等)</li>
+<li>PASS/FAIL/UNCERTAIN 三态</li>
+<li>阈值边界(等于、临界值)</li>
+<li>写库验证</li>
+<li>三个生命周期门(intro/growth/mature)</li></ul></p>
+<p>---</p>
+<h3>Demo 演示场景</h3>
+<p><code class="inline">demo.py</code> 跑 4 个真实场景,六月鲜轻盐 500ml 在上海浦东A社区便利店:</p>
+<table class="md-tbl">
+<tr><th>场景</th><th>生命周期</th><th>信号状况</th><th>Agent 判断</th></tr>
+<tr><td>① 刚上架</td><td>intro</td><td>S01✓ S02✓ S06✗</td><td>❌ FAIL · 攻克 S06 动销</td></tr>
+<tr><td>② 已动销</td><td>growth</td><td>4 项全 ✓</td><td>✅ PASS · 进成熟门</td></tr>
+<tr><td>③ 突然断货</td><td>mature</td><td>S08 断货</td><td>❌ FAIL · 紧急补货</td></tr>
+<tr><td>④ 数据不全</td><td>intro</td><td>S06 未采集</td><td>⚠️ UNCERTAIN · 请补录</td></tr>
+</table>
+<blockquote>同一个 SKU,同一家店,生命周期不同,Agent 判断<strong>完全不同</strong>。这就是&quot;生命力底层&quot;的真正威力。</blockquote>
+<p>---</p>
+<h3>怎么跑</h3>
+<pre class="codeblock"># 1. 跑全部测试
+python3 test_engine.py
+<h2>2. 跑演示</h2>
+python3 demo.py
+<h2>3. 单例运行</h2>
+python3 engine.py /tmp/infinity_os_test.db
+</pre>
+<p>---</p>
+<h3>设计要点</h3>
+<h4>① 规则用 JSON 存,不写死在代码里</h4>
+<ul><li><code class="inline">logic_gates.gate_logic</code> 字段是 JSON,业务可自助配置</li>
+<li>L8 学习层未来可以<strong>自动迭代规则</strong>(版本化,A/B test)</li></ul>
+<h4>② 三态判断保护 Agent 诚实</h4>
+<ul><li>字段为 <code class="inline">None</code>(未采集)→ uncertain · 不蒙</li>
+<li>字段明确 <code class="inline">false</code> → fail · 信号成立但不通过</li>
+<li>这两种 Agent 行动建议完全不同(补录 vs 行动)</li></ul>
+<h4>③ 短路求值</h4>
+<ul><li>OR 找到一个 PASS 就停,不必跑完所有条件</li>
+<li>AND 找到一个明确 FAIL 也短路(性能 + 清晰)</li></ul>
+<h4>④ 完全数据驱动</h4>
+<ul><li>加新门 = INSERT logic_gates · 不改代码</li>
+<li>改阈值 = UPDATE gate_logic JSON · 不改代码</li>
+<li>加新业态 = 新业态的 logic_gates 行 · 代码 0 改动</li></ul>
+<p>---</p>
+<h3>边界(本 Step <strong>不做</strong>)</h3>
+<p>严守 DS ⑧ 警告:</p>
+<ul><li>❌ <strong>不做</strong> 行动建议生成 → Step 4 L7 引擎</li>
+<li>❌ <strong>不做</strong> 资源调度触发 → Step 5 L8 接口</li>
+<li>❌ <strong>不做</strong> HTTP API · 当前是 Python 类直接调</li>
+<li>❌ <strong>不做</strong> 多门联动评估(导入→成长→成熟自动迁移)→ Step 4</li></ul>
+<p>---</p>
+<h3>下一步</h3>
+<p><strong>Step 4 · Agent 行动建议 API</strong> —— 把 <code class="inline">gate_results</code> 接入 L7 行动建议引擎(DS ③),按 DS ⑩ 的 5 个 API 设计:
+<ul><li><code class="inline">POST /signals</code> 接收 L0 信号</li>
+<li><code class="inline">POST /gates/evaluate</code> 触发 L2 评估</li>
+<li><code class="inline">POST /reasoning</code> 调 L6 推理</li>
+<li><code class="inline">POST /actions</code> 输出 L7 行动建议</li>
+<li><code class="inline">POST /resources/request</code> 触发 L8 资源调度</li></ul></p>
+<p>---</p>
+<p><strong>INFINITY Agent OS · 新地基 · L2 规则引擎</strong>
+署名 DS · 2026-05-29 · 定位:S2 × L0~L2 · Layer 1.3 · 对外不可说成 Agent
+</p></div></div>
+  </div>
+</details>
+
+<details class="filebox star" id="sec-1" >
+  <summary class="filehd">
+    <span class="ic">⚙️</span>
+    <span class="fname">engine.py</span>
+    <span class="flabel">规则引擎核心 ★</span>
+    <span class="fsize">18,861 字符</span>
+    <span class="arrow">▼</span>
+  </summary>
+  <div class="fcontent">
+    <div class="ftools">
+      <button class="btn-copy" onclick="copyContent('sec-1')">📋 复制全文</button>
+      <span class="lang-tag">PYTHON</span>
+    </div>
+    <div class="raw-content" data-content="&quot;&quot;&quot;
+INFINITY Agent OS · Step 3 · 生命周期逻辑门规则引擎
+=========================================================
+按 DS ⑫《规则引擎伪代码 V0.1》1:1 实现
+
+核心职责(L2 层):
+  · 读 L1 transistor_signals 最新信号
+  · 读 sku_lifecycle 当前生命周期阶段
+  · 读 logic_gates 对应的门规则
+  · 评估并写入 gate_results
+  · 输出: PASS / FAIL / UNCERTAIN + 失败的具体晶体管 + 原因
+
+不做(留给 Step 4-5):
+  ✗ 行动建议生成 (L7 - Step 4)
+  ✗ 资源调度 (L8 - Step 5)
+  ✗ HTTP API (Step 4)
+
+铁律: 严守底层 SKU 生命力 · 规则评估的是&quot;SKU 活得好不好&quot;
+署名 DS · 2026-05-29
+&quot;&quot;&quot;
+
+from __future__ import annotations
+import json
+import sqlite3
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any, Optional
+
+
+# ============================================================
+# 数据模型
+# ============================================================
+
+@dataclass
+class TransistorSignals:
+    &quot;&quot;&quot;L1 经营晶体管信号·一个时刻的SKU生命体征&quot;&quot;&quot;
+    signal_id: int
+    sku_id: str
+    store_id: str
+    channel_type: str
+    captured_at: str
+    
+    # 10 个晶体管(可空·空=未采集=未知)
+    s01_on_shelf: Optional[bool] = None
+    s02_in_stock: Optional[bool] = None
+    s02_qty: Optional[int] = None
+    s03_main_shelf: Optional[bool] = None
+    s04_second_display: Optional[bool] = None
+    s05_has_price_tag: Optional[bool] = None
+    s06_has_sellout: Optional[bool] = None
+    s06_units_7d: Optional[int] = None
+    s07_repurchase: Optional[bool] = None
+    s08_stockout: Optional[bool] = None
+    s09_owner_recommends: Optional[bool] = None
+    s10_profit_target: Optional[bool] = None
+    
+    def get(self, signal_name: str) -&gt; Any:
+        &quot;&quot;&quot;按晶体管名取值·支持 &#x27;sNN&#x27; 或 &#x27;sNN_xxx&#x27; 形式&quot;&quot;&quot;
+        return getattr(self, signal_name, None)
+
+
+@dataclass
+class LogicGate:
+    &quot;&quot;&quot;L2 逻辑门定义&quot;&quot;&quot;
+    gate_id: str
+    channel_type: str
+    lifecycle_stage: str
+    gate_name: str
+    gate_logic: dict  # JSON 规则
+    pass_action: str
+    fail_action: str
+    description: str
+    version: str = &quot;v0.1&quot;
+
+
+@dataclass
+class GateResult:
+    &quot;&quot;&quot;门评估结果&quot;&quot;&quot;
+    gate_id: str
+    sku_id: str
+    store_id: str
+    channel_type: str
+    lifecycle_stage: str
+    result: str  # &#x27;pass&#x27; | &#x27;fail&#x27; | &#x27;uncertain&#x27;
+    reason: str
+    failed_signals: list[str] = field(default_factory=list)
+    uncertain_signals: list[str] = field(default_factory=list)
+    signal_id: Optional[int] = None
+    evaluated_at: str = &quot;&quot;
+
+
+# ============================================================
+# 规则评估器·核心
+# ============================================================
+
+class GateEvaluator:
+    &quot;&quot;&quot;
+    解析 logic_gates.gate_logic 这个 JSON·对 signals 做评估
+    
+    支持的 JSON 规则形式:
+      简单条件: &quot;s01_on_shelf&quot; → 取该字段·必须为 truthy
+      
+      带操作符:
+        {&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [...]}
+        {&quot;rule&quot;: &quot;OR&quot;,  &quot;conditions&quot;: [...]}
+        {&quot;rule&quot;: &quot;NOT&quot;, &quot;condition&quot;: ...}
+        
+      带阈值:
+        &quot;s06_units_7d&gt;=10&quot;  → 大于等于
+        &quot;s08_stockout_days&lt;3&quot; → 小于
+        &quot;s10_gross_margin&gt;0.3&quot; → 浮点比较
+      
+      负向条件:
+        &quot;s08_stockout=0&quot; → 等于 0/false
+    &quot;&quot;&quot;
+
+    def __init__(self):
+        pass
+
+    def evaluate(self, gate: LogicGate, signals: TransistorSignals) -&gt; GateResult:
+        &quot;&quot;&quot;评估一个门·返回 GateResult&quot;&quot;&quot;
+        logic = gate.gate_logic
+        if not isinstance(logic, dict):
+            try:
+                logic = json.loads(logic) if isinstance(logic, str) else {}
+            except Exception:
+                logic = {}
+
+        # 评估
+        outcome = self._eval_rule(logic, signals)
+
+        # 组装结果·诚实性优先:
+        # - 明确 pass = pass
+        # - 有 uncertain 且没明确 fail = uncertain
+        # - 否则 = fail
+        if outcome[&quot;passed&quot;]:
+            result_str = &quot;pass&quot;
+        elif outcome[&quot;uncertain&quot;] and not outcome[&quot;failed&quot;]:
+            result_str = &quot;uncertain&quot;
+        else:
+            result_str = &quot;fail&quot;
+
+        # 生成 reason 文本(给人看)
+        reason = self._compose_reason(outcome, signals)
+
+        return GateResult(
+            gate_id=gate.gate_id,
+            sku_id=signals.sku_id,
+            store_id=signals.store_id,
+            channel_type=signals.channel_type,
+            lifecycle_stage=gate.lifecycle_stage,
+            result=result_str,
+            reason=reason,
+            failed_signals=outcome[&quot;failed&quot;],
+            uncertain_signals=outcome[&quot;uncertain&quot;],
+            signal_id=signals.signal_id,
+            evaluated_at=datetime.utcnow().isoformat() + &quot;Z&quot;,
+        )
+
+    # --------------------------------------------------------
+    # 递归规则评估
+    # --------------------------------------------------------
+    def _eval_rule(self, rule: Any, sig: TransistorSignals) -&gt; dict:
+        &quot;&quot;&quot;
+        返回 {
+          passed: bool,
+          has_uncertain: bool,
+          failed: [signal names],
+          uncertain: [signal names],
+          checked: [signal names]  # 评估过的
+        }
+        &quot;&quot;&quot;
+        # 复合规则
+        if isinstance(rule, dict):
+            r = rule.get(&quot;rule&quot;)
+            if r == &quot;AND&quot;:
+                return self._eval_and(rule.get(&quot;conditions&quot;, []), sig)
+            if r == &quot;OR&quot;:
+                return self._eval_or(rule.get(&quot;conditions&quot;, []), sig)
+            if r == &quot;NOT&quot;:
+                return self._eval_not(rule.get(&quot;condition&quot;), sig)
+            # 字典但无 rule 字段·当成 AND
+            if &quot;conditions&quot; in rule:
+                return self._eval_and(rule[&quot;conditions&quot;], sig)
+            # 单个字段引用
+            if &quot;field&quot; in rule:
+                return self._eval_atom(rule[&quot;field&quot;], sig)
+        
+        # 字符串单条件
+        if isinstance(rule, str):
+            return self._eval_atom(rule, sig)
+        
+        # 列表当 AND
+        if isinstance(rule, list):
+            return self._eval_and(rule, sig)
+        
+        # 兜底
+        return self._empty_result(passed=False, failed=[&quot;INVALID_RULE&quot;])
+
+    def _eval_and(self, conditions: list, sig: TransistorSignals) -&gt; dict:
+        &quot;&quot;&quot;
+        AND: 全部必须 pass · 任何一个 fail/uncertain 都影响最终结果
+        
+        关键诚实性: 字段为 None(未采集) → uncertain · 不是 fail
+        因为&quot;没采集到&quot;≠&quot;是 false&quot;·Agent 不能把未知当失败
+        &quot;&quot;&quot;
+        any_fail = False
+        any_uncertain = False
+        failed = []
+        uncertain = []
+        checked = []
+        for cond in conditions:
+            sub = self._eval_rule(cond, sig)
+            checked.extend(sub[&quot;checked&quot;])
+            # 子结果有 uncertain·标记整体不确定
+            if sub[&quot;uncertain&quot;] or sub[&quot;has_uncertain&quot;]:
+                any_uncertain = True
+                uncertain.extend(sub[&quot;uncertain&quot;])
+            # 子结果明确 failed(非未知导致)·标记 fail
+            if sub[&quot;failed&quot;]:
+                any_fail = True
+                failed.extend(sub[&quot;failed&quot;])
+            # 没失败也没不确定·但也没 pass(NOT 情况) · 不应发生
+        
+        # 优先级: 任何明确fail → fail · 否则有uncertain → uncertain · 否则 pass
+        if any_fail:
+            passed = False
+            has_uncertain = False
+        elif any_uncertain:
+            passed = False  # uncertain 不算 pass
+            has_uncertain = True
+        else:
+            passed = True
+            has_uncertain = False
+        
+        return {
+            &quot;passed&quot;: passed,
+            &quot;has_uncertain&quot;: has_uncertain,
+            &quot;failed&quot;: failed,
+            &quot;uncertain&quot;: uncertain,
+            &quot;checked&quot;: checked,
+        }
+
+    def _eval_or(self, conditions: list, sig: TransistorSignals) -&gt; dict:
+        &quot;&quot;&quot;OR: 任何一个 pass 就 pass&quot;&quot;&quot;
+        any_passed = False
+        all_failed = []
+        all_uncertain = []
+        checked = []
+        for cond in conditions:
+            sub = self._eval_rule(cond, sig)
+            checked.extend(sub[&quot;checked&quot;])
+            if sub[&quot;passed&quot;]:
+                any_passed = True
+                break  # 短路求值
+            all_failed.extend(sub[&quot;failed&quot;])
+            all_uncertain.extend(sub[&quot;uncertain&quot;])
+        return {
+            &quot;passed&quot;: any_passed,
+            &quot;has_uncertain&quot;: False if any_passed else bool(all_uncertain),
+            &quot;failed&quot;: [] if any_passed else all_failed,
+            &quot;uncertain&quot;: [] if any_passed else all_uncertain,
+            &quot;checked&quot;: checked,
+        }
+
+    def _eval_not(self, condition: Any, sig: TransistorSignals) -&gt; dict:
+        &quot;&quot;&quot;NOT: 反转结果&quot;&quot;&quot;
+        if condition is None:
+            return self._empty_result(passed=False, failed=[&quot;NOT_MISSING_CONDITION&quot;])
+        sub = self._eval_rule(condition, sig)
+        return {
+            &quot;passed&quot;: not sub[&quot;passed&quot;],
+            &quot;has_uncertain&quot;: sub[&quot;has_uncertain&quot;],
+            &quot;failed&quot;: [] if not sub[&quot;passed&quot;] else [f&quot;NOT({s})&quot; for s in sub[&quot;checked&quot;]],
+            &quot;uncertain&quot;: sub[&quot;uncertain&quot;],
+            &quot;checked&quot;: sub[&quot;checked&quot;],
+        }
+
+    def _eval_atom(self, atom: str, sig: TransistorSignals) -&gt; dict:
+        &quot;&quot;&quot;
+        评估一个原子条件:
+        - &quot;s01_on_shelf&quot;       → 取字段·必须 truthy
+        - &quot;s06_units_7d&gt;=10&quot;   → 阈值比较
+        - &quot;s08_stockout=0&quot;     → 等于
+        &quot;&quot;&quot;
+        atom = atom.strip()
+        
+        # 阈值比较: 找操作符
+        for op in (&quot;&gt;=&quot;, &quot;&lt;=&quot;, &quot;!=&quot;, &quot;==&quot;, &quot;=&quot;, &quot;&gt;&quot;, &quot;&lt;&quot;):
+            if op in atom:
+                field_name, _, threshold = atom.partition(op)
+                field_name = field_name.strip()
+                threshold = threshold.strip()
+                try:
+                    threshold_val = float(threshold)
+                except ValueError:
+                    return self._empty_result(passed=False, failed=[f&quot;BAD_THRESHOLD:{atom}&quot;])
+                
+                actual = sig.get(field_name)
+                if actual is None:
+                    return {
+                        &quot;passed&quot;: False,
+                        &quot;has_uncertain&quot;: True,
+                        &quot;failed&quot;: [],
+                        &quot;uncertain&quot;: [field_name],
+                        &quot;checked&quot;: [field_name],
+                    }
+                # 布尔转 0/1
+                if isinstance(actual, bool):
+                    actual = 1 if actual else 0
+                try:
+                    actual_num = float(actual)
+                except (TypeError, ValueError):
+                    return self._empty_result(passed=False, failed=[f&quot;NOT_NUMERIC:{field_name}&quot;])
+                
+                passed = self._compare(actual_num, op, threshold_val)
+                return {
+                    &quot;passed&quot;: passed,
+                    &quot;has_uncertain&quot;: False,
+                    &quot;failed&quot;: [] if passed else [f&quot;{field_name}{op}{threshold} (actual={actual})&quot;],
+                    &quot;uncertain&quot;: [],
+                    &quot;checked&quot;: [field_name],
+                }
+        
+        # 简单字段引用: 必须 truthy
+        field_name = atom
+        value = sig.get(field_name)
+        if value is None:
+            return {
+                &quot;passed&quot;: False,
+                &quot;has_uncertain&quot;: True,
+                &quot;failed&quot;: [],
+                &quot;uncertain&quot;: [field_name],
+                &quot;checked&quot;: [field_name],
+            }
+        passed = bool(value)
+        return {
+            &quot;passed&quot;: passed,
+            &quot;has_uncertain&quot;: False,
+            &quot;failed&quot;: [] if passed else [field_name],
+            &quot;uncertain&quot;: [],
+            &quot;checked&quot;: [field_name],
+        }
+
+    @staticmethod
+    def _compare(actual: float, op: str, threshold: float) -&gt; bool:
+        if op == &quot;&gt;=&quot;: return actual &gt;= threshold
+        if op == &quot;&lt;=&quot;: return actual &lt;= threshold
+        if op == &quot;&gt;&quot;:  return actual &gt; threshold
+        if op == &quot;&lt;&quot;:  return actual &lt; threshold
+        if op in (&quot;==&quot;, &quot;=&quot;): return actual == threshold
+        if op == &quot;!=&quot;: return actual != threshold
+        return False
+
+    @staticmethod
+    def _empty_result(passed: bool, failed: list = None) -&gt; dict:
+        return {
+            &quot;passed&quot;: passed, &quot;has_uncertain&quot;: False,
+            &quot;failed&quot;: failed or [], &quot;uncertain&quot;: [], &quot;checked&quot;: [],
+        }
+
+    def _compose_reason(self, outcome: dict, sig: TransistorSignals) -&gt; str:
+        &quot;&quot;&quot;生成给人看的判定原因文本&quot;&quot;&quot;
+        if outcome[&quot;passed&quot;] and not outcome[&quot;has_uncertain&quot;]:
+            return &quot;✓ 所有条件满足 · 生命信号成立&quot;
+        if outcome[&quot;passed&quot;] and outcome[&quot;has_uncertain&quot;]:
+            unc = &quot;, &quot;.join(outcome[&quot;uncertain&quot;])
+            return f&quot;✓ 主要条件满足·但有不确定信号: {unc}&quot;
+        # fail
+        parts = []
+        if outcome[&quot;failed&quot;]:
+            parts.append(&quot;✗ 失败: &quot; + &quot;, &quot;.join(outcome[&quot;failed&quot;]))
+        if outcome[&quot;uncertain&quot;]:
+            parts.append(&quot;⚠ 不确定: &quot; + &quot;, &quot;.join(outcome[&quot;uncertain&quot;]))
+        return &quot; | &quot;.join(parts) or &quot;✗ 评估失败&quot;
+
+
+# ============================================================
+# Agent 引擎主入口·按 DS⑫ runAgentEngine
+# ============================================================
+
+class AgentEngine:
+    &quot;&quot;&quot;
+    按 DS ⑫ 主流程:
+      runAgentEngine(signal) =
+        getSku(signal.sku_id)
+        getStore(signal.store_id)
+        getChannel(signal.channel_type)
+        getLifecycle(signal.sku_id, signal.channel_type, store.city)
+        gate = getLogicGate(lifecycle.stage, signal.channel_type)
+        evaluateGate(gate, signal)
+    
+    本 Step 实现到 evaluateGate · diagnoseProblem/generateActions 留 Step 4
+    &quot;&quot;&quot;
+
+    def __init__(self, db_path: str):
+        self.db_path = db_path
+        self.evaluator = GateEvaluator()
+
+    def _conn(self):
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+    def get_latest_signal(self, sku_id: str, store_id: str) -&gt; Optional[TransistorSignals]:
+        &quot;&quot;&quot;取该 SKU × 门店最新未过期的信号&quot;&quot;&quot;
+        with self._conn() as c:
+            row = c.execute(
+                &quot;&quot;&quot;
+                SELECT * FROM transistor_signals
+                WHERE sku_id = ? AND store_id = ?
+                  AND (ttl_expires_at IS NULL OR ttl_expires_at &gt; ?)
+                ORDER BY captured_at DESC
+                LIMIT 1
+                &quot;&quot;&quot;,
+                (sku_id, store_id, datetime.utcnow().isoformat() + &quot;Z&quot;),
+            ).fetchone()
+        if not row:
+            return None
+        d = dict(row)
+        return TransistorSignals(
+            signal_id=d[&quot;signal_id&quot;],
+            sku_id=d[&quot;sku_id&quot;],
+            store_id=d[&quot;store_id&quot;],
+            channel_type=d[&quot;channel_type&quot;],
+            captured_at=d[&quot;captured_at&quot;],
+            s01_on_shelf=self._tb(d.get(&quot;s01_on_shelf&quot;)),
+            s02_in_stock=self._tb(d.get(&quot;s02_in_stock&quot;)),
+            s02_qty=d.get(&quot;s02_qty&quot;),
+            s03_main_shelf=self._tb(d.get(&quot;s03_main_shelf&quot;)),
+            s04_second_display=self._tb(d.get(&quot;s04_second_display&quot;)),
+            s05_has_price_tag=self._tb(d.get(&quot;s05_has_price_tag&quot;)),
+            s06_has_sellout=self._tb(d.get(&quot;s06_has_sellout&quot;)),
+            s06_units_7d=d.get(&quot;s06_units_7d&quot;),
+            s07_repurchase=self._tb(d.get(&quot;s07_repurchase&quot;)),
+            s08_stockout=self._tb(d.get(&quot;s08_stockout&quot;)),
+            s09_owner_recommends=self._tb(d.get(&quot;s09_owner_recommends&quot;)),
+            s10_profit_target=self._tb(d.get(&quot;s10_profit_target&quot;)),
+        )
+
+    @staticmethod
+    def _tb(v) -&gt; Optional[bool]:
+        &quot;&quot;&quot;SQLite 没真布尔·int 转 bool&quot;&quot;&quot;
+        if v is None: return None
+        return bool(v)
+
+    def get_lifecycle_stage(self, sku_id: str, store_id: str) -&gt; Optional[str]:
+        with self._conn() as c:
+            row = c.execute(
+                &quot;SELECT lifecycle_stage FROM sku_lifecycle WHERE sku_id=? AND store_id=?&quot;,
+                (sku_id, store_id),
+            ).fetchone()
+        return row[&quot;lifecycle_stage&quot;] if row else None
+
+    def get_logic_gate(self, channel_type: str, lifecycle_stage: str) -&gt; Optional[LogicGate]:
+        with self._conn() as c:
+            row = c.execute(
+                &quot;&quot;&quot;
+                SELECT * FROM logic_gates 
+                WHERE channel_type=? AND lifecycle_stage=? AND status=&#x27;active&#x27;
+                ORDER BY version DESC LIMIT 1
+                &quot;&quot;&quot;,
+                (channel_type, lifecycle_stage),
+            ).fetchone()
+        if not row:
+            return None
+        d = dict(row)
+        logic = d[&quot;gate_logic&quot;]
+        if isinstance(logic, str):
+            try: logic = json.loads(logic)
+            except Exception: logic = {}
+        return LogicGate(
+            gate_id=d[&quot;gate_id&quot;],
+            channel_type=d[&quot;channel_type&quot;],
+            lifecycle_stage=d[&quot;lifecycle_stage&quot;],
+            gate_name=d[&quot;gate_name&quot;],
+            gate_logic=logic,
+            pass_action=d.get(&quot;pass_action&quot;, &quot;&quot;),
+            fail_action=d.get(&quot;fail_action&quot;, &quot;&quot;),
+            description=d.get(&quot;description&quot;, &quot;&quot;),
+            version=d.get(&quot;version&quot;, &quot;v0.1&quot;),
+        )
+
+    def save_gate_result(self, result: GateResult) -&gt; int:
+        &quot;&quot;&quot;把结果写回 gate_results 表&quot;&quot;&quot;
+        with self._conn() as c:
+            cursor = c.execute(
+                &quot;&quot;&quot;
+                INSERT INTO gate_results 
+                  (signal_id, gate_id, sku_id, store_id, channel_type,
+                   lifecycle_stage, result, reason, failed_signals, evaluated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                &quot;&quot;&quot;,
+                (
+                    result.signal_id, result.gate_id, result.sku_id, result.store_id,
+                    result.channel_type, result.lifecycle_stage, result.result, result.reason,
+                    json.dumps(result.failed_signals, ensure_ascii=False),
+                    result.evaluated_at,
+                ),
+            )
+            c.commit()
+            return cursor.lastrowid
+
+    def run(self, sku_id: str, store_id: str) -&gt; Optional[GateResult]:
+        &quot;&quot;&quot;
+        DS⑫ runAgentEngine 主入口
+        输入: sku_id + store_id
+        输出: 门评估结果(并已写库)
+        &quot;&quot;&quot;
+        # 1. 取最新信号
+        signal = self.get_latest_signal(sku_id, store_id)
+        if not signal:
+            return None
+        
+        # 2. 取生命周期
+        stage = self.get_lifecycle_stage(sku_id, store_id)
+        if not stage:
+            return None
+        
+        # 3. 取对应门
+        gate = self.get_logic_gate(signal.channel_type, stage)
+        if not gate:
+            return None
+        
+        # 4. 评估
+        result = self.evaluator.evaluate(gate, signal)
+        
+        # 5. 写库
+        result_id = self.save_gate_result(result)
+        
+        return result
+
+
+# ============================================================
+# 演示运行
+# ============================================================
+
+if __name__ == &quot;__main__&quot;:
+    import sys
+    from pathlib import Path
+    
+    db = sys.argv[1] if len(sys.argv) &gt; 1 else &quot;/tmp/infinity_os_test.db&quot;
+    
+    if not Path(db).exists():
+        print(f&quot;⚠ 数据库不存在: {db}&quot;)
+        print(&quot;⚠ 请先跑 test_engine.py 初始化测试数据&quot;)
+        sys.exit(1)
+    
+    engine = AgentEngine(db)
+    print(&quot;=&quot; * 70)
+    print(&quot;INFINITY Agent OS · L2 规则引擎 · 单例运行&quot;)
+    print(&quot;=&quot; * 70)
+    
+    result = engine.run(&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;)
+    if result is None:
+        print(&quot;❌ 找不到信号或生命周期或门&quot;)
+        sys.exit(1)
+    
+    print(f&quot;门 ID:        {result.gate_id}&quot;)
+    print(f&quot;SKU:          {result.sku_id} @ {result.store_id}&quot;)
+    print(f&quot;生命周期:     {result.lifecycle_stage}&quot;)
+    print(f&quot;判定:         {result.result.upper()}&quot;)
+    print(f&quot;原因:         {result.reason}&quot;)
+    if result.failed_signals:
+        print(f&quot;失败晶体管:   {result.failed_signals}&quot;)
+    if result.uncertain_signals:
+        print(f&quot;不确定:       {result.uncertain_signals}&quot;)
+    print(f&quot;评估时间:     {result.evaluated_at}&quot;)
+    print(&quot;=&quot; * 70)
+"><pre class="code lang-py"><span class="ts">&quot;&quot;</span>&quot;
+INFINITY Agent OS · Step <span class="tn">3</span> · 生命周期逻辑门规则引擎
+=========================================================
+按 DS ⑫《规则引擎伪代码 V0.<span class="tn">1</span>》<span class="tn">1</span>:<span class="tn">1</span> 实现
+
+核心职责(L2 层):
+  · 读 L1 transistor_signals 最新信号
+  · 读 sku_lifecycle 当前生命周期阶段
+  · 读 logic_gates 对应的门规则
+  · 评估并写入 gate_results
+  · 输出: PASS / FAIL / UNCERTAIN + 失败的具体晶体管 + 原因
+
+不做(留给 Step <span class="tn">4</span>-<span class="tn">5</span>):
+  ✗ 行动建议生成 (L7 - Step <span class="tn">4</span>)
+  ✗ 资源调度 (L8 - Step <span class="tn">5</span>)
+  ✗ HTTP API (Step <span class="tn">4</span>)
+
+铁律: 严守底层 SKU 生命力 · 规则评估的是<span class="ts">&quot;SKU 活得好不好&quot;</span>
+署名 DS · <span class="tn">2026</span>-<span class="tn">05</span>-<span class="tn">29</span>
+<span class="ts">&quot;&quot;</span>&quot;
+
+<span <span class="tk">class</span>="tk">from</span> __future__ <span <span class="tk">class</span>="tk">import</span> annotations
+<span <span class="tk">class</span>="tk">import</span> json
+<span <span class="tk">class</span>="tk">import</span> sqlite3
+<span <span class="tk">class</span>="tk">from</span> dataclasses <span <span class="tk">class</span>="tk">import</span> dataclass, field
+<span <span class="tk">class</span>="tk">from</span> datetime <span <span class="tk">class</span>="tk">import</span> datetime
+<span <span class="tk">class</span>="tk">from</span> typing <span <span class="tk">class</span>="tk">import</span> Any, Optional
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># 数据模型</span>
+<span class="tc"># ============================================================</span>
+
+<span class="td">@dataclass</span>
+<span class="tk">class</span> TransistorSignals:
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;L1 经营晶体管信号·一个时刻的SKU生命体征&quot;</span><span class="ts">&quot;&quot;</span>
+    signal_id: int
+    sku_id: str
+    store_id: str
+    channel_type: str
+    captured_at: str
+    
+    <span class="tc"># <span class="tn">10</span> 个晶体管(可空·空=未采集=未知)</span>
+    s01_on_shelf: Optional[bool] = <span class="tk">None</span>
+    s02_in_stock: Optional[bool] = <span class="tk">None</span>
+    s02_qty: Optional[int] = <span class="tk">None</span>
+    s03_main_shelf: Optional[bool] = <span class="tk">None</span>
+    s04_second_display: Optional[bool] = <span class="tk">None</span>
+    s05_has_price_tag: Optional[bool] = <span class="tk">None</span>
+    s06_has_sellout: Optional[bool] = <span class="tk">None</span>
+    s06_units_7d: Optional[int] = <span class="tk">None</span>
+    s07_repurchase: Optional[bool] = <span class="tk">None</span>
+    s08_stockout: Optional[bool] = <span class="tk">None</span>
+    s09_owner_recommends: Optional[bool] = <span class="tk">None</span>
+    s10_profit_target: Optional[bool] = <span class="tk">None</span>
+    
+    <span <span class="tk">class</span>="tk">def</span> get(<span class="tk">self</span>, signal_name: str) -&gt; Any:
+        <span class="ts">&quot;&quot;</span>&quot;按晶体管名取值·支持 <span class="ts">&<span class="tc">#x27;sNN&#x27;</span> 或 <span class="ts">&#x27;sNN_xxx&#x27;</span> 形式<span class="ts">&quot;&quot;</span>&quot;</span>
+        <span class="tk">return</span> getattr(<span class="tk">self</span>, signal_name, <span class="tk">None</span>)
+
+
+<span class="td">@dataclass</span>
+<span class="tk">class</span> LogicGate:
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;L2 逻辑门定义&quot;</span><span class="ts">&quot;&quot;</span>
+    gate_id: str
+    channel_type: str
+    lifecycle_stage: str
+    gate_name: str
+    gate_logic: dict  <span class="tc"># JSON 规则</span>
+    pass_action: str
+    fail_action: str
+    description: str
+    version: str = <span class="ts">&quot;v0.<span class="tn">1</span>&quot;</span>
+
+
+<span class="td">@dataclass</span>
+<span class="tk">class</span> GateResult:
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;门评估结果&quot;</span><span class="ts">&quot;&quot;</span>
+    gate_id: str
+    sku_id: str
+    store_id: str
+    channel_type: str
+    lifecycle_stage: str
+    result: str  <span class="tc"># <span class="ts">&#x27;<span class="tk">pass</span>&#x27;</span> | <span class="ts">&#x27;fail&#x27;</span> | <span class="ts">&#x27;uncertain&#x27;</span></span>
+    reason: str
+    failed_signals: list[str] = field(default_factory=list)
+    uncertain_signals: list[str] = field(default_factory=list)
+    signal_id: Optional[int] = <span class="tk">None</span>
+    evaluated_at: str = <span class="ts">&quot;&quot;</span>
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># 规则评估器·核心</span>
+<span class="tc"># ============================================================</span>
+
+<span class="tk">class</span> GateEvaluator:
+    <span class="ts">&quot;&quot;</span>&quot;
+    解析 logic_gates.gate_logic 这个 JSON·对 signals 做评估
+    
+    支持的 JSON 规则形式:
+      简单条件: <span class="ts">&quot;s01_on_shelf&quot;</span> → 取该字段·必须为 truthy
+      
+      带操作符:
+        {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;AND&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [...]}
+        {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;OR&quot;</span>,  <span class="ts">&quot;conditions&quot;</span>: [...]}
+        {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;NOT&quot;</span>, <span class="ts">&quot;condition&quot;</span>: ...}
+        
+      带阈值:
+        &quot;s06_units_7d&gt;=<span class="tn">10</span>&quot;  → 大于等于
+        &quot;s08_stockout_days&lt;<span class="tn">3</span>&quot; → 小于
+        &quot;s10_gross_margin&gt;<span class="tn">0.3</span>&quot; → 浮点比较
+      
+      负向条件:
+        <span class="ts">&quot;s08_stockout=<span class="tn">0</span>&quot;</span> → 等于 <span class="tn">0</span>/false
+    <span class="ts">&quot;&quot;</span>&quot;
+
+    <span <span class="tk">class</span>="tk">def</span> __init__(<span class="tk">self</span>):
+        <span class="tk">pass</span>
+
+    <span <span class="tk">class</span>="tk">def</span> evaluate(<span class="tk">self</span>, gate: LogicGate, signals: TransistorSignals) -&gt; GateResult:
+        <span class="ts">&quot;&quot;</span><span class="ts">&quot;评估一个门·返回 GateResult&quot;</span><span class="ts">&quot;&quot;</span>
+        logic = gate.gate_logic
+        <span class="tk">if</span> <span class="tk">not</span> isinstance(logic, dict):
+            <span class="tk">try</span>:
+                logic = json.loads(logic) <span class="tk">if</span> isinstance(logic, str) <span class="tk">else</span> {}
+            <span class="tk">except</span> Exception:
+                logic = {}
+
+        <span class="tc"># 评估</span>
+        outcome = <span class="tk">self</span>._eval_rule(logic, signals)
+
+        <span class="tc"># 组装结果·诚实性优先:</span>
+        <span class="tc"># - 明确 <span class="tk">pass</span> = <span class="tk">pass</span></span>
+        <span class="tc"># - 有 uncertain 且没明确 fail = uncertain</span>
+        <span class="tc"># - 否则 = fail</span>
+        <span class="tk">if</span> outcome[<span class="ts">&quot;passed&quot;</span>]:
+            result_str = <span class="ts">&quot;<span class="tk">pass</span>&quot;</span>
+        <span class="tk">elif</span> outcome[<span class="ts">&quot;uncertain&quot;</span>] <span class="tk">and</span> <span class="tk">not</span> outcome[<span class="ts">&quot;failed&quot;</span>]:
+            result_str = <span class="ts">&quot;uncertain&quot;</span>
+        <span class="tk">else</span>:
+            result_str = <span class="ts">&quot;fail&quot;</span>
+
+        <span class="tc"># 生成 reason 文本(给人看)</span>
+        reason = <span class="tk">self</span>._compose_reason(outcome, signals)
+
+        <span class="tk">return</span> GateResult(
+            gate_id=gate.gate_id,
+            sku_id=signals.sku_id,
+            store_id=signals.store_id,
+            channel_type=signals.channel_type,
+            lifecycle_stage=gate.lifecycle_stage,
+            result=result_str,
+            reason=reason,
+            failed_signals=outcome[<span class="ts">&quot;failed&quot;</span>],
+            uncertain_signals=outcome[<span class="ts">&quot;uncertain&quot;</span>],
+            signal_id=signals.signal_id,
+            evaluated_at=datetime.utcnow().isoformat() + <span class="ts">&quot;Z&quot;</span>,
+        )
+
+    <span class="tc"># --------------------------------------------------------</span>
+    <span class="tc"># 递归规则评估</span>
+    <span class="tc"># --------------------------------------------------------</span>
+    <span <span class="tk">class</span>="tk">def</span> _eval_rule(<span class="tk">self</span>, rule: Any, sig: TransistorSignals) -&gt; dict:
+        <span class="ts">&quot;&quot;</span>&quot;
+        返回 {
+          passed: bool,
+          has_uncertain: bool,
+          failed: [signal names],
+          uncertain: [signal names],
+          checked: [signal names]  <span class="tc"># 评估过的</span>
+        }
+        <span class="ts">&quot;&quot;</span>&quot;
+        <span class="tc"># 复合规则</span>
+        <span class="tk">if</span> isinstance(rule, dict):
+            r = rule.get(<span class="ts">&quot;rule&quot;</span>)
+            <span class="tk">if</span> r == <span class="ts">&quot;AND&quot;</span>:
+                <span class="tk">return</span> <span class="tk">self</span>._eval_and(rule.get(<span class="ts">&quot;conditions&quot;</span>, []), sig)
+            <span class="tk">if</span> r == <span class="ts">&quot;OR&quot;</span>:
+                <span class="tk">return</span> <span class="tk">self</span>._eval_or(rule.get(<span class="ts">&quot;conditions&quot;</span>, []), sig)
+            <span class="tk">if</span> r == <span class="ts">&quot;NOT&quot;</span>:
+                <span class="tk">return</span> <span class="tk">self</span>._eval_not(rule.get(<span class="ts">&quot;condition&quot;</span>), sig)
+            <span class="tc"># 字典但无 rule 字段·当成 AND</span>
+            <span class="tk">if</span> <span class="ts">&quot;conditions&quot;</span> <span class="tk">in</span> rule:
+                <span class="tk">return</span> <span class="tk">self</span>._eval_and(rule[<span class="ts">&quot;conditions&quot;</span>], sig)
+            <span class="tc"># 单个字段引用</span>
+            <span class="tk">if</span> <span class="ts">&quot;field&quot;</span> <span class="tk">in</span> rule:
+                <span class="tk">return</span> <span class="tk">self</span>._eval_atom(rule[<span class="ts">&quot;field&quot;</span>], sig)
+        
+        <span class="tc"># 字符串单条件</span>
+        <span class="tk">if</span> isinstance(rule, str):
+            <span class="tk">return</span> <span class="tk">self</span>._eval_atom(rule, sig)
+        
+        <span class="tc"># 列表当 AND</span>
+        <span class="tk">if</span> isinstance(rule, list):
+            <span class="tk">return</span> <span class="tk">self</span>._eval_and(rule, sig)
+        
+        <span class="tc"># 兜底</span>
+        <span class="tk">return</span> <span class="tk">self</span>._empty_result(passed=<span class="tk">False</span>, failed=[<span class="ts">&quot;INVALID_RULE&quot;</span>])
+
+    <span <span class="tk">class</span>="tk">def</span> _eval_and(<span class="tk">self</span>, conditions: list, sig: TransistorSignals) -&gt; dict:
+        <span class="ts">&quot;&quot;</span>&quot;
+        AND: 全部必须 <span class="tk">pass</span> · 任何一个 fail/uncertain 都影响最终结果
+        
+        关键诚实性: 字段为 <span class="tk">None</span>(未采集) → uncertain · 不是 fail
+        因为<span class="ts">&quot;没采集到&quot;</span>≠<span class="ts">&quot;是 false&quot;</span>·Agent 不能把未知当失败
+        <span class="ts">&quot;&quot;</span>&quot;
+        any_fail = <span class="tk">False</span>
+        any_uncertain = <span class="tk">False</span>
+        failed = []
+        uncertain = []
+        checked = []
+        <span class="tk">for</span> cond <span class="tk">in</span> conditions:
+            sub = <span class="tk">self</span>._eval_rule(cond, sig)
+            checked.extend(sub[<span class="ts">&quot;checked&quot;</span>])
+            <span class="tc"># 子结果有 uncertain·标记整体不确定</span>
+            <span class="tk">if</span> sub[<span class="ts">&quot;uncertain&quot;</span>] <span class="tk">or</span> sub[<span class="ts">&quot;has_uncertain&quot;</span>]:
+                any_uncertain = <span class="tk">True</span>
+                uncertain.extend(sub[<span class="ts">&quot;uncertain&quot;</span>])
+            <span class="tc"># 子结果明确 failed(非未知导致)·标记 fail</span>
+            <span class="tk">if</span> sub[<span class="ts">&quot;failed&quot;</span>]:
+                any_fail = <span class="tk">True</span>
+                failed.extend(sub[<span class="ts">&quot;failed&quot;</span>])
+            <span class="tc"># 没失败也没不确定·但也没 <span class="tk">pass</span>(NOT 情况) · 不应发生</span>
+        
+        <span class="tc"># 优先级: 任何明确fail → fail · 否则有uncertain → uncertain · 否则 <span class="tk">pass</span></span>
+        <span class="tk">if</span> any_fail:
+            passed = <span class="tk">False</span>
+            has_uncertain = <span class="tk">False</span>
+        <span class="tk">elif</span> any_uncertain:
+            passed = <span class="tk">False</span>  <span class="tc"># uncertain 不算 <span class="tk">pass</span></span>
+            has_uncertain = <span class="tk">True</span>
+        <span class="tk">else</span>:
+            passed = <span class="tk">True</span>
+            has_uncertain = <span class="tk">False</span>
+        
+        <span class="tk">return</span> {
+            <span class="ts">&quot;passed&quot;</span>: passed,
+            <span class="ts">&quot;has_uncertain&quot;</span>: has_uncertain,
+            <span class="ts">&quot;failed&quot;</span>: failed,
+            <span class="ts">&quot;uncertain&quot;</span>: uncertain,
+            <span class="ts">&quot;checked&quot;</span>: checked,
+        }
+
+    <span <span class="tk">class</span>="tk">def</span> _eval_or(<span class="tk">self</span>, conditions: list, sig: TransistorSignals) -&gt; dict:
+        <span class="ts">&quot;&quot;</span><span class="ts">&quot;OR: 任何一个 <span class="tk">pass</span> 就 <span class="tk">pass</span>&quot;</span><span class="ts">&quot;&quot;</span>
+        any_passed = <span class="tk">False</span>
+        all_failed = []
+        all_uncertain = []
+        checked = []
+        <span class="tk">for</span> cond <span class="tk">in</span> conditions:
+            sub = <span class="tk">self</span>._eval_rule(cond, sig)
+            checked.extend(sub[<span class="ts">&quot;checked&quot;</span>])
+            <span class="tk">if</span> sub[<span class="ts">&quot;passed&quot;</span>]:
+                any_passed = <span class="tk">True</span>
+                <span class="tk">break</span>  <span class="tc"># 短路求值</span>
+            all_failed.extend(sub[<span class="ts">&quot;failed&quot;</span>])
+            all_uncertain.extend(sub[<span class="ts">&quot;uncertain&quot;</span>])
+        <span class="tk">return</span> {
+            <span class="ts">&quot;passed&quot;</span>: any_passed,
+            <span class="ts">&quot;has_uncertain&quot;</span>: <span class="tk">False</span> <span class="tk">if</span> any_passed <span class="tk">else</span> bool(all_uncertain),
+            <span class="ts">&quot;failed&quot;</span>: [] <span class="tk">if</span> any_passed <span class="tk">else</span> all_failed,
+            <span class="ts">&quot;uncertain&quot;</span>: [] <span class="tk">if</span> any_passed <span class="tk">else</span> all_uncertain,
+            <span class="ts">&quot;checked&quot;</span>: checked,
+        }
+
+    <span <span class="tk">class</span>="tk">def</span> _eval_not(<span class="tk">self</span>, condition: Any, sig: TransistorSignals) -&gt; dict:
+        <span class="ts">&quot;&quot;</span><span class="ts">&quot;NOT: 反转结果&quot;</span><span class="ts">&quot;&quot;</span>
+        <span class="tk">if</span> condition <span class="tk">is</span> <span class="tk">None</span>:
+            <span class="tk">return</span> <span class="tk">self</span>._empty_result(passed=<span class="tk">False</span>, failed=[<span class="ts">&quot;NOT_MISSING_CONDITION&quot;</span>])
+        sub = <span class="tk">self</span>._eval_rule(condition, sig)
+        <span class="tk">return</span> {
+            <span class="ts">&quot;passed&quot;</span>: <span class="tk">not</span> sub[<span class="ts">&quot;passed&quot;</span>],
+            <span class="ts">&quot;has_uncertain&quot;</span>: sub[<span class="ts">&quot;has_uncertain&quot;</span>],
+            <span class="ts">&quot;failed&quot;</span>: [] <span class="tk">if</span> <span class="tk">not</span> sub[<span class="ts">&quot;passed&quot;</span>] <span class="tk">else</span> [f<span class="ts">&quot;NOT({s})&quot;</span> <span class="tk">for</span> s <span class="tk">in</span> sub[<span class="ts">&quot;checked&quot;</span>]],
+            <span class="ts">&quot;uncertain&quot;</span>: sub[<span class="ts">&quot;uncertain&quot;</span>],
+            <span class="ts">&quot;checked&quot;</span>: sub[<span class="ts">&quot;checked&quot;</span>],
+        }
+
+    <span <span class="tk">class</span>="tk">def</span> _eval_atom(<span class="tk">self</span>, atom: str, sig: TransistorSignals) -&gt; dict:
+        <span class="ts">&quot;&quot;</span>&quot;
+        评估一个原子条件:
+        - <span class="ts">&quot;s01_on_shelf&quot;</span>       → 取字段·必须 truthy
+        - &quot;s06_units_7d&gt;=<span class="tn">10</span>&quot;   → 阈值比较
+        - <span class="ts">&quot;s08_stockout=<span class="tn">0</span>&quot;</span>     → 等于
+        <span class="ts">&quot;&quot;</span>&quot;
+        atom = atom.strip()
+        
+        <span class="tc"># 阈值比较: 找操作符</span>
+        <span class="tk">for</span> op <span class="tk">in</span> (&quot;&gt;=<span class="ts">&quot;, &quot;</span>&lt;=<span class="ts">&quot;, &quot;</span>!=<span class="ts">&quot;, &quot;</span>==<span class="ts">&quot;, &quot;</span>=<span class="ts">&quot;, &quot;</span>&gt;<span class="ts">&quot;, &quot;</span>&lt;&quot;):
+            <span class="tk">if</span> op <span class="tk">in</span> atom:
+                field_name, _, threshold = atom.partition(op)
+                field_name = field_name.strip()
+                threshold = threshold.strip()
+                <span class="tk">try</span>:
+                    threshold_val = float(threshold)
+                <span class="tk">except</span> ValueError:
+                    <span class="tk">return</span> <span class="tk">self</span>._empty_result(passed=<span class="tk">False</span>, failed=[f<span class="ts">&quot;BAD_THRESHOLD:{atom}&quot;</span>])
+                
+                actual = sig.get(field_name)
+                <span class="tk">if</span> actual <span class="tk">is</span> <span class="tk">None</span>:
+                    <span class="tk">return</span> {
+                        <span class="ts">&quot;passed&quot;</span>: <span class="tk">False</span>,
+                        <span class="ts">&quot;has_uncertain&quot;</span>: <span class="tk">True</span>,
+                        <span class="ts">&quot;failed&quot;</span>: [],
+                        <span class="ts">&quot;uncertain&quot;</span>: [field_name],
+                        <span class="ts">&quot;checked&quot;</span>: [field_name],
+                    }
+                <span class="tc"># 布尔转 <span class="tn">0</span>/<span class="tn">1</span></span>
+                <span class="tk">if</span> isinstance(actual, bool):
+                    actual = <span class="tn">1</span> <span class="tk">if</span> actual <span class="tk">else</span> <span class="tn">0</span>
+                <span class="tk">try</span>:
+                    actual_num = float(actual)
+                <span class="tk">except</span> (TypeError, ValueError):
+                    <span class="tk">return</span> <span class="tk">self</span>._empty_result(passed=<span class="tk">False</span>, failed=[f<span class="ts">&quot;NOT_NUMERIC:{field_name}&quot;</span>])
+                
+                passed = <span class="tk">self</span>._compare(actual_num, op, threshold_val)
+                <span class="tk">return</span> {
+                    <span class="ts">&quot;passed&quot;</span>: passed,
+                    <span class="ts">&quot;has_uncertain&quot;</span>: <span class="tk">False</span>,
+                    <span class="ts">&quot;failed&quot;</span>: [] <span class="tk">if</span> passed <span class="tk">else</span> [f<span class="ts">&quot;{field_name}{op}{threshold} (actual={actual})&quot;</span>],
+                    <span class="ts">&quot;uncertain&quot;</span>: [],
+                    <span class="ts">&quot;checked&quot;</span>: [field_name],
+                }
+        
+        <span class="tc"># 简单字段引用: 必须 truthy</span>
+        field_name = atom
+        value = sig.get(field_name)
+        <span class="tk">if</span> value <span class="tk">is</span> <span class="tk">None</span>:
+            <span class="tk">return</span> {
+                <span class="ts">&quot;passed&quot;</span>: <span class="tk">False</span>,
+                <span class="ts">&quot;has_uncertain&quot;</span>: <span class="tk">True</span>,
+                <span class="ts">&quot;failed&quot;</span>: [],
+                <span class="ts">&quot;uncertain&quot;</span>: [field_name],
+                <span class="ts">&quot;checked&quot;</span>: [field_name],
+            }
+        passed = bool(value)
+        <span class="tk">return</span> {
+            <span class="ts">&quot;passed&quot;</span>: passed,
+            <span class="ts">&quot;has_uncertain&quot;</span>: <span class="tk">False</span>,
+            <span class="ts">&quot;failed&quot;</span>: [] <span class="tk">if</span> passed <span class="tk">else</span> [field_name],
+            <span class="ts">&quot;uncertain&quot;</span>: [],
+            <span class="ts">&quot;checked&quot;</span>: [field_name],
+        }
+
+    <span class="td">@staticmethod</span>
+    <span <span class="tk">class</span>="tk">def</span> _compare(actual: float, op: str, threshold: float) -&gt; bool:
+        <span class="tk">if</span> op == &quot;&gt;=&quot;: <span class="tk">return</span> actual &gt;= threshold
+        <span class="tk">if</span> op == &quot;&lt;=&quot;: <span class="tk">return</span> actual &lt;= threshold
+        <span class="tk">if</span> op == &quot;&gt;&quot;:  <span class="tk">return</span> actual &gt; threshold
+        <span class="tk">if</span> op == &quot;&lt;&quot;:  <span class="tk">return</span> actual &lt; threshold
+        <span class="tk">if</span> op <span class="tk">in</span> (<span class="ts">&quot;==&quot;</span>, <span class="ts">&quot;=&quot;</span>): <span class="tk">return</span> actual == threshold
+        <span class="tk">if</span> op == <span class="ts">&quot;!=&quot;</span>: <span class="tk">return</span> actual != threshold
+        <span class="tk">return</span> <span class="tk">False</span>
+
+    <span class="td">@staticmethod</span>
+    <span <span class="tk">class</span>="tk">def</span> _empty_result(passed: bool, failed: list = <span class="tk">None</span>) -&gt; dict:
+        <span class="tk">return</span> {
+            <span class="ts">&quot;passed&quot;</span>: passed, <span class="ts">&quot;has_uncertain&quot;</span>: <span class="tk">False</span>,
+            <span class="ts">&quot;failed&quot;</span>: failed <span class="tk">or</span> [], <span class="ts">&quot;uncertain&quot;</span>: [], <span class="ts">&quot;checked&quot;</span>: [],
+        }
+
+    <span <span class="tk">class</span>="tk">def</span> _compose_reason(<span class="tk">self</span>, outcome: dict, sig: TransistorSignals) -&gt; str:
+        <span class="ts">&quot;&quot;</span><span class="ts">&quot;生成给人看的判定原因文本&quot;</span><span class="ts">&quot;&quot;</span>
+        <span class="tk">if</span> outcome[<span class="ts">&quot;passed&quot;</span>] <span class="tk">and</span> <span class="tk">not</span> outcome[<span class="ts">&quot;has_uncertain&quot;</span>]:
+            <span class="tk">return</span> <span class="ts">&quot;✓ 所有条件满足 · 生命信号成立&quot;</span>
+        <span class="tk">if</span> outcome[<span class="ts">&quot;passed&quot;</span>] <span class="tk">and</span> outcome[<span class="ts">&quot;has_uncertain&quot;</span>]:
+            unc = <span class="ts">&quot;, &quot;</span>.join(outcome[<span class="ts">&quot;uncertain&quot;</span>])
+            <span class="tk">return</span> f<span class="ts">&quot;✓ 主要条件满足·但有不确定信号: {unc}&quot;</span>
+        <span class="tc"># fail</span>
+        parts = []
+        <span class="tk">if</span> outcome[<span class="ts">&quot;failed&quot;</span>]:
+            parts.append(<span class="ts">&quot;✗ 失败: &quot;</span> + <span class="ts">&quot;, &quot;</span>.join(outcome[<span class="ts">&quot;failed&quot;</span>]))
+        <span class="tk">if</span> outcome[<span class="ts">&quot;uncertain&quot;</span>]:
+            parts.append(<span class="ts">&quot;⚠ 不确定: &quot;</span> + <span class="ts">&quot;, &quot;</span>.join(outcome[<span class="ts">&quot;uncertain&quot;</span>]))
+        <span class="tk">return</span> <span class="ts">&quot; | &quot;</span>.join(parts) <span class="tk">or</span> <span class="ts">&quot;✗ 评估失败&quot;</span>
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># Agent 引擎主入口·按 DS⑫ runAgentEngine</span>
+<span class="tc"># ============================================================</span>
+
+<span class="tk">class</span> AgentEngine:
+    <span class="ts">&quot;&quot;</span>&quot;
+    按 DS ⑫ 主流程:
+      runAgentEngine(signal) =
+        getSku(signal.sku_id)
+        getStore(signal.store_id)
+        getChannel(signal.channel_type)
+        getLifecycle(signal.sku_id, signal.channel_type, store.city)
+        gate = getLogicGate(lifecycle.stage, signal.channel_type)
+        evaluateGate(gate, signal)
+    
+    本 Step 实现到 evaluateGate · diagnoseProblem/generateActions 留 Step <span class="tn">4</span>
+    <span class="ts">&quot;&quot;</span>&quot;
+
+    <span <span class="tk">class</span>="tk">def</span> __init__(<span class="tk">self</span>, db_path: str):
+        <span class="tk">self</span>.db_path = db_path
+        <span class="tk">self</span>.evaluator = GateEvaluator()
+
+    <span <span class="tk">class</span>="tk">def</span> _conn(<span class="tk">self</span>):
+        conn = sqlite3.connect(<span class="tk">self</span>.db_path)
+        conn.row_factory = sqlite3.Row
+        <span class="tk">return</span> conn
+
+    <span <span class="tk">class</span>="tk">def</span> get_latest_signal(<span class="tk">self</span>, sku_id: str, store_id: str) -&gt; Optional[TransistorSignals]:
+        <span class="ts">&quot;&quot;</span><span class="ts">&quot;取该 SKU × 门店最新未过期的信号&quot;</span><span class="ts">&quot;&quot;</span>
+        <span class="tk">with</span> <span class="tk">self</span>._conn() <span class="tk">as</span> c:
+            row = c.execute(
+                <span class="ts">&quot;&quot;</span>&quot;
+                SELECT * FROM transistor_signals
+                WHERE sku_id = ? AND store_id = ?
+                  AND (ttl_expires_at IS NULL OR ttl_expires_at &gt; ?)
+                ORDER BY captured_at DESC
+                LIMIT <span class="tn">1</span>
+                <span class="ts">&quot;&quot;</span>&quot;,
+                (sku_id, store_id, datetime.utcnow().isoformat() + <span class="ts">&quot;Z&quot;</span>),
+            ).fetchone()
+        <span class="tk">if</span> <span class="tk">not</span> row:
+            <span class="tk">return</span> <span class="tk">None</span>
+        d = dict(row)
+        <span class="tk">return</span> TransistorSignals(
+            signal_id=d[<span class="ts">&quot;signal_id&quot;</span>],
+            sku_id=d[<span class="ts">&quot;sku_id&quot;</span>],
+            store_id=d[<span class="ts">&quot;store_id&quot;</span>],
+            channel_type=d[<span class="ts">&quot;channel_type&quot;</span>],
+            captured_at=d[<span class="ts">&quot;captured_at&quot;</span>],
+            s01_on_shelf=<span class="tk">self</span>._tb(d.get(<span class="ts">&quot;s01_on_shelf&quot;</span>)),
+            s02_in_stock=<span class="tk">self</span>._tb(d.get(<span class="ts">&quot;s02_in_stock&quot;</span>)),
+            s02_qty=d.get(<span class="ts">&quot;s02_qty&quot;</span>),
+            s03_main_shelf=<span class="tk">self</span>._tb(d.get(<span class="ts">&quot;s03_main_shelf&quot;</span>)),
+            s04_second_display=<span class="tk">self</span>._tb(d.get(<span class="ts">&quot;s04_second_display&quot;</span>)),
+            s05_has_price_tag=<span class="tk">self</span>._tb(d.get(<span class="ts">&quot;s05_has_price_tag&quot;</span>)),
+            s06_has_sellout=<span class="tk">self</span>._tb(d.get(<span class="ts">&quot;s06_has_sellout&quot;</span>)),
+            s06_units_7d=d.get(<span class="ts">&quot;s06_units_7d&quot;</span>),
+            s07_repurchase=<span class="tk">self</span>._tb(d.get(<span class="ts">&quot;s07_repurchase&quot;</span>)),
+            s08_stockout=<span class="tk">self</span>._tb(d.get(<span class="ts">&quot;s08_stockout&quot;</span>)),
+            s09_owner_recommends=<span class="tk">self</span>._tb(d.get(<span class="ts">&quot;s09_owner_recommends&quot;</span>)),
+            s10_profit_target=<span class="tk">self</span>._tb(d.get(<span class="ts">&quot;s10_profit_target&quot;</span>)),
+        )
+
+    <span class="td">@staticmethod</span>
+    <span <span class="tk">class</span>="tk">def</span> _tb(v) -&gt; Optional[bool]:
+        <span class="ts">&quot;&quot;</span><span class="ts">&quot;SQLite 没真布尔·int 转 bool&quot;</span><span class="ts">&quot;&quot;</span>
+        <span class="tk">if</span> v <span class="tk">is</span> <span class="tk">None</span>: <span class="tk">return</span> <span class="tk">None</span>
+        <span class="tk">return</span> bool(v)
+
+    <span <span class="tk">class</span>="tk">def</span> get_lifecycle_stage(<span class="tk">self</span>, sku_id: str, store_id: str) -&gt; Optional[str]:
+        <span class="tk">with</span> <span class="tk">self</span>._conn() <span class="tk">as</span> c:
+            row = c.execute(
+                <span class="ts">&quot;SELECT lifecycle_stage FROM sku_lifecycle WHERE sku_id=? AND store_id=?&quot;</span>,
+                (sku_id, store_id),
+            ).fetchone()
+        <span class="tk">return</span> row[<span class="ts">&quot;lifecycle_stage&quot;</span>] <span class="tk">if</span> row <span class="tk">else</span> <span class="tk">None</span>
+
+    <span <span class="tk">class</span>="tk">def</span> get_logic_gate(<span class="tk">self</span>, channel_type: str, lifecycle_stage: str) -&gt; Optional[LogicGate]:
+        <span class="tk">with</span> <span class="tk">self</span>._conn() <span class="tk">as</span> c:
+            row = c.execute(
+                <span class="ts">&quot;&quot;</span>&quot;
+                SELECT * FROM logic_gates 
+                WHERE channel_type=? AND lifecycle_stage=? AND status=<span class="ts">&<span class="tc">#x27;active&#x27;</span></span>
+                ORDER BY version DESC LIMIT <span class="tn">1</span>
+                <span class="ts">&quot;&quot;</span>&quot;,
+                (channel_type, lifecycle_stage),
+            ).fetchone()
+        <span class="tk">if</span> <span class="tk">not</span> row:
+            <span class="tk">return</span> <span class="tk">None</span>
+        d = dict(row)
+        logic = d[<span class="ts">&quot;gate_logic&quot;</span>]
+        <span class="tk">if</span> isinstance(logic, str):
+            <span class="tk">try</span>: logic = json.loads(logic)
+            <span class="tk">except</span> Exception: logic = {}
+        <span class="tk">return</span> LogicGate(
+            gate_id=d[<span class="ts">&quot;gate_id&quot;</span>],
+            channel_type=d[<span class="ts">&quot;channel_type&quot;</span>],
+            lifecycle_stage=d[<span class="ts">&quot;lifecycle_stage&quot;</span>],
+            gate_name=d[<span class="ts">&quot;gate_name&quot;</span>],
+            gate_logic=logic,
+            pass_action=d.get(<span class="ts">&quot;pass_action&quot;</span>, <span class="ts">&quot;&quot;</span>),
+            fail_action=d.get(<span class="ts">&quot;fail_action&quot;</span>, <span class="ts">&quot;&quot;</span>),
+            description=d.get(<span class="ts">&quot;description&quot;</span>, <span class="ts">&quot;&quot;</span>),
+            version=d.get(<span class="ts">&quot;version&quot;</span>, <span class="ts">&quot;v0.<span class="tn">1</span>&quot;</span>),
+        )
+
+    <span <span class="tk">class</span>="tk">def</span> save_gate_result(<span class="tk">self</span>, result: GateResult) -&gt; int:
+        <span class="ts">&quot;&quot;</span><span class="ts">&quot;把结果写回 gate_results 表&quot;</span><span class="ts">&quot;&quot;</span>
+        <span class="tk">with</span> <span class="tk">self</span>._conn() <span class="tk">as</span> c:
+            cursor = c.execute(
+                <span class="ts">&quot;&quot;</span>&quot;
+                INSERT INTO gate_results 
+                  (signal_id, gate_id, sku_id, store_id, channel_type,
+                   lifecycle_stage, result, reason, failed_signals, evaluated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                <span class="ts">&quot;&quot;</span>&quot;,
+                (
+                    result.signal_id, result.gate_id, result.sku_id, result.store_id,
+                    result.channel_type, result.lifecycle_stage, result.result, result.reason,
+                    json.dumps(result.failed_signals, ensure_ascii=<span class="tk">False</span>),
+                    result.evaluated_at,
+                ),
+            )
+            c.commit()
+            <span class="tk">return</span> cursor.lastrowid
+
+    <span <span class="tk">class</span>="tk">def</span> run(<span class="tk">self</span>, sku_id: str, store_id: str) -&gt; Optional[GateResult]:
+        <span class="ts">&quot;&quot;</span>&quot;
+        DS⑫ runAgentEngine 主入口
+        输入: sku_id + store_id
+        输出: 门评估结果(并已写库)
+        <span class="ts">&quot;&quot;</span>&quot;
+        <span class="tc"># <span class="tn">1</span>. 取最新信号</span>
+        signal = <span class="tk">self</span>.get_latest_signal(sku_id, store_id)
+        <span class="tk">if</span> <span class="tk">not</span> signal:
+            <span class="tk">return</span> <span class="tk">None</span>
+        
+        <span class="tc"># <span class="tn">2</span>. 取生命周期</span>
+        stage = <span class="tk">self</span>.get_lifecycle_stage(sku_id, store_id)
+        <span class="tk">if</span> <span class="tk">not</span> stage:
+            <span class="tk">return</span> <span class="tk">None</span>
+        
+        <span class="tc"># <span class="tn">3</span>. 取对应门</span>
+        gate = <span class="tk">self</span>.get_logic_gate(signal.channel_type, stage)
+        <span class="tk">if</span> <span class="tk">not</span> gate:
+            <span class="tk">return</span> <span class="tk">None</span>
+        
+        <span class="tc"># <span class="tn">4</span>. 评估</span>
+        result = <span class="tk">self</span>.evaluator.evaluate(gate, signal)
+        
+        <span class="tc"># <span class="tn">5</span>. 写库</span>
+        result_id = <span class="tk">self</span>.save_gate_result(result)
+        
+        <span class="tk">return</span> result
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># 演示运行</span>
+<span class="tc"># ============================================================</span>
+
+<span class="tk">if</span> __name__ == <span class="ts">&quot;__main__&quot;</span>:
+    <span <span class="tk">class</span>="tk">import</span> sys
+    <span <span class="tk">class</span>="tk">from</span> pathlib <span <span class="tk">class</span>="tk">import</span> Path
+    
+    db = sys.argv[<span class="tn">1</span>] <span class="tk">if</span> len(sys.argv) &gt; <span class="tn">1</span> <span class="tk">else</span> <span class="ts">&quot;/tmp/infinity_os_test.db&quot;</span>
+    
+    <span class="tk">if</span> <span class="tk">not</span> Path(db).exists():
+        print(f<span class="ts">&quot;⚠ 数据库不存在: {db}&quot;</span>)
+        print(<span class="ts">&quot;⚠ 请先跑 test_engine.py 初始化测试数据&quot;</span>)
+        sys.exit(<span class="tn">1</span>)
+    
+    engine = AgentEngine(db)
+    print(<span class="ts">&quot;=&quot;</span> * <span class="tn">70</span>)
+    print(<span class="ts">&quot;INFINITY Agent OS · L2 规则引擎 · 单例运行&quot;</span>)
+    print(<span class="ts">&quot;=&quot;</span> * <span class="tn">70</span>)
+    
+    result = engine.run(<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>)
+    <span class="tk">if</span> result <span class="tk">is</span> <span class="tk">None</span>:
+        print(<span class="ts">&quot;❌ 找不到信号或生命周期或门&quot;</span>)
+        sys.exit(<span class="tn">1</span>)
+    
+    print(f<span class="ts">&quot;门 ID:        {result.gate_id}&quot;</span>)
+    print(f<span class="ts">&quot;SKU:          {result.sku_id} @ {result.store_id}&quot;</span>)
+    print(f<span class="ts">&quot;生命周期:     {result.lifecycle_stage}&quot;</span>)
+    print(f<span class="ts">&quot;判定:         {result.result.upper()}&quot;</span>)
+    print(f<span class="ts">&quot;原因:         {result.reason}&quot;</span>)
+    <span class="tk">if</span> result.failed_signals:
+        print(f<span class="ts">&quot;失败晶体管:   {result.failed_signals}&quot;</span>)
+    <span class="tk">if</span> result.uncertain_signals:
+        print(f<span class="ts">&quot;不确定:       {result.uncertain_signals}&quot;</span>)
+    print(f<span class="ts">&quot;评估时间:     {result.evaluated_at}&quot;</span>)
+    print(<span class="ts">&quot;=&quot;</span> * <span class="tn">70</span>)
+</pre></div>
+  </div>
+</details>
+
+<details class="filebox" id="sec-2" >
+  <summary class="filehd">
+    <span class="ic">🧪</span>
+    <span class="fname">test_engine.py</span>
+    <span class="flabel">21 个测试(全过)</span>
+    <span class="fsize">14,175 字符</span>
+    <span class="arrow">▼</span>
+  </summary>
+  <div class="fcontent">
+    <div class="ftools">
+      <button class="btn-copy" onclick="copyContent('sec-2')">📋 复制全文</button>
+      <span class="lang-tag">PYTHON</span>
+    </div>
+    <div class="raw-content" data-content="&quot;&quot;&quot;
+INFINITY Agent OS · Step 3 · 规则引擎测试套件
+============================================
+用 SQLite mock Step 2 的 MySQL schema·完整跑通规则引擎
+
+测试场景:
+  T1. 导入门 PASS (S01 ✓ S02 ✓ S06 ✓)
+  T2. 导入门 FAIL (S01 ✓ S02 ✓ S06 ✗) - 主场景
+  T3. 导入门 UNCERTAIN (S06 = None)
+  T4. 成长门 PASS (复杂AND条件全满足)
+  T5. 成长门 FAIL (S09 老板不推荐)
+  T6. 成熟门 PASS (S06 ✓ S10 ✓ S08=0)
+  T7. 成熟门 FAIL (S08 断货)
+  T8. 阈值条件 (s06_units_7d &gt;= 10)
+  T9. 等于条件 (s08_stockout = 0)
+  T10. 多源冲突仍能评估
+&quot;&quot;&quot;
+
+import os
+import json
+import sqlite3
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from engine import AgentEngine, GateEvaluator, LogicGate, TransistorSignals
+
+
+# ============================================================
+# 1. 建 SQLite 测试库(简化版 Step 2 schema)
+# ============================================================
+
+DB_PATH = &quot;/tmp/infinity_os_test.db&quot;
+SCHEMA = &quot;&quot;&quot;
+DROP TABLE IF EXISTS transistor_signals;
+DROP TABLE IF EXISTS sku_lifecycle;
+DROP TABLE IF EXISTS logic_gates;
+DROP TABLE IF EXISTS gate_results;
+
+CREATE TABLE transistor_signals (
+  signal_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sku_id TEXT NOT NULL,
+  store_id TEXT NOT NULL,
+  channel_type TEXT NOT NULL,
+  captured_at TEXT NOT NULL,
+  ttl_expires_at TEXT,
+  source TEXT,
+  s01_on_shelf INTEGER,
+  s02_in_stock INTEGER,
+  s02_qty INTEGER,
+  s03_main_shelf INTEGER,
+  s04_second_display INTEGER,
+  s04_display_type TEXT,
+  s05_has_price_tag INTEGER,
+  s05_shelf_price REAL,
+  s05_promo_price REAL,
+  s06_has_sellout INTEGER,
+  s06_units_7d INTEGER,
+  s06_txn_count_7d INTEGER,
+  s07_repurchase INTEGER,
+  s07_unique_buyers INTEGER,
+  s08_stockout INTEGER,
+  s08_stockout_days INTEGER,
+  s08_root_cause TEXT,
+  s09_owner_recommends INTEGER,
+  s09_recommend_level TEXT,
+  s10_profit_target INTEGER,
+  s10_gross_margin REAL
+);
+
+CREATE TABLE sku_lifecycle (
+  sku_id TEXT NOT NULL,
+  store_id TEXT NOT NULL,
+  channel_type TEXT NOT NULL,
+  lifecycle_stage TEXT NOT NULL,
+  PRIMARY KEY (sku_id, store_id)
+);
+
+CREATE TABLE logic_gates (
+  gate_id TEXT PRIMARY KEY,
+  channel_type TEXT NOT NULL,
+  lifecycle_stage TEXT NOT NULL,
+  gate_name TEXT NOT NULL,
+  gate_logic TEXT NOT NULL,
+  pass_action TEXT,
+  fail_action TEXT,
+  description TEXT,
+  version TEXT DEFAULT &#x27;v0.1&#x27;,
+  status TEXT DEFAULT &#x27;active&#x27;
+);
+
+CREATE TABLE gate_results (
+  result_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  signal_id INTEGER,
+  gate_id TEXT,
+  sku_id TEXT,
+  store_id TEXT,
+  channel_type TEXT,
+  lifecycle_stage TEXT,
+  result TEXT,
+  reason TEXT,
+  failed_signals TEXT,
+  evaluated_at TEXT
+);
+&quot;&quot;&quot;
+
+def init_db():
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+    conn = sqlite3.connect(DB_PATH)
+    conn.executescript(SCHEMA)
+    
+    # 插入3个门规则
+    future = (datetime.utcnow() + timedelta(hours=24)).isoformat() + &quot;Z&quot;
+    
+    gates = [
+        # 导入门: S01 AND S02 AND S06
+        (&quot;GATE_GT_CVS_INTRO&quot;, &quot;GT_CVS&quot;, &quot;intro&quot;, &quot;导入期生命信号门&quot;,
+         json.dumps({&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [&quot;s01_on_shelf&quot;, &quot;s02_in_stock&quot;, &quot;s06_has_sellout&quot;]}),
+         &quot;进入成长门&quot;, &quot;L7行动建议介入&quot;, &quot;三个最基础生命信号必须同时满足&quot;),
+        # 成长门: AND(动销&gt;=10 AND 复购 AND 主货架 AND 老板推荐)
+        (&quot;GATE_GT_CVS_GROWTH&quot;, &quot;GT_CVS&quot;, &quot;growth&quot;, &quot;成长期放大门&quot;,
+         json.dumps({&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [
+             &quot;s06_units_7d&gt;=10&quot;, &quot;s07_repurchase&quot;, &quot;s03_main_shelf&quot;, &quot;s09_owner_recommends&quot;
+         ]}),
+         &quot;进入成熟门加大投入&quot;, &quot;维持导入期&quot;, &quot;动销+复购+主货架+老板推荐 = 可放大&quot;),
+        # 成熟门: AND(动销 AND 利润达标 AND 不断货)
+        (&quot;GATE_GT_CVS_MATURE&quot;, &quot;GT_CVS&quot;, &quot;mature&quot;, &quot;成熟期稳盘门&quot;,
+         json.dumps({&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [
+             &quot;s06_has_sellout&quot;, &quot;s10_profit_target&quot;, &quot;s08_stockout=0&quot;
+         ]}),
+         &quot;稳盘 考虑焕新&quot;, &quot;降级回成长门&quot;, &quot;稳定动销+利润+不断货 = 核心SKU&quot;),
+    ]
+    
+    for g in gates:
+        conn.execute(
+            &quot;&quot;&quot;INSERT INTO logic_gates 
+               (gate_id, channel_type, lifecycle_stage, gate_name, gate_logic, 
+                pass_action, fail_action, description) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)&quot;&quot;&quot;,
+            g,
+        )
+    conn.commit()
+    conn.close()
+
+
+# ============================================================
+# 2. 测试辅助
+# ============================================================
+
+def make_signal(stage: str, **signals) -&gt; int:
+    &quot;&quot;&quot;造一条信号·返回 signal_id&quot;&quot;&quot;
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    # 默认值
+    defaults = {
+        &quot;sku_id&quot;: &quot;JYX_LIGHT_500&quot;,
+        &quot;store_id&quot;: &quot;SH_GT_CVS_001&quot;,
+        &quot;channel_type&quot;: &quot;GT_CVS&quot;,
+        &quot;captured_at&quot;: datetime.utcnow().isoformat() + &quot;Z&quot;,
+        &quot;ttl_expires_at&quot;: (datetime.utcnow() + timedelta(hours=24)).isoformat() + &quot;Z&quot;,
+    }
+    defaults.update(signals)
+    
+    cols = list(defaults.keys())
+    placeholders = &quot;,&quot;.join(&quot;?&quot; * len(cols))
+    values = [defaults[k] for k in cols]
+    
+    cursor.execute(
+        f&quot;INSERT INTO transistor_signals ({&#x27;,&#x27;.join(cols)}) VALUES ({placeholders})&quot;,
+        values
+    )
+    signal_id = cursor.lastrowid
+    
+    # 设/更新生命周期
+    conn.execute(
+        &quot;INSERT OR REPLACE INTO sku_lifecycle (sku_id, store_id, channel_type, lifecycle_stage) VALUES (?,?,?,?)&quot;,
+        (defaults[&quot;sku_id&quot;], defaults[&quot;store_id&quot;], defaults[&quot;channel_type&quot;], stage)
+    )
+    conn.commit()
+    conn.close()
+    return signal_id
+
+
+def clean_signals():
+    &quot;&quot;&quot;清掉历史信号·只留最新一条测试&quot;&quot;&quot;
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute(&quot;DELETE FROM transistor_signals&quot;)
+    conn.execute(&quot;DELETE FROM gate_results&quot;)
+    conn.commit()
+    conn.close()
+
+
+# ============================================================
+# 3. 测试用例
+# ============================================================
+
+class TestRunner:
+    def __init__(self):
+        self.passed = 0
+        self.failed = 0
+        self.engine = AgentEngine(DB_PATH)
+    
+    def assert_result(self, name: str, actual_result: str, expected_result: str, 
+                      actual_failed: list = None, expected_failed: list = None):
+        ok_r = (actual_result == expected_result)
+        ok_f = True
+        if expected_failed is not None:
+            ok_f = all(f in (actual_failed or []) or 
+                       any(f in af for af in (actual_failed or []))
+                       for f in expected_failed)
+        if ok_r and ok_f:
+            self.passed += 1
+            print(f&quot;  ✅ {name}&quot;)
+        else:
+            self.failed += 1
+            print(f&quot;  ❌ {name}&quot;)
+            print(f&quot;     期望 result={expected_result}, 实际={actual_result}&quot;)
+            if expected_failed is not None:
+                print(f&quot;     期望 failed包含={expected_failed}, 实际={actual_failed}&quot;)
+    
+    def run_all(self):
+        print(&quot;=&quot; * 70)
+        print(&quot;INFINITY Agent OS · L2 规则引擎 · 测试套件&quot;)
+        print(&quot;=&quot; * 70)
+        
+        # T1
+        print(&quot;\nT1. 导入门 PASS (S01✓ S02✓ S06✓)&quot;)
+        clean_signals()
+        make_signal(&quot;intro&quot;, s01_on_shelf=1, s02_in_stock=1, s06_has_sellout=1)
+        r = self.engine.run(&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;)
+        self.assert_result(&quot;导入门通过&quot;, r.result, &quot;pass&quot;)
+        
+        # T2 主场景
+        print(&quot;\nT2. 导入门 FAIL (S01✓ S02✓ S06✗) - 六月鲜主场景&quot;)
+        clean_signals()
+        make_signal(&quot;intro&quot;, s01_on_shelf=1, s02_in_stock=1, s06_has_sellout=0)
+        r = self.engine.run(&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;)
+        self.assert_result(&quot;导入门失败&quot;, r.result, &quot;fail&quot;, r.failed_signals, [&quot;s06&quot;])
+        print(f&quot;     reason: {r.reason}&quot;)
+        
+        # T3 UNCERTAIN
+        print(&quot;\nT3. 导入门 UNCERTAIN (S06 = None未采集)&quot;)
+        clean_signals()
+        # S06故意空·未采集
+        make_signal(&quot;intro&quot;, s01_on_shelf=1, s02_in_stock=1)
+        r = self.engine.run(&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;)
+        self.assert_result(&quot;不确定信号&quot;, r.result, &quot;uncertain&quot;)
+        print(f&quot;     uncertain: {r.uncertain_signals}&quot;)
+        
+        # T4 成长门 PASS
+        print(&quot;\nT4. 成长门 PASS (动销&gt;=10 + 复购 + 主货架 + 老板推荐)&quot;)
+        clean_signals()
+        make_signal(&quot;growth&quot;, 
+                    s06_has_sellout=1, s06_units_7d=15,
+                    s07_repurchase=1, s03_main_shelf=1, s09_owner_recommends=1)
+        r = self.engine.run(&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;)
+        self.assert_result(&quot;成长门通过&quot;, r.result, &quot;pass&quot;)
+        
+        # T5 成长门 FAIL
+        print(&quot;\nT5. 成长门 FAIL (老板不推荐 S09)&quot;)
+        clean_signals()
+        make_signal(&quot;growth&quot;,
+                    s06_has_sellout=1, s06_units_7d=15,
+                    s07_repurchase=1, s03_main_shelf=1, s09_owner_recommends=0)
+        r = self.engine.run(&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;)
+        self.assert_result(&quot;成长门失败·S09&quot;, r.result, &quot;fail&quot;, r.failed_signals, [&quot;s09&quot;])
+        
+        # T6 成熟门 PASS
+        print(&quot;\nT6. 成熟门 PASS (动销+利润+不断货)&quot;)
+        clean_signals()
+        make_signal(&quot;mature&quot;, s06_has_sellout=1, s10_profit_target=1, s08_stockout=0)
+        r = self.engine.run(&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;)
+        self.assert_result(&quot;成熟门通过&quot;, r.result, &quot;pass&quot;)
+        
+        # T7 成熟门 FAIL · 断货
+        print(&quot;\nT7. 成熟门 FAIL (S08 断货)&quot;)
+        clean_signals()
+        make_signal(&quot;mature&quot;, s06_has_sellout=1, s10_profit_target=1, s08_stockout=1)
+        r = self.engine.run(&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;)
+        # s08_stockout=0 表达式期望该字段为0·实际为1·应fail
+        self.assert_result(&quot;成熟门失败·断货&quot;, r.result, &quot;fail&quot;)
+        
+        # T8 阈值边界
+        print(&quot;\nT8. 阈值边界·units_7d=10 应 PASS (&gt;=10)&quot;)
+        clean_signals()
+        make_signal(&quot;growth&quot;,
+                    s06_units_7d=10, s07_repurchase=1, 
+                    s03_main_shelf=1, s09_owner_recommends=1)
+        r = self.engine.run(&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;)
+        self.assert_result(&quot;阈值=10 通过&quot;, r.result, &quot;pass&quot;)
+        
+        print(&quot;\nT9. 阈值边界·units_7d=9 应 FAIL&quot;)
+        clean_signals()
+        make_signal(&quot;growth&quot;,
+                    s06_units_7d=9, s07_repurchase=1,
+                    s03_main_shelf=1, s09_owner_recommends=1)
+        r = self.engine.run(&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;)
+        self.assert_result(&quot;阈值=9 失败&quot;, r.result, &quot;fail&quot;)
+        
+        # T10 写库验证
+        print(&quot;\nT10. 结果真的写进 gate_results 表了吗?&quot;)
+        conn = sqlite3.connect(DB_PATH)
+        cnt = conn.execute(&quot;SELECT COUNT(*) FROM gate_results&quot;).fetchone()[0]
+        conn.close()
+        if cnt &gt; 0:
+            self.passed += 1
+            print(f&quot;  ✅ gate_results 表有 {cnt} 条评估记录&quot;)
+        else:
+            self.failed += 1
+            print(f&quot;  ❌ gate_results 表为空&quot;)
+        
+        # 总结
+        print(&quot;\n&quot; + &quot;=&quot; * 70)
+        total = self.passed + self.failed
+        print(f&quot;测试总结: {self.passed}/{total} 通过 · {self.failed} 失败&quot;)
+        print(f&quot;判定: {&#x27;✅ 规则引擎可用&#x27; if self.failed == 0 else &#x27;❌ 有问题待修&#x27;}&quot;)
+        print(&quot;=&quot; * 70)
+        return self.failed == 0
+
+
+# ============================================================
+# 4. 复合规则单元测试(直接测evaluator·不经DB)
+# ============================================================
+
+def test_evaluator_unit():
+    &quot;&quot;&quot;单元测试·直接测 GateEvaluator 各种规则形态&quot;&quot;&quot;
+    print(&quot;\n&quot; + &quot;=&quot; * 70)
+    print(&quot;规则评估器·单元测试 (不经DB·直测逻辑)&quot;)
+    print(&quot;=&quot; * 70)
+    
+    ev = GateEvaluator()
+    passed, failed = 0, 0
+    
+    def case(name, gate_logic, signals_dict, expected_result):
+        nonlocal passed, failed
+        sig = TransistorSignals(
+            signal_id=1, sku_id=&quot;X&quot;, store_id=&quot;X&quot;, channel_type=&quot;GT_CVS&quot;,
+            captured_at=&quot;2026-05-29T00:00:00Z&quot;,
+        )
+        for k, v in signals_dict.items():
+            setattr(sig, k, v)
+        gate = LogicGate(
+            gate_id=&quot;TEST&quot;, channel_type=&quot;GT_CVS&quot;, lifecycle_stage=&quot;intro&quot;,
+            gate_name=&quot;test&quot;, gate_logic=gate_logic,
+            pass_action=&quot;&quot;, fail_action=&quot;&quot;, description=&quot;&quot;,
+        )
+        result = ev.evaluate(gate, sig)
+        if result.result == expected_result:
+            passed += 1
+            print(f&quot;  ✅ {name}&quot;)
+        else:
+            failed += 1
+            print(f&quot;  ❌ {name}: 期望 {expected_result}, 实际 {result.result} · {result.reason}&quot;)
+    
+    # 简单 AND
+    case(&quot;AND全通过&quot;, 
+         {&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [&quot;s01_on_shelf&quot;, &quot;s02_in_stock&quot;]},
+         {&quot;s01_on_shelf&quot;: True, &quot;s02_in_stock&quot;: True}, &quot;pass&quot;)
+    case(&quot;AND一个fail&quot;,
+         {&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [&quot;s01_on_shelf&quot;, &quot;s02_in_stock&quot;]},
+         {&quot;s01_on_shelf&quot;: True, &quot;s02_in_stock&quot;: False}, &quot;fail&quot;)
+    
+    # OR
+    case(&quot;OR一个通过&quot;,
+         {&quot;rule&quot;: &quot;OR&quot;, &quot;conditions&quot;: [&quot;s01_on_shelf&quot;, &quot;s02_in_stock&quot;]},
+         {&quot;s01_on_shelf&quot;: False, &quot;s02_in_stock&quot;: True}, &quot;pass&quot;)
+    case(&quot;OR全失败&quot;,
+         {&quot;rule&quot;: &quot;OR&quot;, &quot;conditions&quot;: [&quot;s01_on_shelf&quot;, &quot;s02_in_stock&quot;]},
+         {&quot;s01_on_shelf&quot;: False, &quot;s02_in_stock&quot;: False}, &quot;fail&quot;)
+    
+    # NOT
+    case(&quot;NOT 真→fail&quot;,
+         {&quot;rule&quot;: &quot;NOT&quot;, &quot;condition&quot;: &quot;s08_stockout&quot;},
+         {&quot;s08_stockout&quot;: True}, &quot;fail&quot;)
+    case(&quot;NOT 假→pass&quot;,
+         {&quot;rule&quot;: &quot;NOT&quot;, &quot;condition&quot;: &quot;s08_stockout&quot;},
+         {&quot;s08_stockout&quot;: False}, &quot;pass&quot;)
+    
+    # 嵌套
+    case(&quot;AND嵌套OR&quot;,
+         {&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [
+             &quot;s01_on_shelf&quot;,
+             {&quot;rule&quot;: &quot;OR&quot;, &quot;conditions&quot;: [&quot;s03_main_shelf&quot;, &quot;s04_second_display&quot;]}
+         ]},
+         {&quot;s01_on_shelf&quot;: True, &quot;s03_main_shelf&quot;: False, &quot;s04_second_display&quot;: True}, 
+         &quot;pass&quot;)
+    
+    # 阈值
+    case(&quot;阈值 &gt;=&quot;,
+         {&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [&quot;s06_units_7d&gt;=10&quot;]},
+         {&quot;s06_units_7d&quot;: 15}, &quot;pass&quot;)
+    case(&quot;阈值 &lt; 失败&quot;,
+         {&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [&quot;s06_units_7d&gt;=10&quot;]},
+         {&quot;s06_units_7d&quot;: 5}, &quot;fail&quot;)
+    case(&quot;阈值 浮点&quot;,
+         {&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [&quot;s10_gross_margin&gt;0.3&quot;]},
+         {&quot;s10_gross_margin&quot;: 0.38}, &quot;pass&quot;)
+    
+    # 不确定
+    case(&quot;uncertain·字段None&quot;,
+         {&quot;rule&quot;: &quot;AND&quot;, &quot;conditions&quot;: [&quot;s01_on_shelf&quot;, &quot;s06_has_sellout&quot;]},
+         {&quot;s01_on_shelf&quot;: True}, &quot;uncertain&quot;)
+    
+    total = passed + failed
+    print(f&quot;\n  单元测试: {passed}/{total} 通过 · {failed} 失败&quot;)
+    return failed == 0
+
+
+# ============================================================
+# main
+# ============================================================
+
+if __name__ == &quot;__main__&quot;:
+    init_db()
+    
+    # 单元测试(直测evaluator)
+    unit_ok = test_evaluator_unit()
+    
+    # 集成测试(经DB)
+    runner = TestRunner()
+    integ_ok = runner.run_all()
+    
+    print(&quot;\n&quot; + &quot;█&quot; * 70)
+    if unit_ok and integ_ok:
+        print(&quot;█  ✅ 全部测试通过·L2 规则引擎可投入使用&quot;)
+    else:
+        print(&quot;█  ❌ 有测试失败·需修复&quot;)
+    print(&quot;█&quot; * 70)
+    sys.exit(0 if (unit_ok and integ_ok) else 1)
+"><pre class="code lang-py"><span class="ts">&quot;&quot;</span>&quot;
+INFINITY Agent OS · Step <span class="tn">3</span> · 规则引擎测试套件
+============================================
+用 SQLite mock Step <span class="tn">2</span> 的 MySQL schema·完整跑通规则引擎
+
+测试场景:
+  T1. 导入门 PASS (S01 ✓ S02 ✓ S06 ✓)
+  T2. 导入门 FAIL (S01 ✓ S02 ✓ S06 ✗) - 主场景
+  T3. 导入门 UNCERTAIN (S06 = <span class="tk">None</span>)
+  T4. 成长门 PASS (复杂AND条件全满足)
+  T5. 成长门 FAIL (S09 老板不推荐)
+  T6. 成熟门 PASS (S06 ✓ S10 ✓ S08=<span class="tn">0</span>)
+  T7. 成熟门 FAIL (S08 断货)
+  T8. 阈值条件 (s06_units_7d &gt;= <span class="tn">10</span>)
+  T9. 等于条件 (s08_stockout = <span class="tn">0</span>)
+  T10. 多源冲突仍能评估
+<span class="ts">&quot;&quot;</span>&quot;
+
+<span <span class="tk">class</span>="tk">import</span> os
+<span <span class="tk">class</span>="tk">import</span> json
+<span <span class="tk">class</span>="tk">import</span> sqlite3
+<span <span class="tk">class</span>="tk">import</span> sys
+<span <span class="tk">class</span>="tk">from</span> datetime <span <span class="tk">class</span>="tk">import</span> datetime, timedelta
+<span <span class="tk">class</span>="tk">from</span> pathlib <span <span class="tk">class</span>="tk">import</span> Path
+
+sys.path.insert(<span class="tn">0</span>, str(Path(__file__).parent))
+<span <span class="tk">class</span>="tk">from</span> engine <span <span class="tk">class</span>="tk">import</span> AgentEngine, GateEvaluator, LogicGate, TransistorSignals
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># <span class="tn">1</span>. 建 SQLite 测试库(简化版 Step <span class="tn">2</span> schema)</span>
+<span class="tc"># ============================================================</span>
+
+DB_PATH = <span class="ts">&quot;/tmp/infinity_os_test.db&quot;</span>
+SCHEMA = <span class="ts">&quot;&quot;</span>&quot;
+DROP TABLE IF EXISTS transistor_signals;
+DROP TABLE IF EXISTS sku_lifecycle;
+DROP TABLE IF EXISTS logic_gates;
+DROP TABLE IF EXISTS gate_results;
+
+CREATE TABLE transistor_signals (
+  signal_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sku_id TEXT NOT NULL,
+  store_id TEXT NOT NULL,
+  channel_type TEXT NOT NULL,
+  captured_at TEXT NOT NULL,
+  ttl_expires_at TEXT,
+  source TEXT,
+  s01_on_shelf INTEGER,
+  s02_in_stock INTEGER,
+  s02_qty INTEGER,
+  s03_main_shelf INTEGER,
+  s04_second_display INTEGER,
+  s04_display_type TEXT,
+  s05_has_price_tag INTEGER,
+  s05_shelf_price REAL,
+  s05_promo_price REAL,
+  s06_has_sellout INTEGER,
+  s06_units_7d INTEGER,
+  s06_txn_count_7d INTEGER,
+  s07_repurchase INTEGER,
+  s07_unique_buyers INTEGER,
+  s08_stockout INTEGER,
+  s08_stockout_days INTEGER,
+  s08_root_cause TEXT,
+  s09_owner_recommends INTEGER,
+  s09_recommend_level TEXT,
+  s10_profit_target INTEGER,
+  s10_gross_margin REAL
+);
+
+CREATE TABLE sku_lifecycle (
+  sku_id TEXT NOT NULL,
+  store_id TEXT NOT NULL,
+  channel_type TEXT NOT NULL,
+  lifecycle_stage TEXT NOT NULL,
+  PRIMARY KEY (sku_id, store_id)
+);
+
+CREATE TABLE logic_gates (
+  gate_id TEXT PRIMARY KEY,
+  channel_type TEXT NOT NULL,
+  lifecycle_stage TEXT NOT NULL,
+  gate_name TEXT NOT NULL,
+  gate_logic TEXT NOT NULL,
+  pass_action TEXT,
+  fail_action TEXT,
+  description TEXT,
+  version TEXT DEFAULT <span class="ts">&<span class="tc">#x27;v0.<span class="tn">1</span>&#x27;</span>,</span>
+  status TEXT DEFAULT <span class="ts">&<span class="tc">#x27;active&#x27;</span></span>
+);
+
+CREATE TABLE gate_results (
+  result_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  signal_id INTEGER,
+  gate_id TEXT,
+  sku_id TEXT,
+  store_id TEXT,
+  channel_type TEXT,
+  lifecycle_stage TEXT,
+  result TEXT,
+  reason TEXT,
+  failed_signals TEXT,
+  evaluated_at TEXT
+);
+<span class="ts">&quot;&quot;</span>&quot;
+
+<span <span class="tk">class</span>="tk">def</span> init_db():
+    <span class="tk">if</span> os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+    conn = sqlite3.connect(DB_PATH)
+    conn.executescript(SCHEMA)
+    
+    <span class="tc"># 插入3个门规则</span>
+    future = (datetime.utcnow() + timedelta(hours=<span class="tn">24</span>)).isoformat() + <span class="ts">&quot;Z&quot;</span>
+    
+    gates = [
+        <span class="tc"># 导入门: S01 AND S02 AND S06</span>
+        (<span class="ts">&quot;GATE_GT_CVS_INTRO&quot;</span>, <span class="ts">&quot;GT_CVS&quot;</span>, <span class="ts">&quot;intro&quot;</span>, <span class="ts">&quot;导入期生命信号门&quot;</span>,
+         json.dumps({<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;AND&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [<span class="ts">&quot;s01_on_shelf&quot;</span>, <span class="ts">&quot;s02_in_stock&quot;</span>, <span class="ts">&quot;s06_has_sellout&quot;</span>]}),
+         <span class="ts">&quot;进入成长门&quot;</span>, <span class="ts">&quot;L7行动建议介入&quot;</span>, <span class="ts">&quot;三个最基础生命信号必须同时满足&quot;</span>),
+        <span class="tc"># 成长门: AND(动销&gt;=<span class="tn">10</span> AND 复购 AND 主货架 AND 老板推荐)</span>
+        (<span class="ts">&quot;GATE_GT_CVS_GROWTH&quot;</span>, <span class="ts">&quot;GT_CVS&quot;</span>, <span class="ts">&quot;growth&quot;</span>, <span class="ts">&quot;成长期放大门&quot;</span>,
+         json.dumps({<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;AND&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [
+             &quot;s06_units_7d&gt;=<span class="tn">10</span><span class="ts">&quot;, &quot;</span>s07_repurchase<span class="ts">&quot;, &quot;</span>s03_main_shelf<span class="ts">&quot;, &quot;</span>s09_owner_recommends&quot;
+         ]}),
+         <span class="ts">&quot;进入成熟门加大投入&quot;</span>, <span class="ts">&quot;维持导入期&quot;</span>, <span class="ts">&quot;动销+复购+主货架+老板推荐 = 可放大&quot;</span>),
+        <span class="tc"># 成熟门: AND(动销 AND 利润达标 AND 不断货)</span>
+        (<span class="ts">&quot;GATE_GT_CVS_MATURE&quot;</span>, <span class="ts">&quot;GT_CVS&quot;</span>, <span class="ts">&quot;mature&quot;</span>, <span class="ts">&quot;成熟期稳盘门&quot;</span>,
+         json.dumps({<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;AND&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [
+             <span class="ts">&quot;s06_has_sellout&quot;</span>, <span class="ts">&quot;s10_profit_target&quot;</span>, <span class="ts">&quot;s08_stockout=<span class="tn">0</span>&quot;</span>
+         ]}),
+         <span class="ts">&quot;稳盘 考虑焕新&quot;</span>, <span class="ts">&quot;降级回成长门&quot;</span>, <span class="ts">&quot;稳定动销+利润+不断货 = 核心SKU&quot;</span>),
+    ]
+    
+    <span class="tk">for</span> g <span class="tk">in</span> gates:
+        conn.execute(
+            <span class="ts">&quot;&quot;</span>&quot;INSERT INTO logic_gates 
+               (gate_id, channel_type, lifecycle_stage, gate_name, gate_logic, 
+                pass_action, fail_action, description) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)<span class="ts">&quot;&quot;</span>&quot;,
+            g,
+        )
+    conn.commit()
+    conn.close()
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># <span class="tn">2</span>. 测试辅助</span>
+<span class="tc"># ============================================================</span>
+
+<span <span class="tk">class</span>="tk">def</span> make_signal(stage: str, **signals) -&gt; int:
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;造一条信号·返回 signal_id&quot;</span><span class="ts">&quot;&quot;</span>
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    <span class="tc"># 默认值</span>
+    defaults = {
+        <span class="ts">&quot;sku_id&quot;</span>: <span class="ts">&quot;JYX_LIGHT_500&quot;</span>,
+        <span class="ts">&quot;store_id&quot;</span>: <span class="ts">&quot;SH_GT_CVS_001&quot;</span>,
+        <span class="ts">&quot;channel_type&quot;</span>: <span class="ts">&quot;GT_CVS&quot;</span>,
+        <span class="ts">&quot;captured_at&quot;</span>: datetime.utcnow().isoformat() + <span class="ts">&quot;Z&quot;</span>,
+        <span class="ts">&quot;ttl_expires_at&quot;</span>: (datetime.utcnow() + timedelta(hours=<span class="tn">24</span>)).isoformat() + <span class="ts">&quot;Z&quot;</span>,
+    }
+    defaults.update(signals)
+    
+    cols = list(defaults.keys())
+    placeholders = <span class="ts">&quot;,&quot;</span>.join(<span class="ts">&quot;?&quot;</span> * len(cols))
+    values = [defaults[k] <span class="tk">for</span> k <span class="tk">in</span> cols]
+    
+    cursor.execute(
+        f&quot;INSERT INTO transistor_signals ({<span class="ts">&<span class="tc">#x27;,&#x27;</span>.join(cols)}) VALUES ({placeholders})&quot;,</span>
+        values
+    )
+    signal_id = cursor.lastrowid
+    
+    <span class="tc"># 设/更新生命周期</span>
+    conn.execute(
+        <span class="ts">&quot;INSERT OR REPLACE INTO sku_lifecycle (sku_id, store_id, channel_type, lifecycle_stage) VALUES (?,?,?,?)&quot;</span>,
+        (defaults[<span class="ts">&quot;sku_id&quot;</span>], defaults[<span class="ts">&quot;store_id&quot;</span>], defaults[<span class="ts">&quot;channel_type&quot;</span>], stage)
+    )
+    conn.commit()
+    conn.close()
+    <span class="tk">return</span> signal_id
+
+
+<span <span class="tk">class</span>="tk">def</span> clean_signals():
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;清掉历史信号·只留最新一条测试&quot;</span><span class="ts">&quot;&quot;</span>
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute(<span class="ts">&quot;DELETE FROM transistor_signals&quot;</span>)
+    conn.execute(<span class="ts">&quot;DELETE FROM gate_results&quot;</span>)
+    conn.commit()
+    conn.close()
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># <span class="tn">3</span>. 测试用例</span>
+<span class="tc"># ============================================================</span>
+
+<span class="tk">class</span> TestRunner:
+    <span <span class="tk">class</span>="tk">def</span> __init__(<span class="tk">self</span>):
+        <span class="tk">self</span>.passed = <span class="tn">0</span>
+        <span class="tk">self</span>.failed = <span class="tn">0</span>
+        <span class="tk">self</span>.engine = AgentEngine(DB_PATH)
+    
+    <span <span class="tk">class</span>="tk">def</span> assert_result(<span class="tk">self</span>, name: str, actual_result: str, expected_result: str, 
+                      actual_failed: list = <span class="tk">None</span>, expected_failed: list = <span class="tk">None</span>):
+        ok_r = (actual_result == expected_result)
+        ok_f = <span class="tk">True</span>
+        <span class="tk">if</span> expected_failed <span class="tk">is</span> <span class="tk">not</span> <span class="tk">None</span>:
+            ok_f = all(f <span class="tk">in</span> (actual_failed <span class="tk">or</span> []) <span class="tk">or</span> 
+                       any(f <span class="tk">in</span> af <span class="tk">for</span> af <span class="tk">in</span> (actual_failed <span class="tk">or</span> []))
+                       <span class="tk">for</span> f <span class="tk">in</span> expected_failed)
+        <span class="tk">if</span> ok_r <span class="tk">and</span> ok_f:
+            <span class="tk">self</span>.passed += <span class="tn">1</span>
+            print(f<span class="ts">&quot;  ✅ {name}&quot;</span>)
+        <span class="tk">else</span>:
+            <span class="tk">self</span>.failed += <span class="tn">1</span>
+            print(f<span class="ts">&quot;  ❌ {name}&quot;</span>)
+            print(f<span class="ts">&quot;     期望 result={expected_result}, 实际={actual_result}&quot;</span>)
+            <span class="tk">if</span> expected_failed <span class="tk">is</span> <span class="tk">not</span> <span class="tk">None</span>:
+                print(f<span class="ts">&quot;     期望 failed包含={expected_failed}, 实际={actual_failed}&quot;</span>)
+    
+    <span <span class="tk">class</span>="tk">def</span> run_all(<span class="tk">self</span>):
+        print(<span class="ts">&quot;=&quot;</span> * <span class="tn">70</span>)
+        print(<span class="ts">&quot;INFINITY Agent OS · L2 规则引擎 · 测试套件&quot;</span>)
+        print(<span class="ts">&quot;=&quot;</span> * <span class="tn">70</span>)
+        
+        <span class="tc"># T1</span>
+        print(<span class="ts">&quot;\nT1. 导入门 PASS (S01✓ S02✓ S06✓)&quot;</span>)
+        clean_signals()
+        make_signal(<span class="ts">&quot;intro&quot;</span>, s01_on_shelf=<span class="tn">1</span>, s02_in_stock=<span class="tn">1</span>, s06_has_sellout=<span class="tn">1</span>)
+        r = <span class="tk">self</span>.engine.run(<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>)
+        <span class="tk">self</span>.assert_result(<span class="ts">&quot;导入门通过&quot;</span>, r.result, <span class="ts">&quot;<span class="tk">pass</span>&quot;</span>)
+        
+        <span class="tc"># T2 主场景</span>
+        print(<span class="ts">&quot;\nT2. 导入门 FAIL (S01✓ S02✓ S06✗) - 六月鲜主场景&quot;</span>)
+        clean_signals()
+        make_signal(<span class="ts">&quot;intro&quot;</span>, s01_on_shelf=<span class="tn">1</span>, s02_in_stock=<span class="tn">1</span>, s06_has_sellout=<span class="tn">0</span>)
+        r = <span class="tk">self</span>.engine.run(<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>)
+        <span class="tk">self</span>.assert_result(<span class="ts">&quot;导入门失败&quot;</span>, r.result, <span class="ts">&quot;fail&quot;</span>, r.failed_signals, [<span class="ts">&quot;s06&quot;</span>])
+        print(f<span class="ts">&quot;     reason: {r.reason}&quot;</span>)
+        
+        <span class="tc"># T3 UNCERTAIN</span>
+        print(<span class="ts">&quot;\nT3. 导入门 UNCERTAIN (S06 = None未采集)&quot;</span>)
+        clean_signals()
+        <span class="tc"># S06故意空·未采集</span>
+        make_signal(<span class="ts">&quot;intro&quot;</span>, s01_on_shelf=<span class="tn">1</span>, s02_in_stock=<span class="tn">1</span>)
+        r = <span class="tk">self</span>.engine.run(<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>)
+        <span class="tk">self</span>.assert_result(<span class="ts">&quot;不确定信号&quot;</span>, r.result, <span class="ts">&quot;uncertain&quot;</span>)
+        print(f<span class="ts">&quot;     uncertain: {r.uncertain_signals}&quot;</span>)
+        
+        <span class="tc"># T4 成长门 PASS</span>
+        print(&quot;\nT4. 成长门 PASS (动销&gt;=<span class="tn">10</span> + 复购 + 主货架 + 老板推荐)&quot;)
+        clean_signals()
+        make_signal(<span class="ts">&quot;growth&quot;</span>, 
+                    s06_has_sellout=<span class="tn">1</span>, s06_units_7d=<span class="tn">15</span>,
+                    s07_repurchase=<span class="tn">1</span>, s03_main_shelf=<span class="tn">1</span>, s09_owner_recommends=<span class="tn">1</span>)
+        r = <span class="tk">self</span>.engine.run(<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>)
+        <span class="tk">self</span>.assert_result(<span class="ts">&quot;成长门通过&quot;</span>, r.result, <span class="ts">&quot;<span class="tk">pass</span>&quot;</span>)
+        
+        <span class="tc"># T5 成长门 FAIL</span>
+        print(<span class="ts">&quot;\nT5. 成长门 FAIL (老板不推荐 S09)&quot;</span>)
+        clean_signals()
+        make_signal(<span class="ts">&quot;growth&quot;</span>,
+                    s06_has_sellout=<span class="tn">1</span>, s06_units_7d=<span class="tn">15</span>,
+                    s07_repurchase=<span class="tn">1</span>, s03_main_shelf=<span class="tn">1</span>, s09_owner_recommends=<span class="tn">0</span>)
+        r = <span class="tk">self</span>.engine.run(<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>)
+        <span class="tk">self</span>.assert_result(<span class="ts">&quot;成长门失败·S09&quot;</span>, r.result, <span class="ts">&quot;fail&quot;</span>, r.failed_signals, [<span class="ts">&quot;s09&quot;</span>])
+        
+        <span class="tc"># T6 成熟门 PASS</span>
+        print(<span class="ts">&quot;\nT6. 成熟门 PASS (动销+利润+不断货)&quot;</span>)
+        clean_signals()
+        make_signal(<span class="ts">&quot;mature&quot;</span>, s06_has_sellout=<span class="tn">1</span>, s10_profit_target=<span class="tn">1</span>, s08_stockout=<span class="tn">0</span>)
+        r = <span class="tk">self</span>.engine.run(<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>)
+        <span class="tk">self</span>.assert_result(<span class="ts">&quot;成熟门通过&quot;</span>, r.result, <span class="ts">&quot;<span class="tk">pass</span>&quot;</span>)
+        
+        <span class="tc"># T7 成熟门 FAIL · 断货</span>
+        print(<span class="ts">&quot;\nT7. 成熟门 FAIL (S08 断货)&quot;</span>)
+        clean_signals()
+        make_signal(<span class="ts">&quot;mature&quot;</span>, s06_has_sellout=<span class="tn">1</span>, s10_profit_target=<span class="tn">1</span>, s08_stockout=<span class="tn">1</span>)
+        r = <span class="tk">self</span>.engine.run(<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>)
+        <span class="tc"># s08_stockout=<span class="tn">0</span> 表达式期望该字段为0·实际为1·应fail</span>
+        <span class="tk">self</span>.assert_result(<span class="ts">&quot;成熟门失败·断货&quot;</span>, r.result, <span class="ts">&quot;fail&quot;</span>)
+        
+        <span class="tc"># T8 阈值边界</span>
+        print(&quot;\nT8. 阈值边界·units_7d=<span class="tn">10</span> 应 PASS (&gt;=<span class="tn">10</span>)&quot;)
+        clean_signals()
+        make_signal(<span class="ts">&quot;growth&quot;</span>,
+                    s06_units_7d=<span class="tn">10</span>, s07_repurchase=<span class="tn">1</span>, 
+                    s03_main_shelf=<span class="tn">1</span>, s09_owner_recommends=<span class="tn">1</span>)
+        r = <span class="tk">self</span>.engine.run(<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>)
+        <span class="tk">self</span>.assert_result(<span class="ts">&quot;阈值=<span class="tn">10</span> 通过&quot;</span>, r.result, <span class="ts">&quot;<span class="tk">pass</span>&quot;</span>)
+        
+        print(<span class="ts">&quot;\nT9. 阈值边界·units_7d=<span class="tn">9</span> 应 FAIL&quot;</span>)
+        clean_signals()
+        make_signal(<span class="ts">&quot;growth&quot;</span>,
+                    s06_units_7d=<span class="tn">9</span>, s07_repurchase=<span class="tn">1</span>,
+                    s03_main_shelf=<span class="tn">1</span>, s09_owner_recommends=<span class="tn">1</span>)
+        r = <span class="tk">self</span>.engine.run(<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>)
+        <span class="tk">self</span>.assert_result(<span class="ts">&quot;阈值=<span class="tn">9</span> 失败&quot;</span>, r.result, <span class="ts">&quot;fail&quot;</span>)
+        
+        <span class="tc"># T10 写库验证</span>
+        print(<span class="ts">&quot;\nT10. 结果真的写进 gate_results 表了吗?&quot;</span>)
+        conn = sqlite3.connect(DB_PATH)
+        cnt = conn.execute(<span class="ts">&quot;SELECT COUNT(*) FROM gate_results&quot;</span>).fetchone()[<span class="tn">0</span>]
+        conn.close()
+        <span class="tk">if</span> cnt &gt; <span class="tn">0</span>:
+            <span class="tk">self</span>.passed += <span class="tn">1</span>
+            print(f<span class="ts">&quot;  ✅ gate_results 表有 {cnt} 条评估记录&quot;</span>)
+        <span class="tk">else</span>:
+            <span class="tk">self</span>.failed += <span class="tn">1</span>
+            print(f<span class="ts">&quot;  ❌ gate_results 表为空&quot;</span>)
+        
+        <span class="tc"># 总结</span>
+        print(<span class="ts">&quot;\n&quot;</span> + <span class="ts">&quot;=&quot;</span> * <span class="tn">70</span>)
+        total = <span class="tk">self</span>.passed + <span class="tk">self</span>.failed
+        print(f<span class="ts">&quot;测试总结: {<span class="tk">self</span>.passed}/{total} 通过 · {<span class="tk">self</span>.failed} 失败&quot;</span>)
+        print(f&quot;判定: {<span class="ts">&<span class="tc">#x27;✅ 规则引擎可用&#x27;</span> <span class="tk">if</span> <span class="tk">self</span>.failed == <span class="tn">0</span> <span class="tk">else</span> <span class="ts">&#x27;❌ 有问题待修&#x27;</span>}&quot;)</span>
+        print(<span class="ts">&quot;=&quot;</span> * <span class="tn">70</span>)
+        <span class="tk">return</span> <span class="tk">self</span>.failed == <span class="tn">0</span>
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># <span class="tn">4</span>. 复合规则单元测试(直接测evaluator·不经DB)</span>
+<span class="tc"># ============================================================</span>
+
+<span <span class="tk">class</span>="tk">def</span> test_evaluator_unit():
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;单元测试·直接测 GateEvaluator 各种规则形态&quot;</span><span class="ts">&quot;&quot;</span>
+    print(<span class="ts">&quot;\n&quot;</span> + <span class="ts">&quot;=&quot;</span> * <span class="tn">70</span>)
+    print(<span class="ts">&quot;规则评估器·单元测试 (不经DB·直测逻辑)&quot;</span>)
+    print(<span class="ts">&quot;=&quot;</span> * <span class="tn">70</span>)
+    
+    ev = GateEvaluator()
+    passed, failed = <span class="tn">0</span>, <span class="tn">0</span>
+    
+    <span <span class="tk">class</span>="tk">def</span> case(name, gate_logic, signals_dict, expected_result):
+        <span class="tk">nonlocal</span> passed, failed
+        sig = TransistorSignals(
+            signal_id=<span class="tn">1</span>, sku_id=<span class="ts">&quot;X&quot;</span>, store_id=<span class="ts">&quot;X&quot;</span>, channel_type=<span class="ts">&quot;GT_CVS&quot;</span>,
+            captured_at=<span class="ts">&quot;<span class="tn">2026</span>-<span class="tn">05</span>-29T00:<span class="tn">00</span>:00Z&quot;</span>,
+        )
+        <span class="tk">for</span> k, v <span class="tk">in</span> signals_dict.items():
+            setattr(sig, k, v)
+        gate = LogicGate(
+            gate_id=<span class="ts">&quot;TEST&quot;</span>, channel_type=<span class="ts">&quot;GT_CVS&quot;</span>, lifecycle_stage=<span class="ts">&quot;intro&quot;</span>,
+            gate_name=<span class="ts">&quot;test&quot;</span>, gate_logic=gate_logic,
+            pass_action=<span class="ts">&quot;&quot;</span>, fail_action=<span class="ts">&quot;&quot;</span>, description=<span class="ts">&quot;&quot;</span>,
+        )
+        result = ev.evaluate(gate, sig)
+        <span class="tk">if</span> result.result == expected_result:
+            passed += <span class="tn">1</span>
+            print(f<span class="ts">&quot;  ✅ {name}&quot;</span>)
+        <span class="tk">else</span>:
+            failed += <span class="tn">1</span>
+            print(f<span class="ts">&quot;  ❌ {name}: 期望 {expected_result}, 实际 {result.result} · {result.reason}&quot;</span>)
+    
+    <span class="tc"># 简单 AND</span>
+    case(<span class="ts">&quot;AND全通过&quot;</span>, 
+         {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;AND&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [<span class="ts">&quot;s01_on_shelf&quot;</span>, <span class="ts">&quot;s02_in_stock&quot;</span>]},
+         {<span class="ts">&quot;s01_on_shelf&quot;</span>: <span class="tk">True</span>, <span class="ts">&quot;s02_in_stock&quot;</span>: <span class="tk">True</span>}, <span class="ts">&quot;<span class="tk">pass</span>&quot;</span>)
+    case(<span class="ts">&quot;AND一个fail&quot;</span>,
+         {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;AND&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [<span class="ts">&quot;s01_on_shelf&quot;</span>, <span class="ts">&quot;s02_in_stock&quot;</span>]},
+         {<span class="ts">&quot;s01_on_shelf&quot;</span>: <span class="tk">True</span>, <span class="ts">&quot;s02_in_stock&quot;</span>: <span class="tk">False</span>}, <span class="ts">&quot;fail&quot;</span>)
+    
+    <span class="tc"># OR</span>
+    case(<span class="ts">&quot;OR一个通过&quot;</span>,
+         {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;OR&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [<span class="ts">&quot;s01_on_shelf&quot;</span>, <span class="ts">&quot;s02_in_stock&quot;</span>]},
+         {<span class="ts">&quot;s01_on_shelf&quot;</span>: <span class="tk">False</span>, <span class="ts">&quot;s02_in_stock&quot;</span>: <span class="tk">True</span>}, <span class="ts">&quot;<span class="tk">pass</span>&quot;</span>)
+    case(<span class="ts">&quot;OR全失败&quot;</span>,
+         {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;OR&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [<span class="ts">&quot;s01_on_shelf&quot;</span>, <span class="ts">&quot;s02_in_stock&quot;</span>]},
+         {<span class="ts">&quot;s01_on_shelf&quot;</span>: <span class="tk">False</span>, <span class="ts">&quot;s02_in_stock&quot;</span>: <span class="tk">False</span>}, <span class="ts">&quot;fail&quot;</span>)
+    
+    <span class="tc"># NOT</span>
+    case(<span class="ts">&quot;NOT 真→fail&quot;</span>,
+         {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;NOT&quot;</span>, <span class="ts">&quot;condition&quot;</span>: <span class="ts">&quot;s08_stockout&quot;</span>},
+         {<span class="ts">&quot;s08_stockout&quot;</span>: <span class="tk">True</span>}, <span class="ts">&quot;fail&quot;</span>)
+    case(<span class="ts">&quot;NOT 假→<span class="tk">pass</span>&quot;</span>,
+         {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;NOT&quot;</span>, <span class="ts">&quot;condition&quot;</span>: <span class="ts">&quot;s08_stockout&quot;</span>},
+         {<span class="ts">&quot;s08_stockout&quot;</span>: <span class="tk">False</span>}, <span class="ts">&quot;<span class="tk">pass</span>&quot;</span>)
+    
+    <span class="tc"># 嵌套</span>
+    case(<span class="ts">&quot;AND嵌套OR&quot;</span>,
+         {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;AND&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [
+             <span class="ts">&quot;s01_on_shelf&quot;</span>,
+             {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;OR&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [<span class="ts">&quot;s03_main_shelf&quot;</span>, <span class="ts">&quot;s04_second_display&quot;</span>]}
+         ]},
+         {<span class="ts">&quot;s01_on_shelf&quot;</span>: <span class="tk">True</span>, <span class="ts">&quot;s03_main_shelf&quot;</span>: <span class="tk">False</span>, <span class="ts">&quot;s04_second_display&quot;</span>: <span class="tk">True</span>}, 
+         <span class="ts">&quot;<span class="tk">pass</span>&quot;</span>)
+    
+    <span class="tc"># 阈值</span>
+    case(&quot;阈值 &gt;=&quot;,
+         {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;AND&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [&quot;s06_units_7d&gt;=<span class="tn">10</span>&quot;]},
+         {<span class="ts">&quot;s06_units_7d&quot;</span>: <span class="tn">15</span>}, <span class="ts">&quot;<span class="tk">pass</span>&quot;</span>)
+    case(&quot;阈值 &lt; 失败&quot;,
+         {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;AND&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [&quot;s06_units_7d&gt;=<span class="tn">10</span>&quot;]},
+         {<span class="ts">&quot;s06_units_7d&quot;</span>: <span class="tn">5</span>}, <span class="ts">&quot;fail&quot;</span>)
+    case(<span class="ts">&quot;阈值 浮点&quot;</span>,
+         {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;AND&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [&quot;s10_gross_margin&gt;<span class="tn">0.3</span>&quot;]},
+         {<span class="ts">&quot;s10_gross_margin&quot;</span>: <span class="tn">0.38</span>}, <span class="ts">&quot;<span class="tk">pass</span>&quot;</span>)
+    
+    <span class="tc"># 不确定</span>
+    case(<span class="ts">&quot;uncertain·字段None&quot;</span>,
+         {<span class="ts">&quot;rule&quot;</span>: <span class="ts">&quot;AND&quot;</span>, <span class="ts">&quot;conditions&quot;</span>: [<span class="ts">&quot;s01_on_shelf&quot;</span>, <span class="ts">&quot;s06_has_sellout&quot;</span>]},
+         {<span class="ts">&quot;s01_on_shelf&quot;</span>: <span class="tk">True</span>}, <span class="ts">&quot;uncertain&quot;</span>)
+    
+    total = passed + failed
+    print(f<span class="ts">&quot;\n  单元测试: {passed}/{total} 通过 · {failed} 失败&quot;</span>)
+    <span class="tk">return</span> failed == <span class="tn">0</span>
+
+
+<span class="tc"># ============================================================</span>
+<span class="tc"># main</span>
+<span class="tc"># ============================================================</span>
+
+<span class="tk">if</span> __name__ == <span class="ts">&quot;__main__&quot;</span>:
+    init_db()
+    
+    <span class="tc"># 单元测试(直测evaluator)</span>
+    unit_ok = test_evaluator_unit()
+    
+    <span class="tc"># 集成测试(经DB)</span>
+    runner = TestRunner()
+    integ_ok = runner.run_all()
+    
+    print(<span class="ts">&quot;\n&quot;</span> + <span class="ts">&quot;█&quot;</span> * <span class="tn">70</span>)
+    <span class="tk">if</span> unit_ok <span class="tk">and</span> integ_ok:
+        print(<span class="ts">&quot;█  ✅ 全部测试通过·L2 规则引擎可投入使用&quot;</span>)
+    <span class="tk">else</span>:
+        print(<span class="ts">&quot;█  ❌ 有测试失败·需修复&quot;</span>)
+    print(<span class="ts">&quot;█&quot;</span> * <span class="tn">70</span>)
+    sys.exit(<span class="tn">0</span> <span class="tk">if</span> (unit_ok <span class="tk">and</span> integ_ok) <span class="tk">else</span> <span class="tn">1</span>)
+</pre></div>
+  </div>
+</details>
+
+<details class="filebox" id="sec-3" >
+  <summary class="filehd">
+    <span class="ic">🎬</span>
+    <span class="fname">demo.py</span>
+    <span class="flabel">4 个场景演示</span>
+    <span class="fsize">6,255 字符</span>
+    <span class="arrow">▼</span>
+  </summary>
+  <div class="fcontent">
+    <div class="ftools">
+      <button class="btn-copy" onclick="copyContent('sec-3')">📋 复制全文</button>
+      <span class="lang-tag">PYTHON</span>
+    </div>
+    <div class="raw-content" data-content="&quot;&quot;&quot;
+INFINITY Agent OS · Step 3 · 完整闭环演示
+==========================================
+跑通真实场景:六月鲜轻盐 500ml 在上海浦东A社区便利店
+三个生命周期阶段(intro/growth/mature)各跑一次·展示完整决策链
+&quot;&quot;&quot;
+
+import sys
+import sqlite3
+import json
+from datetime import datetime, timedelta
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from engine import AgentEngine
+from test_engine import init_db, make_signal, clean_signals, DB_PATH
+
+
+def banner(text):
+    print(&quot;\n&quot; + &quot;═&quot; * 70)
+    print(f&quot;  {text}&quot;)
+    print(&quot;═&quot; * 70)
+
+
+def show_signal(sig_id):
+    &quot;&quot;&quot;看刚插入的信号长什么样&quot;&quot;&quot;
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(&quot;SELECT * FROM transistor_signals WHERE signal_id=?&quot;, (sig_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return
+    cols = [d[0] for d in cursor.description]
+    data = dict(zip(cols, row))
+    print(f&quot;\n  信号 #{sig_id} · 实际数据:&quot;)
+    for k, v in data.items():
+        if k.startswith(&#x27;s&#x27;) and v is not None:
+            print(f&quot;    {k:25s} = {v}&quot;)
+    conn.close()
+
+
+def show_gate(gate_id):
+    &quot;&quot;&quot;看门规则&quot;&quot;&quot;
+    conn = sqlite3.connect(DB_PATH)
+    row = conn.execute(
+        &quot;SELECT * FROM logic_gates WHERE gate_id=?&quot;, (gate_id,)
+    ).fetchone()
+    conn.close()
+    if not row:
+        return
+    print(f&quot;\n  门: {row[3]} ({row[0]})&quot;)
+    logic = json.loads(row[4])
+    print(f&quot;  规则: {logic.get(&#x27;rule&#x27;, &#x27;AND&#x27;)} {logic.get(&#x27;conditions&#x27;, [])}&quot;)
+
+
+def show_result(r):
+    print(f&quot;\n  ┌─ Agent 判定 ─────────────────────────────&quot;)
+    print(f&quot;  │ 结果:       {r.result.upper()}&quot;)
+    print(f&quot;  │ 生命周期:   {r.lifecycle_stage}&quot;)
+    print(f&quot;  │ 原因:       {r.reason}&quot;)
+    if r.failed_signals:
+        print(f&quot;  │ 失败晶体管: {r.failed_signals}&quot;)
+    if r.uncertain_signals:
+        print(f&quot;  │ 不确定信号: {r.uncertain_signals}&quot;)
+    print(f&quot;  └──────────────────────────────────────────&quot;)
+
+
+def clean_signals_keep_results():
+    &quot;&quot;&quot;清掉历史信号·但保留 gate_results 给最后汇总&quot;&quot;&quot;
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute(&quot;DELETE FROM transistor_signals&quot;)
+    conn.commit()
+    conn.close()
+
+
+def main():
+    init_db()
+    engine = AgentEngine(DB_PATH)
+    
+    banner(&quot;INFINITY Agent OS · L2 规则引擎 · 完整闭环演示&quot;)
+    print(&quot;\n场景: 六月鲜轻盐 500ml · 上海浦东A社区便利店 (SH_GT_CVS_001)&quot;)
+    print(&quot;演示: 同一 SKU 在 3 个生命周期阶段·Agent 判断完全不同&quot;)
+
+    # ─────────────────────────────────────────────────
+    # 场景 1·导入期·真实场景(对应 Step 1/2 的主示例)
+    # ─────────────────────────────────────────────────
+    banner(&quot;场景 1 · 导入期 · 刚上架·还没动销&quot;)
+    clean_signals_keep_results()
+    sid = make_signal(&quot;intro&quot;,
+                      s01_on_shelf=1,    # ✓ 上架
+                      s02_in_stock=1,    # ✓ 有库存
+                      s02_qty=6,
+                      s03_main_shelf=0,  # ✗ 不在主货架
+                      s05_has_price_tag=1,  # ✓ 有价签
+                      s06_has_sellout=0,  # ✗ 7天无动销
+                      s09_owner_recommends=0,  # ✗ 老板不推荐
+                      s10_profit_target=1,  # ✓ 利润达标(但无意义)
+                      )
+    show_signal(sid)
+    show_gate(&quot;GATE_GT_CVS_INTRO&quot;)
+    r = engine.run(&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;)
+    show_result(r)
+    print(f&quot;\n  → Agent 下一步: {r.failed_signals[0] if r.failed_signals else &#x27;?&#x27;}&quot;)
+    print(f&quot;     &#x27;导入期生命信号未成立·进入L7行动建议·该攻克 S06 动销&#x27;&quot;)
+    
+    # ─────────────────────────────────────────────────
+    # 场景 2·成长期·已经活起来了
+    # ─────────────────────────────────────────────────
+    banner(&quot;场景 2 · 成长期 · 动销了·要看能不能放大&quot;)
+    clean_signals_keep_results()
+    sid = make_signal(&quot;growth&quot;,
+                      s01_on_shelf=1,
+                      s02_in_stock=1,
+                      s03_main_shelf=1,   # ✓ 已上主货架
+                      s06_has_sellout=1,  # ✓ 有动销
+                      s06_units_7d=15,    # ✓ 周销 15 瓶
+                      s07_repurchase=1,   # ✓ 有复购
+                      s09_owner_recommends=1,  # ✓ 老板主动推
+                      s10_profit_target=1,
+                      )
+    show_signal(sid)
+    show_gate(&quot;GATE_GT_CVS_GROWTH&quot;)
+    r = engine.run(&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;)
+    show_result(r)
+    print(f&quot;\n  → Agent 下一步: 进入成熟门评估·加大投入(L7建议申请陈列资源/扩SKU)&quot;)
+    
+    # ─────────────────────────────────────────────────
+    # 场景 3·成熟期·稳但断货
+    # ─────────────────────────────────────────────────
+    banner(&quot;场景 3 · 成熟期 · 但突然断货&quot;)
+    clean_signals_keep_results()
+    sid = make_signal(&quot;mature&quot;,
+                      s01_on_shelf=1,
+                      s02_in_stock=0,     # ✗ 当前无库存
+                      s06_has_sellout=1,
+                      s08_stockout=1,     # ✗ 断货!
+                      s08_stockout_days=2,
+                      s10_profit_target=1,
+                      )
+    show_signal(sid)
+    show_gate(&quot;GATE_GT_CVS_MATURE&quot;)
+    r = engine.run(&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;)
+    show_result(r)
+    print(f&quot;\n  → Agent 下一步: 紧急补货·查根因(经销商OOS/门店未下单/配送)&quot;)
+    
+    # ─────────────────────────────────────────────────
+    # 场景 4·诚实性·数据不完整时不假装判断
+    # ─────────────────────────────────────────────────
+    banner(&quot;场景 4 · 诚实性 · 关键信号未采集·Agent 不蒙&quot;)
+    clean_signals_keep_results()
+    sid = make_signal(&quot;intro&quot;,
+                      s01_on_shelf=1,
+                      s02_in_stock=1,
+                      # S06 故意不采集
+                      )
+    show_signal(sid)
+    show_gate(&quot;GATE_GT_CVS_INTRO&quot;)
+    r = engine.run(&quot;JYX_LIGHT_500&quot;, &quot;SH_GT_CVS_001&quot;)
+    show_result(r)
+    print(f&quot;\n  → Agent 下一步: &#x27;S06 未采集·不能判断是否动销·请SR下次进店补录&#x27;&quot;)
+    print(f&quot;     ★ 这是诚实性: 不把&#x27;未知&#x27;当&#x27;失败&#x27;·避免错误投入资源&quot;)
+    
+    # ─────────────────────────────────────────────────
+    # 汇总: gate_results 表里跑了几次
+    # ─────────────────────────────────────────────────
+    conn = sqlite3.connect(DB_PATH)
+    rows = conn.execute(
+        &quot;SELECT lifecycle_stage, result, reason FROM gate_results ORDER BY result_id&quot;
+    ).fetchall()
+    conn.close()
+    
+    banner(&quot;演示总结&quot;)
+    print(f&quot;\n  共评估 {len(rows)} 次:&quot;)
+    for i, (stage, result, reason) in enumerate(rows, 1):
+        icon = {&quot;pass&quot;: &quot;✅&quot;, &quot;fail&quot;: &quot;❌&quot;, &quot;uncertain&quot;: &quot;⚠️&quot;}[result]
+        print(f&quot;  {i}. {stage:8s} → {icon} {result.upper():10s} {reason[:50]}&quot;)
+    
+    print(f&quot;\n  ✅ 完整 Agent 闭环跑通:&quot;)
+    print(f&quot;     L1 信号 → L2 规则引擎 → L2 结果(写入gate_results)&quot;)
+    print(f&quot;     不同生命周期·不同门·完全不同判断&quot;)
+    print(f&quot;     未知信号诚实标 uncertain·不蒙&quot;)
+    print(f&quot;\n  下一步 Step 4: L7 行动建议 API · 把这些判断转成 SR 待办&quot;)
+    print()
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+"><pre class="code lang-py"><span class="ts">&quot;&quot;</span>&quot;
+INFINITY Agent OS · Step <span class="tn">3</span> · 完整闭环演示
+==========================================
+跑通真实场景:六月鲜轻盐 500ml 在上海浦东A社区便利店
+三个生命周期阶段(intro/growth/mature)各跑一次·展示完整决策链
+<span class="ts">&quot;&quot;</span>&quot;
+
+<span <span class="tk">class</span>="tk">import</span> sys
+<span <span class="tk">class</span>="tk">import</span> sqlite3
+<span <span class="tk">class</span>="tk">import</span> json
+<span <span class="tk">class</span>="tk">from</span> datetime <span <span class="tk">class</span>="tk">import</span> datetime, timedelta
+<span <span class="tk">class</span>="tk">from</span> pathlib <span <span class="tk">class</span>="tk">import</span> Path
+
+sys.path.insert(<span class="tn">0</span>, str(Path(__file__).parent))
+<span <span class="tk">class</span>="tk">from</span> engine <span <span class="tk">class</span>="tk">import</span> AgentEngine
+<span <span class="tk">class</span>="tk">from</span> test_engine <span <span class="tk">class</span>="tk">import</span> init_db, make_signal, clean_signals, DB_PATH
+
+
+<span <span class="tk">class</span>="tk">def</span> banner(text):
+    print(<span class="ts">&quot;\n&quot;</span> + <span class="ts">&quot;═&quot;</span> * <span class="tn">70</span>)
+    print(f<span class="ts">&quot;  {text}&quot;</span>)
+    print(<span class="ts">&quot;═&quot;</span> * <span class="tn">70</span>)
+
+
+<span <span class="tk">class</span>="tk">def</span> show_signal(sig_id):
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;看刚插入的信号长什么样&quot;</span><span class="ts">&quot;&quot;</span>
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(<span class="ts">&quot;SELECT * FROM transistor_signals WHERE signal_id=?&quot;</span>, (sig_id,))
+    row = cursor.fetchone()
+    <span class="tk">if</span> <span class="tk">not</span> row:
+        conn.close()
+        <span class="tk">return</span>
+    cols = [d[<span class="tn">0</span>] <span class="tk">for</span> d <span class="tk">in</span> cursor.description]
+    data = dict(zip(cols, row))
+    print(f<span class="ts">&quot;\n  信号 <span class="tc">#{sig_id} · 实际数据:&quot;</span>)</span>
+    <span class="tk">for</span> k, v <span class="tk">in</span> data.items():
+        <span class="tk">if</span> k.startswith(<span class="ts">&<span class="tc">#x27;s&#x27;</span>) <span class="tk">and</span> v <span class="tk">is</span> <span class="tk">not</span> <span class="tk">None</span>:</span>
+            print(f<span class="ts">&quot;    {k:25s} = {v}&quot;</span>)
+    conn.close()
+
+
+<span <span class="tk">class</span>="tk">def</span> show_gate(gate_id):
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;看门规则&quot;</span><span class="ts">&quot;&quot;</span>
+    conn = sqlite3.connect(DB_PATH)
+    row = conn.execute(
+        <span class="ts">&quot;SELECT * FROM logic_gates WHERE gate_id=?&quot;</span>, (gate_id,)
+    ).fetchone()
+    conn.close()
+    <span class="tk">if</span> <span class="tk">not</span> row:
+        <span class="tk">return</span>
+    print(f<span class="ts">&quot;\n  门: {row[<span class="tn">3</span>]} ({row[<span class="tn">0</span>]})&quot;</span>)
+    logic = json.loads(row[<span class="tn">4</span>])
+    print(f&quot;  规则: {logic.get(<span class="ts">&<span class="tc">#x27;rule&#x27;</span>, <span class="ts">&#x27;AND&#x27;</span>)} {logic.get(<span class="ts">&#x27;conditions&#x27;</span>, [])}&quot;)</span>
+
+
+<span <span class="tk">class</span>="tk">def</span> show_result(r):
+    print(f<span class="ts">&quot;\n  ┌─ Agent 判定 ─────────────────────────────&quot;</span>)
+    print(f<span class="ts">&quot;  │ 结果:       {r.result.upper()}&quot;</span>)
+    print(f<span class="ts">&quot;  │ 生命周期:   {r.lifecycle_stage}&quot;</span>)
+    print(f<span class="ts">&quot;  │ 原因:       {r.reason}&quot;</span>)
+    <span class="tk">if</span> r.failed_signals:
+        print(f<span class="ts">&quot;  │ 失败晶体管: {r.failed_signals}&quot;</span>)
+    <span class="tk">if</span> r.uncertain_signals:
+        print(f<span class="ts">&quot;  │ 不确定信号: {r.uncertain_signals}&quot;</span>)
+    print(f<span class="ts">&quot;  └──────────────────────────────────────────&quot;</span>)
+
+
+<span <span class="tk">class</span>="tk">def</span> clean_signals_keep_results():
+    <span class="ts">&quot;&quot;</span><span class="ts">&quot;清掉历史信号·但保留 gate_results 给最后汇总&quot;</span><span class="ts">&quot;&quot;</span>
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute(<span class="ts">&quot;DELETE FROM transistor_signals&quot;</span>)
+    conn.commit()
+    conn.close()
+
+
+<span <span class="tk">class</span>="tk">def</span> main():
+    init_db()
+    engine = AgentEngine(DB_PATH)
+    
+    banner(<span class="ts">&quot;INFINITY Agent OS · L2 规则引擎 · 完整闭环演示&quot;</span>)
+    print(<span class="ts">&quot;\n场景: 六月鲜轻盐 500ml · 上海浦东A社区便利店 (SH_GT_CVS_001)&quot;</span>)
+    print(<span class="ts">&quot;演示: 同一 SKU 在 <span class="tn">3</span> 个生命周期阶段·Agent 判断完全不同&quot;</span>)
+
+    <span class="tc"># ─────────────────────────────────────────────────</span>
+    <span class="tc"># 场景 <span class="tn">1</span>·导入期·真实场景(对应 Step <span class="tn">1</span>/<span class="tn">2</span> 的主示例)</span>
+    <span class="tc"># ─────────────────────────────────────────────────</span>
+    banner(<span class="ts">&quot;场景 <span class="tn">1</span> · 导入期 · 刚上架·还没动销&quot;</span>)
+    clean_signals_keep_results()
+    sid = make_signal(<span class="ts">&quot;intro&quot;</span>,
+                      s01_on_shelf=<span class="tn">1</span>,    <span class="tc"># ✓ 上架</span>
+                      s02_in_stock=<span class="tn">1</span>,    <span class="tc"># ✓ 有库存</span>
+                      s02_qty=<span class="tn">6</span>,
+                      s03_main_shelf=<span class="tn">0</span>,  <span class="tc"># ✗ 不在主货架</span>
+                      s05_has_price_tag=<span class="tn">1</span>,  <span class="tc"># ✓ 有价签</span>
+                      s06_has_sellout=<span class="tn">0</span>,  <span class="tc"># ✗ 7天无动销</span>
+                      s09_owner_recommends=<span class="tn">0</span>,  <span class="tc"># ✗ 老板不推荐</span>
+                      s10_profit_target=<span class="tn">1</span>,  <span class="tc"># ✓ 利润达标(但无意义)</span>
+                      )
+    show_signal(sid)
+    show_gate(<span class="ts">&quot;GATE_GT_CVS_INTRO&quot;</span>)
+    r = engine.run(<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>)
+    show_result(r)
+    print(f&quot;\n  → Agent 下一步: {r.failed_signals[<span class="tn">0</span>] <span class="tk">if</span> r.failed_signals <span class="tk">else</span> <span class="ts">&<span class="tc">#x27;?&#x27;</span>}&quot;)</span>
+    print(f&quot;     <span class="ts">&<span class="tc">#x27;导入期生命信号未成立·进入L7行动建议·该攻克 S06 动销&#x27;</span>&quot;)</span>
+    
+    <span class="tc"># ─────────────────────────────────────────────────</span>
+    <span class="tc"># 场景 <span class="tn">2</span>·成长期·已经活起来了</span>
+    <span class="tc"># ─────────────────────────────────────────────────</span>
+    banner(<span class="ts">&quot;场景 <span class="tn">2</span> · 成长期 · 动销了·要看能不能放大&quot;</span>)
+    clean_signals_keep_results()
+    sid = make_signal(<span class="ts">&quot;growth&quot;</span>,
+                      s01_on_shelf=<span class="tn">1</span>,
+                      s02_in_stock=<span class="tn">1</span>,
+                      s03_main_shelf=<span class="tn">1</span>,   <span class="tc"># ✓ 已上主货架</span>
+                      s06_has_sellout=<span class="tn">1</span>,  <span class="tc"># ✓ 有动销</span>
+                      s06_units_7d=<span class="tn">15</span>,    <span class="tc"># ✓ 周销 <span class="tn">15</span> 瓶</span>
+                      s07_repurchase=<span class="tn">1</span>,   <span class="tc"># ✓ 有复购</span>
+                      s09_owner_recommends=<span class="tn">1</span>,  <span class="tc"># ✓ 老板主动推</span>
+                      s10_profit_target=<span class="tn">1</span>,
+                      )
+    show_signal(sid)
+    show_gate(<span class="ts">&quot;GATE_GT_CVS_GROWTH&quot;</span>)
+    r = engine.run(<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>)
+    show_result(r)
+    print(f<span class="ts">&quot;\n  → Agent 下一步: 进入成熟门评估·加大投入(L7建议申请陈列资源/扩SKU)&quot;</span>)
+    
+    <span class="tc"># ─────────────────────────────────────────────────</span>
+    <span class="tc"># 场景 <span class="tn">3</span>·成熟期·稳但断货</span>
+    <span class="tc"># ─────────────────────────────────────────────────</span>
+    banner(<span class="ts">&quot;场景 <span class="tn">3</span> · 成熟期 · 但突然断货&quot;</span>)
+    clean_signals_keep_results()
+    sid = make_signal(<span class="ts">&quot;mature&quot;</span>,
+                      s01_on_shelf=<span class="tn">1</span>,
+                      s02_in_stock=<span class="tn">0</span>,     <span class="tc"># ✗ 当前无库存</span>
+                      s06_has_sellout=<span class="tn">1</span>,
+                      s08_stockout=<span class="tn">1</span>,     <span class="tc"># ✗ 断货!</span>
+                      s08_stockout_days=<span class="tn">2</span>,
+                      s10_profit_target=<span class="tn">1</span>,
+                      )
+    show_signal(sid)
+    show_gate(<span class="ts">&quot;GATE_GT_CVS_MATURE&quot;</span>)
+    r = engine.run(<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>)
+    show_result(r)
+    print(f<span class="ts">&quot;\n  → Agent 下一步: 紧急补货·查根因(经销商OOS/门店未下单/配送)&quot;</span>)
+    
+    <span class="tc"># ─────────────────────────────────────────────────</span>
+    <span class="tc"># 场景 <span class="tn">4</span>·诚实性·数据不完整时不假装判断</span>
+    <span class="tc"># ─────────────────────────────────────────────────</span>
+    banner(<span class="ts">&quot;场景 <span class="tn">4</span> · 诚实性 · 关键信号未采集·Agent 不蒙&quot;</span>)
+    clean_signals_keep_results()
+    sid = make_signal(<span class="ts">&quot;intro&quot;</span>,
+                      s01_on_shelf=<span class="tn">1</span>,
+                      s02_in_stock=<span class="tn">1</span>,
+                      <span class="tc"># S06 故意不采集</span>
+                      )
+    show_signal(sid)
+    show_gate(<span class="ts">&quot;GATE_GT_CVS_INTRO&quot;</span>)
+    r = engine.run(<span class="ts">&quot;JYX_LIGHT_500&quot;</span>, <span class="ts">&quot;SH_GT_CVS_001&quot;</span>)
+    show_result(r)
+    print(f&quot;\n  → Agent 下一步: <span class="ts">&<span class="tc">#x27;S06 未采集·不能判断是否动销·请SR下次进店补录&#x27;</span>&quot;)</span>
+    print(f&quot;     ★ 这是诚实性: 不把<span class="ts">&<span class="tc">#x27;未知&#x27;</span>当<span class="ts">&#x27;失败&#x27;</span>·避免错误投入资源&quot;)</span>
+    
+    <span class="tc"># ─────────────────────────────────────────────────</span>
+    <span class="tc"># 汇总: gate_results 表里跑了几次</span>
+    <span class="tc"># ─────────────────────────────────────────────────</span>
+    conn = sqlite3.connect(DB_PATH)
+    rows = conn.execute(
+        <span class="ts">&quot;SELECT lifecycle_stage, result, reason FROM gate_results ORDER BY result_id&quot;</span>
+    ).fetchall()
+    conn.close()
+    
+    banner(<span class="ts">&quot;演示总结&quot;</span>)
+    print(f<span class="ts">&quot;\n  共评估 {len(rows)} 次:&quot;</span>)
+    <span class="tk">for</span> i, (stage, result, reason) <span class="tk">in</span> enumerate(rows, <span class="tn">1</span>):
+        icon = {<span class="ts">&quot;<span class="tk">pass</span>&quot;</span>: <span class="ts">&quot;✅&quot;</span>, <span class="ts">&quot;fail&quot;</span>: <span class="ts">&quot;❌&quot;</span>, <span class="ts">&quot;uncertain&quot;</span>: <span class="ts">&quot;⚠️&quot;</span>}[result]
+        print(f<span class="ts">&quot;  {i}. {stage:8s} → {icon} {result.upper():10s} {reason[:<span class="tn">50</span>]}&quot;</span>)
+    
+    print(f<span class="ts">&quot;\n  ✅ 完整 Agent 闭环跑通:&quot;</span>)
+    print(f<span class="ts">&quot;     L1 信号 → L2 规则引擎 → L2 结果(写入gate_results)&quot;</span>)
+    print(f<span class="ts">&quot;     不同生命周期·不同门·完全不同判断&quot;</span>)
+    print(f<span class="ts">&quot;     未知信号诚实标 uncertain·不蒙&quot;</span>)
+    print(f<span class="ts">&quot;\n  下一步 Step <span class="tn">4</span>: L7 行动建议 API · 把这些判断转成 SR 待办&quot;</span>)
+    print()
+
+
+<span class="tk">if</span> __name__ == <span class="ts">&quot;__main__&quot;</span>:
+    main()
+</pre></div>
+  </div>
+</details>
+<div class="colophon">
+  <p><b>INFINITY Agent OS · Step 3 · L2 规则引擎 V0.1</b></p>
+  <p>署名 DS · 2026-05-29 · 定位:S2 × L0~L2 · Layer 1.3</p>
+  <p>严守 DS ⑧ 警告:不抢 Step 4-5 · 不再加 L4-L9 概念层</p>
+  <p style="margin-top:14px;font-size:10px">21/21 测试通过 · 4 场景演示 · 接 L3-L7 准备就绪</p>
+</div></div>
+<script>
+function copyContent(id){
+  const el = document.querySelector('#'+id+' .raw-content');
+  const text = el.dataset.content;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.querySelector('#'+id+' .btn-copy');
+    const orig = btn.textContent;
+    btn.textContent = '✓ 已复制';
+    btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent = orig; btn.classList.remove('copied'); }, 1800);
+  });
+}
+document.querySelectorAll('.toc a').forEach(a=>{
+  a.addEventListener('click', e=>{
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if(target){ target.open = true; target.scrollIntoView({behavior:'smooth', block:'start'}); }
+  });
+});
+</script></body></html>
