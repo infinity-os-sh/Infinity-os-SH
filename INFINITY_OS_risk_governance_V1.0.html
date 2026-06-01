@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>风险治理 · 规则当黑脸 · INFINITY OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090f;--bg2:#0e1018;--bg3:#13161f;--card:#141820;--card2:#1a2030;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.1);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.1);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.1);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.1);--purple:#a78bfa;--purple-dim:rgba(167,139,250,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;line-height:1.55;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(9,9,15,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:11px 16px}
+.tb-row{display:flex;align-items:center;gap:9px}
+.logo{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#ff5f5f,#f5a623);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.tb-t{font-family:Syne;font-size:13px;font-weight:700}
+.tb-t span{color:var(--red)}
+.tb-sub{font-family:Space Mono,monospace;font-size:9px;color:var(--text3);margin-top:1px}
+.wrap{max-width:760px;margin:0 auto;padding:14px 14px 60px}
+
+.soul{background:linear-gradient(135deg,rgba(255,95,95,.08),rgba(245,166,35,.04));border:1px solid rgba(255,95,95,.25);border-radius:14px;padding:14px 15px;margin-bottom:14px}
+.soul .slt{font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px}
+.soul p{font-size:11.5px;color:var(--text2);line-height:1.55;margin-bottom:5px}
+.soul p:last-child{margin-bottom:0}
+.soul b{color:var(--text)}.soul .gn{color:var(--green);font-weight:600}.soul .am{color:var(--amber);font-weight:600}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:11px 6px;text-align:center}
+.stat .n{font-family:Syne;font-weight:800;font-size:20px;line-height:1}
+.stat .l{font-size:9px;color:var(--text3);margin-top:4px;line-height:1.2}
+.c-red{color:var(--red)}.c-amber{color:var(--amber)}.c-green{color:var(--green)}.c-blue{color:var(--blue)}
+
+.sectitle{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin:16px 0 9px;display:flex;align-items:center;gap:7px}
+.sectitle::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.case{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:0;margin-bottom:10px;overflow:hidden;border-left:3px solid var(--text3)}
+.case.suspect{border-left-color:var(--amber)}
+.case.cleared{border-left-color:var(--green)}
+.case.melt{border-left-color:var(--red)}
+.case-hd{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+.case-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;background:var(--bg3)}
+.case-t{flex:1;min-width:0}
+.case-name{font-size:13px;font-weight:700}
+.case-sub{font-family:Space Mono,monospace;font-size:9px;color:var(--text3);margin-top:2px}
+.case-stat{font-size:10px;font-weight:700;padding:3px 9px;border-radius:18px;white-space:nowrap;flex-shrink:0}
+.cs-suspect{color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,166,35,.3)}
+.cs-cleared{color:var(--green);background:var(--green-dim);border:1px solid rgba(74,222,128,.3)}
+.cs-melt{color:var(--red);background:var(--red-dim);border:1px solid rgba(255,95,95,.3)}
+.case-body{padding:0 14px 13px;display:none}
+.case.open .case-body{display:block}
+.case-arrow{color:var(--text3);font-size:11px;transition:transform .2s}
+.case.open .case-arrow{transform:rotate(180deg)}
+
+.rule-row{background:var(--bg3);border-radius:8px;padding:9px 11px;margin-bottom:7px;border-left:2px solid var(--blue)}
+.rule-row .rl{font-size:9px;font-family:Space Mono,monospace;color:var(--blue);margin-bottom:3px;letter-spacing:.04em}
+.rule-row .rt{font-size:11.5px;color:var(--text);line-height:1.5}
+.rule-row .rt .em{color:var(--amber);font-weight:600}
+.rule-row .rt .ok{color:var(--green);font-weight:600}
+
+.flow{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.fstep{display:flex;gap:9px;align-items:flex-start;font-size:11px;color:var(--text2);line-height:1.5}
+.fstep .fnum{font-family:Space Mono,monospace;font-size:9px;color:#000;background:var(--amber);min-width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-weight:700}
+.fstep.auto .fnum{background:var(--blue)}
+.fstep.human .fnum{background:var(--purple)}
+.fstep b{color:var(--text)}
+.fstep .tag{font-family:Space Mono,monospace;font-size:8px;padding:1px 5px;border-radius:4px;margin-left:4px}
+.tag-auto{color:var(--blue);background:var(--blue-dim)}
+.tag-human{color:var(--purple);background:var(--purple-dim)}
+
+.noface{margin-top:16px;background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.22);border-radius:12px;padding:13px 15px}
+.noface .nt{font-size:11px;font-weight:700;color:var(--purple);margin-bottom:8px}
+.noface .cmp{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.nc{border-radius:9px;padding:10px 12px;font-size:11px;line-height:1.5}
+.nc.bad{background:rgba(255,95,95,.05);border:1px solid rgba(255,95,95,.2)}
+.nc.good{background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.2)}
+.nc .h{font-size:9px;font-family:Space Mono,monospace;margin-bottom:4px}
+.nc.bad .h{color:var(--red)}.nc.good .h{color:var(--green)}
+.nc p{color:var(--text2)}.nc b{color:var(--text)}
+@media(max-width:520px){.noface .cmp{grid-template-columns:1fr}}
+
+.honest{margin-top:14px;background:rgba(96,165,250,.05);border:1px solid rgba(96,165,250,.2);border-radius:12px;padding:13px 15px}
+.honest .ht{font-size:11px;font-weight:700;color:var(--blue);margin-bottom:7px}
+.honest ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.honest li{font-size:11px;color:var(--text2);padding-left:15px;position:relative;line-height:1.5}
+.honest li::before{content:'';position:absolute;left:2px;top:7px;width:5px;height:5px;border-radius:50%}
+.honest li.t::before{background:var(--green)}.honest li.f::before{background:var(--amber)}
+.honest li b{color:var(--text)}
+.foot{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-family:Space Mono,monospace;font-size:9.5px;color:var(--text3);line-height:1.8}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="tb-row">
+    <div class="logo">⚖</div>
+    <div>
+      <div class="tb-t">INFINITY <span>OS</span> · 风险治理</div>
+      <div class="tb-sub">规则当黑脸 · 对事不对人 · 不可求情</div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="soul">
+    <div class="slt">⚖ 这页演示:黑脸由"规则"当,不由任何人当</div>
+    <p>公司不是被对手打败,是被<b>内部漏洞</b>打败的:投机者钻空子→诚实人出走→生命力被耗掉。</p>
+    <p><span class="am">所以守漏洞这件事,必须规则/Agent来当黑脸</span>——<b>无差别、不可求情、24h不疲倦、透明可申诉</b>。没有任何主管、HR、老板需要去得罪人。</p>
+    <p><span class="gn">机制焊死漏洞 → 没人靠投机得利 → 诚实人不再吃亏 → 全员转向对外竞争(百人一步)。</span></p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="n c-blue" id="s-total">0</div><div class="l">稽核数据</div></div>
+    <div class="stat"><div class="n c-amber" id="s-suspect">0</div><div class="l">规则存疑</div></div>
+    <div class="stat"><div class="n c-green" id="s-cleared">0</div><div class="l">自证通过</div></div>
+    <div class="stat"><div class="n c-red" id="s-melt">0</div><div class="l">转投处置</div></div>
+  </div>
+
+  <div class="sectitle">稽核案例 · 点开看规则怎么自动落子</div>
+  <div id="cases"></div>
+
+  <div class="noface">
+    <div class="nt">▶ 同一件事:人当黑脸 vs 规则当黑脸</div>
+    <div class="cmp">
+      <div class="nc bad"><div class="h">✕ 人当黑脸(过去)</div><p>主管/审计去查→<b>会被求情、有人情、选择性执法</b>→漏洞还在、老实人寒心、还让授权式管理破功</p></div>
+      <div class="nc good"><div class="h">✓ 规则当黑脸(现在)</div><p>规则自动判定+处置→<b>对事不对人、不可求情、透明依据、可申诉</b>→没人需要得罪人,漏洞自动焊死</p></div>
+    </div>
+  </div>
+
+  <div class="honest">
+    <div class="ht">⚠ 诚实说明</div>
+    <ul>
+      <li class="t"><b>真的</b>:失真类型A/B/C、补货/蝴蝶预警字段——来自INF-XD真实花雕数据(店号真实)</li>
+      <li class="f"><b>演示</b>:反作弊四维(GPS/月末开单/幽灵库存)的判定是<b>规则示意</b>,真实稽核需三方数据(POS+合同+物流)接入·待TL后端</li>
+      <li class="f"><b>处置去向</b>:本页处置="暂缓+诊断+转投",不是没收/扣薪;扣薪汰换属HR域·需独立流程·非系统自动</li>
+    </ul>
+  </div>
+
+  <div class="foot">
+    INFINITY OS · 风险治理 · 规则当黑脸 V1.0 · 署名 DS<br>
+    系统只发现+取证+按公开规则处置 · 定性不靠人情 · 复核规则不复核人
+  </div>
+</div>
+
+<script>
+// 案例:混真实字段(失真A)+演示反作弊四维。每个案例展示"规则自动落子"全流程
+const CASES=[
+  {id:1, cls:'suspect', icon:'🕐', name:'月末开单异常 · 时间集中度',
+   sub:'演示规则 · 大区X · 花雕1.28L', stat:'规则存疑', sl:'cs-suspect',
+   rule:{rl:'反作弊①时间集中度(演示)', rt:'末3天开单占全月 <span class="em">78%</span> 且开单量齐刷卡在"1箱" → 触发"高熵协同异常"红线(阈值70%)'},
+   flow:[
+     {t:'auto',tag:'自动',txt:'规则扫描出异常 → 该数据<b>自动标"存疑"·不计入满分</b>(防刷分)'},
+     {t:'auto',tag:'自动',txt:'相关战术费用<b>自动暂缓</b>(冻结·非没收)'},
+     {t:'auto',tag:'自动',txt:'<b>自动派"拍照自证"任务</b>给SFA:随机10家门店·拍货架+批次+GPS+时间戳'},
+     {t:'human',tag:'仅复核规则',txt:'若申诉 → 人复核的是"这条规则该不该这样定",<b>不是放不放这个人一马</b>'}
+   ]},
+  {id:2, cls:'suspect', icon:'📍', name:'物理流GPS · 车没到店',
+   sub:'演示规则 · 某门店签收', stat:'规则存疑', sl:'cs-suspect',
+   rule:{rl:'反作弊③物理流(演示)', rt:'出库单当天·送货车GPS<span class="em">未进店500米内</span>·且签收IP=经销商办公室 → 三方对不上'},
+   flow:[
+     {t:'auto',tag:'自动',txt:'需求流×合同流×物理流<b>三角互证失败</b> → 该笔动销自动存疑'},
+     {t:'auto',tag:'自动',txt:'<b>自动给出透明依据</b>:哪个单号、车在哪、IP是什么——全员看同一把尺'},
+     {t:'auto',tag:'自动',txt:'该笔动销<b>不计入L2满分</b>·等自证'},
+     {t:'human',tag:'仅复核规则',txt:'误判可申诉 → 复核GPS规则阈值是否合理·规则错就改规则(对所有人生效)'}
+   ]},
+  {id:3, cls:'cleared', icon:'✅', name:'自证通过 · 真动销',
+   sub:'演示 · 自证回传后', stat:'自证通过', sl:'cs-cleared',
+   rule:{rl:'自证结果', rt:'14天内SFA传回真实货架照·GPS对得上·批次号清晰 → <span class="ok">证明是真动销</span>'},
+   flow:[
+     {t:'auto',tag:'自动',txt:'照片+GPS+批次<b>自动核验通过</b>'},
+     {t:'auto',tag:'自动',txt:'数据<b>自动计回满分</b>·暂缓的费用<b>自动释放</b>'},
+     {t:'auto',tag:'自动',txt:'<b>无事发生·无人被得罪</b>——这正是"对事不对人"的好处:清白的自动还清白'}
+   ]},
+  {id:4, cls:'suspect', icon:'📊', name:'失真类型A · 无动销历史',
+   sub:'真实字段 · 店31300136 花雕1.28L', stat:'规则存疑', sl:'cs-suspect',
+   rule:{rl:'真实失真字段 distort=A', rt:'真实盘点:有库存(货架12瓶)但<span class="em">动销历史不足</span>·系统标失真类型A → 数据可信度待积累'},
+   flow:[
+     {t:'auto',tag:'自动',txt:'真实数据里 <b>distort=A</b> 已由后端算出(非演示)'},
+     {t:'auto',tag:'自动',txt:'规则:无历史数据→<b>该SKU该店暂不参与达成率排名</b>(防止用空数据评高分)'},
+     {t:'auto',tag:'自动',txt:'<b>自动持续盘点积累</b>·够样本后自动转正常(失真B)'}
+   ]},
+  {id:5, cls:'melt', icon:'💸', name:'费用转投处置 · 不是没收',
+   sub:'演示 · 自证失败后', stat:'转投处置', sl:'cs-melt',
+   rule:{rl:'处置=诊断+转投(非罚款)', rt:'自证失败·动销确实没起来 → 战术费用<span class="em">暂停该处投入</span>·<span class="ok">转投到更该投的SKU/店</span>'},
+   flow:[
+     {t:'auto',tag:'自动',txt:'按公开规则自动处置:<b>钱不没收·只挪位</b>(养SKU,不是罚人)'},
+     {t:'auto',tag:'自动',txt:'<b>自动诊断为什么没效果</b>(ITR分诊):陈列?价格?认知?'},
+     {t:'auto',tag:'自动',txt:'整改目标<b>按SKU生命周期阶段定</b>(导入期看陈列·非动销95%)'},
+     {t:'human',tag:'仅复核规则',txt:'<b>全程无人定性·无人扣薪</b>·扣薪汰换属HR独立流程·系统不自动碰'}
+   ]}
+];
+
+function render(){
+  document.getElementById('s-total').textContent=CASES.length+'+';
+  document.getElementById('s-suspect').textContent=CASES.filter(function(c){return c.cls==='suspect';}).length;
+  document.getElementById('s-cleared').textContent=CASES.filter(function(c){return c.cls==='cleared';}).length;
+  document.getElementById('s-melt').textContent=CASES.filter(function(c){return c.cls==='melt';}).length;
+  document.getElementById('cases').innerHTML=CASES.map(function(c){
+    const flow=c.flow.map(function(f){
+      const tagcls=f.t==='human'?'tag-human':'tag-auto';
+      return '<div class="fstep '+f.t+'"><div class="fnum">'+(f.t==='human'?'人':'机')+'</div><div>'+f.txt+'<span class="tag '+tagcls+'">'+f.tag+'</span></div></div>';
+    }).join('');
+    return '<div class="case '+c.cls+'" onclick="this.classList.toggle(\'open\')">'+
+      '<div class="case-hd"><div class="case-icon">'+c.icon+'</div>'+
+      '<div class="case-t"><div class="case-name">'+c.name+'</div><div class="case-sub">'+c.sub+'</div></div>'+
+      '<div class="case-stat '+c.sl+'">'+c.stat+'</div><div class="case-arrow">▼</div></div>'+
+      '<div class="case-body">'+
+        '<div class="rule-row"><div class="rl">'+c.rule.rl+'</div><div class="rt">'+c.rule.rt+'</div></div>'+
+        '<div class="flow">'+flow+'</div>'+
+      '</div></div>';
+  }).join('');
+}
+render();
+</script>
+</body>
+</html>
