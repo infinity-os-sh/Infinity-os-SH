@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GT SR App V0.2 · 焊入DECISION-002 · INFINITY Agent OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#09090f;--bg2:#0e1018;--bg3:#13161f;--card:#141820;--card2:#1a2030;
+--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+--text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;
+--amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.1);
+--teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.1);--red:#ff5f5f;--red-dim:rgba(255,95,95,0.1);
+--green:#4ade80;--green-dim:rgba(74,222,128,0.1);--blue:#60a5fa;--blue-dim:rgba(96,165,250,0.1);--purple:#a78bfa;--purple-dim:rgba(167,139,250,0.12);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;line-height:1.5;min-height:100vh;padding-bottom:20px}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(9,9,15,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:10px 15px}
+.tb{display:flex;align-items:center;gap:9px}
+.logo{width:27px;height:27px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#ff7c38);display:flex;align-items:center;justify-content:center;font-family:Syne;font-weight:800;font-size:11px;color:#000;flex-shrink:0}
+.tb-t{font-family:Syne;font-size:12.5px;font-weight:700}.tb-t span{color:var(--amber)}
+.tb-sub{font-family:Space Mono,monospace;font-size:8.5px;color:var(--text3);margin-top:1px}
+.who{margin-left:auto;font-family:Space Mono,monospace;font-size:8.5px;color:var(--green);background:var(--green-dim);border:1px solid rgba(74,222,128,.3);border-radius:14px;padding:3px 8px}
+.wrap{max-width:560px;margin:0 auto;padding:13px 13px 20px}
+.gov{background:linear-gradient(135deg,rgba(167,139,250,.08),rgba(96,165,250,.04));border:1px solid rgba(167,139,250,.22);border-radius:12px;padding:11px 13px;margin-bottom:12px}
+.gov-t{font-family:Space Mono,monospace;font-size:8.5px;color:var(--purple);margin-bottom:6px;letter-spacing:.04em}
+.gov p{font-size:10.5px;color:var(--text2);line-height:1.55}.gov b{color:var(--text)}
+.xp{background:linear-gradient(135deg,rgba(96,165,250,.08),rgba(245,166,35,.04));border:1px solid rgba(96,165,250,.22);border-radius:13px;padding:12px 15px;margin-bottom:13px}
+.xp-t{font-family:Space Mono,monospace;font-size:8.5px;color:var(--blue);margin-bottom:9px;letter-spacing:.05em;display:flex;justify-content:space-between}
+.xp-t .ok{color:var(--green)}
+.xp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.xp-box{text-align:center}.xp-n{font-family:Syne;font-weight:800;font-size:18px;line-height:1}.xp-l{font-size:8px;color:var(--text3);margin-top:3px;line-height:1.2}
+.c-amber{color:var(--amber)}.c-green{color:var(--green)}.c-red{color:var(--red)}.c-blue{color:var(--blue)}
+.tabs{display:flex;gap:6px;margin-bottom:13px}
+.tab{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 3px;text-align:center;font-size:11px;color:var(--text2);cursor:pointer;font-weight:600}
+.tab.on{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+.tab .ic{font-size:14px;display:block;margin-bottom:2px}
+.pane{display:none}.pane.on{display:block}
+.sectitle{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin:6px 0 10px}
+.store{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:13px 14px;margin-bottom:10px;border-left:3px solid var(--text3)}
+.store.todo{border-left-color:var(--amber)}.store.urgent{border-left-color:var(--red)}.store.ok{border-left-color:var(--green)}
+.st-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.st-nm{font-size:13px;font-weight:700}.st-nm small{display:block;font-family:Space Mono,monospace;font-size:8.5px;color:var(--text3);font-weight:400;margin-top:1px}
+.st-badge{font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:14px;white-space:nowrap;flex-shrink:0}
+.bg-urgent{color:var(--red);background:var(--red-dim);border:1px solid rgba(255,95,95,.3)}
+.bg-todo{color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,166,35,.3)}
+.bg-ok{color:var(--green);background:var(--green-dim);border:1px solid rgba(74,222,128,.3)}
+.trx{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.t{font-family:Space Mono,monospace;font-size:9px;padding:3px 7px;border-radius:6px;border:1px solid var(--border)}
+.t.on{color:var(--green);background:var(--green-dim);border-color:rgba(74,222,128,.25)}
+.t.off{color:var(--red);background:var(--red-dim);border-color:rgba(255,95,95,.25)}
+.t.unk{color:var(--text3);background:var(--bg3)}
+.jbp{background:var(--bg3);border-radius:9px;padding:10px 12px;border-left:2px solid var(--blue);margin-bottom:8px}
+.jbp-l{font-family:Space Mono,monospace;font-size:8.5px;color:var(--blue);margin-bottom:5px;letter-spacing:.04em;display:flex;justify-content:space-between}
+.jbp-l .stage{color:var(--text3)}
+.jbp-flow{display:flex;gap:4px;margin-bottom:7px}
+.jbp-step{flex:1;text-align:center;font-size:8.5px;padding:5px 2px;border-radius:5px;border:1px solid var(--border);color:var(--text3)}
+.jbp-step.cur{border-color:var(--blue);color:var(--blue);background:var(--blue-dim);font-weight:700}
+.jbp-step.done{color:var(--green);border-color:rgba(74,222,128,.25)}
+.jbp-step.done::before{content:'✓ '}
+.jbp-t{font-size:11.5px;color:var(--text);line-height:1.5}.jbp-t .em{color:var(--blue);font-weight:600}
+.jbp-btns{display:flex;gap:6px;margin-top:8px}
+.jbp-btn{flex:1;font-size:10.5px;padding:7px;border-radius:7px;border:none;cursor:pointer;font-weight:600;font-family:Noto Sans SC}
+.jbp-btn.go{background:var(--blue);color:#fff}.jbp-btn.fix{background:var(--bg2);color:var(--amber);border:1px solid rgba(245,166,35,.3)}
+.itr{background:var(--bg3);border-radius:9px;padding:10px 12px;border-left:2px solid var(--amber)}
+.itr-l{font-family:Space Mono,monospace;font-size:8.5px;color:var(--amber);margin-bottom:4px;letter-spacing:.04em}
+.itr-t{font-size:12px;color:var(--text);font-weight:600;line-height:1.5}.itr-t .em{color:var(--amber)}.itr-t .conf{font-family:Space Mono,monospace;font-size:9px;color:var(--text3)}
+.itr-xl{font-size:11px;color:var(--green);margin-top:6px;font-weight:600}
+.st-meta{display:flex;gap:9px;margin-top:8px;font-family:Space Mono,monospace;font-size:8.5px;color:var(--text3);flex-wrap:wrap}
+.dste{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 14px;margin-bottom:9px}
+.dste-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.dste-nm{font-size:12.5px;font-weight:700}.dste-pct{font-family:Syne;font-weight:800;font-size:15px;color:var(--amber)}
+.dste-bar{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-bottom:6px}
+.dste-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--amber2))}
+.dste-d{font-size:10.5px;color:var(--text3)}
+.dste-src{font-family:Space Mono,monospace;font-size:8px;color:var(--blue);margin-top:5px}
+/* 收入·处置绑定 */
+.income{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:14px 15px;margin-bottom:11px}
+.inc-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px}
+.inc-nm{font-size:12.5px;font-weight:700}
+.inc-n{font-family:Syne;font-weight:800;font-size:20px;color:var(--green)}
+.inc-status{border-radius:9px;padding:10px 12px;font-size:11px;line-height:1.55;margin-top:9px}
+.inc-clean{background:var(--green-dim);border:1px solid rgba(74,222,128,.25);color:var(--text2)}
+.inc-clean b{color:var(--green)}
+.inc-flag{background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.25)}
+.inc-flag .fl-t{font-size:11.5px;color:var(--amber);font-weight:700;margin-bottom:6px}
+.inc-flag .fl-flow{display:flex;gap:4px;margin:7px 0}
+.fl-step{flex:1;text-align:center;font-size:8.5px;padding:5px 2px;border-radius:5px;border:1px solid var(--border);color:var(--text3)}
+.fl-step.cur{border-color:var(--amber);color:var(--amber);background:var(--amber-dim);font-weight:700}
+.inc-flag .fl-d{font-size:10.5px;color:var(--text2);line-height:1.55}.inc-flag .fl-d b{color:var(--text)}
+.inc-flag .appeal{margin-top:8px;display:flex;gap:6px}
+.appeal-btn{flex:1;font-size:10.5px;padding:7px;border-radius:7px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);cursor:pointer;font-family:Noto Sans SC}
+.ladder{display:flex;gap:3px;margin-top:9px}
+.ld{flex:1;text-align:center;font-size:8px;padding:4px 1px;border-radius:4px;border:1px solid var(--border);color:var(--text3)}
+.ld.cur{border-color:var(--amber);color:var(--amber);background:var(--amber-dim);font-weight:700}
+.collect{display:none;background:var(--bg2);border:1px dashed var(--border2);border-radius:9px;padding:11px;margin-top:9px}
+.collect.show{display:block}
+.collect-t{font-family:Space Mono,monospace;font-size:8.5px;color:var(--teal);margin-bottom:8px}
+.cgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.cbtn{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 9px;font-size:10.5px;color:var(--text2);display:flex;justify-content:space-between;align-items:center}
+.cbtn .sw{font-family:Space Mono,monospace;font-size:9px;padding:1px 6px;border-radius:5px}
+.cbtn .sw.on{color:var(--green);background:var(--green-dim)}.cbtn .sw.off{color:var(--red);background:var(--red-dim)}.cbtn .sw.unk{color:var(--text3);background:rgba(255,255,255,.05)}
+.cnote{font-size:9.5px;color:var(--text3);margin-top:8px;line-height:1.5}
+.expand{font-size:10.5px;color:var(--amber);text-align:center;padding:7px;cursor:pointer;margin-top:2px}
+.note{margin-top:16px;background:rgba(96,165,250,.05);border:1px solid rgba(96,165,250,.2);border-radius:11px;padding:12px 14px}
+.note .nt{font-size:10px;font-weight:700;color:var(--blue);margin-bottom:6px}
+.note ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.note li{font-size:10.5px;color:var(--text2);padding-left:13px;position:relative;line-height:1.45}
+.note li::before{content:'';position:absolute;left:2px;top:6px;width:4px;height:4px;border-radius:50%;background:var(--blue)}
+.note li b{color:var(--text)}
+.foot{margin-top:16px;text-align:center;font-family:Space Mono,monospace;font-size:9px;color:var(--text3);line-height:1.8}
+</style></head><body>
+<div class="topbar"><div class="tb">
+  <div class="logo">SR</div>
+  <div><div class="tb-t">GT <span>SR</span> · 社区店业代 V0.2</div><div class="tb-sub">焊入DECISION-002 · ICA到店核心+JBP</div></div>
+  <div class="who">● 赵磊 · 杨浦区</div>
+</div></div>
+
+<div class="wrap">
+  <div class="gov">
+    <div class="gov-t">⚖ 治理基准 DECISION-002(守护者非控制者)</div>
+    <p><b>检测≠判决</b>·程序永远拉满(可申诉+双签裁决)·力度=f(置信×可逆×惯犯)·<b>异常只标记转人工·不自动判罚</b>(因果层未建)</p>
+  </div>
+
+  <div class="xp">
+    <div class="xp-t"><span>INF-XP · 我的状态</span><span class="ok">● 信用正常·无指控</span></div>
+    <div class="xp-grid">
+      <div class="xp-box"><div class="xp-n c-blue" id="xp-stores">8</div><div class="xp-l">今日路线</div></div>
+      <div class="xp-box"><div class="xp-n c-red" id="xp-urgent">0</div><div class="xp-l">急处理</div></div>
+      <div class="xp-box"><div class="xp-n c-amber" id="xp-todo">0</div><div class="xp-l">待行动</div></div>
+      <div class="xp-box"><div class="xp-n c-green">¥—</div><div class="xp-l">本周收入</div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on" onclick="tab('route',this)"><span class="ic">📍</span>今日路线</div>
+    <div class="tab" onclick="tab('dste',this)"><span class="ic">🎯</span>关键任务</div>
+    <div class="tab" onclick="tab('income',this)"><span class="ic">💰</span>我的收入</div>
+  </div>
+
+  <div class="pane on" id="pane-route">
+    <div class="sectitle">进店:到店核心(同ICA) + JBP草案 + 该做的事</div>
+    <div id="storelist"></div>
+  </div>
+
+  <div class="pane" id="pane-dste">
+    <div class="sectitle">INF-XM · 关键任务(JBP草案→去谈→执行→喂回)</div>
+    <div class="dste"><div class="dste-top"><div class="dste-nm">本周·六月鲜老板推荐覆盖</div><div class="dste-pct">2/5</div></div>
+      <div class="dste-bar"><div class="dste-fill" style="width:40%"></div></div>
+      <div class="dste-d">已攻下2家·还差3家·路线里3家S09待采</div><div class="dste-src">▸ 任务来源:INF-XM(非SR自己拼)</div></div>
+    <div class="dste"><div class="dste-top"><div class="dste-nm">本周·防断货巡检</div><div class="dste-pct">6/8</div></div>
+      <div class="dste-bar"><div class="dste-fill" style="width:75%"></div></div>
+      <div class="dste-d">8家·6家健康·2家需补货(店1111急)</div><div class="dste-src">▸ 任务来源:INF-XM</div></div>
+    <div class="dste"><div class="dste-top"><div class="dste-nm">本周·JBP执行(社区店联合计划)</div><div class="dste-pct">1/3</div></div>
+      <div class="dste-bar"><div class="dste-fill" style="width:33%"></div></div>
+      <div class="dste-d">JBP Agent已出3家草案·1家已谈成·2家待SR拿草案去谈</div><div class="dste-src">▸ 草案来源:JBP Agent(四段:对赌/商品/费用/违约转人工)</div></div>
+  </div>
+
+  <div class="pane" id="pane-income">
+    <div class="sectitle">INF-XL · 收入(受处置绑定·DECISION-002)</div>
+    <div class="income">
+      <div class="inc-top"><div class="inc-nm">本周收入进度</div><div class="inc-n">养生命→收入</div></div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.6">收入=做对的事→SKU生命力变强→应得收入。<b style="color:var(--text)">不是计件即时到账</b>·按周期结算。</div>
+      <div class="inc-status inc-clean"><b>● 信用正常</b> · 无指控 · 收入正常累计 · 守规多数默认信任(DECISION-002 D-2①)</div>
+    </div>
+    <div class="income">
+      <div class="inc-nm" style="margin-bottom:9px">⚖ 若被标记违规·走正当程序(不秒扣)</div>
+      <div class="inc-status inc-flag">
+        <div class="fl-t">演示:某SR被标记"GPS异常"</div>
+        <div class="fl-flow"><div class="fl-step cur">①指控</div><div class="fl-step">②申诉</div><div class="fl-step">③双签裁决</div></div>
+        <div class="fl-d"><b>检测≠判决</b>:系统标记GPS距门店3km(置信中)→<b>不秒扣收入</b>→SR可申诉看理由→确认惯犯才上L3扣奖金(总部+大区GM双签)</div>
+        <div class="ladder">
+          <div class="ld">L0提示</div><div class="ld cur">L1警告</div><div class="ld">L2扣分</div><div class="ld">L3扣奖(双签)</div><div class="ld">L4退出(双签)</div></div>
+        <div class="appeal"><button class="appeal-btn">查看指控理由</button><button class="appeal-btn">我要申诉</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <div class="nt">⚠ V0.2 焊入了DECISION-002四硬点(诚实)</div>
+    <ul>
+      <li class="t"><b>①可信度门同口径</b>:风险柱用 f(置信×可逆) 判能否自动/双签·与判定门B一套·不另定</li>
+      <li class="t"><b>②收入受处置绑定</b>:违规走指控→申诉→裁决·不秒扣·惯犯才L3/L4双签(见"我的收入"tab)</li>
+      <li class="t"><b>③任务受JBP影响</b>:任务从INF-XM出·SR工作=拿AI草案去谈+执行+喂回·非自己拼方案</li>
+      <li class="t"><b>④守护者+因果待建</b>:GPS/动销骤降一律检测≠判决·只标记转人工·不自动判罚</li>
+      <li><b>建在GT SR契约V0.1上</b>:S01-S10+L7引擎不重画·JBP复用已有JBP Agent(四段草案)·到店核心同ICA</li>
+    </ul>
+  </div>
+  <div class="foot">INFINITY Agent OS · GT SR App V0.2 · 署名 DS<br>ICA到店核心 + JBP(已有Agent) + DECISION-002守护者治理 · GT SR非美顾</div>
+</div>
+
+<script>
+const STORES=[{"store": "3000041111", "spec": "1.28L", "shelf": 9, "back": 0, "total": 9, "r": 1.29, "wstatus": "danger", "distort": null, "reorder": 1, "butterfly": 1, "sw": {"S01": 1, "S02": 1, "S03": 1, "S04": 0, "S05": 1, "S06": 1, "S07": null, "S08": 0, "S09": null, "S10": null}}, {"store": "31000796", "spec": "450ml方瓶", "shelf": 46, "back": 0, "total": 46, "r": 6.57, "wstatus": "unknown", "distort": "B", "reorder": 0, "butterfly": 0, "sw": {"S01": 1, "S02": 1, "S03": 1, "S04": 1, "S05": 1, "S06": 1, "S07": null, "S08": 0, "S09": null, "S10": null}}, {"store": "31000796", "spec": "1.28L", "shelf": 4, "back": 24, "total": 28, "r": 4, "wstatus": "unknown", "distort": "B", "reorder": 0, "butterfly": 0, "sw": {"S01": 1, "S02": 1, "S03": 1, "S04": 0, "S05": 1, "S06": 1, "S07": null, "S08": 0, "S09": null, "S10": null}}, {"store": "3090031719", "spec": "1.28L", "shelf": 8, "back": 0, "total": 8, "r": 0, "wstatus": "unknown", "distort": "B", "reorder": 0, "butterfly": 0, "sw": {"S01": 1, "S02": 1, "S03": 1, "S04": 0, "S05": 1, "S06": 0, "S07": null, "S08": 0, "S09": null, "S10": null}}, {"store": "3090066621", "spec": "450ml方瓶", "shelf": 6, "back": 0, "total": 6, "r": 2, "wstatus": "unknown", "distort": "B", "reorder": 0, "butterfly": 0, "sw": {"S01": 1, "S02": 1, "S03": 1, "S04": 0, "S05": 1, "S06": 1, "S07": null, "S08": 0, "S09": null, "S10": null}}, {"store": "4000412072", "spec": "450ml方瓶", "shelf": 4, "back": 0, "total": 4, "r": 0.57, "wstatus": "unknown", "distort": "B", "reorder": 0, "butterfly": 0, "sw": {"S01": 1, "S02": 1, "S03": 1, "S04": 0, "S05": 1, "S06": 1, "S07": null, "S08": 0, "S09": null, "S10": null}}, {"store": "4000934492", "spec": "450ml方瓶", "shelf": 3, "back": 0, "total": 3, "r": 0.43, "wstatus": "unknown", "distort": "B", "reorder": 0, "butterfly": 0, "sw": {"S01": 1, "S02": 1, "S03": 1, "S04": 0, "S05": 1, "S06": 1, "S07": null, "S08": 0, "S09": null, "S10": null}}, {"store": "4000616834", "spec": "450ml圆瓶", "shelf": 0, "back": 1, "total": 1, "r": 0.14, "wstatus": "unknown", "distort": "B", "reorder": 0, "butterfly": 0, "sw": {"S01": 1, "S02": 1, "S03": 0, "S04": 0, "S05": 1, "S06": 0, "S07": null, "S08": 0, "S09": null, "S10": null}}];
+const TRX_NAME={S01:'上架',S02:'库存',S03:'主货架',S04:'第二陈列',S05:'价签',S06:'动销',S07:'复购',S08:'断货',S09:'老板推荐',S10:'利润'};
+function diagnose(s){
+  const sw=s.sw;
+  if(s.total===0||s.wstatus==='danger'||s.reorder===1){
+    return {cls:'urgent',badge:'急补货',bg:'bg-urgent',
+      itr:'库存仅<span class="em">'+s.total+'瓶</span>·快断货 → <span class="em">立即补货</span>'+(s.butterfly?'·蝴蝶预警':''),
+      xl:'救活防断货=养生命·应得收入',jbp:null};
+  }
+  if(sw.S09===null){
+    return {cls:'todo',badge:'采+谈推荐',bg:'bg-todo',
+      itr:'老板是否推荐<span class="em">还没采</span> → <span class="em">今天问老板+争推荐</span> <span class="conf">(GT首因0.85)</span>',
+      xl:'救活"老板推荐OFF→ON"=养生命·应得收入',
+      jbp:{stage:1,t:'JBP Agent已出草案:<span class="em">给老板进货返点+第二陈列支持·换老板主动推荐</span>(四段:对赌/商品/费用/违约转人工)'}};
+  }
+  if(sw.S04===0&&sw.S06===1){
+    return {cls:'todo',badge:'争第二陈列',bg:'bg-todo',
+      itr:'有动销但<span class="em">没第二陈列</span> → 争堆头/端架 <span class="conf">(display_weak 0.70)</span>',
+      xl:'救活第二陈列=养生命·应得收入',jbp:null};
+  }
+  if(sw.S06===0){
+    return {cls:'todo',badge:'攻动销',bg:'bg-todo',
+      itr:'有货却<span class="em">无动销</span> → 查陈列/价签/争推荐 <span class="conf">(多因)</span>',
+      xl:'救活动销=养生命·应得收入',jbp:null};
+  }
+  return {cls:'ok',badge:'状态好',bg:'bg-ok',itr:'晶体管达标·维持陈列+客情',xl:'维持·稳定收入',jbp:null};
+}
+function trxDots(sw){return Object.keys(TRX_NAME).map(function(k){const v=sw[k];const cls=v===1?'on':v===0?'off':'unk';const mk=v===1?'●':v===0?'○':'?';return '<span class="t '+cls+'">'+mk+k+'</span>';}).join('');}
+function collectGrid(sw){return Object.keys(TRX_NAME).map(function(k){const v=sw[k];const cls=v===1?'on':v===0?'off':'unk';const tx=v===1?'ON':v===0?'OFF':'待采';return '<div class="cbtn">'+TRX_NAME[k]+'('+k+')<span class="sw '+cls+'">'+tx+'</span></div>';}).join('');}
+function jbpBlock(jbp){
+  if(!jbp) return '';
+  return '<div class="jbp"><div class="jbp-l"><span>🤝 JBP · 联合生意计划(已有JBP Agent生成)</span><span class="stage">草案·需双签</span></div>'+
+    '<div class="jbp-flow"><div class="jbp-step done">AI出草案</div><div class="jbp-step cur">拿去谈</div><div class="jbp-step">执行</div><div class="jbp-step">喂回结果</div></div>'+
+    '<div class="jbp-t">'+jbp.t+'</div>'+
+    '<div class="jbp-btns"><button class="jbp-btn go">拿草案去谈</button><button class="jbp-btn fix">特殊情况·提请改方案</button></div></div>';
+}
+function renderStores(){
+  const diag=STORES.map(function(s){return Object.assign({},s,{_d:diagnose(s)});});
+  const ord={urgent:0,todo:1,ok:2};diag.sort(function(a,b){return ord[a._d.cls]-ord[b._d.cls];});
+  document.getElementById('xp-urgent').textContent=diag.filter(function(x){return x._d.cls==='urgent';}).length;
+  document.getElementById('xp-todo').textContent=diag.filter(function(x){return x._d.cls==='todo';}).length;
+  document.getElementById('storelist').innerHTML=diag.map(function(s,i){
+    const d=s._d;
+    return '<div class="store '+d.cls+'">'+
+      '<div class="st-top"><div class="st-nm">花雕 '+s.spec+'<small>GT店 '+s.store+'</small></div><div class="st-badge '+d.bg+'">'+d.badge+'</div></div>'+
+      '<div class="trx">'+trxDots(s.sw)+'</div>'+
+      jbpBlock(d.jbp)+
+      '<div class="itr"><div class="itr-l">INF-XM · ITR 今天该做的对的事</div><div class="itr-t">'+d.itr+'</div><div class="itr-xl">💰 INF-XL · '+d.xl+'</div></div>'+
+      '<div class="st-meta"><span>货架'+s.shelf+'</span><span>后仓'+s.back+'</span><span>实R '+(s.r!=null?s.r:'-')+'</span><span>水位 '+(s.wstatus||'-')+'</span></div>'+
+      '<div class="expand" onclick="toggleC('+i+')">▾ 展开到店核心采集(同ICA·S01-S10)</div>'+
+      '<div class="collect" id="c'+i+'"><div class="collect-t">到店核心 · 巡店拍照盘库(=ICA·视觉3阶段手填为准)</div>'+
+        '<div class="cgrid">'+collectGrid(s.sw)+'</div>'+
+        '<div class="cnote">● ON / ○ OFF / ? 待采 · S09只能现场问老板 · S06动销POS权威 · 拍照存档(阶段1)</div></div></div>';
+  }).join('');
+}
+function toggleC(i){document.getElementById('c'+i).classList.toggle('show');}
+function tab(id,el){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});el.classList.add('on');
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('on');});document.getElementById('pane-'+id).classList.add('on');}
+renderStores();
+</script></body></html>
