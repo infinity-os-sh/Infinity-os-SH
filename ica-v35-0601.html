@@ -361,9 +361,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans SC',sans-serif
   <div class="sec">🔥 SURGE 热力图 · 扫描5公里</div>
   <div class="heatmap">
     <div class="hm-label">📍 锦江区 · 周一晚高峰</div>
-    <div class="hm-dot hm-hot" style="left:30%;top:40%">¥87🔥</div>
-    <div class="hm-dot hm-warm" style="left:70%;top:30%">¥150</div>
-    <div class="hm-dot hm-warm" style="left:55%;top:70%">¥120</div>
+    <div class="hm-dot hm-hot" style="left:30%;top:40%;cursor:pointer" onclick="grabSurge(87,this)">¥87🔥</div>
+    <div class="hm-dot hm-warm" style="left:70%;top:30%;cursor:pointer" onclick="grabSurge(150,this)">¥150</div>
+    <div class="hm-dot hm-warm" style="left:55%;top:70%;cursor:pointer" onclick="grabSurge(120,this)">¥120</div>
     <div class="hm-dot hm-me" style="left:45%;top:55%">我</div>
     <div class="hm-scan">扫描5公里 · 8个任务</div>
   </div>
@@ -864,13 +864,14 @@ function showSupervisor(){
 }
 function showChan(t){
   var M={
-    fixed:"🏠 固定通道(3单)\n常驻店日常·每天必做的盘点+理货",
-    route:"🗺️ 路线通道(5单)\n系统排好的今日巡店路线·按顺序跑",
-    assign:"📩 派单通道(1单)\n督导/系统主动派给我的指定任务",
-    grab:"⚡ 抢单通道(2单)\n关差任务池·谁抢谁得·手快有",
-    self:"💡 自发通道\n我自己发现的差·主动上报+补·也算积分"
+    fixed:{n:'🏠 固定通道',d:'常驻店日常·每天必做',tasks:['大润发沪西·日常盘点 +¥30','步步高西郊·理货补位 +¥25','社区店·陈列检查 +¥20']},
+    route:{n:'🗺️ 路线通道',d:'系统排好的今日巡店路线',tasks:['王家便利店 +¥38','社区生鲜超市 +¥40','新民路新店 +¥50','×2家...']},
+    assign:{n:'📩 派单通道',d:'督导主动派给我的',tasks:['古北高端店·重点拜访 +¥60(督导派)']},
+    grab:{n:'⚡ 抢单通道',d:'关差池·谁抢谁得',tasks:['W2上海版·救活 +¥42','轻8克·救活 +¥42']},
+    self:{n:'💡 自发通道',d:'我自己发现的差·主动上报',tasks:['(发现新机会→主动上报+补·也算积分)']}
   };
-  alert("任务来源·5通道之一\n\n"+M[t]+"\n\n(5通道=任务不只靠抢·固定/路线/派单/抢单/自发都来·演示·真任务流待TL)");
+  var c=M[t]; if(!c) return;
+  alert(c.n+'\n'+c.d+'\n\n该通道任务:\n· '+c.tasks.join('\n· ')+'\n\n(点任务进店执行·演示·真任务流待TL)');
 }
 function showForceAssign(){
   alert("⏱️ DSR强派机制\n\n关差任务进抢单池→30秒无人抢→DSR周小军被系统强制派单\n\n目的:确保差一定被关·不会因没人抢就漏掉\n(=确保执行的兜底·演示·真强派+企微推待TL)");
@@ -1180,6 +1181,13 @@ function renderLedger(newIdx){
 }
 
 // ════ 灵魂动作1:抢单 → 任务进"在手" → 在手数字涨 ════
+function grabSurge(money, el){
+  S.prog.push({id:'surge_'+Date.now(), store:'热力图·锦江区 · 救活', money:money, pct:5, left:'刚抢', signal:'热力图·'+money, rescued:true});
+  if(typeof renderProg==='function') renderProg();
+  if(typeof refreshMoney==='function') refreshMoney('pending');
+  if(el){ el.textContent='✓已抢'; el.style.background='#4ade80'; el.style.color='#000'; el.onclick=null; el.style.cursor='default'; }
+  if(typeof toast==='function') toast('✅ 抢到热力图这单! 在手+¥'+money);
+}
 function grabGap(skuName, money, btn){
   S.prog.push({id:'gap_'+Date.now(), store:skuName+' · 救活', money:money, pct:5, left:'刚接单', signal:skuName+'·救活', rescued:true});
   if(typeof renderProg==='function') renderProg();
