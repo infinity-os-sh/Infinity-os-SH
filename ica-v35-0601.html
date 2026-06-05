@@ -378,7 +378,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans SC',sans-serif
         <div class="chan-c" style="cursor:pointer" onclick="showChan('grab')"><div class="n red">2</div><div class="l">⚡抢单</div></div>
         <div class="chan-c" style="cursor:pointer" onclick="showChan('self')"><div class="n">+</div><div class="l">💡自发</div></div>
       </div>
-  <div class="t3" style="margin-bottom:10px;text-align:center">固定+路线=73%（例行） · 派/抢=27%</div>
+  <div id="chanPanel" style="display:none;margin:4px 0 10px"></div>
+      <div class="t3" style="margin-bottom:10px;text-align:center">固定+路线=73%（例行） · 派/抢=27%</div>
 
   <!-- 抢单池·三位一体 (数据驱动·可抢单) -->
   <div class="sec">⚡ 抢单池 · <span id="poolCount">3</span>单</div>
@@ -864,14 +865,26 @@ function showSupervisor(){
 }
 function showChan(t){
   var M={
-    fixed:{n:'🏠 固定通道',d:'常驻店日常·每天必做',tasks:['大润发沪西·日常盘点 +¥30','步步高西郊·理货补位 +¥25','社区店·陈列检查 +¥20']},
-    route:{n:'🗺️ 路线通道',d:'系统排好的今日巡店路线',tasks:['王家便利店 +¥38','社区生鲜超市 +¥40','新民路新店 +¥50','×2家...']},
-    assign:{n:'📩 派单通道',d:'督导主动派给我的',tasks:['古北高端店·重点拜访 +¥60(督导派)']},
-    grab:{n:'⚡ 抢单通道',d:'关差池·谁抢谁得',tasks:['W2上海版·救活 +¥42','轻8克·救活 +¥42']},
-    self:{n:'💡 自发通道',d:'我自己发现的差·主动上报',tasks:['(发现新机会→主动上报+补·也算积分)']}
+    fixed:{n:'🏠 固定通道',c:'#4ade80',d:'常驻店日常·每天必做',tasks:[{s:'大润发沪西·日常盘点',m:30,act:'进店'},{s:'步步高西郊·理货补位',m:25,act:'进店'},{s:'社区店·陈列检查',m:20,act:'进店'}]},
+    route:{n:'🗺️ 路线通道',c:'#60a5fa',d:'系统排好的今日巡店路线',tasks:[{s:'王家便利店',m:38,act:'进店'},{s:'社区生鲜超市',m:40,act:'进店'},{s:'新民路新店',m:50,act:'开拓'}]},
+    assign:{n:'📩 派单通道',c:'#f5a623',d:'督导主动派给我的',tasks:[{s:'古北高端店·重点拜访',m:60,act:'接单'}]},
+    grab:{n:'⚡ 抢单通道',c:'#ff5f5f',d:'关差池·谁抢谁得',tasks:[{s:'W2上海版·救活',m:42,act:'抢'},{s:'轻8克·救活',m:42,act:'抢'}]},
+    self:{n:'💡 自发通道',c:'#a78bfa',d:'我自己发现的差·主动上报',tasks:[{s:'发现新机会→上报+补',m:0,act:'上报'}]}
   };
-  var c=M[t]; if(!c) return;
-  alert(c.n+'\n'+c.d+'\n\n该通道任务:\n· '+c.tasks.join('\n· ')+'\n\n(点任务进店执行·演示·真任务流待TL)');
+  var c=M[t]; var panel=document.getElementById('chanPanel'); if(!c||!panel) return;
+  document.querySelectorAll('.chan-c').forEach(function(x){ x.style.outline='none'; });
+  if(event&&event.currentTarget) event.currentTarget.style.outline='2px solid '+c.c;
+  panel.style.display='block';
+  panel.innerHTML='<div style="border:1px solid '+c.c+'55;border-radius:11px;padding:11px 12px;background:rgba(255,255,255,.02)">'+
+    '<div style="font-size:12px;font-weight:700;color:'+c.c+';margin-bottom:3px">'+c.n+'</div>'+
+    '<div style="font-size:10px;color:var(--t3);margin-bottom:9px">'+c.d+'</div>'+
+    c.tasks.map(function(tk){
+      return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.05)">'+
+        '<span style="flex:1;font-size:12px;color:var(--txt)">'+tk.s+'</span>'+
+        (tk.m>0?'<span style="font-size:11px;color:var(--amber2);font-family:Space Mono,monospace">+¥'+tk.m+'</span>':'')+
+        '<button style="background:'+c.c+';color:#000;border:none;border-radius:14px;padding:5px 13px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer" onclick="grabSurge('+tk.m+',this)">'+tk.act+'</button>'+
+      '</div>';
+    }).join('')+'</div>';
 }
 function showForceAssign(){
   alert("⏱️ DSR强派机制\n\n关差任务进抢单池→30秒无人抢→DSR周小军被系统强制派单\n\n目的:确保差一定被关·不会因没人抢就漏掉\n(=确保执行的兜底·演示·真强派+企微推待TL)");
