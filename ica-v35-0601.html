@@ -290,7 +290,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans SC',sans-serif
         <div class="tb-sub">经销商雇·常驻 · 大润发沪西</div>
       </div>
     </div>
-    <div class="tb-up">↗ 我的督导</div>
+    <div class="tb-up" style="cursor:pointer" onclick="showSupervisor()">↗ 我的督导</div>
   </div>
   <div class="tb-mode">
     <div class="tb-m on" id="modeXM" onclick="switchMode('xm')">📱 路上</div>
@@ -345,8 +345,16 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans SC',sans-serif
   <!-- 弥补差距 -->
   <div class="card" style="background:linear-gradient(135deg,var(--amber-d),var(--card));border-color:rgba(245,166,35,0.25)">
     <div class="h">⚡ 弥补差距 · 主动 Agent</div>
-    <div class="t2">今日<b id="gapToday">¥386</b> · 距满分¥664差<b id="gapLeft">¥278</b> · Agent算好3处补救 <span class="amber">可补¥122 ></span></div>
-    <div class="t3" style="margin-top:5px">💡 主动找活·不被动等派 · 一键加入明日路线</div>
+    <div class="t2">今日<b id="gapToday">¥386</b> · 距满分¥664差<b id="gapLeft">¥278</b> · Agent算好3处补救</div>
+    <div class="t3" style="margin:5px 0 10px">💡 主动找活·不被动等派 · 不丢差·滚进明天继续关</div>
+    <button id="addTomorrowBtn" onclick="addToTomorrow()" style="width:100%;background:var(--amber);color:#000;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .35s ease;transform:scale(1)">
+      一键加入明日路线 · 可补 ¥<span id="canFill">122</span> →
+    </button>
+    <!-- 明日路线栏(点了任务进这里) -->
+    <div id="tomorrowBox" style="display:none;opacity:0;transform:translateY(-6px);transition:all .4s ease;margin-top:10px;background:var(--bg3);border:1px solid rgba(74,222,128,0.3);border-radius:9px;padding:11px 13px">
+      <div class="t3" style="color:var(--green);font-size:10px;margin-bottom:7px">✓ 已加入明日路线 · 明天去大润发青岛补这3处 · 预计多挣¥122</div>
+      <div id="tomorrowList"></div>
+    </div>
   </div>
 
   <!-- SURGE 热力图 -->
@@ -364,12 +372,12 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans SC',sans-serif
   <!-- 5通道 -->
   <div class="sec">任务来源 · 5通道（不只抢单）</div>
   <div class="chan">
-    <div class="chan-c"><div class="n green">3</div><div class="l">🏠固定</div></div>
-    <div class="chan-c"><div class="n blue">5</div><div class="l">🗺️路线</div></div>
-    <div class="chan-c"><div class="n amber">1</div><div class="l">📩派单</div></div>
-    <div class="chan-c"><div class="n red">2</div><div class="l">⚡抢单</div></div>
-    <div class="chan-c"><div class="n">+</div><div class="l">💡自发</div></div>
-  </div>
+        <div class="chan-c" style="cursor:pointer" onclick="showChan('fixed')"><div class="n green">3</div><div class="l">🏠固定</div></div>
+        <div class="chan-c" style="cursor:pointer" onclick="showChan('route')"><div class="n blue">5</div><div class="l">🗺️路线</div></div>
+        <div class="chan-c" style="cursor:pointer" onclick="showChan('assign')"><div class="n amber">1</div><div class="l">📩派单</div></div>
+        <div class="chan-c" style="cursor:pointer" onclick="showChan('grab')"><div class="n red">2</div><div class="l">⚡抢单</div></div>
+        <div class="chan-c" style="cursor:pointer" onclick="showChan('self')"><div class="n">+</div><div class="l">💡自发</div></div>
+      </div>
   <div class="t3" style="margin-bottom:10px;text-align:center">固定+路线=73%（例行） · 派/抢=27%</div>
 
   <!-- 抢单池·三位一体 (数据驱动·可抢单) -->
@@ -378,8 +386,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans SC',sans-serif
 
   <!-- DSR强派 + PRISM -->
   <div class="card" style="margin-top:4px">
-    <div class="t2">⏱️ <b>DSR强派</b>：30秒无人抢·DSR周小军自动派给在线美顾</div>
-    <div class="t2" style="margin-top:6px">🎯 <b>PRISM共创招募</b>：古北高端小区·周六9-11点·<span class="amber">+¥200/场+AIQL加速包</span> · 5名额</div>
+    <div class="t2" style="cursor:pointer" onclick="showForceAssign()">⏱️ <b>DSR强派</b>：30秒无人抢·DSR周小军自动派给在线美顾 <span class="amber">详情></span></div>
+    <div class="t2" style="margin-top:6px;cursor:pointer" onclick="showPrism()">🎯 <b>PRISM共创招募</b>：古北高端小区·周六9-11点·<span class="amber">+¥200/场+AIQL加速包</span> · 5名额 <span class="amber">报名></span></div>
   </div>
 
   <!-- 进行中 (数据驱动·可完成) -->
@@ -781,6 +789,63 @@ function mapGrade(g){ return {1:'导入',2:'成长',3:'成熟',4:'成熟'}[g] ||
 function checkDecline(sku){ return (sku.salesTrend!=null && sku.salesTrend < -15) || sku.forceExit===true; }
 
 // ════ 关差数据 = 引擎输出(不再硬编码·单一真相来源) ════
+function addToTomorrow(){
+  // 3处可补救援(取关差里可逆的前3个·演示)
+  var rescuable=SKUS.map(function(s){return {s:s,g:gateSku(s)};})
+    .filter(function(x){return (x.g.rescue.length>0||x.g.danger) && !x.s.forceExit;})
+    .slice(0,3);
+  var box=document.getElementById('tomorrowBox');
+  var list=document.getElementById('tomorrowList');
+  var btn=document.getElementById('addTomorrowBtn');
+  if(!box||!list||!btn) return;
+  list.innerHTML=rescuable.map(function(x){
+    return '<div style="font-size:11px;color:var(--text2);padding:5px 0;border-top:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between"><span>📍 '+x.s.ic+' '+x.s.name+' · 去补</span><b style="color:var(--amber2)">+¥'+rescueValue(x.s)+'</b></div>';
+  }).join('');
+  box.style.display='block'; setTimeout(function(){box.style.opacity='1';box.style.transform='translateY(0)';},10);
+  btn.textContent='✓ 已加入明日路线(3处)';
+  btn.style.background='rgba(74,222,128,0.15)';
+  btn.style.color='var(--green)';
+  btn.disabled=true; btn.style.transform='scale(0.98)';
+  // 诚实标注:真存真推待TL
+  if(!document.getElementById('tlNote')){
+    var n=document.createElement('div');n.id='tlNote';
+    n.style.cssText='font-size:9px;color:var(--text3);margin-top:7px;font-family:Space Mono,monospace';
+    n.textContent='▸ 演示:任务已进明日栏。真存数据库+企微明早推送=待TL接电';
+    box.appendChild(n);
+  }
+}
+function showSupervisor(){
+  alert("👤 我的督导\n\n美顾督导:李建国(管本片区6名美顾)\nDOM督导:张伟(管SR+DSR+美顾督导·杨浦区)\n\n督导能看到:我的关差完成率、积分排名、异常预警\n(演示·真督导视图待TL接驾驶舱)");
+}
+function showChan(t){
+  var M={
+    fixed:"🏠 固定通道(3单)\n常驻店日常·每天必做的盘点+理货",
+    route:"🗺️ 路线通道(5单)\n系统排好的今日巡店路线·按顺序跑",
+    assign:"📩 派单通道(1单)\n督导/系统主动派给我的指定任务",
+    grab:"⚡ 抢单通道(2单)\n关差任务池·谁抢谁得·手快有",
+    self:"💡 自发通道\n我自己发现的差·主动上报+补·也算积分"
+  };
+  alert("任务来源·5通道之一\n\n"+M[t]+"\n\n(5通道=任务不只靠抢·固定/路线/派单/抢单/自发都来·演示·真任务流待TL)");
+}
+function showForceAssign(){
+  alert("⏱️ DSR强派机制\n\n关差任务进抢单池→30秒无人抢→DSR周小军被系统强制派单\n\n目的:确保差一定被关·不会因没人抢就漏掉\n(=确保执行的兜底·演示·真强派+企微推待TL)");
+}
+function showPrism(){
+  if(confirm("🎯 PRISM共创招募\n\n古北高端小区·周六9-11点\n报酬:+¥200/场 + AIQL加速包\n剩5个名额\n\n确定报名?")){
+    alert("✓ 已报名(演示)\n周六9点古北·已加入你的日程\n(真报名+排期待TL)");
+  }
+}
+function renderGapAgent(){
+  // 弥补差距块数字=引擎真算·不写死
+  var rescuable=SKUS.map(function(s){return {s:s,g:gateSku(s)};})
+    .filter(function(x){return (x.g.rescue.length>0||x.g.danger)&&!x.s.forceExit;});
+  var canFill=rescuable.slice(0,3).reduce(function(a,x){return a+rescueValue(x.s);},0); // 可补=前3处
+  var totalGap=rescuable.reduce(function(a,x){return a+rescueValue(x.s);},0);            // 全部差
+  // 今日已挣=满分-总差(演示:满分按¥664基准)
+  var full=664, today=full-totalGap>0?full-totalGap:386;
+  var setT=function(id,val){var e=document.getElementById(id);if(e)e.textContent=val;};
+  setT('gapToday','¥'+today); setT('gapLeft','¥'+totalGap); setT('canFill',canFill);
+}
 function renderTodayEarn(){
   // 今日预计多赚 = 所有关差卡救活金额之和(引擎算·非写死)
   var total=0,cnt=0;
@@ -1268,6 +1333,7 @@ renderPool(); renderProg(); renderLedger(); renderChannels(); refreshMoney(false
 renderSkuBoard();  // L1+L2引擎首次渲染SKU看板
 renderGap();  // 今日关差渲染
 renderTodayEarn();  // 今日赚钱条
+renderGapAgent();  // 弥补差距块数字引擎算
 </script>
 
 </body>
