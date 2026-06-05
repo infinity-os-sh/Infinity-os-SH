@@ -934,7 +934,7 @@ function renderGap(){
       '<div style="font-size:11px;color:var(--text2);margin-top:5px;line-height:1.5;background:rgba(255,95,95,.06);border-radius:7px;padding:6px 8px">系统判断:'+whyOf(sku,g)+'</div>'+
       collect+
       '<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><b style="font-family:Space Mono,monospace;color:var(--amber2);font-size:13px">救活+¥'+money+'</b>'+revtag+
-      '<button style="margin-left:auto;background:var(--amber);color:#000;border:none;border-radius:16px;padding:6px 16px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer" onclick="grabGap(\''+sku.name+'\','+money+')">抢单 +¥'+money+'</button></div>'+
+      '<button style="margin-left:auto;background:var(--amber);color:#000;border:none;border-radius:16px;padding:6px 16px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer" onclick="grabGap(\''+sku.name+'\','+money+',this)">抢单 +¥'+money+'</button></div>'+
     '</div>';
   }).join('');
 }
@@ -1180,14 +1180,12 @@ function renderLedger(newIdx){
 }
 
 // ════ 灵魂动作1:抢单 → 任务进"在手" → 在手数字涨 ════
-function grabGap(skuName, money){
-  // 弥补差距的死货→真加进"进行中"(数字变化·和抢单一致)
-  S.prog.push({id:'gap_'+Date.now(), store:skuName+' · 救活', money:money, pct:5, left:'刚接单 · 救活中', signal:skuName+'·救活', rescued:true});
+function grabGap(skuName, money, btn){
+  S.prog.push({id:'gap_'+Date.now(), store:skuName+' · 救活', money:money, pct:5, left:'刚接单', signal:skuName+'·救活', rescued:true});
   if(typeof renderProg==='function') renderProg();
   if(typeof refreshMoney==='function') refreshMoney('pending');
+  if(btn){ btn.textContent='✓ 已抢·进行中'; btn.style.background='#4ade80'; btn.style.color='#000'; btn.disabled=true; btn.style.opacity='0.85'; btn.onclick=null; }
   if(typeof toast==='function') toast('✅ 抢到! 救活'+skuName+' 在手+¥'+money);
-  // 切到路上让用户看到进行中变化
-  if(typeof switchMode==='function') switchMode('xm');
 }
 function grab(id){
   const i = S.pool.findIndex(t=>t.id===id); if(i<0) return;
