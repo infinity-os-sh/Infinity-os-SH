@@ -875,6 +875,28 @@ function showChan(t){
   document.querySelectorAll('.chan-c').forEach(function(x){ x.style.outline='none'; });
   if(event&&event.currentTarget) event.currentTarget.style.outline='2px solid '+c.c;
   panel.style.display='block';
+  if(t==='self'){
+    // 自发通道=ICA主动上报系统盲区(竞品/缺货/新需求)→喂U墙·给积分
+    panel.innerHTML='<div style="border:1px solid #a78bfa55;border-radius:11px;padding:12px;background:rgba(167,139,250,.04)">'+
+      '<div style="font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:3px">💡 自发上报 · 我发现了系统不知道的事</div>'+
+      '<div style="font-size:10px;color:var(--t3);margin-bottom:10px">上报=主动喂数据·尤其竞品(系统最缺)·提交给积分</div>'+
+      '<div style="font-size:10px;color:var(--t2);margin-bottom:5px">① 这是什么?</div>'+
+      '<div id="rptType" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">'+
+        ['🔴竞品动态','📦陈列被抢','🚫缺货','💬新需求','其他'].map(function(x,i){
+          return '<button onclick="pickRptType(this,\''+x+'\')" style="background:'+(i===0?'rgba(255,95,95,.15)':'var(--bg3)')+';border:1px solid '+(i===0?'#ff5f5f':'var(--line)')+';color:'+(i===0?'#ff5f5f':'var(--t2)')+';border-radius:14px;padding:5px 11px;font-size:11px;font-family:inherit;cursor:pointer">'+x+'</button>';
+        }).join('')+'</div>'+
+      '<div style="font-size:10px;color:var(--t2);margin-bottom:5px">② 哪个店</div>'+
+      '<input id="rptStore" value="大润发沪西" style="width:100%;background:var(--bg3);border:1px solid var(--line);border-radius:8px;padding:9px;color:var(--txt);font-size:12px;font-family:inherit;margin-bottom:9px;outline:none">'+
+      '<div style="font-size:10px;color:var(--t2);margin-bottom:5px">③ 拍照存证 + 描述</div>'+
+      '<button onclick="rptPhoto(this)" style="width:100%;background:var(--bg3);border:1px dashed var(--line2);color:var(--t2);border-radius:8px;padding:11px;font-size:12px;font-family:inherit;cursor:pointer;margin-bottom:8px">📷 拍照(竞品价签/陈列)</button>'+
+      '<textarea id="rptDesc" placeholder="简单描述:如 海天3号货架买二送一·挤占我位置" style="width:100%;background:var(--bg3);border:1px solid var(--line);border-radius:8px;padding:9px;color:var(--txt);font-size:12px;font-family:inherit;min-height:54px;outline:none;margin-bottom:10px"></textarea>'+
+      '<button onclick="submitReport()" style="width:100%;background:#a78bfa;color:#fff;border:none;border-radius:9px;padding:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">提交上报 · +¥15积分 →</button>'+
+      '<div style="font-size:9px;color:var(--t3);text-align:center;margin-top:8px">▸ 竞品类标红→喂U墙·你的上报让Agent understand变深(演示·真回流待TL)</div>'+
+    '</div>';
+    var cells=document.querySelectorAll('.chan-c'); cells.forEach(function(x){x.style.outline='none';});
+    if(event&&event.currentTarget) event.currentTarget.style.outline='2px solid #a78bfa';
+    return;
+  }
   panel.innerHTML='<div style="border:1px solid '+c.c+'55;border-radius:11px;padding:11px 12px;background:rgba(255,255,255,.02)">'+
     '<div style="font-size:12px;font-weight:700;color:'+c.c+';margin-bottom:3px">'+c.n+'</div>'+
     '<div style="font-size:10px;color:var(--t3);margin-bottom:9px">'+c.d+'</div>'+
@@ -1194,6 +1216,30 @@ function renderLedger(newIdx){
 }
 
 // ════ 灵魂动作1:抢单 → 任务进"在手" → 在手数字涨 ════
+var _rptType='🔴竞品动态', _rptPhoto=false;
+function pickRptType(btn,type){
+  _rptType=type;
+  var p=document.getElementById('rptType');
+  if(p) p.querySelectorAll('button').forEach(function(b){
+    var on=(b===btn);
+    b.style.background=on?'rgba(167,139,250,.18)':'var(--bg3)';
+    b.style.borderColor=on?'#a78bfa':'var(--line)';
+    b.style.color=on?'#a78bfa':'var(--t2)';
+  });
+}
+function rptPhoto(btn){ _rptPhoto=true; btn.textContent='📷 已拍 ✓'; btn.style.borderColor='#4ade80'; btn.style.color='#4ade80'; }
+function submitReport(){
+  var store=(document.getElementById('rptStore')||{}).value||'本店';
+  var desc=(document.getElementById('rptDesc')||{}).value||'';
+  var isComp=_rptType.indexOf('竞品')>=0;
+  if(typeof toast==='function') toast('✅ 已上报! '+(_rptType)+' · +¥15积分'+(isComp?' · 🔴竞品→喂U墙':''));
+  // 上报也进"进行中"留痕+加钱
+  S.prog.push({id:'rpt_'+Date.now(), store:store+' · 自发上报', money:15, pct:100, left:'已上报', signal:_rptType+(isComp?'·凿U墙':''), rescued:isComp});
+  if(typeof renderProg==='function') renderProg();
+  if(typeof refreshMoney==='function') refreshMoney('pending');
+  var panel=document.getElementById('chanPanel');
+  if(panel) panel.innerHTML='<div style="border:1px solid #4ade8055;border-radius:11px;padding:14px;text-align:center;background:rgba(74,222,128,.06)"><div style="font-size:13px;color:#4ade80;font-weight:700">✓ 上报成功 · +¥15</div><div style="font-size:11px;color:var(--t2);margin-top:6px">'+_rptType+' @ '+store+'<br>'+(isComp?'🔴竞品信息已标红·优先喂U墙':'已回流喂Agent')+'</div></div>';
+}
 function grabSurge(money, el){
   S.prog.push({id:'surge_'+Date.now(), store:'热力图·锦江区 · 救活', money:money, pct:5, left:'刚抢', signal:'热力图·'+money, rescued:true});
   if(typeof renderProg==='function') renderProg();
