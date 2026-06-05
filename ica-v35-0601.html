@@ -1246,7 +1246,12 @@ function xdGoInspect(id){
 function settleJob(id){
   const i = S.prog.findIndex(t=>t.id===id); if(i<0) return;
   const t = S.prog.splice(i,1)[0];
-  S.done += t.money; S.doneCount++; S.activeJob = null;
+  S.done += t.money; S.doneCount++;
+        // 今日小结卡(落袋闭环的视觉收尾)
+        var _saved = S.lastInspectedSkus ? S.lastInspectedSkus.length : 5;
+        setTimeout(function(){
+          alert('💰 今日小结 · 落袋\n\n✓ 本单已落袋 +¥'+t.money+'\n📦 盘点回流 '+_saved+' 个SKU\n⭐ 救活SKU·看板生命力已点亮\n📡 数据已喂Agent(明天派单更准)\n\n今日累计落袋 ¥'+S.done+' · CB '+S.cb+'\n(演示·真到账/数据回流待TL接后端)');
+        }, 300); S.activeJob = null;
   // CB信用分微涨(完成单·真实信号→成长)
   S.cb = Math.round((( S.cb||4.78) + 0.02)*100)/100;
   updateSkuBoard(id);  // 救活后·看板对应SKU开关变ON·生命力升·"该救"消失(闭环自洽)
@@ -1329,12 +1334,15 @@ function updateSkuBoard(jobId){
 }
 // 监听INF-XD签退(postMessage)→自动结算当前进店盘点的单
 window.addEventListener('message', function(e){
-  if(e && e.data && e.data.type==='xd_finish' && S.activeJob){
-    // 收下INF-XD传回的真实盘点数据(盘了哪些SKU)·存起来给看板用
-    if(e.data.skus && e.data.skus.length) S.lastInspectedSkus = e.data.skus;
-    settleJob(S.activeJob);
-  }
-});
+      if(e && e.data && e.data.type==='xd_finish'){
+        if(e.data.skus && e.data.skus.length) S.lastInspectedSkus = e.data.skus;
+        // 有活动单→正常结算落袋(更新赚钱条/看板/明细账)
+        if(S.activeJob){ settleJob(S.activeJob); }
+        // 切回路上(签退页小结已显示完整·这里只负责回到路上继续)
+        switchMode('xm');
+        if(typeof toast==='function') toast('✓ 已签退落袋 · 数据已回流');
+      }
+    });
 function xdBack(){
   // 中途退出 → 切回路上XM(用switchMode·恢复被隐藏的头部)
   switchMode('xm');
