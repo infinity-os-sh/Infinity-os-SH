@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · JBP Agent · 正式版 V2.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090f;--bg2:#0e1018;--bg3:#13161f;--card:#141820;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.1);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.1);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.1);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);
+  --blue:#60a5fa;--purple:#a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;padding-bottom:40px}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(9,9,15,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:50px}
+.logo-row{display:flex;align-items:center;gap:9px}
+.logo-sym{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#f5a623,#a78bfa);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#000}
+.logo-text{font-family:'Syne',sans-serif;font-size:12px;font-weight:700}
+.l13{font-size:9px;font-family:'Space Mono',monospace;color:#000;background:var(--amber);padding:3px 7px;border-radius:9px;font-weight:700}
+
+/* shared customer bar */
+.custbar{position:sticky;top:50px;z-index:90;background:rgba(14,16,24,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:10px 16px}
+.custbar-lbl{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:6px;letter-spacing:.05em}
+.custbar-lbl b{color:var(--amber)}
+.cust-row{display:flex;gap:6px}
+.cust-pill{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:7px 4px;text-align:center;cursor:pointer;transition:all .15s}
+.cust-pill.on{border-color:var(--amber);background:var(--amber-dim)}
+.cust-pn{font-size:12px;font-weight:600}
+.cust-ps{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace}
+.cust-pill.on .cust-pn{color:var(--amber)}
+
+/* tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 8px;position:sticky;top:113px;z-index:80;background:rgba(9,9,15,0.95);backdrop-filter:blur(12px)}
+.tab{flex:1;text-align:center;padding:12px 4px;font-size:12px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;font-weight:600}
+.tab.on{color:var(--amber);border-bottom-color:var(--amber)}
+
+.wrap{padding:14px 16px}
+.pane{display:none;animation:fade .2s}
+.pane.on{display:block}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:14px;margin-bottom:11px}
+.sec-hdr{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:11px;display:flex;align-items:center;gap:6px}
+.sec-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
+.badge{font-size:9px;padding:2px 7px;border-radius:8px;font-weight:600}
+.bd-green{color:var(--green);background:var(--green-dim);border:1px solid rgba(74,222,128,0.2)}
+.bd-amber{color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,166,35,0.2)}
+
+.rules{font-size:10px;color:var(--text3);line-height:1.6;background:var(--bg3);border-radius:8px;padding:9px 11px;margin-bottom:10px}
+.rules b{color:var(--text2)}
+.gen-btn{width:100%;padding:13px;border-radius:11px;background:var(--amber);color:#000;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans SC';transition:all .15s}
+.gen-btn:active{transform:scale(.98)} .gen-btn:disabled{opacity:.5}
+.draft{margin-top:12px}
+.dseg{background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--amber);border-radius:9px;padding:11px 13px;margin-bottom:8px}
+.dseg-t{font-size:12px;font-weight:700;color:var(--amber);margin-bottom:5px}
+.dseg-b{font-size:12px;color:var(--text2);line-height:1.65;white-space:pre-wrap}
+.thinking{display:flex;gap:4px;padding:8px 0}.td{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:td 1.2s infinite}.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}@keyframes td{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+/* 算账 */
+.in-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.in-row:last-child{border:none}
+.in-label{flex:1;font-size:12px;color:var(--text2)}
+.in-field input{width:92px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 9px;color:var(--text);font-family:'Space Mono',monospace;font-size:13px;text-align:right;outline:none}
+.in-field input:focus{border-color:var(--amber)}
+.in-unit{font-size:11px;color:var(--text3);margin-left:4px}
+.out-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:11px}
+.out-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.out-lbl{font-size:10px;color:var(--text3);margin-bottom:4px;line-height:1.3}
+.out-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800}
+.out-val .u{font-size:11px;font-weight:400;color:var(--text3);margin-left:2px}
+.sig-row{display:flex;gap:6px}
+.sig{flex:1;border-radius:9px;padding:10px 6px;text-align:center;border:1px solid var(--border);background:var(--bg3)}
+.sig-dot{width:10px;height:10px;border-radius:50%;margin:0 auto 5px}
+.sig-name{font-size:9px;color:var(--text2);line-height:1.2}
+.sig-state{font-size:11px;font-weight:700;margin-top:3px}
+.dg{background:var(--green);box-shadow:0 0 9px var(--green)}.da{background:var(--amber);box-shadow:0 0 9px var(--amber)}.dr{background:var(--red);box-shadow:0 0 9px var(--red)}
+.cg{color:var(--green)}.ca{color:var(--amber)}.cr{color:var(--red)}
+.diag{background:var(--bg2);border-left:3px solid var(--amber);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.65;margin-top:10px}
+.diag b{color:var(--amber)}
+
+/* 关差 */
+.exec-tog{font-size:12px;font-weight:700;padding:7px 15px;border-radius:9px;cursor:pointer;border:1px solid var(--border2)}
+.exec-tog.done{background:var(--green-dim);color:var(--green);border-color:rgba(74,222,128,0.3)}
+.exec-tog.notdone{background:var(--red-dim);color:var(--red);border-color:rgba(255,95,95,0.3)}
+.gate{background:var(--bg2);border-left:3px solid var(--teal);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.65;margin:8px 0}
+.gate b{color:var(--teal)}
+.m22{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.cell{border:1px solid var(--border);border-radius:9px;padding:9px;background:var(--bg3);opacity:.4;transition:.15s}
+.cell.on{opacity:1}.cell.on.g{border-color:var(--green);background:var(--green-dim)}.cell.on.a{border-color:var(--amber);background:var(--amber-dim)}.cell.on.r{border-color:var(--red);background:var(--red-dim)}
+.cell-t{font-size:11px;font-weight:700;margin-bottom:3px}.cell-d{font-size:10px;color:var(--text3);line-height:1.4}
+.task{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(78,205,196,0.03));border:1px solid rgba(245,166,35,0.18);border-radius:10px;padding:11px 13px;margin-top:8px}
+.task-l{display:flex;gap:8px;font-size:11px;margin-bottom:5px}.task-k{color:var(--text3);width:42px;flex-shrink:0;font-family:'Space Mono',monospace}.task-v{color:var(--text2);flex:1;line-height:1.5}.task-v b{color:var(--amber)}
+
+/* 组合 */
+.crow{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.crow:last-child{border:none}
+.clight{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.cinfo{flex:1}.cname{font-size:12px;font-weight:600}.cmeta{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace}
+.cgap{font-size:11px;font-family:'Space Mono',monospace}
+
+.merge-note{font-size:10px;color:var(--text3);line-height:1.6;background:var(--bg3);border-left:3px solid var(--purple);border-radius:7px;padding:9px 11px;margin-top:4px}
+.merge-note b{color:var(--purple)}
+.foot{text-align:center;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;padding:14px 16px 0;line-height:1.7}
+.foot b{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-row"><div class="logo-sym">∞</div><div class="logo-text">JBP Agent · 正式版 V2.1</div></div>
+  <div class="l13">LAYER 1.3</div>
+</div>
+
+<div class="custbar">
+  <div class="custbar-lbl">共享数据层 · <b>选一个客户，四个标签全是这一家</b></div>
+  <div class="cust-row" id="custRow"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab on" data-p="draft" onclick="tab('draft')">JBP草案</div>
+  <div class="tab" data-p="econ" onclick="tab('econ')">算账</div>
+  <div class="tab" data-p="gap" onclick="tab('gap')">关差</div>
+  <div class="tab" data-p="port" onclick="tab('port')">组合</div>
+</div>
+
+<div class="wrap">
+
+  <!-- JBP草案 -->
+  <div class="pane on" id="pane-draft">
+    <div class="card">
+      <div class="sec-hdr">JBP 草案生成 <span class="badge bd-green">红线已修·目标=北极星分解</span></div>
+      <div class="rules"><b>规则</b>：① 草案非生效契约 ② 对赌目标<b>自上而下由北极星200M瓶分解</b>(不再上年×1.3倒推) ③ 费用优先砸消费者乐得买、砍无效进场费 ④ 破价/窜货违约转人工裁定·不自动划扣 ⑤ 对齐 DECISION-001 五审批·终稿总部+大区GM双签</div>
+      <button class="gen-btn" id="genBtn" onclick="genDraft()">为 <span id="genCust">华东大润发</span> 生成 JBP 草案</button>
+      <div class="draft" id="draftBox"></div>
+    </div>
+  </div>
+
+  <!-- 算账 -->
+  <div class="pane" id="pane-econ">
+    <div class="card">
+      <div class="sec-hdr">SKU 算账 · 同一家客户 <span class="badge bd-amber" id="econCust"></span></div>
+      <div class="in-row"><div class="in-label">出厂价</div><div class="in-field"><input id="i_fob" value="10"><span class="in-unit">元/瓶</span></div></div>
+      <div class="in-row"><div class="in-label">COGS</div><div class="in-field"><input id="i_cogs" value="6"><span class="in-unit">元/瓶</span></div></div>
+      <div class="in-row"><div class="in-label">目标量(北极星分解)</div><div class="in-field"><input id="i_qt" value="500000"><span class="in-unit">瓶/年</span></div></div>
+      <div class="out-grid" style="margin-top:11px">
+        <div class="out-box"><div class="out-lbl">单瓶净贡献 m</div><div class="out-val" id="o_m">—<span class="u">元</span></div></div>
+        <div class="out-box"><div class="out-lbl">固定通路费 F</div><div class="out-val" id="o_F">—<span class="u">万</span></div></div>
+        <div class="out-box"><div class="out-lbl">规模门槛 Q*</div><div class="out-val" id="o_Q">—<span class="u">瓶</span></div></div>
+        <div class="out-box"><div class="out-lbl">目标量净毛利</div><div class="out-val" id="o_gm">—<span class="u">%</span></div></div>
+      </div>
+      <div class="sig-row">
+        <div class="sig"><div class="sig-dot" id="d1"></div><div class="sig-name">净毛利</div><div class="sig-state" id="s1">—</div></div>
+        <div class="sig"><div class="sig-dot" id="d2"></div><div class="sig-name">规模门槛</div><div class="sig-state" id="s2">—</div></div>
+        <div class="sig"><div class="sig-dot" id="d3"></div><div class="sig-name">投入结构</div><div class="sig-state" id="s3">—</div></div>
+      </div>
+      <div class="diag" id="econDiag"></div>
+    </div>
+  </div>
+
+  <!-- 关差 -->
+  <div class="pane" id="pane-gap">
+    <div class="card">
+      <div class="sec-hdr">关差闭环 · 同一家客户</div>
+      <div class="in-row"><div class="in-label">实际量(汉询回流)</div><div class="in-field"><input id="i_qa" value="420000"><span class="in-unit">瓶/年</span></div></div>
+      <div class="in-row"><div class="in-label">JBP承诺动作执行?</div><div class="exec-tog done" id="execTog" onclick="toggleExec()">✓ 做了</div></div>
+      <div class="gate" id="gate"></div>
+      <div class="m22" id="m22"></div>
+      <div class="task" id="task"></div>
+    </div>
+  </div>
+
+  <!-- 组合 -->
+  <div class="pane" id="pane-port">
+    <div class="card">
+      <div class="sec-hdr">SR 组合 · 放大视角 <span class="badge bd-amber">同一套晶体管</span></div>
+      <div id="portBox"></div>
+    </div>
+    <div class="merge-note"><b>正式版说明</b>：本版为 JBP Agent <b>唯一正式版</b>，取代并归档 cloud_console_v1。草案/算账/关差/组合<b>共享同一份客户×SKU×费用数据</b>，选中客户驱动全部标签——一体，非四个独立工具。<b>草案 prompt 细节请对照原文件最后核一次。</b></div>
+  </div>
+
+  <div class="foot">
+    <b>Layer 1.3</b> · 唯一正式版 · 取代并归档 cloud_console_v1 · 算账金额示意待真值<br>
+    INFINITY OS · JBP Agent 正式版 V2.1 · 署名 DS · <span id="dt"></span>
+  </div>
+</div>
+
+<script>
+const CUST={
+  jjy:{name:'家家悦',sales:'8868W',type:'KA·胶东',
+    fee:{进场:1,信息系统:1,节庆:0,陈列:1,DM:1,无条件返:1,达量返:1,特价:1,配送:1},
+    fix:{进场:50000,信息系统:30000,节庆:0,陈列:130000,DM:80000},vr:{无条件返:5,达量返:3,配送:0.2,特价:0.5}},
+  hdrt:{name:'华东大润发',sales:'8468W',type:'KA',
+    fee:{进场:1,信息系统:0,节庆:1,陈列:1,DM:1,无条件返:1,达量返:1,特价:1,配送:1},
+    fix:{进场:50000,信息系统:0,节庆:20000,陈列:130000,DM:80000},vr:{无条件返:5,达量返:3,配送:0.2,特价:0.5}},
+  hbrt:{name:'华北大润发',sales:'3280W',type:'KA',
+    fee:{进场:1,信息系统:0,节庆:1,陈列:1,DM:1,无条件返:1,达量返:1,特价:1,配送:1},
+    fix:{进场:50000,信息系统:0,节庆:20000,陈列:90000,DM:50000},vr:{无条件返:5,达量返:3,配送:0.2,特价:0.5}},
+};
+let cur='hdrt', execDone=true;
+const RED=22; // 成熟期六月鲜
+
+function buildCust(){
+  const r=document.getElementById('custRow');r.innerHTML='';
+  Object.entries(CUST).forEach(([id,c])=>{
+    const d=document.createElement('div');d.className='cust-pill'+(id===cur?' on':'');
+    d.innerHTML=`<div class="cust-pn">${c.name}</div><div class="cust-ps">${c.sales}</div>`;
+    d.onclick=()=>{cur=id;buildCust();syncCust();calc();buildPort();document.getElementById('draftBox').innerHTML='';};
+    r.appendChild(d);
+  });
+}
+function syncCust(){
+  document.getElementById('genCust').textContent=CUST[cur].name;
+  document.getElementById('econCust').textContent=CUST[cur].name;
+}
+function tab(p){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.p===p));
+  document.querySelectorAll('.pane').forEach(pn=>pn.classList.toggle('on',pn.id==='pane-'+p));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function val(id){return parseFloat(document.getElementById(id).value)||0}
+function setSig(d,s,cls,t){document.getElementById(d).className='sig-dot d'+cls;const e=document.getElementById(s);e.className='sig-state c'+cls;e.textContent=t;}
+function toggleExec(){execDone=!execDone;const t=document.getElementById('execTog');t.className='exec-tog '+(execDone?'done':'notdone');t.textContent=execDone?'✓ 做了':'✗ 没做';calc();}
+
+function calc(){
+  const c=CUST[cur],fob=val('i_fob'),cogs=val('i_cogs'),qt=val('i_qt'),qa=val('i_qa');
+  const vBuy=fob*(c.vr.无条件返+c.vr.达量返)/100+c.vr.配送;
+  const vPull=c.vr.特价;
+  const m=fob-cogs-vBuy-vPull;
+  const fixBuy=c.fix.进场+c.fix.信息系统+c.fix.节庆;
+  const fixPull=c.fix.陈列+c.fix.DM;
+  const F=fixBuy+fixPull;
+  const Qstar=m>0?F/m:Infinity;
+  const gm=fob>0?(m-(qt>0?F/qt:0))/fob*100:0;
+  const buyT=fixBuy+vBuy*qt, pullT=fixPull+vPull*qt;
+  const pull=(buyT+pullT)>0?pullT/(buyT+pullT)*100:0;
+
+  document.getElementById('o_m').innerHTML=m.toFixed(2)+'<span class="u">元</span>';
+  document.getElementById('o_F').innerHTML=(F/10000).toFixed(1)+'<span class="u">万</span>';
+  document.getElementById('o_Q').innerHTML=(Qstar===Infinity?'∞':Math.round(Qstar).toLocaleString())+'<span class="u">瓶</span>';
+  document.getElementById('o_gm').innerHTML=gm.toFixed(1)+'<span class="u">%</span>';
+  gm>=RED?setSig('d1','s1','g','达标'):gm>=RED-5?setSig('d1','s1','a','差一点'):setSig('d1','s1','r','不达标');
+  qt>=Qstar*1.3?setSig('d2','s2','g','过门槛'):qt>=Qstar?setSig('d2','s2','a','刚过线'):setSig('d2','s2','r','未回本');
+  pull>=55?setSig('d3','s3','g','拉力主导'):pull>=45?setSig('d3','s3','a','勉强'):setSig('d3','s3','r','买路钱重');
+  document.getElementById('econDiag').innerHTML=`<b>${c.name}</b>：单瓶净贡献 <b>${m.toFixed(2)}元</b>，门槛 <b>${Math.round(Qstar).toLocaleString()}瓶</b>，净毛利 <b>${gm.toFixed(1)}%</b>(红线${RED}%)，拉力占 ${pull.toFixed(0)}%。`;
+
+  // 关差
+  const gapPct=qt>0?(qt-qa)/qt*100:0, perfGood=qa>=qt*0.95;
+  let v=qt<Qstar?'IF 未过门槛 → 角色错位：转防御/候选 或 谈降固定费。'
+    :(gm<RED&&pull<50)?'IF 量够+毛利不达标+买路钱重 → 砍买路钱挪向乐得买。'
+    :(gm<RED)?'IF 量够+毛利薄 → 降变动费/价格带内评估提价。'
+    :(gm>=RED&&pull>=55)?'IF 三信号绿 → 健康·正样本可复制。':'基本健康，结构往拉力倾斜。';
+  document.getElementById('gate').innerHTML=v;
+  const C={done_good:['g','做了×好','投入有效·正样本喂Agent'],done_bad:['r','做了×差','投入无效·送因果诊断查竞品/认知'],no_good:['a','没做×好','预算本身错·反向核减'],no_bad:['r','没做×差','执行问题坐实·查为何没做']};
+  const cell=execDone?(perfGood?'done_good':'done_bad'):(perfGood?'no_good':'no_bad');
+  document.getElementById('m22').innerHTML=['done_good','done_bad','no_good','no_bad'].map(k=>`<div class="cell ${k===cell?'on '+C[k][0]:''}"><div class="cell-t">${C[k][1]}</div><div class="cell-d">${C[k][2]}</div></div>`).join('');
+  let tt=cell==='no_bad'?['补执行·查责任人','→ XM一线(抢单)']:cell==='done_bad'?['查因果·拍竞品价签+访谈','→ 驾驶舱+XM收一手']:cell==='no_good'?['核预算·这笔可能不必要','→ 驾驶舱']:['维持+沉淀模板','→ 喂Agent正样本'];
+  document.getElementById('task').innerHTML=`<div class="task-l"><div class="task-k">差距</div><div class="task-v"><b>${(qt-qa).toLocaleString()}瓶 (${gapPct.toFixed(1)}%)</b></div></div><div class="task-l"><div class="task-k">任务</div><div class="task-v"><b>${tt[0]}</b></div></div><div class="task-l"><div class="task-k">路由</div><div class="task-v">${tt[1]}</div></div>`;
+}
+function buildPort(){
+  const data=[['家家悦','jjy','a',9],['华东大润发','hdrt','r',18],['华北大润发','hbrt','a',7]];
+  document.getElementById('portBox').innerHTML=data.map(([n,id,h,g])=>`<div class="crow"><div class="clight d${h}"></div><div class="cinfo"><div class="cname">${n} · 六月鲜战略SKU</div><div class="cmeta">${CUST[id].type} · 年销${CUST[id].sales}</div></div><div class="cgap c${h}">${g>3?'-'+g+'%':'达标'}</div></div>`).join('');
+}
+
+async function genDraft(){
+  const c=CUST[cur], box=document.getElementById('draftBox'), btn=document.getElementById('genBtn');
+  btn.disabled=true;
+  box.innerHTML='<div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  const sys=`你是欣和SH INFINITY OS的JBP Agent。为大卖场客户生成"联合商业计划建议稿(草案)"。严格输出四段，每段以【段名】开头另起一行：
+【财务对赌】对赌目标必须自上而下由北极星200M瓶/4B战略分解到该客户×SKU，绝不用上年GMV×系数倒推。
+【商品策略】战略SKU组合，六月鲜(高端首选)优先。
+【费用流向】费用优先砸消费者"乐得买"(特价/陈列/试吃)，砍无效进场费等"买路钱"。
+【违约处理】破价/窜货违约转人工裁定，不自动划扣。
+规则：草案非生效契约；对齐DECISION-001五审批；终稿需总部+大区GM双签。中文，每段3-5句，专业克制。`;
+  const q=`客户：${c.name}(${c.type})，当前年销${c.sales}。为其六月鲜战略SKU生成下一年度JBP草案。`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:q}]})});
+    const d=await r.json();
+    const txt=d.content?.map(x=>x.text||'').join('')||'';
+    renderDraft(txt||fallback(c));
+  }catch(e){renderDraft(fallback(c));}
+  btn.disabled=false;
+}
+function fallback(c){
+  return `【财务对赌】依北极星200M瓶向下分解至${c.name}×六月鲜的承诺目标(非上年倒推)，配套铺货率与动销节律里程碑，季度对赌、不达标转人工复盘。
+【商品策略】以六月鲜500ml战略装为主推锚点，搭味达美走量、禾然卡有机价格带，形成高中组合。
+【费用流向】压缩进场费/信息系统费等买路钱，资源向端架陈列、特价补差、试吃等"乐得买"动作倾斜。
+【违约处理】线上线下破价或跨区窜货，触发转人工裁定，不自动从货款划扣。
+（内置示例稿·未连通API时回退）`;
+}
+function renderDraft(txt){
+  const segs=['财务对赌','商品策略','费用流向','违约处理'];
+  let html='';
+  segs.forEach(s=>{
+    const re=new RegExp('【'+s+'】([\\s\\S]*?)(?=【|$)');
+    const mt=txt.match(re);
+    if(mt)html+=`<div class="dseg"><div class="dseg-t">【${s}】</div><div class="dseg-b">${mt[1].trim()}</div></div>`;
+  });
+  document.getElementById('draftBox').innerHTML=html||`<div class="dseg"><div class="dseg-b">${txt}</div></div>`;
+}
+
+buildCust();syncCust();calc();buildPort();
+document.querySelectorAll('#i_fob,#i_cogs,#i_qt,#i_qa').forEach(e=>e.addEventListener('input',calc));
+const now=new Date();
+document.getElementById('dt').textContent=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+</script>
+</body>
+</html>

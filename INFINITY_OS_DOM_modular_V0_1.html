@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · DOM 视角(三级模块化测试)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090f;--bg2:#0e1018;--bg3:#13161f;--card:#141820;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;
+  --amber:#f5a623;--amber-dim:rgba(245,166,35,0.1);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.1);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.1);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.1);--purple:#a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden;padding-bottom:40px}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(9,9,15,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-sym{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#f5a623,#ff5f5f);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000}
+.logo-text{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.logo-text span{color:var(--amber)}
+.l13{font-size:9px;font-family:'Space Mono',monospace;color:#000;background:var(--amber);padding:3px 8px;border-radius:10px;font-weight:700}
+.hero{padding:18px 16px 6px}
+.hero-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1.15}
+.hero-title span{color:var(--amber)}
+.hero-sub{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:4px}
+.wrap{padding:8px 16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.sec-hdr{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.sec-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
+.badge{font-size:9px;padding:2px 7px;border-radius:8px;font-weight:600;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,166,35,0.2)}
+
+.verdict{background:linear-gradient(135deg,rgba(74,222,128,0.07),rgba(245,166,35,0.04));border:1px solid rgba(74,222,128,0.2);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.verdict-t{font-size:14px;font-weight:700;color:var(--green);margin-bottom:6px}
+.verdict-d{font-size:12px;color:var(--text2);line-height:1.65}
+.verdict-d b{color:var(--text)}
+.verdict-d .new{color:var(--amber);font-weight:600}
+
+.rt{width:100%;border-collapse:collapse;font-size:11px}
+.rt th{background:rgba(255,255,255,0.04);color:var(--text3);padding:7px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600}
+.rt td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text2);vertical-align:top}
+.rt tr:last-child td{border:none}
+.keep{color:var(--green);font-weight:600;white-space:nowrap}
+.fill{color:var(--amber);font-weight:600;white-space:nowrap}
+.amp{color:var(--blue);font-weight:600;white-space:nowrap}
+.newt{color:var(--red);font-weight:600;white-space:nowrap}
+
+.dep{background:var(--red-dim);border:1px solid rgba(255,95,95,0.2);border-radius:10px;padding:11px 13px;font-size:11px;color:var(--text2);line-height:1.6}
+.dep b{color:var(--red)}
+
+/* people board */
+.person{border:1px solid var(--border);border-radius:12px;padding:12px 13px;margin-bottom:9px;background:var(--bg3)}
+.p-top{display:flex;align-items:center;gap:10px}
+.p-light{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.p-id{flex:1}
+.p-name{font-size:13px;font-weight:700}
+.p-role{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:1px}
+.p-metric{text-align:right;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace}
+.p-metric b{font-family:'Syne',sans-serif;font-size:15px;display:block}
+.p-sub{font-size:10px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);line-height:1.5}
+.p-sub b{color:var(--text2)}
+.p-22{font-size:9px;font-family:'Space Mono',monospace;padding:2px 7px;border-radius:6px;margin-left:8px}
+.dg{background:var(--green);box-shadow:0 0 7px var(--green)}.da{background:var(--amber);box-shadow:0 0 7px var(--amber)}.dr{background:var(--red);box-shadow:0 0 7px var(--red)}
+.cg{color:var(--green)}.ca{color:var(--amber)}.cr{color:var(--red)}
+.b22-r{background:var(--red-dim);color:var(--red)}.b22-g{background:var(--green-dim);color:var(--green)}.b22-a{background:var(--amber-dim);color:var(--amber)}
+
+/* deploy gate */
+.dep-i{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:7px}
+.dep-rank{width:24px;height:24px;border-radius:7px;background:var(--amber-dim);color:var(--amber);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;flex-shrink:0}
+.dep-body{flex:1}
+.dep-t{font-size:12px;font-weight:600}
+.dep-d{font-size:10px;color:var(--text3);margin-top:2px;line-height:1.4}
+.dep-kind{font-size:8px;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:6px;flex-shrink:0}
+.k-people{background:var(--blue-dim);color:var(--blue)}.k-res{background:var(--amber-dim);color:var(--amber)}.k-up{background:rgba(167,139,250,0.12);color:var(--purple)}
+
+.cause{font-size:11px;color:var(--text2);line-height:1.6;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03);display:flex;gap:8px}
+.cause:last-child{border:none}
+.cause .tag{font-size:8px;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:5px;flex-shrink:0;height:fit-content}
+.t-mkt{background:var(--teal-dim);color:var(--teal)}.t-ppl{background:var(--blue-dim);color:var(--blue)}
+.cause b{color:var(--text)}
+
+.note{font-size:11px;color:var(--text3);line-height:1.6}
+.note b{color:var(--text2)}
+.foot{text-align:center;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;padding:14px 16px 0;line-height:1.7}
+.foot b{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-row"><div class="logo-sym">∞</div><div class="logo-text">DOM 视角 · <span>三级测试</span></div></div>
+  <div class="l13">LAYER 1.3</div>
+</div>
+
+<div class="hero">
+  <div class="hero-title">DOM 视角 · <span>第三级放大</span></div>
+  <div class="hero-sub">胶东大区 · 管 SR+DSR+美顾督导 · 人 + 资源 进来了</div>
+</div>
+
+<div class="wrap">
+
+  <div class="verdict">
+    <div class="verdict-t">✓ 模板第三级仍成立 · 底层四项零改动</div>
+    <div class="verdict-d">晶体管/逻辑门/因果/算账 <b>原样复用</b>，区域账是客户账<b>求和</b>。但 DOM 引入<span class="new">两个真实新维度</span>，你判算不算"放大插槽"：<br>① <span class="new">人维度</span>——DOM 评 SR/DSR(把"人"当对象跑同一个 2×2)；② <span class="new">资源调配</span>——任务从"在客户做X"变成"调谁/给谁资源/向上要预算"。</div>
+  </div>
+
+  <div class="card">
+    <div class="sec-hdr">复用 vs 新增 · 三级验证</div>
+    <table class="rt">
+      <thead><tr><th>要素</th><th>SR</th><th>DOM</th><th>判定</th></tr></thead>
+      <tbody>
+        <tr><td>晶体管 / 逻辑门 / 因果 / 算账</td><td>同</td><td>区域聚合·求和</td><td class="keep">底层不变</td></tr>
+        <tr><td>分析对象</td><td>SKU×客户</td><td>+ <b>SR/DSR(人)</b></td><td class="newt">新对象</td></tr>
+        <tr><td>因果候选表</td><td>市场/竞品</td><td>+ <b>人-cause</b>(某SR执行差)</td><td class="fill">候选填充</td></tr>
+        <tr><td>优先级门</td><td>攻哪个客户×SKU</td><td><b>调谁/给资源/要预算</b></td><td class="amp">放大(对象→人/资源)</td></tr>
+        <tr><td>计分权重 / 手段</td><td>进货/谈判</td><td>区域达成/人效·调配</td><td class="fill">每角色填</td></tr>
+        <tr><td>数据来源</td><td>自己跑客户</td><td><b>纯靠一线喂</b></td><td class="newt">新依赖·最易空</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="sec-hdr">区域人盘 · DOM 多出来的"人维度" <span class="badge">同一个2×2·对象=人</span></div>
+    <div id="people"></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-hdr">资源调配门 · DOM 版优先级门</div>
+    <div id="deploy"></div>
+    <div class="note" style="margin-top:8px">排序 = 缺口 × 战略权重 × 杠杆(调一个动作能撬动多大区域差)。任务<b>类型</b>从执行变调配：<span style="color:var(--blue)">派人</span> / <span style="color:var(--amber)">给资源</span> / <span style="color:var(--purple)">向上要预算</span>。</div>
+  </div>
+
+  <div class="card">
+    <div class="sec-hdr">区域因果 · 候选表多了"人"这一类</div>
+    <div class="cause"><span class="tag t-mkt">市场</span><div>区域六月鲜差距：<b>竞品胶东片区集体降价</b>(待核·派一线拍价签)</div></div>
+    <div class="cause"><span class="tag t-ppl">人·新</span><div><b>美顾督导 张</b> 辖区巡店执行差 → 拉低 3 家 KA 动销(现有数据可判：拜访达成率低)</div></div>
+    <div class="cause"><span class="tag t-mkt">市场</span><div>季节/品类(现有数据已排除)</div></div>
+    <div class="note" style="margin-top:8px">同一台鉴别诊断引擎——只是候选清单**填进了"人-cause"**。执行类(人)用现有数据(拜访达成率)就能判，市场类(竞品)仍标待核。</div>
+  </div>
+
+  <div class="card">
+    <div class="sec-hdr">⚠️ 最该警惕的一级</div>
+    <div class="dep">DOM <b>没有一手数据</b>——整张盘全是 ICA/SR/DSR <b>喂上来的聚合</b>。信息脉络不通，DOM 就是<b>空驾驶舱</b>。所以越往上的管理视角，越依赖最底层一线把数据收上来——这也是为什么 App 要<b>倒逼一线收数据</b>，而不是等数据。DOM 越往后建，越验证一线 App 必须先跑起来。</div>
+  </div>
+
+  <div class="foot">
+    <b>Layer 1.3 演示</b> · 数据示意 · 与已有 infinity_os_dom.html 有重叠待合并 · 验证=三级模块化(成立+2新维度)<br>
+    INFINITY OS · DOM 三级模块化测试 V0.1 · 署名 DS · <span id="dt"></span>
+  </div>
+</div>
+
+<script>
+const PEOPLE=[
+  {name:'SR 王',role:'直营KA · 管3客户',h:'a',metric:'94%',ml:'区域达成',exec:'做了',perf:'差',w:'家家悦六月鲜缺口大，执行到位但量没起 → 投入有效性存疑(转区域因果)',b22:'做了×差',b22c:'a'},
+  {name:'DSR 李',role:'代理区 · 管经销商',h:'g',metric:'103%',ml:'区域达成',exec:'做了',perf:'好',w:'经销商进货+动销双达标 → 正样本，配方可推广',b22:'做了×好',b22c:'g'},
+  {name:'美顾督导 张',role:'管区美顾',h:'r',metric:'71%',ml:'巡店达成',exec:'没做',perf:'差',w:'辖区美顾拜访达成率低、陈列整改没跟 → 执行问题坐实(人-cause)',b22:'没做×差',b22c:'r'},
+];
+function buildPeople(){
+  const box=document.getElementById('people');box.innerHTML='';
+  PEOPLE.forEach(p=>{
+    const el=document.createElement('div');el.className='person';
+    el.innerHTML=`<div class="p-top">
+        <div class="p-light d${p.h}"></div>
+        <div class="p-id"><div class="p-name">${p.name}<span class="p-22 b22-${p.b22c}">${p.b22}</span></div><div class="p-role">${p.role}</div></div>
+        <div class="p-metric"><b class="c${p.h}">${p.metric}</b>${p.ml}</div>
+      </div>
+      <div class="p-sub">${p.w}</div>`;
+    box.appendChild(el);
+  });
+}
+const DEPLOY=[
+  {t:'介入美顾督导张',d:'辖区美顾执行差(71%)→DOM 督导/补员/重排巡店路线',kind:'派人',kc:'k-people',score:'高·杠杆大'},
+  {t:'家家悦六月鲜申请区域促销预算',d:'竞品降价待核确认后跟促一档+王跟进',kind:'给资源',kc:'k-res',score:'高'},
+  {t:'华东大润发禾然缺口',d:'向大区 GM 申请禾然战略费用倾斜',kind:'向上要预算',kc:'k-up',score:'中'},
+];
+function buildDeploy(){
+  const box=document.getElementById('deploy');box.innerHTML='';
+  DEPLOY.forEach((x,i)=>{
+    const el=document.createElement('div');el.className='dep-i';
+    el.innerHTML=`<div class="dep-rank">${i+1}</div>
+      <div class="dep-body"><div class="dep-t">${x.t}</div><div class="dep-d">${x.d} · ${x.score}</div></div>
+      <span class="dep-kind ${x.kc}">${x.kind}</span>`;
+    box.appendChild(el);
+  });
+}
+buildPeople();buildDeploy();
+const now=new Date();
+document.getElementById('dt').textContent=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+</script>
+</body>
+</html>

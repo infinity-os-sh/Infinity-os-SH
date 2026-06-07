@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · 因果鉴别诊断引擎</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090f;--bg2:#0e1018;--bg3:#13161f;--card:#141820;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;
+  --amber:#f5a623;--amber-dim:rgba(245,166,35,0.1);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.1);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.1);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden;padding-bottom:40px}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(9,9,15,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-sym{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#a78bfa,#7c5cff);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000;box-shadow:0 3px 12px rgba(167,139,250,0.3)}
+.logo-text{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.04em}
+.logo-text span{color:var(--purple)}
+.l13{font-size:9px;font-family:'Space Mono',monospace;color:#000;background:var(--amber);padding:3px 8px;border-radius:10px;font-weight:700}
+.hero{padding:20px 16px 8px}
+.hero-title{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;line-height:1.1}
+.hero-title span{color:var(--purple)}
+.hero-sub{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:4px;line-height:1.5}
+.wrap{padding:8px 16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.sec-hdr{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.sec-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
+.badge{font-size:9px;color:var(--purple);background:var(--purple-dim);border:1px solid rgba(167,139,250,0.2);padding:2px 7px;border-radius:8px;letter-spacing:0;text-transform:none;font-weight:600}
+
+.l1{background:var(--red-dim);border:1px solid rgba(255,95,95,0.2);border-radius:10px;padding:12px 14px}
+.l1-t{font-size:12px;color:var(--red);font-weight:700;margin-bottom:4px}
+.l1-d{font-size:12px;color:var(--text2);line-height:1.6}
+.l1-d b{color:var(--text)}
+
+.funnel{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:4px}
+.fn{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 4px;text-align:center}
+.fn-v{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1}
+.fn-l{font-size:9px;color:var(--text3);margin-top:3px;line-height:1.2}
+
+.cand{border:1px solid var(--border);border-radius:10px;padding:10px 11px;margin-bottom:7px;background:var(--bg3);transition:all .15s}
+.cand.elim{opacity:.45}
+.cand.conf{border-color:var(--red);background:var(--red-dim)}
+.cand.pend{border-color:var(--amber);background:var(--amber-dim)}
+.cand-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.cand-layer{font-size:8px;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:6px;font-weight:700;flex-shrink:0}
+.lay-buy{background:rgba(96,165,250,0.12);color:#60a5fa} .lay-see{background:var(--teal-dim);color:var(--teal)} .lay-want{background:var(--green-dim);color:var(--green)} .lay-ext{background:rgba(255,255,255,0.06);color:var(--text3)}
+.cand-name{font-size:12px;font-weight:600;flex:1}
+.cand-src{font-size:8px;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:6px;flex-shrink:0}
+.src-now{background:var(--green-dim);color:var(--green)} .src-part{background:var(--amber-dim);color:var(--amber)} .src-wait{background:var(--red-dim);color:var(--red)}
+.cand-probe{font-size:10px;color:var(--text3);line-height:1.45;margin-bottom:8px}
+.cand-probe b{color:var(--text2)}
+.verds{display:flex;gap:5px}
+.vbtn{flex:1;font-size:10px;padding:6px 4px;border-radius:7px;border:1px solid var(--border);background:var(--bg2);color:var(--text3);cursor:pointer;text-align:center;transition:all .12s}
+.vbtn.on-elim{background:rgba(255,255,255,0.08);color:var(--text2);border-color:var(--border2)}
+.vbtn.on-conf{background:var(--red);color:#000;border-color:var(--red);font-weight:700}
+.vbtn.on-pend{background:var(--amber);color:#000;border-color:var(--amber);font-weight:700}
+
+.attr{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.7}
+.attr b{color:var(--purple)}
+.attr .conf-c{color:var(--red);font-weight:700}
+
+.task{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(255,95,95,0.03));border:1px solid rgba(245,166,35,0.18);border-radius:10px;padding:11px 13px;margin-top:8px}
+.task-t{font-size:11px;font-weight:700;color:var(--amber);margin-bottom:6px}
+.task-i{font-size:11px;color:var(--text2);line-height:1.6;display:flex;gap:7px;margin-bottom:4px}
+.task-i .dot{width:5px;height:5px;border-radius:50%;background:var(--amber);flex-shrink:0;margin-top:6px}
+
+.smp{background:var(--bg3);border:1px dashed rgba(167,139,250,0.35);border-radius:9px;padding:11px 13px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8}
+.smp .k{color:var(--purple)}
+.smp-none{font-size:11px;color:var(--text3);line-height:1.6;font-family:'Noto Sans SC'}
+
+.lbar-wrap{margin-top:10px}
+.lbar-top{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:5px}
+.lbar{height:7px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden}
+.lbar-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--teal));border-radius:4px}
+.lhint{font-size:10px;color:var(--text3);margin-top:7px;line-height:1.5}
+.lhint b{color:var(--purple)}
+
+.note{font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:10px}
+.note b{color:var(--text2)}
+.foot{text-align:center;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;padding:14px 16px 0;line-height:1.7}
+.foot b{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-row">
+    <div class="logo-sym">∞</div>
+    <div class="logo-text">INFINITY <span>OS</span> · 因果鉴别诊断</div>
+  </div>
+  <div class="l13">LAYER 1.3</div>
+</div>
+
+<div class="hero">
+  <div class="hero-title">因果 <span>鉴别诊断</span> 引擎 · 破 K→U 墙</div>
+  <div class="hero-sub">接 ⑦"做了×差" · 排除法收窄 → 残差倒逼收数据 → 每判一次产一条样本</div>
+</div>
+
+<div class="wrap">
+
+  <div class="card">
+    <div class="note">这不是学来的因果模型（反事实模型要 ~500 样本 ~12 月）。这是<b>鉴别诊断引擎</b>：用现有数据排掉能排的，剩下的逼一线去收，<b>每判定一次产一条样本</b>——墙是这样一点点凿开的。<b>排除/确认/待核</b>可手动切换，模拟数据回收。</div>
+
+    <div class="sec-hdr">L1 现象 · 来自 ⑦ 逻辑门</div>
+    <div class="l1">
+      <div class="l1-t">做了 × 差 · 投入有效性存疑</div>
+      <div class="l1-d">华东大润发 · 六月鲜战略SKU · 成熟期。JBP 承诺动作<b>执行到位</b>(陈列/DM/特价都做了)，但实际量 <b>42万</b> vs 目标 <b>50万</b>，差距 <b>16%</b>。执行没问题 → 必须找因果。</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-hdr">L3 收窄漏斗 · 现有数据先排</div>
+    <div class="funnel">
+      <div class="fn"><div class="fn-v" id="f_total" style="color:var(--text2)">8</div><div class="fn-l">候选因</div></div>
+      <div class="fn"><div class="fn-v" id="f_elim" style="color:var(--green)">—</div><div class="fn-l">现有数据排除</div></div>
+      <div class="fn"><div class="fn-v" id="f_pend" style="color:var(--amber)">—</div><div class="fn-l">待核(缺数据)</div></div>
+      <div class="fn"><div class="fn-v" id="f_conf" style="color:var(--red)">—</div><div class="fn-l">确认归因</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-hdr">L2 机制 · 候选因 × 数据探针 <span class="badge">买得到→看得到→乐得买</span></div>
+    <div id="cands"></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-hdr">归因结论</div>
+    <div class="attr" id="attr"></div>
+    <div id="taskBox"></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-hdr">学习样本 · 写入 inf_learning_log</div>
+    <div id="smpBox"></div>
+    <div class="lbar-wrap">
+      <div class="lbar-top"><span>累积因果样本</span><span id="lcount">12 / 500</span></div>
+      <div class="lbar"><div class="lbar-fill" id="lfill" style="width:2.4%"></div></div>
+      <div class="lhint">攒到 <b>~500 条</b> 才训得出真·因果模型(反事实)。当前 IF-THEN + 排除法<b>暂代</b>因果——是脚手架，不是终点。</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <b>Layer 1.3 演示</b> · 排除法+样本日志为工程脚手架·非学来的因果 · 探针数据源真实(汉询/POS/价签A23待建)<br>
+    INFINITY OS · 因果鉴别诊断引擎 V0.1 · 署名 DS · <span id="dt"></span>
+  </div>
+</div>
+
+<script>
+// 候选因表(L2) — 数据探针 + 来源 + 默认判定
+const CANDS=[
+  {id:'A1',layer:'买得到',lc:'lay-buy',name:'隐性断货 / 缺货',probe:'库存上报 + POS 连续零销',src:'现有',sc:'src-now',def:'elim',elimWhy:'库存上报显示货架未空、POS 无连续零销'},
+  {id:'A2',layer:'买得到',lc:'lay-buy',name:'铺货错配(SKU/规格不对路)',probe:'铺货 SKU 组合 vs 该店客群',src:'部分',sc:'src-part',def:'elim',elimWhy:'铺货组合与同型店一致'},
+  {id:'B1',layer:'看得到',lc:'lay-see',name:'陈列位置差 / 被竞品挤',probe:'货架 AI 识别(A21) / 美顾拍照',src:'部分',sc:'src-part',def:'elim',elimWhy:'执行到位、排面与黄金位达标'},
+  {id:'C5',layer:'乐得买',lc:'lay-want',name:'全店客流下降',probe:'全店 POS 客流 / 全品类同比',src:'现有',sc:'src-now',def:'elim',elimWhy:'全店客流与全品类未降 → 非客流问题'},
+  {id:'C3',layer:'乐得买',lc:'lay-want',name:'季节性波动',probe:'去年同期同比(需季节模型)',src:'现有',sc:'src-now',def:'elim',elimWhy:'去年同期未现同样低谷'},
+  {id:'C4',layer:'乐得买',lc:'lay-want',name:'品类真实需求下降',probe:'品类大盘(二手数据)',src:'现有',sc:'src-now',def:'elim',elimWhy:'调味品品类大盘平稳'},
+  {id:'C1',layer:'乐得买',lc:'lay-want',name:'竞品降价 / 强促销',probe:'价签识别(A23待建) / 美顾拍竞品价签',src:'待建',sc:'src-wait',def:'pend',elimWhy:''},
+  {id:'B2',layer:'看得到',lc:'lay-see',name:'消费者认知不足',probe:'渗透/复购 + 终端一手访谈',src:'待建',sc:'src-wait',def:'pend',elimWhy:''},
+];
+let verd={};
+CANDS.forEach(c=>verd[c.id]=c.def);
+
+function render(){
+  const box=document.getElementById('cands');box.innerHTML='';
+  CANDS.forEach(c=>{
+    const v=verd[c.id];
+    const cls=v==='conf'?'conf':v==='pend'?'pend':'elim';
+    const el=document.createElement('div');
+    el.className='cand '+cls;
+    el.innerHTML=`
+      <div class="cand-top">
+        <span class="cand-layer ${c.lc}">${c.layer}·${c.id}</span>
+        <span class="cand-name">${c.name}</span>
+        <span class="cand-src ${c.sc}">${c.src}</span>
+      </div>
+      <div class="cand-probe">探针：<b>${c.probe}</b>${v==='elim'&&c.elimWhy?' — '+c.elimWhy:''}</div>
+      <div class="verds">
+        <div class="vbtn ${v==='elim'?'on-elim':''}" onclick="setV('${c.id}','elim')">排除</div>
+        <div class="vbtn ${v==='pend'?'on-pend':''}" onclick="setV('${c.id}','pend')">待核</div>
+        <div class="vbtn ${v==='conf'?'on-conf':''}" onclick="setV('${c.id}','conf')">确认</div>
+      </div>`;
+    box.appendChild(el);
+  });
+  compute();
+}
+function setV(id,v){verd[id]=v;render();}
+
+function compute(){
+  const elim=CANDS.filter(c=>verd[c.id]==='elim');
+  const pend=CANDS.filter(c=>verd[c.id]==='pend');
+  const conf=CANDS.filter(c=>verd[c.id]==='conf');
+  document.getElementById('f_elim').textContent=elim.length;
+  document.getElementById('f_pend').textContent=pend.length;
+  document.getElementById('f_conf').textContent=conf.length;
+
+  // 归因
+  let a='';
+  if(conf.length){
+    a=`<b>归因已定</b>：${conf.map(c=>`<span class="conf-c">${c.id} ${c.name}</span>`).join('、')}。`;
+    a+=` 现有数据排除 ${elim.length} 项，证据收敛到此。`;
+    if(pend.length) a+=` 仍有 ${pend.length} 项待核未排，置信中等。`;
+    a+=` → 处置：${conf.some(c=>c.id==='C1')?'竞品降价 → 上报价格管控 + 评估跟价/加促销档期(不破战略价格带)':'按机制对症 → 生成纠偏任务'}。`;
+  }else if(pend.length){
+    a=`<b>归因未定·收窄中</b>。现有数据已排除 <b>${elim.length}</b> 项，残差锁定在 <b>${pend.map(c=>c.id+' '+c.name).join(' / ')}</b>——这些<b>缺数据</b>，无法用现有数据判，必须去收。`;
+  }else{
+    a=`全部排除，无明确归因 → 可能是测量噪声或目标量本身偏高，回 ③ 复核目标量(自上而下是否过激)。`;
+  }
+  document.getElementById('attr').innerHTML=a;
+
+  // 待核任务
+  const tb=document.getElementById('taskBox');
+  if(pend.length){
+    let items=pend.map(c=>{
+      let how=c.id==='C1'?'美顾拍竞品价签 + 货架照(待 A23 价签识别自动读价)':c.id==='B2'?'终端 5 户访谈 + 拉渗透/复购数据':'按探针收集 '+c.probe;
+      return `<div class="task-i"><span class="dot"></span><div>${c.id} ${c.name} → <b>${how}</b></div></div>`;
+    }).join('');
+    tb.innerHTML=`<div class="task"><div class="task-t">🔻 残差倒逼收数据(派 XM 一线·积分激励)</div>${items}<div class="task-i" style="color:var(--text3);margin-top:4px"><span class="dot" style="background:var(--text3)"></span><div>收回后回到此处把"待核"切到"确认/排除" → 自动产样本。这就是 App 倒逼信息脉络长粗的一圈。</div></div></div>`;
+  }else tb.innerHTML='';
+
+  // 样本
+  const smp=document.getElementById('smpBox');
+  if(conf.length){
+    const c=conf[0];
+    const confidence=c.src==='现有'?'高(现有数据)':'中(一手回收)';
+    const today=document.getElementById('dt').textContent;
+    smp.innerHTML=`<div class="smp"><span class="k">date</span>: ${today}　<span class="k">sku</span>: 六月鲜战略SKU　<span class="k">cust</span>: 华东大润发<br><span class="k">现象</span>: 做了×差 · 差距16%<br><span class="k">归因</span>: ${c.id} ${c.name}<br><span class="k">证据</span>: 排除${elim.length}项·探针[${c.probe}]<br><span class="k">置信</span>: ${confidence}　<span class="k">→</span> inf_learning_log +1</div>`;
+    document.getElementById('lcount').textContent='13 / 500';
+    document.getElementById('lfill').style.width='2.6%';
+  }else{
+    smp.innerHTML=`<div class="smp-none">尚无确认归因 → 不产样本。残差回收、判定确认后，这里才写入一条 inf_learning_log。<b>没确认就不喂</b>——防止把噪声当因果污染模型。</div>`;
+    document.getElementById('lcount').textContent='12 / 500';
+    document.getElementById('lfill').style.width='2.4%';
+  }
+}
+
+const now=new Date();
+document.getElementById('dt').textContent=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+render();
+</script>
+</body>
+</html>

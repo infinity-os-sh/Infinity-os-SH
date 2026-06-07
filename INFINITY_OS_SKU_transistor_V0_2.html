@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · SKU 晶体管算账器</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090f;--bg2:#0e1018;--bg3:#13161f;--card:#141820;--card2:#1a2030;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.1);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.1);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.1);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);
+  --blue:#60a5fa;--purple:#a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden;padding-bottom:40px}
+
+.topbar{position:sticky;top:0;z-index:100;background:rgba(9,9,15,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-sym{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#f5a623,#ff7c38);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000;box-shadow:0 3px 12px rgba(245,166,35,0.3)}
+.logo-text{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.04em}
+.logo-text span{color:var(--amber)}
+.l13{font-size:9px;font-family:'Space Mono',monospace;color:#000;background:var(--amber);padding:3px 8px;border-radius:10px;font-weight:700}
+
+.hero{padding:20px 16px 8px}
+.hero-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1.1}
+.hero-title span{color:var(--amber)}
+.hero-sub{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:4px}
+
+.wrap{padding:8px 16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.sec-hdr{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.sec-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec-hdr .badge{font-size:9px;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,166,35,0.2);padding:2px 7px;border-radius:8px;letter-spacing:0;text-transform:none;font-weight:600}
+
+.cust-row{display:flex;gap:8px;flex-wrap:wrap}
+.cust-pill{flex:1;min-width:100px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;transition:all .15s}
+.cust-pill.on{border-color:var(--amber);background:var(--amber-dim)}
+.cust-name{font-size:13px;font-weight:600}
+.cust-sales{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px}
+.cust-pill.on .cust-name{color:var(--amber)}
+
+.stage-row{display:flex;gap:6px}
+.stage-btn{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 4px;text-align:center;font-size:11px;cursor:pointer;transition:all .15s;color:var(--text2)}
+.stage-btn.on{border-color:var(--teal);background:var(--teal-dim);color:var(--teal);font-weight:700}
+.stage-hint{font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5}
+.stage-hint b{color:var(--teal)}
+
+.in-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.in-row:last-child{border:none}
+.in-label{flex:1;font-size:12px;color:var(--text2)}
+.in-label .src{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;display:block;margin-top:1px}
+.in-field{display:flex;align-items:center;gap:4px}
+.in-field input{width:90px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 9px;color:var(--text);font-family:'Space Mono',monospace;font-size:13px;text-align:right;outline:none}
+.in-field input:focus{border-color:var(--amber)}
+.in-unit{font-size:11px;color:var(--text3);width:30px}
+.in-row.off{opacity:.32}
+.in-row.off input{pointer-events:none}
+.tag-no{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace}
+.grp-lbl{font-size:10px;font-weight:700;letter-spacing:.04em;margin:2px 0 4px;display:flex;align-items:center;gap:6px}
+.grp-buy{color:var(--red)} .grp-pull{color:var(--green)}
+.grp-note{font-size:10px;color:var(--text3);line-height:1.5;margin-bottom:6px}
+
+.out-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.out-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 12px}
+.out-lbl{font-size:10px;color:var(--text3);margin-bottom:4px;line-height:1.3}
+.out-val{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;line-height:1}
+.out-val .u{font-size:11px;font-weight:400;color:var(--text3);margin-left:2px}
+
+.sig-row{display:flex;gap:6px;margin:4px 0 12px}
+.sig{flex:1;border-radius:10px;padding:11px 8px;text-align:center;border:1px solid var(--border);background:var(--bg3)}
+.sig-dot{width:11px;height:11px;border-radius:50%;margin:0 auto 6px}
+.sig-name{font-size:10px;color:var(--text2);line-height:1.2}
+.sig-state{font-size:11px;font-weight:700;margin-top:3px}
+.dot-g{background:var(--green);box-shadow:0 0 10px var(--green)}
+.dot-a{background:var(--amber);box-shadow:0 0 10px var(--amber)}
+.dot-r{background:var(--red);box-shadow:0 0 10px var(--red)}
+.st-g{color:var(--green)} .st-a{color:var(--amber)} .st-r{color:var(--red)}
+
+.diag{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--amber);border-radius:8px;padding:11px 13px;font-size:12px;color:var(--text2);line-height:1.7}
+.diag b{color:var(--amber)}
+
+/* ⑦ 逻辑门·关差 */
+.exec-row{display:flex;align-items:center;gap:10px;padding:9px 0 3px}
+.exec-toggle{font-size:12px;font-weight:700;padding:7px 16px;border-radius:9px;cursor:pointer;border:1px solid var(--border2)}
+.exec-toggle.done{background:var(--green-dim);color:var(--green);border-color:rgba(74,222,128,0.3)}
+.exec-toggle.notdone{background:var(--red-dim);color:var(--red);border-color:rgba(255,95,95,0.3)}
+.gate{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:8px;padding:11px 13px;font-size:12px;color:var(--text2);line-height:1.7;margin-top:6px}
+.gate b{color:var(--teal)}
+.m22{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.m22 .cell{border:1px solid var(--border);border-radius:9px;padding:9px 10px;background:var(--bg3);opacity:.42;transition:all .15s}
+.m22 .cell.on{opacity:1}
+.m22 .cell.on.g{border-color:var(--green);background:var(--green-dim)}
+.m22 .cell.on.a{border-color:var(--amber);background:var(--amber-dim)}
+.m22 .cell.on.r{border-color:var(--red);background:var(--red-dim)}
+.cell-t{font-size:11px;font-weight:700;margin-bottom:3px}
+.cell-d{font-size:10px;color:var(--text3);line-height:1.4}
+.taskcard{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(78,205,196,0.03));border:1px solid rgba(245,166,35,0.18);border-radius:10px;padding:12px}
+.task-line{display:flex;gap:8px;font-size:11px;margin-bottom:6px}
+.task-line:last-child{margin:0}
+.task-k{color:var(--text3);width:46px;flex-shrink:0;font-family:'Space Mono',monospace}
+.task-v{color:var(--text2);flex:1;line-height:1.5}
+.task-v b{color:var(--amber)}
+.dikuw{display:flex;gap:4px}
+.dk{flex:1;border-radius:8px;padding:8px 3px;text-align:center;font-size:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text3);line-height:1.3}
+.dk b{display:block;font-family:'Syne',sans-serif;font-size:13px;color:var(--text2);margin-bottom:2px}
+.dk.ok{border-color:rgba(74,222,128,0.2)} .dk.ok b{color:var(--green)}
+.dk.wall{border-color:var(--red);background:var(--red-dim)} .dk.wall b{color:var(--red)}
+.dk.future b{color:var(--text3)}
+.dikuw-hint{font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5}
+.dikuw-hint b{color:var(--red)}
+
+.stub{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.stub:last-child{border:none}
+.stub-ico{width:34px;height:34px;border-radius:9px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;border:1px solid var(--border)}
+.stub-body{flex:1}
+.stub-ttl{font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px}
+.stub-pin{font-size:8px;font-family:'Space Mono',monospace;color:var(--red);background:var(--red-dim);border:1px solid rgba(255,95,95,0.2);padding:1px 6px;border-radius:7px;font-weight:700}
+.stub-desc{font-size:11px;color:var(--text3);line-height:1.5;margin-top:3px}
+
+.foot{text-align:center;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;padding:14px 16px 0;line-height:1.7}
+.foot b{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-row">
+    <div class="logo-sym">∞</div>
+    <div class="logo-text">INFINITY <span>OS</span> · 晶体管算账器</div>
+  </div>
+  <div class="l13">LAYER 1.3</div>
+</div>
+
+<div class="hero">
+  <div class="hero-title">SKU <span>晶体管</span> · 算账器 + 关差闭环</div>
+  <div class="hero-sub">①晶体管(状态) → ②逻辑门(IF-THEN) → 关差任务 · 5层经营计算机第①②层</div>
+</div>
+
+<div class="wrap">
+
+  <!-- 客户 -->
+  <div class="card">
+    <div class="sec-hdr">① 客户 · 费用结构来自真实调研 <span class="badge">大卖场_MT</span></div>
+    <div class="cust-row" id="custRow"></div>
+  </div>
+
+  <!-- 阶段 -->
+  <div class="card">
+    <div class="sec-hdr">② SKU 生命周期阶段 · 阶段是评分尺子本身</div>
+    <div class="stage-row" id="stageRow"></div>
+    <div class="stage-hint" id="stageHint"></div>
+  </div>
+
+  <!-- 定价与量 -->
+  <div class="card">
+    <div class="sec-hdr">③ 定价与目标量 <span class="badge">价格带由战略定·非成本加成</span></div>
+    <div class="in-row"><div class="in-label">出厂价 / 供货价</div><div class="in-field"><input id="i_fob" value="10"><span class="in-unit">元/瓶</span></div></div>
+    <div class="in-row"><div class="in-label">零售价 RSP<span class="src">参考·检查是否在战略价格带</span></div><div class="in-field"><input id="i_rsp" value="15.9"><span class="in-unit">元/瓶</span></div></div>
+    <div class="in-row"><div class="in-label">单瓶成本 COGS</div><div class="in-field"><input id="i_cogs" value="6"><span class="in-unit">元/瓶</span></div></div>
+    <div class="in-row"><div class="in-label">战略目标量 Q<sub>目标</sub><span class="src">北极星自上而下分解·非费用倒推</span></div><div class="in-field"><input id="i_qt" value="500000"><span class="in-unit">瓶/年</span></div></div>
+  </div>
+
+  <!-- 投大润发 -->
+  <div class="card">
+    <div class="sec-hdr">④ 投大润发 · 买路钱(要砍)</div>
+    <div class="grp-lbl grp-buy">● 固定费(摊薄·跟量无关)</div>
+    <div id="fixBuy"></div>
+    <div class="grp-lbl grp-buy" style="margin-top:10px">● 变动费(随量·返利)</div>
+    <div id="varBuy"></div>
+  </div>
+
+  <!-- 投消费者 -->
+  <div class="card">
+    <div class="sec-hdr">⑤ 投消费者 · 乐得买(要砸)</div>
+    <div class="grp-note">看得到 + 乐得买。陈列/DM 买可见性，特价/买赠/试吃直接拉动销。这块占比越高越健康。</div>
+    <div class="grp-lbl grp-pull">● 固定费(看得到)</div>
+    <div id="fixPull"></div>
+    <div class="grp-lbl grp-pull" style="margin-top:10px">● 变动费(乐得买/瓶)</div>
+    <div id="varPull"></div>
+    <div class="grp-lbl grp-pull" style="margin-top:10px">● 通路外品牌拉力(可选·合纵棒1-3)</div>
+    <div class="in-row" id="row_brand"><div class="in-label">小红书/抖音/电商投流<span class="src">摊到本SKU·不在大润发体内</span></div><div class="in-field"><input id="i_brand" value="0"><span class="in-unit">元/年</span></div></div>
+  </div>
+
+  <!-- ⑥ 信号 -->
+  <div class="card">
+    <div class="sec-hdr">⑥ 状态信号 · 这就是晶体管</div>
+    <div class="out-grid">
+      <div class="out-box"><div class="out-lbl">单瓶净贡献 m<br><span style="font-size:9px">出厂价−COGS−变动费</span></div><div class="out-val" id="o_m">—<span class="u">元</span></div></div>
+      <div class="out-box"><div class="out-lbl">固定通路费 F<br><span style="font-size:9px">全部固定·年</span></div><div class="out-val" id="o_F">—<span class="u">万</span></div></div>
+      <div class="out-box"><div class="out-lbl">规模效益门槛 Q*<br><span style="font-size:9px">F ÷ m · 回本量</span></div><div class="out-val" id="o_Q">—<span class="u">瓶</span></div></div>
+      <div class="out-box"><div class="out-lbl">目标量净毛利<br><span style="font-size:9px">m − F/Q目标</span></div><div class="out-val" id="o_gm">—<span class="u">%</span></div></div>
+    </div>
+    <div class="sig-row">
+      <div class="sig"><div class="sig-dot" id="d1"></div><div class="sig-name">净毛利<br>达阶段红线?</div><div class="sig-state" id="s1">—</div></div>
+      <div class="sig"><div class="sig-dot" id="d2"></div><div class="sig-name">量过<br>规模门槛?</div><div class="sig-state" id="s2">—</div></div>
+      <div class="sig"><div class="sig-dot" id="d3"></div><div class="sig-name">投入结构<br>拉力≥买路钱?</div><div class="sig-state" id="s3">—</div></div>
+    </div>
+    <div class="diag" id="diag"></div>
+  </div>
+
+  <!-- ⑦ 逻辑门·关差闭环 -->
+  <div class="card">
+    <div class="sec-hdr">⑦ 逻辑门 · 关差闭环 <span class="badge" style="color:var(--teal);background:var(--teal-dim);border-color:rgba(78,205,196,0.2)">大脑层·非新surface</span></div>
+
+    <div class="in-row"><div class="in-label">实际量 Q<sub>实际</sub><span class="src">汉询·POS 回流·此处手填</span></div><div class="in-field"><input id="i_qa" value="420000"><span class="in-unit">瓶/年</span></div></div>
+    <div class="exec-row">
+      <div class="in-label" style="flex:1">本期 JBP 承诺动作(陈列/DM/特价)执行到位?<span class="src">点击切换·决定2×2落哪格</span></div>
+      <div class="exec-toggle done" id="execTog" onclick="toggleExec()">✓ 做了</div>
+    </div>
+
+    <div class="grp-lbl" style="color:var(--teal);margin-top:12px">● 逻辑门 IF-THEN · 经济处方</div>
+    <div class="gate" id="gate"></div>
+
+    <div class="grp-lbl" style="color:var(--text2);margin-top:14px">● 2×2 执行诊断 (做没做 × 业绩好坏)</div>
+    <div class="m22" id="m22"></div>
+
+    <div class="grp-lbl" style="color:var(--amber);margin-top:14px">● 关差任务 · 自动生成(待企微推送)</div>
+    <div class="taskcard" id="taskcard"></div>
+
+    <div class="grp-lbl" style="color:var(--text2);margin-top:14px">● DIKUW 阶梯 · 自动派单要爬完五阶</div>
+    <div class="dikuw" id="dikuw"></div>
+    <div class="dikuw-hint">当前卡在 <b>K → U</b>：有数据有规则，但"为什么"还靠人——<b>因果墙</b>是 Layer1→5 的核心障碍。逻辑门用的是写死的 IF-THEN，不是学来的因果。</div>
+  </div>
+
+  <!-- ⑧ 上层 -->
+  <div class="card">
+    <div class="sec-hdr">⑧ 仍未实现的上层 <span class="badge" style="color:var(--red);background:var(--red-dim);border-color:rgba(255,95,95,0.2)">诚实标注</span></div>
+    <div class="stub">
+      <div class="stub-ico">👤</div>
+      <div class="stub-body"><div class="stub-ttl">照顾 / 责任绑定 <span class="stub-pin">六卡 schema 待建</span></div><div class="stub-desc">谁照顾 = JBP 三方合同派给谁 + SKU 六卡阶段。算账器已读阶段红线、任务已标责任人，但 SKU↔个人收入(income_share≤70%)的绑定要等六卡 schema。</div></div>
+    </div>
+    <div class="stub">
+      <div class="stub-ico">📲</div>
+      <div class="stub-body"><div class="stub-ttl">自动推送到人 <span class="stub-pin">企微 push = S4 · 待 TL</span></div><div class="stub-desc">逻辑门已会判红、关差任务已会生成，但"自动推到 XM/驾驶舱"需企微 API + Java 后端。现在是手动演示口径。</div></div>
+    </div>
+    <div class="stub">
+      <div class="stub-ico">🧠</div>
+      <div class="stub-body"><div class="stub-ttl">因果学习(K→U 破墙) <span class="stub-pin">~500 样本 · ~12月</span></div><div class="stub-desc">"做了×差"要透因果，靠正负样本喂养。当前 ~12 样本，IF-THEN 暂代因果，远未到自主决策(L5)。</div></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <b>Layer 1.3 演示口径</b> · 金额示意待真值(KAM录JBP/财务+汉询补) · 费用结构来自「大卖场_MT」真实调研 · 逻辑门为写死IF-THEN非因果<br>
+    INFINITY OS · SKU 晶体管算账器 V0.2 · 署名 DS · <span id="dt"></span>
+  </div>
+</div>
+
+<script>
+const CUST={
+  jjy:{name:'家家悦',sales:'8868W',kam:'孙克豪',
+    fee:{进场:1,信息系统:1,节庆:0,合同:0,陈列:1,DM:1,无条件返:1,达量返:1,特价:1,买赠:0,试吃:0,配送:1}},
+  hbrt:{name:'华北大润发',sales:'3280W',kam:'—',
+    fee:{进场:1,信息系统:0,节庆:1,合同:0,陈列:1,DM:1,无条件返:1,达量返:1,特价:1,买赠:0,试吃:0,配送:1}},
+  hdrt:{name:'华东大润发',sales:'8468W',kam:'—',
+    fee:{进场:1,信息系统:0,节庆:1,合同:0,陈列:1,DM:1,无条件返:1,达量返:1,特价:1,买赠:0,试吃:0,配送:1}},
+};
+let curCust='hdrt';
+
+const STAGES={
+  导入:{red:0,note:'刚铺货，<b>可低毛利甚至亏</b>，目的是把货铺进去、动销点亮。红线≈0%。'},
+  成长:{red:10,note:'动销起势，<b>边投边赚</b>，毛利红线≈10%，重点是把量推过规模门槛。'},
+  成熟:{red:22,note:'必须达标，<b>毛利红线22%</b>(六月鲜战略品)，砍买路钱、保净利。'},
+  衰退:{red:15,note:'收割期，<b>守毛利≥15%</b>，减投入、防窜货乱价，评估是否转防御角色。'},
+};
+let curStage='成熟';
+let execDone=true;
+
+const FIX_BUY=[
+  {k:'进场',lbl:'进场费 / 条码费',def:50000},
+  {k:'信息系统',lbl:'信息系统使用费',def:30000},
+  {k:'节庆',lbl:'节庆 / 店庆费',def:20000},
+  {k:'合同',lbl:'年度合同费(后台固定)',def:0},
+];
+const FIX_PULL=[
+  {k:'陈列',lbl:'陈列费(端架+堆头+地堆)',def:130000},
+  {k:'DM',lbl:'DM 档期费 / 海报',def:80000},
+];
+const VAR_BUY=[
+  {k:'无条件返',lbl:'无条件返利(固定扣点)',def:5,unit:'%'},
+  {k:'达量返',lbl:'有条件返利(达量返)',def:3,unit:'%'},
+  {k:'配送',lbl:'配送费 / 物流补贴',def:0.2,unit:'元/瓶'},
+];
+const VAR_PULL=[
+  {k:'特价',lbl:'特价补差(促销让利)',def:0.5,unit:'元/瓶'},
+  {k:'买赠',lbl:'买赠活动分摊',def:0,unit:'元/瓶'},
+  {k:'试吃',lbl:'试吃 / 体验',def:0,unit:'元/瓶'},
+];
+
+function buildCust(){
+  const r=document.getElementById('custRow');r.innerHTML='';
+  Object.entries(CUST).forEach(([id,c])=>{
+    const d=document.createElement('div');
+    d.className='cust-pill'+(id===curCust?' on':'');
+    d.innerHTML=`<div class="cust-name">${c.name}</div><div class="cust-sales">年销 ${c.sales}</div>`;
+    d.onclick=()=>{curCust=id;buildCust();buildFees();calc()};
+    r.appendChild(d);
+  });
+}
+function buildStage(){
+  const r=document.getElementById('stageRow');r.innerHTML='';
+  Object.keys(STAGES).forEach(s=>{
+    const b=document.createElement('div');
+    b.className='stage-btn'+(s===curStage?' on':'');
+    b.textContent=s;
+    b.onclick=()=>{curStage=s;buildStage();calc()};
+    r.appendChild(b);
+  });
+  document.getElementById('stageHint').innerHTML=`红线 = 净毛利 ≥ <b>${STAGES[curStage].red}%</b>。${STAGES[curStage].note}`;
+}
+function feeRow(item,fee){
+  const on=fee[item.k]===1;const unit=item.unit||'元/年';
+  return `<div class="in-row${on?'':' off'}">
+    <div class="in-label">${item.lbl}${on?'':' <span class="tag-no">调研:否</span>'}</div>
+    <div class="in-field"><input id="f_${item.k}" value="${on?item.def:0}" ${on?'':'disabled'}><span class="in-unit">${unit}</span></div>
+  </div>`;
+}
+function buildFees(){
+  const fee=CUST[curCust].fee;
+  document.getElementById('fixBuy').innerHTML=FIX_BUY.map(i=>feeRow(i,fee)).join('');
+  document.getElementById('varBuy').innerHTML=VAR_BUY.map(i=>feeRow(i,fee)).join('');
+  document.getElementById('fixPull').innerHTML=FIX_PULL.map(i=>feeRow(i,fee)).join('');
+  document.getElementById('varPull').innerHTML=VAR_PULL.map(i=>feeRow(i,fee)).join('');
+  document.querySelectorAll('.in-field input').forEach(inp=>inp.addEventListener('input',calc));
+}
+function val(id){const e=document.getElementById(id);return e?(parseFloat(e.value)||0):0}
+function fv(k){const e=document.getElementById('f_'+k);return e?(parseFloat(e.value)||0):0}
+function setSig(dot,state,cls,txt){document.getElementById(dot).className='sig-dot dot-'+cls;const s=document.getElementById(state);s.className='sig-state st-'+cls;s.textContent=txt;}
+function toggleExec(){execDone=!execDone;const t=document.getElementById('execTog');t.className='exec-toggle '+(execDone?'done':'notdone');t.textContent=execDone?'✓ 做了':'✗ 没做';calc();}
+
+function calc(){
+  const fob=val('i_fob'),cogs=val('i_cogs'),qt=val('i_qt'),rsp=val('i_rsp'),qa=val('i_qa');
+  const varBuyBottle=fob*(fv('无条件返')+fv('达量返'))/100+fv('配送');
+  const varPullBottle=fv('特价')+fv('买赠')+fv('试吃');
+  const m=fob-cogs-varBuyBottle-varPullBottle;
+  const fixBuy=fv('进场')+fv('信息系统')+fv('节庆')+fv('合同');
+  const fixPull=fv('陈列')+fv('DM')+val('i_brand');
+  const F=fixBuy+fixPull;
+  const Qstar=m>0?F/m:Infinity;
+  const gmBottle=m-(qt>0?F/qt:0);
+  const gmPct=fob>0?gmBottle/fob*100:0;
+  const buyTotal=fixBuy+varBuyBottle*qt;
+  const pullTotal=fixPull+varPullBottle*qt;
+  const pullShare=(buyTotal+pullTotal)>0?pullTotal/(buyTotal+pullTotal)*100:0;
+  const red=STAGES[curStage].red;
+
+  document.getElementById('o_m').innerHTML=m.toFixed(2)+'<span class="u">元</span>';
+  document.getElementById('o_F').innerHTML=(F/10000).toFixed(1)+'<span class="u">万</span>';
+  document.getElementById('o_Q').innerHTML=(Qstar===Infinity?'∞':Math.round(Qstar).toLocaleString())+'<span class="u">瓶</span>';
+  document.getElementById('o_gm').innerHTML=gmPct.toFixed(1)+'<span class="u">%</span>';
+
+  if(gmPct>=red) setSig('d1','s1','g','达标'); else if(gmPct>=red-5) setSig('d1','s1','a','差一点'); else setSig('d1','s1','r','不达标');
+  if(qt>=Qstar*1.3) setSig('d2','s2','g','过门槛'); else if(qt>=Qstar) setSig('d2','s2','a','刚过线'); else setSig('d2','s2','r','未回本');
+  if(pullShare>=55) setSig('d3','s3','g','拉力主导'); else if(pullShare>=45) setSig('d3','s3','a','勉强'); else setSig('d3','s3','r','买路钱重');
+
+  let d=[];
+  d.push(`<b>${CUST[curCust].name} · ${curStage}期</b>：单瓶净贡献 <b>${m.toFixed(2)}元</b>，卖到 <b>${Math.round(Qstar).toLocaleString()}瓶/年</b> 才覆盖固定买路钱。`);
+  if(qt<Qstar) d.push(`目标量 ${qt.toLocaleString()} <b>低于</b>规模门槛 → 当主力会亏固定费，要么谈降进场/陈列，要么它在这家应是<b>防御/候选</b>角色。`);
+  else d.push(`目标量已过门槛 ${(qt/Qstar).toFixed(1)}倍。`);
+  if(gmPct<red) d.push(`净毛利 ${gmPct.toFixed(1)}% <b>低于${curStage}红线${red}%</b>，差 ${(red-gmPct).toFixed(1)}个点。`);
+  else d.push(`净毛利 ${gmPct.toFixed(1)}% 达 ${red}% 红线。`);
+  if(pullShare<50) d.push(`买路钱占 ${(100-pullShare).toFixed(0)}%、拉力仅 ${pullShare.toFixed(0)}% → <b>钱砸错地方</b>。`);
+  if(rsp>0&&rsp<fob) d.push(`⚠️ 零售价 ${rsp} 低于出厂价 ${fob}，价格带异常。`);
+  document.getElementById('diag').innerHTML=d.join(' ');
+
+  // ── ⑦ 逻辑门 ──
+  const gapPct=qt>0?(qt-qa)/qt*100:0;
+  const perfGood=qa>=qt*0.95;
+  let v='';
+  if(qt<Qstar){
+    v=(curStage==='导入')
+      ?'IF 未过门槛 AND 导入期 → <b>正常</b>，继续铺货点动销，别急着算赚。'
+      :'IF 未过门槛 AND 非导入 → <b>角色错位</b>：转防御/候选，或谈降进场+陈列固定费。';
+  }else if(gmPct<red&&pullShare<50){
+    v='IF 量够 AND 毛利不达标 AND 买路钱重 → <b>砍买路钱</b>(进场/返利)，挪向"乐得买"。';
+  }else if(gmPct<red){
+    v='IF 量够 AND 毛利薄 → 降变动费 或 在战略价格带内评估<b>提价</b>，不靠加价硬凑。';
+  }else if(gmPct>=red&&pullShare>=55){
+    v='IF 三信号全绿 → <b>健康·正样本</b>，配方可作他店复制模板。';
+  }else{
+    v='基本健康，<b>投入结构往拉力倾斜</b>再优化。';
+  }
+  document.getElementById('gate').innerHTML=v;
+
+  // 2×2
+  const C={
+    done_good:{c:'g',t:'做了 × 好',d:'投入有效·正样本 → 记录喂 Agent，维持配方'},
+    done_bad:{c:'r',t:'做了 × 差',d:'投入无效·必须找因果(因果墙 U) → 拍竞品价签+访谈查为什么，标待核'},
+    no_good:{c:'a',t:'没做 × 好',d:'设计/预算本身错 → 反向校验，这笔投入可能不必要，核减预算'},
+    no_bad:{c:'r',t:'没做 × 差',d:'执行问题坐实 → 查为何没做(没人/没钱/流程/不会/不愿/走样)'},
+  };
+  const cell=execDone?(perfGood?'done_good':'done_bad'):(perfGood?'no_good':'no_bad');
+  const order=['done_good','done_bad','no_good','no_bad'];
+  document.getElementById('m22').innerHTML=order.map(k=>{
+    const o=C[k];const on=k===cell;
+    return `<div class="cell ${on?'on '+o.c:''}"><div class="cell-t">${o.t}</div><div class="cell-d">${o.d}</div></div>`;
+  }).join('');
+
+  // 关差任务
+  const who=CUST[curCust].kam!=='—'?CUST[curCust].kam:'本客户 KAM';
+  let taskTxt,route,incentive;
+  if(cell==='no_bad'){taskTxt='补执行 — 查责任人为何没做；JBP 承诺动作回到位';route='→ XM 一线(抢单)';incentive='抢单 + CB 粘性分';}
+  else if(cell==='done_bad'){taskTxt='查因果 — 做了却没起量，拍竞品价签+终端访谈，定位是竞品/认知/季节';route='→ 驾驶舱(管理找因) + XM 收一手';incentive='收一手数据积分(倒逼信息脉络)';}
+  else if(cell==='no_good'){taskTxt='核预算 — 没做却达标，这笔投入可能不必要，反向校验后核减';route='→ 驾驶舱(管理决策)';incentive='—';}
+  else{taskTxt='维持 + 沉淀 — 投入有效，存为正样本喂 Agent，配方复制到同型门店';route='→ 喂 Agent(正样本)';incentive='—';}
+  document.getElementById('taskcard').innerHTML=`
+    <div class="task-line"><div class="task-k">差距</div><div class="task-v"><b>${(qt-qa).toLocaleString()}瓶 (${gapPct.toFixed(1)}%)</b> = 目标 − 实际</div></div>
+    <div class="task-line"><div class="task-k">原因类</div><div class="task-v">${C[cell].t}</div></div>
+    <div class="task-line"><div class="task-k">任务</div><div class="task-v"><b>${taskTxt}</b></div></div>
+    <div class="task-line"><div class="task-k">派给</div><div class="task-v">${who} · ${CUST[curCust].name}</div></div>
+    <div class="task-line"><div class="task-k">路由</div><div class="task-v">${route}</div></div>
+    <div class="task-line"><div class="task-k">激励</div><div class="task-v">${incentive}</div></div>`;
+
+  // DIKUW
+  const dk=[
+    {n:'D',l:'数据',cls:'ok',sub:'🟡6%覆盖'},
+    {n:'I',l:'信息',cls:'ok',sub:'🟢'},
+    {n:'K',l:'知识',cls:'ok',sub:'🟢规则'},
+    {n:'U',l:'理解',cls:'wall',sub:'🔴因果墙'},
+    {n:'W',l:'智慧',cls:'future',sub:'⚪自主派单'},
+  ];
+  document.getElementById('dikuw').innerHTML=dk.map(x=>`<div class="dk ${x.cls}"><b>${x.n}</b>${x.l}<br>${x.sub}</div>`).join('');
+}
+
+buildCust();buildStage();buildFees();
+document.querySelectorAll('#i_fob,#i_rsp,#i_cogs,#i_qt,#i_qa,#i_brand').forEach(e=>e.addEventListener('input',calc));
+const now=new Date();
+document.getElementById('dt').textContent=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+calc();
+</script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · SR 视角(模块化测试)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090f;--bg2:#0e1018;--bg3:#13161f;--card:#141820;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;
+  --amber:#f5a623;--amber-dim:rgba(245,166,35,0.1);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.1);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.1);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);
+  --blue:#60a5fa;--purple:#a78bfa;--purple-dim:rgba(167,139,250,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden;padding-bottom:40px}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(9,9,15,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-sym{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#60a5fa,#4ecdc4);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000}
+.logo-text{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.logo-text span{color:var(--blue)}
+.l13{font-size:9px;font-family:'Space Mono',monospace;color:#000;background:var(--amber);padding:3px 8px;border-radius:10px;font-weight:700}
+.hero{padding:18px 16px 6px}
+.hero-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;line-height:1.15}
+.hero-title span{color:var(--blue)}
+.hero-sub{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:4px}
+.wrap{padding:8px 16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.sec-hdr{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.sec-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
+.badge{font-size:9px;padding:2px 7px;border-radius:8px;letter-spacing:0;text-transform:none;font-weight:600}
+.bd-blue{color:var(--blue);background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2)}
+
+/* verdict */
+.verdict{background:linear-gradient(135deg,rgba(74,222,128,0.08),rgba(96,165,250,0.04));border:1px solid rgba(74,222,128,0.22);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.verdict-t{font-size:14px;font-weight:700;color:var(--green);margin-bottom:6px}
+.verdict-d{font-size:12px;color:var(--text2);line-height:1.65}
+.verdict-d b{color:var(--text)}
+
+/* reuse table */
+.rt{width:100%;border-collapse:collapse;font-size:11px}
+.rt th{background:rgba(255,255,255,0.04);color:var(--text3);padding:7px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600}
+.rt td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text2);vertical-align:top}
+.rt tr:last-child td{border:none}
+.keep{color:var(--green);font-weight:600;white-space:nowrap}
+.fill{color:var(--amber);font-weight:600;white-space:nowrap}
+.amp{color:var(--blue);font-weight:600;white-space:nowrap}
+
+/* customer board */
+.cust{border:1px solid var(--border);border-radius:12px;padding:12px 13px;margin-bottom:9px;background:var(--bg3)}
+.cust-top{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.cust-light{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.cust-name{font-size:13px;font-weight:700;flex:1}
+.cust-meta{font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;text-align:right}
+.sku-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:11px}
+.sku-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sku-name{flex:1;color:var(--text2)}
+.sku-brand{font-size:8px;font-family:'Space Mono',monospace;padding:1px 5px;border-radius:5px;background:rgba(255,255,255,0.05);color:var(--text3)}
+.sku-gap{font-size:10px;font-family:'Space Mono',monospace;width:48px;text-align:right}
+.dg{background:var(--green);box-shadow:0 0 7px var(--green)} .da{background:var(--amber);box-shadow:0 0 7px var(--amber)} .dr{background:var(--red);box-shadow:0 0 7px var(--red)}
+.cg{color:var(--green)}.ca{color:var(--amber)}.cr{color:var(--red)}
+
+/* priority gate */
+.pri{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:7px}
+.pri-rank{width:24px;height:24px;border-radius:7px;background:var(--red-dim);color:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;flex-shrink:0}
+.pri-body{flex:1}
+.pri-t{font-size:12px;font-weight:600}
+.pri-d{font-size:10px;color:var(--text3);margin-top:2px}
+.pri-score{font-family:'Space Mono',monospace;font-size:11px;color:var(--amber);flex-shrink:0}
+.pri-note{font-size:10px;color:var(--text3);line-height:1.5;margin-top:8px}
+.pri-note b{color:var(--blue)}
+
+.drill{background:var(--bg2);border:1px dashed var(--border2);border-radius:10px;padding:12px 13px;font-size:11px;color:var(--text2);line-height:1.65}
+.drill b{color:var(--teal)}
+
+.foot{text-align:center;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;padding:14px 16px 0;line-height:1.7}
+.foot b{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-row"><div class="logo-sym">∞</div><div class="logo-text">SR 视角 · <span>模块化测试</span></div></div>
+  <div class="l13">LAYER 1.3</div>
+</div>
+
+<div class="hero">
+  <div class="hero-title">SR 视角 · <span>同一套晶体管的放大</span></div>
+  <div class="hero-sub">门店→客户 · 底层不动 · 只填映射/权重/手段 + 一个优先级门</div>
+</div>
+
+<div class="wrap">
+
+  <div class="verdict">
+    <div class="verdict-t">✓ 模板成立 · 底层零改动</div>
+    <div class="verdict-d">晶体管(3信号)、逻辑门(IF-THEN)、因果鉴别引擎、算账器公式——<b>原样复用</b>。SR 只换了三处"业态填充" + 多了一个"优先级门"。<b>但暴露一个真实补充</b>：SR 管 N客户×M SKU(很多晶体管、时间有限)，比美顾多一层<b>聚合+优先级</b>——它是同种逻辑门的<b>放大应用，不是新底层</b>。模板没破。</div>
+  </div>
+
+  <div class="card">
+    <div class="sec-hdr">复用 vs 填充 · 这才是 ① 的验证</div>
+    <table class="rt">
+      <thead><tr><th>要素</th><th>美顾(ICA)</th><th>SR</th><th>判定</th></tr></thead>
+      <tbody>
+        <tr><td>晶体管 3 信号</td><td>SKU×门店</td><td>SKU×客户</td><td class="keep">底层不变</td></tr>
+        <tr><td>逻辑门 IF-THEN</td><td>同</td><td>同</td><td class="keep">不变</td></tr>
+        <tr><td>因果鉴别引擎</td><td>同</td><td>同</td><td class="keep">不变</td></tr>
+        <tr><td>算账器公式</td><td>店内 slice</td><td>客户整账</td><td class="keep">公式不变*</td></tr>
+        <tr><td>计分权重</td><td>陈列/动销/拜访</td><td>进货/铺货/客户健康</td><td class="fill">每角色填</td></tr>
+        <tr><td>手段(乐得买)</td><td>店内执行</td><td>客户谈判/资源</td><td class="fill">每角色填</td></tr>
+        <tr><td>视角范围</td><td>1店1SKU</td><td>N客户×M SKU</td><td class="amp">放大+优先级门</td></tr>
+      </tbody>
+    </table>
+    <div class="drill" style="margin-top:10px">* 算账器本就是<b>客户级</b>的(华东大润发那张就是客户费用结构)——美顾看的只是它的店内切片。所以它<b>天然更贴 SR</b>。这条恰好证明底层选对了。</div>
+  </div>
+
+  <div class="card">
+    <div class="sec-hdr">SR 客户组合 · 放大视角 <span class="badge bd-blue">胶东片区 · 4客户</span></div>
+    <div id="board"></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-hdr">优先级门 · SR 多出来的那一层</div>
+    <div id="pri"></div>
+    <div class="pri-note">排序 = <b>差距瓶数 × 品牌战略权重</b>(六月鲜=北极星=3)。SR 时间有限，逻辑门帮它定<b>先攻谁</b>——这是同种 IF-THEN 的聚合放大，不是新底层。</div>
+  </div>
+
+  <div class="card">
+    <div class="sec-hdr">点开一个客户 = 复用同一套引擎</div>
+    <div class="drill">点 <b>家家悦 × 六月鲜</b> 这格 → 进的是我们已建的 <b>晶体管算账器 + 逻辑门关差 + 因果鉴别诊断</b>，<b>同一套，不重写</b>。SR 看的是组合(放大)，钻进一格就回到最小单元(美顾级)。一套引擎、两个缩放级别——这就是"百人做千人"的工程根。</div>
+  </div>
+
+  <div class="foot">
+    <b>Layer 1.3 演示</b> · 数据示意 · 验证目标=模块化模板是否成立(成立) · 客户来自「大卖场_MT」<br>
+    INFINITY OS · SR 视角模块化测试 V0.1 · 署名 DS · <span id="dt"></span>
+  </div>
+</div>
+
+<script>
+const W={'六月鲜':3,'味达美':2,'禾然':2,'葱伴侣':1,'小康':1};
+const CUST=[
+  {name:'家家悦',type:'KA·胶东',sales:'8868W',skus:[
+    {sku:'六月鲜 500ml 战略',brand:'六月鲜',h:'r',gap:18,gv:1100},
+    {sku:'味达美 老抽',brand:'味达美',h:'g',gap:2,gv:60},
+    {sku:'禾然 有机酱油',brand:'禾然',h:'a',gap:9,gv:140},
+  ]},
+  {name:'华东大润发',type:'KA',sales:'8468W',skus:[
+    {sku:'六月鲜 500ml 战略',brand:'六月鲜',h:'a',gap:8,gv:400},
+    {sku:'味达美 生抽',brand:'味达美',h:'g',gap:1,gv:30},
+    {sku:'禾然 有机酱油',brand:'禾然',h:'r',gap:21,gv:300},
+  ]},
+  {name:'华北大润发',type:'KA',sales:'3280W',skus:[
+    {sku:'六月鲜 500ml 战略',brand:'六月鲜',h:'a',gap:7,gv:180},
+    {sku:'味达美 老抽',brand:'味达美',h:'a',gap:6,gv:90},
+  ]},
+  {name:'胶东海滨经销商',type:'P2·分销',sales:'1240W',skus:[
+    {sku:'六月鲜 1.28L 餐饮',brand:'六月鲜',h:'g',gap:3,gv:50},
+    {sku:'味达美 大桶',brand:'味达美',h:'g',gap:2,gv:40},
+  ]},
+];
+function worst(skus){let r=skus.some(s=>s.h==='r');let a=skus.some(s=>s.h==='a');return r?'r':a?'a':'g';}
+function buildBoard(){
+  const b=document.getElementById('board');b.innerHTML='';
+  CUST.forEach(c=>{
+    const wh=worst(c.skus);
+    const el=document.createElement('div');el.className='cust';
+    el.innerHTML=`<div class="cust-top">
+        <div class="cust-light d${wh}"></div>
+        <div class="cust-name">${c.name}</div>
+        <div class="cust-meta">${c.type}<br>年销 ${c.sales}</div>
+      </div>`+
+      c.skus.map(s=>`<div class="sku-row">
+        <div class="sku-dot d${s.h}"></div>
+        <div class="sku-name">${s.sku}</div>
+        <span class="sku-brand">${s.brand}</span>
+        <span class="sku-gap c${s.h}">${s.gap>3?'-'+s.gap+'%':'达标'}</span>
+      </div>`).join('');
+    b.appendChild(el);
+  });
+}
+function buildPri(){
+  let flat=[];
+  CUST.forEach(c=>c.skus.forEach(s=>{if(s.h!=='g')flat.push({cust:c.name,...s,score:s.gv*W[s.brand]});}));
+  flat.sort((a,b)=>b.score-a.score);
+  const p=document.getElementById('pri');p.innerHTML='';
+  flat.slice(0,5).forEach((x,i)=>{
+    const el=document.createElement('div');el.className='pri';
+    el.innerHTML=`<div class="pri-rank">${i+1}</div>
+      <div class="pri-body"><div class="pri-t">${x.cust} × ${x.brand}</div>
+      <div class="pri-d">${x.sku} · 差距 ${x.gap}% (${x.gv}瓶)</div></div>
+      <div class="pri-score">${x.score}</div>`;
+    p.appendChild(el);
+  });
+}
+buildBoard();buildPri();
+const now=new Date();
+document.getElementById('dt').textContent=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+</script>
+</body>
+</html>
