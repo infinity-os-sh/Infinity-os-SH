@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INFINITY OS · JBP 生成器</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090f;--bg2:#0e1018;--bg3:#13161f;--card:#141820;--card2:#1a2030;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.1);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.1);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.1);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);
+  --blue:#60a5fa;--purple:#a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh}
+.wrap{max-width:660px;margin:0 auto;padding:0 14px 40px}
+
+.topbar{position:sticky;top:0;z-index:50;background:rgba(9,9,15,0.92);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 16px;height:54px;max-width:660px;margin:0 auto}
+.logo-sym{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#f5a623,#ff7c38);
+  display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000;box-shadow:0 3px 12px rgba(245,166,35,0.3)}
+.logo-text{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.04em}
+.logo-text span{color:var(--amber)}
+.logo-tag{font-size:10px;color:var(--text3);margin-top:1px}
+
+.hero{padding:18px 2px 6px}
+.hero-t{font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
+.hero-t span{color:var(--amber)}
+.hero-s{font-size:12px;color:var(--text3);margin-top:4px;line-height:1.6}
+
+.why{background:linear-gradient(135deg,rgba(245,166,35,0.07),rgba(78,205,196,0.04));
+  border:1px solid rgba(245,166,35,0.18);border-radius:12px;padding:11px 13px;margin:10px 0 16px;font-size:11px;color:var(--text2);line-height:1.6}
+.why b{color:var(--amber)}
+
+.presets{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:14px}
+.presets::-webkit-scrollbar{display:none}
+.preset{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:7px 13px;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap;font-family:'Noto Sans SC',sans-serif;transition:.15s}
+.preset:hover{border-color:var(--amber);color:var(--amber)}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:15px;margin-bottom:12px}
+.card-h{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:13px;display:flex;align-items:center;gap:6px}
+.card-h::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.field{margin-bottom:12px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:11px;color:var(--text3);margin-bottom:5px}
+.field label .req{color:var(--amber)}
+input,select,textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;
+  padding:10px 11px;font-size:13px;color:var(--text);font-family:'Noto Sans SC',sans-serif;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--amber)}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%234a5468' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:10px;color:var(--teal);margin-top:5px;line-height:1.5}
+.hint.warn{color:var(--amber)}
+.profit-box{background:var(--teal-dim);border:1px solid rgba(78,205,196,0.2);border-radius:9px;padding:9px 11px;margin-top:6px;font-size:11px;color:var(--teal);line-height:1.55;display:none}
+.profit-box.show{display:block}
+.profit-box b{color:var(--teal)}
+
+.note{font-size:10px;color:var(--text3);margin-top:6px;line-height:1.5}
+.redline{background:var(--red-dim);border:1px solid rgba(255,95,95,0.2);border-radius:8px;padding:8px 10px;font-size:10px;color:#ff8a8a;line-height:1.55;margin-top:6px}
+
+.genbtn{width:100%;background:linear-gradient(135deg,var(--amber),#ff8a3d);border:none;border-radius:11px;
+  padding:14px;font-size:14px;font-weight:700;color:#000;cursor:pointer;font-family:'Syne',sans-serif;letter-spacing:.02em;transition:.15s;margin-top:4px}
+.genbtn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.genbtn:active{transform:translateY(0)}
+
+.out{display:none;margin-top:16px}
+.out.show{display:block}
+.out-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.out-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+.out-title span{color:var(--amber)}
+.badge{font-size:9px;background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.25);padding:3px 9px;border-radius:10px;font-family:'Space Mono',monospace}
+.copybtn{font-size:11px;background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;color:var(--text2);cursor:pointer}
+.copybtn:hover{color:var(--text)}
+.draft{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:16px;font-size:13px;line-height:1.85;color:var(--text2);white-space:pre-wrap}
+.draft .seg{display:block;font-weight:700;color:var(--amber);margin:14px 0 4px;font-size:13px}
+.draft .seg:first-child{margin-top:0}
+.draft .seg.me{color:var(--teal)}
+.draft .seg.warn{color:#ff8a8a}
+
+.signrow{display:none;margin-top:12px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:12px 14px;font-size:11px;color:var(--text3);line-height:1.6}
+.signrow.show{display:block}
+.signrow b{color:var(--text2)}
+.steps{display:flex;gap:6px;margin-top:9px}
+.step{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 6px;text-align:center;font-size:10px;color:var(--text2);line-height:1.3}
+.step .n{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--amber-dim);color:var(--amber);font-weight:700;line-height:16px;margin-bottom:3px}
+
+.thinking{display:flex;gap:5px;align-items:center;color:var(--text3);font-size:12px;padding:6px 0}
+.td{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:td 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+.foot{text-align:center;font-size:10px;color:var(--text3);margin-top:24px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo-sym">∞</div>
+  <div><div class="logo-text">INFINITY <span>OS</span></div><div class="logo-tag">JBP 生成器 · 一客一案</div></div>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-t">JBP <span>生成器</span></div>
+    <div class="hero-s">输入客户的分类画像 → 生成一份「满足他 + 满足我」的联合生意计划草案。每个客户的赚钱逻辑不同,JBP 就不同。</div>
+  </div>
+
+  <div class="why">
+    为什么一客一案:客户靠什么赚钱不一样(<b>会员店</b>看复购、<b>大卖场</b>看坪效、<b>餐饮</b>看翻台、<b>直播</b>看爆款),分级和 SKU 阶段也不一样 —— 所以目标额、费用流向、对赌条款全都不一样。锚永远是 <b>SKU 生命力</b>,变的只是计分权重和手段。
+  </div>
+
+  <div class="presets" id="presets"></div>
+
+  <!-- 客户画像 -->
+  <div class="card">
+    <div class="card-h">客户画像 · 标准分类</div>
+    <div class="field">
+      <label>客户名称 <span class="req">*</span></label>
+      <input id="f_name" placeholder="例:山姆华东会员店 / 胶东亮店社区超市群">
+    </div>
+    <div class="field">
+      <label>渠道商业模式 <span class="req">*</span>(决定「他靠什么赚钱」)</label>
+      <select id="f_model" onchange="showProfit()"></select>
+      <div class="profit-box" id="profitBox"></div>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>客户分级(规模能力)</label>
+        <select id="f_tier">
+          <option value="战略型">战略型(年销大·区域龙头)</option>
+          <option value="成长型">成长型(有潜力·重点扶持)</option>
+          <option value="执行型" selected>执行型(配送强·运营弱)</option>
+          <option value="占位型">占位型(下沉·轻运营重覆盖)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>健康评分</label>
+        <select id="f_grade">
+          <option>S</option><option>A</option><option selected>B</option><option>C</option><option>D</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>市场成熟度</label>
+      <select id="f_maturity">
+        <option value="新区开拓">新区开拓(抢铺货·大投入)</option>
+        <option value="成熟区守份额" selected>成熟区(守份额·提单产)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- SKU 与目标 -->
+  <div class="card">
+    <div class="card-h">SKU 与目标 · 自上而下</div>
+    <div class="grid2">
+      <div class="field">
+        <label>主推品牌</label>
+        <select id="f_brand">
+          <option>六月鲜(高端·北极星)</option>
+          <option>味达美(大众·现金牛)</option>
+          <option>禾然(有机·战略赌注)</option>
+          <option>葱伴侣(场景·利基)</option>
+          <option>小康(防御·低价)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>战略 SKU 生命周期</label>
+        <select id="f_stage">
+          <option value="导入期">导入期(刚铺·大投入)</option>
+          <option value="成长期">成长期(放量)</option>
+          <option value="成熟期" selected>成熟期(守位·提效)</option>
+          <option value="衰退期">衰退期(收割/退场)</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>战略 SKU</label>
+      <input id="f_sku" placeholder="例:六月鲜特级原汁500ml">
+    </div>
+    <div class="field">
+      <label>北极星分配目标额(瓶/年)<span class="req">*</span></label>
+      <input id="f_target" type="number" placeholder="例:480000">
+      <div class="field" style="margin-top:8px">
+        <label>分配依据(户数 × 渗透率 × 复购)</label>
+        <input id="f_basis" placeholder="例:覆盖 8 万户 × 目标渗透 18% × 年复购 3.3 次">
+      </div>
+      <div class="redline">⛔ 红线:此目标必须来自 BP 北极星(200M 瓶)自上而下分解,<b>不是</b>上年实际 ×系数倒推。所有客户目标加总 = 北极星;缺口暴露=去开新客户/做深,绝不调低目标。</div>
+    </div>
+  </div>
+
+  <button class="genbtn" onclick="genJBP()">⚡ 生成这家客户的 JBP 草案</button>
+
+  <!-- 输出 -->
+  <div class="out" id="out">
+    <div class="out-head">
+      <div class="out-title">JBP <span>建议稿</span> · 草案</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="badge" id="badge">Layer 1.3</div>
+        <button class="copybtn" onclick="copyJBP()">复制</button>
+      </div>
+    </div>
+    <div class="draft" id="draft"></div>
+    <div class="signrow" id="signrow">
+      <b>这是谈判草案,不是生效契约。</b> 终稿落地三步(承 DECISION-001 / 002):
+      <div class="steps">
+        <div class="step"><span class="n">1</span><br>业务/GM 据现场修订草案</div>
+        <div class="step"><span class="n">2</span><br>总部 + 大区 GM 双签</div>
+        <div class="step"><span class="n">3</span><br>录 SKU 6 卡 · 绑责任合伙人(income_share≤70%)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    INFINITY OS · JBP 生成器 v1 · 一客一案 · 目标自上而下<br>
+    只出草案不签约 · 违约转人工不自动划扣 · 现状 Layer 1.3 · 署名 DS
+  </div>
+</div>
+
+<script>
+// ── 渠道商业模式 → 赚钱逻辑(满足他的依据) ──
+const MODELS={
+  '会员店(山姆/Costco)':{logic:'会员续费 + 爆品差异化 + 单品销售力',focus:'要独家大包装、极致单品力,帮它留住会员、提续费'},
+  'KA大卖场(永辉/大润发)':{logic:'坪效(销售额/面积)+ 通路费/毛利返点 + 客流',focus:'要黄金视线排面、堆头档期,帮它把每平米产出做高'},
+  '便利店(7-11/全家)':{logic:'高客单精品 + 店效 + 高毛利',focus:'要小规格高毛利精品,帮它提单店坪效'},
+  'O2O前置仓(盒马/叮咚)':{logic:'订单转化 + 履约时效 + 线上曝光',focus:'要线上曝光位、稳定供货,帮它提转化和履约'},
+  '社区超市(社区生鲜)':{logic:'高频复购 + 铺货密度 + 性价比',focus:'要稳定铺货和高频补货,帮它做复购'},
+  '电商货架(天猫/京东)':{logic:'GMV + 搜索排名 + 转化率',focus:'要搜索权重、详情页和大促资源,帮它冲 GMV'},
+  '兴趣直播(抖音/快手)':{logic:'爆款机制 + 高佣金 + 引流款',focus:'要爆款货盘和引流款,帮它做场观和转化'},
+  '即时零售(美团闪购)':{logic:'线上门店开户 + 闪电仓 + 应急刚需',focus:'要门店开户率和应急刚需品,帮它接住即时需求'},
+  '社区团购(多多买菜/优选)':{logic:'极致价格 + 海量爆单 + 极简履约',focus:'要高性价比单品和极简供应链,帮它跑量'},
+  '餐饮二批(B端分销)':{logic:'翻台率 + 出品稳定 + 毛利(底价红线¥17)',focus:'要稳定供货和出品标准化,守住 B 端底价不乱'},
+  '传统批发(夫妻店/批发市场)':{logic:'进货低价 + 现款现货 + 大促搭赠',focus:'要清晰的搭赠返利,帮它走量、保它的进销差'}
+};
+const msel=document.getElementById('f_model');
+Object.keys(MODELS).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;msel.appendChild(o)});
+function showProfit(){
+  const m=MODELS[msel.value];const b=document.getElementById('profitBox');
+  if(!m){b.classList.remove('show');return}
+  b.innerHTML=`💰 <b>他靠什么赚钱:</b>${m.logic}<br>🤝 <b>这份 JBP 要:</b>${m.focus}`;
+  b.classList.add('show');
+}
+showProfit();
+
+// ── 预设客户(展示「每个都不一样」) ──
+const PRESETS=[
+  {label:'🏬 山姆会员店',name:'山姆华东会员店',model:'会员店(山姆/Costco)',tier:'战略型',grade:'S',maturity:'成熟区守份额',brand:'六月鲜(高端·北极星)',stage:'成熟期',sku:'六月鲜特级原汁1L大包装',target:'1200000',basis:'会员家庭 30 万户 × 渗透 20% × 复购 2 次'},
+  {label:'🏘️ 社区超市',name:'胶东亮店社区超市群',model:'社区超市(社区生鲜)',tier:'执行型',grade:'B',maturity:'成熟区守份额',brand:'六月鲜(高端·北极星)',stage:'成长期',sku:'六月鲜特级原汁500ml',target:'480000',basis:'覆盖 8 万户 × 渗透 18% × 复购 3.3 次'},
+  {label:'🍜 餐饮二批',name:'济南区域餐饮二批',model:'餐饮二批(B端分销)',tier:'专项型(餐饮)',grade:'A',maturity:'成熟区守份额',brand:'味达美(大众·现金牛)',stage:'成熟期',sku:'味达美金标生抽1.28L',target:'900000',basis:'覆盖餐厅 1200 家 × 月均 62 瓶'},
+  {label:'🎵 抖音直播',name:'抖音头部达人合作',model:'兴趣直播(抖音/快手)',tier:'成长型',grade:'A',maturity:'新区开拓',brand:'禾然(有机·战略赌注)',stage:'导入期',sku:'禾然有机酱油礼盒装',target:'200000',basis:'新客拉新为主 × 首购转化'}
+];
+const pc=document.getElementById('presets');
+PRESETS.forEach(p=>{const b=document.createElement('div');b.className='preset';b.textContent=p.label;b.onclick=()=>fill(p);pc.appendChild(b)});
+function fill(p){
+  document.getElementById('f_name').value=p.name;
+  // tier 可能含「专项型」,select 没有则退到成长型
+  msel.value=p.model;showProfit();
+  const t=document.getElementById('f_tier');
+  t.value=[...t.options].some(o=>o.value===p.tier)?p.tier:'成长型';
+  document.getElementById('f_grade').value=p.grade;
+  document.getElementById('f_maturity').value=p.maturity;
+  document.getElementById('f_brand').value=p.brand;
+  document.getElementById('f_stage').value=p.stage;
+  document.getElementById('f_sku').value=p.sku;
+  document.getElementById('f_target').value=p.target;
+  document.getElementById('f_basis').value=p.basis;
+  window.scrollTo({top:document.querySelector('.genbtn').offsetTop-300,behavior:'smooth'});
+}
+
+// ── 生成 JBP ──
+function gather(){
+  return {
+    name:document.getElementById('f_name').value.trim()||'未命名客户',
+    model:msel.value,
+    logic:MODELS[msel.value]?.logic||'',
+    focus:MODELS[msel.value]?.focus||'',
+    tier:document.getElementById('f_tier').value,
+    grade:document.getElementById('f_grade').value,
+    maturity:document.getElementById('f_maturity').value,
+    brand:document.getElementById('f_brand').value,
+    stage:document.getElementById('f_stage').value,
+    sku:document.getElementById('f_sku').value.trim()||'战略SKU',
+    target:document.getElementById('f_target').value||'(待 BP 分解)',
+    basis:document.getElementById('f_basis').value.trim()||'(户数×渗透率×复购,待补)'
+  };
+}
+
+function styleDraft(t){
+  // 把【...】段头变成样式
+  return t
+    .replace(/【(满足我[^】]*)】/g,'<span class="seg me">【$1】</span>')
+    .replace(/【(违约[^】]*|对赌与复盘[^】]*)】/g,'<span class="seg warn">【$1】</span>')
+    .replace(/【([^】]+)】/g,'<span class="seg">【$1】</span>');
+}
+
+async function genJBP(){
+  const c=gather();
+  const out=document.getElementById('out'),draft=document.getElementById('draft'),sign=document.getElementById('signrow');
+  out.classList.add('show');sign.classList.remove('show');
+  document.getElementById('badge').textContent='Layer 1.3 · 草案';
+  draft.innerHTML='<div class="thinking"><div class="td"></div><div class="td"></div><div class="td"></div> INFINITY Agent 算账中…</div>';
+  out.scrollIntoView({behavior:'smooth',block:'start'});
+
+  const sys=`你是欣和SH INFINITY OS 的 JBP Agent,为「一个具体客户」生成《联合商业计划建议稿(草案)》。
+铁律(必须全部遵守):
+1. 锚 SKU 生命力,不锚销量。一切动作服务于把该 SKU 的状态拨到它生命周期阶段该有的位置。
+2. 目标自上而下:目标额我已给定(来自北极星分解),严禁用「上年实际×系数」倒推,也不要把目标往客户舒适区调低。
+3. 双赢双段必须分开写清:既要「满足他」(紧扣他的赚钱逻辑帮他多赚),也要「满足我」(欣和的 SKU 生命力、毛利红线22%、推进北极星)。
+4. 费用优先砸向能直接拉动消费者「乐得买」的动作,砍无效进场费。
+5. 违约一律写「触发后转人工裁定」,绝不写自动划扣/自动冻结。
+6. 这是建议草案,非生效契约;终稿需总部+大区GM双签,绑 SKU 6卡、责任合伙人 income_share≤70%。
+输出用中文,严格按以下六段、每段用【】标题开头,简洁有数字,总字数 500-700:
+【目标·自上而下】用给定目标额,写清增量逻辑与分配依据,标明锚北极星非上年倒推。
+【满足他·帮客户多赚】紧扣他的赚钱逻辑,写这份计划怎么提升他最在意的那个指标。
+【满足我·欣和怎么赢】SKU 生命力如何变强、毛利红线22%、对北极星的贡献。
+【联合投资·谁出钱出人】欣和投入 vs 客户投入,双向对等,费用砸「乐得买」。
+【对赌与复盘】对赌目标(=给定额,受毛利红线约束)、复盘节律、违约→转人工裁定。
+【绑定】DECISION-001 审批模型选择(按场景)、双签、SKU 6卡+责任合伙人。`;
+
+  const usr=`客户画像:
+- 名称:${c.name}
+- 渠道商业模式:${c.model}
+- 他的赚钱逻辑:${c.logic}
+- 这份JBP应帮他:${c.focus}
+- 客户分级:${c.tier} / 健康评分:${c.grade} / 市场成熟度:${c.maturity}
+- 主推品牌:${c.brand}
+- 战略SKU:${c.sku}(生命周期:${c.stage})
+- 北极星分配目标额:${c.target} 瓶/年
+- 分配依据:${c.basis}
+请为这家客户生成专属 JBP 草案。`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,system:sys,messages:[{role:'user',content:usr}]})
+    });
+    const d=await r.json();
+    const txt=(d.content||[]).map(x=>x.text||'').join('').trim();
+    draft.innerHTML=txt?styleDraft(txt):styleDraft(fallback(c));
+  }catch(e){
+    draft.innerHTML=styleDraft(fallback(c))+'\n\n— 注:实时 AI 暂不可达,以上为按画像生成的内置草案。';
+  }
+  sign.classList.add('show');
+  window._lastJBP=draft.innerText;
+}
+
+// ── 离线兜底(按画像差异化) ──
+function fallback(c){
+  return `《${c.name} · JBP 建议稿草案》(${c.model})
+
+【目标·自上而下】年度目标 ${c.target} 瓶,来自北极星分解(依据:${c.basis})。锚北极星,非上年实际倒推;${c.brand} 在此为${c.stage}。
+【满足他·帮客户多赚】紧扣其赚钱逻辑「${c.logic}」:${c.focus}。围绕 ${c.sku} 设计能直接提升他核心指标的动作。
+【满足我·欣和怎么赢】把 ${c.sku} 的生命力拨强(${c.stage}该有的位置),守毛利红线 22%,该客户目标计入北极星进度。
+【联合投资·谁出钱出人】欣和:费用优先投向消费者「乐得买」的体验/曝光、培训、系统;客户:陈列位/库存/人力/账期。对等投入,砍无效进场费。
+【对赌与复盘】对赌=${c.target} 瓶(受毛利红线约束),按${c.maturity}定复盘节律;破价/未达 → 触发预警转人工裁定,不自动划扣。
+【绑定】按场景选 DECISION-001 审批模型;终稿总部+大区GM双签;录入 SKU 6卡,绑责任合伙人 income_share≤70%。`;
+}
+
+function copyJBP(){
+  const t=window._lastJBP||document.getElementById('draft').innerText;
+  navigator.clipboard?.writeText(t).then(()=>{
+    const b=document.querySelector('.copybtn');const o=b.textContent;b.textContent='已复制 ✓';setTimeout(()=>b.textContent=o,1500);
+  });
+}
+</script>
+</body>
+</html>
