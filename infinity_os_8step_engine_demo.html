@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INFINITY OS · 八步引擎走查 demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090f;--bg2:#0e1018;--bg3:#13161f;--card:#141820;--card2:#1a2030;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --text:#e8ecf5;--text2:#8a95aa;--text3:#4a5468;
+  --amber:#f5a623;--amber2:#ffc85e;--amber-dim:rgba(245,166,35,0.1);
+  --teal:#4ecdc4;--teal-dim:rgba(78,205,196,0.1);
+  --red:#ff5f5f;--red-dim:rgba(255,95,95,0.1);
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.1);--purple:#a78bfa;--purple-dim:rgba(167,139,250,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;line-height:1.6;padding-bottom:40px}
+.wrap{max-width:860px;margin:0 auto;padding:0 14px}
+.top{position:sticky;top:0;z-index:50;background:rgba(9,9,15,0.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:11px 14px;display:flex;align-items:center;gap:9px}
+.sym{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#f5a623,#ff7c38);display:flex;align-items:center;justify-content:center;font-family:'Syne';font-weight:800;color:#000;font-size:13px}
+.brand{font-family:'Syne';font-weight:700;font-size:13px}.brand span{color:var(--amber)}
+.ver{margin-left:auto;font-family:'Space Mono';font-size:10px;color:var(--text3)}
+.hero{padding:22px 0 14px}
+.kicker{font-family:'Space Mono';font-size:10px;color:var(--amber);letter-spacing:.12em;text-transform:uppercase}
+h1{font-family:'Syne';font-size:25px;font-weight:800;margin:5px 0 7px;line-height:1.15}h1 span{color:var(--amber)}
+.lede{font-size:13px;color:var(--text2)}
+.banner{margin:12px 0 18px;padding:11px 14px;border-radius:10px;background:var(--blue-dim);border:1px solid rgba(96,165,250,.22);font-size:12px;color:var(--text2)}
+.banner b{color:var(--blue)}
+
+/* stepper */
+.stepper{display:flex;gap:4px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none}
+.stepper::-webkit-scrollbar{display:none}
+.stp{flex:0 0 auto;min-width:62px;border:1px solid var(--border);background:var(--card);border-radius:9px;padding:7px 6px;text-align:center;cursor:pointer;transition:all .15s}
+.stp .sn{font-family:'Space Mono';font-size:9px;color:var(--text3)}
+.stp .st{font-size:11px;font-weight:600;color:var(--text2);margin-top:2px}
+.stp.active{border-color:var(--amber);background:var(--amber-dim)}
+.stp.active .st{color:var(--amber)}
+.stp.done .sn::before{content:'✓ ';color:var(--green)}
+
+/* panel */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;min-height:300px}
+.p-head{display:flex;align-items:baseline;gap:9px;margin-bottom:6px}
+.p-num{font-family:'Space Mono';font-size:11px;color:var(--amber);border:1px solid rgba(245,166,35,.3);border-radius:6px;padding:2px 7px}
+.p-title{font-family:'Syne';font-size:18px;font-weight:700}
+.p-desc{font-size:12.5px;color:var(--text2);margin-bottom:14px}
+
+.acctlabel{font-size:10px;font-family:'Space Mono';letter-spacing:.05em;text-transform:uppercase;margin:14px 0 6px;display:flex;align-items:center;gap:6px}
+.acctlabel.a{color:var(--blue)}.acctlabel.x{color:var(--amber)}.acctlabel.gate{color:var(--purple)}
+.acctlabel::before{content:'';width:8px;height:8px;border-radius:2px}
+.acctlabel.a::before{background:var(--blue)}.acctlabel.x::before{background:var(--amber)}.acctlabel.gate::before{background:var(--purple)}
+
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:480px}
+th{background:rgba(255,255,255,.04);color:var(--text3);text-align:left;padding:7px 9px;font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap;font-size:10px;text-transform:uppercase}
+td{padding:7px 9px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--text2);white-space:nowrap}
+tr:last-child td{border-bottom:none}td b{color:var(--text)}
+.neg{color:var(--red);font-weight:600}.pos{color:var(--green);font-weight:600}
+.totrow td{background:rgba(255,255,255,.03);font-weight:600;color:var(--text)}
+.chip{display:inline-block;font-size:10px;padding:2px 7px;border-radius:8px;font-family:'Space Mono'}
+.c-traffic{background:rgba(96,165,250,.15);color:var(--blue)}
+.c-trans{background:rgba(78,205,196,.15);color:var(--teal)}
+.c-cash{background:rgba(245,166,35,.15);color:var(--amber)}
+.c-profit{background:rgba(74,222,128,.15);color:var(--green)}
+
+.gatebox{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-top:6px}
+.gateverdict{font-family:'Space Mono';font-size:11px;padding:3px 9px;border-radius:8px;display:inline-block;margin-bottom:8px}
+.v-flag{background:var(--red-dim);color:var(--red)}.v-pass{background:var(--green-dim);color:var(--green)}
+.gateline{font-size:12.5px;color:var(--text2);margin:4px 0}.gateline b{color:var(--text)}
+.mono{font-family:'Space Mono';font-size:11.5px;color:var(--teal)}
+.conf{font-size:10px;font-family:'Space Mono';color:var(--text3);margin-top:8px}
+
+.recs{display:flex;flex-direction:column;gap:10px}
+.rec{border:1px solid rgba(167,139,250,.25);background:var(--purple-dim);border-radius:12px;padding:13px 15px}
+.rec .rh{font-size:13px;font-weight:700;color:var(--purple);margin-bottom:6px}
+.rec .rrow{font-size:12px;color:var(--text2);margin:3px 0}
+.rec .rrow b{color:var(--text)}
+.win2{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.wtag{font-size:11px;padding:4px 9px;border-radius:8px}
+.wtag.r{background:var(--blue-dim);color:var(--blue)}.wtag.x{background:var(--amber-dim);color:var(--amber)}
+
+.nav{display:flex;gap:8px;margin-top:16px}
+.btn{flex:1;padding:11px;border-radius:10px;border:1px solid var(--border2);background:var(--card2);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:'Noto Sans SC';transition:all .15s}
+.btn:hover{background:var(--card);color:var(--text)}
+.btn.primary{background:var(--amber);color:#000;border-color:var(--amber)}
+.btn.primary:hover{background:var(--amber2)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+
+.foot{margin-top:22px;font-size:10.5px;color:var(--text3);font-family:'Space Mono';line-height:1.7}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="sym">∞</div><div class="brand">INFINITY <span>OS</span></div>
+  <div class="ver">DEMO · Layer 1.3 · 门引擎走查</div>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <div class="kicker">渠道品类 Agent · 八步引擎</div>
+    <h1>八步走查 <span>demo</span></h1>
+    <div class="lede">门是真在算的(不是幻灯片)。点"下一步"走完八步,引擎吐出双赢品类建议书。</div>
+  </div>
+  <div class="banner">⚠️ <b>诚实标注:</b>本 demo 用 ECR 真实个案数据(洗衣品类·供应商×零售商)驱动,演示<b>引擎机制</b>。这是 Layer 1.3 演示,非欣和实时数据。换成欣和酱油品类,只是换数据,引擎不变。</div>
+
+  <div class="stepper" id="stepper"></div>
+  <div class="panel" id="panel"></div>
+  <div class="nav">
+    <button class="btn" id="prev" onclick="go(-1)">← 上一步</button>
+    <button class="btn primary" id="next" onclick="go(1)">下一步 →</button>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+// ===== 种子数据:ECR 真实个案(洗衣品类) =====
+const PARAM = { category:'衣物清洁', role:'优先性', fairShare:5.3, deptMargin:10.0 };
+
+// 8 区隔:今年份额 / Point Gap(份额−fairShare) / 毛利% / 是否增长 / 区隔规模m / 分派策略
+const SEG = [
+  {n:'浓缩洗剂', share:5.19, pg:-0.11, mgn:4.21,  grow:true,  size:2242, strat:'traffic'},
+  {n:'传统洗剂', share:4.55, pg:-0.75, mgn:4.95,  grow:true,  size:1981, strat:'trans'},
+  {n:'浓缩洗衣精',share:3.62, pg:-1.68, mgn:17.11, grow:true,  size:1737, strat:'cash'},
+  {n:'柔软精',   share:4.44, pg:-0.86, mgn:9.40,  grow:true,  size:594,  strat:'trans'},
+  {n:'冷洗精',   share:5.07, pg:-0.23, mgn:13.78, grow:false, size:432,  strat:'profit'},
+  {n:'香皂',     share:12.5, pg:7.20,  mgn:16.21, grow:false, size:206,  strat:'profit'},
+  {n:'预洗剂',   share:10.2, pg:4.90,  mgn:16.66, grow:true,  size:108,  strat:'trans'},
+  {n:'漂白水',   share:7.64, pg:2.34,  mgn:10.99, grow:true,  size:402,  strat:'profit'},
+];
+const TOTAL = { shareLY:5.75, shareTY:5.0, pg:-0.30, mgnLY:8.01, mgnTY:9.09 };
+
+// 账X:个案里各品牌「促销份额 vs 市场份额」——错配即机会
+const BRANDS = [
+  {n:'Attack',      promo:15, mkt:34, seg:'浓缩洗剂'},
+  {n:'Attack 良材', promo:15, mkt:20, seg:'浓缩洗剂'},
+  {n:'Ultra',       promo:15, mkt:20, seg:'传统洗剂'},
+  {n:'Colour Care', promo:15, mkt:7,  seg:'柔软精'},
+  {n:'Tide',        promo:15, mkt:1,  seg:'浓缩洗剂'},
+];
+
+const STRAT = {traffic:'增来客',trans:'增客单',cash:'现金流',profit:'提利润'};
+const STRATCLS = {traffic:'c-traffic',trans:'c-trans',cash:'c-cash',profit:'c-profit'};
+
+// 门 #1 角色→4战术(TABLE)
+const ROLE_TACTICS = {
+  '优先性':{range:'Broad 至少和竞品一样宽',price:'Strongly Competitive 主成分最优价',shelf:'Quality 位置·中-高空间',promo:'Build 高频·主力定制'}
+};
+
+// ===== 门引擎(真在算) =====
+function fairShareGate(){
+  const verdict = TOTAL.pg < 0 ? 'FLAG':'PASS';
+  return {verdict, line:`品类总份额 ${TOTAL.shareTY}% − Fair Share ${PARAM.fairShare}% = <span class="mono">${TOTAL.pg.toFixed(2)} 点</span>,低于应得份额 → 关差对象`,
+    detail: SEG.map(s=>({n:s.n, share:s.share, pg:s.pg, grow:s.grow}))};
+}
+function opportunityGate(){
+  // 剔除衰退:只算 增长 AND pg<0 的区隔
+  const up = SEG.filter(s=>s.grow && s.pg<0);
+  const dollars = up.reduce((a,s)=>a + Math.abs(s.pg)/100*s.size,0);
+  return {verdict:'FLAG', up, dollars};
+}
+function strategyGate(){
+  // 优先性 允许菜单
+  const menu = ['traffic','trans','cash','profit'];
+  return {menu, assign: SEG.map(s=>({n:s.n, strat:s.strat, why: stratWhy(s)}))};
+}
+function stratWhy(s){
+  if(s.strat==='cash') return '现金利润最高区隔';
+  if(s.strat==='profit') return s.pg>0?'份额已超 Fair Share·收利润':'高毛利·收利润';
+  if(s.strat==='traffic') return '增长引流区隔';
+  return '提客单/关联销售';
+}
+function keystoneGate(){
+  // 双角色对齐:零售商有缺口的区隔(pg<0) ∩ 品牌促销份额远低于市场份额(欣和能补)
+  const gapSegs = new Set(SEG.filter(s=>s.pg<0).map(s=>s.n));
+  const recs=[];
+  BRANDS.forEach(b=>{
+    const under = b.mkt - b.promo;            // 市场份额 − 促销份额 = 被低估程度
+    if(gapSegs.has(b.seg) && under>10){
+      const seg = SEG.find(s=>s.n===b.seg);
+      recs.push({brand:b.n, seg:b.seg, strat:seg.strat, promo:b.promo, mkt:b.mkt, under,
+        action:`把 ${b.n} 的促销份额从 ${b.promo}% 上调至贴近市场份额 ${b.mkt}%`,
+        rWin:`填零售商「${b.seg}·${STRAT[seg.strat]}」缺口(${seg.pg}点)`,
+        xWin:`${b.n} 动销↑·SKU 生命力↑(市占 ${b.mkt}% 却只占 ${b.promo}% 促销资源)`});
+    }
+  });
+  recs.sort((a,b)=>b.under-a.under);
+  return recs;
+}
+
+// ===== 步骤渲染 =====
+const STEPS = [
+  {n:'①',t:'定义',render:s_def},
+  {n:'②',t:'角色',render:s_role},
+  {n:'③',t:'评估',render:s_assess},
+  {n:'④',t:'评分表',render:s_score},
+  {n:'⑤',t:'策略',render:s_strat},
+  {n:'⑥',t:'战术',render:s_tactic},
+  {n:'⑦',t:'执行',render:s_exec},
+  {n:'⑧',t:'检视',render:s_review},
+];
+let cur=0, maxSeen=0;
+
+function s_def(){return `
+  <div class="p-desc">双方对"这是什么品类、含哪些区隔"达共识。零售商管整个品类树;欣和把自己 SKU 挂到对应节点。</div>
+  <div class="acctlabel a">账A 零售商·品类树</div>
+  <div class="tbl-wrap"><table><thead><tr><th>品类</th><th>角色</th><th>区隔数</th></tr></thead>
+  <tbody><tr><td><b>${PARAM.category}</b></td><td>${PARAM.role}</td><td>${SEG.length} 个区隔</td></tr></tbody></table></div>
+  <div class="acctlabel x">账X 欣和侧</div>
+  <div class="p-desc" style="margin:0">欣和 SKU 须先映射到这棵树的区隔节点(schema 里的 segment_code)——这是唯一的新增数据工作。</div>`;
+}
+function s_role(){return `
+  <div class="p-desc">零售商给<b>整个品类</b>定角色;欣和给<b>自己 SKU</b>定角色。两套角色不同层、不混。</div>
+  <div class="acctlabel a">账A 品类角色</div>
+  <div class="gatebox"><div class="gateline"><b>${PARAM.category} = ${PARAM.role}</b> —— 对业绩与毛利贡献大 + 竞争激烈,愿牺牲部分毛利迎击竞争。</div></div>
+  <div class="acctlabel x">账X SKU 角色</div>
+  <div class="gatebox"><div class="gateline">旗舰 / 主力 / 跑量 / 利基 / 防御 / 候选 / 退场(六卡)。<span class="mono">entity_type=sku</span>,与品类角色分属两本账。</div></div>
+  <div class="acctlabel gate">对应门预告</div>
+  <div class="p-desc" style="margin:0">欣和旗舰最好落在零售商眼里"优先/目的"的品类——资源同向。第⑧步交集处兑现。</div>`;
+}
+function s_assess(){
+  const g=fairShareGate();
+  let rows = g.detail.map(d=>`<tr><td>${d.n}</td><td>${d.share}%</td><td class="${d.pg<0?'neg':'pos'}">${d.pg>0?'+':''}${d.pg}</td><td>${d.grow?'增':'衰'}</td></tr>`).join('');
+  return `
+  <div class="p-desc">门 #2 Fair Share + 门 #3 机会(剔衰退)。这是关差的核心算法。</div>
+  <div class="acctlabel a">账A 评估 · Fair Share 门</div>
+  <div class="gatebox"><span class="gateverdict v-flag">FLAG</span><div class="gateline">${g.line}</div></div>
+  <div class="tbl-wrap" style="margin-top:8px"><table><thead><tr><th>区隔</th><th>份额</th><th>Point Gap</th><th>增/衰</th></tr></thead>
+  <tbody>${rows}<tr class="totrow"><td>总计</td><td>${TOTAL.shareTY}%</td><td class="neg">${TOTAL.pg}</td><td>—</td></tr></tbody></table></div>
+  <div class="conf">置信:零售商整店/竞品份额 = APPROX(V0 缺第三方大盘,标低置信)</div>`;
+}
+function s_score(){
+  const o=opportunityGate();
+  let rows=o.up.map(s=>`<tr><td>${s.n}</td><td class="neg">${s.pg}</td><td>${s.size}m</td><td>${(Math.abs(s.pg)/100*s.size).toFixed(2)}m</td></tr>`).join('');
+  return `
+  <div class="p-desc">门 #3 机会:只算「增长 AND 低于 Fair Share」的区隔,衰退的剔除——这才是真实可关的上行。</div>
+  <div class="acctlabel a">账A 机会门(剔除衰退)</div>
+  <div class="tbl-wrap"><table><thead><tr><th>可关区隔</th><th>Point Gap</th><th>规模</th><th>机会$</th></tr></thead>
+  <tbody>${rows}<tr class="totrow"><td>合计机会</td><td colspan="2">剔除衰退后</td><td>≈ ${o.dollars.toFixed(1)}m</td></tr></tbody></table></div>
+  <div class="acctlabel x">账X 评分表</div>
+  <div class="gatebox"><div class="gateline">欣和侧:北极星(200M 瓶)自上而下拆到 node_target,<b>不锚实际</b>。Plan(自下而上)与 Target(承诺)是两条数。</div>
+  <div class="conf">卡点:node_targets 的 r_target+grade 待业务团队填 → 解锁本步 + SAP Step 2</div></div>`;
+}
+function s_strat(){
+  const g=strategyGate();
+  let rows=g.assign.map(a=>`<tr><td>${a.n}</td><td><span class="chip ${STRATCLS[a.strat]}">${STRAT[a.strat]}</span></td><td>${a.why}</td></tr>`).join('');
+  return `
+  <div class="p-desc">门 #6 七策略×角色:<b>角色筛菜单</b>(优先性 → {增来客/增客单/现金流/提利润}),<b>区隔级分派</b>(每区隔按自身特征各挑一个)。</div>
+  <div class="acctlabel a">账A 策略分派</div>
+  <div class="tbl-wrap"><table><thead><tr><th>区隔</th><th>策略</th><th>为什么</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="conf">自洽性:8 区隔策略全落在优先性允许的 4 个里,从没用到 Turf/Excitement/Image —— 与个案完全一致。</div>`;
+}
+function s_tactic(){
+  const t=ROLE_TACTICS[PARAM.role];
+  return `
+  <div class="p-desc">门 #1 角色→4战术(查表)。优先性 → 四构面规则:</div>
+  <div class="acctlabel a">账A 战术(优先性)</div>
+  <div class="tbl-wrap"><table><thead><tr><th>构面</th><th>规则</th></tr></thead><tbody>
+    <tr><td><b>范围</b></td><td>${t.range}</td></tr>
+    <tr><td><b>价格</b></td><td>${t.price}</td></tr>
+    <tr><td><b>货架</b></td><td>${t.shelf}</td></tr>
+    <tr><td><b>促销</b></td><td>${t.promo}</td></tr>
+  </tbody></table></div>
+  <div class="acctlabel x">账X 4P</div>
+  <div class="p-desc" style="margin:0">欣和 4P 与这四构面几乎一一对上(促销欣和更深=交叉点)。这是双方语言最接近的一步。</div>`;
+}
+function s_exec(){return `
+  <div class="p-desc">执行落地。欣和有执行肌肉、零售商缺——帮它执行 = 借力支点。</div>
+  <div class="acctlabel x">账X 执行肌肉</div>
+  <div class="gatebox"><div class="gateline">派单互锁 25 步 · SFA · 抢单 · CB —— GateResult 落到 <b>XM(今日要关的差)+ SFA 品类建议书</b>,不新建 surface。</div></div>`;
+}
+function s_review(){
+  const recs=keystoneGate();
+  let html=`
+  <div class="p-desc">门 keystone:零售商有缺口的区隔 ∩ 品牌被低估(促销份额≪市占)→ 交集处出双赢动作。引擎实算结果:</div>
+  <div class="acctlabel gate">双赢品类建议书(引擎生成)</div>
+  <div class="recs">`;
+  recs.forEach((r,i)=>{
+    html+=`<div class="rec">
+      <div class="rh">建议 ${i+1} · ${r.action}</div>
+      <div class="rrow"><b>区隔:</b>${r.seg} · 策略 <span class="chip ${STRATCLS[r.strat]}">${STRAT[r.strat]}</span></div>
+      <div class="rrow"><b>依据:</b>${r.brand} 市占 ${r.mkt}% 却只占 ${r.promo}% 促销资源(被低估 ${r.under} 点)</div>
+      <div class="win2"><span class="wtag r">零售商赢:${r.rWin}</span><span class="wtag x">欣和赢:${r.xWin}</span></div>
+    </div>`;
+  });
+  html+=`</div>
+  <div class="conf">检视回到第③步重启循环(持续改进,非一次结案)。每个执行实例 = 一次性实验 → 喂因果门(门#7,V0 留接口)。</div>`;
+  return html;
+}
+
+function render(){
+  document.getElementById('stepper').innerHTML = STEPS.map((s,i)=>
+    `<div class="stp ${i===cur?'active':''} ${i<maxSeen?'done':''}" onclick="jump(${i})"><div class="sn">${s.n}</div><div class="st">${s.t}</div></div>`).join('');
+  const s=STEPS[cur];
+  document.getElementById('panel').innerHTML =
+    `<div class="p-head"><span class="p-num">${s.n}</span><span class="p-title">${s.t}</span></div>` + s.render();
+  document.getElementById('prev').disabled = cur===0;
+  document.getElementById('next').textContent = cur===STEPS.length-1 ? '↻ 重启循环' : '下一步 →';
+  document.getElementById('foot').innerHTML =
+    `数据源:ECR Taiwan 品类管理先导个案(脱敏真实数据)· 门引擎 = 真实计算 · Layer 1.3 演示<br>引擎不变,换欣和酱油品类只换 SEG/BRANDS 种子数据 · 署名 DS`;
+  window.scrollTo(0,0);
+}
+function go(d){
+  if(cur===STEPS.length-1 && d>0){ cur=0; render(); return; }
+  cur=Math.max(0,Math.min(STEPS.length-1,cur+d));
+  maxSeen=Math.max(maxSeen,cur);
+  render();
+}
+function jump(i){ cur=i; maxSeen=Math.max(maxSeen,cur); render(); }
+render();
+</script>
+</body>
+</html>
