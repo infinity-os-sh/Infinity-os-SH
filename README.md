@@ -1,43 +1,56 @@
-# INFINITY OS · 渠道品类管理成长 Agent
+# INFINITY OS · 品牌AI顾问 · 高端通路渠道分级包 v1
 
-把 ECR 品类管理八步法 **结构化 → 建模 → 工程化**,做成欣和的渠道品类 Agent。
-核心:**一个循环 · 两本账 · 一组对应门**,既满足零售商,也满足欣和,双赢各取其值。
-
-署名 DS · 全部为 Layer 1.3 演示(门引擎=真实计算,数据=模拟,已标注)。
+**署名：DS**　·　**生成日期：2026-06-10**　·　**数据时点：2025 / 2026**
 
 ---
 
-## 文件清单(建议从 index 进)
+## 这个包是什么
 
-| 文件 | 类型 | 说明 |
+为「品牌AI顾问」Agent 准备的一套**中国高端通路渠道分级**数据 + 展示卡片。
+回答的核心问题：禾然(有机首选) / 六月鲜(高端首选) 该进哪些高端通路、谁能真正放量。
+
+---
+
+## 文件清单
+
+| 文件 | 用途 | 建议 GitHub 路径 |
 |---|---|---|
-| `infinity_os_category_agent_index.html` | 导航 | 总览首页,先打开这个 |
-| `infinity_os_category_agent_app.html` | **可动产品** | 驾驶舱 / 今日要关的差 / 八步引擎,点"运行引擎"看它跑。**主入口** |
-| `infinity_os_8step_engine_demo.html` | 可点 demo | ECR 真实个案走查八步,理解引擎机制 |
-| `infinity_os_category_8step_spec_v0_1.html` | 设计 | 骨架 Spec V0.1(agent_spec_04):架构 + 八步对应 + L2 门库 |
-| `infinity_os_8step_container_engine_v0_1.html` | 设计 | 容器引擎:schema + 门引擎契约 + 接线(TL 照建) |
-| `infinity_os_live_data_wiring.html` | 设计 | 接真实数据清单:字段映射 + SIM→LIVE 切换 + 待校项 |
+| `brand_advisor_channel_input_v1.json` | **机器输入**：12 条通路结构化数据，喂给品牌AI顾问 Agent 作知识库/上下文 | `/data/` 下，或仓库根目录 |
+| `brand_advisor_channel_kb_v1.html` | **展示卡片**：套主控台 kb-card 格式，可独立预览，也可拷进品牌AI顾问页面 | 仓库根目录（GitHub Pages 可直接访问） |
+| `kb_card_compare_v1.html` | **同源对照**：勤策卡 vs 通路卡并排，验证用，可不上线 | 仓库根目录，或验收后归档 |
+| `README.md` | 本说明 | 与上述文件同目录 |
 
-## 阅读顺序
+> 命名已遵循：纯英文、无空格、下划线分隔。
 
-设计链:骨架 → 容器引擎 → 走查 demo → 可动产品 → 接数据
-快速看效果:直接开 `app`,点"运行引擎"。
+---
 
-## 部署
+## 数据口径与校准红线（重要 · 真实原则）
 
-GitHub Pages 直接上传即可。文件名无空格,互不覆盖现有 `index.html`
-(本包导航页另名为 `..._agent_index.html`)。
+1. **门店数 = 公开报道**，已在各文件标注采集时点（2024末 / 2025 / 2025E）。可信度高。
+2. **接受度 / 进入难度 / 放量潜力 = 判断性评分（1–5），非实测**。
+   → 必须接入**真实动销 r_actual** 后回写校准；上线前不可当作准确结论对外。
+3. **禾然品牌级市占率 = 无公开数据**。JSON 中相关字段**留空**，待内部数据补入，**不编造**。
+4. **本包是「输入」不是「答案」**。品牌AI顾问 Agent 应在此基础上结合禾然生命周期阶段推理，不得直接把 `agent_recommendation_seed` 当结论输出。
 
-## 关键设计
+---
 
-- **不混层**:零售商品类角色 与 欣和 SKU 角色分属两本账,schema 用 `entity_type` 硬隔离。
-- **数据可换**:所有数据走 `DataSource` 适配层,SIM/LIVE 两模式对引擎透明,换真实数据不动引擎/界面。
-- **门引擎真在算**:机会值、健康度、keystone 双赢建议均为实算(机会值 ≈ 个案原文,已校)。
+## 用法（三步）
 
-## 下一步(三条轨)
+1. **JSON**：作为品牌AI顾问 Agent 的知识库/上下文喂入；接真实数据后覆盖三项评分字段 + 补 `brand_share`。
+2. **kb HTML**：打开后，把 `<!-- KB-CARDS BEGIN -->` 到 `<!-- KB-CARDS END -->` 之间的 kb-card 区块整段拷进品牌AI顾问页面的「知识库」区域。`toggleKB()` 主控台已有，无需重复；顶部说明条/底部脚本拷贝时删掉。
+3. **对照 HTML**：一次性验收用——确认通路卡与现有勤策卡用的是同一套积木后即可归档。
 
-1. **业务·现在** — 填 `infinity_os_node_targets` 的 r_target + grade,导 SQL 给 DBA(解锁评分表 + SAP Step 2 + LIVE)。最紧急,不靠 TL。
-2. **DS·现在** — 校"接数据清单"里 4 个业务判断(Fair Share 基准 / keystone 阈值 / 欣和 SKU 占比上限 / 健康度权重);部署本包供团队反馈。
-3. **后端·TL 入职后** — 建表 + 实现 `LIVE.stores()` + Java 门引擎,切 LIVE 真跑。
+---
 
-真跑唯一前置:业务团队填 node_target 导 SQL。它一通 + 4 项校准定了,DataSource 切 LIVE,从"模拟动"变"真数据动",不重做任何东西。
+## 待办（接真实数据时该覆盖的字段）
+
+- `channels[].organic_premium_acceptance` / `entry_difficulty` / `volume_potential` ← 用 r_actual 校准
+- `market_context.heran_position` 补禾然真实份额
+- 新增 `brand_share` 字段（当前缺）
+
+---
+
+## 版本
+
+**v1 · 2026-06-10** · 首版，数据为公开来源 + 判断性评分。
+后续接入汉询 r_actual 后出 v2，三项评分由判断改为实测。
