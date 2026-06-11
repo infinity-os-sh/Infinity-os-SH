@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INFINITY OS · Agent 设计标准 v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17191E;
+    --ink-panel:#1B1E24;
+    --paper:#F2F1EB;
+    --surface:#FBFAF6;
+    --amber:#A8612A;
+    --amber-deep:#834A1F;
+    --amber-tint:#EADFCB;
+    --go:#2E6A4A;
+    --go-tint:#DDE8DF;
+    --stop:#9A3A33;
+    --stop-tint:#F0DBD7;
+    --slate:#565A62;
+    --rule:#DAD7CC;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --cjk:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',-apple-system,BlinkMacSystemFont,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:var(--cjk);line-height:1.75;
+    font-size:16px;-webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:0 22px;}
+
+  /* sticky slim bar */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:rgba(242,241,235,.86);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--rule);
+  }
+  .topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:46px;}
+  .topbar .doc{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--slate);}
+  .topbar .ver{font-family:var(--mono);font-size:12px;color:var(--amber);}
+
+  /* masthead */
+  .mast{padding:64px 0 40px;border-bottom:2px solid var(--ink);}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--amber);margin:0 0 20px;}
+  h1.title{
+    font-size:clamp(30px,6.4vw,52px);line-height:1.12;font-weight:800;
+    letter-spacing:-.01em;margin:0 0 18px;
+  }
+  .lede{font-size:clamp(16px,2.4vw,19px);color:var(--slate);max-width:640px;margin:0 0 26px;}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 10px;font-family:var(--mono);font-size:11.5px;}
+  .chip{border:1px solid var(--rule);background:var(--surface);
+    padding:5px 10px;border-radius:2px;color:var(--ink);}
+  .chip b{color:var(--amber-deep);}
+
+  /* contents */
+  .toc{margin:34px 0 10px;padding:22px 24px;background:var(--surface);
+    border:1px solid var(--rule);border-left:3px solid var(--amber);}
+  .toc h2{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--slate);margin:0 0 14px;}
+  .toc ol{list-style:none;margin:0;padding:0;
+    display:grid;grid-template-columns:1fr 1fr;gap:6px 28px;}
+  .toc a{display:flex;gap:12px;text-decoration:none;color:var(--ink);
+    padding:4px 0;font-size:14.5px;border-bottom:1px dotted transparent;}
+  .toc a:hover{border-bottom-color:var(--amber);color:var(--amber-deep);}
+  .toc .n{font-family:var(--mono);color:var(--amber);font-size:13px;min-width:24px;}
+
+  /* sections */
+  section{padding:50px 0;border-bottom:1px solid var(--rule);}
+  .sec-head{display:flex;align-items:baseline;gap:16px;margin:0 0 22px;}
+  .sec-num{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--amber);
+    border:1px solid var(--amber);border-radius:2px;padding:3px 8px;white-space:nowrap;}
+  h2.sec-title{font-size:clamp(21px,3.4vw,27px);font-weight:800;margin:0;letter-spacing:-.01em;}
+  p{margin:0 0 16px;}
+  .sub{color:var(--slate);}
+  strong{font-weight:700;}
+  .accent{color:var(--amber-deep);font-weight:700;}
+
+  /* principles */
+  .principles{display:grid;gap:14px;}
+  .pr{display:flex;gap:16px;padding:18px 20px;background:var(--surface);
+    border:1px solid var(--rule);border-radius:3px;}
+  .pr .k{font-family:var(--mono);font-weight:700;color:var(--amber);font-size:13px;
+    min-width:30px;padding-top:2px;}
+  .pr .t b{display:block;margin-bottom:3px;font-size:16px;}
+  .pr .t span{color:var(--slate);font-size:14.5px;}
+
+  /* decision gate — signature */
+  .gate{background:var(--ink-panel);color:#EDEBE4;border-radius:6px;padding:30px 26px;margin:6px 0;}
+  .gate .glabel{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--amber);margin:0 0 18px;}
+  .qline{display:flex;gap:14px;align-items:flex-start;padding:16px 0;border-top:1px solid #32363E;}
+  .qline:first-of-type{border-top:none;}
+  .qmark{font-family:var(--mono);font-weight:700;color:var(--amber);font-size:14px;min-width:26px;}
+  .qbody{flex:1;}
+  .qbody .q{font-size:16.5px;font-weight:600;margin-bottom:12px;}
+  .branches{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .branch{padding:13px 15px;border-radius:4px;}
+  .branch.go{background:rgba(46,106,74,.18);border:1px solid #3C7A58;}
+  .branch.agent{background:rgba(154,58,51,.16);border:1px solid #A8514A;}
+  .branch .ans{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    opacity:.8;margin-bottom:5px;}
+  .branch .res{font-weight:700;font-size:16px;margin-bottom:3px;}
+  .branch.go .res{color:#9FD6B6;}
+  .branch.agent .res{color:#E6A9A3;}
+  .branch .note{font-size:13px;opacity:.78;line-height:1.5;}
+
+  /* tables */
+  .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:4px 0 8px;
+    border:1px solid var(--rule);border-radius:3px;}
+  table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px;background:var(--surface);}
+  th{background:var(--ink);color:#F2F1EB;text-align:left;font-weight:600;
+    padding:11px 14px;font-size:12.5px;letter-spacing:.02em;}
+  th.mono,td.mono{font-family:var(--mono);}
+  td{padding:11px 14px;border-top:1px solid var(--rule);vertical-align:top;line-height:1.55;}
+  tr td:first-child{font-weight:700;white-space:nowrap;}
+  .yes{color:var(--go);font-weight:700;font-family:var(--mono);}
+  .no{color:var(--stop);font-weight:700;font-family:var(--mono);}
+  td .en{font-family:var(--mono);font-size:12px;color:var(--slate);display:block;font-weight:400;}
+
+  /* rfc tags */
+  .rfc{display:grid;gap:12px;}
+  .rfc-row{display:flex;gap:16px;align-items:flex-start;padding:16px 18px;
+    background:var(--surface);border:1px solid var(--rule);border-radius:3px;border-left-width:4px;}
+  .rfc-row.must{border-left-color:var(--stop);}
+  .rfc-row.should{border-left-color:var(--amber);}
+  .rfc-row.may{border-left-color:var(--go);}
+  .tag{font-family:var(--mono);font-weight:700;font-size:12px;padding:4px 9px;border-radius:2px;
+    white-space:nowrap;min-width:74px;text-align:center;}
+  .tag.must{background:var(--stop-tint);color:var(--stop);}
+  .tag.should{background:var(--amber-tint);color:var(--amber-deep);}
+  .tag.may{background:var(--go-tint);color:var(--go);}
+  .rfc-row .d b{display:block;margin-bottom:3px;}
+  .rfc-row .d span{color:var(--slate);font-size:13.5px;}
+
+  /* steps */
+  .steps{counter-reset:s;display:grid;gap:0;}
+  .step{display:flex;gap:18px;padding:20px 0;border-top:1px solid var(--rule);}
+  .step:first-child{border-top:none;}
+  .step .sn{counter-increment:s;font-family:var(--mono);font-weight:700;font-size:20px;
+    color:var(--amber);min-width:42px;}
+  .step .sn::before{content:counter(s,decimal-leading-zero);}
+  .step .sc b{display:block;font-size:16.5px;margin-bottom:5px;}
+  .step .sc span{color:var(--slate);font-size:14.5px;}
+  .step .sc .en{font-family:var(--mono);font-size:11.5px;color:var(--amber-deep);}
+
+  /* worked example */
+  .flow{background:var(--ink-panel);color:#D7DAE0;border-radius:6px;padding:22px;
+    font-family:var(--mono);font-size:12.5px;line-height:1.95;overflow-x:auto;margin:8px 0 18px;}
+  .flow .n{color:#9FD6B6;}
+  .flow .a{color:#E0B07E;}
+  .flow .c{color:#8C929C;}
+  .atoms{display:grid;gap:8px;margin:8px 0 18px;}
+  .atom{display:flex;gap:12px;padding:11px 14px;background:var(--surface);
+    border:1px solid var(--rule);border-radius:3px;font-size:14px;}
+  .atom .id{font-family:var(--mono);font-weight:700;color:var(--amber);min-width:22px;}
+  .atom .arrow{color:var(--slate);font-family:var(--mono);}
+  pre.code{background:var(--ink-panel);color:#D7DAE0;border-radius:6px;padding:18px 20px;
+    overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.7;margin:8px 0 0;}
+  pre.code .key{color:#E0B07E;}
+  pre.code .str{color:#9FD6B6;}
+  blockquote{margin:0 0 18px;padding:14px 18px;background:var(--amber-tint);
+    border-left:3px solid var(--amber);border-radius:0 3px 3px 0;font-size:14.5px;color:var(--amber-deep);}
+
+  /* checklist */
+  .check{display:grid;gap:9px;}
+  .ck{display:flex;gap:13px;align-items:flex-start;padding:13px 16px;background:var(--surface);
+    border:1px solid var(--rule);border-radius:3px;font-size:14.5px;}
+  .ck .box{font-family:var(--mono);color:var(--amber);font-weight:700;}
+
+  /* footer */
+  footer{padding:40px 0 70px;color:var(--slate);font-size:13px;}
+  footer .fmono{font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;}
+  footer hr{border:none;border-top:1px solid var(--rule);margin:0 0 22px;}
+
+  @media(max-width:640px){
+    .toc ol{grid-template-columns:1fr;}
+    .branches{grid-template-columns:1fr;}
+    .sec-head{gap:12px;}
+    .mast{padding:46px 0 32px;}
+  }
+  @media(prefers-reduced-motion:no-preference){
+    section,.mast{animation:fade .5s ease both;}
+    @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <span class="doc">INFINITY OS · AGENT 设计标准</span>
+    <span class="ver">v1.0</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header class="mast">
+    <p class="eyebrow">Internal Standard · 节点设计基准</p>
+    <h1 class="title">每个节点开工前,<br>先过这道决策门。</h1>
+    <p class="lede">这是 INFINITY OS 里设计任何一个 Agent / 节点的统一标准。核心只有一句话:<strong>能写死就别放权,能简单就别复杂。</strong>把它当成查阅基准,不是读完就忘的文章。</p>
+    <div class="meta">
+      <span class="chip">依据 <b>Anthropic · Building Effective Agents</b></span>
+      <span class="chip">融合 <b>四步法</b> + <b>RFC2119</b></span>
+      <span class="chip">范例 <b>库存上报 Agent</b></span>
+    </div>
+  </header>
+
+  <div style="margin:28px 0 -8px;padding:14px 18px;background:var(--amber-tint);border-left:3px solid var(--amber);border-radius:0 3px 3px 0;font-size:14.5px;color:var(--amber-deep);line-height:1.65;">
+    <strong>怎么用这套文件 ·</strong> 本标准<strong>定规矩</strong>;《库存上报 Skill v0.1》(<code>bas_inventory_skill_v0_1.md</code>)是<strong>按规矩落地的第一个范例</strong>。先读本标准 §1–§6 建立判断,再照 §7 对照 Skill 文件上手。
+  </div>
+
+  <nav class="toc">
+    <h2>目录 / Contents</h2>
+    <ol>
+      <li><a href="#s1"><span class="n">§1</span>四条总原则</a></li>
+      <li><a href="#s2"><span class="n">§2</span>第一决策门:Workflow / Agent</a></li>
+      <li><a href="#s3"><span class="n">§3</span>模式速查表</a></li>
+      <li><a href="#s4"><span class="n">§4</span>设计四步法</a></li>
+      <li><a href="#s5"><span class="n">§5</span>RFC2119 强度规范</a></li>
+      <li><a href="#s6"><span class="n">§6</span>HITL 卡点规范</a></li>
+      <li><a href="#s7"><span class="n">§7</span>标准范例:库存上报</a></li>
+      <li><a href="#s8"><span class="n">§8</span>节点设计检查清单</a></li>
+      <li><a href="#sa"><span class="n">§A</span>术语 / 缩写表</a></li>
+    </ol>
+  </nav>
+
+  <!-- §1 -->
+  <section id="s1">
+    <div class="sec-head"><span class="sec-num">§1</span><h2 class="sec-title">四条总原则</h2></div>
+    <p class="sub">任何节点都先服从这四条,再谈细节。</p>
+    <div class="principles">
+      <div class="pr"><span class="k">01</span><div class="t"><b>能简单就别复杂</b><span>先做最朴素的版本,跑出来再按真实错误加东西。复杂度必须用结果证明自己值得。</span></div></div>
+      <div class="pr"><span class="k">02</span><div class="t"><b>能写死就别放权</b><span>步骤可预测的事用 Workflow(轨道),不要交给 Agent 即兴发挥。放权要付出不可控的代价。</span></div></div>
+      <div class="pr"><span class="k">03</span><div class="t"><b>节点间靠标准化 JSON 硬连接</b><span>上一节点的 Output 必须是下一节点明确的 Input,不靠"心电感应"。接口稳,系统才稳。</span></div></div>
+      <div class="pr"><span class="k">04</span><div class="t"><b>高风险动作必有 HITL</b><span>涉及钱、权限、不可逆操作的,机器必须停机等人拍板。系统要可控,不要黑箱。</span></div></div>
+    </div>
+  </section>
+
+  <!-- §2 -->
+  <section id="s2">
+    <div class="sec-head"><span class="sec-num">§2</span><h2 class="sec-title">第一决策门:Workflow 还是 Agent</h2></div>
+    <p class="sub">拿到任何节点,先回答两个问题。这是整套标准的总开关。</p>
+    <div class="gate">
+      <p class="glabel">Decision Gate · 决策门</p>
+      <div class="qline">
+        <span class="qmark">Q1</span>
+        <div class="qbody">
+          <div class="q">这事每次都差不多吗?步骤能不能提前画死?</div>
+          <div class="branches">
+            <div class="branch go"><div class="ans">能 / Predictable</div><div class="res">→ Workflow</div><div class="note">写死的轨道。稳、便宜、可审计。再进 Q2 选模式。</div></div>
+            <div class="branch agent"><div class="ans">不能 / 要临场判断</div><div class="res">→ Agent</div><div class="note">放权给 AI 自己决定。灵活但难控,慎用。</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="qline">
+        <span class="qmark">Q2</span>
+        <div class="qbody">
+          <div class="q">若是 Workflow,这一步在干哪类活?</div>
+          <div class="branches">
+            <div class="branch go"><div class="ans">分类 / 接力</div><div class="res">路由 / 链式</div><div class="note">先分流到对的窗口;或一道工序接一道。</div></div>
+            <div class="branch go"><div class="ans">分发</div><div class="res">确定性扇出</div><div class="note">一份结果按写死规则同时派给多个下游。</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="sub" style="margin-top:18px;">类比:<span class="accent">Workflow = 自动扶梯</span>(固定方向,稳);<span class="accent">Agent = 出租车司机</span>(自己选路,灵活但你管不住走哪)。库存这类高频规律的事,永远先选扶梯。</p>
+  </section>
+
+  <!-- §3 -->
+  <section id="s3">
+    <div class="sec-head"><span class="sec-num">§3</span><h2 class="sec-title">模式速查表</h2></div>
+    <p class="sub">五个常用积木 + 两个刻意避开的。"用吗"一栏指库存上报这道标准范例。</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>模式</th><th>一句话大白话(配类比)</th><th>何时用</th><th class="mono">范例用吗</th></tr></thead>
+        <tbody>
+          <tr><td>增强型 LLM<span class="en">Augmented LLM</span></td><td>配了眼睛+字典+记事本的 AI(会干活的工人)</td><td>一切的基础积木</td><td class="mono"><span class="yes">✓ 用</span></td></tr>
+          <tr><td>路由<span class="en">Routing</span></td><td>门口分拣员,先分类再处理(医院分诊台)</td><td>输入混了多种类别</td><td class="mono"><span class="yes">✓ 用</span></td></tr>
+          <tr><td>链式<span class="en">Chaining</span></td><td>一道接一道接力(工厂传送带)</td><td>步骤有先后依赖</td><td class="mono"><span class="yes">✓ 用</span></td></tr>
+          <tr><td>确定性扇出<span class="en">Fan-out</span></td><td>一份结果按写死规则自动分发(快递格口)</td><td>下游可预测、要同时触发多个</td><td class="mono"><span class="yes">✓ 用</span></td></tr>
+          <tr><td>并行<span class="en">Parallelization</span></td><td>多份活同时跑 / 同一份跑几遍投票</td><td>赶速度,或要提高置信度</td><td class="mono"><span class="yes">✓ 选用</span></td></tr>
+          <tr><td>编排者<span class="en">Orchestrator</span></td><td>AI 当包工头,临场决定拆几步、派给谁</td><td>事先无法预测会冒出哪些子任务</td><td class="mono"><span class="no">✗ 避</span></td></tr>
+          <tr><td>线上评估者<span class="en">Evaluator (live)</span></td><td>旁边再加 AI 打分、让重做</td><td>建设期离线用,高频线上别挂</td><td class="mono"><span class="no">✗ 避</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <blockquote>避开 Orchestrator / 线上 Evaluator 的原因:库存上报下游永远是补货/断货/竞品那几样,完全可预测 —— 给简单事请包工头、给每条上报配打分员,只会更慢、更贵、更不可控。</blockquote>
+  </section>
+
+  <!-- §4 -->
+  <section id="s4">
+    <div class="sec-head"><span class="sec-num">§4</span><h2 class="sec-title">设计四步法</h2></div>
+    <p class="sub">从一句人话的 SOP,到一条能上线的生产线。</p>
+    <div class="steps">
+      <div class="step"><span class="sn"></span><div class="sc"><b>格式标准化 <span class="en">Standardization</span></b><span>停止写散文。把情境转成变量(参数化),用结构化区块切分,并用 RFC2119 给每条规则定强度(见 §5)。</span></div></div>
+      <div class="step"><span class="sn"></span><div class="sc"><b>任务拆解 <span class="en">Decomposition</span></b><span>把大任务拆成独立节点,每个节点有自己的 Input/Output。节点之间靠标准化 JSON(Artifact)硬连接。哪里坏改哪里。</span></div></div>
+      <div class="step"><span class="sn"></span><div class="sc"><b>双向开发 <span class="en">Bi-directional Dev</span></b><span>用真实数据挖"默会知识"。别闭门写完美 SOP —— 写粗糙版、跑一次、撞墙、补一条规则,小步快跑迭代。</span></div></div>
+      <div class="step"><span class="sn"></span><div class="sc"><b>整合与执行 <span class="en">Integration</span></b><span>经 MCP 接真实世界工具(订货系统、数据中台),并在高风险处设 HITL 卡点(见 §6)。</span></div></div>
+    </div>
+  </section>
+
+  <!-- §5 -->
+  <section id="s5">
+    <div class="sec-head"><span class="sec-num">§5</span><h2 class="sec-title">RFC2119 强度规范</h2></div>
+    <p class="sub">每条规则都必须标强度,让节点清楚:哪些不能讨价还价,哪些可以自行判断。</p>
+    <div class="rfc">
+      <div class="rfc-row must"><span class="tag must">MUST</span><div class="d"><b>硬性规定,绝对不能跳过。</b><span>例:断货必须立刻标记并触发预警;口语 SKU 必须先归一到主数据,归一不到就停下打标记,不许瞎编。</span></div></div>
+      <div class="rfc-row should"><span class="tag should">SHOULD</span><div class="d"><b>强烈建议,不做需记录原因。</b><span>例:数量是估算的应标注置信度;竞品堆头应附照片佐证。</span></div></div>
+      <div class="rfc-row may"><span class="tag may">MAY</span><div class="d"><b>可选项,由节点视上下文决定。</b><span>例:美顾已执行的动作可记录 —— 对核心决策非必需。</span></div></div>
+    </div>
+  </section>
+
+  <!-- §6 -->
+  <section id="s6">
+    <div class="sec-head"><span class="sec-num">§6</span><h2 class="sec-title">HITL 卡点规范</h2></div>
+    <p class="sub"><strong>HITL = Human-In-The-Loop(人在回路)</strong>。日常小事机器自己跑;碰到高风险,先停机等人点 OK 才继续。</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>触发条件</th><th>动作</th><th>放在哪</th></tr></thead>
+        <tbody>
+          <tr><td>金额超阈值<span class="en">如下单 &gt; 设定额</span></td><td>暂停,等人审批</td><td>执行(下单)前</td></tr>
+          <tr><td>权限 / 不可逆变更</td><td>暂停,等人审批</td><td>执行前</td></tr>
+          <tr><td>疑似窜货 / 异常</td><td>暂停,转人工核查</td><td>执行前</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <blockquote>原则:把人放在"高风险动作执行前",不要放在"每条上报前"—— 否则人被淹没,HITL 形同虚设。类比 ATM:取小钱直接给,取大额才二次验证。</blockquote>
+  </section>
+
+  <!-- §7 -->
+  <section id="s7">
+    <div class="sec-head"><span class="sec-num">§7</span><h2 class="sec-title">标准范例:库存上报 Agent</h2></div>
+    <p class="sub">这是全套标准最干净的一道例题。一条真实上报跑完全程。</p>
+    <blockquote>美顾小王巡完大润发徐汇店,发来一张货架照 + 语音转文字:「① 六月鲜特级 380ml 货架剩两排大概 8 瓶,② 加点鲜断货了,③ 海天在端架做了金标生抽的大堆头,④ 我把六月鲜的爆炸卡补了。」</blockquote>
+
+    <p><strong>第一步 · 拆原子</strong>(对应 §4 标准化)</p>
+    <div class="atoms">
+      <div class="atom"><span class="id">①</span><span>六月鲜特级380ml 剩约8瓶</span><span class="arrow">→</span><span>库存量(估计,标置信度)</span></div>
+      <div class="atom"><span class="id">②</span><span>加点鲜断货</span><span class="arrow">→</span><span>断货(MUST 立即预警)</span></div>
+      <div class="atom"><span class="id">③</span><span>海天端架金标堆头</span><span class="arrow">→</span><span>竞品动作(SHOULD 附照)</span></div>
+      <div class="atom"><span class="id">④</span><span>已补爆炸卡</span><span class="arrow">→</span><span>已执行动作(MAY 记录)</span></div>
+    </div>
+
+    <p><strong>第二步 · 跑流程</strong>(对应 §2 决策门 → Workflow,§3 路由+链式+扇出)</p>
+    <div class="flow">
+小王原始上报(①~④ + 照片)
+  │
+  <span class="n">[节点1 解析]</span>  路由分四类 → 链式:认货→查编码→估量→比安全库存
+  │            Output = 标准 JSON  <span class="c">(Artifact,硬连接)</span>
+  │
+  ├─<span class="a">▶</span> <span class="n">[节点2 补货]</span>    读 ① status:low      → 拟补货单
+  ├─<span class="a">▶</span> <span class="n">[节点3 断货预警]</span> 读 ② out_of_stock    → 推紧急预警
+  └─<span class="a">▶</span> <span class="n">[节点4 竞品战报]</span> 读 ③ competitor      → 生成战报、喂统治力差距
+  │            <span class="c">↑ 确定性扇出:字段决定派给谁,不靠 AI 临场判断</span>
+  │
+  <span class="a">[HITL 卡点]</span>  节点2 补货单 &gt; 阈值 或 疑似窜货 → 停机等人点 OK
+  │
+  [最终执行]  人批准后才真正下单
+    </div>
+
+    <p><strong>第三步 · 标准产出物</strong>(节点1 的 Output,下游唯一认的接口)</p>
+    <pre class="code">{
+  <span class="key">"store"</span>: <span class="str">"大润发徐汇店"</span>, <span class="key">"advisor_id"</span>: <span class="str">"MG-0420"</span>,
+  <span class="key">"items"</span>: [
+    { <span class="key">"sku"</span>:<span class="str">"6MX-TJ-380"</span>, <span class="key">"qty"</span>:8, <span class="key">"conf"</span>:<span class="str">"low"</span>, <span class="key">"status"</span>:<span class="str">"low"</span> },
+    { <span class="key">"sku"</span>:<span class="str">"6MX-JDX"</span>, <span class="key">"qty"</span>:0, <span class="key">"status"</span>:<span class="str">"out_of_stock"</span> }
+  ],
+  <span class="key">"competitor"</span>: [{ <span class="key">"brand"</span>:<span class="str">"海天"</span>, <span class="key">"sku"</span>:<span class="str">"金标生抽"</span>, <span class="key">"loc"</span>:<span class="str">"端架"</span>, <span class="key">"act"</span>:<span class="str">"堆头"</span>, <span class="key">"scale"</span>:<span class="str">"large"</span> }],
+  <span class="key">"executed"</span>: [<span class="str">"补爆炸卡"</span>],
+  <span class="key">"fanout"</span>: [<span class="str">"补货:6MX-TJ-380"</span>, <span class="str">"断货预警:6MX-JDX"</span>, <span class="str">"竞品战报:海天金标堆头"</span>]
+}</pre>
+    <blockquote style="margin-top:18px;">默会知识陷阱(§4 双向开发):第一版 SOP 一定漏写"爆炸卡是物料不是产品""端架是高价值位置""两排按货架规格换算"—— 这些靠跑真实数据撞出来,再一条条补进 §5 的 MUST/SHOULD。</blockquote>
+  </section>
+
+  <!-- §8 -->
+  <section id="s8">
+    <div class="sec-head"><span class="sec-num">§8</span><h2 class="sec-title">节点设计检查清单</h2></div>
+    <p class="sub">每设计一个新节点,逐条过一遍。</p>
+    <div class="check">
+      <div class="ck"><span class="box">☐</span><div>过了 §2 决策门 —— 明确写下它是 <strong>Workflow</strong> 还是 <strong>Agent</strong>,以及理由。</div></div>
+      <div class="ck"><span class="box">☐</span><div>若是 Workflow,标明用的是 <strong>路由 / 链式 / 扇出</strong> 中的哪一种。</div></div>
+      <div class="ck"><span class="box">☐</span><div>定义了明确的 <strong>Input 与 Output</strong>,且 Output 是标准化 JSON。</div></div>
+      <div class="ck"><span class="box">☐</span><div>每条规则都标了 <strong>MUST / SHOULD / MAY</strong> 强度。</div></div>
+      <div class="ck"><span class="box">☐</span><div>识别了高风险动作,并设了 <strong>HITL 卡点</strong>(卡在执行前)。</div></div>
+      <div class="ck"><span class="box">☐</span><div>没有为可预测的事误用 <strong>Orchestrator</strong>;没有在高频线上挂 <strong>Evaluator</strong>。</div></div>
+      <div class="ck"><span class="box">☐</span><div>先写了 <strong>粗糙 v0</strong>,准备拿真实数据迭代,而非闭门求完美。</div></div>
+      <div class="ck"><span class="box">☐</span><div>准备了 <strong>评测集</strong>(离线),能量化"它到底准不准、哪类最常错"。</div></div>
+    </div>
+  </section>
+
+  <!-- Appendix -->
+  <section id="sa">
+    <div class="sec-head"><span class="sec-num">§A</span><h2 class="sec-title">术语 / 缩写表</h2></div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th class="mono">缩写</th><th>全称</th><th>中文 / 含义</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">HITL</td><td>Human-In-The-Loop</td><td>人在回路 —— 关键节点保留人来把关、拍板</td></tr>
+          <tr><td class="mono">LLM</td><td>Large Language Model</td><td>大语言模型</td></tr>
+          <tr><td class="mono">SOP</td><td>Standard Operating Procedure</td><td>标准作业流程</td></tr>
+          <tr><td class="mono">MCP</td><td>Model Context Protocol</td><td>模型上下文协议 —— AI 界的 USB-C,统一接外部工具</td></tr>
+          <tr><td class="mono">Artifact</td><td>—</td><td>上一节点的标准化输出(JSON),作为下一节点的输入</td></tr>
+          <tr><td class="mono">Workflow</td><td>—</td><td>按预定义路径运行的系统(轨道 / 扶梯)</td></tr>
+          <tr><td class="mono">Agent</td><td>—</td><td>由 LLM 自主决定步骤与工具的系统(司机)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <hr>
+    <p class="fmono">INFINITY OS · AGENT 设计标准 · v1.0</p>
+    <p>本标准依据 Anthropic《Building Effective Agents》,融合四步法与 RFC2119,以库存上报 Agent 为标准范例。修订请递增版本号并记录变更。</p>
+  </footer>
+
+</div>
+</body>
+</html>
