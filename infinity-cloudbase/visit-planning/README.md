@@ -3,16 +3,16 @@
 > 生成"每人每日拜访清单+路线"。是 DSR/美顾/督导 app **XM(今日任务)** 的数据源，也是 **XD 系统性采集的指挥棒**（它排谁去哪，XD 在拜访时采状态）。
 > **只排程**：不采集(XD)、不判级(L1-03)、不算战功。
 
-## ⚠ 诚实先行：两份权威文档不在仓库
-- `bas_visit_planning_skill_v0_1.md`（98 分定稿规则，"以它为准"）— **缺**
-- `bas_field_dictionary_v1_0`（字段契约，"不准新造名"）— **缺**
+## 字段字典 v1.1（运行时准）
+命名以 `../field-dictionary.js`（字段字典 v1.1）为单一真相源，两类泾渭分明：
+- **主数据（门店/用户/拜访/SKU）= SFA 真名**（camelCase）：`storeCode/grade/visitCycleT/latitude/role/visitDate`，不另造平行名。
+- **节点新概念 = 设计名**（snake_case）：`plan_date/reason_code/cycle_t/days_since_last…`；跨域锁定概念直接用字典名 `ts/source_ref/human_override/effective_stage/oos_flag/no_data…`。
 
-我无法 100% 满足"以它为准 / 字段名全照字典"。**替代锚点**（已据此 scaffold）：
-- `SFA_Backend_v4.zip` 实体定义 → 真实字段名（`stores.storeCode/grade/visitCycleT/latitude…`、`users.userCode/role`、`visit_reports.visitDate`）
-- `bas_inventory_skill_v0_1.md`（姊妹 skill）→ 结构/护栏风格
-- 本任务消息里你**逐字重述的 6 条铁律** → 作为临时规则源
+`*_pending_dict` 已按 v1.1 解析：能对到 SFA 真名/锁定概念的全部改真名；**仅 `coverage_blindspot`（盲点本体 `isBlindspot/blindReason`）与 `org_capacity`（产能 `capacityDaily/home`）保留 `*_pending_dict`**——无字典项且表未建，等建表。
 
-**命名决定**：已存在的 SFA 表沿用其真实字段名（camelCase，改了断后端）；新表/新字段统一 camelCase 并标 `*_pending_dict`，字典定稿后**一处改名**（`visit-dictionary.js`）。
+## ⚠ 仍缺：98 分定稿 SKILL.md
+- `bas_visit_planning_skill_v0_1.md`（98 分定稿规则，"以它为准"）— **仍不在仓库**。
+- 规则引擎现按你逐字重述的 6 条铁律 + 姊妹 skill `bas_inventory_skill_v0_1.md` 实现并自测；**待该定稿入库后按它正式复核**（重点三命门：配额保底 / 助手非鞭子 / 不漏常规）。
 
 ## 依赖状态（缺了不能真跑）
 | 依赖表 | 状态 | 说明 |

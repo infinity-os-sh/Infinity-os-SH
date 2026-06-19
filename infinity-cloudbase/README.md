@@ -11,10 +11,9 @@
 |---|---|---|---|
 | **CloudBase 环境ID** | 任务给的是占位符 `[环境ID]` | 无法真连/建库/建登录 | 单一配置点 `CB_ENV_ID`；未填→自动**双轨·mock**，页面照常跑、可演示 |
 | **SecretId / SecretKey / 自定义登录私钥** | 未提供 | 工号自定义登录、云函数无法部署 | 手机号走 CloudBase 短信验证码（配好环境即用）；工号登录留好接口，接后端即生效 |
-| **《字段字典v1.0》原件** | 未入库（仓库只有可对齐 schema） | 6开关里仅 `on_shelf/oos_flag/display_rate` 被点名 | 其余3个（`sellout/repurchase/margin`）取对齐 `04_l0_to_l1` 的推断默认，**改名只改 `field-dictionary.js` + `inventory_snapshot.schema.json` 两处** |
 | **门店/SKU 主数据** | 演示用名称 | SKU 未归一到主数据编码 | `STORE_MAP` / SKU 按名匹配占位，接 SKILL §9 主数据后替换 |
 
-> `oos_flag` 语义需字典确认：本实现按「缺货标记」处理（`oos_flag = !有货`，与 app『有货』开关反向）。
+> **字段字典 v1.1 已确立**（见 `field-dictionary.js`，运行时准）：主数据用 SFA 真名（`storeCode/grade/visitCycleT/latitude/role/visitDate`）；节点新概念用设计名（`effective_stage/oos_flag/sellthrough_rate/sellthrough_grade/range/source_ref/ts/unknown/no_data/human_override/lifeforce_grade/strategic_tier`）。`oos_flag = 缺货 = !有货`（已锁定）。`lifeforce_grade` 只地基③可产出，其余节点禁算。`unknown`(采过拿不准) 与 `no_data`(从未采) 绝不混。
 
 ---
 

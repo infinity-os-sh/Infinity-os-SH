@@ -15,22 +15,22 @@
   'use strict';
   var Dict = (typeof require !== 'undefined') ? require('./visit-dictionary.js') : root.VisitDict;
 
-  // visit_plan → XM 任务卡数组(纯投影,无副作用)
+  // visit_plan → XM 任务卡数组(纯投影,无副作用)·字段照 字段字典 v1.1
   function planToXM(plan) {
     if (!plan || !plan.items) return [];
     return plan.items.map(function (it) {
       return {
-        taskId: (plan.userCode || 'U') + '_' + plan.planDate + '_' + it.seq, // 稳定可幂等
-        taskType: 'visit',
+        task_id: (plan.userCode || 'U') + '_' + plan.plan_date + '_' + it.seq, // 稳定可幂等
+        task_type: 'visit',
         seq: it.seq,
-        storeCode: it.storeCode,
-        storeName: it.storeName,
+        storeCode: it.storeCode,              // sfa 真名
+        storeName: it.storeName,              // sfa 真名
         // 给一线"为什么排你来"的可解释信号(非考核):
-        reasonCode: it.reasonCode,            // blindspot | overdue | regular
+        reason_code: it.reason_code,          // blindspot | overdue | regular
         pool: it.pool,                        // fire | baseline
-        tier: it.tier, tierPending: it.tierPending,
-        cycleT: it.cycleT, overdueDays: it.overdueDays,
-        planDate: plan.planDate,
+        grade: it.grade, tier_pending: it.tier_pending,
+        cycle_t: it.cycle_t, overdue_days: it.overdue_days,
+        plan_date: plan.plan_date,
         flags: plan.flags
         // ✗ 不含 done/checked_in/completion/progress —— XM 只显示"今天去哪",不显示考勤
       };
@@ -44,24 +44,24 @@
    */
   function fetchTodayXM(opts) {
     opts = opts || {};
-    var userCode = opts.userCode, planDate = opts.planDate || new Date().toISOString().slice(0, 10);
+    var userCode = opts.userCode, plan_date = opts.plan_date || new Date().toISOString().slice(0, 10);
     var cb = opts.cb || root.InfinityCB;
     var coll = Dict.COLLECTIONS.plan;
 
     // 真接:从 visit_plan 集合查本人当日 plan
     if (cb && cb.mode && cb.mode() === 'real' && cb._db) {
       return cb._db.collection(coll)
-        .where({ userCode: userCode, planDate: planDate })
+        .where({ userCode: userCode, plan_date: plan_date })
         .limit(1).get().then(function (r) { return planToXM((r.data || [])[0]); });
     }
     // 双轨·mock:用传入的 plan 或本地缓存(scaffold 阶段离线可演示)
-    var plan = opts.plan || readMock(userCode, planDate);
+    var plan = opts.plan || readMock(userCode, plan_date);
     return Promise.resolve(planToXM(plan));
   }
 
-  function readMock(userCode, planDate) {
+  function readMock(userCode, plan_date) {
     try {
-      var raw = (typeof localStorage !== 'undefined') && localStorage.getItem('vp_mock_plan_' + userCode + '_' + planDate);
+      var raw = (typeof localStorage !== 'undefined') && localStorage.getItem('vp_mock_plan_' + userCode + '_' + plan_date);
       if (raw) return JSON.parse(raw);
     } catch (e) {}
     return null;
@@ -69,7 +69,7 @@
   function writeMock(plan) {
     try {
       if (typeof localStorage !== 'undefined')
-        localStorage.setItem('vp_mock_plan_' + plan.userCode + '_' + plan.planDate, JSON.stringify(plan));
+        localStorage.setItem('vp_mock_plan_' + plan.userCode + '_' + plan.plan_date, JSON.stringify(plan));
     } catch (e) {}
   }
 
