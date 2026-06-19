@@ -1463,5 +1463,155 @@ renderTodayEarn();  // 今日赚钱条
 renderGapAgent();  // 弥补差距块数字引擎算
 </script>
 
+<!-- ════════════════════════════════════════════════════════════════════════
+     ICA · CloudBase 接入补丁 v1 (增量·附加·不改原 UI/交互/逻辑)
+     第一里程碑 · 第一条回路:
+       ① 真登录(手机号/工号)→ 唯一身份,替换 ica_user_v35 本机存名
+       ② 写死 SKUS[].sw 换成 fetch CloudBase 盘点(双轨·mock 兜底)
+       ③ 上报(submitReport)顺带写一条合规盘点快照(带 source_ref+ts+reporter)
+     铁律:不重写前端;字段名照 field-dictionary;不给涉钱涉权自动执行接口。
+     署名 DS · 接 infinity-cloudbase/
+═════════════════════════════════════════════════════════════════════════ -->
+<script src="infinity-cloudbase/field-dictionary.js"></script>
+<script src="infinity-cloudbase/cloudbase-client.js"></script>
+<script>
+(function(){
+  var Dict=window.InfinityDict, CB=window.InfinityCB;
+  if(!Dict||!CB){ console.warn('[ICA补丁] cloudbase 脚本未加载,保持原写死演示'); return; }
+
+  // 门店名 → 门店ID (归一·主数据上线后替换)
+  var STORE_MAP={ '大润发沪西':'SH_GT_CVS_001' };
+  function storeIdOf(name){ return STORE_MAP[(name||'').replace(/店$/,'')]||'SH_GT_CVS_001'; }
+  var MY_STORE_NAME='大润发沪西', MY_STORE_ID=storeIdOf(MY_STORE_NAME);
+  var IDENTITY=null;
+
+  // 清理旧的本机存名(ica_user_v35),迁移到真身份
+  try{ localStorage.removeItem('ica_user_v35'); }catch(e){}
+
+  // ── 真登录浮层(手机号/工号)──────────────────────────────────────────
+  function showLogin(){
+    if(document.getElementById('icaCbLoginMask')) return;
+    var m=document.createElement('div'); m.id='icaCbLoginMask';
+    m.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(8,10,14,.92);display:flex;align-items:center;justify-content:center;padding:24px';
+    m.innerHTML='<div style="width:100%;max-width:330px;background:#1a1f2b;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:22px">'+
+      '<div style="font-size:16px;font-weight:800;margin-bottom:4px">美顾登录</div>'+
+      '<div style="font-size:11px;color:#9aa5b8;margin-bottom:14px;line-height:1.6">手机号 或 工号 · 认出你的唯一身份(替代本机存名)<br><span id="icaCbMode" style="color:#f5a623"></span></div>'+
+      '<input id="icaCbId" placeholder="手机号 / 工号(如 8801)" autocomplete="off" style="width:100%;background:#0d0f14;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:11px;color:#eef2f8;font-size:14px;margin-bottom:9px;outline:none">'+
+      '<div id="icaCbSmsWrap" style="display:none;gap:8px;margin-bottom:9px"><input id="icaCbSms" placeholder="短信验证码" style="flex:1;background:#0d0f14;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:11px;color:#eef2f8;font-size:14px;outline:none"><button id="icaCbSendSms" style="background:#222836;color:#5d9cec;border:1px solid rgba(93,156,236,.4);border-radius:9px;padding:0 12px;font-size:12px;cursor:pointer">发码</button></div>'+
+      '<button id="icaCbGo" style="width:100%;background:#f5a623;color:#1a1207;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:800;cursor:pointer">进入</button>'+
+      '</div>';
+    document.body.appendChild(m);
+    CB.ready().then(function(){
+      document.getElementById('icaCbMode').textContent = CB.mode()==='real' ? '真接 CloudBase '+CB.CB_ENV_ID : '⚠ 双轨·mock(未配环境ID,本地演示·不上传后端)';
+    });
+    var idInp=document.getElementById('icaCbId');
+    idInp.addEventListener('input',function(){
+      var isPhone=/^1\d{10}$/.test(idInp.value.trim());
+      document.getElementById('icaCbSmsWrap').style.display=(isPhone&&CB.mode()==='real')?'flex':'none';
+    });
+    document.getElementById('icaCbSendSms').onclick=function(){
+      CB.sendSms(idInp.value.trim()).then(function(){ alert('验证码已发送(真接时)'); });
+    };
+    document.getElementById('icaCbGo').onclick=function(){
+      var v=idInp.value.trim(); if(!v){ idInp.focus(); return; }
+      var sms=(document.getElementById('icaCbSms')||{}).value;
+      CB.login(v,sms).then(function(identity){
+        IDENTITY=identity; m.remove(); onLoggedIn();
+      }).catch(function(e){ alert('登录失败:'+(e&&e.message)); });
+    };
+    idInp.addEventListener('keydown',function(e){ if(e.key==='Enter') document.getElementById('icaCbGo').click(); });
+    setTimeout(function(){ idInp.focus(); },80);
+  }
+
+  // ── 登录后:身份贴名 + 拉盘点合并 SKUS[].sw(读向·双轨)──────────────
+  function applyName(name){
+    if(!name) return;
+    try{
+      var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null),n,hits=[];
+      while((n=w.nextNode())){ if(n.nodeValue&&n.nodeValue.indexOf('赵美玲')>=0) hits.push(n); }
+      hits.forEach(function(t){ t.nodeValue=t.nodeValue.replace(/赵美玲/g,name); });
+    }catch(e){}
+  }
+  function banner(){
+    if(document.getElementById('icaCbBanner')) return;
+    var b=document.createElement('div'); b.id='icaCbBanner';
+    var real=CB.mode()==='real';
+    b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:80;font-size:10px;text-align:center;padding:6px;background:'+(real?'rgba(61,220,132,.12)':'rgba(245,166,35,.12)')+';color:'+(real?'#3ddc84':'#f5a623')+';border-top:1px solid rgba(255,255,255,.08)';
+    b.innerHTML=(real?'● 真接 CloudBase · ':'● 双轨·mock(未配环境ID) · ')+'当前:'+((IDENTITY&&(IDENTITY.name||IDENTITY.login_id))||'?')+' <span style="text-decoration:underline;cursor:pointer" onclick="icaCbLogout()">切换</span>';
+    document.body.appendChild(b); document.body.style.paddingBottom='84px';
+  }
+  function mergeInventory(){
+    return CB.queryByStore(MY_STORE_ID).then(function(rows){
+      if(!rows||!rows.length) return; // 无真数据 → 保留原写死(双轨兜底)
+      // 取每SKU最新一条,字典 switches → app 6开关回填
+      var latest={};
+      rows.forEach(function(r){ if(!latest[r.sku]||(r.ts>latest[r.sku].ts)) latest[r.sku]=r; });
+      if(typeof SKUS==='undefined') return;
+      SKUS.forEach(function(s){
+        // SKU主数据编码未贴到本演示 SKUS,按 name 粗匹配演示;真接时用 sku 编码 join
+        var hit=Object.keys(latest).find(function(k){ return latest[k].skuName===s.name; });
+        var rec= hit?latest[hit]:null;
+        if(rec){
+          var app=Dict.dictSwitchesToApp(rec.switches);
+          Dict.SWITCH_MAP.forEach(function(mm,i){ s.sw[mm.app]= app[i]?1:0; });
+          if(rec.effective_stage) s.stage=rec.effective_stage;
+        }
+      });
+      try{ if(typeof renderSkuBoard==='function') renderSkuBoard(); }catch(e){}
+    }).catch(function(e){ console.warn('[ICA补丁] 拉盘点失败,保留写死:',e&&e.message); });
+  }
+  function onLoggedIn(){
+    if(IDENTITY) applyName(IDENTITY.name);
+    banner();
+    mergeInventory();
+    wrapSubmitReport();
+  }
+
+  // ── ③ 上报顺带写一条合规盘点快照(数据采集·非涉钱涉权)─────────────────
+  function snapshotsFromBoard(store_id, subId){
+    if(typeof SKUS==='undefined') return [];
+    return SKUS.map(function(s){
+      var app=Dict.SWITCH_MAP.map(function(mm){ return !!s.sw[mm.app]; });
+      return Dict.buildSnapshot({
+        sku:s.name,                 // TODO[上线]:换 SKU 主数据编码
+        store:store_id,
+        switches:Dict.appSwitchesToDict(app),
+        effective_stage:(s.stage||null),
+        source:'sales_rep_input',
+        submission_id:subId,
+        app:'ica-v35',
+        reporter:{ user_id:(IDENTITY&&IDENTITY.uid)||'unknown', role:(IDENTITY&&IDENTITY.role)||'ICA', name:(IDENTITY&&IDENTITY.name)||null, login_id:(IDENTITY&&IDENTITY.login_id)||null }
+      });
+    });
+  }
+  // 显式整店盘点上报(可被现有按钮调用)
+  window.icaSubmitInventory=function(){
+    var subId=Dict.newSubmissionId();
+    var snaps=snapshotsFromBoard(MY_STORE_ID, subId);
+    return Promise.all(snaps.map(function(sn){ return CB.submitSnapshot(sn); }))
+      .then(function(){ console.log('[ICA补丁] 已上报盘点 '+snaps.length+' 条 · '+subId); return subId; });
+  };
+  // 包住原 submitReport:原行为不动,额外写一条以现场门店为 scope 的快照
+  function wrapSubmitReport(){
+    if(window.__icaReportWrapped) return; window.__icaReportWrapped=true;
+    var orig=window.submitReport;
+    window.submitReport=function(){
+      try{
+        var storeName=(document.getElementById('rptStore')||{}).value||MY_STORE_NAME;
+        window.icaSubmitInventory && window.icaSubmitInventory();
+      }catch(e){ console.warn('[ICA补丁] 上报写盘点失败(不阻断原流程):',e&&e.message); }
+      if(typeof orig==='function') return orig.apply(this, arguments);
+    };
+  }
+
+  window.icaCbLogout=function(){ try{ CB.ready(); }catch(e){} location.reload(); };
+
+  // boot:替换原(本机存名)登录入口
+  function boot(){ showLogin(); }
+  if(document.readyState==='complete'||document.readyState==='interactive') setTimeout(boot,80);
+  else document.addEventListener('DOMContentLoaded',boot);
+})();
+</script>
+
 </body>
 </html>
