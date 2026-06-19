@@ -8064,5 +8064,44 @@ function inspectedSkus2Count(){
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════════════════════════════════
+     INF-XD · CloudBase 盘点接入补丁 v1 (增量·附加·只读·不改原 UI/交互/逻辑)
+     第一里程碑 · 第一条回路 · 只碰盘点节点,不碰其余:
+       督导侧只读消费美顾回传的盘点(写死兜底·双轨 mock)。
+     铁律:不重写前端;只读·无任何涉钱涉权自动执行接口;字段名照 field-dictionary。
+     用法:window.infxdInventory(storeId) → Promise<某店每SKU 最新6开关>。
+     署名 DS · 接 infinity-cloudbase/ · 管理层完整汇总见 inventory-summary.html
+═════════════════════════════════════════════════════════════════════════ -->
+<script src="infinity-cloudbase/field-dictionary.js"></script>
+<script src="infinity-cloudbase/cloudbase-client.js"></script>
+<script>
+(function(){
+  var Dict=window.InfinityDict, CB=window.InfinityCB;
+  if(!Dict||!CB){ console.warn('[INF-XD补丁] cloudbase 脚本未加载,原写死演示不受影响'); return; }
+
+  // 只读:取某店每SKU最新一条盘点(字典 switches → 含中文标签,便于督导渲染)
+  window.infxdInventory=function(storeId){
+    storeId=storeId||'SH_GT_CVS_001';
+    return CB.queryByStore(storeId).then(function(rows){
+      var latest={};
+      (rows||[]).forEach(function(r){ if(!latest[r.sku]||(r.ts>latest[r.sku].ts)) latest[r.sku]=r; });
+      return Object.keys(latest).map(function(k){
+        var r=latest[k], sw={};
+        Dict.SWITCH_FIELDS.forEach(function(f){ sw[Dict.FIELD_LABEL[f]]=!!r.switches[f]; });
+        return { sku:r.sku, store:storeId, switches:sw, stage:r.effective_stage||null,
+                 ts:r.ts, by:(r.reporter&&(r.reporter.name||r.reporter.user_id))||'?',
+                 source_ref:r.source_ref };  // 审计链随数据走
+      });
+    });
+  };
+
+  // 督导侧只暴露只读数据源 + 模式提示,不自动改任何 UI(尊重"不碰其余节点")
+  CB.ready().then(function(){
+    console.log('[INF-XD补丁] 盘点只读接入就绪 · 模式='+CB.mode()+' · env='+CB.CB_ENV_ID+
+      ' · 调 window.infxdInventory("SH_GT_CVS_001") 取真盘点;管理层汇总页 inventory-summary.html');
+  });
+})();
+</script>
+
 </body>
 </html>
