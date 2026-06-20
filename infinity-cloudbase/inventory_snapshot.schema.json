@@ -7,7 +7,14 @@
   "_milestone": "接手说明v1.0 · 第一里程碑 · 第一条回路 · 只读盘点,不接涉钱涉权动作",
   "_field_dictionary_status": "字段字典v1.0 原件未入库;以下为对齐 04_l0_to_l1_mapping / 01_sales_rep_input / SKU6卡spec / bas_inventory_skill 的推断默认值。on_shelf/oos_flag/display_rate 为任务明确点名,其余3个待字典锁定(改名只需改本文件 + field-dictionary.js)。",
   "type": "object",
-  "required": ["sku", "scope", "switches", "ts", "source_ref", "reporter"],
+  "required": [
+    "sku",
+    "scope",
+    "switches",
+    "ts",
+    "source_ref",
+    "reporter"
+  ],
   "additionalProperties": false,
   "properties": {
     "_id": {
@@ -17,90 +24,166 @@
     "sku": {
       "type": "string",
       "description": "SKU 主数据编码·必须归一·严禁编造 (见 bas_inventory_skill §9 闸门)",
-      "examples": ["6MX-TJ-380", "6MX-QY-500"],
+      "examples": [
+        "6MX-TJ-380",
+        "6MX-QY-500"
+      ],
       "_source": "bas_inventory_skill_v0_1.md §3 sku / 01_sales_rep_input sku_id"
     },
     "scope": {
       "type": "object",
       "description": "粒度锚:状态 = SKU × 店 × 时 × 场景 (SKU6卡spec 晶体管口径)。第一回路只用 store。",
-      "required": ["store"],
+      "required": [
+        "store"
+      ],
       "additionalProperties": false,
       "properties": {
         "store": {
           "type": "string",
           "description": "门店ID·归一到门店主数据",
           "pattern": "^[A-Z]{2}_GT_CVS_[0-9]{3,6}$",
-          "examples": ["SH_GT_CVS_001"],
+          "examples": [
+            "SH_GT_CVS_001"
+          ],
           "_source": "01_sales_rep_input store_id"
         }
       }
     },
     "switches": {
       "type": "object",
-      "description": "六开关·二元信号 (ON/OFF)。app 内 6开关 = 上架/有货/陈列/动销/复购/毛利。",
-      "required": ["on_shelf", "oos_flag", "display_rate", "sellout", "repurchase", "margin"],
+      "description": "六开关·三态信号:true=ON观察到、false=OFF观察到、\"no_data\"=未采集(哨兵·≠OFF)。app内6开关=上架/有货/陈列/动销/复购/毛利。",
+      "required": [
+        "on_shelf",
+        "oos_flag",
+        "display_rate",
+        "sellout",
+        "repurchase",
+        "margin"
+      ],
       "additionalProperties": false,
       "properties": {
         "on_shelf": {
-          "type": "boolean",
           "description": "上架·SKU在门店有可销售位置。ON=在架。",
           "_app_switch": "上架",
-          "_source": "04_l0_to_l1 S01_on_shelf (任务点名)"
+          "_source": "04_l0_to_l1 S01_on_shelf (任务点名)",
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": "no_data",
+              "description": "未采集哨兵"
+            }
+          ]
         },
         "oos_flag": {
-          "type": "boolean",
           "description": "缺货标记。ON(true)=断货/无货。注意:与 app『有货』开关语义相反 → oos_flag = !有货。待字典确认语义方向。",
           "_app_switch": "有货 (反向)",
           "_source": "04_l0_to_l1 S08_stockout / S02_in_stock 反 (任务点名)",
-          "_warn": "语义反向·上线前需《字段字典v1.0》确认 oos_flag 是否= 缺货标记"
+          "_warn": "语义反向·上线前需《字段字典v1.0》确认 oos_flag 是否= 缺货标记",
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": "no_data",
+              "description": "未采集哨兵"
+            }
+          ]
         },
         "display_rate": {
-          "type": "boolean",
           "description": "陈列·SKU在主货架/第二陈列达标。ON=陈列达标。",
           "_app_switch": "陈列",
-          "_source": "04_l0_to_l1 S03_main_shelf / S04_second_display (任务点名)"
+          "_source": "04_l0_to_l1 S03_main_shelf / S04_second_display (任务点名)",
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": "no_data",
+              "description": "未采集哨兵"
+            }
+          ]
         },
         "sellout": {
-          "type": "boolean",
           "description": "动销·7天内真实销售 (排除压货/假单)。ON=有动销。",
           "_app_switch": "动销",
-          "_source": "04_l0_to_l1 S06_has_sellout (推断默认·待字典锁定)"
+          "_source": "04_l0_to_l1 S06_has_sellout (推断默认·待字典锁定)",
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": "no_data",
+              "description": "未采集哨兵"
+            }
+          ]
         },
         "repurchase": {
-          "type": "boolean",
           "description": "复购·消费者再次购买。ON=有复购。",
           "_app_switch": "复购",
-          "_source": "04_l0_to_l1 S07_repurchase (推断默认·待字典锁定)"
+          "_source": "04_l0_to_l1 S07_repurchase (推断默认·待字典锁定)",
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": "no_data",
+              "description": "未采集哨兵"
+            }
+          ]
         },
         "margin": {
-          "type": "boolean",
           "description": "毛利·SKU利润达标。ON=达标。",
           "_app_switch": "毛利",
-          "_source": "04_l0_to_l1 S10_profit_meet_target (推断默认·待字典锁定)"
+          "_source": "04_l0_to_l1 S10_profit_meet_target (推断默认·待字典锁定)",
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": "no_data",
+              "description": "未采集哨兵"
+            }
+          ]
         }
-      }
+      },
+      "_tri_state": "每个开关取值 true|false|\"no_data\"。no_data 表示该开关本次未观察(如现场盘点采不到动销/复购/毛利),绝不可与 false(观察到OFF)混。汇总展示 no_data=\"—/无数据\",不显示OFF。"
     },
     "ts": {
       "type": "string",
       "format": "date-time",
       "description": "上报/观察时间·ISO8601。审计必填。",
-      "examples": ["2026-06-19T14:20:00+08:00"]
+      "examples": [
+        "2026-06-19T14:20:00+08:00"
+      ]
     },
     "source_ref": {
       "type": "object",
       "description": "来源引用·审计链。每条数据 MUST 带,定位原始上报。",
-      "required": ["source"],
+      "required": [
+        "source"
+      ],
       "additionalProperties": true,
       "properties": {
         "source": {
           "type": "string",
-          "enum": ["sales_rep_input", "photo_ai", "pos_sync", "shelf_scan", "owner_report", "mock_seed"],
+          "enum": [
+            "sales_rep_input",
+            "photo_ai",
+            "pos_sync",
+            "shelf_scan",
+            "owner_report",
+            "mock_seed"
+          ],
           "description": "采集源·对齐 04_l0_to_l1 sources_priority"
         },
         "submission_id": {
           "type": "string",
           "description": "上报批次ID·格式 SUB_YYYYMMDDHHMMSS_RANDOM6",
-          "examples": ["SUB_20260619142000_A1B2C3"]
+          "examples": [
+            "SUB_20260619142000_A1B2C3"
+          ]
         },
         "raw_ref": {
           "type": "string",
@@ -109,29 +192,48 @@
         "app": {
           "type": "string",
           "description": "上报来源前端",
-          "examples": ["ica-v35", "inf-xd-v6712"]
+          "examples": [
+            "ica-v35",
+            "inf-xd-v6712"
+          ]
         }
       }
     },
     "reporter": {
       "type": "object",
       "description": "上报人·真实身份 (接真登录后由身份解析填入)。",
-      "required": ["user_id", "role"],
+      "required": [
+        "user_id",
+        "role"
+      ],
       "additionalProperties": true,
       "properties": {
         "user_id": {
           "type": "string",
           "description": "唯一身份ID (手机号/工号解析后的稳定ID)",
-          "examples": ["MG-0420", "SR_001234"]
+          "examples": [
+            "MG-0420",
+            "SR_001234"
+          ]
         },
         "role": {
           "type": "string",
-          "enum": ["ICA", "ICA_BOSS_HIRED", "ICA_TEMP", "GT_SR", "GT_DSR", "DOM", "SUPERVISOR"],
+          "enum": [
+            "ICA",
+            "ICA_BOSS_HIRED",
+            "ICA_TEMP",
+            "GT_SR",
+            "GT_DSR",
+            "DOM",
+            "SUPERVISOR"
+          ],
           "description": "角色·对齐 01_sales_rep_input submitted_by.role"
         },
         "name": {
           "type": "string",
-          "examples": ["赵美玲"]
+          "examples": [
+            "赵美玲"
+          ]
         },
         "login_id": {
           "type": "string",
@@ -140,8 +242,17 @@
       }
     },
     "effective_stage": {
-      "type": ["string", "null"],
-      "enum": ["导入", "成长", "成熟", "衰退", null],
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "导入",
+        "成长",
+        "成熟",
+        "衰退",
+        null
+      ],
       "default": null,
       "description": "生命周期阶段·字段预留 (SKU6卡spec 卡②)。第一里程碑不计算,留空。是『评分尺子』,后续 L2 门接入。",
       "_reserved": true,
@@ -149,8 +260,23 @@
     }
   },
   "_indexes": [
-    {"keys": {"scope.store": 1, "sku": 1, "ts": -1}, "name": "store_sku_ts", "note": "只读汇总页主查询:某店某SKU最新一条"},
-    {"keys": {"reporter.user_id": 1, "ts": -1}, "name": "reporter_ts", "note": "按上报人审计"}
+    {
+      "keys": {
+        "scope.store": 1,
+        "sku": 1,
+        "ts": -1
+      },
+      "name": "store_sku_ts",
+      "note": "只读汇总页主查询:某店某SKU最新一条"
+    },
+    {
+      "keys": {
+        "reporter.user_id": 1,
+        "ts": -1
+      },
+      "name": "reporter_ts",
+      "note": "按上报人审计"
+    }
   ],
   "_security_rules_hint": {
     "read": "登录用户可读本人上报;管理层(DOM/SUPERVISOR)可读汇总。",

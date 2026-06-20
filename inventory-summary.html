@@ -28,6 +28,7 @@ th{color:var(--txt2);font-weight:500;font-size:12px}
 td.sku{text-align:left;font-family:'JetBrains Mono',monospace;font-weight:700}
 .on{color:var(--green);font-weight:700}
 .off{color:var(--red)}
+.nd{color:var(--txt3);font-weight:700}
 .stage{font-size:11px;color:var(--txt3)}
 .audit{font-size:10px;color:var(--txt3);text-align:left}
 .empty{color:var(--txt3);font-size:13px;padding:20px;text-align:center}
@@ -62,6 +63,7 @@ td.sku{text-align:left;font-family:'JetBrains Mono',monospace;font-weight:700}
 (function(){
   var Dict = window.InfinityDict, CB = window.InfinityCB;
   var FIELDS = Dict.SWITCH_FIELDS, LABEL = Dict.FIELD_LABEL;
+  var NO_DATA = (Dict.SENTINEL && Dict.SENTINEL.NO_DATA) || 'no_data';
   var all = [];
 
   function badge(){
@@ -109,8 +111,11 @@ td.sku{text-align:left;font-family:'JetBrains Mono',monospace;font-weight:700}
       byStore[st].sort(function(a,b){return a.sku<b.sku?-1:1;}).forEach(function(r){
         html+='<tr><td class="sku">'+r.sku+'</td>';
         FIELDS.forEach(function(f){
-          var v=r.switches[f];
-          html+='<td class="'+(v?'on':'off')+'">'+(v?'ON':'OFF')+'</td>';
+          var v=r.switches[f], cls, txt, title='';
+          if(v===NO_DATA || v==='no_data'){ cls='nd'; txt='—'; title='无数据·本次未采集(待POS/L1-03)'; }
+          else if(v===true){ cls='on'; txt='ON'; }
+          else { cls='off'; txt='OFF'; }
+          html+='<td class="'+cls+'" title="'+title+'">'+txt+'</td>';
         });
         html+='<td class="stage">'+(r.effective_stage||'—')+'</td>';
         var sr=r.source_ref||{};
@@ -143,7 +148,7 @@ td.sku{text-align:left;font-family:'JetBrains Mono',monospace;font-weight:700}
   // 字典说明 (oos_flag 语义反向提示)
   document.getElementById('dictNote').innerHTML=
     '字段字典:'+FIELDS.map(function(f){return LABEL[f]+'='+f;}).join(' · ')+
-    '<br>⚠ oos_flag = 缺货标记(与 app『有货』开关语义相反);sellout/repurchase/margin 为推断默认,待《字段字典v1.0》锁定。'+
+    '<br>⚠ oos_flag = 缺货标记(与 app『有货』开关语义相反)。三态:ON=观察到、OFF=观察到、<b>— = no_data(未采集,≠OFF)</b>。现场盘点采不到 动销/复购/毛利 → 记 no_data,待 POS/L1-03 填。'+
     '<br>环境ID(CB_ENV_ID): <code>'+CB.CB_ENV_ID+'</code> —— 占位符时自动走 mock,填真实环境ID即切真接。';
 
   load();
