@@ -27,11 +27,13 @@ python3 test_visit_planning_redlines.py   # 24 条命门
 - `human_override` 留痕;输出物理无 `visited/checked_in/who_missed/completion` 等考勤字段(命门①)。
 
 ## ⚠ 仍 pending(等环境ID + 表 + D-003)
-**政策数字(全部 D-003 占位,flags 标 `D003_pending`)**,在 `l5_07_planner.js` 的 `D003{}`:
-- 分级频率 `FREQ_DAYS{A:7,B:14,C:30}` / 缺分级兜底 `DEFAULT_FREQ_DAYS:14`
-- 常规到期度权重 `TIER_WEIGHT{A:30,B:20,C:10}`
-- 人均日产能 `CAP_DAILY:8` / 救火配额 `FIREFIGHT_CAP:5` / 常规保底 `REGULAR_MIN:2`
-- 救火紧急度权重 `CHS_SCORE/SHS_SCORE`
+**政策数字 = provisional 草拟值**(仍 `D003_pending`·仍待管理层 DECISION-003 定·不当已定),在 `l5_07_planner.js` 的 `D003{}`:
+- 分级频率 `FREQ_DAYS{A:7,B:14,C:30}`(A级7天/B级14天/C级30天)/ 缺分级兜底 `DEFAULT_FREQ_DAYS:14`
+- **人均产能 `CAP_DAILY:16`(城区基准)**
+- **配额 `REGULAR_MIN:11` + `FIREFIGHT_CAP:5`(70/30·对齐产能16)**
+- **VPS权重 `VPS_WEIGHT{常规到期度:1, 救火紧急度:1}`(1:1 占位)**
+- 常规到期度分级权重 `TIER_WEIGHT{A:30,B:20,C:10}` / 救火紧急度权重 `CHS_SCORE/SHS_SCORE`
+> 这些只是让 scaffold 跑得像真的;最终由管理层 DECISION-003 定。
 
 **数据源 / 表未建(现用 mock 输入)**:
 - 门店档案 **L0-04**(store_id/tier/geo)— CloudBase 表未建

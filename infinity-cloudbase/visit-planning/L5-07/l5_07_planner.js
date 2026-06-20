@@ -19,15 +19,18 @@
   function safeReq(p){ try { return require(p); } catch(e){ return null; } }
   var STORE_ID = (Dict && Dict.MASTER && Dict.MASTER.store.code) || 'store_id'; // 'store_id'(L0-04/C1)
 
-  // ── D-003 政策占位(绝不当已定;flags 标 D003_pending)──────────────────────
+  // ── D-003 政策(provisional 草拟值·绝不当已定;flags 仍标 D003_pending)──────
+  //   数字 = 我们草拟的 provisional,让 scaffold 跑得像真的;最终由管理层 DECISION-003 定。
   var D003 = {
-    _status: 'D003_pending',
-    FREQ_DAYS: { A: 7, B: 14, C: 30 },        // A周/B双周/C月
-    DEFAULT_FREQ_DAYS: 14,                     // 缺分级兜底
-    TIER_WEIGHT: { A: 30, B: 20, C: 10 },     // 常规到期度·分级权重
-    CAP_DAILY: 8,                             // 人均日产能上限
-    FIREFIGHT_CAP: 5,                         // 救火配额上限(盲点+逾期)
-    REGULAR_MIN: 2,                           // 常规保底配额
+    _status: 'D003_pending',                  // 仍待管理层 DECISION-003 定
+    _provenance: 'provisional草拟值·非最终',
+    FREQ_DAYS: { A: 7, B: 14, C: 30 },        // 分级频率:A级7天/B级14天/C级30天
+    DEFAULT_FREQ_DAYS: 14,                     // 缺分级兜底:14天
+    TIER_WEIGHT: { A: 30, B: 20, C: 10 },     // 常规到期度·分级权重(相对)
+    CAP_DAILY: 16,                            // 人均产能:16家/日(城区基准)
+    FIREFIGHT_CAP: 5,                          // 救火配额:5(对齐产能16·约30%)
+    REGULAR_MIN: 11,                          // 常规保底:11(对齐产能16·约70%)
+    VPS_WEIGHT: { 常规到期度: 1, 救火紧急度: 1 }, // VPS权重 常规:救火 = 1:1 占位
     CHS_SCORE: { A: 0, B: 15, C: 30, D: 45 }, // 门店健康越差→救火越高(读 L1-06)
     SHS_SCORE: { S: 0, A: 0, B: 15, C: 30, D: 45 } // SKU生命力越低→救火越高(读地基③ vitality)
   };
@@ -90,7 +93,8 @@
       var ff = firefightScore(h.CHS, h.SHS);
       var dueDeg = Math.round((D003.TIER_WEIGHT[st.tier] || D003.TIER_WEIGHT.B) *
                    ((st.lastVisitDays != null ? st.lastVisitDays : fq.days) / fq.days));
-      var vps = dueDeg + ff.score;
+      // VPS = 常规到期度 + 救火紧急度,按 D-003 VPS_WEIGHT(provisional 1:1)
+      var vps = Math.round(D003.VPS_WEIGHT['常规到期度'] * dueDeg + D003.VPS_WEIGHT['救火紧急度'] * ff.score);
       candidates.push({
         store_id: sid, reason: reason, vps: vps,
         vps_breakdown: {
