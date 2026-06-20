@@ -4,11 +4,11 @@
 > **只排程**：不采集(XD)、不判级(L1-03)、不算战功。
 
 ## 字段字典 v1.1（运行时准）
-命名以 `../field-dictionary.js`（字段字典 v1.1）为单一真相源，两类泾渭分明：
-- **主数据（门店/用户/拜访/SKU）= SFA 真名**（camelCase）：`storeCode/grade/visitCycleT/latitude/role/visitDate`，不另造平行名。
-- **节点新概念 = 设计名**（snake_case）：`plan_date/reason_code/cycle_t/days_since_last…`；跨域锁定概念直接用字典名 `ts/source_ref/human_override/effective_stage/oos_flag/no_data…`。
+命名以 `../field-dictionary.js`（字段字典 v1.1，C1–C4 已裁）为单一真相源：
+- **门店主数据 = L0-04 真相源名**（C1）：`store_id/store_name/store_grade/M/region/gps{lat,lng}`，不用 SFA 名（SFA 名只在导数据边界经 `MASTER_MAP_SFA` 映射一次）。组织/拜访主数据真相源未入库，暂留待对齐。
+- **节点新概念 = 设计名**（snake_case）：`plan_date/reason_code/cycle_t/days_since_last…`；跨域锁定概念直接用字典名 `ts/source_ref/human_override/effective_stage/oos_flag/no_data/vitality…`。
 
-`*_pending_dict` 已按 v1.1 解析：能对到 SFA 真名/锁定概念的全部改真名；**仅 `coverage_blindspot`（盲点本体 `isBlindspot/blindReason`）与 `org_capacity`（产能 `capacityDaily/home`）保留 `*_pending_dict`**——无字典项且表未建，等建表。
+`*_pending_dict` 已按 v1.1 + C1–C4 裁定解析:盲点表改用 L1-04 真契约(type/store_ids/score/trend/suggested_action…),门店主数据改用 L0-04 名(store_id/store_grade/M/gps)。**仅 `org_capacity`(产能 capacityDaily/home)保留 pending**——真相源未入库、表未建。
 
 ## ⚠ 仍缺：98 分定稿 SKILL.md
 - `bas_visit_planning_skill_v0_1.md`（98 分定稿规则，"以它为准"）— **仍不在仓库**。
@@ -17,10 +17,10 @@
 ## 依赖状态（缺了不能真跑）
 | 依赖表 | 状态 | 说明 |
 |---|---|---|
-| 门店档案 L0-04 | ✅ 已存在 `stores` | `storeCode/grade(A/B/C)/visitCycleT/lat/lng/gpsRadiusM/district` |
-| 拜访历史(上次访期) | ✅ 可derive `visit_reports` | `MAX(visitDate) BY store` → `visit_history` 读视图 |
-| 组织主数据(人/岗位) | ◐ 部分 `users` | 有 `userCode/role/district`；**产能 capacity 缺** → `org_capacity` 新表 |
-| 覆盖盲点 L1-04 | ❌ 新建 | `coverage_blindspot` 新表 |
+| 门店档案 L0-04 | ✅ spec 在仓库 | 真相源名:`store_id/store_grade/M/region/gps{lat,lng}`(C1) |
+| 拜访历史(上次访期) | ◐ derive | `MAX(visitDate) BY store_id` → `visit_history` 读视图;真相源 doc 未入库 |
+| 组织主数据(人/岗位) | ◐ 部分 | `userCode/role`;**产能 capacity 缺** → `org_capacity` 新表(pending) |
+| 覆盖盲点 L1-04 | ✅ spec 在仓库 | 契约已对齐 `coverage_blindspot.schema.json`;表需建 |
 | 排程输出 | ❌ 新建 | `visit_plan` 新表 |
 | **DECISION-003 政策数字** | ❌ 未定 | 分级频率/产能上限/配额比例 = **全部占位**，标 `D003_pending` |
 
@@ -37,7 +37,7 @@
 
 ## D-003 占位默认（绝不当"已定"）
 ```
-分级频率(天)  A:7  B:14  C:30          // 门店级 visitCycleT 优先
+分级频率(天)  A:7  B:14  C:30          // 门店级 M(静默天数) 优先
 缺分级兜底    14  + 标 tier_pending     // 铁律3:不漏访
 人均日产能    8                          // null→占位+标 capacity_default
 配额比例      常规保底60% / 救火上限40%   // 铁律2:救火吃不掉保底
@@ -49,10 +49,10 @@
 |---|---|---|
 | 1 | 助手非鞭子·不当考勤 | `visit_plan` schema 禁含 `visited/checked_in/who_missed/completion`；引擎 `assertNoAttendance()` 递归扫描禁字段即抛错 |
 | 2 | 配额保底不漏常规 | `allocate()`：常规保底名额先占(60%)，救火设上限(40%)，救火吃不掉保底；`quota` 字段留审计 |
-| 3 | 接口先行·缺分级不漏访 | `resolveCycle()`：缺 grade → 默认周期 + `tierPending=true`，照排不漏 |
-| 4 | 只排程不越界 | 只读 `stores`/`coverage_blindspot`/`org_capacity`/`visit_history(visitDate)`；不读 visit_reports 执行态、不采集、不判级、不算战功 |
-| 5 | 经理可调·留痕不锁死 | `applyOverride()` 写 `humanOverride[]{by,from,to,why,at}`，机器不锁 |
-| 6 | 字段名全照字典 | 全集中 `visit-dictionary.js`；已存在表用真名，新名标 `*_pending_dict` |
+| 3 | 接口先行·缺分级不漏访 | `resolveCycle()`：缺 `store_grade` → 默认周期 + `tier_pending=true`，照排不漏 |
+| 4 | 只排程不越界 | 只读 门店档案(L0-04)/`coverage_blindspot`/`org_capacity`/`visit_history(visitDate)`；不读执行态、不采集、不判级、不算战功。**C4:白区盲点不消费,走 L5-02/经理** |
+| 5 | 经理可调·留痕不锁死 | `applyOverride()` 写 `human_override[]{by,from,to,why,at}`，机器不锁 |
+| 6 | 字段名全照字典 | 全集中 `visit-dictionary.js`；门店照 L0-04 真名、新概念设计名;仅产能 `org_capacity` 仍 `*_pending_dict` |
 
 ## ③ 怎么推到 app 的 XM(今日任务)
 单向只读投影：`visit_plan ──planToXM()──▶ XM 任务卡`。

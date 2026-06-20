@@ -19,10 +19,11 @@
 
   // ── 已存在表的字段名(SFA 真名·provenance:'sfa'·照搬不改名)──────────────
   var STORE_FIELDS = {            // 门店档案 L0-04 = stores
-    code: 'storeCode', name: 'storeName', type: 'storeType',
-    grade: 'grade', cycleT: 'visitCycleT',
-    district: 'district', city: 'city',
-    lat: 'latitude', lng: 'longitude', geoRadius: 'gpsRadiusM'
+    // C1 裁定:门店主数据照 L0-04 真相源名(snake_case)
+    code: 'store_id', name: 'store_name', type: 'channel_type',
+    grade: 'store_grade', cycleM: 'M',          // 巡店节奏·静默天数(按 store_grade 派生)
+    region: 'region', city: 'city', tradeZone: 'trade_zone',
+    gps: 'gps'                                   // {lat,lng} 嵌套
   };
   var ORG_FIELDS = {              // 组织主数据 = users
     code: 'userCode', name: 'userName', role: 'role', district: 'district'
@@ -66,12 +67,12 @@
       flags: 'flags'
     },
     planItem: {
-      storeCode: 'storeCode', storeName: 'storeName',// sfa
+      store_id: 'store_id', store_name: 'store_name',// L0-04 真名(C1)
       seq: 'seq', pool: 'pool',
       reason_code: 'reason_code',                    // 设计名
-      grade: 'grade',                                // sfa(门店运营分级 A/B/C)
+      store_grade: 'store_grade',                    // L0-04 真名·门店运营分级 A/B/C
       tier_pending: 'tier_pending',                  // 铁律3 术语(缺分级标记)
-      cycle_t: 'cycle_t',                            // 设计名(采用周期T)
+      cycle_t: 'cycle_t',                            // 设计名(采用周期=M或默认)
       days_since_last: 'days_since_last',            // 设计名
       overdue_days: 'overdue_days'                   // 设计名
     },
@@ -94,24 +95,38 @@
     FIRE_CAP_RATIO: 0.4                          // 救火上限·占位
   };
 
-  // 采用周期 + 是否 tier_pending(门店级 cycleT > 分级默认 > 兜底)
+  // 采用周期 + 是否 tier_pending(门店级 M > 分级默认 > 兜底)
   function resolveCycle(store) {
-    var t = store[STORE_FIELDS.cycleT];
-    if (t != null && t > 0) return { cycle_t: t, tier_pending: false, grade: store[STORE_FIELDS.grade] || null };
-    var g = store[STORE_FIELDS.grade];
+    var m = store[STORE_FIELDS.cycleM];            // L0-04 巡店节奏 M
+    var g = store[STORE_FIELDS.grade];             // store_grade
+    if (m != null && m > 0) return { cycle_t: m, tier_pending: false, grade: g || null };
     if (g && D003.TIER_DEFAULT_CYCLE[g] != null)
       return { cycle_t: D003.TIER_DEFAULT_CYCLE[g], tier_pending: false, grade: g };
     return { cycle_t: D003.TIER_PENDING_CYCLE, tier_pending: true, grade: null }; // 铁律3
   }
 
+  // C4 裁定:盲点按有无 store_id 切——只有 store_id 的盲点(未铺/数据)进拜访规划救火池;
+  //   白区(type='白区',store_ids 恒 null)不进拜访规划,走 L5-02/经理(L1-04 边界)。
+  // 入参 = L1-04 coverage_blindspot 输出;返回 Set<store_id>。
+  function fireStoreSetFromBlindspots(l104) {
+    var set = new Set();
+    var arr = (l104 && l104.blindspots) || [];
+    arr.forEach(function (b) {
+      if (b.type === '白区') return;               // 无 store_id → 不进救火池
+      (b.store_ids || []).forEach(function (sid) { if (sid) set.add(sid); });
+    });
+    return set;
+  }
+
   var api = {
-    VERSION: 'visit-dictionary v1.1 (字段字典 v1.1 对齐)',
+    VERSION: 'visit-dictionary v1.1 (字段字典 v1.1·C1-C4 已裁)',
     STORE_FIELDS: STORE_FIELDS, ORG_FIELDS: ORG_FIELDS, HISTORY_FIELDS: HISTORY_FIELDS,
     FIELDS: FIELDS, OVERRIDE_FIELDS: OVERRIDE_FIELDS, D003: D003,
     COLLECTIONS: { plan: 'visit_plan', blindspot: 'coverage_blindspot', capacity: 'org_capacity' },
     // 铁律1护栏:输出里绝不允许出现的考勤/完成态字段
     FORBIDDEN_OUTPUT_FIELDS: ['visited', 'checked_in', 'checkin', 'who_missed', 'completion', 'completed', 'done', 'status'],
-    resolveCycle: resolveCycle
+    resolveCycle: resolveCycle,
+    fireStoreSetFromBlindspots: fireStoreSetFromBlindspots
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.VisitDict = api;

@@ -23,12 +23,12 @@
         task_id: (plan.userCode || 'U') + '_' + plan.plan_date + '_' + it.seq, // 稳定可幂等
         task_type: 'visit',
         seq: it.seq,
-        storeCode: it.storeCode,              // sfa 真名
-        storeName: it.storeName,              // sfa 真名
+        store_id: it.store_id,              // L0-04 真名(C1)
+        store_name: it.store_name,          // L0-04 真名(C1)
         // 给一线"为什么排你来"的可解释信号(非考核):
         reason_code: it.reason_code,          // blindspot | overdue | regular
         pool: it.pool,                        // fire | baseline
-        grade: it.grade, tier_pending: it.tier_pending,
+        store_grade: it.store_grade, tier_pending: it.tier_pending,
         cycle_t: it.cycle_t, overdue_days: it.overdue_days,
         plan_date: plan.plan_date,
         flags: plan.flags
