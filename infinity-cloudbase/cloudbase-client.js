@@ -74,16 +74,18 @@
   //       手机号走 CloudBase 短信验证码。两条路最终都解析出稳定 user_id。
   // 未配置环境时,本地解析出确定性 mock 身份,保证 app 可跑、可演示。
   //
-  // identity = { uid, login_id, role, name }  —— reporter 的来源。
+  // identity = { uid, login_id, role, name, display_name }  —— reporter / 界面显示的来源。
   function resolveIdentity(loginId) {
-    // loginId: 手机号(11位) 或 工号(如 8801 / MG-0420)
+    // loginId: 手机号(11位) 或 工号(如 8801 / MG-0420) 或 姓名(如 张三)
     var id = String(loginId || '').trim();
     var isPhone = /^1\d{10}$/.test(id);
     return {
       uid: (isPhone ? 'P_' : 'E_') + id,        // 稳定唯一身份ID
       login_id: id,
       role: 'ICA',                               // TODO[上线]: 由 HR 主数据返回真实角色
-      name: null                                 // TODO[上线]: 由 HR 主数据返回真实姓名
+      name: null,                                // HR 真名槽位(上线由 hr_lookup 回填)
+      // 临时显示名:HR 未接时,用登录输入兜底(手机号→隐去中段),保证"名字跟着登录的人走"
+      display_name: isPhone ? (id.slice(0, 3) + '****' + id.slice(7)) : id
     };
   }
 

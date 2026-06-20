@@ -1524,20 +1524,42 @@ renderGapAgent();  // 弥补差距块数字引擎算
   }
 
   // ── 登录后:身份贴名 + 拉盘点合并 SKUS[].sw(读向·双轨)──────────────
+  // 绑到登录身份(不是一次性文本替换):DISP_NAME 来自 IDENTITY,
+  // MutationObserver 持续把写死的"赵美玲"换成当前登录显示名(含 app 后续重渲染)。
+  var ORIG_NAME='赵美玲', DISP_NAME=null, __nameObs=null;
+  function replaceIn(node){
+    try{
+      var w=document.createTreeWalker(node,NodeFilter.SHOW_TEXT,null),n,hits=[];
+      while((n=w.nextNode())){ if(n.nodeValue&&n.nodeValue.indexOf(ORIG_NAME)>=0) hits.push(n); }
+      hits.forEach(function(t){ t.nodeValue=t.nodeValue.replace(/赵美玲/g,DISP_NAME); });
+    }catch(e){}
+  }
   function applyName(name){
     if(!name) return;
-    try{
-      var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null),n,hits=[];
-      while((n=w.nextNode())){ if(n.nodeValue&&n.nodeValue.indexOf('赵美玲')>=0) hits.push(n); }
-      hits.forEach(function(t){ t.nodeValue=t.nodeValue.replace(/赵美玲/g,name); });
-    }catch(e){}
+    DISP_NAME=name; window.__icaUserName=name;       // 全局可读·绑定身份
+    replaceIn(document.body);
+    try{ document.title=document.title.replace(/赵美玲/g,name); }catch(e){}
+    if(__nameObs) return;
+    __nameObs=new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        if(m.type==='characterData'){
+          var t=m.target; if(t&&t.nodeValue&&t.nodeValue.indexOf(ORIG_NAME)>=0) t.nodeValue=t.nodeValue.replace(/赵美玲/g,DISP_NAME);
+        } else if(m.addedNodes){
+          Array.prototype.forEach.call(m.addedNodes,function(nd){
+            if(nd.nodeType===3){ if(nd.nodeValue&&nd.nodeValue.indexOf(ORIG_NAME)>=0) nd.nodeValue=nd.nodeValue.replace(/赵美玲/g,DISP_NAME); }
+            else if(nd.nodeType===1) replaceIn(nd);
+          });
+        }
+      });
+    });
+    __nameObs.observe(document.body,{childList:true,subtree:true,characterData:true});
   }
   function banner(){
     if(document.getElementById('icaCbBanner')) return;
     var b=document.createElement('div'); b.id='icaCbBanner';
     var real=CB.mode()==='real';
     b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:80;font-size:10px;text-align:center;padding:6px;background:'+(real?'rgba(61,220,132,.12)':'rgba(245,166,35,.12)')+';color:'+(real?'#3ddc84':'#f5a623')+';border-top:1px solid rgba(255,255,255,.08)';
-    b.innerHTML=(real?'● 真接 CloudBase · ':'● 双轨·mock(未配环境ID) · ')+'当前:'+((IDENTITY&&(IDENTITY.name||IDENTITY.login_id))||'?')+' <span style="text-decoration:underline;cursor:pointer" onclick="icaCbLogout()">切换</span>';
+    b.innerHTML=(real?'● 真接 CloudBase · ':'● 双轨·mock(未配环境ID) · ')+'当前:'+((IDENTITY&&(IDENTITY.name||IDENTITY.display_name||IDENTITY.login_id))||'?')+' <span style="text-decoration:underline;cursor:pointer" onclick="icaCbLogout()">切换</span>';
     document.body.appendChild(b); document.body.style.paddingBottom='84px';
   }
   function mergeInventory(){
@@ -1561,7 +1583,7 @@ renderGapAgent();  // 弥补差距块数字引擎算
     }).catch(function(e){ console.warn('[ICA补丁] 拉盘点失败,保留写死:',e&&e.message); });
   }
   function onLoggedIn(){
-    if(IDENTITY) applyName(IDENTITY.name);
+    if(IDENTITY) applyName(IDENTITY.name||IDENTITY.display_name||IDENTITY.login_id);
     banner();
     mergeInventory();
     wrapSubmitReport();
@@ -1580,7 +1602,7 @@ renderGapAgent();  // 弥补差距块数字引擎算
         source:'sales_rep_input',
         submission_id:subId,
         app:'ica-v35',
-        reporter:{ user_id:(IDENTITY&&IDENTITY.uid)||'unknown', role:(IDENTITY&&IDENTITY.role)||'ICA', name:(IDENTITY&&IDENTITY.name)||null, login_id:(IDENTITY&&IDENTITY.login_id)||null }
+        reporter:{ user_id:(IDENTITY&&IDENTITY.uid)||'unknown', role:(IDENTITY&&IDENTITY.role)||'ICA', name:(IDENTITY&&(IDENTITY.name||IDENTITY.display_name))||null, login_id:(IDENTITY&&IDENTITY.login_id)||null }
       });
     });
   }
