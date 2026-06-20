@@ -8100,6 +8100,60 @@ function inspectedSkus2Count(){
     console.log('[INF-XD补丁] 盘点只读接入就绪 · 模式='+CB.mode()+' · env='+CB.CB_ENV_ID+
       ' · 调 window.infxdInventory("SH_GT_CVS_001") 取真盘点;管理层汇总页 inventory-summary.html');
   });
+
+  // ── 写向:签退(finishVisit)→ 组 snapshot 写 inventory_snapshot(字段照字典 v1.1) ──
+  // 同源 localStorage 取登录身份(张三)与本次盘点门店(由父框架 ica-wired 写入)。
+  function xdReadIdentity(){
+    try{ var raw=localStorage.getItem('inf_cb_identity'); if(raw) return JSON.parse(raw); }catch(e){}
+    return null;
+  }
+  function xdInspectStore(){
+    try{ var s=localStorage.getItem('inf_cb_inspect_store'); if(s) return s; }catch(e){}
+    return 'SH_GT_CVS_003'; // 步步高西郊店 兜底
+  }
+  // 收集本次真实盘到的 SKU(与原 finishVisit 同口径:主货架块 + 美顾补录)
+  function xdCollectSkus(){
+    var skus=[];
+    try{
+      ['shelfBlock1','shelfBlock2','shelfBlock3'].forEach(function(bid){
+        var b=document.getElementById(bid); if(b){ var nm=b.querySelector('.sku-block-name'); if(nm) skus.push(nm.textContent.trim().split(' ')[0]); }
+      });
+      if(typeof window.xdLearnedSkus!=='undefined' && xdLearnedSkus && xdLearnedSkus.main)
+        xdLearnedSkus.main.forEach(function(s){ skus.push((s.name||'').split(' ')[0]); });
+    }catch(e){}
+    return skus.filter(function(x,i){ return x && skus.indexOf(x)===i; }); // 去空去重
+  }
+  // 盘市三开关由现场盘点观察:上架=在架、有货=有库存(→oos_flag=!有货)、陈列=已拍达标;
+  // 动销/复购/毛利 需 POS,现场盘点不产出 → 默认 false,并在 source_ref.observed_switches 标注。
+  function xdSwitches(){ return Dict.appSwitchesToDict([true, true, true, false, false, false]); }
+  function xdWriteSnapshots(){
+    try{
+      var skus=xdCollectSkus(); if(!skus.length) return 0;
+      var id=xdReadIdentity();
+      var reporter = id
+        ? { user_id:id.uid||'unknown', role:id.role||'ICA', name:id.name||id.display_name||id.login_id||null, login_id:id.login_id||null }
+        : { user_id:'unknown', role:'ICA', name:null };
+      var store=xdInspectStore(), subId=Dict.newSubmissionId(), n=0;
+      skus.forEach(function(nm){
+        var snap=Dict.buildSnapshot({
+          sku:nm, store:store, switches:xdSwitches(),
+          source:'shelf_scan', submission_id:subId, app:'inf-xd-v6712-wired',
+          reporter:reporter, effective_stage:null
+        });
+        snap.source_ref.observed_switches=['on_shelf','oos_flag','display_rate']; // 审计:仅盘市三开关为观察值
+        CB.submitSnapshot(snap); n++;
+      });
+      console.log('[INF-XD-wired] 盘点写入 '+n+' 条 → inventory_snapshot · store='+store+' · reporter='+(reporter.name||reporter.user_id)+' · '+subId);
+      return n;
+    }catch(e){ console.warn('[INF-XD-wired] 盘点写入失败:',e&&e.message); return 0; }
+  }
+  window.xdWriteSnapshots=xdWriteSnapshots;
+  // 包住 finishVisit:签退时先写盘点快照,再走原流程(原 postMessage/UI 零改动)
+  if(!window.__xdFinishWrapped && typeof window.finishVisit==='function'){
+    window.__xdFinishWrapped=true;
+    var _origFinish=window.finishVisit;
+    window.finishVisit=function(){ try{ xdWriteSnapshots(); }catch(e){} return _origFinish.apply(this, arguments); };
+  }
 })();
 </script>
 
