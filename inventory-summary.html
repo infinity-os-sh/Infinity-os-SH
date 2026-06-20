@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>INFINITY OS · 盘点只读汇总 · 某店某SKU 哪些开关 ON/OFF</title>
+<style>
+:root{
+  --bg:#0d0f14; --card:#1a1f2b; --card2:#222836; --line:rgba(255,255,255,0.08);
+  --txt:#eef2f8; --txt2:#9aa5b8; --txt3:#5d6678;
+  --green:#3ddc84; --red:#ff5f5f; --amber:#f5a623; --blue:#5d9cec;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:'Noto Sans SC',system-ui,sans-serif;padding:16px;max-width:1100px;margin:0 auto}
+h1{font-size:18px;margin-bottom:4px}
+.sub{font-size:12px;color:var(--txt3);margin-bottom:14px;line-height:1.6}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;border:1px solid var(--line);margin-left:6px}
+.badge.real{color:var(--green);border-color:rgba(61,220,132,.4)}
+.badge.mock{color:var(--amber);border-color:rgba(245,166,35,.4)}
+.badge.ro{color:var(--blue);border-color:rgba(93,156,236,.4)}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+select,input{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px}
+.store-block{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+.store-h{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px 6px;text-align:center;border-bottom:1px solid var(--line)}
+th{color:var(--txt2);font-weight:500;font-size:12px}
+td.sku{text-align:left;font-family:'JetBrains Mono',monospace;font-weight:700}
+.on{color:var(--green);font-weight:700}
+.off{color:var(--red)}
+.stage{font-size:11px;color:var(--txt3)}
+.audit{font-size:10px;color:var(--txt3);text-align:left}
+.empty{color:var(--txt3);font-size:13px;padding:20px;text-align:center}
+.note{font-size:11px;color:var(--txt3);margin-top:18px;line-height:1.7;border-top:1px solid var(--line);padding-top:12px}
+</style>
+</head>
+<body>
+  <h1>盘点只读汇总
+    <span class="badge ro">只读·不可执行</span>
+    <span id="modeBadge" class="badge mock">模式:加载中</span>
+  </h1>
+  <div class="sub">
+    管理层视图 · 某店某SKU 哪些开关 ON / OFF · 第一里程碑第一条回路<br>
+    数据来源:CloudBase 集合 <code>inventory_snapshot</code> · 每条带 source_ref + ts 可审计 · 本页不含任何涉钱涉权动作
+  </div>
+
+  <div class="bar">
+    <label>门店:</label>
+    <select id="storeSel"><option value="">全部门店</option></select>
+    <label>SKU:</label>
+    <select id="skuSel"><option value="">全部SKU</option></select>
+    <button id="refreshBtn" style="cursor:pointer">刷新</button>
+  </div>
+
+  <div id="content"><div class="empty">加载中…</div></div>
+
+  <div class="note" id="dictNote"></div>
+
+<script src="infinity-cloudbase/field-dictionary.js"></script>
+<script src="infinity-cloudbase/cloudbase-client.js"></script>
+<script>
+(function(){
+  var Dict = window.InfinityDict, CB = window.InfinityCB;
+  var FIELDS = Dict.SWITCH_FIELDS, LABEL = Dict.FIELD_LABEL;
+  var all = [];
+
+  function badge(){
+    var b = document.getElementById('modeBadge');
+    var m = CB.mode();
+    b.textContent = '模式:' + (m==='real'?'真接 CloudBase':'双轨·mock');
+    b.className = 'badge ' + (m==='real'?'real':'mock');
+  }
+
+  function fillSelectors(){
+    var stores={}, skus={};
+    all.forEach(function(r){ stores[r.scope.store]=1; skus[r.sku]=1; });
+    var ss=document.getElementById('storeSel'), ks=document.getElementById('skuSel');
+    Object.keys(stores).sort().forEach(function(s){ ss.add(new Option(s,s)); });
+    Object.keys(skus).sort().forEach(function(s){ ks.add(new Option(s,s)); });
+  }
+
+  // 每店每SKU 取最新一条
+  function latest(rows){
+    var map={};
+    rows.forEach(function(r){
+      var k=r.scope.store+'||'+r.sku;
+      if(!map[k] || (r.ts||'')>(map[k].ts||'')) map[k]=r;
+    });
+    return Object.keys(map).map(function(k){return map[k];});
+  }
+
+  function render(){
+    var store=document.getElementById('storeSel').value;
+    var sku=document.getElementById('skuSel').value;
+    var rows=latest(all).filter(function(r){
+      return (!store||r.scope.store===store) && (!sku||r.sku===sku);
+    });
+    var byStore={};
+    rows.forEach(function(r){ (byStore[r.scope.store]=byStore[r.scope.store]||[]).push(r); });
+    var c=document.getElementById('content');
+    var stores=Object.keys(byStore).sort();
+    if(!stores.length){ c.innerHTML='<div class="empty">无盘点数据</div>'; return; }
+    var html='';
+    stores.forEach(function(st){
+      html+='<div class="store-block"><div class="store-h">🏪 '+st+'</div>';
+      html+='<table><thead><tr><th class="sku">SKU</th>';
+      FIELDS.forEach(function(f){ html+='<th>'+LABEL[f]+'<br><span style="font-size:9px;color:#5d6678">'+f+'</span></th>'; });
+      html+='<th>阶段</th><th>最近上报(审计)</th></tr></thead><tbody>';
+      byStore[st].sort(function(a,b){return a.sku<b.sku?-1:1;}).forEach(function(r){
+        html+='<tr><td class="sku">'+r.sku+'</td>';
+        FIELDS.forEach(function(f){
+          var v=r.switches[f];
+          html+='<td class="'+(v?'on':'off')+'">'+(v?'ON':'OFF')+'</td>';
+        });
+        html+='<td class="stage">'+(r.effective_stage||'—')+'</td>';
+        var sr=r.source_ref||{};
+        html+='<td class="audit">'+(r.reporter&&r.reporter.name||r.reporter&&r.reporter.user_id||'?')
+            +'<br>'+(r.ts||'').replace('T',' ').slice(0,16)
+            +'<br><span style="opacity:.7">'+(sr.source||'')+' '+(sr.submission_id||'')+'</span></td>';
+        html+='</tr>';
+      });
+      html+='</tbody></table></div>';
+    });
+    c.innerHTML=html;
+  }
+
+  function load(){
+    document.getElementById('content').innerHTML='<div class="empty">加载中…</div>';
+    CB.queryAll().then(function(rows){
+      all=rows; badge();
+      // selectors 只填一次
+      if(document.getElementById('storeSel').options.length<=1) fillSelectors();
+      render();
+    }).catch(function(e){
+      document.getElementById('content').innerHTML='<div class="empty">加载失败:'+(e&&e.message)+'</div>';
+    });
+  }
+
+  document.getElementById('storeSel').onchange=render;
+  document.getElementById('skuSel').onchange=render;
+  document.getElementById('refreshBtn').onclick=load;
+
+  // 字典说明 (oos_flag 语义反向提示)
+  document.getElementById('dictNote').innerHTML=
+    '字段字典:'+FIELDS.map(function(f){return LABEL[f]+'='+f;}).join(' · ')+
+    '<br>⚠ oos_flag = 缺货标记(与 app『有货』开关语义相反);sellout/repurchase/margin 为推断默认,待《字段字典v1.0》锁定。'+
+    '<br>环境ID(CB_ENV_ID): <code>'+CB.CB_ENV_ID+'</code> —— 占位符时自动走 mock,填真实环境ID即切真接。';
+
+  load();
+})();
+</script>
+</body>
+</html>

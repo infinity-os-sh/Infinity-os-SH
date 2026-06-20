@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinity-os://cloudbase/v1.0/visit_history.schema.json",
+  "collection": "visit_history",
+  "title": "拜访历史 · 各店上次访期 (读视图 · 拜访规划只读输入)",
+  "_status": "SCAFFOLD · 未上线 · 对齐既有 visit_reports 表",
+  "_role": "规划引擎只需『某店上次访期』。来源 = SFA visit_reports 表 MAX(visitDate) BY store(可物化成本视图)。",
+  "_dependency": "visit_reports 表已存在(SFA_Backend_v4)。本视图是其投影,不新增采集。",
+  "_field_source": "store/user/visitDate 三字段照 visit_reports 实体原名,不改名。",
+  "type": "object",
+  "required": ["storeCode", "lastVisitDate"],
+  "additionalProperties": false,
+  "properties": {
+    "storeCode": { "type": "string", "description": "对齐 stores.storeCode" },
+    "lastVisitDate": { "type": ["string", "null"], "format": "date", "description": "MAX(visit_reports.visitDate)·null=从无记录(引擎按盲点/逾期处理)" },
+    "lastVisitUserCode": { "type": ["string", "null"], "description": "上次谁访的·对齐 users.userCode·仅供路线参考" }
+  },
+  "_indexes": [{ "keys": { "storeCode": 1 }, "name": "store" }],
+  "_guardrail": "⚠ 规划只读 lastVisitDate 推『该不该去』;绝不读/写 visit_reports 里的 checkinValid/status/positionsDone 等执行态(那是 XD 域,铁律4)。",
+  "_iron_law_1_note": "visit_reports 自身含 checkin/status 是 SFA 执行模型;规划节点只取 visitDate,不消费也不产出完成态。"
+}

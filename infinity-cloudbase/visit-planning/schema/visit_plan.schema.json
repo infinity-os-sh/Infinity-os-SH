@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinity-os://cloudbase/v1.0/visit_plan.schema.json",
+  "collection": "visit_plan",
+  "title": "拜访清单+路线 · 规划引擎输出 (新表)",
+  "_status": "SCAFFOLD · 未上线 · 字段名照 字段字典 v1.1 · 政策数字 D003_pending",
+  "_naming": "主数据=SFA真名(storeCode/userCode/grade);节点新概念=设计名(plan_date/reason_code...);跨域概念=锁定名(ts/source_ref/human_override)。",
+  "_role": "每人每日『去哪、第几站、为什么』。是 DSR/美顾/督导 app XM(今日任务)的数据源。",
+  "_IRON_LAW_1": "本表物理上禁含 visited/checked_in/checkin/who_missed/completion/completed/done/status —— 拜访规划不是打卡考勤。引擎 assertNoAttendance() 硬性拒绝。",
+  "type": "object",
+  "required": ["plan_date", "userCode", "items", "quota", "ts"],
+  "additionalProperties": false,
+  "properties": {
+    "_id": { "type": "string" },
+    "plan_id": { "type": "string", "description": "设计名·= userCode + '_' + plan_date" },
+    "plan_date": { "type": "string", "format": "date", "description": "设计名·清单日期 YYYY-MM-DD" },
+    "userCode": { "type": "string", "description": "SFA真名·对齐 users.userCode" },
+    "items": {
+      "type": "array",
+      "description": "排程项·按 seq 即路线顺序",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["storeCode", "seq", "pool", "reason_code"],
+        "properties": {
+          "storeCode": { "type": "string", "description": "SFA真名·对齐 stores.storeCode" },
+          "storeName": { "type": "string", "description": "SFA真名" },
+          "seq": { "type": "integer", "minimum": 1, "description": "路线顺序" },
+          "pool": { "type": "string", "enum": ["fire", "baseline"], "description": "救火 / 常规保底(铁律2)" },
+          "reason_code": { "type": "string", "enum": ["blindspot", "overdue", "regular"], "description": "设计名·为什么排·可解释·非考核" },
+          "grade": { "type": ["string", "null"], "enum": ["A", "B", "C", null], "description": "SFA真名·门店运营分级(≠ strategic_tier)" },
+          "tier_pending": { "type": "boolean", "description": "铁律3术语·true=门店缺分级,按默认频率排" },
+          "cycle_t": { "type": "integer", "description": "设计名·采用的周期T(天)" },
+          "days_since_last": { "type": ["integer", "null"], "description": "设计名·null=no_data(从未访)" },
+          "overdue_days": { "type": "integer", "description": "设计名·<=0 未逾期" }
+        }
+      }
+    },
+    "quota": {
+      "type": "object",
+      "description": "配额审计(铁律2):证明常规保底没被救火吃光",
+      "additionalProperties": false,
+      "properties": {
+        "capacity_daily": { "type": "integer" },
+        "baseline_reserved": { "type": "integer", "description": "常规保底名额" },
+        "fire_cap": { "type": "integer", "description": "救火上限" },
+        "used_fire": { "type": "integer" },
+        "used_baseline": { "type": "integer" }
+      }
+    },
+    "human_override": {
+      "type": "array",
+      "description": "跨域锁定概念·经理调整留痕(铁律5)·机器不锁死",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["by", "at"],
+        "properties": {
+          "by": { "type": "string", "description": "谁改的·对齐 users.userCode" },
+          "from": { "type": "array", "items": { "type": "string" }, "description": "原顺序(storeCode 列表)" },
+          "to": { "type": "array", "items": { "type": "string" }, "description": "新顺序" },
+          "why": { "type": ["string", "null"] },
+          "at": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "ts": { "type": "string", "format": "date-time", "description": "跨域锁定概念·生成时间·审计必带" },
+    "source_ref": { "type": "object", "description": "跨域锁定概念·审计来源", "properties": { "source": { "type": "string" }, "app": { "type": "string" } } },
+    "flags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "诚实标记·如 D003_pending / tier_pending / capacity_default"
+    }
+  },
+  "_security_rules_hint": {
+    "read": "本人读本人清单;经理读本片区。",
+    "write": "仅规划引擎(服务端)写;经理调整只能走 human_override 留痕,不得静默改 items。",
+    "_guardrail": "只排程·不含执行/考勤态·不触发任何涉钱涉权动作。"
+  }
+}
