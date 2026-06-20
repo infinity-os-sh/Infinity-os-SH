@@ -2,26 +2,57 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "infinity-os://cloudbase/v1.0/coverage_blindspot.schema.json",
   "collection": "coverage_blindspot",
-  "title": "覆盖盲点 L1-04 (新表 · 拜访规划只读输入)",
-  "_status": "SCAFFOLD · 未上线 · 字段字典 v1.1 部分解析",
-  "_naming": "storeCode/ts/source_ref 已解析(SFA真名/锁定概念);盲点本体字段表未建+无字典项 → 保留 *_pending_dict。",
-  "_role": "标出系统性失访/从未覆盖的门店,喂给规划引擎的『救火池』。规划只读,不在此判级。",
-  "_dependency": "新表,第一回路未建。需后端补。",
+  "title": "覆盖盲点 L1-04 · 月度盲点清单 (字段照 L1-04 SKILL.md v0.2 输出契约)",
+  "_status": "SCAFFOLD · 未上线 · pending 已用 L1-04 真名解锁",
+  "_source_of_truth": "L1-04_coverage_blindspot_v0_2.md §6 Output 契约",
+  "_naming": "全部采用 L1-04 真名;不再有 *_pending_dict。effective_stage 照 字段字典 v1.1。",
+  "_BOUNDARY": "⚑ L1-04 是月度清单给 BD/城市经理做开发排期,『只出清单不派任务·绝不触发 L5-02·不反向指挥采集』。拜访规划是否可消费它作日清救火池=架构待裁(见 CONFLICTS C4)。",
+  "_window": "monthly 唯一主窗口;weekly 不跑。",
   "type": "object",
-  "required": ["storeCode", "isBlindspot_pending_dict"],
-  "additionalProperties": false,
+  "required": ["period", "window", "blindspots"],
+  "additionalProperties": true,
   "properties": {
-    "_id": { "type": "string" },
-    "storeCode": { "type": "string", "description": "SFA真名·对齐 stores.storeCode", "examples": ["SH_GT_CVS_001"] },
-    "isBlindspot_pending_dict": { "type": "boolean", "description": "pending(盲点·等建表)·是否盲点(系统性失访/从未覆盖)" },
-    "blindReason_pending_dict": {
-      "type": "string",
-      "enum": ["never_visited", "coverage_gap", "long_overdue", "unassigned", null],
-      "description": "pending(盲点·等建表)·盲点成因。注意 never_visited=no_data,≠ unknown"
+    "period": { "type": "string", "description": "如 2026-05", "examples": ["2026-05"] },
+    "window": { "type": "string", "const": "monthly" },
+    "scope": { "type": "object", "properties": { "region": { "type": "string" } } },
+    "blindspots": {
+      "type": "array",
+      "description": "三类盲点·互斥·严禁混算(未铺/数据/白区)",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["type"],
+        "properties": {
+          "type": { "type": "string", "enum": ["未铺", "数据", "白区"], "description": "三类盲点·互斥(原 isBlindspot/blindReason 已解为 type)" },
+          "sku": { "type": ["string", "null"], "description": "SKU(数据/白区类常为 null)" },
+          "scope": { "type": "string", "description": "聚合粒度·如 '上海|社区超市'" },
+          "store_ids": { "type": ["array", "null"], "items": { "type": "string" }, "description": "①未铺②数据有;③白区恒 null(无建档即无ID)。store_id 对齐 L0-04" },
+          "count": { "type": "integer", "description": "①②店数(=L1-03桶事实,阶段不改 count)" },
+          "gap_count": { "type": "integer", "description": "③白区缺口(POI应有 − L0-04实有)" },
+          "effective_stage": { "type": "string", "description": "字段字典 v1.1·只影响优先级权重,不改是否盲点" },
+          "base_score": { "type": "number" },
+          "score": { "type": "number", "description": "= base_score × W_stage(阶段加权后排序用)" },
+          "score_basis": { "type": "string", "description": "打分可溯源串" },
+          "trend": {
+            "type": "object",
+            "description": "同店 cohort 环比",
+            "properties": {
+              "cohort_count_prev": { "type": "integer" },
+              "cohort_count_now": { "type": "integer" },
+              "direction": { "type": "string", "enum": ["收敛", "恶化", "unchanged"] }
+            }
+          },
+          "suggested_action": { "type": "string", "description": "建议枚举(非派单):补铺/补巡/建档核查→新店开发;随阶段(原 blindReason 语义并入此 + type)" },
+          "poi_refs": { "type": ["array", "null"], "items": { "type": "string" } },
+          "stale_refs": { "type": ["array", "null"], "items": { "type": "string" } }
+        }
+      }
     },
-    "ts": { "type": "string", "format": "date-time", "description": "跨域锁定概念·探测时间(原 detectedAt 已解析)" },
-    "source_ref": { "type": "object", "description": "跨域锁定概念·审计来源", "properties": { "source": { "type": "string" } } }
+    "flags": { "type": "array", "items": { "type": "string" }, "description": "poi_unavailable / unchanged:{key} / stage_weighted / stage_no_blindspot:淘汰 / stage_unknown_base_score …" },
+    "summary_text": { "type": "string" },
+    "fanout": { "type": "array", "items": { "type": "string" } },
+    "ts": { "type": "string", "format": "date-time", "description": "字段字典 v1.1·生成时间" },
+    "source_ref": { "type": "object", "properties": { "source": { "type": "string" } } }
   },
-  "_indexes": [{ "keys": { "storeCode": 1 }, "name": "store" }],
-  "_guardrail": "只读输入;本表不含任何拜访完成/打卡态。"
+  "_guardrail": "只出清单·不派任务·不碰任务台账·不触发 L5-02·不反向指挥采集(L1-04 §5 MUST NOT)。"
 }

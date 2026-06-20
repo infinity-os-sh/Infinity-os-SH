@@ -33,13 +33,17 @@
 
   // ── 字段名注册(已解析 + 仍 pending)─────────────────────────────────────
   var FIELDS = {
-    // 覆盖盲点 L1-04 (coverage_blindspot) —— 盲点概念无字典项、表未建 → 保留 pending
+    // 覆盖盲点 L1-04 (coverage_blindspot) —— pending 已用 L1-04 SKILL 真名全解锁
+    // ⚑ C4 架构待裁:L1-04"只出清单不派任务/不触发L5-02";拜访规划消费它作日清救火池需经裁定。
     blindspot: {
-      storeCode: 'storeCode',                       // sfa(已解析)
-      isBlindspot: 'isBlindspot_pending_dict',       // pending(盲点·等建表)
-      blindReason: 'blindReason_pending_dict',       // pending(盲点·等建表)
-      ts: 'ts',                                      // 字典锁定(已解析:原 detectedAt)
-      source_ref: 'source_ref'                       // 字典锁定
+      type: 'type',                                  // L1-04 真名(未铺/数据/白区)·原 isBlindspot/blindReason 解为此
+      sku: 'sku', scope: 'scope',
+      store_ids: 'store_ids',                         // L1-04 真名(对齐 L0-04 store_id)
+      count: 'count', gap_count: 'gap_count',
+      effective_stage: 'effective_stage',            // 字典 v1.1
+      score: 'score', base_score: 'base_score',
+      suggested_action: 'suggested_action',          // L1-04 真名
+      ts: 'ts', source_ref: 'source_ref'             // 字典锁定
     },
     // 组织产能扩展 (org_capacity) —— 产能概念无字典项、表未建 → 保留 pending
     capacity: {
