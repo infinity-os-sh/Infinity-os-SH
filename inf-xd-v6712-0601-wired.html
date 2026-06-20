@@ -8123,9 +8123,15 @@ function inspectedSkus2Count(){
     }catch(e){}
     return skus.filter(function(x,i){ return x && skus.indexOf(x)===i; }); // 去空去重
   }
-  // 盘市三开关由现场盘点观察:上架=在架、有货=有库存(→oos_flag=!有货)、陈列=已拍达标;
-  // 动销/复购/毛利 需 POS,现场盘点不产出 → 默认 false,并在 source_ref.observed_switches 标注。
-  function xdSwitches(){ return Dict.appSwitchesToDict([true, true, true, false, false, false]); }
+  // 盘市三开关由现场盘点观察:上架=在架、有货=有库存(→oos_flag=!有货)、陈列=已拍达标。
+  // 动销/复购/毛利 现场盘点采不到 → 写 no_data 哨兵(不是 false!false=观察到OFF是假陈述),
+  //   由 POS / L1-03 后续填。observed_switches 标注哪三个是真观察值。
+  function xdSwitches(){
+    var sw=Dict.appSwitchesToDict([true, true, true, false, false, false]); // 先得6个布尔
+    var ND=Dict.SENTINEL.NO_DATA;
+    sw.sellout=ND; sw.repurchase=ND; sw.margin=ND;   // 未采集 → no_data,绝不记 false
+    return sw;
+  }
   function xdWriteSnapshots(){
     try{
       var skus=xdCollectSkus(); if(!skus.length) return 0;
