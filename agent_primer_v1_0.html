@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INFINITY OS · Agent 设计入门讲义 v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17191E;--ink-panel:#1B1E24;--paper:#F2F1EB;--surface:#FBFAF6;
+    --amber:#A8612A;--amber-deep:#834A1F;--amber-tint:#EADFCB;
+    --go:#2E6A4A;--go-tint:#DDE8DF;--stop:#9A3A33;--stop-tint:#F0DBD7;
+    --slate:#565A62;--rule:#DAD7CC;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --cjk:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',-apple-system,BlinkMacSystemFont,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--cjk);
+    line-height:1.8;font-size:16px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:840px;margin:0 auto;padding:0 22px;}
+
+  .topbar{position:sticky;top:0;z-index:20;background:rgba(242,241,235,.86);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--rule);}
+  .topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:46px;}
+  .topbar .doc{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--slate);}
+  .topbar .ver{font-family:var(--mono);font-size:12px;color:var(--amber);}
+
+  .mast{padding:60px 0 36px;border-bottom:2px solid var(--ink);}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--amber);margin:0 0 18px;}
+  h1.title{font-size:clamp(28px,6vw,48px);line-height:1.15;font-weight:800;letter-spacing:-.01em;margin:0 0 16px;}
+  .lede{font-size:clamp(15px,2.3vw,18px);color:var(--slate);max-width:620px;margin:0 0 22px;}
+  .lede b{color:var(--amber-deep);}
+  .pair{display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:11.5px;}
+  .pair span{border:1px solid var(--rule);background:var(--surface);padding:5px 10px;border-radius:2px;}
+
+  section{padding:46px 0;border-bottom:1px solid var(--rule);}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin:0 0 20px;}
+  .sec-num{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--amber);
+    border:1px solid var(--amber);border-radius:2px;padding:3px 8px;white-space:nowrap;}
+  h2.sec-title{font-size:clamp(20px,3.2vw,26px);font-weight:800;margin:0;letter-spacing:-.01em;}
+  p{margin:0 0 14px;} .sub{color:var(--slate);}
+  .accent{color:var(--amber-deep);font-weight:700;}
+
+  /* big callout */
+  .callout{background:var(--ink-panel);color:#EDEBE4;border-radius:6px;padding:24px 24px;margin:6px 0;}
+  .callout .l{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin:0 0 12px;}
+  .callout .big{font-size:clamp(18px,3vw,24px);font-weight:800;line-height:1.4;margin:0;}
+  .callout .big em{color:#E6B988;font-style:normal;}
+
+  /* two identities */
+  .ids{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .id{padding:18px 18px;border-radius:5px;border:1px solid var(--rule);background:var(--surface);border-top-width:4px;}
+  .id.w{border-top-color:var(--go);} .id.a{border-top-color:var(--amber);}
+  .id .h{font-weight:800;font-size:17px;margin-bottom:4px;}
+  .id.w .h{color:var(--go);} .id.a .h{color:var(--amber-deep);}
+  .id .tag{font-family:var(--mono);font-size:11px;color:var(--slate);}
+  .id p{margin:8px 0 0;font-size:14px;color:var(--slate);}
+
+  /* flow steps */
+  .flow{counter-reset:f;display:grid;gap:0;}
+  .fstep{display:flex;gap:16px;padding:18px 0;border-top:1px solid var(--rule);}
+  .fstep:first-child{border-top:none;}
+  .fstep .n{counter-increment:f;font-family:var(--mono);font-weight:700;font-size:22px;color:var(--amber);min-width:40px;}
+  .fstep .n::before{content:counter(f);}
+  .fstep .c b{display:block;font-size:16.5px;margin-bottom:4px;}
+  .fstep .c b .en{font-family:var(--mono);font-size:11.5px;color:var(--amber-deep);font-weight:500;}
+  .fstep .c span{color:var(--slate);font-size:14.5px;}
+
+  /* glossary */
+  .gcat{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--amber);margin:26px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--rule);}
+  .gcat:first-of-type{margin-top:6px;}
+  .g{display:flex;gap:16px;padding:14px 16px;background:var(--surface);border:1px solid var(--rule);
+    border-radius:4px;margin-bottom:9px;align-items:flex-start;}
+  .g .term{min-width:118px;}
+  .g .term b{display:block;font-size:15px;}
+  .g .term .en{font-family:var(--mono);font-size:11px;color:var(--slate);}
+  .g .term .badge{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;
+    padding:2px 6px;border-radius:2px;margin-top:5px;}
+  .g .term .badge.use{background:var(--go-tint);color:var(--go);}
+  .g .term .badge.avoid{background:var(--stop-tint);color:var(--stop);}
+  .g .d{flex:1;font-size:14px;line-height:1.6;}
+  .g .d .ana{color:var(--amber-deep);font-size:13px;}
+
+  /* decision rule */
+  .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--rule);border-radius:3px;margin:6px 0;}
+  table{border-collapse:collapse;width:100%;font-size:14px;min-width:480px;background:var(--surface);}
+  th{background:var(--ink);color:#F2F1EB;text-align:left;font-weight:600;padding:10px 14px;font-size:12.5px;}
+  td{padding:10px 14px;border-top:1px solid var(--rule);vertical-align:top;line-height:1.55;}
+  tr td:first-child{font-weight:700;}
+  td.mono,th.mono{font-family:var(--mono);}
+
+  /* rfc */
+  .rfc{display:grid;gap:11px;}
+  .rfc-row{display:flex;gap:15px;align-items:flex-start;padding:15px 18px;background:var(--surface);
+    border:1px solid var(--rule);border-radius:3px;border-left-width:4px;}
+  .rfc-row.must{border-left-color:var(--stop);} .rfc-row.should{border-left-color:var(--amber);} .rfc-row.may{border-left-color:var(--go);}
+  .rtag{font-family:var(--mono);font-weight:700;font-size:12px;padding:4px 9px;border-radius:2px;min-width:72px;text-align:center;}
+  .rtag.must{background:var(--stop-tint);color:var(--stop);} .rtag.should{background:var(--amber-tint);color:var(--amber-deep);} .rtag.may{background:var(--go-tint);color:var(--go);}
+  .rfc-row .x b{display:block;margin-bottom:2px;} .rfc-row .x span{color:var(--slate);font-size:13.5px;}
+
+  pre.code{background:var(--ink-panel);color:#D7DAE0;border-radius:5px;padding:14px 16px;overflow-x:auto;
+    font-family:var(--mono);font-size:12.5px;line-height:1.7;margin:6px 0;}
+  pre.code .k{color:#E0B07E;} pre.code .s{color:#9FD6B6;}
+  blockquote{margin:14px 0;padding:13px 18px;background:var(--amber-tint);border-left:3px solid var(--amber);
+    border-radius:0 3px 3px 0;font-size:14px;color:var(--amber-deep);}
+
+  footer{padding:36px 0 64px;color:var(--slate);font-size:13px;}
+  footer .fmono{font-family:var(--mono);font-size:11.5px;}
+  footer hr{border:none;border-top:1px solid var(--rule);margin:0 0 20px;}
+
+  @media(max-width:600px){.ids,.callout .big{}.ids{grid-template-columns:1fr;}.g{flex-direction:column;gap:6px;}.g .term{min-width:0;}}
+  @media(prefers-reduced-motion:no-preference){section,.mast{animation:f .5s ease both;}@keyframes f{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <span class="doc">INFINITY OS · AGENT 入门讲义</span><span class="ver">v1.0 · 大白话版</span>
+</div></div>
+
+<div class="wrap">
+
+  <header class="mast">
+    <p class="eyebrow">Plain-Language Primer · 通俗入门</p>
+    <h1 class="title">设计一个 agent,<br>大白话讲一遍。</h1>
+    <p class="lede">这是《Agent 设计标准》的<b>通俗配套版</b>。标准是查规矩用的;这份是<b>建立直觉、给团队上手</b>用的。先读这份懂"为什么",再翻标准查"怎么做"。</p>
+    <div class="pair">
+      <span>配套:bas_agent_standard(标准)</span>
+      <span>范例:bas_inventory_skill</span>
+      <span>清单:bas_agent_backlog</span>
+    </div>
+  </header>
+
+  <!-- 0 terminology -->
+  <section id="s0">
+    <div class="sec-head"><span class="sec-num">§0</span><h2 class="sec-title">先理清一件事:「agent」有两层意思</h2></div>
+    <p class="sub">很多混乱都来自这个词撞名。分清楚,后面全通。</p>
+    <div class="ids">
+      <div class="id w"><div class="h">广义「agent」</div><div class="tag">统称 / 一个节点</div><p>系统里每个干活的单元都叫 agent(你那 A01–A23)。这层意思上,所有节点都是"agent",没问题。</p></div>
+      <div class="id a"><div class="h">狭义 Agent</div><div class="tag">标准定义 / 自主型</div><p>特指 LLM 自己决定步骤和工具的那种。这层意思上,绝大多数节点<b>不是</b> Agent,而是 Workflow。</p></div>
+    </div>
+    <blockquote>所以「把 Workflow 都转成 Agent」是错的:目标是把绝大多数做成稳的 Workflow,只有极少数真该放权的才是 Agent。</blockquote>
+  </section>
+
+  <!-- 1 core -->
+  <section id="s1">
+    <div class="sec-head"><span class="sec-num">§1</span><h2 class="sec-title">核心一句话</h2></div>
+    <div class="callout"><p class="l">The one rule</p><p class="big"><em>能写死就别放权,能简单就别复杂。</em></p></div>
+    <p class="sub" style="margin-top:16px;"><span class="accent">Workflow = 自动扶梯</span>(固定路线,稳);<span class="accent">Agent = 出租车司机</span>(自己选路,灵活但你管不住)。高频规律的事,永远先选扶梯。</p>
+  </section>
+
+  <!-- 2 the full flow -->
+  <section id="s2">
+    <div class="sec-head"><span class="sec-num">§2</span><h2 class="sec-title">设计一个节点的全流程(就五步)</h2></div>
+    <p class="sub">从头到尾,顺序固定。任何节点都走这五步。</p>
+    <div class="flow">
+      <div class="fstep"><span class="n"></span><div class="c"><b>判 Workflow 还是 Agent <span class="en">Decision Gate</span></b><span>能写死→Workflow;不能预测、要临场判断→Agent。这是总开关。</span></div></div>
+      <div class="fstep"><span class="n"></span><div class="c"><b>走模式 <span class="en">Pattern</span></b><span>若是 Workflow,选它用哪种(常几种组合):分诊=路由、接力=链式、分发=扇出、并跑=并行。</span></div></div>
+      <div class="fstep"><span class="n"></span><div class="c"><b>标 RFC2119 强度 <span class="en">MUST / SHOULD / MAY</span></b><span>每条规则标清硬度:绝不能跳 / 建议 / 可选。让 AI 知道哪条不能讨价还价。</span></div></div>
+      <div class="fstep"><span class="n"></span><div class="c"><b>定 JSON 契约 <span class="en">Artifact</span></b><span>约定一张"字段贴好标签的表",当作给下游的输出。节点之间靠它硬连接。</span></div></div>
+      <div class="fstep"><span class="n"></span><div class="c"><b>设 HITL 卡点 <span class="en">Human-in-the-Loop</span></b><span>高风险动作(钱/权限/不可逆)机器停机等人点 OK,卡在执行前。</span></div></div>
+    </div>
+  </section>
+
+  <!-- 3 glossary -->
+  <section id="s3">
+    <div class="sec-head"><span class="sec-num">§3</span><h2 class="sec-title">名词大白话表</h2></div>
+
+    <div class="gcat">两种身份(先判这个)</div>
+    <div class="g"><div class="term"><b>Workflow</b><span class="en">工作流</span><span class="badge use">主体</span></div><div class="d">路线提前画死,AI 沿轨道走。稳、便宜、可审计。<span class="ana">类比:自动扶梯。</span></div></div>
+    <div class="g"><div class="term"><b>Agent</b><span class="en">自主体</span><span class="badge use">少数</span></div><div class="d">AI 自己决定下一步、用什么工具。灵活但难控,只在步骤无法预测时才用。<span class="ana">类比:出租车司机。</span></div></div>
+
+    <div class="gcat">基础积木</div>
+    <div class="g"><div class="term"><b>增强型 LLM</b><span class="en">Augmented LLM</span></div><div class="d">配了眼睛(读图)、字典(查资料)、记事本(记数据)的 AI。一切的最小单位。<span class="ana">类比:会干活的工人。</span></div></div>
+
+    <div class="gcat">四种模式(Workflow 选一种或几种)</div>
+    <div class="g"><div class="term"><b>路由</b><span class="en">Routing</span></div><div class="d">门口分拣员,先分类再分流。<span class="ana">类比:医院分诊台。</span></div></div>
+    <div class="g"><div class="term"><b>链式</b><span class="en">Chaining</span></div><div class="d">一道工序接一道,前一步的产出交下一步。<span class="ana">类比:工厂传送带。</span></div></div>
+    <div class="g"><div class="term"><b>确定性扇出</b><span class="en">Fan-out</span></div><div class="d">一份结果按写死规则自动分发给多个下游,不靠 AI 临场判断。<span class="ana">类比:快递分拣格口。</span></div></div>
+    <div class="g"><div class="term"><b>并行</b><span class="en">Parallelization</span></div><div class="d">多份活同时跑;或同一份跑几遍取多数,换速度或换置信度。</div></div>
+
+    <div class="gcat">两个刻意避开的</div>
+    <div class="g"><div class="term"><b>编排者</b><span class="en">Orchestrator</span><span class="badge avoid">避</span></div><div class="d">AI 当包工头,临场决定拆几步、派给谁。只在子任务无法预测时才用;可预测的别用,否则又添黑箱。</div></div>
+    <div class="g"><div class="term"><b>线上评估者</b><span class="en">Evaluator</span><span class="badge avoid">避</span></div><div class="d">旁边再加 AI 打分、让重做。放到离线建设期用;高频线上别挂,又慢又贵。</div></div>
+
+    <div class="gcat">连接与工具</div>
+    <div class="g"><div class="term"><b>JSON</b><span class="en">结构化文本</span></div><div class="d">带标签的文本,机器能精准读。<span class="ana">类比:一张字段都贴好标签的表。</span></div></div>
+    <div class="g"><div class="term"><b>Artifact</b><span class="en">产出物</span></div><div class="d">上一个节点吐的那份 JSON,直接当下一个节点的输入。节点之间的"硬连接"。</div></div>
+    <div class="g"><div class="term"><b>MCP</b><span class="en">Model Context Protocol</span></div><div class="d">AI 界的 USB-C,一套标准接口接外部工具(订货系统、数据中台、货架照)。</div></div>
+
+    <div class="gcat">规则强度 & 把关</div>
+    <div class="g"><div class="term"><b>RFC2119</b><span class="en">强度规范</span></div><div class="d">公开技术规范,定义 MUST / SHOULD / MAY 的精确含义,消除"应该"的模糊。详见 §4。</div></div>
+    <div class="g"><div class="term"><b>HITL</b><span class="en">人在回路</span></div><div class="d">高风险动作机器停机等人点 OK。<span class="ana">类比:ATM 取大额要二次验证。</span></div></div>
+
+    <div class="gcat">方法(怎么真的把它做好)</div>
+    <div class="g"><div class="term"><b>节点</b><span class="en">node</span></div><div class="d">流水线上的一个工位。每个 agent / 处理步骤都是一个节点。</div></div>
+    <div class="g"><div class="term"><b>四步法</b><span class="en">4 Steps</span></div><div class="d">格式标准化 → 任务拆解 → 双向开发 → 整合。把一句人话的 SOP 变成能上线的流水线。</div></div>
+    <div class="g"><div class="term"><b>默会知识</b><span class="en">Tacit Knowledge</span></div><div class="d">你脑子里没写下来的"常识",AI 不会通灵。第一版一定漏,要靠跑真实数据撞出来。</div></div>
+    <div class="g"><div class="term"><b>双向开发</b><span class="en">小步快跑</span></div><div class="d">别闭门写完美 SOP。写粗糙版 → 跑 → 撞墙 → 补一条 → 再跑。速度靠"迭代得多快"。</div></div>
+    <div class="g"><div class="term"><b>评测</b><span class="en">Eval</span></div><div class="d">怎么知道它准不准。攒真实样本对照打分,看哪类最常错。从"会搭"到"能上线"的关键一步。</div></div>
+  </section>
+
+  <!-- 4 rfc -->
+  <section id="s4">
+    <div class="sec-head"><span class="sec-num">§4</span><h2 class="sec-title">RFC2119 三档(规则的硬度)</h2></div>
+    <p class="sub">它是一份公开技术规范(IETF 1997 年发布,编号 RFC 2119)。原文很短:<span class="accent">rfc-editor.org/rfc/rfc2119</span>。你在上传的两份文件和《设计标准》§5 里都见过它。</p>
+    <div class="rfc">
+      <div class="rfc-row must"><span class="rtag must">MUST</span><div class="x"><b>硬规定,绝不能跳过。</b><span>例:断货必须立刻预警;口语 SKU 必须归一,归一不到就停,不许编。</span></div></div>
+      <div class="rfc-row should"><span class="rtag should">SHOULD</span><div class="x"><b>强烈建议,不做要说明原因。</b><span>例:数量是估算的应标置信度;竞品堆头应附照片。</span></div></div>
+      <div class="rfc-row may"><span class="rtag may">MAY</span><div class="x"><b>可选,做不做都行。</b><span>例:美顾已执行的动作可记录。</span></div></div>
+    </div>
+  </section>
+
+  <!-- 5 decision rule -->
+  <section id="s5">
+    <div class="sec-head"><span class="sec-num">§5</span><h2 class="sec-title">判断口诀(拿到任何节点,只问两句)</h2></div>
+    <div class="tbl-scroll"><table>
+      <thead><tr><th>问自己</th><th>答案</th><th>就用</th></tr></thead>
+      <tbody>
+        <tr><td>这事每次都差不多、步骤能提前写死吗?</td><td class="mono">能</td><td><b>Workflow</b> → 再选 路由 / 链式 / 扇出 / 并行</td></tr>
+        <tr><td></td><td class="mono">不能,要临场判断</td><td><b>Agent</b></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 6 worked mini-example -->
+  <section id="s6">
+    <div class="sec-head"><span class="sec-num">§6</span><h2 class="sec-title">用一个例子串起来:库存上报</h2></div>
+    <p class="sub">五步走完,长这样:</p>
+    <p>① 高频规律 → <b>Workflow</b>。② 一句话混了几类 → <b>路由</b>分开,库存这条 <b>链式</b>处理(认货→查编码→估量→比库存)。③ 断货标 <b>MUST</b>、数量估算标 <b>SHOULD</b>。④ 吐一份 <b>JSON</b> 给下游:</p>
+    <pre class="code">{ <span class="k">"sku"</span>:<span class="s">"6MX-TJ-380"</span>, <span class="k">"qty"</span>:8, <span class="k">"status"</span>:<span class="s">"low"</span> }</pre>
+    <p>⑤ 这份 JSON 按写死规则 <b>扇出</b>:断货叫断货组、low 叫补货组。大额补货前设 <b>HITL</b> 等人点 OK。</p>
+    <blockquote>这道题只用到 增强型 LLM + 路由 + 链式 + 扇出 + HITL,刻意没用 Orchestrator 和线上 Evaluator —— 所以最干净,适合当第一道练手题。</blockquote>
+  </section>
+
+  <footer>
+    <hr>
+    <p class="fmono">INFINITY OS · AGENT 设计入门讲义 · v1.0 · 大白话版</p>
+    <p>配套《Agent 设计标准》《库存上报 Skill 范例》《Agent 建设清单》使用。本讲义建立直觉,标准查细节,清单看排期。</p>
+  </footer>
+
+</div>
+</body>
+</html>
