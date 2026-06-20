@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>INFINITY OS · SR app(大卖场销售终端)· wired</title>
+<!--
+  SR app = ICA 的兄弟脸,共用同一中台,绝不 fork ICA。
+  复用(import,不重写):field-dictionary.js v1.1 / cloudbase-client.js / l5_07_planner.js / 共享 XD。
+  XM 路线读 L5-07 planner 输出(不另算 VPS);XD 挂共享盘点件(storeType=大卖场→②③ checklist);
+  XL 跟 XM 派生;XP 复盘 VQS 对事不对人。scaffold·mock·不上线·线上文件零改动。
+-->
+<style>
+:root{--bg:#0c1118;--bg2:#121a26;--card:#16202e;--card2:#1d2a3a;--line:rgba(255,255,255,.08);
+  --t1:#eaf1fb;--t2:#9fb0c8;--t3:#5d6e86;--blue:#4f8cff;--blue2:#7db0ff;--green:#3ddc84;--red:#ff5f5f;--amber:#f5a623;--purple:#a78bfa}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+body{background:var(--bg);color:var(--t1);font-family:'Noto Sans SC',system-ui,sans-serif;max-width:460px;margin:0 auto;min-height:100vh;padding-bottom:64px}
+.plan{background:linear-gradient(90deg,#2f6df0,#1f4fb0);color:#fff;text-align:center;padding:6px;font-size:11px;font-weight:700;letter-spacing:.03em}
+.top{position:sticky;top:0;z-index:30;background:rgba(12,17,24,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+.top .nm{font-size:15px;font-weight:800}.top .sub{font-size:10px;color:var(--t3);font-family:ui-monospace,monospace}
+.badge{font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--line)}
+.badge.mock{color:var(--amber);border-color:rgba(245,166,35,.4)}.badge.real{color:var(--green);border-color:rgba(61,220,132,.4)}
+.scr{display:none;padding:12px 14px}.scr.on{display:block;animation:f .2s ease}@keyframes f{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.sec{font-size:12px;color:var(--t2);margin:4px 0 8px;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px;margin-bottom:10px}
+.vrow{display:flex;align-items:flex-start;gap:10px}
+.vseq{width:26px;height:26px;border-radius:8px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;color:var(--blue2)}
+.vname{font-size:14px;font-weight:700}.vmeta{font-size:11px;color:var(--t3);font-family:ui-monospace,monospace;margin-top:2px}
+.why{display:inline-block;font-size:10px;padding:2px 7px;border-radius:8px;margin-top:5px;margin-right:5px}
+.why.fire{background:rgba(255,95,95,.14);color:var(--red);border:1px solid rgba(255,95,95,.3)}
+.why.reg{background:rgba(61,220,132,.12);color:var(--green);border:1px solid rgba(61,220,132,.3)}
+.vps{font-family:ui-monospace,monospace;font-weight:800;color:var(--amber)}
+.bd{font-size:10.5px;color:var(--t2);line-height:1.6;margin-top:6px;background:rgba(255,255,255,.03);border-radius:8px;padding:6px 8px}
+.go{margin-top:8px;width:100%;background:var(--blue);color:#fff;border:none;border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer}
+.xdslot{height:calc(100vh - 188px);min-height:520px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#0d0f14}
+.tabbar{position:fixed;bottom:0;left:0;right:0;max-width:460px;margin:0 auto;display:flex;background:rgba(12,17,24,.98);border-top:1px solid var(--line);z-index:40}
+.tab{flex:1;text-align:center;padding:8px 0 10px;font-size:10px;color:var(--t3);cursor:pointer}
+.tab.on{color:var(--blue2)}.tab .ic{font-size:18px;display:block;margin-bottom:2px}
+.kv{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--line)}
+.kv b{font-family:ui-monospace,monospace}
+.note{font-size:10.5px;color:var(--t3);line-height:1.7;margin-top:8px}
+.sw{display:inline-block;font-size:10px;padding:1px 6px;border-radius:6px;margin:1px;font-family:ui-monospace,monospace}
+.sw.on{background:rgba(61,220,132,.14);color:var(--green)}.sw.off{background:rgba(255,95,95,.12);color:var(--red)}.sw.nd{background:rgba(255,255,255,.05);color:var(--t3)}
+.mockbar{position:fixed;left:0;right:0;bottom:54px;max-width:460px;margin:0 auto;font-size:10px;text-align:center;padding:4px;background:rgba(245,166,35,.12);color:var(--amber);z-index:35}
+button{font-family:inherit}
+</style>
+</head>
+<body>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo</div>
+<div class="top">
+  <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
+  <div class="badge mock" id="srMode">双轨·mock</div>
+</div>
+
+<!-- XM · 路上 -->
+<div class="scr on" id="scrXM">
+  <div class="sec">📱 今日拜访路线 · 来自 L5-07 planner(不另算 VPS)</div>
+  <div id="xmList"></div>
+  <div class="note" id="xmSummary"></div>
+</div>
+
+<!-- XD · 店内 -->
+<div class="scr" id="scrXD">
+  <div class="sec">🔧 店内盘点 · 共享 XD(同 ICA 一套底座)<span id="xdStoreTag" style="color:var(--t3)"></span></div>
+  <div class="xdslot" id="xdSlot"><div style="padding:20px;color:var(--t3);font-size:12px">从「📱路上」点一家店「进店」开始盘点。</div></div>
+  <div class="note">① 层 6 开关(上架/有货/陈列/动销/复购/毛利)所有角色同口径;大卖场额外 ②③ 项(堆头/端架/KA账期/促销/竞品/大客户)在 XD 底部面板。签退写 inventory_snapshot(reporter 跟登录走;动销/复购/毛利未采=no_data)。</div>
+</div>
+
+<!-- XL · 一本账 -->
+<div class="scr" id="scrXL">
+  <div class="sec">💳 一本账 · 我负责的 KA 门店 SKU 表现(跟 XM 派生)</div>
+  <div id="xlList"></div>
+  <div class="note">收入口径为 mock 占位(真口径待后端)。SKU 状态读 inventory_snapshot(盘点后出现);动销/复购/毛利 no_data 显示「—」。</div>
+</div>
+
+<!-- XP · 我的 -->
+<div class="scr" id="scrXP">
+  <div class="sec">👤 我的 · 复盘(VQS 对事)/ 学习 / 设置</div>
+  <div class="card">
+    <div style="font-size:12px;font-weight:700;margin-bottom:6px">📈 拜访有效性复盘 · VQS</div>
+    <div id="xpVqs"></div>
+    <div class="note">⚠ VQS 评的是「这次拜访有没有拨动门店状态」(对事)——<b>不是给 SR 打个人绩效分 / 排名 / 触发主管介入</b>(延续 L5-07 命门④)。</div>
+  </div>
+  <div class="card">
+    <div class="kv"><span>登录身份</span><b id="xpWho">—</b></div>
+    <div class="kv"><span>角色</span><b>SR · 零售业代</b></div>
+    <div class="kv" style="border:none"><span>中台</span><b id="xpMode">mock</b></div>
+    <button class="go" style="background:var(--card2);margin-top:10px" onclick="srLogout()">切换账号</button>
+  </div>
+</div>
+
+<div class="mockbar" id="mockbar">● 双轨·mock · 演示数据·未连真后端 · 不推真人</div>
+<div class="tabbar">
+  <div class="tab on" data-s="XM" onclick="srTab('XM')"><span class="ic">📱</span>路上</div>
+  <div class="tab" data-s="XD" onclick="srTab('XD')"><span class="ic">🔧</span>店内</div>
+  <div class="tab" data-s="XL" onclick="srTab('XL')"><span class="ic">💳</span>一本账</div>
+  <div class="tab" data-s="XP" onclick="srTab('XP')"><span class="ic">👤</span>我的</div>
+</div>
+
+<!-- 中台:全部 import,不重写 -->
+<script src="infinity-cloudbase/field-dictionary.js"></script>
+<script src="infinity-cloudbase/cloudbase-client.js"></script>
+<script src="infinity-cloudbase/visit-planning/L5-07/l5_07_planner.js"></script>
+<script src="infinity-cloudbase/shared-xd/shared-xd-mount.js"></script>
+<script>
+(function(){
+  var Dict=window.InfinityDict, CB=window.InfinityCB, L507=window.VisitPlannerL507, XD=window.SharedXD;
+  var IDENTITY=null, PLAN=null;
+
+  // ── L5-07 输入(大卖场 KA 门店·mock)。真接时来自 L0-04/拜访历史/CHS(L1-06)/SHS(地基③) ──
+  function srPlanInput(){
+    return {
+      date:new Date().toISOString().slice(0,10),
+      person:(IDENTITY&&(IDENTITY.name||IDENTITY.login_id))||'SR', role:'DSR', geo_cluster:'城区KA片',
+      stores:[
+        {store_id:'SH_GT_CVS_201',name:'大润发·徐汇大卖场',tier:'A',geo:{lat:31.18,lng:121.43},lastVisitDays:9, blindspot:true },
+        {store_id:'SH_GT_CVS_202',name:'家乐福·古北大卖场',tier:'B',geo:{lat:31.20,lng:121.45},lastVisitDays:18,blindspot:false},
+        {store_id:'SH_GT_CVS_203',name:'沃尔玛·五角场大卖场',tier:'B',geo:{lat:31.30,lng:121.51},lastVisitDays:14,blindspot:false},
+        {store_id:'SH_GT_CVS_204',name:'欧尚·杨浦大卖场',tier:'C',geo:{lat:31.27,lng:121.52},lastVisitDays:30,blindspot:false}
+      ],
+      health:{
+        'SH_GT_CVS_201':{CHS:'C',SHS:'D'}, 'SH_GT_CVS_202':{CHS:'B',SHS:'C'},
+        'SH_GT_CVS_203':{CHS:'A',SHS:'B'}, 'SH_GT_CVS_204':{CHS:'A',SHS:'A'}
+      }
+    };
+  }
+  var STORE_NAME={}; // store_id → 展示名
+  function buildPlan(){
+    var input=srPlanInput(); input.stores.forEach(function(s){ STORE_NAME[s.store_id]=s.name; });
+    PLAN=L507.planL507(input); // 直接用 L5-07 输出,不重算 VPS
+  }
+
+  // ── XM:渲染 L5-07 的 visit_list(reason/vps/vps_breakdown/route/时长)──────────
+  function renderXM(){
+    var el=document.getElementById('xmList'); var vl=(PLAN&&PLAN.visit_list)||[];
+    el.innerHTML=vl.map(function(v){
+      var fire=(v.reason==='盲点'||v.reason==='逾期');
+      var bd=v.vps_breakdown||{}; var dd=bd['常规到期度']||{}; var ff=bd['救火紧急度']||{};
+      return '<div class="card"><div class="vrow"><div class="vseq">'+v.seq+'</div><div style="flex:1">'+
+        '<div class="vname">'+(STORE_NAME[v.store_id]||v.store_id)+'</div>'+
+        '<div class="vmeta">'+v.store_id+' · 预计 '+(v.est_minutes||'?')+' 分</div>'+
+        '<span class="why '+(fire?'fire':'reg')+'">'+(v.reason==='盲点'?'救火·盲点':v.reason==='逾期'?'救火·逾期':'常规到期')+'</span>'+
+        '<span class="why reg" style="background:rgba(79,140,255,.12);color:var(--blue2);border-color:rgba(79,140,255,.3)">VPS <b class="vps">'+v.vps+'</b></span>'+
+        '<div class="bd">为什么去(VPS 拆解·来自 L5-07,不另算):<br>· 常规到期度:'+(dd['分级']||'?')+'级/'+(dd['周期']||'?')+'·距上次访 '+(dd['距上次访天数']==null?'—':dd['距上次访天数']+'天')+
+        '<br>· 救火紧急度:CHS '+(ff.from_CHS||'—')+' / SHS '+(ff.from_SHS||'—')+' <span style="color:var(--t3)">('+(ff.provenance||'')+')</span></div>'+
+        '<button class="go" onclick="srEnter(\''+v.store_id+'\')">进店盘点 →</button>'+
+      '</div></div></div>';
+    }).join('')|| '<div class="note">今日无到期门店。</div>';
+    document.getElementById('xmSummary').textContent=(PLAN&&PLAN.summary_text)||'';
+  }
+
+  // ── 进店:切 XD tab + 挂共享 XD(storeType=大卖场)──────────────────────────
+  window.srEnter=function(store_id){
+    srTab('XD');
+    document.getElementById('xdStoreTag').textContent=' · '+(STORE_NAME[store_id]||store_id);
+    XD.mountXD(document.getElementById('xdSlot'), { storeType:'大卖场', identity:IDENTITY, store_id:store_id });
+  };
+
+  // ── XL:跟 XM 派生 — 我负责的 KA 门店 SKU 表现(读 inventory_snapshot)────────────
+  function renderXL(){
+    var el=document.getElementById('xlList'); var vl=(PLAN&&PLAN.visit_list)||[];
+    Promise.all(vl.map(function(v){ return CB.queryByStore(v.store_id).then(function(rows){ return {v:v,rows:rows||[]}; }); }))
+    .then(function(list){
+      el.innerHTML=list.map(function(o){
+        var latest={}; o.rows.forEach(function(r){ if(!latest[r.sku]||(r.ts>latest[r.sku].ts)) latest[r.sku]=r; });
+        var skus=Object.keys(latest);
+        var onCnt=0; skus.forEach(function(k){ if(latest[k].switches.on_shelf===true) onCnt++; });
+        var body = skus.length? skus.map(function(k){
+          var sw=latest[k].switches; var cell=function(f){ var x=sw[f]; return '<span class="sw '+(x===true?'on':(x==='no_data'?'nd':'off'))+'">'+(x===true?'ON':(x==='no_data'?'—':'OFF'))+'</span>'; };
+          return '<div style="font-size:11px;margin-top:4px"><b style="font-family:ui-monospace,monospace">'+k+'</b> '+['on_shelf','oos_flag','display_rate','sellout','repurchase','margin'].map(cell).join('')+'</div>';
+        }).join('') : '<div class="note">待盘点(去 XD 盘一次,这里就有数据)。</div>';
+        return '<div class="card"><div class="vname">'+(STORE_NAME[o.v.store_id]||o.v.store_id)+'</div>'+
+          '<div class="vmeta">'+o.v.store_id+' · 在架 SKU '+onCnt+' · 收入(mock占位):¥'+(onCnt*1200+800)+'/月</div>'+body+'</div>';
+      }).join('');
+    });
+  }
+
+  // ── XP:复盘 VQS(对事非对人)= L5-07 learning_emits ─────────────────────────
+  function renderXP(){
+    var el=document.getElementById('xpVqs'); var le=(PLAN&&PLAN.learning_emits)||[];
+    el.innerHTML=le.map(function(e){
+      return '<div class="kv"><span>'+(STORE_NAME[e.store_id]||e.store_id)+'</span><b style="font-size:11px;color:var(--t2)">VPS '+e.planned_vps+'</b></div>'+
+        '<div class="note" style="margin:2px 0 6px">拨动门店状态:'+e['拜访后店状态有无拨动']+'<br>有效性(对事):'+e.effectiveness_signal+'</div>';
+    }).join('')||'<div class="note">签退后这里出现拜访有效性记录(对事)。</div>';
+    document.getElementById('xpWho').textContent=(IDENTITY&&(IDENTITY.name||IDENTITY.login_id))||'—';
+    document.getElementById('xpMode').textContent=CB.mode()==='real'?'真接 CloudBase':'双轨·mock';
+  }
+
+  // ── tabs ──
+  window.srTab=function(s){
+    ['XM','XD','XL','XP'].forEach(function(x){ document.getElementById('scr'+x).classList.toggle('on',x===s); });
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('on',t.getAttribute('data-s')===s); });
+    if(s==='XL') renderXL(); if(s==='XP') renderXP();
+  };
+
+  function badges(){
+    var real=CB.mode()==='real';
+    var b=document.getElementById('srMode'); b.textContent=real?'真接 CloudBase':'双轨·mock'; b.className='badge '+(real?'real':'mock');
+    document.getElementById('mockbar').style.display=real?'none':'block';
+  }
+  function applyIdentity(){
+    var nm=(IDENTITY&&(IDENTITY.name||IDENTITY.display_name||IDENTITY.login_id))||'SR';
+    document.getElementById('srName').textContent=nm;
+    document.getElementById('srSub').textContent='SR · 零售业代 · '+((IDENTITY&&IDENTITY.login_id)||'');
+  }
+
+  // ── 登录(复用 cloudbase-client·同 ICA 一套身份)──────────────────────────────
+  function showLogin(){
+    var m=document.createElement('div'); m.id='srLogin';
+    m.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(8,12,18,.94);display:flex;align-items:center;justify-content:center;padding:24px';
+    m.innerHTML='<div style="width:100%;max-width:330px;background:#16202e;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:22px">'+
+      '<div style="font-size:16px;font-weight:800;margin-bottom:4px">SR 登录</div>'+
+      '<div style="font-size:11px;color:#9fb0c8;margin-bottom:14px;line-height:1.6">手机号 / 工号(与 ICA 同一套身份)。<br><span id="srLgMode" style="color:#f5a623"></span></div>'+
+      '<input id="srLgId" placeholder="手机号 / 工号(如 SR-8801)" autocomplete="off" style="width:100%;background:#0c1118;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:11px;color:#eaf1fb;font-size:14px;margin-bottom:10px;outline:none">'+
+      '<button id="srLgGo" style="width:100%;background:#4f8cff;color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:800;cursor:pointer">进入</button></div>';
+    document.body.appendChild(m);
+    CB.ready().then(function(){ document.getElementById('srLgMode').textContent=CB.mode()==='real'?('真接 '+CB.CB_ENV_ID):'⚠ 双轨·mock(未配环境ID·演示·不上传)'; });
+    function go(){ var v=(document.getElementById('srLgId').value||'').trim(); if(!v){ document.getElementById('srLgId').focus(); return; }
+      CB.login(v).then(function(id){ IDENTITY=id; try{ localStorage.setItem('inf_cb_identity',JSON.stringify(id)); }catch(e){} m.remove(); boot2(); }); }
+    document.getElementById('srLgGo').onclick=go;
+    document.getElementById('srLgId').addEventListener('keydown',function(e){ if(e.key==='Enter') go(); });
+    setTimeout(function(){ try{document.getElementById('srLgId').focus();}catch(e){} },80);
+  }
+  window.srLogout=function(){ location.reload(); };
+
+  function boot2(){ badges(); applyIdentity(); buildPlan(); renderXM(); }
+  CB.ready().then(function(){ if(!Dict||!CB||!L507||!XD){ document.body.innerHTML='<div style="padding:30px;color:#ff5f5f">中台脚本未加载</div>'; return; } showLogin(); });
+})();
+</script>
+</body>
+</html>

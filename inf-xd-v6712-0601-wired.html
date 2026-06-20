@@ -8117,6 +8117,35 @@ function inspectedSkus2Count(){
     try{ var s=localStorage.getItem('inf_cb_inspect_store'); if(s) return s; }catch(e){}
     return 'SH_GT_CVS_003'; // 步步高西郊店 兜底
   }
+  function xdStoreType(){ try{ return localStorage.getItem('inf_cb_store_type')||''; }catch(e){ return ''; } }
+
+  // ── ②③ 层业态 checklist(storeType 条件显示)·绝不动 ① 层 6 开关口径 ──────────
+  // storeType='大卖场' → 额外显示 KA 业态项;默认(ICA 社区店/空)→ 不显示,ICA 行为零变化。
+  var KA_ITEMS=[
+    {key:'duitou_endcap_gold',label:'堆头/端架/黄金位陈列',type:'toggle'},
+    {key:'ka_account_period',label:'KA 账期',type:'text'},
+    {key:'promo_window',label:'促销档期',type:'text'},
+    {key:'competitor_duitou',label:'竞品堆头/价格',type:'text'},
+    {key:'big_client_contact',label:'大客户对接',type:'toggle'}
+  ];
+  window.__kaChecklist={};
+  function xdRenderKaPanel(){
+    if(xdStoreType()!=='大卖场') return;           // 仅大卖场显示②③
+    if(document.getElementById('xdKaPanel')) return;
+    var p=document.createElement('div'); p.id='xdKaPanel';
+    p.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:120;background:#141821;border-top:2px solid #5d9cec;max-height:46vh;overflow:auto;padding:10px 12px calc(10px + env(safe-area-inset-bottom));transform:translateY(calc(100% - 38px));transition:transform .22s';
+    var head='<div id="xdKaHead" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:12px;font-weight:700;color:#5d9cec">🛒 大卖场专项(②③层·不影响①开关) <span style="font-size:10px;color:#9aa5b8">点开/收起</span></div>';
+    var body='<div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">'+KA_ITEMS.map(function(it){
+      if(it.type==='toggle') return '<label style="display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#eef2f8">'+it.label+'<input type="checkbox" data-ka="'+it.key+'" style="width:20px;height:20px"></label>';
+      return '<label style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#eef2f8">'+it.label+'<input type="text" data-ka="'+it.key+'" placeholder="填写" style="flex:0 0 130px;background:#0d0f14;border:1px solid rgba(255,255,255,.14);border-radius:7px;padding:6px 8px;color:#eef2f8;font-size:12px"></label>';
+    }).join('')+'<div style="font-size:10px;color:#5d6678">② ③ 层业态手段,随店写入审计;① 层晶体管(上架/有货/陈列/动销/复购/毛利)口径不变。</div></div>';
+    p.innerHTML=head+body; document.body.appendChild(p);
+    var open=false;
+    document.getElementById('xdKaHead').onclick=function(){ open=!open; p.style.transform=open?'translateY(0)':'translateY(calc(100% - 38px))'; };
+    p.addEventListener('input',function(e){ var k=e.target.getAttribute('data-ka'); if(!k) return; window.__kaChecklist[k]=(e.target.type==='checkbox')?e.target.checked:e.target.value; });
+  }
+  function xdCollectKa(){ var t=xdStoreType(); return (t==='大卖场')?{store_type:t,items:window.__kaChecklist}:null; }
+
   // 收集本次真实盘到的 SKU(与原 finishVisit 同口径:主货架块 + 美顾补录)
   function xdCollectSkus(){
     var skus=[];
@@ -8146,6 +8175,7 @@ function inspectedSkus2Count(){
         ? { user_id:id.uid||'unknown', role:id.role||'ICA', name:id.name||id.display_name||id.login_id||null, login_id:id.login_id||null }
         : { user_id:'unknown', role:'ICA', name:null };
       var store=xdInspectStore(), subId=Dict.newSubmissionId(), n=0;
+      var ka=xdCollectKa(); // ②③ 层业态(大卖场)·随快照审计,不入①开关
       skus.forEach(function(nm){
         var snap=Dict.buildSnapshot({
           sku:nm, store:store, switches:xdSwitches(),
@@ -8153,6 +8183,7 @@ function inspectedSkus2Count(){
           reporter:reporter, effective_stage:null
         });
         snap.source_ref.observed_switches=['on_shelf','oos_flag','display_rate']; // 审计:仅盘市三开关为观察值
+        if(ka) snap.source_ref.ka_checklist=ka; // ②③层(store_type+items),≠ ①层开关
         CB.submitSnapshot(snap); n++;
       });
       console.log('[INF-XD-wired] 盘点写入 '+n+' 条 → inventory_snapshot · store='+store+' · reporter='+(reporter.name||reporter.user_id)+' · '+subId);
@@ -8160,6 +8191,8 @@ function inspectedSkus2Count(){
     }catch(e){ console.warn('[INF-XD-wired] 盘点写入失败:',e&&e.message); return 0; }
   }
   window.xdWriteSnapshots=xdWriteSnapshots;
+  // 大卖场业态面板:就绪后渲染(仅 storeType=大卖场;ICA 默认空→不渲染→零变化)
+  CB.ready().then(function(){ try{ xdRenderKaPanel(); }catch(e){} });
   // 包住 finishVisit:签退时先写盘点快照,再走原流程(原 postMessage/UI 零改动)
   if(!window.__xdFinishWrapped && typeof window.finishVisit==='function'){
     window.__xdFinishWrapped=true;
