@@ -1,11 +1,14 @@
 /* ============================================================================
  * INFINITY OS · 拜访规划/路线编排 · 规则引擎 (SCAFFOLD · 纯函数 · 未上线)
  * ----------------------------------------------------------------------------
- * 字段名照 字段字典 v1.1:主数据=SFA真名(storeCode/grade/visitDate);
+ * 字段名照 字段字典 v1.1(C1-C4 已裁):门店主数据=L0-04真名(store_id/store_grade/M/gps);
  *   节点新概念=设计名(plan_date/reason_code/...);跨域概念=锁定名(ts/source_ref/human_override)。
  *
- * 职责(只排程):读 stores / coverage_blindspot / org_capacity / visit_history(visitDate)
+ * 职责(只排程):读 门店档案(L0-04) / coverage_blindspot / org_capacity / visit_history(visitDate)
  *   → 产出"每人每日拜访清单+路线"。不采集/不判级/不算战功/不回写状态(铁律4)。
+ *
+ * C4 裁定:救火池只纳"有 store_id 的盲点"(未铺/数据);白区(无store_id)不进,走 L5-02/经理。
+ *   调用方用 VisitDict.fireStoreSetFromBlindspots(L1-04输出) 构造 blindspotSet。
  *
  * 铁律落实:见 README 铁律落实表。三命门:
  *   · 助手非鞭子 → assertNoAttendance() 硬拦考勤字段(铁律1)
@@ -62,7 +65,7 @@
    * 为一个人排今日清单。
    * person: { userCode, capacity_daily?, home:{lat,lng} }
    * candidates: [{ store(=stores行), lastVisitDate }]
-   * blindspotSet: Set<storeCode>
+   * blindspotSet: Set<store_id>  (C4:只含有 store_id 的盲点·见 VisitDict.fireStoreSetFromBlindspots)
    * today: ISO date
    */
   function planForPerson(person, candidates, blindspotSet, today) {
@@ -114,12 +117,13 @@
   function ratio(it) { return it.cycle_t ? (it.days_since_last == null ? 99 : it.days_since_last / it.cycle_t) : 1; }
 
   function buildItem(store, ds, cl) {
+    var gps = store[SF.gps] || null;             // L0-04 gps:{lat,lng} 嵌套
     return {
-      storeCode: store[SF.code], storeName: store[SF.name],
+      store_id: store[SF.code], store_name: store[SF.name],
       pool: cl.pool, reason_code: cl.reason_code,
-      grade: ds.grade, tier_pending: ds.tier_pending,
+      store_grade: ds.grade, tier_pending: ds.tier_pending,
       cycle_t: ds.cycle_t, days_since_last: ds.days_since_last, overdue_days: ds.overdue_days,
-      _geo: (store[SF.lat] != null) ? { lat: +store[SF.lat], lng: +store[SF.lng] } : null
+      _geo: (gps && gps.lat != null) ? { lat: +gps.lat, lng: +gps.lng } : null
       // 绝不含 visited/checkin/completion(铁律1)
     };
   }
@@ -156,18 +160,18 @@
     var rec = {
       by: override.by, why: override.why || null,
       at: override.at || new Date().toISOString(),
-      from: plan.items.map(function (i) { return i.storeCode; }), to: null
+      from: plan.items.map(function (i) { return i.store_id; }), to: null
     };
     if (override.action === 'reorder' && Array.isArray(override.payload)) {
-      var idx = {}; plan.items.forEach(function (i) { idx[i.storeCode] = i; });
+      var idx = {}; plan.items.forEach(function (i) { idx[i.store_id] = i; });
       plan.items = override.payload.map(function (code, n) { var it = idx[code]; if (it) it.seq = n + 1; return it; }).filter(Boolean);
     } else if (override.action === 'remove') {
-      plan.items = plan.items.filter(function (i) { return i.storeCode !== override.payload; });
+      plan.items = plan.items.filter(function (i) { return i.store_id !== override.payload; });
       plan.items.forEach(function (i, n) { i.seq = n + 1; });
     } else if (override.action === 'add' && override.payload) {
       override.payload.seq = plan.items.length + 1; plan.items.push(override.payload);
     }
-    rec.to = plan.items.map(function (i) { return i.storeCode; });
+    rec.to = plan.items.map(function (i) { return i.store_id; });
     plan.human_override.push(rec);
     assertNoAttendance(plan);
     return plan;

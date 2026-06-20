@@ -19,26 +19,45 @@
   // ① MASTER · 主数据字段 = SFA 真名 (provenance:'sfa' · 不另造平行名)
   //    来源:SFA_Backend_v4 entity 定义。这些是"已有的表",照搬真名。
   // ══════════════════════════════════════════════════════════════════════════
+  // ⚑ 主数据命名冲突(待拍):SFA_Backend_v4(实现) vs L0-04 SKILL(真相源 spec) 同义异名。
+  //   用户规则"主数据→SFA真名为准"已给裁决向;但下游 L1-03/L1-04 引用的是 L0-04 名(store_id/
+  //   store_grade/M/gps)。下表 sfa↔l0_04 映射保留,等你确认 SFA-wins(则下游读时需映射)。
+  // C1 裁定(2026-06-20):门店主数据以 L0-04 真相源为准(snake_case),不用 SFA 名。
+  //   新后端 = CloudBase greenfield,下游节点(L1-03/L1-04…)都用 L0-04 名。
+  //   SFA 名只在"从 SFA 导数据"边界做一次映射(见 MASTER_MAP_SFA),不当标准名。
   var MASTER = {
-    store: { // 门店档案 L0-04 = stores 表
-      code: 'storeCode', name: 'storeName', type: 'storeType',
-      grade: 'grade',            // 运营分级 A/B/C (≠ strategic_tier,见 CONCEPTS)
-      cycleT: 'visitCycleT',     // 拜访周期T(天)
-      district: 'district', city: 'city', address: 'address',
-      lat: 'latitude', lng: 'longitude', geoRadius: 'gpsRadiusM', active: 'isActive'
+    store: { // 门店档案 = L0-04 真相源(C1)
+      code: 'store_id',            // 终身不变唯一码(ST-SH-00420);版本变更不换号
+      name: 'store_name', type: 'channel_type',
+      grade: 'store_grade',        // 运营分级 A/B/C (≠ strategic_tier)
+      cycleM: 'M',                 // 巡店节奏·静默天数(按 store_grade 派生·L0-07 按店读)
+      region: 'region', city: 'city', tradeZone: 'trade_zone',
+      address: 'address', gps: 'gps',          // {lat,lng} 嵌套
+      trafficTier: 'traffic_tier', status: 'status',
+      effectiveFrom: 'effective_from', effectiveTo: 'effective_to', version: 'version' // SCD-2
     },
-    user: { // 组织主数据(人/岗位) = users 表
+    user: { // 组织主数据(人/岗位) —— 真相源 doc 未见,暂留 SFA 名 + 标记
+      _pending: '组织主数据真相源未入库;C1 只裁了门店。待该 SKILL 入库再对齐。',
       code: 'userCode', name: 'userName', role: 'role', district: 'district',
       phone: 'phone', cbScore: 'cbScore', aiqlScore: 'aiqlScore'
     },
-    visit: { // 拜访历史 = visit_reports 表
-      code: 'visitCode', store: 'store', user: 'user', visitDate: 'visitDate'
-      // ⚠ visit_reports 自带 checkinValid/status/positionsDone 是 SFA 执行模型;
-      //   规划/盘点节点只读 visitDate,不消费也不产出这些执行/考勤态(铁律1+4)。
+    visit: { // 拜访历史 —— 真相源(拜访节点)未见,暂留;只读 visitDate
+      _pending: '拜访历史真相源未入库;暂留。规划只读 visitDate,不碰 checkin/status 执行态。',
+      visitDate: 'visitDate'
     },
-    sku: { // SKU 主数据 = skus 表
-      code: 'skuCode', name: 'skuName', brand: 'brand', spec: 'spec',
-      gradeYear: 'gradeYear', gradeCoef: 'gradeCoef'
+    sku: { // SKU 主数据(真相源未单列,暂留)
+      code: 'skuCode', name: 'skuName', brand: 'brand', spec: 'spec'
+    }
+  };
+
+  // SFA → L0-04 导数据边界映射(只在 ETL 入口用一次;标准名是右列 L0-04)
+  var MASTER_MAP_SFA = {
+    store: {
+      storeCode: 'store_id', storeName: 'store_name', storeType: 'channel_type',
+      grade: 'store_grade', visitCycleT: 'M',
+      latitude: 'gps.lat', longitude: 'gps.lng',
+      district: 'region', // SFA 单级 → L0-04 三级 region/city/trade_zone(导入时补全)
+      gpsRadiusM: '(无直接对应·建档地理容差另算)'
     }
   };
 
@@ -47,14 +66,21 @@
   //    用户 v1.1 下发批次。def=定义, owner=哪层产出, guard=护栏。
   // ══════════════════════════════════════════════════════════════════════════
   var CONCEPTS = {
-    effective_stage: { zh: '生命周期阶段', enum: ['导入', '成长', '成熟', '衰退'],
-      def: '该评分用的生命周期门(卡②/L2)。是"评分的尺子本身"。', owner: 'L2门', provenance: 'design' },
+    effective_stage: { zh: '生命周期阶段', enum: ['导入', '成长', '成熟', '衰退', '焕新', '淘汰'],
+      def: '生命周期门·"评分的尺子本身"。stage=unknown 时不判级(stage_unknown_no_grading),绝不拿默认阶段顶替。',
+      owner: '地基①(FOUNDATION-1)·L1-03/L1-04/地基③只读不重判', provenance: 'design',
+      _v11_change: '原只列4值;按 L1-03/L1-04/FOUNDATION-3 实证补 焕新/淘汰(unknown 为哨兵,不入枚举)' },
     oos_flag: { zh: '缺货标记', type: 'boolean',
-      def: '缺货 = !有货。ON(true)=断货/无货。与 app『有货』开关语义相反。', provenance: 'design' },
+      def: '缺货 = !有货。ON(true)=断货/无货。与 app『有货』开关语义相反。L1-03 以"在售/oos证据"判铺货,口径一致。', provenance: 'design' },
     sellthrough_rate: { zh: '动销率', type: 'number', range: [0, 1],
-      def: '数值型动销率(POS算)。⚠ 区别于 sellout(布尔开关:有无动销),不可混。', owner: '地基/POS', provenance: 'design' },
-    sellthrough_grade: { zh: '动销分级', type: 'string',
-      def: 'sellthrough_rate 的分级。', provenance: 'design' },
+      def: '= moving ÷ pairable_selling(pool口径)。事实·与阶段无关。⚠ ≠ sellout(布尔开关:有无动销)。',
+      owner: 'L1-03', provenance: 'design', _confirmed: 'L1-03 §C5 实证一致' },
+    sellthrough_grade: { zh: '动销判级', enum: ['达标', '未达标', '未判级'],
+      def: '动销率按 effective_stage 阶段表判级的结果(未判级=unknown或淘汰期)。',
+      owner: 'L1-03', provenance: 'design', _confirmed: 'L1-03 v0.3 实证一致',
+      related: 'grading_stage = 判级所用阶段(=effective_stage,溯源用)' },
+    grading_stage: { zh: '判级所用阶段', type: 'string',
+      def: '判 sellthrough_grade 时所用的 effective_stage·溯源用。', owner: 'L1-03', provenance: 'design' },
     range: { zh: '区间', type: 'object', shape: { low: 'number', high: 'number' },
       def: '区间非单点。估算/阈值用 {low,high} 表达,不强压成单值。', provenance: 'design' },
     source_ref: { zh: '来源引用', type: 'object', shape: { source: 'string', submission_id: 'string', raw_ref: 'string', app: 'string' },
@@ -62,13 +88,16 @@
     ts: { zh: '时间戳', type: 'string', format: 'date-time',
       def: '记录/观察时间·ISO8601。审计必带。', provenance: 'design' },
     unknown: { zh: '未知(采过但拿不准)', sentinel: 'unknown',
-      def: '采集过、但当时判不准/AI低置信。≠ no_data。', provenance: 'design' },
+      def: '采集过、但当时判不准/AI低置信。≠ no_data。L1-03 stage=unknown 照算事实但不判级。', provenance: 'design' },
     no_data: { zh: '无数据(从未采集)', sentinel: 'no_data',
-      def: '从未采集/无记录。≠ unknown。两者绝不可混(混了会把"没去过"误当"去过但没看清")。', provenance: 'design' },
+      def: '从未采集/无记录。≠ unknown。L1-03 no_data "双不进"(不进分子分母);L1-04 数据盲点。两者绝不可混。', provenance: 'design' },
     human_override: { zh: '人工干预留痕', type: 'array', shape: { by: 'string', from: 'any', to: 'any', why: 'string', at: 'date-time' },
       def: '经理/人对机器输出的调整留痕(by/原/新/why/at)。机器不锁死。', provenance: 'design' },
-    lifeforce_grade: { zh: '生命力分级', type: 'string',
-      def: 'SKU/节点生命力分级。', owner: '地基③', guard: '⚠ 只地基③可产出;盘点/拜访规划等节点不得计算或写此字段。', provenance: 'design' },
+    vitality: { zh: '生命力(五级)', type: 'object',
+      shape: { level: 'S/A/B/C/D', prev_level: 'string', lift: 'number(净提升=level-prev_level)', attributed: 'number(归因于人的部分)' },
+      def: 'SKU 生命力五级。救活濒死(D→B)的 lift 远大于维持成熟。',
+      owner: '地基③(FOUNDATION-3)', guard: '⚠ 只地基③可产出;盘点/拜访规划等节点不得计算或写。', provenance: 'design',
+      _resolved: 'C2(2026-06-20 用户裁定):取代 lifeforce_grade,用 FOUNDATION-3 真名 vitality.level' },
     strategic_tier: { zh: '战略层级', type: 'string',
       def: '战略层级分类(战略地位)。⚠ ≠ store.grade(运营A/B/C),不可混用。', owner: '战略/品牌AI顾问', provenance: 'design' }
   };
@@ -178,10 +207,24 @@
     });
   }
 
+  // ⚑ 交叉复核冲突清单——4 条已由用户拍定(2026-06-20)。
+  var CONFLICTS = [
+    { id: 'C1-store-master-naming', status: 'RESOLVED',
+      ruling: '门店主数据以 L0-04 为准(store_id/store_grade/gps/M/region);SFA 名只在导数据边界映射一次(MASTER_MAP_SFA)。MASTER.store 已改。' },
+    { id: 'C2-lifeforce-name', status: 'RESOLVED',
+      ruling: '用 vitality.level(S/A/B/C/D),弃 lifeforce_grade。CONCEPTS.vitality 已替换。' },
+    { id: 'C3-effective_stage-enum', status: 'RESOLVED',
+      ruling: '保留六阶段 导入/成长/成熟/衰退/焕新/淘汰(匹配地基①)+ unknown 哨兵。' },
+    { id: 'C4-blindspot-consume', status: 'RESOLVED',
+      ruling: '盲点按有无 store_id 切:有(未铺/数据)进拜访规划救火池;白区(无store_id)不进,走 L5-02/经理。引擎已据此调整(fireStoreSetFromBlindspots)。' }
+  ];
+
   var api = {
-    VERSION: 'field-dictionary v1.1',
-    // ① 主数据(SFA真名) ② 新概念(设计名) —— 单一真相源
+    VERSION: 'field-dictionary v1.1 (+L1-04/L0-04/L1-03/F-3 复核·C1-C4 已裁)',
+    CONFLICTS: CONFLICTS,
+    // ① 主数据(L0-04真相源名) ② 新概念(设计名) —— 单一真相源
     MASTER: MASTER,
+    MASTER_MAP_SFA: MASTER_MAP_SFA,
     CONCEPTS: CONCEPTS,
     SENTINEL: SENTINEL,
     isUnknown: isUnknown,
