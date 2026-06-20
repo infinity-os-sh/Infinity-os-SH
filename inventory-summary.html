@@ -51,6 +51,7 @@ td.sku{text-align:left;font-family:'JetBrains Mono',monospace;font-weight:700}
     <label>SKU:</label>
     <select id="skuSel"><option value="">全部SKU</option></select>
     <button id="refreshBtn" style="cursor:pointer">刷新</button>
+    <span id="refreshStatus" style="font-size:11px;color:var(--txt3)"></span>
   </div>
 
   <div id="content"><div class="empty">加载中…</div></div>
@@ -73,12 +74,18 @@ td.sku{text-align:left;font-family:'JetBrains Mono',monospace;font-weight:700}
     b.className = 'badge ' + (m==='real'?'real':'mock');
   }
 
+  // 每次刷新都重建选项(新店/新SKU也出现),并保留当前选择
   function fillSelectors(){
+    var ss=document.getElementById('storeSel'), ks=document.getElementById('skuSel');
+    var curS=ss.value, curK=ks.value;
+    while(ss.options.length>1) ss.remove(1);
+    while(ks.options.length>1) ks.remove(1);
     var stores={}, skus={};
     all.forEach(function(r){ stores[r.scope.store]=1; skus[r.sku]=1; });
-    var ss=document.getElementById('storeSel'), ks=document.getElementById('skuSel');
     Object.keys(stores).sort().forEach(function(s){ ss.add(new Option(s,s)); });
     Object.keys(skus).sort().forEach(function(s){ ks.add(new Option(s,s)); });
+    ss.value=curS; if(ss.selectedIndex<0) ss.value='';   // 选项消失则回"全部"
+    ks.value=curK; if(ks.selectedIndex<0) ks.value='';
   }
 
   // 每店每SKU 取最新一条
@@ -130,20 +137,22 @@ td.sku{text-align:left;font-family:'JetBrains Mono',monospace;font-weight:700}
   }
 
   function load(){
+    var st=document.getElementById('refreshStatus'); if(st) st.textContent='刷新中…';
     document.getElementById('content').innerHTML='<div class="empty">加载中…</div>';
-    CB.queryAll().then(function(rows){
-      all=rows; badge();
-      // selectors 只填一次
-      if(document.getElementById('storeSel').options.length<=1) fillSelectors();
+    return CB.queryAll().then(function(rows){
+      all=rows||[]; badge();
+      fillSelectors();   // 每次刷新都重建选项(新盘点的新店/新SKU也出现)
       render();
+      if(st) st.textContent='已刷新 '+new Date().toLocaleTimeString()+' · '+all.length+' 条';
     }).catch(function(e){
       document.getElementById('content').innerHTML='<div class="empty">加载失败:'+(e&&e.message)+'</div>';
+      if(st) st.textContent='刷新失败:'+(e&&e.message);
     });
   }
 
   document.getElementById('storeSel').onchange=render;
   document.getElementById('skuSel').onchange=render;
-  document.getElementById('refreshBtn').onclick=load;
+  document.getElementById('refreshBtn').addEventListener('click', load);
 
   // 字典说明 (oos_flag 语义反向提示)
   document.getElementById('dictNote').innerHTML=
