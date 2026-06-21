@@ -32,10 +32,11 @@ body{background:var(--bg);color:var(--t1);font-family:'Noto Sans SC',system-ui,s
 .vps{font-family:ui-monospace,monospace;font-weight:800;color:var(--amber)}
 .bd{font-size:10.5px;color:var(--t2);line-height:1.6;margin-top:6px;background:rgba(255,255,255,.03);border-radius:8px;padding:6px 8px}
 .go{margin-top:8px;width:100%;background:var(--blue);color:#fff;border:none;border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer}
-.xdslot{height:calc(100vh - 200px);height:calc(100dvh - 200px);border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#0d0f14}
-.xdslot{position:relative;z-index:1}
-/* XD iframe 充满容器但不强行 540 高(否则底部绿按钮被裁/被底栏盖) */
-#xdSlot iframe{height:100%!important;min-height:0!important}
+.xdslot{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#0d0f14;position:relative;z-index:1;min-height:300px}
+/* XD 容器:进店时 position:fixed,top/bottom 由 JS 用真实渲染几何(getBoundingClientRect/offsetHeight)算,
+   精确卡在 header 与底栏(mockbar+tabbar)之间 → 绿色底部按钮在底栏之上,完整可见可点。不靠猜像素。 */
+#xdSlot.xd-fixed{position:fixed;left:50%;transform:translateX(-50%);width:100%;max-width:460px;z-index:50;border-radius:0;border-left:none;border-right:none}
+#xdSlot iframe{width:100%;height:100%!important;min-height:0!important;border:none;display:block}
 .tabbar{position:fixed;bottom:0;left:0;right:0;max-width:460px;margin:0 auto;display:flex;background:#0c1118;border-top:1px solid var(--line);z-index:100}
 .tab{flex:1;text-align:center;padding:8px 0 10px;font-size:10px;color:var(--t3);cursor:pointer}
 .tab.on{color:var(--blue2)}.tab .ic{font-size:18px;display:block;margin-bottom:2px}
@@ -216,10 +217,33 @@ button{font-family:inherit}
     document.getElementById('xpMode').textContent=CB.mode()==='real'?'真接 CloudBase':'双轨·mock';
   }
 
+  // ── XD 容器精确定位(用真实渲染几何,不猜像素)──────────────────────────────
+  // 进店时把 #xdSlot 固定在「店内标签底」与「底栏(mockbar+tabbar)顶」之间,
+  // top/bottom 都从 getBoundingClientRect/offsetHeight 实测 → inf-xd(固定视口App)
+  // 填满这块、内部滚动到底部绿按钮时,绿按钮就在底栏之上,完整可见可点。
+  function layoutXD(active){
+    var slot=document.getElementById('xdSlot'); if(!slot) return;
+    if(!active){ slot.classList.remove('xd-fixed'); slot.style.top=''; slot.style.bottom=''; return; }
+    try{ window.scrollTo(0,0); }catch(e){}
+    requestAnimationFrame(function(){
+      var sec=document.querySelector('#scrXD .sec');
+      var top = sec ? Math.max(0, Math.round(sec.getBoundingClientRect().bottom)) : 100; // 店内标签底
+      var tab=document.querySelector('.tabbar');
+      var mb=document.getElementById('mockbar');
+      var mbShown = mb && getComputedStyle(mb).display!=='none';
+      var barsH = (tab?tab.offsetHeight:54) + (mbShown?mb.offsetHeight:0);            // 底栏实测高
+      slot.style.top=top+'px'; slot.style.bottom=barsH+'px';
+      slot.classList.add('xd-fixed');
+    });
+  }
+  window.addEventListener('resize', function(){ if(document.getElementById('scrXD').classList.contains('on')) layoutXD(true); });
+  window.addEventListener('orientationchange', function(){ setTimeout(function(){ if(document.getElementById('scrXD').classList.contains('on')) layoutXD(true); },250); });
+
   // ── tabs ──
   window.srTab=function(s){
     ['XM','XD','XL','XP'].forEach(function(x){ document.getElementById('scr'+x).classList.toggle('on',x===s); });
     document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('on',t.getAttribute('data-s')===s); });
+    layoutXD(s==='XD');                       // 进/出 XD → 重算固定几何
     if(s==='XL') renderXL(); if(s==='XP') renderXP();
   };
 
