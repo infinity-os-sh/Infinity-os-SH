@@ -20,20 +20,27 @@
   function mountXD(slot, opts) {
     opts = opts || {};
     try {
-      localStorage.setItem('inf_cb_identity', JSON.stringify(opts.identity || {}));
-      localStorage.setItem('inf_cb_inspect_store', opts.store_id || 'SH_GT_CVS_001');
-      localStorage.setItem('inf_cb_store_type', opts.storeType || '');  // 空=不显示②③(ICA默认)
+      // 只覆盖传入的键(reload 时可传 {} 不动 identity/store/type)
+      if (opts.identity  !== undefined) localStorage.setItem('inf_cb_identity', JSON.stringify(opts.identity || {}));
+      if (opts.store_id  !== undefined) localStorage.setItem('inf_cb_inspect_store', opts.store_id || 'SH_GT_CVS_001');
+      if (opts.storeType !== undefined) localStorage.setItem('inf_cb_store_type', opts.storeType || ''); // 空=不显示②③(ICA默认)
     } catch (e) {}
     if (!slot) return null;
-    var f = slot.querySelector('iframe.shared-xd');
-    if (!f) {
-      f = document.createElement('iframe');
-      f.className = 'shared-xd';
-      f.title = 'INFINITY OS · 共享盘点 XD';
-      f.style.cssText = 'width:100%;height:100%;min-height:540px;border:none;display:block;background:#0d0f14';
-      slot.appendChild(f);
+    // slot 可是容器 div(SR:内建 iframe),也可直接传现成 iframe(ICA:复用其 #xdFrame)
+    var f;
+    if (slot.tagName === 'IFRAME') {
+      f = slot;
+    } else {
+      f = slot.querySelector('iframe.shared-xd');
+      if (!f) {
+        f = document.createElement('iframe');
+        f.className = 'shared-xd';
+        f.title = 'INFINITY OS · 共享盘点 XD';
+        f.style.cssText = 'width:100%;height:100%;min-height:540px;border:none;display:block;background:#0d0f14';
+        slot.appendChild(f);
+      }
     }
-    // 重载 = 重新读 localStorage(切店/切人/切业态时调用)
+    // 重载 = 重新读 localStorage(切店/切人/切业态/重开盘点时调用)
     f.src = SHARED_XD_SRC + '?t=' + Date.now();
     return f;
   }

@@ -427,7 +427,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Noto Sans SC',sans-serif
     <span style="font-size:12px;color:var(--amber);font-weight:700">🔧 盘完走到「签退」自动落袋</span>
     
   </div>
-  <iframe id="xdFrame" src="inf-xd-v6712-0601-wired.html"
+  <iframe id="xdFrame"
     style="width:100%;height:calc(100vh - 158px);min-height:540px;border:none;display:block;background:#0d0f14"
     title="INF-XD 现场盘点"></iframe>
 
@@ -1313,7 +1313,7 @@ function xdGoInspect(id){
   S.activeJob = id;
   switchMode('xd');
   // 每次进店都从打卡起点重新开始(不停在上次退出的屏·避免跨单串状态)
-  var f=document.getElementById('xdFrame'); if(f) f.src=f.src;
+  if(window.icaMountXD){ window.icaMountXD(); } else { var f=document.getElementById('xdFrame'); if(f) f.src=f.src; }
   toast('🔧 进店盘点中 · 拍货架/录库存/填日期 → 签退自动落袋');
 }
 // ②a 签退自动结算(Uber法则:盘点签退=送达=自动结算·不需点完成·防刷)
@@ -1424,8 +1424,8 @@ function xdBack(){
 }
 function xdNext(){
   // 下一家 → 重新加载INF-XD·从进店打卡重新开始
-  const f = document.getElementById('xdFrame');
-  if(f){ f.src = f.src; toast('🔄 进下一家 · 重新开始盘点'); }
+  if(window.icaMountXD){ window.icaMountXD(); toast('🔄 进下一家 · 重新开始盘点'); }
+  else { const f = document.getElementById('xdFrame'); if(f){ f.src = f.src; toast('🔄 进下一家 · 重新开始盘点'); } }
 }
 
 // ════ 提现 ════
@@ -1474,6 +1474,7 @@ renderGapAgent();  // 弥补差距块数字引擎算
 ═════════════════════════════════════════════════════════════════════════ -->
 <script src="infinity-cloudbase/field-dictionary.js"></script>
 <script src="infinity-cloudbase/cloudbase-client.js"></script>
+<script src="infinity-cloudbase/shared-xd/shared-xd-mount.js"></script>
 <script>
 (function(){
   var Dict=window.InfinityDict, CB=window.InfinityCB;
@@ -1582,14 +1583,16 @@ renderGapAgent();  // 弥补差距块数字引擎算
       try{ if(typeof renderSkuBoard==='function') renderSkuBoard(); }catch(e){}
     }).catch(function(e){ console.warn('[ICA补丁] 拉盘点失败,保留写死:',e&&e.message); });
   }
+  // 单一挂载路径:ICA 与 SR 都经 SharedXD.mountXD 挂共享 XD(消除两条路径漂移)。
+  // ICA storeType='' → 共享XD不显示大卖场②③;identity/store 同源传给 iframe(签退写 snapshot)。
+  window.icaMountXD=function(){
+    var f=document.getElementById('xdFrame');
+    if(f && window.SharedXD){ window.SharedXD.mountXD(f, {storeType:'', identity:IDENTITY, store_id:MY_STORE_ID}); }
+    else if(f){ try{ localStorage.setItem('inf_cb_identity',JSON.stringify(IDENTITY||{})); localStorage.setItem('inf_cb_inspect_store',MY_STORE_ID); localStorage.setItem('inf_cb_store_type',''); }catch(e){} f.src='inf-xd-v6712-0601-wired.html?t='+Date.now(); } // 兜底
+  };
   function onLoggedIn(){
     if(IDENTITY) applyName(IDENTITY.name||IDENTITY.display_name||IDENTITY.login_id);
-    // 同源 localStorage 传身份+盘点门店给 iframe 里的 inf-xd-wired(签退写 snapshot 用)
-    try{
-      localStorage.setItem('inf_cb_identity', JSON.stringify(IDENTITY||{}));
-      localStorage.setItem('inf_cb_inspect_store', MY_STORE_ID);  // 大润发沪西=SH_GT_CVS_001
-      localStorage.setItem('inf_cb_store_type', '');  // ICA=社区店,清空→共享XD不显示大卖场②③(防SR会话残留)
-    }catch(e){}
+    window.icaMountXD();   // 写 identity/store/storeType + 加载共享 XD(单一路径)
     banner();
     mergeInventory();
     wrapSubmitReport();
