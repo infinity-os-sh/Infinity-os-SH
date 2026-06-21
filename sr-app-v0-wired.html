@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v13</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v14</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -175,6 +175,7 @@ button{font-family:inherit}
     XD.mountXD(document.getElementById('xdSlot'), { storeType:'大卖场', identity:IDENTITY, store_id:store_id });
     layoutXD(true);                              // 进店后头部高度可能变,再 fit 一次
     setTimeout(function(){ layoutXD(true); },120); // iframe 入位后再校一次
+    setTimeout(liftXDAboveBars,300);             // 兜一次晚到的布局(mockbar 显示后栈高才稳)
   };
 
   // ── 签退回路:监听共享 XD 的 finishVisit postMessage(同 ICA-wired parent 那套)──
@@ -242,15 +243,26 @@ button{font-family:inherit}
   // SR 与 inf-xd 同源:往 XD iframe 注样式,把 inf-xd 的 .main 底边抬高=SR底栏实测高,
   // 让 inf-xd 内部 sticky bottom:0 的绿按钮落在 .mockbar+.tabbar 之上,可见可点。
   // ICA 没这两条底栏 → barsH=0 → 注入是空操作,不影响 ICA。
+  // 测「整条底栏栈」的顶边离真屏底多高(不逐条相加、不受 display 时序影响):
+  // 取 tabbar/mockbar 各自顶边 y,谁最靠上(min top)就用谁,栈高=屏底-最高顶边 +8px 留缝。
+  // mockbar 晚 display 时它顶边变小(更靠上)→ 这里自动吃进去,barsH 不再漏算。
+  function barStackHeight(){
+    var vh=window.innerHeight;
+    var tops=[];
+    var tab=document.querySelector('.tabbar');
+    var mb=document.getElementById('mockbar');
+    if(tab){ var r=tab.getBoundingClientRect(); if(r.height>0) tops.push(r.top); }
+    if(mb && getComputedStyle(mb).display!=='none'){ var r2=mb.getBoundingClientRect(); if(r2.height>0) tops.push(r2.top); }
+    if(!tops.length) return 0;
+    return Math.max(0, Math.round(vh - Math.min.apply(null,tops))) + 8;
+  }
   function liftXDAboveBars(){
     var slot=document.getElementById('xdSlot');
     var f=slot&&slot.querySelector('iframe'); if(!f) return;
     function inject(){
       try{
         var doc=f.contentDocument; if(!doc||!doc.head) return;
-        var tab=document.querySelector('.tabbar'), mb=document.getElementById('mockbar');
-        var mbShown=mb&&getComputedStyle(mb).display!=='none';
-        var barsH=(tab?tab.offsetHeight:0)+(mbShown?mb.offsetHeight:0);
+        var barsH=barStackHeight();
         var st=doc.getElementById('sr-host-barpad');
         if(!st){ st=doc.createElement('style'); st.id='sr-host-barpad'; doc.head.appendChild(st); }
         st.textContent='.main{bottom:'+barsH+'px !important}';
@@ -276,6 +288,7 @@ button{font-family:inherit}
     var real=CB.mode()==='real';
     var b=document.getElementById('srMode'); b.textContent=real?'真接 CloudBase':'双轨·mock'; b.className='badge '+(real?'real':'mock');
     document.getElementById('mockbar').style.display=real?'none':'block';
+    if(document.getElementById('scrXD').classList.contains('on')) liftXDAboveBars(); // mockbar 显隐变了 → 再抬一次,吃进真实栈高
   }
   function applyIdentity(){
     var nm=(IDENTITY&&(IDENTITY.name||IDENTITY.display_name||IDENTITY.login_id))||'SR';
