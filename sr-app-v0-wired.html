@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v14</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v15</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -253,8 +253,10 @@ button{font-family:inherit}
     var mb=document.getElementById('mockbar');
     if(tab){ var r=tab.getBoundingClientRect(); if(r.height>0) tops.push(r.top); }
     if(mb && getComputedStyle(mb).display!=='none'){ var r2=mb.getBoundingClientRect(); if(r2.height>0) tops.push(r2.top); }
-    if(!tops.length) return 0;
-    return Math.max(0, Math.round(vh - Math.min.apply(null,tops))) + 8;
+    var measured = tops.length ? (Math.round(vh - Math.min.apply(null,tops)) + 8) : 0;
+    // 安全下限 88 = tabbar(~54)+mockbar(~24)+10缝;某次测到 mockbar=0 也绝不欠。
+    // 横屏/底栏更高时 measured>88 用 measured。
+    return Math.max(measured, 88);
   }
   function liftXDAboveBars(){
     var slot=document.getElementById('xdSlot');
@@ -265,10 +267,14 @@ button{font-family:inherit}
         var barsH=barStackHeight();
         var st=doc.getElementById('sr-host-barpad');
         if(!st){ st=doc.createElement('style'); st.id='sr-host-barpad'; doc.head.appendChild(st); }
-        st.textContent='.main{bottom:'+barsH+'px !important}';
+        st.textContent='.main{bottom:'+barsH+'px !important}'; // 永远重写,旧的欠量值不留
       }catch(e){}
     }
+    // 多档重测:mockbar 排版/显示有时序,140/380ms 后它真有高度时再测一次(永不欠)
     if(f.contentDocument&&f.contentDocument.readyState==='complete') inject();
+    requestAnimationFrame(inject);
+    setTimeout(inject,140);
+    setTimeout(inject,380);
     f.addEventListener('load',inject);          // iframe 每次(重)载后再注
   }
   // 调用时机:load、resize、orientationchange、以及进店后(srEnter 里再调一次)
