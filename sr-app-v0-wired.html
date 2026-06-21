@@ -33,7 +33,7 @@ body{background:var(--bg);color:var(--t1);font-family:'Noto Sans SC',system-ui,s
 .bd{font-size:10.5px;color:var(--t2);line-height:1.6;margin-top:6px;background:rgba(255,255,255,.03);border-radius:8px;padding:6px 8px}
 .go{margin-top:8px;width:100%;background:var(--blue);color:#fff;border:none;border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer}
 .xdslot{height:calc(100vh - 188px);min-height:520px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#0d0f14}
-.tabbar{position:fixed;bottom:0;left:0;right:0;max-width:460px;margin:0 auto;display:flex;background:rgba(12,17,24,.98);border-top:1px solid var(--line);z-index:40}
+.tabbar{position:fixed;bottom:0;left:0;right:0;max-width:460px;margin:0 auto;display:flex;background:#0c1118;border-top:1px solid var(--line);z-index:100}
 .tab{flex:1;text-align:center;padding:8px 0 10px;font-size:10px;color:var(--t3);cursor:pointer}
 .tab.on{color:var(--blue2)}.tab .ic{font-size:18px;display:block;margin-bottom:2px}
 .kv{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--line)}
@@ -41,7 +41,8 @@ body{background:var(--bg);color:var(--t1);font-family:'Noto Sans SC',system-ui,s
 .note{font-size:10.5px;color:var(--t3);line-height:1.7;margin-top:8px}
 .sw{display:inline-block;font-size:10px;padding:1px 6px;border-radius:6px;margin:1px;font-family:ui-monospace,monospace}
 .sw.on{background:rgba(61,220,132,.14);color:var(--green)}.sw.off{background:rgba(255,95,95,.12);color:var(--red)}.sw.nd{background:rgba(255,255,255,.05);color:var(--t3)}
-.mockbar{position:fixed;left:0;right:0;bottom:54px;max-width:460px;margin:0 auto;font-size:10px;text-align:center;padding:4px;background:rgba(245,166,35,.12);color:var(--amber);z-index:35}
+.mockbar{position:fixed;left:0;right:0;bottom:54px;max-width:460px;margin:0 auto;font-size:10px;text-align:center;padding:4px;background:rgba(245,166,35,.12);color:var(--amber);z-index:90}
+.xdslot{position:relative;z-index:1}
 button{font-family:inherit}
 </style>
 </head>
@@ -106,6 +107,18 @@ button{font-family:inherit}
 (function(){
   var Dict=window.InfinityDict, CB=window.InfinityCB, L507=window.VisitPlannerL507, XD=window.SharedXD;
   var IDENTITY=null, PLAN=null;
+  var CUR_STORE=null;          // 当前进店盘点的 store_id
+  var VISITED={};              // 已签退落袋的店:store_id → true
+
+  // 轻量 toast(落袋提示)
+  function srToast(msg){
+    var t=document.getElementById('srToast');
+    if(!t){ t=document.createElement('div'); t.id='srToast';
+      t.style.cssText='position:fixed;left:50%;bottom:74px;transform:translateX(-50%);z-index:60;background:#1d2a3a;color:#eaf1fb;border:1px solid rgba(61,220,132,.4);border-radius:10px;padding:9px 14px;font-size:12px;max-width:88%;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.4)';
+      document.body.appendChild(t); }
+    t.textContent=msg; t.style.display='block';
+    clearTimeout(t._h); t._h=setTimeout(function(){ t.style.display='none'; },2600);
+  }
 
   // ── L5-07 输入(大卖场 KA 门店·mock)。真接时来自 L0-04/拜访历史/CHS(L1-06)/SHS(地基③) ──
   function srPlanInput(){
@@ -143,7 +156,9 @@ button{font-family:inherit}
         '<span class="why reg" style="background:rgba(79,140,255,.12);color:var(--blue2);border-color:rgba(79,140,255,.3)">VPS <b class="vps">'+v.vps+'</b></span>'+
         '<div class="bd">为什么去(VPS 拆解·来自 L5-07,不另算):<br>· 常规到期度:'+(dd['分级']||'?')+'级/'+(dd['周期']||'?')+'·距上次访 '+(dd['距上次访天数']==null?'—':dd['距上次访天数']+'天')+
         '<br>· 救火紧急度:CHS '+(ff.from_CHS||'—')+' / SHS '+(ff.from_SHS||'—')+' <span style="color:var(--t3)">('+(ff.provenance||'')+')</span></div>'+
-        '<button class="go" onclick="srEnter(\''+v.store_id+'\')">进店盘点 →</button>'+
+        (VISITED[v.store_id]
+          ? '<div style="margin-top:8px;display:flex;gap:8px;align-items:center"><span class="why reg" style="margin:0">✓ 已访·已落袋·盘点已写</span><button class="go" style="flex:1;margin:0;background:var(--card2)" onclick="srEnter(\''+v.store_id+'\')">重盘 ↻</button></div>'
+          : '<button class="go" onclick="srEnter(\''+v.store_id+'\')">进店盘点 →</button>')+
       '</div></div></div>';
     }).join('')|| '<div class="note">今日无到期门店。</div>';
     document.getElementById('xmSummary').textContent=(PLAN&&PLAN.summary_text)||'';
@@ -151,10 +166,23 @@ button{font-family:inherit}
 
   // ── 进店:切 XD tab + 挂共享 XD(storeType=大卖场)──────────────────────────
   window.srEnter=function(store_id){
+    CUR_STORE=store_id;
     srTab('XD');
     document.getElementById('xdStoreTag').textContent=' · '+(STORE_NAME[store_id]||store_id);
     XD.mountXD(document.getElementById('xdSlot'), { storeType:'大卖场', identity:IDENTITY, store_id:store_id });
   };
+
+  // ── 签退回路:监听共享 XD 的 finishVisit postMessage(同 ICA-wired parent 那套)──
+  //   只补 SR 侧返回流:回路上 + 标已落袋 + 可进下一家;不动写路(快照已写)。
+  window.addEventListener('message', function(e){
+    if(!e || !e.data || e.data.type!=='xd_finish') return;
+    var sid=CUR_STORE;                       // 用本地记录的店(message.store 是 XD 内部名,不可靠)
+    if(sid) VISITED[sid]=true;               // 标已访·已落袋
+    srTab('XM');                             // ① 自动回「路上」
+    renderXM();                              // ② 刷新:该店标已落袋
+    var nm=(sid&&(STORE_NAME[sid]||sid))||'本店';
+    srToast('✓ '+nm+' 已签退落袋 · 盘点已写入(reporter 跟登录走)');  // ③ 落袋清晰
+  });
 
   // ── XL:跟 XM 派生 — 我负责的 KA 门店 SKU 表现(读 inventory_snapshot)────────────
   function renderXL(){
