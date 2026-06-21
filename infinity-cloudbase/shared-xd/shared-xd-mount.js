@@ -36,7 +36,7 @@
         f = document.createElement('iframe');
         f.className = 'shared-xd';
         f.title = 'INFINITY OS · 共享盘点 XD';
-        f.style.cssText = 'width:100%;height:100%;min-height:540px;border:none;display:block;background:#0d0f14';
+        f.style.cssText = 'width:100%;height:100%;min-height:0;border:none;display:block;background:#0d0f14';
         slot.appendChild(f);
       }
     }
