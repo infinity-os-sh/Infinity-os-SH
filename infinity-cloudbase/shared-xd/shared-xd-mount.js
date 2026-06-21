@@ -33,6 +33,7 @@
     } else {
       f = slot.querySelector('iframe.shared-xd');
       if (!f) {
+        slot.innerHTML = '';                 // 清掉占位符(「从路上点一家店进店…」)再放 iframe
         f = document.createElement('iframe');
         f.className = 'shared-xd';
         f.title = 'INFINITY OS · 共享盘点 XD';

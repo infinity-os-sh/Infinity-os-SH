@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v15</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -172,7 +172,11 @@ button{font-family:inherit}
     CUR_STORE=store_id;
     srTab('XD');
     document.getElementById('xdStoreTag').textContent=' · '+(STORE_NAME[store_id]||store_id);
-    XD.mountXD(document.getElementById('xdSlot'), { storeType:'大卖场', identity:IDENTITY, store_id:store_id });
+    var f=XD.mountXD(document.getElementById('xdSlot'), { storeType:'大卖场', identity:IDENTITY, store_id:store_id });
+    // 同源:iframe 载好后把顶栏角色标签改「SR·零售业代」。setRole 只改标签,不改任务内容(契约活另算)。
+    if(f) f.addEventListener('load',function(){
+      try{ var w=f.contentWindow; if(w&&typeof w.setRole==='function') w.setRole('sr'); }catch(e){}
+    });
     layoutXD(true);                              // 进店后头部高度可能变,再 fit 一次
     setTimeout(function(){ layoutXD(true); },120); // iframe 入位后再校一次
     setTimeout(liftXDAboveBars,300);             // 兜一次晚到的布局(mockbar 显示后栈高才稳)
@@ -228,7 +232,14 @@ button{font-family:inherit}
   //   真正把绿按钮抬到底栏之上 = 伸进同源 iframe,把 inf-xd 的 .main 底边抬高=底栏实测高(liftXDAboveBars)。
   function layoutXD(active){
     var slot=document.getElementById('xdSlot'); if(!slot) return;
-    if(!active){ slot.classList.remove('xd-fixed'); slot.style.top=slot.style.bottom=''; return; }
+    // #scrXD .note 在 fixed 布局下会错位浮顶 → 进 XD 隐、离 XD 复
+    var notes=document.querySelectorAll('#scrXD .note');
+    if(!active){
+      slot.classList.remove('xd-fixed'); slot.style.top=slot.style.bottom='';
+      for(var i=0;i<notes.length;i++) notes[i].style.display='';
+      return;
+    }
+    for(var j=0;j<notes.length;j++) notes[j].style.display='none';
     try{ window.scrollTo(0,0); }catch(e){}
     requestAnimationFrame(function(){
       var sec=document.querySelector('#scrXD .sec');
