@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · XDfit-v12</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v13</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -223,30 +223,46 @@ button{font-family:inherit}
   // 进店时把 #xdSlot 固定在「店内标签底」与「底栏(mockbar+tabbar)顶」之间,
   // top/bottom 都从 getBoundingClientRect/offsetHeight 实测 → inf-xd(固定视口App)
   // 填满这块、内部滚动到底部绿按钮时,绿按钮就在底栏之上,完整可见可点。
-  // fit():把 #xdSlot 精确钉在「头部底边」和「底栏顶边」之间——全用真实测量,无任何写死像素。
+  // fit():把 #xdSlot 钉在「头部底边」到「真屏幕底」之间(bottom:0)。
+  //   真正把绿按钮抬到底栏之上 = 伸进同源 iframe,把 inf-xd 的 .main 底边抬高=底栏实测高(liftXDAboveBars)。
   function layoutXD(active){
     var slot=document.getElementById('xdSlot'); if(!slot) return;
     if(!active){ slot.classList.remove('xd-fixed'); slot.style.top=slot.style.bottom=''; return; }
     try{ window.scrollTo(0,0); }catch(e){}
     requestAnimationFrame(function(){
-      // top = xdSlot 上方所有常驻头部(蓝条+米老师块+店内盘点行)的底边。
-      // 用「店内盘点行(.sec)」的 viewport 底边——它已含其上方所有头部高度。
       var sec=document.querySelector('#scrXD .sec');
       var top = sec ? Math.round(sec.getBoundingClientRect().bottom) : 0;
-      // barsH = mockbar(显示时) + tabbar 实测高
-      var tab=document.querySelector('.tabbar'), mb=document.getElementById('mockbar');
-      var mbShown = mb && getComputedStyle(mb).display!=='none';
-      var barsH = (tab?tab.offsetHeight:0) + (mbShown?mb.offsetHeight:0);
       slot.style.top=top+'px';
-      slot.style.bottom=barsH+'px';
-      slot.style.height='auto';                 // 高度由 top/bottom 决定,绝不溢出
+      slot.style.bottom='0px';                  // iframe 占到真屏幕底;抬升交给 liftXDAboveBars
+      slot.style.height='auto';
       slot.classList.add('xd-fixed');
+      liftXDAboveBars();                        // 伸进 iframe 抬 inf-xd .main 到底栏之上
     });
   }
+  // SR 与 inf-xd 同源:往 XD iframe 注样式,把 inf-xd 的 .main 底边抬高=SR底栏实测高,
+  // 让 inf-xd 内部 sticky bottom:0 的绿按钮落在 .mockbar+.tabbar 之上,可见可点。
+  // ICA 没这两条底栏 → barsH=0 → 注入是空操作,不影响 ICA。
+  function liftXDAboveBars(){
+    var slot=document.getElementById('xdSlot');
+    var f=slot&&slot.querySelector('iframe'); if(!f) return;
+    function inject(){
+      try{
+        var doc=f.contentDocument; if(!doc||!doc.head) return;
+        var tab=document.querySelector('.tabbar'), mb=document.getElementById('mockbar');
+        var mbShown=mb&&getComputedStyle(mb).display!=='none';
+        var barsH=(tab?tab.offsetHeight:0)+(mbShown?mb.offsetHeight:0);
+        var st=doc.getElementById('sr-host-barpad');
+        if(!st){ st=doc.createElement('style'); st.id='sr-host-barpad'; doc.head.appendChild(st); }
+        st.textContent='.main{bottom:'+barsH+'px !important}';
+      }catch(e){}
+    }
+    if(f.contentDocument&&f.contentDocument.readyState==='complete') inject();
+    f.addEventListener('load',inject);          // iframe 每次(重)载后再注
+  }
   // 调用时机:load、resize、orientationchange、以及进店后(srEnter 里再调一次)
-  window.addEventListener('load', function(){ if(document.getElementById('scrXD').classList.contains('on')) layoutXD(true); });
-  window.addEventListener('resize', function(){ if(document.getElementById('scrXD').classList.contains('on')) layoutXD(true); });
-  window.addEventListener('orientationchange', function(){ setTimeout(function(){ if(document.getElementById('scrXD').classList.contains('on')) layoutXD(true); },250); });
+  window.addEventListener('load', function(){ if(document.getElementById('scrXD').classList.contains('on')){ layoutXD(true); liftXDAboveBars(); } });
+  window.addEventListener('resize', function(){ if(document.getElementById('scrXD').classList.contains('on')){ layoutXD(true); liftXDAboveBars(); } });
+  window.addEventListener('orientationchange', function(){ setTimeout(function(){ if(document.getElementById('scrXD').classList.contains('on')){ layoutXD(true); liftXDAboveBars(); } },250); });
 
   // ── tabs ──
   window.srTab=function(s){
