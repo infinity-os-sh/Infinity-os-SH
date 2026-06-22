@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带 · 实体主数据 · 事件流 · 校准判断</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带 · 实体主数据 · 事件流 · 校准判断 · 路线Agent</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -145,7 +145,7 @@ button{font-family:inherit}
     return e;
   }
   window.evToggle=function(){ var d=document.getElementById('evTimeline'); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
-  function evLabel(t){ return {VISIT_START:'进店',INVENTORY_SCANNED:'盘点',SCORE_COMPUTED:'算分',VISIT_COMPLETED:'签退',JUDGMENT_MADE:'判断',ESCALATED:'上报'}[t]||t; }
+  function evLabel(t){ return {VISIT_START:'进店',INVENTORY_SCANNED:'盘点',SCORE_COMPUTED:'算分',VISIT_COMPLETED:'签退',JUDGMENT_MADE:'判断',ESCALATED:'上报',ROUTE_PLANNED:'排路线'}[t]||t; }
   function renderEventTimeline(){
     var box=document.getElementById('evTimeline'); if(!box) return;
     if(!INF_EVENTS.length){ box.innerHTML='今日暂无事件。'; return; }
@@ -157,6 +157,7 @@ button{font-family:inherit}
       if(e.type==='SCORE_COMPUTED') extra=' · '+EM.nameOf('SKU',p.sku_code)+' '+p.state_score+'/'+p.sku_state_level;
       if(e.type==='JUDGMENT_MADE') extra=' · '+EM.nameOf('SKU',p.sku_code)+' ['+p.rule_id+'] '+p.act+(p.calibrated===false?' ·动销虚高谨慎':'');
       if(e.type==='ESCALATED') extra=' · '+EM.nameOf('SKU',p.sku_code)+' → '+p.to;
+      if(e.type==='ROUTE_PLANNED') extra=' · 先去 '+(p.top_store?EM.nameOf('STORE',p.top_store):'—')+'(共'+(p.store_order?p.store_order.length:0)+'店)';
       return '<div style="font-size:10.5px;padding:3px 0;border-bottom:1px solid var(--card2);line-height:1.6">'+
         '<span style="color:var(--t3);font-family:ui-monospace,monospace">'+hhmm+'</span> · '+
         '<b>'+evLabel(e.type)+'</b> · '+esc(store)+esc(extra)+'</div>';
@@ -234,6 +235,7 @@ button{font-family:inherit}
   var WEIGHT_NUM = { '高':3, '中':2, '低':1 };
   var REPORT_QUEUE = [];                         // 内存上报队列(mock·不真推)
   var _judgeEmitted = {};
+  var _routeEmitted = null;                      // ROUTE_PLANNED 去重签名
   function judge(ctx){
     for(var i=0;i<JUDGE_RULES.length;i++){ if(JUDGE_RULES[i].test(ctx)) return JUDGE_RULES[i]; }
     return { id:'R0_跟进', act:'常规跟进', why:'无规则命中·默认' };
@@ -389,8 +391,9 @@ button{font-family:inherit}
     el.innerHTML=vl.map(function(v){
       var fire=(v.reason==='盲点'||v.reason==='逾期');
       var bd=v.vps_breakdown||{}; var dd=bd['常规到期度']||{}; var ff=bd['救火紧急度']||{};
-      return '<div class="card"><div class="vrow"><div class="vseq">'+v.seq+'</div><div style="flex:1">'+
+      return '<div class="card" id="xmCard_'+v.store_id+'"><div class="vrow"><div class="vseq">'+v.seq+'</div><div style="flex:1">'+
         '<div class="vname">'+(STORE_NAME[v.store_id]||v.store_id)+'</div>'+
+        '<div id="xmPrio_'+v.store_id+'" style="font-size:10px;color:var(--t3);margin:2px 0">关键度计算中…</div>'+
         '<div class="vmeta">'+v.store_id+' · 预计 '+(v.est_minutes||'?')+' 分</div>'+
         '<span class="why '+(fire?'fire':'reg')+'">'+(v.reason==='盲点'?'救火·盲点':v.reason==='逾期'?'救火·逾期':'常规到期')+'</span>'+
         '<span class="why reg" style="background:rgba(79,140,255,.12);color:var(--blue2);border-color:rgba(79,140,255,.3)">VPS <b class="vps">'+v.vps+'</b></span>'+
@@ -402,6 +405,65 @@ button{font-family:inherit}
       '</div></div></div>';
     }).join('')|| '<div class="note">今日无到期门店。</div>';
     document.getElementById('xmSummary').textContent=(PLAN&&PLAN.summary_text)||'';
+    routeAgent();                               // PR25:店级聚合 PR24 关键度 → 路线优先排序+注解(叠在 L5-07 上,不改其路由)
+  }
+
+  // ── PR25 Route Agent:店优先级 = Σ(该店各 JBP 目标 SKU 的 crit)。复用 PR24 的算分/判断/权重,
+  //   只按店聚合求和;叠在 L5-07 路线之上(不动其 tier/频次/距离),展示层 sort + 注解。
+  //   无盘点分的店 → 需先盘·无法预判,排在有数据店之后。L5-07 原序作 stable 兜底。
+  function storePriority(store, targets){
+    if(!store || !CB || !CB.queryByStore || !window.SkuScorecard) return Promise.resolve({store:store, hasData:false, priority:0, reasons:[]});
+    return CB.queryByStore(store).then(function(rows){
+      var rmap={}; (rows||[]).forEach(function(r){ if(r.sku && (!rmap[r.sku]||r.ts>rmap[r.sku].ts)) rmap[r.sku]=r; });
+      var sum=0, reasons=[], any=false;
+      (targets||[]).forEach(function(t){
+        if(!EM.SKU[t.code]) return;
+        var latest=rmap[t.code]; if(!latest) return;
+        any=true;
+        var r=window.SkuScorecard.scoreSku(swToScoreInput(latest, store));   // 复用·不重算
+        var gap=Math.max(0,100-r.state_score);
+        var crit=(WEIGHT_NUM[t.strategic_weight||'中']||1)*gap;
+        sum+=crit;
+        if(crit>0) reasons.push({code:t.code, crit:crit, level:r.sku_state_level});
+      });
+      reasons.sort(function(a,b){return b.crit-a.crit;});
+      return {store:store, hasData:any, priority:sum, reasons:reasons};
+    }).catch(function(){ return {store:store, hasData:false, priority:0, reasons:[]}; });
+  }
+  function routeAgent(){
+    var vl=(PLAN&&PLAN.visit_list)||[]; if(!vl.length) return;
+    var targets=(JBP_MOCK&&JBP_MOCK.sku_targets)||[];
+    Promise.all(vl.map(function(v,i){ return storePriority(v.store_id, targets).then(function(p){ p._seq=i; return p; }); }))
+    .then(function(list){
+      // 排序:有数据按 priority 降序;无数据(需先盘)排末,内部保持 L5-07 原序(_seq)
+      var ordered=list.slice().sort(function(a,b){
+        if(a.hasData!==b.hasData) return a.hasData?-1:1;
+        if(a.hasData) return b.priority-a.priority;
+        return a._seq-b._seq;
+      });
+      var el=document.getElementById('xmList');
+      ordered.forEach(function(p, rank){
+        // 注解
+        var box=document.getElementById('xmPrio_'+p.store);
+        if(box){
+          if(!p.hasData){ box.innerHTML='<span style="color:#e2a336">需先盘·无法预判</span>'; }
+          else {
+            var why=p.reasons.slice(0,2).map(function(r){ return EM.nameOf('SKU',r.code).replace(/〔.*/,'')+'·'+r.level; }).join(' / ')||'无显著缺口';
+            box.innerHTML='<span style="color:#e5484d;font-weight:700">#'+(rank+1)+'</span> · 关键度 <b>'+p.priority+'</b> · 主因 '+esc(why);
+          }
+        }
+        // 展示层重排:把卡片按新序 append(移动 DOM,不重渲染、不动 L5-07 的 PLAN)
+        var card=document.getElementById('xmCard_'+p.store);
+        if(card && el) el.appendChild(card);
+      });
+      // 发事件(按序列+优先级签名去重,重渲染不刷屏)
+      var hasAny=ordered.some(function(p){return p.hasData;});
+      var sig=ordered.map(function(p){return p.store+':'+(p.hasData?p.priority:'-');}).join(',');
+      if(hasAny && _routeEmitted!==sig){ _routeEmitted=sig;
+        emitEvent('ROUTE_PLANNED',{ store_order:ordered.map(function(p){return p.store;}),
+          top_store:ordered[0]&&ordered[0].hasData?ordered[0].store:null });
+      }
+    });
   }
 
   // ── 进店:切 XD tab + 挂共享 XD(storeType=大卖场)──────────────────────────
