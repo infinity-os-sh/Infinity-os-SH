@@ -3,7 +3,7 @@
 SKU Scorecard 实现 → 黄金例/命门校验 桥
 ================================================================
 实现是 JS(接 cloudbase 栈最顺,对齐 field-dictionary.js v1.1);
-本桥跑 `node sku_scorecard.js` 取五个黄金例输出,断言 state_score / vitality_level
+本桥跑 `node sku_scorecard.js` 取五个黄金例输出,断言 state_score / sku_state_level
 与 SKILL §4 期望逐例一致;再跑四条边界(§4)断言不破命门。
 
 这是"实现是否复现规格"的验收(对应 SKILL §4「tracker 合并前必跑的 dry-run,
@@ -31,15 +31,15 @@ def score(inp):
 
 
 def check_golden():
-    """§4 五个黄金例:state_score + vitality_level 逐例必中。"""
+    """§4 五个黄金例:state_score + sku_state_level 逐例必中。"""
     rows = run_golden()
     errs = []
     for r in rows:
         g = r["got"]
         if g["state_score"] != r["expect_score"]:
             errs.append("黄金例 %s 分不符:got %s != exp %s" % (r["name"], g["state_score"], r["expect_score"]))
-        if g["vitality_level"] != r["expect_L"]:
-            errs.append("黄金例 %s L级不符:got %s != exp %s" % (r["name"], g["vitality_level"], r["expect_L"]))
+        if g["sku_state_level"] != r["expect_L"]:
+            errs.append("黄金例 %s L级不符:got %s != exp %s" % (r["name"], g["sku_state_level"], r["expect_L"]))
     return rows, errs
 
 
@@ -82,9 +82,9 @@ def main():
     print("=" * 64)
     for r in rows:
         g = r["got"]
-        ok = (g["state_score"] == r["expect_score"] and g["vitality_level"] == r["expect_L"])
+        ok = (g["state_score"] == r["expect_score"] and g["sku_state_level"] == r["expect_L"])
         print("  [%s] 例%s  score=%s L=%s  top=%s conf=%s gate=%s" % (
-            "OK" if ok else "XX", r["name"], g["state_score"], g["vitality_level"],
+            "OK" if ok else "XX", r["name"], g["state_score"], g["sku_state_level"],
             g["top_gap_dim"], g["confidence"], g["margin_gate"]["cap_applied"]))
     print("-" * 64)
     if errs == []:

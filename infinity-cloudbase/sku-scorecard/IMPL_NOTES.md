@@ -43,8 +43,10 @@ python3 -m pytest -q test_sku_scorecard_redlines.py   # 14 条 Redline
 - **tracker 校验**:毛利闸 / 压货(铺货远超目标→疑压货,标待人工核+降置信)/ no_data 置信 / 权重和。
 - **观测留痕**:`flags` 标用了哪套政策(`SKU_SCORE_pending`)、缺哪些维、是否疑压货,可审计回溯。
 
-## ⚠ 待对齐(命名重叠)
-- 输出字段 `vitality_level` = **本表 L1–L5**(状态分映射,§2.4),**≠ FOUNDATION-3 / 字典 C2 的 `vitality.level`(S/A/B/C/D,门店生命力)**。两者同名不同义,需在字段字典里给本节点的 L 级单列一个名(建议 `sku_state_level`)以免混淆 —— 同 DICT_RECONCILIATION 的 C 类裁定流程,**留待业务/字典拍板**,本实现暂按 SKILL §3 原字段名 `vitality_level` 输出并在此标注。
+## ✅ 命名消歧(C5 已裁定)
+- 输出字段原为 SKILL §3 的 `vitality_level`(本表 L1–L5,状态分映射 §2.4),与字典 C2 的 `vitality.level`(S/A/B/C/D,门店生命力·地基③产)**同名不同义**。
+- **C5(2026-06-21 用户裁定)**:本节点 L1–L5 单列名 **`sku_state_level`**,弃用 `vitality_level`。已落地:① 字典 `CONCEPTS.sku_state_level`(带 guard:≠ vitality.level)+ `CONFLICTS` 加 C5;② `sku_scorecard.js` 输出改名 `sku_state_level`;③ bridge / 测试同步改。
+- SKILL §3 规格原文(只读)仍写 `vitality_level`,以字典 C5 裁定为准(字段字典 v1.1 = 单一真相源)。
 
 ## ⚠ 仍 pending(等业务拍板 + 环境ID + 表)
 **政策数字 = provisional 草拟值**(`SKU_SCORE_pending`·绝不当已定·绝不用实际倒推),在 `sku_scorecard.js` 的 `POLICY{}`:
