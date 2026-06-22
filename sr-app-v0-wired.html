@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -58,6 +58,7 @@ button{font-family:inherit}
 
 <!-- XM · 路上 -->
 <div class="scr on" id="scrXM">
+  <div id="jbpBand"></div><!-- JBP 带 + WHY 链(additive·纯展示·见 renderJBPBand) -->
   <div class="sec">📱 今日拜访路线 · 来自 L5-07 planner(不另算 VPS)</div>
   <div id="xmList"></div>
   <div class="note" id="xmSummary"></div>
@@ -148,7 +149,74 @@ button{font-family:inherit}
   }
 
   // ── XM:渲染 L5-07 的 visit_list(reason/vps/vps_breakdown/route/时长)──────────
+  // ── JBP 带 + WHY 链(additive·纯展示·内存 mock·不写库不改既有逻辑)──────────────
+  //   抬头看(JBP带:意图/两进度/承诺提醒/校准)+ 低头做事知道为什么(任务 WHY:SKU→品类→承诺→意图)。
+  //   数据底=内联 mock(大润发 V0.2);真接后端时 JBP_MOCK 换读真实 JBP 对象,结构不变。
+  var JBP_MOCK = {
+    client_id: 'DRF_SH', client_name: '大润发(上海)', channel: '大卖场',
+    intent: '高端酱油第一心智锚点·防御海天高端线',
+    goal: {
+      volume_target: { now: '—', target: 'X万瓶/¥XX万', root: '北极星200M瓶→渠道→客户' },
+      share: { actual: 0.18, target: 0.24, confidence: 'mid', note: '份额=我方销量÷品类容量;分母弱' },
+      margin_floor: 0.22
+    },
+    our_commitments:   [{t:'火锅季堆头', due:'2wk', status:'pending'},{t:'上2新品',status:'doing'},{t:'不破价',status:'ok'}],
+    client_commitments:[{t:'主通道堆头', due:'2wk', status:'pending'},{t:'端架黄金位',status:'ok'},{t:'账期45天',status:'ok'}],
+    client_value: { category_growth:'—', sku_grmu_per_shelf:'—', note:'客户价值:整品类增长/坪效·待真实口径' },
+    calib: { promo_window:true, note:'火锅季=促销窗口·动销读数已扣虚高(蝴蝶TypeB)' },
+    sku_targets: [
+      { sku:'六月鲜特级500ml', role:'主力', stage:'成熟', target_level:'L4',
+        why:['高端酱油份额↑','我方:火锅季堆头 + 大润发:主通道堆头','意图:高端锚点'] },
+      { sku:'六月鲜零添加', role:'候选', stage:'导入', target:'铺进+上架率≥X%',
+        why:['品类拓宽','我方:上2新品','意图:高端升级'] }
+    ]
+  };
+  function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+  window.jbpToggleWhy=function(i){ var d=document.getElementById('jbpWhy'+i); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
+  function renderJBPBand(){
+    var host=document.getElementById('jbpBand'); if(!host) return;
+    var J=JBP_MOCK;
+    // graceful degrade:无 mock / 关键字段缺 → 不渲染(返回空),不报错
+    if(!J || !J.goal || !J.goal.share || !J.sku_targets){ host.innerHTML=''; return; }
+    var sh=J.goal.share;
+    var confZH={high:'高',mid:'中',low:'低'}[sh.confidence]||sh.confidence||'—';
+    // 承诺提醒:pending && due → 橙标
+    function pend(list,who){ return (list||[]).filter(function(c){return c.status==='pending'&&c.due;})
+      .map(function(c){ return '<span style="background:rgba(226,163,54,.16);color:#e2a336;border:1px solid rgba(226,163,54,.38);border-radius:5px;padding:1px 6px;font-size:10px;margin:2px 4px 0 0;display:inline-block">'+who+':'+esc(c.t)+'·还差'+esc(c.due)+'未落实</span>'; }).join(''); }
+    var reminders=pend(J.our_commitments,'我方')+pend(J.client_commitments,'客户');
+    var calib=(J.calib&&J.calib.promo_window)?'<div style="margin-top:6px;font-size:10px;color:#e2a336">⚠ 促销期·动销读数已扣虚高('+esc((J.calib.note||'').replace(/^.*?·/,''))+')</div>':'';
+    // 任务 WHY 链:SKU→品类→承诺→意图;差复用 XL 的 SkuScorecard(此处只引用目标级,不重算)
+    var tasks=J.sku_targets.map(function(t,i){
+      var tgt=t.target_level?('目标 '+esc(t.target_level)):(t.target?esc(t.target):'—');
+      var chain=(t.why||[]).map(function(w,j){ return '<span style="color:'+(j===t.why.length-1?'var(--blue2)':'var(--t2)')+'">'+esc(w)+'</span>'; }).join('<span style="color:var(--t3)"> → </span>');
+      return '<div style="margin-top:6px">'+
+        '<div onclick="jbpToggleWhy('+i+')" style="cursor:pointer;font-size:11px;padding:5px 7px;background:var(--card2);border-radius:6px;display:flex;justify-content:space-between;align-items:center">'+
+          '<span><b>'+esc(t.sku)+'</b> <span style="color:var(--t3)">'+esc(t.role)+'·'+esc(t.stage)+'·'+tgt+'</span></span>'+
+          '<span style="color:var(--t3);font-size:10px">为什么做 ▾</span></div>'+
+        '<div id="jbpWhy'+i+'" style="display:none;font-size:10.5px;color:var(--t2);padding:6px 8px;line-height:1.8">'+
+          'WHY:'+chain+'<br><span style="color:var(--t3)">差(实际状态分)见 XL · SkuScorecard,不在此重算。</span></div>'+
+      '</div>';
+    }).join('');
+    host.innerHTML=
+      '<div class="card" style="border:1px solid rgba(79,140,255,.28)">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center">'+
+          '<div class="vname">'+esc(J.client_name)+' · '+esc(J.intent)+'</div>'+
+          '<span style="background:rgba(226,163,54,.18);color:#e2a336;border:1px solid rgba(226,163,54,.4);border-radius:4px;padding:0 5px;font-size:9px">JBP_pending</span>'+
+        '</div>'+
+        // 两条进度
+        '<div style="margin-top:7px;font-size:11px">① 我方 份额 <b>'+Math.round(sh.actual*100)+'%→'+Math.round(sh.target*100)+'%</b> '+
+          '<span style="color:var(--t3)">(置信:'+confZH+'·'+esc(sh.note)+')</span></div>'+
+        '<div style="margin-top:3px;font-size:11px">② 客户价值 品类增长/坪效 <b>'+esc(J.client_value.category_growth)+'</b>/<b>'+esc(J.client_value.sku_grmu_per_shelf)+'</b> '+
+          '<span style="color:var(--t3)">(待真实口径)</span></div>'+
+        (reminders?'<div style="margin-top:7px">'+reminders+'</div>':'')+
+        calib+
+        '<div style="margin-top:9px;font-size:10px;color:var(--t3)">今日 JBP 任务(点开看 WHY:SKU→品类→承诺→意图)</div>'+
+        tasks+
+      '</div>';
+  }
+
   function renderXM(){
+    renderJBPBand();                            // additive:XM 顶 JBP 带 + 任务 WHY(纯展示)
     var el=document.getElementById('xmList'); var vl=(PLAN&&PLAN.visit_list)||[];
     el.innerHTML=vl.map(function(v){
       var fire=(v.reason==='盲点'||v.reason==='逾期');
