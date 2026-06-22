@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带 · 实体主数据 · 事件流 · 校准判断 · 路线Agent</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带 · 实体主数据 · 事件流 · 校准判断 · 路线Agent · SKU经营</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -145,7 +145,7 @@ button{font-family:inherit}
     return e;
   }
   window.evToggle=function(){ var d=document.getElementById('evTimeline'); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
-  function evLabel(t){ return {VISIT_START:'进店',INVENTORY_SCANNED:'盘点',SCORE_COMPUTED:'算分',VISIT_COMPLETED:'签退',JUDGMENT_MADE:'判断',ESCALATED:'上报',ROUTE_PLANNED:'排路线'}[t]||t; }
+  function evLabel(t){ return {VISIT_START:'进店',INVENTORY_SCANNED:'盘点',SCORE_COMPUTED:'算分',VISIT_COMPLETED:'签退',JUDGMENT_MADE:'判断',ESCALATED:'上报',ROUTE_PLANNED:'排路线',SKU_DECISION:'经营'}[t]||t; }
   function renderEventTimeline(){
     var box=document.getElementById('evTimeline'); if(!box) return;
     if(!INF_EVENTS.length){ box.innerHTML='今日暂无事件。'; return; }
@@ -158,6 +158,7 @@ button{font-family:inherit}
       if(e.type==='JUDGMENT_MADE') extra=' · '+EM.nameOf('SKU',p.sku_code)+' ['+p.rule_id+'] '+p.act+(p.calibrated===false?' ·动销虚高谨慎':'');
       if(e.type==='ESCALATED') extra=' · '+EM.nameOf('SKU',p.sku_code)+' → '+p.to;
       if(e.type==='ROUTE_PLANNED') extra=' · 先去 '+(p.top_store?EM.nameOf('STORE',p.top_store):'—')+'(共'+(p.store_order?p.store_order.length:0)+'店)';
+      if(e.type==='SKU_DECISION') extra=' · '+EM.nameOf('SKU',p.sku_code)+' ['+p.rule_id+'] '+p.act+'('+(p.stage||'?')+'/'+p.level+')';
       return '<div style="font-size:10.5px;padding:3px 0;border-bottom:1px solid var(--card2);line-height:1.6">'+
         '<span style="color:var(--t3);font-family:ui-monospace,monospace">'+hhmm+'</span> · '+
         '<b>'+evLabel(e.type)+'</b> · '+esc(store)+esc(extra)+'</div>';
@@ -517,6 +518,25 @@ button{font-family:inherit}
     return { sku_id: rec.sku, store_id: store_id, stage: rec.effective_stage || null,
              buy: buy, see: see, sell: sell, margin_broken: (sw.margin===false) }; // 毛利OFF=破线;no_data/ON 不算破
   }
+  // ── PR26 SKU Agent:经营(救/加/维持/减/退场)= 生命周期阶段 × 状态分 × 角色权重。锚回原点:养 SKU 生命力。
+  //   显式资源规则(像 JUDGE_RULES·可读可加·命中第一条为准·R0 优先)。投资比例/阈值=provisional·JBP_pending。
+  var RESOURCE_RULES = [
+    { id:'R0_缺数据', test:function(c){ return !c.hasData; },                                                          act:'先去盘点·暂不决策', why:'没数据不经营' },
+    { id:'R1_救',     test:function(c){ return (c.level==='L1'||c.level==='L2') && (c.stage==='导入'||c.stage==='衰退'); }, act:'加资源(铺货/堆头/促销)', why:'低分+关键阶段=该投;导入期投资比例最大' },
+    { id:'R2_加',     test:function(c){ return c.stage==='成长' && (c.level==='L3'||c.level==='L4'); },                 act:'乘胜加投入',         why:'成长期起势,加码放大' },
+    { id:'R3_维持',   test:function(c){ return c.stage==='成熟' && (c.level==='L4'||c.level==='L5'); },                 act:'维持·省力',          why:'成熟达标,守住别浪费' },
+    { id:'R4_减',     test:function(c){ return c.stage==='衰退' && (c.level==='L1'||c.level==='L2') && c.weight!=='高'; }, act:'减资源 / 标退场候选',  why:'衰退持续低+非关键=收力气' }
+  ];
+  var _skuDecisionEmitted = {};
+  function resourceDecide(ctx){
+    for(var i=0;i<RESOURCE_RULES.length;i++){ if(RESOURCE_RULES[i].test(ctx)) return RESOURCE_RULES[i]; }
+    return { id:'R5_观察', act:'常规观察', why:'阶段/规则未定·暂不动资源' };
+  }
+  // SKU 是 JBP 目标 → 取其 stage/strategic_weight(权威);否则 stage 用盘点 effective_stage、权重默认中。
+  function skuTargetMeta(code){
+    var tg=((JBP_MOCK&&JBP_MOCK.sku_targets)||[]).filter(function(t){return t.code===code;})[0];
+    return { stage: tg?tg.stage:null, weight: tg?(tg.strategic_weight||'中'):'中' };
+  }
   function xlScoreLine(rec, store_id){
     if(!window.SkuScorecard) return '';
     var r=window.SkuScorecard.scoreSku(swToScoreInput(rec, store_id));
@@ -525,10 +545,19 @@ button{font-family:inherit}
     var lvColor={L1:'#e5484d',L2:'#e2a336',L3:'#d9c75a',L4:'#7bd47b',L5:'#46c46a'}[r.sku_state_level]||'#888';
     var noGap=(r.task_seed&&r.task_seed.type==='无差')||r.gap_total<0.5;
     var gapTxt=noGap?'无显著缺口':('最大缺口 '+(gapZH[r.top_gap_dim]||'—')+(r.tactic?' → '+r.tactic:''));
+    // PR26 经营建议:阶段(JBP目标优先,否则盘点 effective_stage)× 状态分 × 权重 → RESOURCE_RULES。
+    var meta=skuTargetMeta(rec.sku);
+    var stage=meta.stage||rec.effective_stage||null;
+    var dec=resourceDecide({ hasData:true, level:r.sku_state_level, stage:stage, weight:meta.weight });
+    var jk=store_id+'|'+rec.sku+'|'+dec.id;
+    if(!_skuDecisionEmitted[jk]){ _skuDecisionEmitted[jk]=1; emitEvent('SKU_DECISION',{store_id:store_id, sku_code:rec.sku, rule_id:dec.id, act:dec.act, stage:stage, level:r.sku_state_level}); }
     return '<div style="font-size:10.5px;margin:3px 0 2px;padding:4px 7px;background:var(--card2);border-radius:6px;line-height:1.7">'+
       '<b>状态分 '+r.state_score+'</b> <span style="font-weight:700;color:'+lvColor+'">'+r.sku_state_level+'</span>'+
       '<span style="color:var(--t3)"> · '+gapTxt+' · 置信 '+r.confidence+'</span>'+
       (pending?' <span style="background:rgba(226,163,54,.18);color:#e2a336;border:1px solid rgba(226,163,54,.4);border-radius:4px;padding:0 5px;font-size:9px">权重草拟·待校准(SKU_SCORE_pending)</span>':'')+
+      '<div style="margin-top:3px;color:var(--t1)">经营建议<b style="color:var(--blue2)">['+esc(dec.id)+']</b> '+esc(dec.act)+
+        ' <span style="color:var(--t3)">('+esc(stage||'阶段?')+'·'+esc(meta.weight)+'权重·'+esc(dec.why)+')</span></div>'+
+      '<div style="color:var(--t3)">对客户贡献:坪效/品类增长 <span style="color:#e2a336">待真实口径</span></div>'+
       '</div>';
   }
 
@@ -549,8 +578,14 @@ button{font-family:inherit}
         return '<div class="card"><div class="vname">'+(STORE_NAME[o.v.store_id]||o.v.store_id)+'</div>'+
           '<div class="vmeta">'+o.v.store_id+' · 在架 SKU '+onCnt+' · 收入(mock占位):¥'+(onCnt*1200+800)+'/月</div>'+body+'</div>';
       }).join('');
+      // PR26:显式资源规则折叠列出(看得见、可加)
+      var rulesHtml=RESOURCE_RULES.map(function(R){ return '<div>· <b>'+esc(R.id)+'</b>:'+esc(R.act)+' <span style="color:var(--t3)">('+esc(R.why)+')</span></div>'; }).join('');
+      el.innerHTML += '<div class="card"><div onclick="xlToggleRules()" style="cursor:pointer;font-size:11px;font-weight:700">📐 SKU 经营规则(显式·可加) ▾</div>'+
+        '<div id="xlRules" style="display:none;font-size:10px;color:var(--t2);line-height:1.7;margin-top:6px">'+rulesHtml+
+        '<div style="color:var(--t3);margin-top:4px">⚠ 规则版·投资比例/阈值 provisional(JBP_pending);只说"该不该投",说不了"投了值不值"(=因果/学习·PR27+)。缺趋势:现按阶段+当前分,不含生命力下降趋势。</div></div></div>';
     });
   }
+  window.xlToggleRules=function(){ var d=document.getElementById('xlRules'); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
 
   // ── XP:复盘 VQS(对事非对人)= L5-07 learning_emits ─────────────────────────
   function renderXP(){
