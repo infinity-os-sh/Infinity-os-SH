@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带 · 实体主数据</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带 · 实体主数据 · 事件流</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -87,6 +87,13 @@ button{font-family:inherit}
     <div class="note">⚠ VQS 评的是「这次拜访有没有拨动门店状态」(对事)——<b>不是给 SR 打个人绩效分 / 排名 / 触发主管介入</b>(延续 L5-07 命门④)。</div>
   </div>
   <div class="card">
+    <div onclick="evToggle()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:12px;font-weight:700">🕓 今日事件流(理解发生什么)</div>
+      <span style="color:var(--t3);font-size:10px">展开/收起 ▾</span>
+    </div>
+    <div id="evTimeline" style="display:none;margin-top:8px">今日暂无事件。</div>
+  </div>
+  <div class="card">
     <div class="kv"><span>登录身份</span><b id="xpWho">—</b></div>
     <div class="kv"><span>角色</span><b>SR · 零售业代</b></div>
     <div class="kv" style="border:none"><span>中台</span><b id="xpMode">mock</b></div>
@@ -119,6 +126,40 @@ button{font-family:inherit}
   var IDENTITY=null, PLAN=null;
   var CUR_STORE=null;          // 当前进店盘点的 store_id
   var VISITED={};              // 已签退落袋的店:store_id → true
+
+  // ── 事件化(PR23 理解发生什么)·内存事件流·实体一律用 PR22 ID,不裸字符串 ─────────
+  //   每个动作 → 结构化 Event(供 PR24 判断、以后学习读)。内存 mock,刷新即清;
+  //   真接后端时 emitEvent 改成同时写事件表,结构不变。emit 在 EM/CUR_STORE 缺时填 null 不报错。
+  var INF_EVENTS=[];
+  var _scoreEmitted={};        // SCORE_COMPUTED 去重:store|sku|score 只记一次(重渲染不刷屏)
+  function emitEvent(type, payload){
+    payload=payload||{};
+    var sid=payload.store_id||CUR_STORE||null;
+    var e={ type:type, ts:Date.now(),
+            actor:(IDENTITY&&(IDENTITY.uid||IDENTITY.login_id||IDENTITY.name))||null,
+            store_id:sid,
+            customer_id: sid? EM.customerOf(sid) : null,
+            payload:payload };
+    INF_EVENTS.push(e);
+    if(typeof renderEventTimeline==='function') renderEventTimeline();
+    return e;
+  }
+  window.evToggle=function(){ var d=document.getElementById('evTimeline'); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
+  function evLabel(t){ return {VISIT_START:'进店',INVENTORY_SCANNED:'盘点',SCORE_COMPUTED:'算分',VISIT_COMPLETED:'签退'}[t]||t; }
+  function renderEventTimeline(){
+    var box=document.getElementById('evTimeline'); if(!box) return;
+    if(!INF_EVENTS.length){ box.innerHTML='今日暂无事件。'; return; }
+    box.innerHTML=INF_EVENTS.slice().reverse().map(function(e){
+      var hhmm=new Date(e.ts).toTimeString().slice(0,8);
+      var store=e.store_id?EM.nameOf('STORE',e.store_id):'—';
+      var p=e.payload||{}; var extra='';
+      if(e.type==='INVENTORY_SCANNED'&&p.sku_code) extra=' · '+EM.nameOf('SKU',p.sku_code);
+      if(e.type==='SCORE_COMPUTED') extra=' · '+EM.nameOf('SKU',p.sku_code)+' '+p.state_score+'/'+p.sku_state_level;
+      return '<div style="font-size:10.5px;padding:3px 0;border-bottom:1px solid var(--card2);line-height:1.6">'+
+        '<span style="color:var(--t3);font-family:ui-monospace,monospace">'+hhmm+'</span> · '+
+        '<b>'+evLabel(e.type)+'</b> · '+esc(store)+esc(extra)+'</div>';
+    }).join('');
+  }
 
   // 轻量 toast(落袋提示)
   function srToast(msg){
@@ -267,6 +308,8 @@ button{font-family:inherit}
         var noGap=(r.task_seed&&r.task_seed.type==='无差')||r.gap_total<0.5;
         span.innerHTML='本店('+esc(storeNm)+')状态分 <b>'+r.state_score+'</b> · '+esc(r.sku_state_level)+' · '+
           (noGap?'无显著缺口':('最大缺口 '+(gapZH[r.top_gap_dim]||'—')));
+        var k=store+'|'+t.code+'|'+r.state_score;            // PR23:算分事件(同值去重,重渲染不刷屏)
+        if(!_scoreEmitted[k]){ _scoreEmitted[k]=1; emitEvent('SCORE_COMPUTED',{store_id:store, sku_code:t.code, state_score:r.state_score, sku_state_level:r.sku_state_level}); }
       }).catch(function(){ span.textContent='本店未盘到(店:'+storeNm+')'; });
     });
   }
@@ -295,6 +338,7 @@ button{font-family:inherit}
   // ── 进店:切 XD tab + 挂共享 XD(storeType=大卖场)──────────────────────────
   window.srEnter=function(store_id){
     CUR_STORE=store_id;
+    emitEvent('VISIT_START',{store_id:store_id});   // PR23:进店事件
     srTab('XD');
     document.getElementById('xdStoreTag').textContent=' · '+(STORE_NAME[store_id]||store_id);
     var f=XD.mountXD(document.getElementById('xdSlot'), { storeType:'大卖场', identity:IDENTITY, store_id:store_id });
@@ -313,6 +357,14 @@ button{font-family:inherit}
     if(!e || !e.data || e.data.type!=='xd_finish') return;
     var sid=CUR_STORE;                       // 用本地记录的店(message.store 是 XD 内部名,不可靠)
     if(sid) VISITED[sid]=true;               // 标已访·已落袋
+    // PR23:盘点提交事件(每盘到的 SKU 一条,从已写快照取真开关)+ 签退事件。不动写路。
+    if(sid && CB && CB.queryByStore){
+      CB.queryByStore(sid).then(function(rows){
+        var seen={}; (rows||[]).forEach(function(r){ if(r.sku && !seen[r.sku]){ seen[r.sku]=1;
+          emitEvent('INVENTORY_SCANNED',{store_id:sid, sku_code:r.sku, switches:r.switches}); } });
+        emitEvent('VISIT_COMPLETED',{store_id:sid});
+      }).catch(function(){ emitEvent('VISIT_COMPLETED',{store_id:sid}); });
+    } else if(sid){ emitEvent('VISIT_COMPLETED',{store_id:sid}); }
     srTab('XM');                             // ① 自动回「路上」
     renderXM();                              // ② 刷新:该店标已落袋
     var nm=(sid&&(STORE_NAME[sid]||sid))||'本店';
@@ -378,6 +430,7 @@ button{font-family:inherit}
     }).join('')||'<div class="note">签退后这里出现拜访有效性记录(对事)。</div>';
     document.getElementById('xpWho').textContent=(IDENTITY&&(IDENTITY.name||IDENTITY.login_id))||'—';
     document.getElementById('xpMode').textContent=CB.mode()==='real'?'真接 CloudBase':'双轨·mock';
+    renderEventTimeline();                    // PR23:刷新今日事件流(折叠块)
   }
 
   // ── XD 容器精确定位(用真实渲染几何,不猜像素)──────────────────────────────
