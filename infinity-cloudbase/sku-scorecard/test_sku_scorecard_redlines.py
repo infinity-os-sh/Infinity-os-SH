@@ -37,7 +37,7 @@ GOLD = golden()
 def test_golden_case_score_and_level(name):
     r = GOLD[name]
     assert r["got"]["state_score"] == r["expect_score"], "例%s 分不符" % name
-    assert r["got"]["vitality_level"] == r["expect_L"], "例%s L级不符" % name
+    assert r["got"]["sku_state_level"] == r["expect_L"], "例%s L级不符" % name
 
 
 # ── §2.4 毛利闸:破底线必封顶 60、最高 L3、永不健康 ───────────────────────────
@@ -45,13 +45,13 @@ def test_margin_gate_caps_high_raw():
     r = score({"role": "攻击", "stage": "成长", "buy": .95, "see": .80, "sell": .95, "margin_broken": True})
     assert r["margin_gate"]["cap_applied"] is True
     assert r["state_score"] <= 60
-    assert r["vitality_level"] in ("L1", "L2", "L3")  # 封顶后永不达 L4/L5
+    assert r["sku_state_level"] in ("L1", "L2", "L3")  # 封顶后永不达 L4/L5
 
 
 def test_margin_held_not_capped():
     r = score({"role": "防御", "stage": "成熟", "buy": .90, "see": .95, "sell": .85, "margin_broken": False})
     assert r["margin_gate"]["cap_applied"] is False
-    assert r["state_score"] == 89.25 and r["vitality_level"] == "L5"
+    assert r["state_score"] == 89.25 and r["sku_state_level"] == "L5"
 
 
 # ── §2.5 缺数据(判级类):no_data ≠ 0,不计 0、重归一化、降置信度 ────────────────
@@ -101,6 +101,6 @@ def test_task_seed_is_suggestion_not_command():
 # ── §3 输出 schema:字段齐全 ─────────────────────────────────────────────────
 def test_output_schema_fields():
     r = score({"role": "明星", "stage": "成长", "buy": .8, "see": .8, "sell": .8})
-    for k in ("state_score", "vitality_level", "gap_total", "gap_breakdown",
+    for k in ("state_score", "sku_state_level", "gap_total", "gap_breakdown",
               "top_gap_dim", "tactic", "task_seed", "confidence", "margin_gate"):
         assert k in r, "缺输出字段 %s" % k

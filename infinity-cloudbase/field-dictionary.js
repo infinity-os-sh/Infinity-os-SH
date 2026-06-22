@@ -99,7 +99,12 @@
       owner: '地基③(FOUNDATION-3)', guard: '⚠ 只地基③可产出;盘点/拜访规划等节点不得计算或写。', provenance: 'design',
       _resolved: 'C2(2026-06-20 用户裁定):取代 lifeforce_grade,用 FOUNDATION-3 真名 vitality.level' },
     strategic_tier: { zh: '战略层级', type: 'string',
-      def: '战略层级分类(战略地位)。⚠ ≠ store.grade(运营A/B/C),不可混用。', owner: '战略/品牌AI顾问', provenance: 'design' }
+      def: '战略层级分类(战略地位)。⚠ ≠ store.grade(运营A/B/C),不可混用。', owner: '战略/品牌AI顾问', provenance: 'design' },
+    sku_state_level: { zh: 'SKU状态分级(L1–L5)', type: 'string', enum: ['L1', 'L2', 'L3', 'L4', 'L5'],
+      def: 'SKU 状态评分(SKU Scorecard)的状态分(0–100)按 L 切点映射出的级别。L1最差/L5最健康。',
+      owner: 'SKU状态评分(SKU Scorecard)', provenance: 'design',
+      guard: '⚠ ≠ vitality.level(S/A/B/C/D,门店生命力·地基③产)。同为"级别"但不同义不同源,绝不可混。',
+      _resolved: 'C5(2026-06-21 用户裁定):SKU Scorecard 输出的 L1–L5 单列名 sku_state_level,弃用 SKILL §3 原字段名 vitality_level 以与 vitality.level 消歧。' }
   };
 
   // 哨兵值(unknown / no_data 不可混)
@@ -216,11 +221,13 @@
     { id: 'C3-effective_stage-enum', status: 'RESOLVED',
       ruling: '保留六阶段 导入/成长/成熟/衰退/焕新/淘汰(匹配地基①)+ unknown 哨兵。' },
     { id: 'C4-blindspot-consume', status: 'RESOLVED',
-      ruling: '盲点按有无 store_id 切:有(未铺/数据)进拜访规划救火池;白区(无store_id)不进,走 L5-02/经理。引擎已据此调整(fireStoreSetFromBlindspots)。' }
+      ruling: '盲点按有无 store_id 切:有(未铺/数据)进拜访规划救火池;白区(无store_id)不进,走 L5-02/经理。引擎已据此调整(fireStoreSetFromBlindspots)。' },
+    { id: 'C5-sku-state-level-naming', status: 'RESOLVED',
+      ruling: 'SKU Scorecard 输出的状态分级(L1–L5)单列名 sku_state_level,弃 SKILL §3 原字段名 vitality_level,以与 vitality.level(S/A/B/C/D·门店生命力·地基③)消歧。CONCEPTS.sku_state_level 已加;sku_scorecard.js 输出已改名。' }
   ];
 
   var api = {
-    VERSION: 'field-dictionary v1.1 (+L1-04/L0-04/L1-03/F-3 复核·C1-C4 已裁)',
+    VERSION: 'field-dictionary v1.1 (+L1-04/L0-04/L1-03/F-3 复核·C1-C5 已裁)',
     CONFLICTS: CONFLICTS,
     // ① 主数据(L0-04真相源名) ② 新概念(设计名) —— 单一真相源
     MASTER: MASTER,

@@ -14,8 +14,9 @@
  * 对齐 字段字典 v1.1(../field-dictionary.js):
  *   - effective_stage 阶段名沿用 ['导入','成长','成熟','衰退','焕新','淘汰'];
  *   - no_data/unknown 哨兵语义沿用(no_data ≠ 0,绝不当差);
- *   - 输出 vitality_level = 本表 L1–L5(状态分映射),≠ FOUNDATION-3 vitality.level
- *     (S/A/B/C/D)。命名重叠见 IMPL_NOTES「待对齐」。
+ *   - 输出 sku_state_level = 本表 L1–L5(状态分映射),≠ FOUNDATION-3 vitality.level
+ *     (S/A/B/C/D)。命名已由 C5(2026-06-21 用户裁定)消歧:弃 SKILL §3 原名
+ *     vitality_level,改用字典 CONCEPTS.sku_state_level。
  * ⚠ 政策数字(权重表/封顶/L切点)= provisional 草拟,绝不当已定;flags 标 SKU_SCORE_pending。
  * ========================================================================== */
 (function (root) {
@@ -133,7 +134,7 @@
     return {
       sku_id: input.sku_id || null, store_id: input.store_id || null,
       role: input.role || null, stage: stage || POLICY.DEFAULT_STAGE,
-      state_score: score, vitality_level: mapL(score),
+      state_score: score, sku_state_level: mapL(score),
       gap_total: gap_total, gap_breakdown: gap_breakdown, top_gap_dim: top_gap_dim,
       tactic: tactic, task_seed: task_seed, confidence: Math.round(confidence * 100) / 100,
       margin_gate: { broken: broken, cap: POLICY.CAP, cap_applied: capApplied },
