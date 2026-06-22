@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -105,6 +105,7 @@ button{font-family:inherit}
 <script src="infinity-cloudbase/field-dictionary.js"></script>
 <script src="infinity-cloudbase/cloudbase-client.js"></script>
 <script src="infinity-cloudbase/visit-planning/L5-07/l5_07_planner.js"></script>
+<script src="infinity-cloudbase/sku-scorecard/sku_scorecard.js"></script>
 <script src="infinity-cloudbase/shared-xd/shared-xd-mount.js"></script>
 <script>
 (function(){
@@ -194,6 +195,36 @@ button{font-family:inherit}
     srToast('✓ '+nm+' 已签退落袋 · 盘点已写入(reporter 跟登录走)');  // ③ 落袋清晰
   });
 
+  // ── SKU 状态评分(SKU Scorecard)接入 XL ─────────────────────────────────────
+  //   只读 inventory_snapshot 的字典真字段(SWITCH_MAP),不造新字段:
+  //     买得到 ← on_shelf + oos_flag(有货=oos_flag false);看得到 ← display_rate(陈列/facing/黄金位的盘点代理);
+  //     动销 ← sellout;毛利(闸)← margin。盘点开关是离散代理(ON/OFF/—),非连续达成率,故 r∈{1,0,no_data}。
+  //   no_data 不当差(判级类):该维传 'no_data',引擎重归一化 + 降置信度。
+  function nd_(v){ return v==='no_data' || v==null; }
+  function swToScoreInput(rec, store_id){
+    var sw=rec.switches||{};
+    var buy = (nd_(sw.on_shelf) && nd_(sw.oos_flag)) ? 'no_data'
+            : (sw.on_shelf===true ? (sw.oos_flag===true ? 0 : 1) : 0); // 没上架/缺货=买不到
+    var see = nd_(sw.display_rate) ? 'no_data' : (sw.display_rate===true ? 1 : 0);
+    var sell= nd_(sw.sellout)      ? 'no_data' : (sw.sellout===true ? 1 : 0);
+    return { sku_id: rec.sku, store_id: store_id, stage: rec.effective_stage || null,
+             buy: buy, see: see, sell: sell, margin_broken: (sw.margin===false) }; // 毛利OFF=破线;no_data/ON 不算破
+  }
+  function xlScoreLine(rec, store_id){
+    if(!window.SkuScorecard) return '';
+    var r=window.SkuScorecard.scoreSku(swToScoreInput(rec, store_id));
+    var pending=(r.flags||[]).indexOf('SKU_SCORE_pending')>=0;
+    var gapZH={buy:'买得到',see:'看得到',sell:'动销'};
+    var lvColor={L1:'#e5484d',L2:'#e2a336',L3:'#d9c75a',L4:'#7bd47b',L5:'#46c46a'}[r.sku_state_level]||'#888';
+    var noGap=(r.task_seed&&r.task_seed.type==='无差')||r.gap_total<0.5;
+    var gapTxt=noGap?'无显著缺口':('最大缺口 '+(gapZH[r.top_gap_dim]||'—')+(r.tactic?' → '+r.tactic:''));
+    return '<div style="font-size:10.5px;margin:3px 0 2px;padding:4px 7px;background:var(--card2);border-radius:6px;line-height:1.7">'+
+      '<b>状态分 '+r.state_score+'</b> <span style="font-weight:700;color:'+lvColor+'">'+r.sku_state_level+'</span>'+
+      '<span style="color:var(--t3)"> · '+gapTxt+' · 置信 '+r.confidence+'</span>'+
+      (pending?' <span style="background:rgba(226,163,54,.18);color:#e2a336;border:1px solid rgba(226,163,54,.4);border-radius:4px;padding:0 5px;font-size:9px">权重草拟·待校准(SKU_SCORE_pending)</span>':'')+
+      '</div>';
+  }
+
   // ── XL:跟 XM 派生 — 我负责的 KA 门店 SKU 表现(读 inventory_snapshot)────────────
   function renderXL(){
     var el=document.getElementById('xlList'); var vl=(PLAN&&PLAN.visit_list)||[];
@@ -205,7 +236,8 @@ button{font-family:inherit}
         var onCnt=0; skus.forEach(function(k){ if(latest[k].switches.on_shelf===true) onCnt++; });
         var body = skus.length? skus.map(function(k){
           var sw=latest[k].switches; var cell=function(f){ var x=sw[f]; return '<span class="sw '+(x===true?'on':(x==='no_data'?'nd':'off'))+'">'+(x===true?'ON':(x==='no_data'?'—':'OFF'))+'</span>'; };
-          return '<div style="font-size:11px;margin-top:4px"><b style="font-family:ui-monospace,monospace">'+k+'</b> '+['on_shelf','oos_flag','display_rate','sellout','repurchase','margin'].map(cell).join('')+'</div>';
+          return '<div style="font-size:11px;margin-top:4px"><b style="font-family:ui-monospace,monospace">'+k+'</b> '+['on_shelf','oos_flag','display_rate','sellout','repurchase','margin'].map(cell).join('')+'</div>'+
+            xlScoreLine(latest[k], o.v.store_id);   // additive:状态分行(不动既有开关行)
         }).join('') : '<div class="note">待盘点(去 XD 盘一次,这里就有数据)。</div>';
         return '<div class="card"><div class="vname">'+(STORE_NAME[o.v.store_id]||o.v.store_id)+'</div>'+
           '<div class="vmeta">'+o.v.store_id+' · 在架 SKU '+onCnt+' · 收入(mock占位):¥'+(onCnt*1200+800)+'/月</div>'+body+'</div>';
