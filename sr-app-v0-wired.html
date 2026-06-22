@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带绑码现算</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带 · 实体主数据</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -107,10 +107,15 @@ button{font-family:inherit}
 <script src="infinity-cloudbase/cloudbase-client.js"></script>
 <script src="infinity-cloudbase/visit-planning/L5-07/l5_07_planner.js"></script>
 <script src="infinity-cloudbase/sku-scorecard/sku_scorecard.js"></script>
+<script src="infinity-cloudbase/entity-master.js"></script>
 <script src="infinity-cloudbase/shared-xd/shared-xd-mount.js"></script>
 <script>
 (function(){
   var Dict=window.InfinityDict, CB=window.InfinityCB, L507=window.VisitPlannerL507, XD=window.SharedXD;
+  // 共享实体主数据(单一来源)·EntityMaster 缺失时降级兜底,不报错
+  var EM=window.EntityMaster||{ SKU:{},
+    nameOf:function(t,id){ return '〔'+id+'·待映射〕'; }, customerOf:function(){return null;},
+    cityOf:function(){return null;}, storesOf:function(){return [];}, checkConsistency:function(){return [];} };
   var IDENTITY=null, PLAN=null;
   var CUR_STORE=null;          // 当前进店盘点的 store_id
   var VISITED={};              // 已签退落袋的店:store_id → true
@@ -131,20 +136,21 @@ button{font-family:inherit}
       date:new Date().toISOString().slice(0,10),
       person:(IDENTITY&&(IDENTITY.name||IDENTITY.login_id))||'SR', role:'DSR', geo_cluster:'城区KA片',
       stores:[
-        {store_id:'SH_GT_CVS_201',name:'大润发·徐汇大卖场',tier:'A',geo:{lat:31.18,lng:121.43},lastVisitDays:9, blindspot:true },
-        {store_id:'SH_GT_CVS_202',name:'家乐福·古北大卖场',tier:'B',geo:{lat:31.20,lng:121.45},lastVisitDays:18,blindspot:false},
-        {store_id:'SH_GT_CVS_203',name:'沃尔玛·五角场大卖场',tier:'B',geo:{lat:31.30,lng:121.51},lastVisitDays:14,blindspot:false},
-        {store_id:'SH_GT_CVS_204',name:'欧尚·杨浦大卖场',tier:'C',geo:{lat:31.27,lng:121.52},lastVisitDays:30,blindspot:false}
+        // 大润发那家对齐到「有盘点的店」001(只改路线 store_id,不碰盘点数据)→ CUR_STORE 有盘点 → WHY 分真算出
+        {store_id:'SH_GT_CVS_001',tier:'A',geo:{lat:31.18,lng:121.43},lastVisitDays:9, blindspot:true },
+        {store_id:'SH_GT_CVS_202',tier:'B',geo:{lat:31.20,lng:121.45},lastVisitDays:18,blindspot:false},
+        {store_id:'SH_GT_CVS_203',tier:'B',geo:{lat:31.30,lng:121.51},lastVisitDays:14,blindspot:false},
+        {store_id:'SH_GT_CVS_204',tier:'C',geo:{lat:31.27,lng:121.52},lastVisitDays:30,blindspot:false}
       ],
       health:{
-        'SH_GT_CVS_201':{CHS:'C',SHS:'D'}, 'SH_GT_CVS_202':{CHS:'B',SHS:'C'},
+        'SH_GT_CVS_001':{CHS:'C',SHS:'D'}, 'SH_GT_CVS_202':{CHS:'B',SHS:'C'},
         'SH_GT_CVS_203':{CHS:'A',SHS:'B'}, 'SH_GT_CVS_204':{CHS:'A',SHS:'A'}
       }
     };
   }
-  var STORE_NAME={}; // store_id → 展示名
+  var STORE_NAME={}; // store_id → 展示名(单一来源:EntityMaster,不硬编)
   function buildPlan(){
-    var input=srPlanInput(); input.stores.forEach(function(s){ STORE_NAME[s.store_id]=s.name; });
+    var input=srPlanInput(); input.stores.forEach(function(s){ STORE_NAME[s.store_id]=EM.nameOf('STORE',s.store_id); });
     PLAN=L507.planL507(input); // 直接用 L5-07 输出,不重算 VPS
   }
 
@@ -152,13 +158,7 @@ button{font-family:inherit}
   // ── JBP 带 + WHY 链(additive·纯展示·内存 mock·不写库不改既有逻辑)──────────────
   //   抬头看(JBP带:意图/两进度/承诺提醒/校准)+ 低头做事知道为什么(任务 WHY:SKU→品类→承诺→意图)。
   //   数据底=内联 mock(大润发 V0.2);真接后端时 JBP_MOCK 换读真实 JBP 对象,结构不变。
-  // SKU 主数据(内存 mock)·给人看名、系统认码;真接后端换读 SFA_Backend_v4,结构不变。
-  // QY/JDX 中文名待主数据确认(名里标〔名待主数据〕)。
-  var SKU_MASTER = {
-    '6MX-TJ-380': { name:'六月鲜特级380ml', spec:'380ml', cat:'高端酱油' },
-    '6MX-QY-500': { name:'六月鲜·QY500〔名待主数据〕', spec:'500ml', cat:'高端酱油' },
-    '6MX-JDX'   : { name:'六月鲜·JDX〔名待主数据〕',   spec:'—',     cat:'高端酱油' }
-  };
+  // SKU 主数据已移入 EntityMaster.SKU(单一来源·PR22),此处不再内联(算分一行不改)。
   var JBP_MOCK = {
     client_id: 'DRF_SH', client_name: '大润发(上海)', channel: '大卖场',
     intent: '高端酱油第一心智锚点·防御海天高端线',
@@ -197,8 +197,7 @@ button{font-family:inherit}
     // 任务 WHY 链:SKU(名从主数据查·系统认码)→品类→承诺→意图;
     //   差=现算:对 code 在当前门店 inventory_snapshot 找同 sku 行 → 复用 swToScoreInput+SkuScorecard(就是 XL 那套,不另写)。
     var tasks=J.sku_targets.map(function(t,i){
-      var m=SKU_MASTER[t.code]||null;
-      var nm=m?m.name:('〔'+esc(t.code)+'·待映射〕');     // code 不在主数据 → 待映射
+      var nm=EM.nameOf('SKU',t.code);                    // 名走主数据(单一来源);未登记→〔code·待映射〕
       var tgt=t.target_level?('目标 '+esc(t.target_level)):(t.target?esc(t.target):'—');
       var chain=(t.why||[]).map(function(w,j){ return '<span style="color:'+(j===t.why.length-1?'var(--blue2)':'var(--t2)')+'">'+esc(w)+'</span>'; }).join('<span style="color:var(--t3)"> → </span>');
       return '<div style="margin-top:6px">'+
@@ -213,7 +212,7 @@ button{font-family:inherit}
     host.innerHTML=
       '<div class="card" style="border:1px solid rgba(79,140,255,.28)">'+
         '<div style="display:flex;justify-content:space-between;align-items:center">'+
-          '<div class="vname">'+esc(J.client_name)+' · '+esc(J.intent)+'</div>'+
+          '<div class="vname">'+esc(EM.nameOf('CUSTOMER',J.client_id))+' · '+esc(J.intent)+'</div>'+
           '<span style="background:rgba(226,163,54,.18);color:#e2a336;border:1px solid rgba(226,163,54,.4);border-radius:4px;padding:0 5px;font-size:9px">JBP_pending</span>'+
         '</div>'+
         // 两条进度
@@ -225,8 +224,26 @@ button{font-family:inherit}
         calib+
         '<div style="margin-top:9px;font-size:10px;color:var(--t3)">今日 JBP 任务(点开看 WHY:SKU→品类→承诺→意图 + 现算状态分)</div>'+
         tasks+
+        '<div id="jbpConsist" style="margin-top:9px;font-size:10px;color:var(--t3)">路线一致性核对中…</div>'+
       '</div>';
     jbpFillScores(J.sku_targets);               // 异步:按 code 在当前门店现算状态分(复用 XL 那套)
+    jbpFillConsistency();                       // 异步:路线店 × 主数据 × 盘点 一致性(checkConsistency)
+  }
+  // 认识世界=知道哪里还不一致:路线店 vs 主数据 vs 有无盘点。不编分,只标"待对齐/未盘到"。
+  function jbpFillConsistency(){
+    var box=document.getElementById('jbpConsist'); if(!box) return;
+    var routeIds=((PLAN&&PLAN.visit_list)||[]).map(function(v){return v.store_id;});
+    if(!CB || !CB.queryAll){ box.innerHTML=''; return; }
+    CB.queryAll().then(function(rows){
+      var snapIds={}; (rows||[]).forEach(function(r){ if(r.scope&&r.scope.store) snapIds[r.scope.store]=1; });
+      var rep=EM.checkConsistency(routeIds, Object.keys(snapIds));
+      box.innerHTML='路线归属/数据一致性:<br>'+rep.map(function(x){
+        var cust=x.customer?EM.nameOf('CUSTOMER',x.customer):'〔客户待映射〕';
+        var ok=x.hasSnapshot;
+        var tag=ok?'<span style="color:#46c46a">有盘点·可算分</span>':'<span style="color:#e2a336">待对齐·未盘到</span>';
+        return '· '+esc(EM.nameOf('STORE',x.store))+' <span style="color:var(--t3)">('+esc(x.store)+'→'+esc(cust)+')</span> '+tag;
+      }).join('<br>');
+    }).catch(function(){ box.innerHTML=''; });
   }
   // 当前门店:优先本次进店 CUR_STORE,否则取计划首店;都无 → null(WHY 标"未盘到")
   function jbpStoreForScore(){
@@ -240,7 +257,7 @@ button{font-family:inherit}
     var storeNm=store?(STORE_NAME[store]||store):'—';
     (targets||[]).forEach(function(t,i){
       var span=document.getElementById('jbpScore'+i); if(!span) return;
-      if(!SKU_MASTER[t.code]){ span.innerHTML='<span style="color:#e2a336">待映射(主数据无此码 '+esc(t.code)+')</span>'; return; }
+      if(!EM.SKU[t.code]){ span.innerHTML='<span style="color:#e2a336">待映射(主数据无此码 '+esc(t.code)+')</span>'; return; }
       if(!store || !window.SkuScorecard || !CB){ span.textContent='本店未盘到(店:'+storeNm+')'; return; }
       CB.queryByStore(store).then(function(rows){
         var latest=null; (rows||[]).forEach(function(r){ if(r.sku===t.code && (!latest||r.ts>latest.ts)) latest=r; });
