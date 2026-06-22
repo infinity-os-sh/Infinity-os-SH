@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · 作业面提速·检视面归位(督导/系统视图)</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · 作业面提速·检视面归位 · 进店即时反馈/防重入</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -449,7 +449,7 @@ button{font-family:inherit}
         '<div class="bd">为什么去(VPS 拆解·来自 L5-07,不另算):<br>· 常规到期度:'+(dd['分级']||'?')+'级/'+(dd['周期']||'?')+'·距上次访 '+(dd['距上次访天数']==null?'—':dd['距上次访天数']+'天')+
         '<br>· 救火紧急度:CHS '+(ff.from_CHS||'—')+' / SHS '+(ff.from_SHS||'—')+' <span style="color:var(--t3)">('+(ff.provenance||'')+')</span></div>'+
         (VISITED[v.store_id]
-          ? '<div style="margin-top:8px;display:flex;gap:8px;align-items:center"><span class="why reg" style="margin:0">✓ 已访·已落袋·盘点已写</span><button class="go" style="flex:1;margin:0;background:var(--card2)" onclick="srEnter(\''+v.store_id+'\')">重盘 ↻</button></div>'
+          ? '<div style="margin-top:8px;display:flex;gap:8px;align-items:center"><span class="why reg" style="margin:0">✓ 已访·已落袋·盘点已写</span><button class="go" style="flex:1;margin:0;background:var(--card2)" onclick="srEnter(\''+v.store_id+'\',true)">重盘 ↻</button></div>'
           : '<button class="go" onclick="srEnter(\''+v.store_id+'\')">进店盘点 →</button>')+
       '</div></div></div>';
     }).join('')|| '<div class="note">今日无到期门店。</div>';
@@ -516,16 +516,27 @@ button{font-family:inherit}
   }
 
   // ── 进店:切 XD tab + 挂共享 XD(storeType=大卖场)──────────────────────────
-  window.srEnter=function(store_id){
+  //   修「绿按钮要点很多次」:即时反馈 + 防重入 + 幂等(只改交互,不动打分/判断/事件逻辑)。
+  var _xdMounted={};
+  window.srEnter=function(store_id, force){
+    if(window._srBusy) return;                       // 防重入:挂载中忽略连点,不重复挂 iframe
+    if(!force && CUR_STORE===store_id && _xdMounted[store_id]){ srTab('XD'); return; } // 幂等:同店已挂→只回 XD
+    window._srBusy=true;
     CUR_STORE=store_id;
-    emitEvent('VISIT_START',{store_id:store_id});   // PR23:进店事件
-    srTab('XD');
+    emitEvent('VISIT_START',{store_id:store_id});   // PR23:进店事件(逻辑不动)
+    srTab('XD');                                     // 即时:点击那刻先切屏
+    var slot=document.getElementById('xdSlot');
+    if(slot) slot.innerHTML='<div style="padding:24px;text-align:center;color:var(--t2)">⏳ 正在进店…</div>'; // 即时:占位反馈
     document.getElementById('xdStoreTag').textContent=' · '+(STORE_NAME[store_id]||store_id);
-    var f=XD.mountXD(document.getElementById('xdSlot'), { storeType:'大卖场', identity:IDENTITY, store_id:store_id });
+    var f=XD.mountXD(slot, { storeType:'大卖场', identity:IDENTITY, store_id:store_id });
+    _xdMounted[store_id]=true;
+    var done=function(){ window._srBusy=false; };
     // 同源:iframe 载好后把顶栏角色标签改「SR·零售业代」。setRole 只改标签,不改任务内容(契约活另算)。
-    if(f) f.addEventListener('load',function(){
+    if(f){ f.addEventListener('load',function(){
       try{ var w=f.contentWindow; if(w&&typeof w.setRole==='function') w.setRole('sr'); }catch(e){}
-    });
+      done();
+    }); }
+    setTimeout(done,600);                            // 兜底:600ms 无论如何解锁
     layoutXD(true);                              // 进店后头部高度可能变,再 fit 一次
     setTimeout(function(){ layoutXD(true); },120); // iframe 入位后再校一次
     setTimeout(liftXDAboveBars,300);             // 兜一次晚到的布局(mockbar 显示后栈高才稳)
