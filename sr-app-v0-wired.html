@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带 · 实体主数据 · 事件流</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带 · 实体主数据 · 事件流 · 校准判断</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -145,7 +145,7 @@ button{font-family:inherit}
     return e;
   }
   window.evToggle=function(){ var d=document.getElementById('evTimeline'); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
-  function evLabel(t){ return {VISIT_START:'进店',INVENTORY_SCANNED:'盘点',SCORE_COMPUTED:'算分',VISIT_COMPLETED:'签退'}[t]||t; }
+  function evLabel(t){ return {VISIT_START:'进店',INVENTORY_SCANNED:'盘点',SCORE_COMPUTED:'算分',VISIT_COMPLETED:'签退',JUDGMENT_MADE:'判断',ESCALATED:'上报'}[t]||t; }
   function renderEventTimeline(){
     var box=document.getElementById('evTimeline'); if(!box) return;
     if(!INF_EVENTS.length){ box.innerHTML='今日暂无事件。'; return; }
@@ -155,6 +155,8 @@ button{font-family:inherit}
       var p=e.payload||{}; var extra='';
       if(e.type==='INVENTORY_SCANNED'&&p.sku_code) extra=' · '+EM.nameOf('SKU',p.sku_code);
       if(e.type==='SCORE_COMPUTED') extra=' · '+EM.nameOf('SKU',p.sku_code)+' '+p.state_score+'/'+p.sku_state_level;
+      if(e.type==='JUDGMENT_MADE') extra=' · '+EM.nameOf('SKU',p.sku_code)+' ['+p.rule_id+'] '+p.act+(p.calibrated===false?' ·动销虚高谨慎':'');
+      if(e.type==='ESCALATED') extra=' · '+EM.nameOf('SKU',p.sku_code)+' → '+p.to;
       return '<div style="font-size:10.5px;padding:3px 0;border-bottom:1px solid var(--card2);line-height:1.6">'+
         '<span style="color:var(--t3);font-family:ui-monospace,monospace">'+hhmm+'</span> · '+
         '<b>'+evLabel(e.type)+'</b> · '+esc(store)+esc(extra)+'</div>';
@@ -213,13 +215,35 @@ button{font-family:inherit}
     client_value: { category_growth:'—', sku_grmu_per_shelf:'—', note:'客户价值:整品类增长/坪效·待真实口径' },
     calib: { promo_window:true, note:'火锅季=促销窗口·动销读数已扣虚高(蝴蝶TypeB)' },
     sku_targets: [
-      { code:'6MX-TJ-380', role:'主力', stage:'成熟', target_level:'L4',
+      { code:'6MX-TJ-380', role:'主力', stage:'成熟', target_level:'L4', strategic_weight:'高', // 主力×高端锚点=高(provisional·JBP_pending)
         why:['高端酱油份额↑','我方:火锅季堆头 + 大润发:主通道堆头','意图:高端锚点'] },
-      { code:'6MX-QY-500', role:'候选', stage:'成长', target:'铺进+上架率≥X%',
+      { code:'6MX-QY-500', role:'候选', stage:'成长', target:'铺进+上架率≥X%', strategic_weight:'中',
         why:['品类拓宽','我方:上新品','意图:高端升级'] },
-      { code:'6MX-JDX',   role:'候选', stage:'成长', target:'铺进+端架曝光',
+      { code:'6MX-JDX',   role:'候选', stage:'成长', target:'铺进+端架曝光', strategic_weight:'中',
         why:['品类拓宽','我方:上新品','意图:高端升级'] }
     ]
+  };
+  // ── PR24 判断:显式规则表(看得见、可加;不准把判断藏进零散 if)。阈值/权重=草拟·JBP_pending ──
+  var JUDGE_RULES = [
+    { id:'R5_缺数据', test:function(c){ return !c.hasData; },                         act:'先去盘点·暂不判',            why:'没数据不判(事实类)' },
+    { id:'R3_上报',   test:function(c){ return c.clientCommitBlocked || c.overreach; }, act:'上报 KAM/DOM',               why:'SR 关不了→升一层' },
+    { id:'R1_救',     test:function(c){ return (c.level==='L1'||c.level==='L2') && c.weight==='高'; }, act:'今日优先关 + 建议明天复访', why:'低分高权重=该救' },
+    { id:'R2_陈列',   test:function(c){ return c.gap_dim==='see' && c.promo; },         act:'争堆头/黄金位(动销判断打折)', why:'大卖场看得到为王,促销期动销不可信' },
+    { id:'R4_维持',   test:function(c){ return c.level==='L4'||c.level==='L5'; },        act:'维持·不占今日容量',          why:'已达标,省力气' }
+  ];
+  var WEIGHT_NUM = { '高':3, '中':2, '低':1 };
+  var REPORT_QUEUE = [];                         // 内存上报队列(mock·不真推)
+  var _judgeEmitted = {};
+  function judge(ctx){
+    for(var i=0;i<JUDGE_RULES.length;i++){ if(JUDGE_RULES[i].test(ctx)) return JUDGE_RULES[i]; }
+    return { id:'R0_跟进', act:'常规跟进', why:'无规则命中·默认' };
+  }
+  window.jbpEscalate=function(code){
+    var nm=EM.nameOf('SKU',code);
+    if(REPORT_QUEUE.indexOf(code)<0) REPORT_QUEUE.push(code);
+    emitEvent('ESCALATED',{store_id:jbpStoreForScore(), sku_code:code, to:'KAM/DOM'});
+    srToast('已上报 '+nm+' → KAM/DOM(mock·待管理端·触发 JBP 重谈,不真推)');
+    renderJBPBand();                            // 刷新:该条标「已上报·待管理端」
   };
   function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
   window.jbpToggleWhy=function(i){ var d=document.getElementById('jbpWhy'+i); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
@@ -235,21 +259,8 @@ button{font-family:inherit}
       .map(function(c){ return '<span style="background:rgba(226,163,54,.16);color:#e2a336;border:1px solid rgba(226,163,54,.38);border-radius:5px;padding:1px 6px;font-size:10px;margin:2px 4px 0 0;display:inline-block">'+who+':'+esc(c.t)+'·还差'+esc(c.due)+'未落实</span>'; }).join(''); }
     var reminders=pend(J.our_commitments,'我方')+pend(J.client_commitments,'客户');
     var calib=(J.calib&&J.calib.promo_window)?'<div style="margin-top:6px;font-size:10px;color:#e2a336">⚠ 促销期·动销读数已扣虚高('+esc((J.calib.note||'').replace(/^.*?·/,''))+')</div>':'';
-    // 任务 WHY 链:SKU(名从主数据查·系统认码)→品类→承诺→意图;
-    //   差=现算:对 code 在当前门店 inventory_snapshot 找同 sku 行 → 复用 swToScoreInput+SkuScorecard(就是 XL 那套,不另写)。
-    var tasks=J.sku_targets.map(function(t,i){
-      var nm=EM.nameOf('SKU',t.code);                    // 名走主数据(单一来源);未登记→〔code·待映射〕
-      var tgt=t.target_level?('目标 '+esc(t.target_level)):(t.target?esc(t.target):'—');
-      var chain=(t.why||[]).map(function(w,j){ return '<span style="color:'+(j===t.why.length-1?'var(--blue2)':'var(--t2)')+'">'+esc(w)+'</span>'; }).join('<span style="color:var(--t3)"> → </span>');
-      return '<div style="margin-top:6px">'+
-        '<div onclick="jbpToggleWhy('+i+')" style="cursor:pointer;font-size:11px;padding:5px 7px;background:var(--card2);border-radius:6px;display:flex;justify-content:space-between;align-items:center">'+
-          '<span><b>'+esc(nm)+'</b> <span style="color:var(--t3)">'+esc(t.code)+'·'+esc(t.role)+'·'+esc(t.stage)+'·'+tgt+'</span></span>'+
-          '<span style="color:var(--t3);font-size:10px">为什么做 ▾</span></div>'+
-        '<div id="jbpWhy'+i+'" style="display:none;font-size:10.5px;color:var(--t2);padding:6px 8px;line-height:1.8">'+
-          '<div id="jbpScore'+i+'" style="margin-bottom:4px;color:var(--t1)">状态分计算中…</div>'+
-          'WHY:'+chain+'</div>'+
-      '</div>';
-    }).join('');
+    // 任务列表 = 校准前置 → 复用 PR21 现算分(不重算)→ 显式规则判断 → triage 排序 → 渲染。异步(见 jbpRenderTasks)。
+    var rulesHtml=JUDGE_RULES.map(function(R){ return '<div>· <b>'+esc(R.id)+'</b>:'+esc(R.act)+' <span style="color:var(--t3)">('+esc(R.why)+')</span></div>'; }).join('');
     host.innerHTML=
       '<div class="card" style="border:1px solid rgba(79,140,255,.28)">'+
         '<div style="display:flex;justify-content:space-between;align-items:center">'+
@@ -263,13 +274,16 @@ button{font-family:inherit}
           '<span style="color:var(--t3)">(待真实口径)</span></div>'+
         (reminders?'<div style="margin-top:7px">'+reminders+'</div>':'')+
         calib+
-        '<div style="margin-top:9px;font-size:10px;color:var(--t3)">今日 JBP 任务(点开看 WHY:SKU→品类→承诺→意图 + 现算状态分)</div>'+
-        tasks+
+        '<div style="margin-top:9px;font-size:10px;color:var(--t3)">今日 JBP 任务(按关键度排·校准前置·判断走显式规则)</div>'+
+        '<div id="jbpTasks">今日任务计算中…</div>'+
+        '<div onclick="jbpToggleRules()" style="cursor:pointer;margin-top:8px;font-size:10px;color:var(--t3)">📐 判断规则(显式·可加) ▾</div>'+
+        '<div id="jbpRules" style="display:none;font-size:10px;color:var(--t2);line-height:1.7;margin-top:4px">'+rulesHtml+'</div>'+
         '<div id="jbpConsist" style="margin-top:9px;font-size:10px;color:var(--t3)">路线一致性核对中…</div>'+
       '</div>';
-    jbpFillScores(J.sku_targets);               // 异步:按 code 在当前门店现算状态分(复用 XL 那套)
+    jbpRenderTasks(J);                          // 异步:校准→现算分(复用 PR21)→判断→triage→渲染+发事件
     jbpFillConsistency();                       // 异步:路线店 × 主数据 × 盘点 一致性(checkConsistency)
   }
+  window.jbpToggleRules=function(){ var d=document.getElementById('jbpRules'); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
   // 认识世界=知道哪里还不一致:路线店 vs 主数据 vs 有无盘点。不编分,只标"待对齐/未盘到"。
   function jbpFillConsistency(){
     var box=document.getElementById('jbpConsist'); if(!box) return;
@@ -291,27 +305,82 @@ button{font-family:inherit}
     if(CUR_STORE) return CUR_STORE;
     var vl=(PLAN&&PLAN.visit_list)||[]; return vl.length? vl[0].store_id : null;
   }
-  // 现算分:对每个 code 在当前门店快照找同 sku 行 → swToScoreInput + SkuScorecard(不另写算分)。
-  //   code 不在主数据 → 待映射;本店没盘到该 code → 未盘到(均不报错、不编分)。
-  function jbpFillScores(targets){
+  // PR24:校准前置 → 复用 PR21 现算分(不重算)→ 显式规则判断 → triage 关键度排序 → 渲染 + 发事件。
+  //   差距=100−状态分(来自 PR21);关键度=strategic_weight × 差距;未盘到/待映射 走 R5、排末「缺分·先盘」。
+  var GAP_ZH={buy:'买得到',see:'看得到',sell:'动销'};
+  var TRIAGE_CAP=3;                             // 今日容量 N(mock·provisional)
+  function jbpRenderTasks(J){
+    var box=document.getElementById('jbpTasks'); if(!box) return;
     var store=jbpStoreForScore();
     var storeNm=store?(STORE_NAME[store]||store):'—';
-    (targets||[]).forEach(function(t,i){
-      var span=document.getElementById('jbpScore'+i); if(!span) return;
-      if(!EM.SKU[t.code]){ span.innerHTML='<span style="color:#e2a336">待映射(主数据无此码 '+esc(t.code)+')</span>'; return; }
-      if(!store || !window.SkuScorecard || !CB){ span.textContent='本店未盘到(店:'+storeNm+')'; return; }
-      CB.queryByStore(store).then(function(rows){
-        var latest=null; (rows||[]).forEach(function(r){ if(r.sku===t.code && (!latest||r.ts>latest.ts)) latest=r; });
-        if(!latest){ span.textContent='本店未盘到(店:'+storeNm+')'; return; }
-        var r=window.SkuScorecard.scoreSku(swToScoreInput(latest, store));
-        var gapZH={buy:'买得到',see:'看得到',sell:'动销'};
-        var noGap=(r.task_seed&&r.task_seed.type==='无差')||r.gap_total<0.5;
-        span.innerHTML='本店('+esc(storeNm)+')状态分 <b>'+r.state_score+'</b> · '+esc(r.sku_state_level)+' · '+
-          (noGap?'无显著缺口':('最大缺口 '+(gapZH[r.top_gap_dim]||'—')));
-        var k=store+'|'+t.code+'|'+r.state_score;            // PR23:算分事件(同值去重,重渲染不刷屏)
-        if(!_scoreEmitted[k]){ _scoreEmitted[k]=1; emitEvent('SCORE_COMPUTED',{store_id:store, sku_code:t.code, state_score:r.state_score, sku_state_level:r.sku_state_level}); }
-      }).catch(function(){ span.textContent='本店未盘到(店:'+storeNm+')'; });
-    });
+    var promo=!!(J.calib&&J.calib.promo_window);                 // 校准前置:促销窗口 → 动销虚高
+    var clientBlocked=(J.client_commitments||[]).some(function(c){return c.status==='pending'&&c.due;}); // 客户承诺差
+    var qByStore=(store&&CB&&CB.queryByStore)?CB.queryByStore(store):Promise.resolve([]);
+    qByStore.then(function(rows){
+      var rmap={}; (rows||[]).forEach(function(r){ if(r.sku && (!rmap[r.sku]||r.ts>rmap[r.sku].ts)) rmap[r.sku]=r; });
+      // 1) 逐 target:校准 + 现算分(复用)+ 判断 + 关键度
+      var items=(J.sku_targets||[]).map(function(t){
+        var it={ t:t, weight:t.strategic_weight||'中', hasData:false, unmapped:false };
+        if(!EM.SKU[t.code]){ it.unmapped=true; }
+        else { var latest=rmap[t.code];
+          if(latest && window.SkuScorecard){
+            var r=window.SkuScorecard.scoreSku(swToScoreInput(latest, store));
+            it.hasData=true; it.score=r.state_score; it.level=r.sku_state_level;
+            it.gap_dim=(r.task_seed&&r.task_seed.type==='无差')||r.gap_total<0.5?null:r.top_gap_dim;
+            it.gap=Math.max(0,100-r.state_score); it.conf=r.confidence;
+          }
+        }
+        // 校准前置:动销相关判断(top_gap=动销,或低分需看动销)在促销窗口标"虚高·谨慎"、置信降
+        it.sellDependent = it.hasData && (it.gap_dim==='sell');
+        it.calibrated = !(promo && it.sellDependent);          // 依赖动销 && 促销期 → 未校准净(谨慎)
+        var ctx={ hasData:it.hasData, level:it.level, gap_dim:it.gap_dim, promo:promo,
+                  weight:it.weight, clientCommitBlocked:(clientBlocked && it.weight==='高'), overreach:!!t.overreach };
+        it.rule=judge(ctx);
+        it.crit = it.hasData ? (WEIGHT_NUM[it.weight]||1) * it.gap : -1;  // 关键度
+        return it;
+      });
+      // 2) triage:有数据按关键度降序;无数据(未盘到/待映射)排末
+      items.sort(function(a,b){ return b.crit-a.crit; });
+      // 3) 渲染 + 发事件
+      box.innerHTML=items.map(function(it,idx){
+        var t=it.t, nm=EM.nameOf('SKU',t.code);
+        var tgt=t.target_level?('目标 '+esc(t.target_level)):(t.target?esc(t.target):'—');
+        var chain=(t.why||[]).map(function(w,j){ return '<span style="color:'+(j===t.why.length-1?'var(--blue2)':'var(--t2)')+'">'+esc(w)+'</span>'; }).join('<span style="color:var(--t3)"> → </span>');
+        // 关键度名次徽标
+        var rankTag;
+        if(!it.hasData) rankTag='<span style="background:rgba(226,163,54,.16);color:#e2a336;border-radius:4px;padding:0 5px;font-size:9px">缺分·先盘</span>';
+        else if(idx<TRIAGE_CAP) rankTag='<span style="background:rgba(229,72,77,.16);color:#e5484d;border-radius:4px;padding:0 5px;font-size:9px">今日关键 #'+(idx+1)+'</span>';
+        else rankTag='<span style="background:var(--card2);color:var(--t3);border-radius:4px;padding:0 5px;font-size:9px">待办 #'+(idx+1)+'</span>';
+        // 状态分行
+        var scoreLine = it.unmapped ? '<span style="color:#e2a336">待映射(主数据无此码 '+esc(t.code)+')</span>'
+          : (!it.hasData ? '本店未盘到(店:'+esc(storeNm)+')'
+          : '本店('+esc(storeNm)+')状态分 <b>'+it.score+'</b> · '+esc(it.level)+' · '+(it.gap_dim?'最大缺口 '+GAP_ZH[it.gap_dim]:'无显著缺口')+' · 关键度 '+it.crit);
+        // 判断标:命中规则 → 建议动作 + 依据 + 校准旗标
+        var calibFlag = (it.hasData && it.sellDependent && promo) ? ' <span style="color:#e2a336">促销期·动销虚高·谨慎(置信↓)</span>' : (it.hasData?' <span style="color:#46c46a">已校准</span>':'');
+        var reported = REPORT_QUEUE.indexOf(t.code)>=0;
+        var escBtn = (it.rule.id==='R3_上报') ? (reported
+            ? '<div style="margin-top:4px"><span class="why reg" style="margin:0;background:rgba(70,196,106,.14);color:#46c46a">已上报·待管理端</span></div>'
+            : '<div style="margin-top:4px"><button class="go" style="margin:0;padding:5px 10px;font-size:11px;background:#e5484d" onclick="jbpEscalate(\''+t.code+'\')">上报 KAM/DOM ↑</button></div>')
+          : '';
+        // 发事件(去重):判断成了事件,阶梯接上
+        if(it.hasData){
+          var sk=store+'|'+t.code+'|'+it.score;
+          if(!_scoreEmitted[sk]){ _scoreEmitted[sk]=1; emitEvent('SCORE_COMPUTED',{store_id:store, sku_code:t.code, state_score:it.score, sku_state_level:it.level}); }
+        }
+        var jk=store+'|'+t.code+'|'+it.rule.id+'|'+it.calibrated;
+        if(!_judgeEmitted[jk]){ _judgeEmitted[jk]=1; emitEvent('JUDGMENT_MADE',{store_id:store, sku_code:t.code, rule_id:it.rule.id, act:it.rule.act, calibrated:it.calibrated}); }
+        return '<div style="margin-top:6px">'+
+          '<div onclick="jbpToggleWhy('+idx+')" style="cursor:pointer;font-size:11px;padding:5px 7px;background:var(--card2);border-radius:6px;display:flex;justify-content:space-between;align-items:center">'+
+            '<span>'+rankTag+' <b>'+esc(nm)+'</b> <span style="color:var(--t3)">'+esc(t.code)+'·'+esc(it.weight)+'权重</span></span>'+
+            '<span style="color:var(--t3);font-size:10px">为什么做 ▾</span></div>'+
+          '<div style="font-size:10.5px;color:var(--t1);padding:3px 7px">'+scoreLine+'</div>'+
+          '<div style="font-size:10.5px;padding:2px 7px"><b style="color:var(--blue2)">判断['+esc(it.rule.id)+']</b> '+esc(it.rule.act)+' <span style="color:var(--t3)">('+esc(it.rule.why)+')</span>'+calibFlag+'</div>'+
+          escBtn+
+          '<div id="jbpWhy'+idx+'" style="display:none;font-size:10.5px;color:var(--t2);padding:4px 8px;line-height:1.8">'+
+            esc(t.role)+'·'+esc(t.stage)+'·'+tgt+'<br>WHY:'+chain+'</div>'+
+        '</div>';
+      }).join('');
+    }).catch(function(){ box.innerHTML='<div class="note">任务判断暂不可用。</div>'; });
   }
 
   function renderXM(){
