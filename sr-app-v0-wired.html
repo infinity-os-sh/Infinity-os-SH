@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · 作业面提速·检视面归位 · 进店即时反馈/防重入</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · 自查修复包(进店/不跳/XL兜底/重盘更新)</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -418,7 +418,7 @@ button{font-family:inherit}
           var sk=store+'|'+t.code+'|'+it.score;
           if(!_scoreEmitted[sk]){ _scoreEmitted[sk]=1; emitEvent('SCORE_COMPUTED',{store_id:store, sku_code:t.code, state_score:it.score, sku_state_level:it.level}); }
         }
-        var jk=store+'|'+t.code+'|'+it.rule.id+'|'+it.calibrated;
+        var jk=store+'|'+t.code+'|'+it.rule.id+'|'+it.calibrated+'|'+it.score; // 修复4:含分数→重盘分变即重发,台账反映得出
         if(!_judgeEmitted[jk]){ _judgeEmitted[jk]=1; emitEvent('JUDGMENT_MADE',{store_id:store, sku_code:t.code, rule_id:it.rule.id, act:it.rule.act, calibrated:it.calibrated}); }
         return '<div style="margin-top:6px">'+
           '<div onclick="jbpToggleWhy('+idx+')" style="cursor:pointer;font-size:11px;padding:5px 7px;background:var(--card2);border-radius:6px;display:flex;justify-content:space-between;align-items:center">'+
@@ -434,27 +434,57 @@ button{font-family:inherit}
     }).catch(function(){ box.innerHTML='<div class="note">任务判断暂不可用。</div>'; });
   }
 
+  // 单店卡片(关键度注解在首次绘制时就内联,不再画完再 appendChild 重排 → 不跳)
+  function xmPrioHtml(p, rank){
+    if(!p) return '<span style="color:var(--t3)">关键度暂不可用</span>';
+    if(!p.hasData) return '<span style="color:#e2a336">需先盘·无法预判</span>';
+    var why=p.reasons.slice(0,2).map(function(r){ return EM.nameOf('SKU',r.code).replace(/〔.*/,'')+'·'+r.level; }).join(' / ')||'无显著缺口';
+    return '<span style="color:#e5484d;font-weight:700">#'+(rank+1)+'</span> · 关键度 <b>'+p.priority+'</b> · 主因 '+esc(why);
+  }
+  function xmCardHtml(v, prioHtml){
+    var fire=(v.reason==='盲点'||v.reason==='逾期');
+    var bd=v.vps_breakdown||{}; var dd=bd['常规到期度']||{}; var ff=bd['救火紧急度']||{};
+    return '<div class="card" id="xmCard_'+v.store_id+'"><div class="vrow"><div class="vseq">'+v.seq+'</div><div style="flex:1">'+
+      '<div class="vname">'+(STORE_NAME[v.store_id]||v.store_id)+'</div>'+
+      '<div id="xmPrio_'+v.store_id+'" style="font-size:10px;color:var(--t3);margin:2px 0">'+prioHtml+'</div>'+
+      '<div class="vmeta">'+v.store_id+' · 预计 '+(v.est_minutes||'?')+' 分</div>'+
+      '<span class="why '+(fire?'fire':'reg')+'">'+(v.reason==='盲点'?'救火·盲点':v.reason==='逾期'?'救火·逾期':'常规到期')+'</span>'+
+      '<span class="why reg" style="background:rgba(79,140,255,.12);color:var(--blue2);border-color:rgba(79,140,255,.3)">VPS <b class="vps">'+v.vps+'</b></span>'+
+      '<div class="bd">为什么去(VPS 拆解·来自 L5-07,不另算):<br>· 常规到期度:'+(dd['分级']||'?')+'级/'+(dd['周期']||'?')+'·距上次访 '+(dd['距上次访天数']==null?'—':dd['距上次访天数']+'天')+
+      '<br>· 救火紧急度:CHS '+(ff.from_CHS||'—')+' / SHS '+(ff.from_SHS||'—')+' <span style="color:var(--t3)">('+(ff.provenance||'')+')</span></div>'+
+      (VISITED[v.store_id]
+        ? '<div style="margin-top:8px;display:flex;gap:8px;align-items:center"><span class="why reg" style="margin:0">✓ 已访·已落袋·盘点已写</span><button class="go" style="flex:1;margin:0;background:var(--card2)" onclick="srEnter(\''+v.store_id+'\',true)">重盘 ↻</button></div>'
+        : '<button class="go" onclick="srEnter(\''+v.store_id+'\')">进店盘点 →</button>')+
+    '</div></div></div>';
+  }
   function renderXM(){
     renderJBPBand();                            // additive:XM 顶 JBP 带 + 任务 WHY(纯展示)
     var el=document.getElementById('xmList'); var vl=(PLAN&&PLAN.visit_list)||[];
-    el.innerHTML=vl.map(function(v){
-      var fire=(v.reason==='盲点'||v.reason==='逾期');
-      var bd=v.vps_breakdown||{}; var dd=bd['常规到期度']||{}; var ff=bd['救火紧急度']||{};
-      return '<div class="card" id="xmCard_'+v.store_id+'"><div class="vrow"><div class="vseq">'+v.seq+'</div><div style="flex:1">'+
-        '<div class="vname">'+(STORE_NAME[v.store_id]||v.store_id)+'</div>'+
-        '<div id="xmPrio_'+v.store_id+'" style="font-size:10px;color:var(--t3);margin:2px 0">关键度计算中…</div>'+
-        '<div class="vmeta">'+v.store_id+' · 预计 '+(v.est_minutes||'?')+' 分</div>'+
-        '<span class="why '+(fire?'fire':'reg')+'">'+(v.reason==='盲点'?'救火·盲点':v.reason==='逾期'?'救火·逾期':'常规到期')+'</span>'+
-        '<span class="why reg" style="background:rgba(79,140,255,.12);color:var(--blue2);border-color:rgba(79,140,255,.3)">VPS <b class="vps">'+v.vps+'</b></span>'+
-        '<div class="bd">为什么去(VPS 拆解·来自 L5-07,不另算):<br>· 常规到期度:'+(dd['分级']||'?')+'级/'+(dd['周期']||'?')+'·距上次访 '+(dd['距上次访天数']==null?'—':dd['距上次访天数']+'天')+
-        '<br>· 救火紧急度:CHS '+(ff.from_CHS||'—')+' / SHS '+(ff.from_SHS||'—')+' <span style="color:var(--t3)">('+(ff.provenance||'')+')</span></div>'+
-        (VISITED[v.store_id]
-          ? '<div style="margin-top:8px;display:flex;gap:8px;align-items:center"><span class="why reg" style="margin:0">✓ 已访·已落袋·盘点已写</span><button class="go" style="flex:1;margin:0;background:var(--card2)" onclick="srEnter(\''+v.store_id+'\',true)">重盘 ↻</button></div>'
-          : '<button class="go" onclick="srEnter(\''+v.store_id+'\')">进店盘点 →</button>')+
-      '</div></div></div>';
-    }).join('')|| '<div class="note">今日无到期门店。</div>';
-    document.getElementById('xmSummary').textContent=(PLAN&&PLAN.summary_text)||'';
-    routeAgent();                               // PR25:店级聚合 PR24 关键度 → 路线优先排序+注解(叠在 L5-07 上,不改其路由)
+    var setSum=function(){ document.getElementById('xmSummary').textContent=(PLAN&&PLAN.summary_text)||''; };
+    if(!vl.length){ el.innerHTML='<div class="note">今日无到期门店。</div>'; setSum(); return; }
+    var targets=(JBP_MOCK&&JBP_MOCK.sku_targets)||[];
+    // 修复2:先算优先级拿到最终顺序,再按最终顺序「一次性」渲染 → 消除 paint 后 appendChild 重排(不跳)。
+    //   铁律不变:同一 storePriority(不改算分/权重/公式);不改 PLAN.visit_list、不动 L5-07 路由,只排展示顺序。
+    Promise.all(vl.map(function(v,i){ return storePriority(v.store_id, targets).then(function(p){ p._seq=i; p._v=v; return p; }); }))
+    .then(function(list){
+      var ordered=list.slice().sort(function(a,b){
+        if(a.hasData!==b.hasData) return a.hasData?-1:1;          // 有数据店在前
+        if(a.hasData) return b.priority-a.priority;               // 有数据:关键度降序
+        return a._seq-b._seq;                                     // 无数据:L5-07 原序兜底
+      });
+      el.innerHTML=ordered.map(function(p,rank){ return xmCardHtml(p._v, xmPrioHtml(p,rank)); }).join('');
+      setSum();
+      var hasAny=ordered.some(function(p){return p.hasData;});
+      var sig=ordered.map(function(p){return p.store+':'+(p.hasData?p.priority:'-');}).join(',');
+      if(hasAny && _routeEmitted!==sig){ _routeEmitted=sig;
+        emitEvent('ROUTE_PLANNED',{ store_order:ordered.map(function(p){return p.store;}),
+          top_store:ordered[0]&&ordered[0].hasData?ordered[0].store:null });
+      }
+    }).catch(function(){
+      // 兜底:优先级算不出 → 按 L5-07 原序一次画(不跳、不空白)
+      el.innerHTML=vl.map(function(v){ return xmCardHtml(v,'<span style="color:var(--t3)">关键度暂不可用</span>'); }).join('');
+      setSum();
+    });
   }
 
   // ── PR25 Route Agent:店优先级 = Σ(该店各 JBP 目标 SKU 的 crit)。复用 PR24 的算分/判断/权重,
@@ -478,41 +508,6 @@ button{font-family:inherit}
       reasons.sort(function(a,b){return b.crit-a.crit;});
       return {store:store, hasData:any, priority:sum, reasons:reasons};
     }).catch(function(){ return {store:store, hasData:false, priority:0, reasons:[]}; });
-  }
-  function routeAgent(){
-    var vl=(PLAN&&PLAN.visit_list)||[]; if(!vl.length) return;
-    var targets=(JBP_MOCK&&JBP_MOCK.sku_targets)||[];
-    Promise.all(vl.map(function(v,i){ return storePriority(v.store_id, targets).then(function(p){ p._seq=i; return p; }); }))
-    .then(function(list){
-      // 排序:有数据按 priority 降序;无数据(需先盘)排末,内部保持 L5-07 原序(_seq)
-      var ordered=list.slice().sort(function(a,b){
-        if(a.hasData!==b.hasData) return a.hasData?-1:1;
-        if(a.hasData) return b.priority-a.priority;
-        return a._seq-b._seq;
-      });
-      var el=document.getElementById('xmList');
-      ordered.forEach(function(p, rank){
-        // 注解
-        var box=document.getElementById('xmPrio_'+p.store);
-        if(box){
-          if(!p.hasData){ box.innerHTML='<span style="color:#e2a336">需先盘·无法预判</span>'; }
-          else {
-            var why=p.reasons.slice(0,2).map(function(r){ return EM.nameOf('SKU',r.code).replace(/〔.*/,'')+'·'+r.level; }).join(' / ')||'无显著缺口';
-            box.innerHTML='<span style="color:#e5484d;font-weight:700">#'+(rank+1)+'</span> · 关键度 <b>'+p.priority+'</b> · 主因 '+esc(why);
-          }
-        }
-        // 展示层重排:把卡片按新序 append(移动 DOM,不重渲染、不动 L5-07 的 PLAN)
-        var card=document.getElementById('xmCard_'+p.store);
-        if(card && el) el.appendChild(card);
-      });
-      // 发事件(按序列+优先级签名去重,重渲染不刷屏)
-      var hasAny=ordered.some(function(p){return p.hasData;});
-      var sig=ordered.map(function(p){return p.store+':'+(p.hasData?p.priority:'-');}).join(',');
-      if(hasAny && _routeEmitted!==sig){ _routeEmitted=sig;
-        emitEvent('ROUTE_PLANNED',{ store_order:ordered.map(function(p){return p.store;}),
-          top_store:ordered[0]&&ordered[0].hasData?ordered[0].store:null });
-      }
-    });
   }
 
   // ── 进店:切 XD tab + 挂共享 XD(storeType=大卖场)──────────────────────────
@@ -628,9 +623,9 @@ button{font-family:inherit}
       el.innerHTML=list.map(function(o){
         var latest={}; o.rows.forEach(function(r){ if(!latest[r.sku]||(r.ts>latest[r.sku].ts)) latest[r.sku]=r; });
         var skus=Object.keys(latest);
-        var onCnt=0; skus.forEach(function(k){ if(latest[k].switches.on_shelf===true) onCnt++; });
+        var onCnt=0; skus.forEach(function(k){ if(((latest[k]&&latest[k].switches)||{}).on_shelf===true) onCnt++; });
         var body = skus.length? skus.map(function(k){
-          var sw=latest[k].switches; var cell=function(f){ var x=sw[f]; return '<span class="sw '+(x===true?'on':(x==='no_data'?'nd':'off'))+'">'+(x===true?'ON':(x==='no_data'?'—':'OFF'))+'</span>'; };
+          var sw=(latest[k]&&latest[k].switches)||{}; var cell=function(f){ var x=sw[f]; return '<span class="sw '+(x===true?'on':(x==='no_data'?'nd':'off'))+'">'+(x===true?'ON':(x==='no_data'?'—':'OFF'))+'</span>'; };
           return '<div style="font-size:11px;margin-top:4px"><b style="font-family:ui-monospace,monospace">'+k+'</b> '+['on_shelf','oos_flag','display_rate','sellout','repurchase','margin'].map(cell).join('')+'</div>'+
             xlScoreLine(latest[k], o.v.store_id);   // additive:状态分行(不动既有开关行)
         }).join('') : '<div class="note">待盘点(去 XD 盘一次,这里就有数据)。</div>';
@@ -638,6 +633,9 @@ button{font-family:inherit}
           '<div class="vmeta">'+o.v.store_id+' · 在架 SKU '+onCnt+' · 收入(mock占位):¥'+(onCnt*1200+800)+'/月</div>'+body+'</div>';
       }).join('');
       // 注:SKU 经营规则数组的「列表展示」已挪到 XP 督导/系统视图(检视面归位)。XL 只留每 SKU 状态分+经营建议。
+    }).catch(function(){
+      // 修复3:查询失败 → 出提示,不静默空白、不报错
+      el.innerHTML='<div class="note">一本账暂不可用(数据读取失败)。</div>';
     });
   }
 
