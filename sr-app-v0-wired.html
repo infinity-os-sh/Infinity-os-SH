@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带 · 实体主数据 · 事件流 · 校准判断 · 路线Agent · SKU经营</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带 · 实体主数据 · 事件流 · 校准判断 · 路线Agent · SKU经营 · 学习台账</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -92,6 +92,14 @@ button{font-family:inherit}
       <span style="color:var(--t3);font-size:10px">展开/收起 ▾</span>
     </div>
     <div id="evTimeline" style="display:none;margin-top:8px">今日暂无事件。</div>
+  </div>
+  <div class="card">
+    <div onclick="learnToggle()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:12px;font-weight:700">🧪 学习台账(实验·底座非学习)</div>
+      <span style="color:var(--t3);font-size:10px">展开/收起 ▾</span>
+    </div>
+    <div id="learnLog" style="display:none;margin-top:8px">今日无实验(走一遍判断/经营/排路线即出现)。</div>
+    <div class="note" style="margin-top:6px">⚠ 这是<b>台账不是学习</b>:系统记下每次决策,但<b>还说不出值不值</b>——结果/裁决/因果全「待真实数据」(学习需 ~500 样本/~12 月)。诚实地知道自己不知道为什么。</div>
   </div>
   <div class="card">
     <div class="kv"><span>登录身份</span><b id="xpWho">—</b></div>
@@ -141,8 +149,47 @@ button{font-family:inherit}
             customer_id: sid? EM.customerOf(sid) : null,
             payload:payload };
     INF_EVENTS.push(e);
+    if(DECISION_TYPES[type]) logExperiment(e);   // PR27:决策事件 → 派生一条实验记录(不另造决策)
     if(typeof renderEventTimeline==='function') renderEventTimeline();
     return e;
+  }
+  // ── PR27 学习台账(铺垫·底座非学习本身):把每个决策记成"实验",留好结果/裁决/因果空位等真数据 ──
+  //   诚实:系统现在会"记录实验",不会"从中学习"(学习要真结果+~500样本+~12月)。空位绝不编。
+  var DECISION_TYPES={ JUDGMENT_MADE:1, SKU_DECISION:1, ROUTE_PLANNED:1 };
+  var inf_learning_log=[];
+  function logExperiment(e){
+    var p=e.payload||{};
+    inf_learning_log.push({
+      id: e.ts+'_'+(p.sku_code||e.store_id||'route'),
+      type: e.type,                                    // 哪类决策
+      decided: p.act||p.rule_id||(p.top_store?('先去 '+p.top_store):'路线'), // 系统判了什么
+      context: { store:e.store_id, customer:e.customer_id, sku:p.sku_code||null,
+                 level:p.sku_state_level||p.level||null, stage:p.stage||null, calibrated:p.calibrated },
+      action_taken: null,  // 待:SR 做没做(真执行回收)        — GATED
+      outcome:      null,  // 待:后来 r/份额/动销怎样(真结果)  — GATED
+      verdict:      null,  // 待:有效/无效                      — GATED
+      diag2x2:      null,  // 待:做没做 × 好不好                — GATED
+      cause_open: ['竞品降价?','巡检不足?','季节?','需求降?']   // 因果墙:待数据答 — GATED
+    });
+    if(typeof renderLearningLog==='function') renderLearningLog();
+    return inf_learning_log[inf_learning_log.length-1];
+  }
+  window.learnToggle=function(){ var d=document.getElementById('learnLog'); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
+  function renderLearningLog(){
+    var box=document.getElementById('learnLog'); if(!box) return;
+    if(!inf_learning_log.length){ box.innerHTML='今日无实验(走一遍判断/经营/排路线即出现)。'; return; }
+    box.innerHTML=inf_learning_log.slice().reverse().map(function(x){
+      var c=x.context||{};
+      var who=(c.sku?EM.nameOf('SKU',c.sku):(c.store?EM.nameOf('STORE',c.store):'—'));
+      var situ=[c.stage,c.level].filter(Boolean).join('/')||'—';
+      var calib=(c.calibrated===false)?' ·动销虚高谨慎':(c.calibrated===true?' ·已校准':'');
+      return '<div style="font-size:10.5px;padding:4px 0;border-bottom:1px solid var(--card2);line-height:1.6">'+
+        '<b>'+evLabel(x.type)+'</b> · '+esc(who)+' <span style="color:var(--t3)">('+esc(situ)+esc(calib)+')</span><br>'+
+        '系统判:<b style="color:var(--blue2)">'+esc(x.decided)+'</b><br>'+
+        '结果/裁决:<span style="color:#e2a336">待回收(真结果)</span> · '+
+        '因果:<span style="color:#e2a336">待数据</span> <span style="color:var(--t3)">候选:'+x.cause_open.join(' / ')+'</span>'+
+      '</div>';
+    }).join('');
   }
   window.evToggle=function(){ var d=document.getElementById('evTimeline'); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
   function evLabel(t){ return {VISIT_START:'进店',INVENTORY_SCANNED:'盘点',SCORE_COMPUTED:'算分',VISIT_COMPLETED:'签退',JUDGMENT_MADE:'判断',ESCALATED:'上报',ROUTE_PLANNED:'排路线',SKU_DECISION:'经营'}[t]||t; }
@@ -597,6 +644,7 @@ button{font-family:inherit}
     document.getElementById('xpWho').textContent=(IDENTITY&&(IDENTITY.name||IDENTITY.login_id))||'—';
     document.getElementById('xpMode').textContent=CB.mode()==='real'?'真接 CloudBase':'双轨·mock';
     renderEventTimeline();                    // PR23:刷新今日事件流(折叠块)
+    renderLearningLog();                      // PR27:刷新学习台账(实验·折叠块)
   }
 
   // ── XD 容器精确定位(用真实渲染几何,不猜像素)──────────────────────────────
