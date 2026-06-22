@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带绑码现算</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -152,6 +152,13 @@ button{font-family:inherit}
   // ── JBP 带 + WHY 链(additive·纯展示·内存 mock·不写库不改既有逻辑)──────────────
   //   抬头看(JBP带:意图/两进度/承诺提醒/校准)+ 低头做事知道为什么(任务 WHY:SKU→品类→承诺→意图)。
   //   数据底=内联 mock(大润发 V0.2);真接后端时 JBP_MOCK 换读真实 JBP 对象,结构不变。
+  // SKU 主数据(内存 mock)·给人看名、系统认码;真接后端换读 SFA_Backend_v4,结构不变。
+  // QY/JDX 中文名待主数据确认(名里标〔名待主数据〕)。
+  var SKU_MASTER = {
+    '6MX-TJ-380': { name:'六月鲜特级380ml', spec:'380ml', cat:'高端酱油' },
+    '6MX-QY-500': { name:'六月鲜·QY500〔名待主数据〕', spec:'500ml', cat:'高端酱油' },
+    '6MX-JDX'   : { name:'六月鲜·JDX〔名待主数据〕',   spec:'—',     cat:'高端酱油' }
+  };
   var JBP_MOCK = {
     client_id: 'DRF_SH', client_name: '大润发(上海)', channel: '大卖场',
     intent: '高端酱油第一心智锚点·防御海天高端线',
@@ -165,10 +172,12 @@ button{font-family:inherit}
     client_value: { category_growth:'—', sku_grmu_per_shelf:'—', note:'客户价值:整品类增长/坪效·待真实口径' },
     calib: { promo_window:true, note:'火锅季=促销窗口·动销读数已扣虚高(蝴蝶TypeB)' },
     sku_targets: [
-      { sku:'六月鲜特级500ml', role:'主力', stage:'成熟', target_level:'L4',
+      { code:'6MX-TJ-380', role:'主力', stage:'成熟', target_level:'L4',
         why:['高端酱油份额↑','我方:火锅季堆头 + 大润发:主通道堆头','意图:高端锚点'] },
-      { sku:'六月鲜零添加', role:'候选', stage:'导入', target:'铺进+上架率≥X%',
-        why:['品类拓宽','我方:上2新品','意图:高端升级'] }
+      { code:'6MX-QY-500', role:'候选', stage:'成长', target:'铺进+上架率≥X%',
+        why:['品类拓宽','我方:上新品','意图:高端升级'] },
+      { code:'6MX-JDX',   role:'候选', stage:'成长', target:'铺进+端架曝光',
+        why:['品类拓宽','我方:上新品','意图:高端升级'] }
     ]
   };
   function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
@@ -185,16 +194,20 @@ button{font-family:inherit}
       .map(function(c){ return '<span style="background:rgba(226,163,54,.16);color:#e2a336;border:1px solid rgba(226,163,54,.38);border-radius:5px;padding:1px 6px;font-size:10px;margin:2px 4px 0 0;display:inline-block">'+who+':'+esc(c.t)+'·还差'+esc(c.due)+'未落实</span>'; }).join(''); }
     var reminders=pend(J.our_commitments,'我方')+pend(J.client_commitments,'客户');
     var calib=(J.calib&&J.calib.promo_window)?'<div style="margin-top:6px;font-size:10px;color:#e2a336">⚠ 促销期·动销读数已扣虚高('+esc((J.calib.note||'').replace(/^.*?·/,''))+')</div>':'';
-    // 任务 WHY 链:SKU→品类→承诺→意图;差复用 XL 的 SkuScorecard(此处只引用目标级,不重算)
+    // 任务 WHY 链:SKU(名从主数据查·系统认码)→品类→承诺→意图;
+    //   差=现算:对 code 在当前门店 inventory_snapshot 找同 sku 行 → 复用 swToScoreInput+SkuScorecard(就是 XL 那套,不另写)。
     var tasks=J.sku_targets.map(function(t,i){
+      var m=SKU_MASTER[t.code]||null;
+      var nm=m?m.name:('〔'+esc(t.code)+'·待映射〕');     // code 不在主数据 → 待映射
       var tgt=t.target_level?('目标 '+esc(t.target_level)):(t.target?esc(t.target):'—');
       var chain=(t.why||[]).map(function(w,j){ return '<span style="color:'+(j===t.why.length-1?'var(--blue2)':'var(--t2)')+'">'+esc(w)+'</span>'; }).join('<span style="color:var(--t3)"> → </span>');
       return '<div style="margin-top:6px">'+
         '<div onclick="jbpToggleWhy('+i+')" style="cursor:pointer;font-size:11px;padding:5px 7px;background:var(--card2);border-radius:6px;display:flex;justify-content:space-between;align-items:center">'+
-          '<span><b>'+esc(t.sku)+'</b> <span style="color:var(--t3)">'+esc(t.role)+'·'+esc(t.stage)+'·'+tgt+'</span></span>'+
+          '<span><b>'+esc(nm)+'</b> <span style="color:var(--t3)">'+esc(t.code)+'·'+esc(t.role)+'·'+esc(t.stage)+'·'+tgt+'</span></span>'+
           '<span style="color:var(--t3);font-size:10px">为什么做 ▾</span></div>'+
         '<div id="jbpWhy'+i+'" style="display:none;font-size:10.5px;color:var(--t2);padding:6px 8px;line-height:1.8">'+
-          'WHY:'+chain+'<br><span style="color:var(--t3)">差(实际状态分)见 XL · SkuScorecard,不在此重算。</span></div>'+
+          '<div id="jbpScore'+i+'" style="margin-bottom:4px;color:var(--t1)">状态分计算中…</div>'+
+          'WHY:'+chain+'</div>'+
       '</div>';
     }).join('');
     host.innerHTML=
@@ -210,9 +223,35 @@ button{font-family:inherit}
           '<span style="color:var(--t3)">(待真实口径)</span></div>'+
         (reminders?'<div style="margin-top:7px">'+reminders+'</div>':'')+
         calib+
-        '<div style="margin-top:9px;font-size:10px;color:var(--t3)">今日 JBP 任务(点开看 WHY:SKU→品类→承诺→意图)</div>'+
+        '<div style="margin-top:9px;font-size:10px;color:var(--t3)">今日 JBP 任务(点开看 WHY:SKU→品类→承诺→意图 + 现算状态分)</div>'+
         tasks+
       '</div>';
+    jbpFillScores(J.sku_targets);               // 异步:按 code 在当前门店现算状态分(复用 XL 那套)
+  }
+  // 当前门店:优先本次进店 CUR_STORE,否则取计划首店;都无 → null(WHY 标"未盘到")
+  function jbpStoreForScore(){
+    if(CUR_STORE) return CUR_STORE;
+    var vl=(PLAN&&PLAN.visit_list)||[]; return vl.length? vl[0].store_id : null;
+  }
+  // 现算分:对每个 code 在当前门店快照找同 sku 行 → swToScoreInput + SkuScorecard(不另写算分)。
+  //   code 不在主数据 → 待映射;本店没盘到该 code → 未盘到(均不报错、不编分)。
+  function jbpFillScores(targets){
+    var store=jbpStoreForScore();
+    var storeNm=store?(STORE_NAME[store]||store):'—';
+    (targets||[]).forEach(function(t,i){
+      var span=document.getElementById('jbpScore'+i); if(!span) return;
+      if(!SKU_MASTER[t.code]){ span.innerHTML='<span style="color:#e2a336">待映射(主数据无此码 '+esc(t.code)+')</span>'; return; }
+      if(!store || !window.SkuScorecard || !CB){ span.textContent='本店未盘到(店:'+storeNm+')'; return; }
+      CB.queryByStore(store).then(function(rows){
+        var latest=null; (rows||[]).forEach(function(r){ if(r.sku===t.code && (!latest||r.ts>latest.ts)) latest=r; });
+        if(!latest){ span.textContent='本店未盘到(店:'+storeNm+')'; return; }
+        var r=window.SkuScorecard.scoreSku(swToScoreInput(latest, store));
+        var gapZH={buy:'买得到',see:'看得到',sell:'动销'};
+        var noGap=(r.task_seed&&r.task_seed.type==='无差')||r.gap_total<0.5;
+        span.innerHTML='本店('+esc(storeNm)+')状态分 <b>'+r.state_score+'</b> · '+esc(r.sku_state_level)+' · '+
+          (noGap?'无显著缺口':('最大缺口 '+(gapZH[r.top_gap_dim]||'—')));
+      }).catch(function(){ span.textContent='本店未盘到(店:'+storeNm+')'; });
+    });
   }
 
   function renderXM(){
