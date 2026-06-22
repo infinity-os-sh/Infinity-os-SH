@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · XL状态分 · JBP带 · 实体主数据 · 事件流 · 校准判断 · 路线Agent · SKU经营 · 学习台账</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · 作业面提速·检视面归位(督导/系统视图)</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -86,20 +86,24 @@ button{font-family:inherit}
     <div id="xpVqs"></div>
     <div class="note">⚠ VQS 评的是「这次拜访有没有拨动门店状态」(对事)——<b>不是给 SR 打个人绩效分 / 排名 / 触发主管介入</b>(延续 L5-07 命门④)。</div>
   </div>
-  <div class="card">
-    <div onclick="evToggle()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:12px;font-weight:700">🕓 今日事件流(理解发生什么)</div>
+  <!-- 督导/系统视图:检视面归位 — 默认收起,不挡 SR 作业。逻辑全在,只是不挡路。 -->
+  <div class="card" style="border:1px dashed rgba(124,140,160,.35)">
+    <div onclick="supToggle()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:12px;font-weight:700">🛡 督导/系统视图(给我们/督导查·默认收起)</div>
       <span style="color:var(--t3);font-size:10px">展开/收起 ▾</span>
     </div>
-    <div id="evTimeline" style="display:none;margin-top:8px">今日暂无事件。</div>
-  </div>
-  <div class="card">
-    <div onclick="learnToggle()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:12px;font-weight:700">🧪 学习台账(实验·底座非学习)</div>
-      <span style="color:var(--t3);font-size:10px">展开/收起 ▾</span>
+    <div id="supView" style="display:none;margin-top:10px">
+      <div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:4px">🕓 今日事件流(理解发生什么)</div>
+      <div id="evTimeline">今日暂无事件。</div>
+      <div style="font-size:11px;font-weight:700;color:var(--t2);margin:12px 0 4px">🧪 学习台账(实验·底座非学习)</div>
+      <div id="learnLog">今日无实验(走一遍判断/经营/排路线即出现)。</div>
+      <div class="note" style="margin-top:6px">⚠ 这是<b>台账不是学习</b>:系统记下每次决策,但<b>还说不出值不值</b>——结果/裁决/因果全「待真实数据」(学习需 ~500 样本/~12 月)。</div>
+      <div style="font-size:11px;font-weight:700;color:var(--t2);margin:12px 0 4px">📐 判断规则(PR24·显式·可加)</div>
+      <div id="judgeRulesList" style="font-size:10px;color:var(--t2);line-height:1.7"></div>
+      <div style="font-size:11px;font-weight:700;color:var(--t2);margin:12px 0 4px">📐 SKU 经营规则(PR26·显式·可加)</div>
+      <div id="resourceRulesList" style="font-size:10px;color:var(--t2);line-height:1.7"></div>
+      <div class="note" style="margin-top:6px">规则版·阈值/权重 provisional(JBP_pending);只说"该不该投/救",说不了"值不值"(=因果/学习·待真数据)。</div>
     </div>
-    <div id="learnLog" style="display:none;margin-top:8px">今日无实验(走一遍判断/经营/排路线即出现)。</div>
-    <div class="note" style="margin-top:6px">⚠ 这是<b>台账不是学习</b>:系统记下每次决策,但<b>还说不出值不值</b>——结果/裁决/因果全「待真实数据」(学习需 ~500 样本/~12 月)。诚实地知道自己不知道为什么。</div>
   </div>
   <div class="card">
     <div class="kv"><span>登录身份</span><b id="xpWho">—</b></div>
@@ -310,7 +314,7 @@ button{font-family:inherit}
     var reminders=pend(J.our_commitments,'我方')+pend(J.client_commitments,'客户');
     var calib=(J.calib&&J.calib.promo_window)?'<div style="margin-top:6px;font-size:10px;color:#e2a336">⚠ 促销期·动销读数已扣虚高('+esc((J.calib.note||'').replace(/^.*?·/,''))+')</div>':'';
     // 任务列表 = 校准前置 → 复用 PR21 现算分(不重算)→ 显式规则判断 → triage 排序 → 渲染。异步(见 jbpRenderTasks)。
-    var rulesHtml=JUDGE_RULES.map(function(R){ return '<div>· <b>'+esc(R.id)+'</b>:'+esc(R.act)+' <span style="color:var(--t3)">('+esc(R.why)+')</span></div>'; }).join('');
+    // 注:判断规则数组的「列表展示」已挪到 XP 督导/系统视图(检视面归位),作业面只留任务+一句动作+一键。
     host.innerHTML=
       '<div class="card" style="border:1px solid rgba(79,140,255,.28)">'+
         '<div style="display:flex;justify-content:space-between;align-items:center">'+
@@ -326,14 +330,11 @@ button{font-family:inherit}
         calib+
         '<div style="margin-top:9px;font-size:10px;color:var(--t3)">今日 JBP 任务(按关键度排·校准前置·判断走显式规则)</div>'+
         '<div id="jbpTasks">今日任务计算中…</div>'+
-        '<div onclick="jbpToggleRules()" style="cursor:pointer;margin-top:8px;font-size:10px;color:var(--t3)">📐 判断规则(显式·可加) ▾</div>'+
-        '<div id="jbpRules" style="display:none;font-size:10px;color:var(--t2);line-height:1.7;margin-top:4px">'+rulesHtml+'</div>'+
         '<div id="jbpConsist" style="margin-top:9px;font-size:10px;color:var(--t3)">路线一致性核对中…</div>'+
       '</div>';
     jbpRenderTasks(J);                          // 异步:校准→现算分(复用 PR21)→判断→triage→渲染+发事件
     jbpFillConsistency();                       // 异步:路线店 × 主数据 × 盘点 一致性(checkConsistency)
   }
-  window.jbpToggleRules=function(){ var d=document.getElementById('jbpRules'); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
   // 认识世界=知道哪里还不一致:路线店 vs 主数据 vs 有无盘点。不编分,只标"待对齐/未盘到"。
   function jbpFillConsistency(){
     var box=document.getElementById('jbpConsist'); if(!box) return;
@@ -625,14 +626,9 @@ button{font-family:inherit}
         return '<div class="card"><div class="vname">'+(STORE_NAME[o.v.store_id]||o.v.store_id)+'</div>'+
           '<div class="vmeta">'+o.v.store_id+' · 在架 SKU '+onCnt+' · 收入(mock占位):¥'+(onCnt*1200+800)+'/月</div>'+body+'</div>';
       }).join('');
-      // PR26:显式资源规则折叠列出(看得见、可加)
-      var rulesHtml=RESOURCE_RULES.map(function(R){ return '<div>· <b>'+esc(R.id)+'</b>:'+esc(R.act)+' <span style="color:var(--t3)">('+esc(R.why)+')</span></div>'; }).join('');
-      el.innerHTML += '<div class="card"><div onclick="xlToggleRules()" style="cursor:pointer;font-size:11px;font-weight:700">📐 SKU 经营规则(显式·可加) ▾</div>'+
-        '<div id="xlRules" style="display:none;font-size:10px;color:var(--t2);line-height:1.7;margin-top:6px">'+rulesHtml+
-        '<div style="color:var(--t3);margin-top:4px">⚠ 规则版·投资比例/阈值 provisional(JBP_pending);只说"该不该投",说不了"投了值不值"(=因果/学习·PR27+)。缺趋势:现按阶段+当前分,不含生命力下降趋势。</div></div></div>';
+      // 注:SKU 经营规则数组的「列表展示」已挪到 XP 督导/系统视图(检视面归位)。XL 只留每 SKU 状态分+经营建议。
     });
   }
-  window.xlToggleRules=function(){ var d=document.getElementById('xlRules'); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
 
   // ── XP:复盘 VQS(对事非对人)= L5-07 learning_emits ─────────────────────────
   function renderXP(){
@@ -643,9 +639,17 @@ button{font-family:inherit}
     }).join('')||'<div class="note">签退后这里出现拜访有效性记录(对事)。</div>';
     document.getElementById('xpWho').textContent=(IDENTITY&&(IDENTITY.name||IDENTITY.login_id))||'—';
     document.getElementById('xpMode').textContent=CB.mode()==='real'?'真接 CloudBase':'双轨·mock';
-    renderEventTimeline();                    // PR23:刷新今日事件流(折叠块)
-    renderLearningLog();                      // PR27:刷新学习台账(实验·折叠块)
+    renderEventTimeline();                    // PR23:刷新今日事件流(督导/系统视图内)
+    renderLearningLog();                      // PR27:刷新学习台账(督导/系统视图内)
+    renderRulesLists();                       // 判断规则/资源规则 列表展示(检视面·督导/系统视图内)
   }
+  // 督导/系统视图:把规则数组的「列表展示」渲染进去(逻辑不变,只是展示归位)
+  function renderRulesLists(){
+    function rl(arr){ return arr.map(function(R){ return '<div>· <b>'+esc(R.id)+'</b>:'+esc(R.act)+' <span style="color:var(--t3)">('+esc(R.why)+')</span></div>'; }).join(''); }
+    var j=document.getElementById('judgeRulesList'); if(j) j.innerHTML=rl(JUDGE_RULES);
+    var s=document.getElementById('resourceRulesList'); if(s) s.innerHTML=rl(RESOURCE_RULES);
+  }
+  window.supToggle=function(){ var d=document.getElementById('supView'); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
 
   // ── XD 容器精确定位(用真实渲染几何,不猜像素)──────────────────────────────
   // 进店时把 #xdSlot 固定在「店内标签底」与「底栏(mockbar+tabbar)顶」之间,
