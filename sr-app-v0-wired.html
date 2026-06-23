@@ -35,7 +35,7 @@ body{background:var(--bg);color:var(--t1);font-family:'Noto Sans SC',system-ui,s
 .xdslot{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#0d0f14;position:relative;z-index:1}
 /* XD 容器:进店时 position:fixed,top/bottom 由 JS 用真实渲染几何(getBoundingClientRect/offsetHeight)算,
    精确卡在「头部底边」和「底栏顶边」之间。height:auto(由 top/bottom 决定,无 calc/min-height)。不靠猜像素。 */
-#xdSlot.xd-fixed{position:fixed;left:50%;transform:translateX(-50%);width:100%;max-width:460px;height:auto!important;min-height:0!important;z-index:50;border-radius:0;border-left:none;border-right:none}
+#xdSlot.xd-fixed{position:fixed;left:50%;transform:translateX(-50%);width:100%;max-width:460px;height:auto!important;min-height:0!important;z-index:50;border-radius:0;border-left:none;border-right:none;bottom:calc(var(--barsH, 110px) + env(safe-area-inset-bottom))}
 #xdSlot iframe{width:100%;height:100%!important;min-height:0!important;border:none;display:block}
 .tabbar{position:fixed;bottom:0;left:0;right:0;max-width:460px;margin:0 auto;display:flex;background:#0c1118;border-top:1px solid var(--line);z-index:100}
 .tab{flex:1;text-align:center;padding:8px 0 10px;font-size:10px;color:var(--t3);cursor:pointer}
@@ -50,8 +50,8 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<!-- BUILD: B-033 (唯一构建码·改一次加一·DS 横幅与本注释/main 最新 commit 三处必一致;核对第一步永远先对 BUILD 码) -->
-<div class="plan"><b style="color:var(--blue2)">build B-033</b> · INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · 补货建议+超阈值上级审批(DECISION-001)</div>
+<!-- BUILD: B-034 (唯一构建码·改一次加一·DS 横幅与本注释/main 最新 commit 三处必一致;核对第一步永远先对 BUILD 码) -->
+<div class="plan"><b style="color:var(--blue2)">build B-034</b> · INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · 补货建议+超阈值上级审批(DECISION-001)</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -743,12 +743,17 @@ button{font-family:inherit}
     requestAnimationFrame(function(){
       var sec=document.querySelector('#scrXD .sec');
       var top = sec ? Math.round(sec.getBoundingClientRect().bottom) : 0;
+      updateBarsVar();                          // 写 --barsH(两条栏实测)→ CSS 兜底 bottom 同源
       slot.style.top=top+'px';
-      slot.style.bottom='0px';                  // iframe 占到真屏幕底;抬升交给 liftXDAboveBars
+      slot.style.bottom='';                     // 交给 CSS bottom:calc(var(--barsH)+safe) → slot 停在两条栏之上
       slot.style.height='auto';
       slot.classList.add('xd-fixed');
-      liftXDAboveBars();                        // 伸进 iframe 抬 inf-xd .main 到底栏之上
+      liftXDAboveBars();                        // 写 --barsH 多时机 + 让 inf-xd .main 填满(已上移的)iframe
     });
+  }
+  // --barsH = 两条底栏栈高(min(tabbar.top,mockbar.top) 离屏底)。CSS(#xdSlot 兜底 bottom)与 JS 同源。
+  function updateBarsVar(){
+    try{ document.documentElement.style.setProperty('--barsH', barStackHeight()+'px'); }catch(e){}
   }
   // SR 与 inf-xd 同源:往 XD iframe 注样式,把 inf-xd 的 .main 底边抬高=SR底栏实测高,
   // 让 inf-xd 内部 sticky bottom:0 的绿按钮落在 .mockbar+.tabbar 之上,可见可点。
@@ -769,20 +774,20 @@ button{font-family:inherit}
     return Math.max(measured, 88);
   }
   function liftXDAboveBars(){
+    updateBarsVar();
     var slot=document.getElementById('xdSlot');
     var f=slot&&slot.querySelector('iframe'); if(!f) return;
     function inject(){
+      updateBarsVar();                          // 多时机:mockbar 显示后再写一次 --barsH(slot 兜底 bottom 随之更新)
       try{
         var doc=f.contentDocument; if(!doc||!doc.head) return;
-        var barsH=barStackHeight();
         var st=doc.getElementById('sr-host-barpad');
         if(!st){ st=doc.createElement('style'); st.id='sr-host-barpad'; doc.head.appendChild(st); }
-        // 永远重写,旧的欠量值不留;同时把 inf-xd 的弹窗浮层(补货修改 modal/成功)抬到底栏之上,动作键不被压
-        st.textContent='.main{bottom:'+barsH+'px !important}'+
-          '.modify-overlay,.modify-success-overlay{bottom:'+barsH+'px !important}';
+        // slot 已停在两条栏之上 → inf-xd 内容只需填满(已上移的)iframe;.main 归零,避免与 slot 双重抬升。
+        st.textContent='.main{bottom:0 !important}';
       }catch(e){}
     }
-    // 多档重测:mockbar 排版/显示有时序,140/380ms 后它真有高度时再测一次(永不欠)
+    // 多档重测:iframe onload 后、mockbar 显示后(140/380ms)、rAF —— 把两条栏都算进,永不欠。
     if(f.contentDocument&&f.contentDocument.readyState==='complete') inject();
     requestAnimationFrame(inject);
     setTimeout(inject,140);
