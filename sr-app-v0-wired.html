@@ -50,8 +50,17 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<!-- BUILD: B-034 (唯一构建码·改一次加一·DS 横幅与本注释/main 最新 commit 三处必一致;核对第一步永远先对 BUILD 码) -->
-<div class="plan"><b style="color:var(--blue2)">build B-034</b> · INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · 补货建议+超阈值上级审批(DECISION-001)</div>
+<!-- BUILD: B-035 (唯一构建码·改一次加一·DS 横幅与本注释/main 最新 commit 三处必一致;核对第一步永远先对 BUILD 码) -->
+<div class="plan"><b style="color:var(--blue2)">build B-035</b> · <b id="chNameBanner">大卖场</b> · INFINITY OS · SR · 渠道模板化(1 引擎插 N 次)· wired demo</div>
+<div class="plan" style="display:flex;align-items:center;gap:8px;justify-content:center">
+  渠道:<select id="chPick" onchange="srSwitchChannel(this.value)" style="background:var(--card2);color:var(--t1);border:1px solid rgba(124,140,160,.3);border-radius:6px;padding:3px 6px;font-size:11px">
+    <option value="hypermarket">大卖场</option>
+    <option value="o2o_club">O2O会员店</option>
+  </select>
+  <span class="badge mock" style="font-size:9px">mock</span>
+  <span onclick="chToggle()" style="cursor:pointer;color:var(--t3);font-size:10px">渠道画像 ▾</span>
+</div>
+<div id="chProfile" class="plan" style="display:none;text-align:left;font-size:10.5px;color:var(--t2);line-height:1.8"></div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -129,6 +138,7 @@ button{font-family:inherit}
 <script src="infinity-cloudbase/visit-planning/L5-07/l5_07_planner.js"></script>
 <script src="infinity-cloudbase/sku-scorecard/sku_scorecard.js"></script>
 <script src="infinity-cloudbase/entity-master.js"></script>
+<script src="infinity-cloudbase/channel-config.js"></script>
 <script src="infinity-cloudbase/shared-xd/shared-xd-mount.js"></script>
 <script>
 (function(){
@@ -137,6 +147,30 @@ button{font-family:inherit}
   var EM=window.EntityMaster||{ SKU:{},
     nameOf:function(t,id){ return '〔'+id+'·待映射〕'; }, customerOf:function(){return null;},
     cityOf:function(){return null;}, storesOf:function(){return [];}, checkConsistency:function(){return [];} };
+  // 渠道配置层(1 引擎插 N 次):当前渠道 id → window.CHANNELS[id]。缺失降级兜底(大卖场原值)不报错。
+  var CHANNEL_ID='hypermarket';
+  function CH(){ return (window.CHANNELS&&window.CHANNELS[CHANNEL_ID]) || { id:'hypermarket', name:'大卖场', store_type:'大卖场', customer_value:'', our_value_and_gap:'', scoring_weights:{}, consumer_pull:[], roles:[], sku_scope:'', extra_transistors:[] }; }
+  window.chToggle=function(){ var d=document.getElementById('chProfile'); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
+  window.srSwitchChannel=function(id){
+    if(window.CHANNELS && window.CHANNELS[id]) CHANNEL_ID=id;
+    var nm=document.getElementById('chNameBanner'); if(nm) nm.textContent=CH().name;     // 横幅显示当前渠道名
+    renderChannelProfile();
+    if(typeof renderXM==='function') renderXM();                                         // 重渲染(文案/画像随渠道变)
+  };
+  function renderChannelProfile(){
+    var d=document.getElementById('chProfile'); if(!d) return;
+    var c=CH();
+    var sw=c.scoring_weights&&c.scoring_weights['成熟']?('成熟期 买/看/动 = '+c.scoring_weights['成熟']['买得到']+'/'+c.scoring_weights['成熟']['看得到']+'/'+c.scoring_weights['成熟']['动销']):'—';
+    d.innerHTML=
+      '<b style="color:var(--blue2)">'+esc(c.name)+'</b> <span style="color:#e2a336;font-size:9px">provisional·mock</span><br>'+
+      '· 客户价值:'+esc(c.customer_value||'—')+'<br>'+
+      '· 我方价值及差异(JBP弥合点):'+esc(c.our_value_and_gap||'—')+'<br>'+
+      '· 计分权重('+sw+'·不回灌引擎)<br>'+
+      '· 消费者手段:'+esc((c.consumer_pull||[]).join(' / ')||'—')+'<br>'+
+      '· 角色:'+esc((c.roles||[]).join(' / ')||'—')+'<br>'+
+      '· SKU 范围:'+esc(c.sku_scope||'—')+'<br>'+
+      '· 业态特有开关:'+esc((c.extra_transistors||[]).join(' / ')||'(无)');
+  }
   var IDENTITY=null, PLAN=null;
   var CUR_STORE=null;          // 当前进店盘点的 store_id
   var VISITED={};              // 已签退落袋的店:store_id → true
@@ -529,7 +563,7 @@ button{font-family:inherit}
     var ld=document.getElementById('xdLoading'); if(ld) ld.style.display='block';
     document.getElementById('xdStoreTag').textContent=' · '+(STORE_NAME[store_id]||store_id);
     var slot=document.getElementById('xdSlot');
-    var f=XD.mountXD(slot, { storeType:'大卖场', identity:IDENTITY, store_id:store_id, force:force });
+    var f=XD.mountXD(slot, { storeType:CH().store_type, identity:IDENTITY, store_id:store_id, force:force }); // 渠道配置驱动(大卖场=原值)
     _xdMounted[store_id]=true;
     var done=function(){ window._srBusy=false; if(ld) ld.style.display='none'; }; // 解禁 + 撤浮层
     if(f && f.getAttribute && f.getAttribute('data-xd-loaded')==='1'){
@@ -838,7 +872,7 @@ button{font-family:inherit}
   }
   window.srLogout=function(){ location.reload(); };
 
-  function boot2(){ badges(); applyIdentity(); buildPlan(); renderXM(); }
+  function boot2(){ badges(); applyIdentity(); renderChannelProfile(); buildPlan(); renderXM(); }
   CB.ready().then(function(){ if(!Dict||!CB||!L507||!XD){ document.body.innerHTML='<div style="padding:30px;color:#ff5f5f">中台脚本未加载</div>'; return; } showLogin(); });
 })();
 </script>
