@@ -50,7 +50,7 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · 自查修复包(进店/不跳/XL兜底/重盘更新)</div>
+<div class="plan">INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · barpad-v16 · 补货建议+超阈值上级审批(DECISION-001)</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -159,14 +159,14 @@ button{font-family:inherit}
   }
   // ── PR27 学习台账(铺垫·底座非学习本身):把每个决策记成"实验",留好结果/裁决/因果空位等真数据 ──
   //   诚实:系统现在会"记录实验",不会"从中学习"(学习要真结果+~500样本+~12月)。空位绝不编。
-  var DECISION_TYPES={ JUDGMENT_MADE:1, SKU_DECISION:1, ROUTE_PLANNED:1 };
+  var DECISION_TYPES={ JUDGMENT_MADE:1, SKU_DECISION:1, ROUTE_PLANNED:1, APPROVAL_REQUESTED:1, APPROVAL_DECIDED:1 };
   var inf_learning_log=[];
   function logExperiment(e){
     var p=e.payload||{};
     inf_learning_log.push({
       id: e.ts+'_'+(p.sku_code||e.store_id||'route'),
       type: e.type,                                    // 哪类决策
-      decided: p.act||p.rule_id||(p.top_store?('先去 '+p.top_store):'路线'), // 系统判了什么
+      decided: p.act||p.rule_id||(p.result?('审批·'+p.result):null)||(p.dev!=null?('请批·偏差'+Math.round((p.dev||0)*100)+'%·'+p.new_qty+'件'):null)||(p.top_store?('先去 '+p.top_store):'路线'), // 系统判了什么
       context: { store:e.store_id, customer:e.customer_id, sku:p.sku_code||null,
                  level:p.sku_state_level||p.level||null, stage:p.stage||null, calibrated:p.calibrated },
       action_taken: null,  // 待:SR 做没做(真执行回收)        — GATED
@@ -196,7 +196,7 @@ button{font-family:inherit}
     }).join('');
   }
   window.evToggle=function(){ var d=document.getElementById('evTimeline'); if(d) d.style.display=(d.style.display==='none'||!d.style.display)?'block':'none'; };
-  function evLabel(t){ return {VISIT_START:'进店',INVENTORY_SCANNED:'盘点',SCORE_COMPUTED:'算分',VISIT_COMPLETED:'签退',JUDGMENT_MADE:'判断',ESCALATED:'上报',ROUTE_PLANNED:'排路线',SKU_DECISION:'经营'}[t]||t; }
+  function evLabel(t){ return {VISIT_START:'进店',INVENTORY_SCANNED:'盘点',SCORE_COMPUTED:'算分',VISIT_COMPLETED:'签退',JUDGMENT_MADE:'判断',ESCALATED:'上报',ROUTE_PLANNED:'排路线',SKU_DECISION:'经营',APPROVAL_REQUESTED:'请批',APPROVAL_DECIDED:'审批'}[t]||t; }
   function renderEventTimeline(){
     var box=document.getElementById('evTimeline'); if(!box) return;
     if(!INF_EVENTS.length){ box.innerHTML='今日暂无事件。'; return; }
@@ -210,6 +210,8 @@ button{font-family:inherit}
       if(e.type==='ESCALATED') extra=' · '+EM.nameOf('SKU',p.sku_code)+' → '+p.to;
       if(e.type==='ROUTE_PLANNED') extra=' · 先去 '+(p.top_store?EM.nameOf('STORE',p.top_store):'—')+'(共'+(p.store_order?p.store_order.length:0)+'店)';
       if(e.type==='SKU_DECISION') extra=' · '+EM.nameOf('SKU',p.sku_code)+' ['+p.rule_id+'] '+p.act+'('+(p.stage||'?')+'/'+p.level+')';
+      if(e.type==='APPROVAL_REQUESTED') extra=' · '+EM.nameOf('SKU',p.sku_code)+' 改'+p.new_qty+'件·偏差'+Math.round((p.dev||0)*100)+'%·待双签';
+      if(e.type==='APPROVAL_DECIDED') extra=' · '+EM.nameOf('SKU',p.sku_code)+' → '+(p.result==='approved'?'已批准·可落单':'已驳回');
       return '<div style="font-size:10.5px;padding:3px 0;border-bottom:1px solid var(--card2);line-height:1.6">'+
         '<span style="color:var(--t3);font-family:ui-monospace,monospace">'+hhmm+'</span> · '+
         '<b>'+evLabel(e.type)+'</b> · '+esc(store)+esc(extra)+'</div>';
@@ -591,6 +593,62 @@ button{font-family:inherit}
     var tg=((JBP_MOCK&&JBP_MOCK.sku_targets)||[]).filter(function(t){return t.code===code;})[0];
     return { stage: tg?tg.stage:null, weight: tg?(tg.strategic_weight||'中'):'中' };
   }
+  // ── 补货建议 + 修改 + 超阈值上级审批(DECISION-001)·新功能·内存状态 ─────────────
+  //   诚实:补货量 mock 无真库存 → rec_qty 占位「示例·待真实库存」;但「修改→超阈值→上级审批+门禁」流程是真的。
+  var APPROVAL = { threshold: 0.15, signers: '总部 + 大区GM 双签' }; // 阈值 provisional·DECISION001_pending
+  var REPLENISH = {};                          // 内存:key store|sku → {rec_qty,new_qty,dev,status}
+  function repPct(dev){ return Math.round((dev||0)*100)+'%'; }
+  function repBlock(store, sku){
+    var key=store+'|'+sku;
+    var rec_qty=Math.max(0, (10)*6);           // 占位示例量(真量待真实库存/盘点数量);DECISION-001 三维矩阵待阶段2
+    var st=REPLENISH[key]||{};
+    var inputVal=(st.new_qty!=null?st.new_qty:rec_qty);
+    var locked=(st.status==='pending_approval');
+    var statusHtml='', actionHtml='';
+    if(st.status==='pending_approval'){
+      statusHtml='<span style="color:#e2a336">待审批('+esc(APPROVAL.signers)+')· 门禁:未批<b>不能落单</b></span>';
+      actionHtml='<button class="go" style="margin:0;padding:4px 8px;font-size:10px;background:#46c46a" onclick="repApprove(\''+store+'\',\''+sku+'\',true,'+rec_qty+')">✓ 模拟批准</button>'+
+                 '<button class="go" style="margin:0;padding:4px 8px;font-size:10px;background:#e5484d" onclick="repApprove(\''+store+'\',\''+sku+'\',false,'+rec_qty+')">✗ 驳回</button>';
+    } else if(st.status==='approved'){
+      statusHtml='<span style="color:#46c46a">✓ 已批准·可落单(偏差 '+repPct(st.dev)+')</span>';
+    } else if(st.status==='rejected'){
+      statusHtml='<span style="color:#e5484d">✗ 已驳回·已回退建议量</span>';
+    } else if(st.status==='submitted'){
+      statusHtml='<span style="color:#46c46a">✓ 已提交·可落单(偏差 '+repPct(st.dev)+'≤'+repPct(APPROVAL.threshold)+')</span>';
+    }
+    var submitBtn = locked ? '' :
+      '<button class="go" style="margin:0;padding:4px 8px;font-size:10px" onclick="repSubmit(\''+store+'\',\''+sku+'\','+rec_qty+')">提交</button>';
+    return '<div style="margin-top:4px;padding-top:4px;border-top:1px dashed rgba(124,140,160,.25)">'+
+      '补货建议 <b>示例 '+rec_qty+' 件</b> <span style="color:#e2a336">示例·待真实库存</span>'+
+      ' <span style="color:var(--t3)">(阈值 '+repPct(APPROVAL.threshold)+'·DECISION001_pending)</span><br>'+
+      '<div style="display:flex;gap:6px;align-items:center;margin-top:3px">改为 '+
+        '<input id="repIn_'+store+'_'+sku+'" type="number" value="'+inputVal+'" '+(locked?'disabled ':'')+
+          'style="width:64px;padding:3px 5px;font-size:11px;background:var(--card2);border:1px solid rgba(124,140,160,.3);border-radius:5px;color:var(--t1)"> 件 '+
+        submitBtn+actionHtml+
+      '</div>'+
+      (statusHtml?'<div style="margin-top:3px;font-size:10px">'+statusHtml+'</div>':'')+
+    '</div>';
+  }
+  window.repSubmit=function(store, sku, rec_qty){
+    var el=document.getElementById('repIn_'+store+'_'+sku);
+    var nq=el?parseFloat(el.value):rec_qty; if(isNaN(nq)) nq=rec_qty;
+    var dev=rec_qty>0?(nq-rec_qty)/rec_qty:(nq>0?1:0);
+    var key=store+'|'+sku;
+    if(Math.abs(dev)<=APPROVAL.threshold){
+      REPLENISH[key]={rec_qty:rec_qty, new_qty:nq, dev:dev, status:'submitted'};   // 偏差内→直接提交(可落单)
+    } else {
+      REPLENISH[key]={rec_qty:rec_qty, new_qty:nq, dev:dev, status:'pending_approval'}; // 超阈值→门禁:必须上级审批
+      emitEvent('APPROVAL_REQUESTED',{store_id:store, sku_code:sku, rec_qty:rec_qty, new_qty:nq, dev:dev});
+    }
+    renderXL();
+  };
+  window.repApprove=function(store, sku, ok, rec_qty){
+    var key=store+'|'+sku; var st=REPLENISH[key]||{rec_qty:rec_qty};
+    if(ok){ st.status='approved'; } else { st.status='rejected'; st.new_qty=rec_qty; st.dev=0; } // 驳回→回退建议量
+    REPLENISH[key]=st;
+    emitEvent('APPROVAL_DECIDED',{store_id:store, sku_code:sku, rec_qty:rec_qty, new_qty:st.new_qty, dev:st.dev, result: ok?'approved':'rejected'});
+    renderXL();
+  };
   function xlScoreLine(rec, store_id){
     if(!window.SkuScorecard) return '';
     var r=window.SkuScorecard.scoreSku(swToScoreInput(rec, store_id));
@@ -612,6 +670,7 @@ button{font-family:inherit}
       '<div style="margin-top:3px;color:var(--t1)">经营建议<b style="color:var(--blue2)">['+esc(dec.id)+']</b> '+esc(dec.act)+
         ' <span style="color:var(--t3)">('+esc(stage||'阶段?')+'·'+esc(meta.weight)+'权重·'+esc(dec.why)+')</span></div>'+
       '<div style="color:var(--t3)">对客户贡献:坪效/品类增长 <span style="color:#e2a336">待真实口径</span></div>'+
+      repBlock(store_id, rec.sku)+              // 补货建议 + 修改 + 超阈值上级审批(DECISION-001)
       '</div>';
   }
 
