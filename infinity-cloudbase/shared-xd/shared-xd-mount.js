@@ -26,22 +26,36 @@
       if (opts.storeType !== undefined) localStorage.setItem('inf_cb_store_type', opts.storeType || ''); // 空=不显示②③(ICA默认)
     } catch (e) {}
     if (!slot) return null;
+    var wantStore = (opts.store_id !== undefined) ? (opts.store_id || '') : null;
     // slot 可是容器 div(SR:内建 iframe),也可直接传现成 iframe(ICA:复用其 #xdFrame)
     var f;
     if (slot.tagName === 'IFRAME') {
+      // ICA 路:保持原行为(每次重载),不引入复用 → ICA 运行期零变化
       f = slot;
-    } else {
-      f = slot.querySelector('iframe.shared-xd');
-      if (!f) {
-        slot.innerHTML = '';                 // 清掉占位符(「从路上点一家店进店…」)再放 iframe
-        f = document.createElement('iframe');
-        f.className = 'shared-xd';
-        f.title = 'INFINITY OS · 共享盘点 XD';
-        f.style.cssText = 'width:100%;height:100%;min-height:0;border:none;display:block;background:#0d0f14';
-        slot.appendChild(f);
-      }
+      f.src = SHARED_XD_SRC + '?t=' + Date.now();
+      return f;
     }
-    // 重载 = 重新读 localStorage(切店/切人/切业态/重开盘点时调用)
+    // SR 路(div slot):iframe 只挂一次、之后复用(同店不重载 src → 第二次秒开)
+    f = slot.querySelector('iframe.shared-xd');
+    var firstCreate = false;
+    if (!f) {
+      slot.innerHTML = '';                   // 清掉占位符(「从路上点一家店进店…」)再放 iframe
+      f = document.createElement('iframe');
+      f.className = 'shared-xd';
+      f.title = 'INFINITY OS · 共享盘点 XD';
+      f.style.cssText = 'width:100%;height:100%;min-height:0;border:none;display:block;background:#0d0f14';
+      slot.appendChild(f);
+      firstCreate = true;
+    }
+    // 复用守卫:非强制 + 非首建 + 已载完 + 同店 → 直接返回现成 iframe(不重设 src、不重载)
+    var loadedStore = f.getAttribute('data-xd-store');
+    if (!opts.force && !firstCreate && f.getAttribute('data-xd-loaded') === '1' && wantStore != null && loadedStore === wantStore) {
+      return f;
+    }
+    // 否则(首建 / 切店 / 强制重盘):设 src 重载;onload 后打 data-xd-loaded 标(供外壳解禁 + 下次复用判断)
+    if (wantStore != null) f.setAttribute('data-xd-store', wantStore);
+    f.removeAttribute('data-xd-loaded');
+    f.addEventListener('load', function onceLoaded() { f.setAttribute('data-xd-loaded', '1'); f.removeEventListener('load', onceLoaded); });
     f.src = SHARED_XD_SRC + '?t=' + Date.now();
     return f;
   }

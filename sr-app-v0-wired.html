@@ -50,8 +50,8 @@ button{font-family:inherit}
 </style>
 </head>
 <body>
-<!-- BUILD: B-032 (唯一构建码·改一次加一·DS 横幅与本注释/main 最新 commit 三处必一致;核对第一步永远先对 BUILD 码) -->
-<div class="plan"><b style="color:var(--blue2)">build B-032</b> · INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · 补货建议+超阈值上级审批(DECISION-001)</div>
+<!-- BUILD: B-033 (唯一构建码·改一次加一·DS 横幅与本注释/main 最新 commit 三处必一致;核对第一步永远先对 BUILD 码) -->
+<div class="plan"><b style="color:var(--blue2)">build B-033</b> · INFINITY OS · SR(大卖场销售终端)· 与 ICA 同一中台·不同脸 · wired demo · 补货建议+超阈值上级审批(DECISION-001)</div>
 <div class="top">
   <div><div class="nm" id="srName">销售终端</div><div class="sub" id="srSub">SR · 零售业代</div></div>
   <div class="badge mock" id="srMode">双轨·mock</div>
@@ -68,6 +68,7 @@ button{font-family:inherit}
 <!-- XD · 店内 -->
 <div class="scr" id="scrXD">
   <div class="sec">🔧 店内盘点 · 共享 XD(同 ICA 一套底座)<span id="xdStoreTag" style="color:var(--t3)"></span></div>
+  <div id="xdLoading" style="display:none;position:fixed;left:0;right:0;top:48%;text-align:center;z-index:60;color:var(--t2);font-size:13px;pointer-events:none">⏳ 加载盘点中…</div>
   <div class="xdslot" id="xdSlot"><div style="padding:20px;color:var(--t3);font-size:12px">从「📱路上」点一家店「进店」开始盘点。</div></div>
   <div class="note">① 层 6 开关(上架/有货/陈列/动销/复购/毛利)所有角色同口径;大卖场额外 ②③ 项(堆头/端架/KA账期/促销/竞品/大客户)在 XD 底部面板。签退写 inventory_snapshot(reporter 跟登录走;动销/复购/毛利未采=no_data)。</div>
 </div>
@@ -516,25 +517,27 @@ button{font-family:inherit}
   // ── 进店:切 XD tab + 挂共享 XD(storeType=大卖场)──────────────────────────
   //   修「绿按钮要点很多次」:即时反馈 + 防重入 + 幂等(只改交互,不动打分/判断/事件逻辑)。
   var _xdMounted={};
+  function xdSetRole(f){ try{ var w=f&&f.contentWindow; if(w&&typeof w.setRole==='function') w.setRole('sr'); }catch(e){} }
   window.srEnter=function(store_id, force){
     if(window._srBusy) return;                       // 防重入:挂载中忽略连点,不重复挂 iframe
-    if(!force && CUR_STORE===store_id && _xdMounted[store_id]){ srTab('XD'); return; } // 幂等:同店已挂→只回 XD
+    if(!force && CUR_STORE===store_id && _xdMounted[store_id]){ srTab('XD'); return; } // 幂等:同店已挂→只回 XD(秒开)
     window._srBusy=true;
     CUR_STORE=store_id;
     emitEvent('VISIT_START',{store_id:store_id});   // PR23:进店事件(逻辑不动)
     srTab('XD');                                     // 即时:点击那刻先切屏
-    var slot=document.getElementById('xdSlot');
-    if(slot) slot.innerHTML='<div style="padding:24px;text-align:center;color:var(--t2)">⏳ 正在进店…</div>'; // 即时:占位反馈
+    // 即时反馈用「独立 loading 浮层」,不写 slot.innerHTML(那会毁掉可复用的 iframe)
+    var ld=document.getElementById('xdLoading'); if(ld) ld.style.display='block';
     document.getElementById('xdStoreTag').textContent=' · '+(STORE_NAME[store_id]||store_id);
-    var f=XD.mountXD(slot, { storeType:'大卖场', identity:IDENTITY, store_id:store_id });
+    var slot=document.getElementById('xdSlot');
+    var f=XD.mountXD(slot, { storeType:'大卖场', identity:IDENTITY, store_id:store_id, force:force });
     _xdMounted[store_id]=true;
-    var done=function(){ window._srBusy=false; };
-    // 同源:iframe 载好后把顶栏角色标签改「SR·零售业代」。setRole 只改标签,不改任务内容(契约活另算)。
-    if(f){ f.addEventListener('load',function(){
-      try{ var w=f.contentWindow; if(w&&typeof w.setRole==='function') w.setRole('sr'); }catch(e){}
-      done();
-    }); }
-    setTimeout(done,600);                            // 兜底:600ms 无论如何解锁
+    var done=function(){ window._srBusy=false; if(ld) ld.style.display='none'; }; // 解禁 + 撤浮层
+    if(f && f.getAttribute && f.getAttribute('data-xd-loaded')==='1'){
+      xdSetRole(f); done();                          // 复用:iframe 已载 → 立即解禁,秒开
+    } else if(f){
+      f.addEventListener('load',function(){ xdSetRole(f); done(); }); // 解禁绑真实 onload(非固定 600ms)
+      setTimeout(done,8000);                          // 兜底:极端加载异常也解禁(放宽,真 onload 优先)
+    } else { done(); }
     layoutXD(true);                              // 进店后头部高度可能变,再 fit 一次
     setTimeout(function(){ layoutXD(true); },120); // iframe 入位后再校一次
     setTimeout(liftXDAboveBars,300);             // 兜一次晚到的布局(mockbar 显示后栈高才稳)
@@ -774,7 +777,9 @@ button{font-family:inherit}
         var barsH=barStackHeight();
         var st=doc.getElementById('sr-host-barpad');
         if(!st){ st=doc.createElement('style'); st.id='sr-host-barpad'; doc.head.appendChild(st); }
-        st.textContent='.main{bottom:'+barsH+'px !important}'; // 永远重写,旧的欠量值不留
+        // 永远重写,旧的欠量值不留;同时把 inf-xd 的弹窗浮层(补货修改 modal/成功)抬到底栏之上,动作键不被压
+        st.textContent='.main{bottom:'+barsH+'px !important}'+
+          '.modify-overlay,.modify-success-overlay{bottom:'+barsH+'px !important}';
       }catch(e){}
     }
     // 多档重测:mockbar 排版/显示有时序,140/380ms 后它真有高度时再测一次(永不欠)
