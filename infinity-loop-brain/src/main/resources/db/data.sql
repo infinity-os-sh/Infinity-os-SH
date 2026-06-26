@@ -45,3 +45,9 @@ INSERT INTO ipo10_sales (store_id, sku_id, period, actual_bottles) VALUES
   ('3001156860','PS01080160','202604',30),
   ('3001156860','PS01080160','202605',61),
   ('3001156860','PS01080160','202606',4);
+
+-- ── ② 执行确认回填:福海路 4月命门应对「查陈列/缺货/竞品价」已执行(done) ──
+-- 于是 5月差缩 → closure.verdict=应对有效 → rule_learning_log 落「命门→应对→有效」种子(验收①)
+DELETE FROM response_execution;
+INSERT INTO response_execution (store_id, sku_id, period, response_executed, execution_source) VALUES
+  ('3001156859','PS01080160','2026-04','done','seed_demo');

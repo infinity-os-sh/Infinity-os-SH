@@ -11,20 +11,20 @@ import java.util.*;
 @RequestMapping("/loop")
 public class LoopController {
 
-    private final ActualRepository repo;
+    private final LoopService loopService;
 
-    public LoopController(ActualRepository repo) { this.repo = repo; }
+    public LoopController(LoopService loopService) { this.loopService = loopService; }
 
     /**
      * GET /loop/series?store=3001156859&sku=PS01080160&year=2026
      * → [ RECORD, ... ] 按 period 升序;一年最多12条(或到当前期)。
+     * 编排(取数 → 闭环增量 → 留痕)收口在 LoopService。
      */
     @GetMapping("/series")
     public List<Record> series(@RequestParam("store") String store,
                                @RequestParam("sku")   String sku,
                                @RequestParam("year")  String year) {
-        LinkedHashMap<String, Integer> actuals = repo.monthlyActual(store, sku, year);
-        return LoopEngine.runSeries(store, sku, actuals);
+        return loopService.series(store, sku, year);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

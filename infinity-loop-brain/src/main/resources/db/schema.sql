@@ -29,3 +29,40 @@ CREATE TABLE IF NOT EXISTS ipo10_sales (
     period          VARCHAR(6)  NOT NULL,   -- 形如 202604
     actual_bottles  INTEGER     NOT NULL
 );
+
+-- ════════ 流程闭环增量新增表 ════════
+
+-- ② 执行确认外部回填源:前端/任务系统/人 写 done/not_done(脑子不自己知道执行没)
+CREATE TABLE IF NOT EXISTS response_execution (
+    store_id          VARCHAR(64) NOT NULL,
+    sku_id            VARCHAR(64) NOT NULL,
+    period            VARCHAR(7)  NOT NULL,   -- "2026-04"
+    response_executed VARCHAR(16) NOT NULL,   -- done | not_done
+    execution_source  VARCHAR(64),
+    PRIMARY KEY (store_id, sku_id, period)
+);
+
+-- ① 规则学习日志:只追加(对齐 LearningSample 纪律),人/学习模块决定是否升正式规则
+CREATE TABLE IF NOT EXISTS rule_learning_log (
+    store_id    VARCHAR(64) NOT NULL,
+    sku_id      VARCHAR(64) NOT NULL,
+    period      VARCHAR(7)  NOT NULL,   -- 产出闭环结论的本期
+    prev_period VARCHAR(7),
+    scenario    VARCHAR(32),            -- 场景 = 上期 state
+    response    VARCHAR(128),           -- 应对 = 上期 response
+    effect      VARCHAR(64),            -- 效果 = verdict
+    gap_change  VARCHAR(16),
+    PRIMARY KEY (store_id, sku_id, period)
+);
+
+-- ④ 上报信号日志:连续未关闭差距 → 升一层(只记信号,不自动派)
+CREATE TABLE IF NOT EXISTS escalation_log (
+    store_id         VARCHAR(64) NOT NULL,
+    sku_id           VARCHAR(64) NOT NULL,
+    period           VARCHAR(7)  NOT NULL,
+    reason           VARCHAR(64),
+    from_level       VARCHAR(32),
+    to_level         VARCHAR(32),
+    periods_unclosed INTEGER,
+    PRIMARY KEY (store_id, sku_id, period)
+);

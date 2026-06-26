@@ -3,8 +3,10 @@ package com.xinhe.infinityos.loop;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,6 +22,9 @@ class LoopSeriesIntegrationTest {
 
     @Autowired
     LoopController controller;
+
+    @Autowired
+    JdbcTemplate jdbc;
 
     @Test
     void 接数真_福海路_走DB与引擎() {
@@ -61,5 +66,22 @@ class LoopSeriesIntegrationTest {
         // 算账:66-60=+6,30-60=-30(命门 -50%≤-40)
         assertEquals(6, recs.get(0).gap);
         assertEquals("欠-命门", recs.get(3).state, "4月 30/60=-50% 应命门");
+    }
+
+    // 流程闭环增量·端到端:GET 路径走 LoopService(读 response_execution 回填 + 落 rule_learning_log)
+    @Test
+    void 闭环留痕_命门应对有效种子入库() {
+        // response_execution 已 seed 福海路 4月=done → 5月 closure=应对有效(②从DB回填)
+        List<Record> recs = controller.series("3001156859", "PS01080160", "2026");
+        assertEquals("应对有效", recs.get(4).closure.verdict, "DB回填4月done → 5月应对有效");
+
+        // ① rule_learning_log 落「命门→查陈列/缺货/竞品价→应对有效」种子(验收①)
+        Map<String, Object> seed = jdbc.queryForMap(
+                "SELECT scenario, response, effect FROM rule_learning_log " +
+                "WHERE store_id=? AND sku_id=? AND period=?",
+                "3001156859", "PS01080160", "2026-05");
+        assertEquals("欠-命门", seed.get("scenario"));
+        assertEquals("查陈列/缺货/竞品价", seed.get("response"));
+        assertEquals("应对有效", seed.get("effect"));
     }
 }

@@ -50,6 +50,19 @@ public class Record {
     public Integer forecast_version;  // 0
     public Double  forecast_outcome;  // 留痕占位
 
+    // —— ③ 校准(占位·流程优化新增) ——
+    public String  distortion_flag;   // null / "疑压货" / "疑促销扰动" / "疑窜货"(现占位 null)
+
+    // —— ② 执行确认(流程优化新增) ——
+    public String  response_executed; // "done" | "not_done" | "unknown"(默认 unknown,外部回填)
+    public String  execution_source;  // 执行确认来源(人工回填/任务系统回执/null)
+
+    // —— ① 验果回写(流程优化新增) ——
+    public Closure closure;           // 闭环结论(上期应对是否有效 + 规则种子);首期为 null
+
+    // —— ④ 上报升一层(流程优化新增) ——
+    public Escalation escalation;     // 关不掉的差 → 上报信号;未触发为 null
+
     // —— 溯源 ——
     public String source;   // "IPO10"
     public String ts;
