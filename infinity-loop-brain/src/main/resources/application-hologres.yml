@@ -1,0 +1,25 @@
+# ════════════════════════════════════════════════════════════
+# 生产 profile = hologres:真连汉询/Hologres(PostgreSQL 协议)。
+# 启动:java -jar ... --spring.profiles.active=hologres
+# 前提:汉询库已存在 loop_config 表(DDL 见 db/schema.sql)与 IPO10 出货量表/视图。
+# ════════════════════════════════════════════════════════════
+spring:
+  datasource:
+    url: ${HOLOGRES_JDBC_URL:jdbc:postgresql://your-hologres-host:80/your_db}
+    driver-class-name: org.postgresql.Driver
+    username: ${HOLOGRES_USER:}
+    password: ${HOLOGRES_PASSWORD:}
+  sql:
+    init:
+      mode: never        # 生产库已有表/数据,不建表不灌数
+
+loop:
+  hanxun:
+    # 换成汉询真实「IPO10 门店出货量」表/视图名(可带 schema,如 dws.ipo10_sales_mv)
+    actual-table: ${HANXUN_ACTUAL_TABLE:ipo10_sales}
+  cors:
+    allowed-origins: ${LOOP_CORS_ORIGINS:https://your-cloudbase-frontend-domain}
+  auth:
+    enabled: true         # 生产开鉴权
+    mode: header          # 网关注入身份头(企微换票在网关侧),与 ICA App 一致
+    user-header: X-Gateway-User
