@@ -1,0 +1,53 @@
+-- ════════════════════════════════════════════════════════════
+-- dev/H2 自检+联调种子数据(生产 hologres profile 不灌,mode=never)
+-- ════════════════════════════════════════════════════════════
+
+-- ── 配置:第1行 福海路(与黄金记录一致;真实可联调样本) ──
+DELETE FROM loop_config;
+INSERT INTO loop_config
+  (store_id, sku_id, store_name, tier, city, sku_name, unit, avg_price,
+   r_target_topdown, closed_periods, partial_periods, anomaly_floor)
+VALUES
+  ('3001156859','PS01080160','烟台大润发福海路店','VP','烟台','六月鲜特级原汁酱油2.0版','瓶',13.68,
+   80,
+   '["2026-01","2026-02","2026-03","2026-04","2026-05"]',
+   '{"2026-06":[15,30]}',
+   20);
+
+-- ── 配置:第2行 青岛(★只在 DB,不在 LoopConfig 内联兜底里 → 证明 DB 装载路径生效) ──
+INSERT INTO loop_config
+  (store_id, sku_id, store_name, tier, city, sku_name, unit, avg_price,
+   r_target_topdown, closed_periods, partial_periods, anomaly_floor)
+VALUES
+  ('3001156860','PS01080160','青岛大润发香港中路店','VP','青岛','六月鲜特级原汁酱油2.0版','瓶',13.68,
+   60,
+   '["2026-01","2026-02","2026-03","2026-04","2026-05"]',
+   '{"2026-06":[15,30]}',
+   20);
+
+-- ── 出货量:福海路 1–5 月 = 86/69/71/43/82,6 月未结=3 ──
+-- 1 月拆成两行(40+46=86),验证多行 SUM 聚合
+DELETE FROM ipo10_sales;
+INSERT INTO ipo10_sales (store_id, sku_id, period, actual_bottles) VALUES
+  ('3001156859','PS01080160','202601',40),
+  ('3001156859','PS01080160','202601',46),
+  ('3001156859','PS01080160','202602',69),
+  ('3001156859','PS01080160','202603',71),
+  ('3001156859','PS01080160','202604',43),
+  ('3001156859','PS01080160','202605',82),
+  ('3001156859','PS01080160','202606',3);
+
+-- ── 出货量:青岛(第2店,证明加一行配置即可跑通) ──
+INSERT INTO ipo10_sales (store_id, sku_id, period, actual_bottles) VALUES
+  ('3001156860','PS01080160','202601',66),
+  ('3001156860','PS01080160','202602',58),
+  ('3001156860','PS01080160','202603',60),
+  ('3001156860','PS01080160','202604',30),
+  ('3001156860','PS01080160','202605',61),
+  ('3001156860','PS01080160','202606',4);
+
+-- ── ② 执行确认回填:福海路 4月命门应对「查陈列/缺货/竞品价」已执行(done) ──
+-- 于是 5月差缩 → closure.verdict=应对有效 → rule_learning_log 落「命门→应对→有效」种子(验收①)
+DELETE FROM response_execution;
+INSERT INTO response_execution (store_id, sku_id, period, response_executed, execution_source) VALUES
+  ('3001156859','PS01080160','2026-04','done','seed_demo');
