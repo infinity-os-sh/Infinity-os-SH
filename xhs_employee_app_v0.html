@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书销售 · 员工 APP(v0 壳)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17191E;--paper:#F2F1EB;--surface:#FBFAF6;--amber:#A8612A;--amber-deep:#834A1F;--amber-tint:#EADFCB;
+    --go:#2E6A4A;--go-tint:#DDE8DF;--stop:#9A3A33;--stop-tint:#F0DBD7;--slate:#565A62;--mute:#8C8F96;--rule:#DAD7CC;
+    --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;--cjk:'PingFang SC','Microsoft YaHei',-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:#26282d;font-family:var(--cjk);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .phone{max-width:430px;margin:0 auto;min-height:100vh;background:var(--paper);display:flex;flex-direction:column;position:relative;}
+  /* header */
+  .hd{background:var(--ink);color:#F2F1EB;padding:14px 16px 12px;}
+  .hd .r1{display:flex;align-items:center;justify-content:space-between;}
+  .hd .who{font-weight:700;font-size:15px;}
+  .hd .who small{font-weight:400;color:#B7BAC0;font-family:var(--mono);font-size:11px;margin-left:6px;}
+  .chan{font-family:var(--mono);font-size:11px;color:var(--amber);border:1px solid #5a4a36;border-radius:3px;padding:3px 8px;background:#21242a;}
+  .wa{margin-top:9px;display:flex;gap:7px;flex-wrap:wrap;}
+  .wa span{font-family:var(--mono);font-size:10px;letter-spacing:.03em;padding:3px 7px;border-radius:2px;background:#21242a;color:#C9CCD2;border:1px solid #34373e;}
+  .wa span b{color:var(--amber);}
+  /* body */
+  .scroll{flex:1;overflow-y:auto;padding:16px 14px 90px;}
+  .ph{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--slate);margin:2px 0 12px;}
+  .ph b{color:var(--amber-deep);}
+  .panel{display:none;}
+  .panel.on{display:block;}
+  /* task list (今日运营) */
+  .task{display:flex;gap:11px;align-items:flex-start;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:12px 13px;margin-bottom:10px;}
+  .task .ck{width:20px;height:20px;border:2px solid var(--amber);border-radius:5px;flex:none;margin-top:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;color:transparent;}
+  .task.done .ck{background:var(--amber);color:#fff;}
+  .task.done .tt{text-decoration:line-through;color:var(--mute);}
+  .task .tt{font-size:14.5px;font-weight:600;}
+  .task .src{font-family:var(--mono);font-size:10.5px;color:var(--slate);margin-top:3px;}
+  .task .src .w{color:var(--amber-deep);}
+  /* collect (数据采集) */
+  .col{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:13px;margin-bottom:11px;}
+  .col h4{margin:0 0 4px;font-size:14.5px;}
+  .col .how{font-family:var(--mono);font-size:10.5px;color:var(--slate);}
+  .col .how .api{color:var(--go);}.col .how .man{color:var(--amber-deep);}
+  .col .node{float:right;font-family:var(--mono);font-size:10px;color:var(--mute);}
+  .col .btn{margin-top:9px;display:inline-block;font-size:13px;font-family:var(--mono);background:var(--ink);color:#F2F1EB;border:none;border-radius:4px;padding:7px 13px;cursor:pointer;}
+  /* record card (一本账·经营环镜) */
+  .card{background:var(--surface);border:1px solid var(--rule);border-radius:7px;margin-bottom:14px;overflow:hidden;}
+  .ch{display:flex;align-items:baseline;gap:8px;padding:12px 13px 9px;border-bottom:1px solid var(--rule);flex-wrap:wrap;}
+  .ch .sku{font-family:var(--mono);font-weight:700;font-size:14px;}
+  .ch .scope{color:var(--slate);font-size:12.5px;}
+  .grade{margin-left:auto;font-family:var(--mono);font-weight:700;font-size:11px;padding:3px 8px;border-radius:2px;}
+  .g-ok{background:var(--go-tint);color:var(--go);}.g-no{background:var(--stop-tint);color:var(--stop);}.g-na{background:#E7E6E1;color:var(--mute);}
+  .ring{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:12px 13px 8px;}
+  .step{padding:7px 5px;border:1px solid var(--rule);border-radius:4px;background:var(--paper);text-align:center;}
+  .step .k{font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;color:var(--mute);text-transform:uppercase;}
+  .step .v{font-family:var(--mono);font-size:11px;font-weight:700;margin-top:2px;word-break:break-all;}
+  .step.lit{background:var(--amber-tint);border-color:var(--amber);}.step.lit .v{color:var(--amber-deep);}
+  .step.na .v{color:var(--mute);font-weight:400;}
+  .why{margin:0 13px 12px;padding:9px 11px;border-left:3px solid var(--mute);background:#EFEEE9;border-radius:0 3px 3px 0;font-size:12px;color:var(--slate);}
+  .why.fix{border-left-color:var(--amber);background:var(--amber-tint);color:var(--amber-deep);}
+  .src2{font-family:var(--mono);font-size:10px;color:var(--mute);padding:8px 13px;border-top:1px solid var(--rule);background:var(--paper);display:flex;justify-content:space-between;}
+  /* 我的 */
+  .me{background:var(--surface);border:1px solid var(--rule);border-radius:7px;padding:14px;margin-bottom:13px;}
+  .me h4{margin:0 0 4px;font-size:14px;}.me p{margin:0;font-size:12.5px;color:var(--slate);}
+  .vqs{display:flex;gap:14px;margin-top:10px;}
+  .vqs .n{font-family:var(--mono);font-weight:700;font-size:24px;color:var(--amber-deep);}
+  .vqs .l{font-size:11px;color:var(--slate);line-height:1.3;}
+  .grow{display:flex;align-items:center;gap:8px;margin-top:8px;font-family:var(--mono);font-size:11px;}
+  .grow .seg{flex:1;height:6px;border-radius:3px;background:#E3E1DA;overflow:hidden;}
+  .grow .seg i{display:block;height:100%;background:var(--amber);}
+  .iface{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;}
+  .iface span{font-family:var(--mono);font-size:10px;padding:3px 7px;border-radius:2px;background:var(--go-tint);color:var(--go);border:1px solid #BcdBc8;}
+  /* tabbar */
+  .tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--rule);}
+  .tab{padding:9px 4px 11px;text-align:center;cursor:pointer;color:var(--slate);border:none;background:none;}
+  .tab .ic{font-size:19px;line-height:1;}
+  .tab .lb{font-size:10.5px;margin-top:3px;display:block;}
+  .tab.on{color:var(--amber-deep);}
+  .tab.on .lb{font-weight:700;}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="hd">
+    <div class="r1"><div class="who">张三 <small>内容运营 · 减盐系列</small></div><span class="chan">渠道 · 小红书 ▾</span></div>
+    <div class="wa"><span><b>Workflow</b> · Agent-Ready</span><span>AgentLadder <b>L1–L3</b></span><span>毕业触发 · 数据回流</span></div>
+  </div>
+
+  <div class="scroll">
+    <!-- TAB1 今日运营 -->
+    <section class="panel on" id="p-today">
+      <p class="ph">📋 今日运营 · <b>我该做哪些"对的事"</b>(来自定标↓ / 关差派单)</p>
+      <div id="tasks"></div>
+    </section>
+
+    <!-- TAB2 数据采集 -->
+    <section class="panel" id="p-collect">
+      <p class="ph">🔍 数据采集 · <b>量实↑</b>(线上=机采为主 + 人工补情报)</p>
+      <div class="col"><span class="node">XHS-02</span><h4>铺设上报</h4><div class="how"><span class="api">●API</span> 笔记/商城上架自动拉 + <span class="man">人工补</span>"已铺/鸽了"</div><button class="btn">补一条铺设情报</button></div>
+      <div class="col"><span class="node">XHS-03</span><h4>卡位识别</h4><div class="how"><span class="api">●API</span> 搜索/信息流 SOV 机采(过数据可信门)</div><button class="btn">看卡位缺口</button></div>
+      <div class="col"><span class="node">XHS-05</span><h4>竞品情报</h4><div class="how"><span class="man">●人工</span>补 + <span class="api">API</span>热榜:对手爆文/抢词/大促</div><button class="btn">报一条竞品动作</button></div>
+      <p class="ph" style="margin-top:18px">注 · 这里不"判",只采。判级是一本账里引擎的事。</p>
+    </section>
+
+    <!-- TAB3 一本账 -->
+    <section class="panel" id="p-account">
+      <p class="ph">💳 一本账 · <b>我做对了没</b>(读 RECORD · 只聚合不重算)</p>
+      <div id="cards"></div>
+    </section>
+
+    <!-- TAB4 我的 -->
+    <section class="panel" id="p-me">
+      <p class="ph">👤 我的 · 复盘 / 战功 / 成长</p>
+      <div class="me">
+        <h4>VQS 拜访有效性 · <span style="color:var(--go)">对事不对人</span></h4>
+        <p>评的是"动作有没有拨动门店/内容状态",不是给你排名扣分。</p>
+        <div class="vqs">
+          <div><div class="n">7</div><div class="l">本周动作<br>拨动状态</div></div>
+          <div><div class="n">2</div><div class="l">系统性未达成<br>(已剔除·不算你头上)</div></div>
+          <div><div class="n">1</div><div class="l">Gate1<br>点亮</div></div>
+        </div>
+      </div>
+      <div class="me">
+        <h4>战功 · 接 FOUNDATION3</h4>
+        <p>导入期奖"点亮"。本周:减盐酱油 Gate1 点亮 → 记战功。系统性未达成先扣再归因,不冤你。</p>
+      </div>
+      <div class="me">
+        <h4>成长路径</h4>
+        <div class="grow"><span>规则执行</span><div class="seg"><i style="width:72%"></i></div><span>72%</span></div>
+        <p style="margin-top:7px">战功累积 → 能力评级 → 成长阶梯(导入奖点亮、成熟奖赚钱)。</p>
+      </div>
+      <div class="me">
+        <h4>这个 APP 现在是什么 · 怎么毕业成 Agent</h4>
+        <p>现在是 <b>Agent-Ready 的 Workflow</b>:四个接口已焊死,数据回流即沿 L3→L4/L5 自然毕业,不重做。</p>
+        <div class="iface"><span>✓ 经营环 loop</span><span>✓ 停止条件 DoD</span><span>✓ HITL</span><span>✓ 回灌口</span></div>
+      </div>
+    </section>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab on" data-t="today"><span class="ic">📋</span><span class="lb">今日运营</span></button>
+    <button class="tab" data-t="collect"><span class="ic">🔍</span><span class="lb">数据采集</span></button>
+    <button class="tab" data-t="account"><span class="ic">💳</span><span class="lb">一本账</span></button>
+    <button class="tab" data-t="me"><span class="ic">👤</span><span class="lb">我的</span></button>
+  </nav>
+</div>
+
+<script>
+// —— 今日运营:该做的"对的事"(来自定标↓ + 关差派单)——
+const TASKS = [
+  { tt:"宝宝辅食酱油核心词补内容卡位", src:"关差派单 · 卡位空缺", w:true, done:false },
+  { tt:"私信催稿:XHS-KOL-000205(零添加笔记)", src:"铺设缺口 · 笔记未交", w:true, done:false },
+  { tt:"减盐酱油:把爆文复制到 2 个腰部达人", src:"定标↓ · Gate2 复制", w:false, done:true },
+  { tt:"核查网红爆款词数据真实性(疑刷量)", src:"系统说明 · 数据存疑·不怪你", w:false, done:false },
+];
+// —— RECORD(与引擎/render 同形)——
+const RECORDS=[
+  {sku:"6MX-TJ-380",scope:"减盐酱油·一二线宝妈",grade:"达标",rate:0.028,stage:"导入",line:0.02,gate1:true,flags:[],src:"XHS-04@v0.1",
+   loop:{"定标":0.02,"量实":0.028,"算差":"+0.008","关差":null,"验果":"Gate1点亮"}},
+  {sku:"6MX-QY-500",scope:"零添加·成熟单品",grade:"未达标",rate:0.020,stage:"成熟",line:0.05,gate1:false,flags:[],src:"XHS-04@v0.1",
+   loop:{"定标":0.05,"量实":0.020,"算差":"-0.030","关差":"优化承接/换内容/加投","验果":"看上层标"}},
+  {sku:"6MX-JDX",scope:"宝宝辅食·站外承接",grade:"未判级",rate:null,stage:"成熟",line:null,gate1:false,flags:["attribution_weak"],src:"XHS-04@v0.1",
+   loop:{"定标":0.05,"量实":null,"算差":null,"关差":"打通站外归因","验果":"归因测不全"}},
+];
+const FLAGWHY={attribution_weak:"成交落在站外(淘天/线下)回传拿不到 → 不判达标也不判病危,先打通归因。这不是你的执行问题。"};
+const esc=s=>(s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const fmt=v=>v==null?"—":v;
+
+function renderTasks(){
+  document.getElementById("tasks").innerHTML=TASKS.map((t,i)=>`
+   <div class="task ${t.done?'done':''}" data-i="${i}">
+     <div class="ck">✓</div>
+     <div><div class="tt">${esc(t.tt)}</div><div class="src">${t.w?'<span class="w">该做的事</span> · ':''}${esc(t.src)}</div></div>
+   </div>`).join("");
+  document.querySelectorAll(".task .ck").forEach(c=>c.onclick=e=>{
+    const i=e.target.closest(".task").dataset.i;TASKS[i].done=!TASKS[i].done;renderTasks();});
+}
+function renderCards(){
+  document.getElementById("cards").innerHTML=RECORDS.map(r=>{
+    const steps=[["定标",r.loop["定标"]],["量实",r.loop["量实"]],["算差",r.loop["算差"]],["关差",r.loop["关差"]],["验果",r.loop["验果"]]];
+    const ring=steps.map(([k,v])=>{
+      const lit=(k==="验果"&&r.gate1)||(k==="量实"&&v!=null&&r.grade==="达标");
+      return `<div class="step ${lit?'lit':''} ${v==null?'na':''}"><div class="k">${k}</div><div class="v">${esc(fmt(v))}</div></div>`;}).join("");
+    const gc=r.grade==="达标"?"g-ok":r.grade==="未达标"?"g-no":"g-na";
+    let why="";const sf=(r.flags||[]).find(f=>FLAGWHY[f]);
+    if(sf)why=`<div class="why">系统说明 · ${esc(FLAGWHY[sf])}</div>`;
+    else if(r.grade==="未达标"&&r.loop["关差"])why=`<div class="why fix">没做对 → 补救:${esc(r.loop["关差"])}</div>`;
+    return `<div class="card">
+      <div class="ch"><span class="sku">${esc(r.sku)}</span><span class="scope">${esc(r.scope)}</span><span class="grade ${gc}">${esc(r.grade)}</span></div>
+      <div class="ring">${ring}</div>${why}
+      <div class="src2"><span>阶段 ${esc(r.stage)}${r.line!=null?' · 线 '+r.line:''}</span><span>source_ref ${esc(r.src)} · 只读</span></div>
+    </div>`;}).join("");
+}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));t.classList.add("on");
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("on"));
+  document.getElementById("p-"+t.dataset.t).classList.add("on");
+});
+renderTasks();renderCards();
+</script>
+</body>
+</html>
