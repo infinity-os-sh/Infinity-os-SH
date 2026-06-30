@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书内容销售 · 员工 APP v3(挂策略标签)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#17191E;--paper:#F2F1EB;--surface:#FBFAF6;--amber:#A8612A;--amber-deep:#834A1F;--amber-tint:#EADFCB;
+    --go:#2E6A4A;--go-tint:#DDE8DF;--stop:#9A3A33;--stop-tint:#F0DBD7;--slate:#565A62;--mute:#8C8F96;--rule:#DAD7CC;
+    --opp:#2E6A4A;--opp-tint:#DDE8DF;--prob:#9A3A33;--prob-tint:#F0DBD7;--blue:#3A5A7A;--blue-tint:#DCE6F0;
+    --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;--cjk:'PingFang SC','Microsoft YaHei',-apple-system,sans-serif;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:#26282d;font-family:var(--cjk);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .phone{max-width:430px;margin:0 auto;min-height:100vh;background:var(--paper);display:flex;flex-direction:column;}
+  .hd{background:var(--ink);color:#F2F1EB;padding:12px 15px 12px;}
+  .hd .r1{display:flex;align-items:center;justify-content:space-between;}
+  .who{font-weight:700;font-size:14.5px;}.who small{font-weight:400;color:#B7BAC0;font-family:var(--mono);font-size:10.5px;margin-left:5px;}
+  .ava{font-family:var(--mono);font-size:10.5px;color:var(--amber);border:1px solid #5a4a36;border-radius:3px;padding:3px 8px;background:#21242a;cursor:pointer;}
+  .lead{margin-top:10px;}
+  .lead .big{font-size:16px;font-weight:700;color:#E8E6DF;}
+  .lead .tags{display:flex;gap:8px;margin-top:7px;}
+  .lead .t{font-family:var(--mono);font-size:11.5px;padding:3px 9px;border-radius:3px;}
+  .lead .opp{background:rgba(46,106,74,.25);color:#9FD6B6;border:1px solid #3C7A58;}
+  .lead .prob{background:rgba(154,58,51,.22);color:#E6A9A3;border:1px solid #A8514A;}
+  .lead .second{margin-top:8px;font-size:11.5px;color:#9a9da3;font-family:var(--mono);}
+  .lead .second b{color:#E8B57E;}
+  .scroll{flex:1;overflow-y:auto;padding:14px 13px 92px;}
+  .panel{display:none;}.panel.on{display:block;}
+  .ph{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--slate);margin:2px 0 12px;}
+  .ph b{color:var(--amber-deep);}
+  .stage{margin-bottom:16px;}
+  .stage .sh{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .stage .sn{font-weight:700;font-size:14px;}.stage .sd{font-family:var(--mono);font-size:10.5px;color:var(--slate);}.stage .bar{flex:1;height:1px;background:var(--rule);}
+  .sku{background:var(--surface);border:1px solid var(--rule);border-radius:7px;padding:12px;margin-bottom:9px;border-left:3px solid var(--rule);}
+  .sku.opp{border-left-color:var(--opp);}.sku.prob{border-left-color:var(--prob);}.sku.sys{border-left-color:var(--mute);}
+  .sku .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .sku .name{font-size:14px;font-weight:700;}
+  .roles{display:flex;gap:5px;margin-top:4px;flex-wrap:wrap;}
+  .role{font-family:var(--mono);font-size:9.5px;padding:2px 6px;border-radius:2px;background:#ECE9E1;color:var(--slate);border:1px solid var(--rule);}
+  .role.me{background:var(--amber-tint);color:var(--amber-deep);border-color:#d8c4a4;}
+  .badge{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:2px;white-space:nowrap;}
+  .badge.opp{background:var(--opp-tint);color:var(--opp);}.badge.prob{background:var(--prob-tint);color:var(--prob);}.badge.sys{background:#E7E6E1;color:var(--mute);}
+  .sku .act{font-size:13px;margin-top:7px;color:var(--ink);}
+  /* 母本策略标签——签名 */
+  .strat{display:flex;align-items:center;gap:7px;margin-top:8px;padding:7px 9px;background:var(--blue-tint);border-radius:5px;border-left:3px solid var(--blue);}
+  .strat .nm{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--blue);}
+  .strat .aq{font-size:10.5px;color:var(--slate);margin-left:auto;font-family:var(--mono);}
+  .kv{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-family:var(--mono);font-size:11px;}
+  .kv .b{color:var(--slate);}.kv .b i{color:var(--ink);font-style:normal;font-weight:700;}
+  .trend{font-family:var(--mono);font-size:11px;display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:2px;margin-top:8px;}
+  .trend.up{background:var(--go-tint);color:var(--go);}.trend.down{background:var(--stop-tint);color:var(--stop);}.trend .pred{color:var(--mute);font-size:9.5px;}
+  .foot{display:flex;justify-content:space-between;align-items:center;margin-top:9px;padding-top:8px;border-top:1px dotted var(--rule);}
+  .foot .inc{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--amber-deep);}.foot.done .inc{color:var(--go);}
+  .foot .dod{font-size:10.5px;color:var(--slate);text-align:right;max-width:60%;}
+  .sysnote{font-size:11.5px;color:var(--slate);background:#EDEAE3;border-left:3px solid var(--mute);border-radius:0 4px 4px 0;padding:8px 10px;margin-top:7px;}
+  .col{background:var(--surface);border:1px solid var(--rule);border-radius:7px;padding:12px;margin-bottom:10px;}
+  .col h4{margin:0 0 3px;font-size:14px;}.col .how{font-family:var(--mono);font-size:10.5px;color:var(--slate);}.col .api{color:var(--go);}.col .man{color:var(--amber-deep);}
+  .settle{background:var(--ink);color:#E8E6DF;border-radius:7px;padding:13px;margin-top:6px;}.settle p{margin:0;font-size:11.5px;color:#B7BAC0;line-height:1.6;}
+  .acc{background:var(--surface);border:1px solid var(--rule);border-radius:7px;padding:13px;margin-bottom:11px;}
+  .acc h4{margin:0 0 9px;font-size:13.5px;}.acc h4 small{font-weight:400;color:var(--slate);font-family:var(--mono);font-size:10px;margin-left:5px;}
+  .dim{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px dotted var(--rule);font-size:12.5px;}.dim:last-child{border:none;}.dim .r{font-family:var(--mono);font-weight:600;text-align:right;}
+  .aiql{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:6px;}
+  .aiql .s{text-align:center;padding:7px 3px;border:1px solid var(--rule);border-radius:4px;background:var(--paper);font-size:10.5px;}
+  .aiql .s.cur{background:var(--amber-tint);border-color:var(--amber);color:var(--amber-deep);font-weight:700;}
+  .aiql .s small{display:block;font-family:var(--mono);font-size:8.5px;color:var(--mute);margin-top:2px;}
+  .nowfut{display:grid;grid-template-columns:1fr 1fr;gap:8px;}.nowfut .box{border:1px solid var(--rule);border-radius:5px;padding:9px;background:var(--paper);}
+  .nowfut .box .t{font-family:var(--mono);font-size:10px;color:var(--slate);text-transform:uppercase;}.nowfut .box .v{font-size:13px;font-weight:700;margin-top:4px;}
+  .pred-tag{font-family:var(--mono);font-size:9.5px;color:var(--mute);margin-top:6px;}
+  .me{background:var(--surface);border:1px solid var(--rule);border-radius:7px;padding:13px;margin-bottom:11px;}.me h4{margin:0 0 4px;font-size:13.5px;}.me p{margin:0;font-size:12px;color:var(--slate);}
+  .vqs{display:flex;gap:13px;margin-top:9px;}.vqs .n{font-family:var(--mono);font-weight:700;font-size:20px;color:var(--amber-deep);}.vqs .l{font-size:10.5px;color:var(--slate);line-height:1.3;}
+  .iface{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}.iface span{font-family:var(--mono);font-size:9.5px;padding:3px 6px;border-radius:2px;background:var(--go-tint);color:var(--go);}
+  .tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--rule);}
+  .seg{display:flex;gap:5px;flex-wrap:wrap;}
+  .roleSw{display:flex;gap:0;border:1px solid #3a3d44;border-radius:5px;overflow:hidden;}
+  .roleSw button{font-family:var(--mono);font-size:11px;padding:4px 12px;border:none;background:#21242a;color:#B7BAC0;cursor:pointer;}
+  .roleSw button.on{background:var(--amber);color:#fff;font-weight:700;}
+  #pendBar{max-width:430px;margin:0 auto;}
+  .pend{background:var(--amber-tint);border-bottom:1px solid #d8c4a4;padding:9px 14px;font-size:12px;color:var(--amber-deep);display:flex;align-items:center;gap:8px;}
+  .pend b{font-family:var(--mono);}
+  .propose{margin-top:9px;display:flex;gap:6px;flex-wrap:wrap;}
+  .propose button{font-family:var(--mono);font-size:11px;padding:6px 11px;border-radius:5px;border:1px solid var(--rule);background:var(--surface);color:var(--slate);cursor:pointer;}
+  .propose button.emp{border-color:var(--blue);color:var(--blue);}
+  .propose button.mgr-ok{border-color:var(--go);color:var(--go);}
+  .propose button.mgr-no{border-color:var(--stop);color:var(--stop);}
+  .pendtag{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:2px;background:var(--amber-tint);color:var(--amber-deep);border:1px solid #d8c4a4;}
+  .mgronly{display:none;}
+  body.role-mgr .mgronly{display:block;}
+  body.role-mgr .emponly{display:none;}
+  .tcell2{background:var(--ink);color:#E8E6DF;border-radius:8px;padding:12px;cursor:pointer;}
+  .tcell2 .cn{font-family:var(--mono);font-size:22px;font-weight:700;color:#E8B57E;}
+  .tcell2 .cl{font-size:11.5px;color:#B7BAC0;margin-top:2px;}
+  #cockpitBody .btn.ok{background:var(--go-tint);color:var(--go);font-family:var(--mono);font-size:11px;padding:6px 11px;border-radius:4px;border:none;cursor:pointer;margin-right:5px;}
+  #cockpitBody .btn.no{background:var(--stop-tint);color:var(--stop);font-family:var(--mono);font-size:11px;padding:6px 11px;border-radius:4px;border:none;cursor:pointer;}
+  .seg button{font-family:var(--mono);font-size:11px;padding:5px 10px;border-radius:4px;border:1px solid #3a3d44;background:#21242a;color:#B7BAC0;cursor:pointer;}
+  .seg button.on{background:var(--amber-tint);color:var(--amber-deep);border-color:var(--amber);font-weight:700;}
+  .grade{display:inline-block;font-family:var(--mono);font-weight:700;font-size:14px;padding:3px 12px;border-radius:3px;}
+  .g-ok{background:rgba(46,106,74,.3);color:#9FD6B6;}.g-no{background:rgba(154,58,51,.3);color:#E6A9A3;}.g-na{background:#2a2c31;color:#9a9da3;}
+  .ring{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:12px;}
+  .rstep{padding:7px 4px;border:1px solid #2c2f36;border-radius:4px;background:#16181c;text-align:center;}
+  .rstep .k{font-family:var(--mono);font-size:8px;color:#7a7d83;}.rstep .v{font-family:var(--mono);font-size:10px;font-weight:700;margin-top:2px;color:#D7DAE0;word-break:break-all;}
+  .rstep.lit{background:rgba(168,97,42,.25);border-color:var(--amber);}.rstep.lit .v{color:#E8B57E;}
+  .pwhy{font-size:11.5px;margin-top:11px;padding:8px 10px;border-radius:5px;line-height:1.5;}
+  .pwhy.sys{background:#26282e;color:#B7BAC0;border-left:3px solid var(--mute);}
+  .pwhy.inc{background:rgba(168,97,42,.18);color:#E8B57E;border-left:3px solid var(--amber);font-family:var(--mono);}
+  .tab{padding:8px 4px 10px;text-align:center;cursor:pointer;color:var(--slate);border:none;background:none;}.tab .ic{font-size:18px;}.tab .lb{font-size:10px;margin-top:2px;display:block;}.tab.on{color:var(--amber-deep);}.tab.on .lb{font-weight:700;}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="hd">
+    <div class="r1"><div class="who" id="whoName">张三 <small id="whoRole">内容运营·减盐系列</small></div>
+      <div class="roleSw"><button id="rE" class="on" onclick="setRole('emp')">一线</button><button id="rM" onclick="setRole('mgr')">主管</button></div></div>
+    <div class="lead">
+      <div class="big">今天 3 个 SKU 要动</div>
+      <div class="tags"><span class="t opp">🟢 2 个机会要抓</span><span class="t prob">🔴 1 个问题要解</span></div>
+      <div class="second" id="leadSecond">已落袋 <b id="hGot">+0</b> · 全做对预计 <b>+150 激励值</b>（绑“状态调优”不绑接单）</div>
+    </div>
+  </div>
+  <div id="pendBar"></div>
+
+  <div class="scroll">
+    <section class="panel on" id="p-today">
+      <div style="display:flex;align-items:center;gap:7px;margin:2px 0 10px;font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--blue-tint);border-radius:5px;padding:6px 10px">
+        <span style="font-weight:700">L1 · SKU State @ POP</span><span style="color:var(--slate)">触点 POP = 小红书 · 下面每个SKU状态都是"在小红书这个触点上的状态"</span>
+      </div>
+      <div style="margin:0 0 10px;font-family:var(--mono);font-size:10px;color:var(--amber-deep);background:var(--amber-tint);border-radius:5px;padding:6px 10px;line-height:1.6">
+        <span style="font-weight:700">⊢ 目标来源 · INPUT</span> 这些SKU今天的目标,是从 <b>BP(年度战略·减盐品类×城)</b> 和 <b>JBP(客户联合计划)</b> 下来的 —— 你做的事挂得回上面的目标,不是凭空排的
+      </div>
+      <p class="ph">📋 今日运营 · <b>系统按"病危&gt;机会·主推优先·快见效优先"排好的清单</b>（today_queue·点处方含投入侧:预算+选达人）</p>
+      <div id="stages"></div>
+    </section>
+
+    <section class="panel" id="p-collect">
+      <p class="ph">🔍 数据采集 · <b>量实↑</b>（机采为主 + 人工补情报）</p>
+      <div class="col"><h4>铺设上报 <small style="font-family:var(--mono);font-size:10px;color:var(--mute)">XHS-02</small></h4><div class="how"><span class="api">●API</span> 笔记/商城上架自动拉 + <span class="man">人工补</span>“已铺/鸽了”</div></div>
+      <div class="col"><h4>卡位识别 <small style="font-family:var(--mono);font-size:10px;color:var(--mute)">XHS-03</small></h4><div class="how"><span class="api">●API</span> 搜索/信息流 SOV 机采（过数据可信门）</div></div>
+      <div class="col"><h4>竞品情报 <small style="font-family:var(--mono);font-size:10px;color:var(--mute)">XHS-05</small></h4><div class="how"><span class="man">●人工</span>补 + <span class="api">API</span>热榜：对手爆文/抢词</div></div>
+      <div class="settle"><p>只采不判。采完 → 引擎判级 → <b style="color:#E8B57E">数据回流·周期结算</b>：发布后看 SKU 状态<b>真拨动了没</b>才计激励（无进店离店·转化有时滞）。</p></div>
+
+      <p class="ph" style="margin-top:18px">🎛 调一调 · <b>拖一拖看判级怎么变</b>（引擎真逻辑·数据手调模拟）</p>
+      <div style="background:var(--ink);color:#E8E6DF;border-radius:9px;padding:15px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--amber);margin-bottom:4px">减盐酱油 · 种草转化判级</div>
+        <div style="font-size:11px;color:#9a9da3;margin-bottom:12px">同样转化率,导入期达标、成熟期可能病危——事实不变,判定随阶段变。</div>
+        <div style="margin-bottom:11px"><label style="font-size:12px;display:flex;justify-content:space-between;margin-bottom:5px">转化率(事实) <b id="vRate" style="font-family:var(--mono);color:#E8B57E">0.028</b></label><input type="range" id="rate" min="0" max="80" value="28" style="width:100%;accent-color:var(--amber)"></div>
+        <div style="margin-bottom:11px"><label style="font-size:12px;display:block;margin-bottom:5px">生命周期阶段</label><div class="seg" id="segStage"><button data-v="导入" class="on">导入</button><button data-v="成长">成长</button><button data-v="成熟">成熟</button><button data-v="unknown">未知</button></div></div>
+        <div style="margin-bottom:11px"><label style="font-size:12px;display:block;margin-bottom:5px">归因口径</label><div class="seg" id="segAttr"><button data-v="站内" class="on">站内可测</button><button data-v="站外为主">站外为主</button></div></div>
+        <div style="margin-bottom:4px"><label style="font-size:12px;display:block;margin-bottom:5px">数据可信</label><div class="seg" id="segTrust"><button data-v="high" class="on">可信</button><button data-v="low_trust">疑刷量</button></div></div>
+        <div id="out" style="background:#101216;border-radius:7px;padding:13px;margin-top:13px"></div>
+      </div>
+    </section>
+
+    <section class="panel" id="p-account">
+      <p class="ph">💳 一本账 · <b>状态调优的结果</b></p>
+      <div class="acc"><h4>① 当下 vs 将来 <small>当下好 ≠ 将来好</small></h4>
+        <div class="nowfut"><div class="box"><div class="t">当下状态</div><div class="v" style="color:var(--go)">导入·已点亮</div></div><div class="box"><div class="t">将来趋势</div><div class="v" style="color:var(--amber-deep)">↑ 潜力大</div></div></div>
+        <div class="pred-tag">趋势/潜力 = 预算·预测 vs 实际 · 现中高层填 · <b>L6 预测待毕业成 Agent</b></div></div>
+      <div class="acc"><h4>② AIQL · 接母本消费者公分母 <small>内容线补因果墙最深处</small></h4>
+        <div class="aiql"><div class="s">A认知<small>声量</small></div><div class="s">I兴趣<small>搜索</small></div><div class="s cur">Q质量<small>口碑</small></div><div class="s">L忠诚<small>复购</small></div></div>
+        <p style="margin:8px 0 0;font-size:11px;color:var(--slate)">线下"记住/喜欢"只能靠代理猜·小红书 AIQL 原生可量。当前在 Q(建质量信任)→ 下一步 L 忠诚。</p></div>
+      <div class="acc"><h4>④ 内容资产 · <small style="font-weight:400;color:var(--slate);font-family:var(--mono);font-size:10px">XHS-07·内容当产品·但锚回SKU</small></h4>
+        <div class="dim"><span>资产库内容数</span><span class="r">126 条·含 8 母版</span></div>
+        <div class="dim"><span>减盐酱油 ← 在推的内容</span><span class="r">14 条 · 推 A/I</span></div>
+        <div class="dim"><span>爆文率(组合·幂律)</span><span class="r" style="color:var(--amber-deep)">6.2%</span></div>
+        <div class="dim"><span>母版复用</span><span class="r">CT-002041 · 复用 5 次</span></div>
+        <p style="margin:8px 0 0;font-size:11px;color:var(--slate)">💡 不算"内容自己赚多少"——显示内容资产<b>在为哪些 SKU 推到 AIQL 哪段</b>。沉没母版可二创·不当失败(幂律)。</p></div>
+      <div class="acc"><h4>③ 生命周期角色系数 + 激励绑 SKU</h4>
+        <div class="dim"><span>减盐酱油 · 攻击×导入·主推</span><span class="r" style="color:var(--amber-deep)">×2.0 主激励源</span></div>
+        <div class="dim"><span>老抽王 · 明星×成熟</span><span class="r" style="color:var(--slate)">×0.9</span></div>
+        <div style="font-family:var(--mono);font-size:10.5px;color:var(--slate);background:var(--paper);border:1px dashed var(--rule);border-radius:5px;padding:9px;margin-top:8px;line-height:1.6">激励 = 基础 × 阶段 × 机会/问题紧要度 × <b>角色(客户×我方)</b> × 趋势潜力</div></div>
+    </section>
+
+    <section class="panel" id="p-me">
+      <p class="ph">👤 我的 · 复盘 / 学习 / 驾驶舱</p>
+      <div class="me"><h4>🎯 升 S+ · 长期目标 ↔ 今日 <small style="font-weight:400;color:var(--slate);font-family:var(--mono);font-size:10px">日常喂长期</small></h4>
+        <p>S82 → S+95 · 距 5 分。<b style="color:var(--amber-deep)">今天拨动 3 个关键 SKU 状态 → 成长进度 +1.2%</b>。每天调优的状态,累加成长期评级跃迁(激励档随之上调)。</p>
+        <div style="height:8px;background:#E3E1DA;border-radius:4px;overflow:hidden;margin-top:9px"><i style="display:block;height:100%;width:82%;background:linear-gradient(90deg,var(--amber),#E8B57E)"></i></div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--slate);margin-top:4px">82% → S+95 · 升级=激励档跃迁</div></div>
+      <div class="me"><h4>VQS · <span style="color:var(--go)">对事不对人</span></h4><p>评"拨动了几个 SKU 状态",不排个人名次。系统性未达成已剔除。</p>
+        <div class="vqs"><div><div class="n">3</div><div class="l">本周拨动<br>SKU状态</div></div><div><div class="n">2</div><div class="l">抓住机会</div></div><div><div class="n">1</div><div class="l">解决问题</div></div></div></div>
+      <div class="me"><h4>三方评价 · <small style="font-weight:400;color:var(--slate);font-family:var(--mono);font-size:10px">运营 ↔ 达人 ↔ 平台</small></h4>
+        <div class="dim" style="border-bottom:1px dotted var(--rule);display:flex;justify-content:space-between;padding:6px 0;font-size:12.5px"><span>达人 → 我(配合度)</span><span style="font-family:var(--mono);font-weight:600">4.8</span></div>
+        <div class="dim" style="border-bottom:1px dotted var(--rule);display:flex;justify-content:space-between;padding:6px 0;font-size:12.5px"><span>我 → 达人(内容质量)</span><span style="font-family:var(--mono);font-weight:600">4.5</span></div>
+        <div class="dim" style="display:flex;justify-content:space-between;padding:6px 0;font-size:12.5px"><span>平台 → 我(合规/数据真实)</span><span style="font-family:var(--mono);font-weight:600">A</span></div>
+        <p style="margin:8px 0 0;font-size:11px;color:var(--slate)">⚠️ 恶意差评/被冤 · 过去 30 天 0 次 · <span style="color:var(--amber-deep)">申诉入口 ›</span>(系统的锅不让你背)</p></div>
+      <div class="me"><h4>决策日志 · 学习闭环（L6）</h4><p style="font-family:var(--mono);font-size:11px;line-height:1.7">DEC-xhs-018 减盐酱油加投腰部达人<br>→ 7天验证 SOV 12%→31% ✅ → learn_score 1.15 · CB+5<br>💡 一线决策被记录·AI 推给其他运营</p></div>
+      <div class="me"><h4>↗ 杠杆链 → 北极星</h4><p style="font-family:var(--mono);font-size:11px;line-height:1.7">我 → 减盐种草人群 → 品类心智<br>⚠ <span style="color:var(--stop)">站外转化断点</span>（跳淘天·测不全·不画顺滑）<br>→ 北极星 200M 瓶</p></div>
+      <div class="me"><h4>Agent-Ready 四接口</h4><div class="iface"><span>✓ 经营环loop</span><span>✓ 停止条件DoD</span><span>✓ HITL</span><span>✓ 回灌口</span></div></div>
+    </section>
+
+    <!-- 驾驶舱:一线=我的驾驶舱 / 主管=品类驾驶舱(同一tab按角色切换) -->
+    <section class="panel" id="p-cockpit">
+      <div id="cockpitBody"></div>
+    </section>
+  </div>
+
+  <nav class="tabs" style="grid-template-columns:repeat(5,1fr)">
+    <button class="tab on" data-t="today"><span class="ic">📋</span><span class="lb">今日运营</span></button>
+    <button class="tab" data-t="cockpit"><span class="ic">🧭</span><span class="lb" id="cockpitLb">驾驶舱</span></button>
+    <button class="tab" data-t="collect"><span class="ic">🔍</span><span class="lb">数据采集</span></button>
+    <button class="tab" data-t="account"><span class="ic">💳</span><span class="lb">一本账</span></button>
+    <button class="tab" data-t="me"><span class="ic">👤</span><span class="lb">我的</span></button>
+  </nav>
+</div>
+
+<script>
+// ===== 引擎判级逻辑(搬自 xhs_seeding_engine.py·逻辑真·数据仍模拟)=====
+const STAGE_LINE={"导入":0.02,"成长":0.04,"成熟":0.05,"焕新":0.04,"衰退":0.01};
+const NO_GRADE=new Set(["unknown","淘汰"]);
+function judge({rate,stage,attribution,trust}){
+  const flags=[]; let canGrade=true;
+  if(NO_GRADE.has(stage)){canGrade=false; if(stage==="unknown")flags.push("stage_unknown");}
+  if(attribution==="站外为主"){canGrade=false; flags.push("attribution_weak");}
+  if(trust==="low_trust"){canGrade=false; flags.push("low_trust");}
+  let grade="未判级", line=STAGE_LINE[stage]??null, alert=false;
+  if(canGrade && rate!=null && line!=null){
+    if(rate>=line)grade="达标"; else{grade="未达标"; if(stage!=="导入")alert=true;}
+  }
+  const gap=(rate==null||line==null)?null:Math.round((rate-line)*1000)/1000;
+  return {grade,line,flags,alert,gap};
+}
+// 每条任务锚地基四表 + 判级数据 j(rate/stage/attribution/trust)
+const STAGES=[
+ {name:"导入期",desc:"看点亮 · 攻击抓机会",skus:[
+   {name:"减盐酱油",cli:"优先",me:"攻击",kind:"opp",act:"宝宝辅食酱油核心词补卡位(点亮)",
+    strat:"Excitement 刺激",aiql:"拉 A 认知",crole:"引流爆款",reuse:"复用母版 CT-002041",aiqlgap:"A✓ → I缺 → Q未启",
+    goal:"SOV≥30%",now:"0%(空缺)",trend:"up",trendTxt:"↑ 潜力大",inc:40,dod:"SOV≥30%·数据回流确认",done:false,
+    j:{rate:0.028,stage:"导入",attribution:"站内",trust:"high"},budgetLeft:15000,stageQuota:"导入期·60-80%档"}]},
+ {name:"成长期",desc:"看放大 · 攻击复制爆款",skus:[
+   {name:"减盐酱油",cli:"优先",me:"攻击",kind:"opp",act:"把爆文复制到 2 个腰部达人(放大)",
+    strat:"Traffic 引流",aiql:"拉 I 兴趣",crole:"种草放大",reuse:"母版 CT-002041 二创",aiqlgap:"A✓ → I推进中",
+    goal:"2 篇 published",now:"2 篇✓",trend:"up",trendTxt:"↑ 趋势向上",inc:50,dod:"2 篇已确认·激励已计",done:false,
+    j:{rate:0.05,stage:"成长",attribution:"站内",trust:"high"},budgetLeft:9000,stageQuota:"成长期·35-50%档"}]},
+ {name:"成熟期",desc:"看守盘 · 明星守心智",skus:[
+   {name:"老抽王",cli:"特色",me:"明星",kind:"prob",act:"转化掉位·体验测评补救(守心智)",
+    strat:"Image 形象",aiql:"守 Q 质量",crole:"体验背书",reuse:"新拍·非复用",aiqlgap:"Q 下滑 → L 受损",
+    goal:"转化回≥0.05",now:"0.02(病危)",trend:"down",trendTxt:"↓ 趋势下滑",inc:60,dod:"转化回升·数据回流确认",done:false,
+    j:{rate:0.02,stage:"成熟",attribution:"站内",trust:"high"},budgetLeft:5000,stageQuota:"成熟期·25%档"},
+   {name:"网红爆款词",cli:"—",me:"—",kind:"sys",act:"数据疑刷量·先核查",sys:"系统说明 · 数据存疑→未判级·不计激励·不怪你（系统的锅不背）"}]},
+];
+const esc=s=>(s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+let got=0;
+
+// ===== 一个app·权限区隔:一线提议↑ → 主管核定↓(HITL不破)=====
+let ROLE="emp"; // emp一线 / mgr主管
+const PEND=[]; // 待核定队列:{id,type,sku,text,by,status}
+let _pid=1;
+function setRole(r){
+  ROLE=r;
+  document.body.classList.toggle("role-mgr",r==="mgr");
+  document.getElementById("rE").classList.toggle("on",r==="emp");
+  document.getElementById("rM").classList.toggle("on",r==="mgr");
+  document.getElementById("whoName").innerHTML = r==="mgr"
+    ? '李主管 <small>减盐品类·渠道经理(L3)</small>'
+    : '张三 <small>内容运营·减盐系列(L1)</small>';
+  document.getElementById("leadSecond").innerHTML = r==="mgr"
+    ? '管理视角 · 看 SKU 状态 + 一线激励是否匹配 · <b id="hGot">待核 '+PEND.filter(p=>p.status==="pending").length+'</b>'
+    : '已落袋 <b id="hGot">+'+got+'</b> · 全做对预计 <b>+150 激励值</b>';
+  document.getElementById("cockpitLb").textContent = r==="mgr" ? "品类驾驶舱" : "我的驾驶舱";
+  render(); renderPend(); renderCockpit();
+}
+// ===== 驾驶舱:一线"我的" / 主管"品类"(同一tab·按角色) =====
+function renderCockpit(){
+  const el=document.getElementById("cockpitBody"); if(!el)return;
+  el.innerHTML = ROLE==="mgr" ? cockpitMgr() : cockpitEmp();
+  bindCockpit();
+}
+// 一线·我的驾驶舱(个人战绩台)
+function cockpitEmp(){
+  const myPend=PEND.filter(p=>p.status==="pending").length;
+  return `<p class="ph">🧭 我的驾驶舱 · <b>张三 · 我自己这摊</b></p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px">
+    <div style="background:var(--ink);color:#E8E6DF;border-radius:8px;padding:12px"><div style="font-family:var(--mono);font-size:22px;font-weight:700;color:#9FD6B6">+${got}</div><div style="font-size:11px;color:#B7BAC0">本月已落袋激励</div></div>
+    <div style="background:var(--ink);color:#E8E6DF;border-radius:8px;padding:12px"><div style="font-family:var(--mono);font-size:22px;font-weight:700;color:#E8B57E">3</div><div style="font-size:11px;color:#B7BAC0">我负责的SKU</div></div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:13px;margin-bottom:11px">
+    <div style="font-weight:700;font-size:14px;margin-bottom:4px">我的SKU状态 <span style="font-family:var(--mono);font-size:9px;color:var(--go);font-weight:400">@小红书POP</span></div>
+    <div style="font-family:var(--mono);font-size:9.5px;color:var(--mute);margin-bottom:8px">Agent First:每个状态后面都跟"所以该做什么",不是纯看板</div>
+    <div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--rule);font-size:13px"><span style="width:9px;height:9px;border-radius:50%;background:var(--go)"></span><span style="flex:1">减盐酱油·导入</span><span class="mono" style="font-size:11px;color:var(--go)">↑ 点亮中·继续</span></div>
+    <div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--rule);font-size:13px"><span style="width:9px;height:9px;border-radius:50%;background:var(--go)"></span><span style="flex:1">减盐酱油·成长</span><span class="mono" style="font-size:11px;color:var(--go)">↑ 复制中·扩量</span></div>
+    <div style="padding:8px 0 0">
+      <div style="display:flex;align-items:center;gap:9px;font-size:13px"><span style="width:9px;height:9px;border-radius:50%;background:var(--stop)"></span><span style="flex:1">老抽王·成熟</span><span class="mono" style="font-size:11px;color:var(--stop)">↓ 病危</span></div>
+      <div style="margin:6px 0 0 18px;padding:9px;background:var(--stop-tint);border-radius:6px;font-size:11.5px;line-height:1.6">
+        <div><b style="color:var(--stop)">诊断:</b>成熟期转化掉(Q质量)·承接内容掉位</div>
+        <div><b style="color:var(--amber-deep)">建议:</b>换体验测评顶上·建Q信任</div>
+        <button onclick="document.querySelector('.tab[data-t=today]').click()" style="margin-top:6px;font-family:var(--mono);font-size:10.5px;padding:5px 11px;border-radius:5px;border:none;background:var(--ink);color:#E8B57E;cursor:pointer">▶ 去解决(进今日运营处方)</button>
+      </div>
+    </div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:13px;margin-bottom:11px">
+    <div style="font-weight:700;font-size:14px;margin-bottom:8px">我的提议进度</div>
+    ${myPend?`<div style="font-size:12.5px;color:var(--amber-deep);font-family:var(--mono)">⏳ ${myPend} 条提议挂起中·等主管核定</div>`:`<div style="font-size:12.5px;color:var(--slate)">暂无挂起提议。去今日运营点"提议"可发起。</div>`}
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:13px">
+    <div style="font-weight:700;font-size:14px;margin-bottom:8px">我的战绩(决策日志·喂L6)</div>
+    <div style="font-family:var(--mono);font-size:11px;line-height:1.7;color:var(--slate)">DEC-018 减盐酱油加投腰部达人<br>→ 7天 SOV 12%→31% ✅ learn_score 1.15 · CB+5</div>
+  </div>
+  <div class="note">这是"我自己"的驾驶舱:我的激励/我的SKU/我的提议/我的战绩。主管切过去看的是"整个品类"。</div>`;
+}
+// 主管·品类驾驶舱(M1-M7)
+function cockpitMgr(){
+  const pend=PEND.filter(p=>p.status==="pending");
+  return `<p class="ph">🧭 品类驾驶舱 · <b>李主管 · 管整个减盐品类</b></p>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:13px">
+    <div class="tcell2" data-go="approve"><div class="cn">${pend.length}</div><div class="cl">待核提议 →</div></div>
+    <div class="tcell2" data-go="forecast"><div class="cn">3</div><div class="cl">待定预测 →</div></div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:13px;margin-bottom:11px">
+    <div style="font-weight:700;font-size:14px;margin-bottom:4px">M1 · 品类整体盘 <span style="font-family:var(--mono);font-size:9px;color:var(--go);font-weight:400">@小红书POP</span></div>
+    <div style="font-family:var(--mono);font-size:9.5px;color:var(--mute);margin-bottom:8px">Agent First:状态后跟品类级诊断→建议→执行,不是纯看板</div>
+    <div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--rule);font-size:13px"><span style="width:9px;height:9px;border-radius:50%;background:var(--go)"></span><span style="flex:1">减盐酱油(导入/成长)</span><span class="mono" style="font-size:11px;color:var(--go)">↑ 向好·维持投入</span></div>
+    <div style="padding:8px 0 0">
+      <div style="display:flex;align-items:center;gap:9px;font-size:13px"><span style="width:9px;height:9px;border-radius:50%;background:var(--stop)"></span><span style="flex:1">老抽王·成熟</span><span class="mono" style="font-size:11px;color:var(--stop)">↓ 病危</span></div>
+      <div style="margin:6px 0 0 18px;padding:9px;background:var(--stop-tint);border-radius:6px;font-size:11.5px;line-height:1.6">
+        <div><b style="color:var(--stop)">诊断:</b>成熟期现金流恶化·占品类资源但ROI掉</div>
+        <div><b style="color:var(--amber-deep)">建议:</b>品类级决策——减投转维持/或战略救援判断</div>
+        <button onclick="document.querySelector('.tcell2[data-go=forecast]')&&document.querySelector('.tcell2[data-go=forecast]').click()" style="margin-top:6px;font-family:var(--mono);font-size:10.5px;padding:5px 11px;border-radius:5px;border:none;background:var(--ink);color:#E8B57E;cursor:pointer">▶ 去决策(看预测定调)</button>
+      </div>
+    </div>
+  </div>
+  <div id="ck-approve" style="background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:13px;margin-bottom:11px">
+    <div style="font-weight:700;font-size:14px;margin-bottom:8px">M2 · 核定提议(带决策依据)</div>
+    ${pend.length?pend.map(p=>`<div style="border:1px solid var(--rule);border-radius:6px;padding:10px;margin-bottom:7px">
+      <div style="font-size:13px;font-weight:600">${esc(p.sku)} <span style="font-family:var(--mono);font-size:10px;color:var(--blue)">${esc(p.by)}提议</span></div>
+      <div style="font-size:12px;color:var(--slate);margin:4px 0">${esc(p.text)}</div>
+      <div style="background:var(--blue-tint);border-radius:5px;padding:8px;font-size:11px;line-height:1.5"><span style="font-family:var(--mono);font-size:9.5px;color:var(--blue)">📋 决策依据</span><br>状态:<b>该SKU当下+趋势</b> · 预期拨动:<b>状态项</b> · 这人过往:采纳率/预测准度</div>
+      <button class="btn ok" style="margin-top:7px" onclick="decideCk(${p.id},1)">✓核定</button>
+      <button class="btn no" onclick="decideCk(${p.id},0)">✗驳回</button></div>`).join(""):'<div style="font-size:12px;color:var(--slate)">暂无待核提议</div>'}
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:13px;margin-bottom:11px">
+    <div style="font-weight:700;font-size:14px;margin-bottom:8px">M4 · 预测(当下+将来·双轨)</div>
+    <div style="border:1px solid var(--rule);border-radius:6px;padding:9px;font-size:12px">
+      <b>老抽王</b> · 当下:实际0.02 vs 预算0.05 差-0.03
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px">
+        <div style="border-left:3px solid var(--blue);padding:6px;font-size:11px"><span style="font-family:var(--mono);font-size:9px;color:var(--mute)">一线L1</span><br>↓我看继续掉</div>
+        <div style="border-left:3px solid var(--amber);padding:6px;font-size:11px"><span style="font-family:var(--mono);font-size:9px;color:var(--mute)">主管L3</span><br><input class="pin2" id="mgrpred" placeholder="填将来预测" style="width:100%;font-family:var(--mono);font-size:10px;padding:3px;border:1px solid var(--rule);border-radius:3px"></div>
+      </div>
+      <div id="dvbox" style="margin-top:7px"></div>
+    </div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:13px">
+    <div style="font-weight:700;font-size:14px;margin-bottom:8px">M6/M7 · 钱账 + 激励校验</div>
+    <div style="font-size:12px;line-height:1.8">
+      <div class="row" style="display:flex;justify-content:space-between"><span>减盐酱油·成长</span><span class="mono" style="color:var(--go)">ROI 2.0</span></div>
+      <div class="row" style="display:flex;justify-content:space-between"><span>老抽王·成熟</span><span class="mono" style="color:var(--stop)">ROI 0.5</span></div>
+      <div style="border-top:1px dotted var(--rule);margin-top:6px;padding-top:6px">
+        <div class="row" style="display:flex;justify-content:space-between"><span>张三 激励+50·状态达标</span><span class="mono" style="color:var(--go)">✓匹配</span></div>
+        <div class="row" style="display:flex;justify-content:space-between"><span>李四 激励+60·状态未拨</span><span class="mono" style="color:var(--stop)">✗错配·排查</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="note">这是"整个品类"的驾驶舱。一线切过去看的是"我自己那摊"。同一份SKU真源,两个视角。</div>`;
+}
+function bindCockpit(){
+  document.querySelectorAll("#cockpitBody .tcell2").forEach(c=>c.onclick=()=>{});
+  const mp=document.getElementById("mgrpred");
+  if(mp)mp.onchange=()=>{
+    const v=mp.value.trim(); const dv=document.getElementById("dvbox");
+    if(!v){dv.innerHTML="";return;}
+    const diverge = v.includes("↑"); // 一线说↓,主管说↑→分歧
+    dv.innerHTML = diverge
+      ? '<div style="background:var(--stop-tint);color:var(--stop);font-family:var(--mono);font-size:10.5px;padding:6px 8px;border-radius:4px">⚠ 双轨分歧→已上报更高层对比判断</div>'
+      : '<div style="background:var(--go-tint);color:var(--go);font-family:var(--mono);font-size:10.5px;padding:6px 8px;border-radius:4px">✓ 双轨一致→信心强</div>';
+  };
+}
+window.decideCk=function(id,ok){const p=PEND.find(x=>x.id===id);if(p){p.status=ok?"approved":"rejected";renderCockpit();renderPend();}};
+// 一线提议
+window.propose=function(type,sku,text){
+  PEND.push({id:_pid++,type,sku,text,by:"张三",status:"pending"});
+  renderPend(); render();
+  alert("已提议:"+text+"\n→ 挂起,等主管核定(你没有核定权·HITL)");
+};
+// 主管核定
+window.approve=function(id,ok){
+  const p=PEND.find(x=>x.id===id); if(!p)return;
+  p.status=ok?"approved":"rejected";
+  renderPend(); render();
+};
+function renderPend(){
+  const bar=document.getElementById("pendBar");
+  const pending=PEND.filter(p=>p.status==="pending");
+  if(ROLE==="mgr" && pending.length){
+    bar.innerHTML=`<div class="pend">🔔 <b>${pending.length}</b> 条一线提议待你核定 ↓（涉钱/改判定/分歧才停你·其余自动过）</div>`;
+  }else if(ROLE==="emp" && pending.length){
+    bar.innerHTML=`<div class="pend">⏳ 你有 <b>${pending.length}</b> 条提议挂起中·等主管核定</div>`;
+  }else bar.innerHTML="";
+}
+function render(){
+  let _k=0; STAGES.forEach(st=>st.skus.forEach(s=>{ if(s.kind!=="sys"){s._i=_k++;} }));
+  document.getElementById("stages").innerHTML=STAGES.map(st=>{
+    const cards=st.skus.map(s=>{
+      if(s.kind==="sys") return `<div class="sku sys"><div class="top"><div class="name">${esc(s.name)}</div><div class="badge sys">系统</div></div><div class="act">${esc(s.act)}</div><div class="sysnote">${esc(s.sys)}</div></div>`;
+      return `<div class="sku ${s.kind}">
+        <div class="top">
+          <div><div class="name">${esc(s.name)} <span style="font-family:var(--mono);font-size:8.5px;color:var(--blue);background:var(--blue-tint);padding:1px 5px;border-radius:3px;font-weight:400">@小红书POP</span></div>
+            <div class="roles"><span class="role">客户·${esc(s.cli)}</span><span class="role me">我方·${esc(s.me)}</span></div>
+          </div>
+          <div class="badge ${s.kind}">${s.kind==="opp"?"🟢 机会":"🔴 问题"}</div>
+        </div>
+        <div class="act">${esc(s.act)}</div>
+        <div class="strat"><span class="nm">🎯 ${esc(s.strat)}</span><span class="aq">${esc(s.aiql)}</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">
+          <span style="font-family:var(--mono);font-size:9.5px;padding:2px 6px;border-radius:2px;background:#ECE9E1;color:var(--slate);border:1px solid var(--rule)">📄 ${esc(s.crole)}</span>
+          <span style="font-family:var(--mono);font-size:9.5px;padding:2px 6px;border-radius:2px;background:#ECE9E1;color:var(--slate);border:1px solid var(--rule)">♻ ${esc(s.reuse)}</span>
+          <span style="font-family:var(--mono);font-size:9.5px;padding:2px 6px;border-radius:2px;background:var(--blue-tint);color:var(--blue);border:1px solid #b8cbe0">AIQL ${esc(s.aiqlgap)}</span>
+        </div>
+        <div class="kv"><span class="b">目标 <i>${esc(s.goal)}</i></span><span class="b">实际 <i>${esc(s.now)}</i></span></div>
+        <span class="trend ${s.trend}">${esc(s.trendTxt)} <span class="pred">·上层预测(主管定·L6待毕业)</span></span>
+        ${predRow(s)}
+        <div class="foot ${s.done?'done':''}"><span class="inc">${s.done?'✓ +':'+'}${s.inc} 激励值</span><span class="dod">${s.done?'已确认·激励已计':'DoD：'+esc(s.dod)}</span></div>
+        <button class="rx-btn" data-i="${s._i}" style="margin-top:9px;margin-right:6px;font-family:var(--mono);font-size:11.5px;padding:7px 13px;border-radius:5px;border:1px solid var(--amber);background:var(--amber-tint);color:var(--amber-deep);cursor:pointer">${s.kind==='opp'?'💡 怎么抓':'🔧 怎么解'} ▾</button>
+        ${s.done?renderResult(s):`<button class="btn" data-i="${s._i}" style="margin-top:9px;font-family:var(--mono);font-size:11.5px;padding:7px 13px;border-radius:5px;border:none;background:var(--ink);color:#F2F1EB;cursor:pointer">▸ 模拟数据回流·真判级</button>`}
+        <div class="rx" id="rx-${s._i}" style="display:none">${prescription(s)}</div>
+        ${proposeRow(s)}
+      </div>`;
+    }).join("");
+    return `<div class="stage"><div class="sh"><span class="sn">${esc(st.name)}</span><span class="sd">${esc(st.desc)}</span><span class="bar"></span></div>${cards}</div>`;
+  }).join("");
+  document.querySelectorAll("#stages .btn").forEach(b=>b.onclick=()=>settle(+b.dataset.i));
+  document.querySelectorAll("#stages .rx-btn").forEach(b=>b.onclick=()=>{
+    const el=document.getElementById("rx-"+b.dataset.i);
+    el.style.display = el.style.display==="none" ? "block" : "none";
+  });
+  const hg=document.getElementById("hGot"); if(hg)hg.textContent="+"+got;
+}
+// 七步处方(总纲v2):找对的事→排序→做对→判据→归因→激励→沉淀
+function prescription(s){
+  if(s.kind==="sys")return "";
+  const aiqlMap={"减盐酱油":"A 认知(搜不到/SOV低)","老抽王":"Q 质量(点进不买/转化掉)"};
+  const isOpp=s.kind==="opp";
+  // 措施库:按AIQL段给具体措施(精简版,真实来自措施库配置)
+  const RX={
+    "减盐酱油":{cap:"A认知",method:["⚡ 补搜索卡位:核心词+场景词埋进标题前10字","⚡ 复制爆文母版 CT-002041 给腰部达人","🔵 信息流(F)加热互动好的笔记"],
+      judgeCur:"评论聊产品 + 回搜率↑ + SOV≥30%",judgeFut:"趋势↑·潜力大(别只刷量伤账号)"},
+    "老抽王":{cap:"Q质量",method:["⚡ 换体验测评类笔记顶上(建Q信任)","⚡ 评论区铺真实体验·压差评","🔒 若核心人群都不买→疑卖点错·提议改定位(主管核定)"],
+      judgeCur:"评论聊产品 + 转化回≥0.05 + 回搜率↑",judgeFut:"趋势止跌回升·非一次性"}
+  };
+  const rx=RX[s.name]||{cap:aiqlMap[s.name]||"—",method:["(措施库待配)"],judgeCur:"状态拨动",judgeFut:"趋势向好"};
+  return `<div style="margin-top:10px;border:1px solid var(--amber);border-radius:7px;overflow:hidden">
+    <div style="background:var(--amber);color:#fff;font-family:var(--mono);font-size:11px;padding:6px 10px">📋 ${isOpp?'抓机会':'解问题'}处方 · 芯片想 → Agent做</div>
+    <div style="padding:11px;font-size:12px;line-height:1.6">
+
+      <!-- ===== 芯片想(Think):L2判级 + L3诊断 + 建议 ===== -->
+      <div style="background:#1B1E24;color:#D7DAE0;border-radius:7px;padding:11px;margin-bottom:0">
+        <div style="font-family:var(--mono);font-size:10px;color:#9EC4E6;margin-bottom:8px;letter-spacing:.06em">🧠 芯片想 · CHIP THINKS(系统思考·不执行)</div>
+        <div style="margin-bottom:7px"><b style="color:#E8B57E">① 找对的事</b><br><span style="color:#B7BAC0">${isOpp?'机会(从有到更好)':'问题(从坏到正常)'} · 卡在 <b style="color:#fff">${esc(rx.cap)}</b> · 查表→${esc(s.strat)}</span></div>
+        <div style="margin-bottom:7px"><b style="color:#E8B57E">② 排序</b> <span style="color:#B7BAC0">${isOpp?'机会·按潜力排':'⚠ 病危优先·今天先做'}</span></div>
+        <div style="margin-bottom:7px"><b style="color:#E8B57E">④ 判据(怎么算做成)</b><br>
+          <span style="display:block;color:#9a9da3">先过可信门(刷量不算)</span>
+          <span style="display:block;color:#9FD6B6">当下:${esc(rx.judgeCur)}</span>
+          <span style="display:block;color:#E0B07E">将来:${esc(rx.judgeFut)}</span>
+          <span style="display:block;color:#E6A9A3;font-size:11px">✗ 不看"爆了几篇"(防无效爆文)</span></div>
+        <div style="background:#22252b;border-radius:5px;padding:8px;margin-top:8px">
+          <span style="font-family:var(--mono);font-size:10px;color:#9FD6B6">▶ 芯片建议(Decision):</span>
+          <span style="color:#fff">${isOpp?'抓这个机会·投内容拨'+esc(rx.cap):'解这个问题·投内容修'+esc(rx.cap)}</span></div>
+      </div>
+
+      <!-- ===== 分界线:决策→执行 ===== -->
+      <div style="text-align:center;font-family:var(--mono);font-size:10px;color:var(--amber-deep);padding:9px 0 7px;letter-spacing:.08em">↓ 芯片想完 · 交给 Agent 做 · THINK → DO ↓</div>
+
+      <!-- ===== Agent做(Do):L4资源 + 执行动作 ===== -->
+      <div style="background:var(--go-tint);border-radius:7px;padding:11px">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--go);margin-bottom:8px;letter-spacing:.06em">🦾 Agent做 · AGENT EXECUTES(照芯片决策执行)</div>
+        <div style="margin-bottom:8px"><b>③ 怎么做(照步骤)</b><br>${rx.method.map(m=>`<span style="display:block;color:var(--ink);margin-top:2px">${esc(m)}</span>`).join("")}
+          <span style="display:block;color:var(--slate);margin-top:4px;font-family:var(--mono);font-size:10.5px">节奏:原型(N个KOL)→软启(48h筛·3-7天定)→放大(KFS·2-4周)</span></div>
+        <div style="margin:10px 0;padding:10px;background:#fff;border:1px solid var(--rule);border-radius:6px">
+          <div style="font-family:var(--mono);font-size:10.5px;color:var(--blue);margin-bottom:7px">💰 L4投入侧(接引擎 budget / carrier_pool)</div>
+          <div style="font-size:11.5px;margin-bottom:6px">采买预算 · 本SKU这阶段剩 <b id="bdg-${s._i}">¥${s.budgetLeft||8000}</b>
+            <span style="color:var(--mute)">(${esc(s.stageQuota||'成熟期·25%档')})</span></div>
+          <input type="number" id="bin-${s._i}" placeholder="填采买金额" style="width:120px;font-family:var(--mono);font-size:11px;padding:4px 7px;border:1px solid var(--rule);border-radius:4px">
+          <button onclick="spendBudget(${s._i})" style="font-family:var(--mono);font-size:11px;padding:5px 11px;border-radius:4px;border:none;background:var(--blue);color:#fff;cursor:pointer;margin-left:5px">投</button>
+          <span id="bmsg-${s._i}" style="font-size:11px;margin-left:6px"></span>
+          <div style="margin-top:9px;font-size:11.5px;color:var(--slate)">达人池(按 匹配度&gt;爆文率&gt;性价比 排):</div>
+          <div style="margin-top:4px;display:flex;flex-direction:column;gap:3px">
+            <label style="font-size:11px;display:flex;align-items:center;gap:6px"><input type="checkbox"> 腰部·美食号A <span style="color:var(--mute);font-family:var(--mono)">匹配92%·爆文18%·¥3k</span></label>
+            <label style="font-size:11px;display:flex;align-items:center;gap:6px"><input type="checkbox"> 腰部·测评号B <span style="color:var(--mute);font-family:var(--mono)">匹配88%·爆文15%·¥2.5k</span></label>
+            <label style="font-size:11px;display:flex;align-items:center;gap:6px"><input type="checkbox"> 底部·素人C <span style="color:var(--mute);font-family:var(--mono)">匹配85%·爆文12%·¥800</span></label>
+          </div>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--go)">Agent动作:补内容/选号/发布/调价 — 执行后改变SKU状态 → 回L1(闭环)</div>
+      </div>
+
+      <!-- ===== 闭环回收:归因/激励/沉淀(Learn) ===== -->
+      <div style="margin-top:10px;padding-top:9px;border-top:1px dashed var(--rule)">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--slate);margin-bottom:6px">↻ 回收学习 · LEARN(执行后)</div>
+        <div style="margin-bottom:6px"><b>⑤ 没做成?归因(锅不让你背)</b><br><span style="color:var(--slate)">执行没到位→补方法 ｜ 对的事错了→迭代设计·不扣你 ｜ 预测错→调预测·不扣你</span></div>
+        <div style="margin-bottom:6px"><b>⑥ 做成了→激励</b><br><span style="color:var(--slate)">绑 回搜×卡位×转化(非爆文数)· 数据回流周期结算</span></div>
+        <div><b>⑦ 沉淀</b> <span style="color:var(--slate)">这次结果存进措施有效性库·下次同类直接调用</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+function renderResult(s){
+  const r=judge(s.j);
+  if(r.grade==="达标")return `<div style="margin-top:9px;font-family:var(--mono);font-size:11px;padding:7px 9px;border-radius:4px;background:var(--go-tint);color:var(--go)">✓ 回流:转化 ${s.j.rate} ≥ 线 ${r.line} → 达标 · 落袋 +${s.inc}</div>`;
+  return `<div style="margin-top:9px;font-family:var(--mono);font-size:11px;padding:7px 9px;border-radius:4px;background:var(--stop-tint);color:var(--stop)">回流:转化 ${s.j.rate} < 线 ${r.line} → 未达标${r.alert?'·P2病危':''} · 不落袋 · 滚明天</div>`;
+}
+// 预测双向口:一线填"我的预测"↑ / 主管"定预测"↓;分歧标记
+function predRow(s){
+  if(s.empPred){
+    const diverge = s.empPred!==s.trendTxt;
+    return `<div style="margin-top:6px;font-family:var(--mono);font-size:10.5px;padding:6px 9px;border-radius:4px;background:${diverge?'var(--stop-tint)':'var(--go-tint)'};color:${diverge?'var(--stop)':'var(--go)'}">
+      一线预测:${esc(s.empPred)} ${diverge?'⚠ 与上层分歧→上报对比':'✓ 与上层一致'}</div>`;
+  }
+  // 一线:可填我的预测;主管:可定预测(此处演示一线入口)
+  return `<div class="emponly propose"><button class="emp" onclick="myPred(${s._i})">↑ 我看这家店不一样·填我的预测</button></div>`;
+}
+// 提议/核定行:机会块——一线提议↑ / 主管核定↓
+function proposeRow(s){
+  if(s.kind==="sys")return "";
+  // 主管视角:若该SKU有待核提议,显示核定按钮
+  const mine=PEND.filter(p=>p.sku===s.name&&p.status==="pending");
+  let mgr="";
+  if(mine.length){
+    mgr=mine.map(p=>`<div class="mgronly propose"><span class="pendtag">待核:${esc(p.text)}</span>
+      <button class="mgr-ok" onclick="approve(${p.id},true)">✓ 核定通过</button>
+      <button class="mgr-no" onclick="approve(${p.id},false)">✗ 驳回</button></div>`).join("");
+  }
+  // 一线视角:提议新机会入口
+  const emp=`<div class="emponly propose"><button class="emp" onclick="propose('机会','${esc(s.name)}','一线发现新机会:${esc(s.name)}该加投')">↑ 我发现一个机会·提议</button></div>`;
+  return mgr+emp;
+}
+window.myPred=function(i){
+  let k=0; for(const st of STAGES)for(const s of st.skus){if(s.kind==="sys")continue; if(k===i){
+    s.empPred = s.trend==="up" ? "↓ 我看要掉(隔壁千禾猛投)" : "↑ 我看会起(这达人在涨粉)";
+    propose('预测', s.name, '一线预测:'+s.empPred);
+  } k++;}
+};
+// 投入侧:采买预算(接引擎 budget 逻辑:额度内放行/超额走提议)
+window.spendBudget=function(i){
+  let sku=null,k=0; for(const st of STAGES)for(const s of st.skus){if(s.kind==="sys")continue; if(k===i){sku=s;} k++;}
+  if(!sku)return;
+  const amt=parseFloat(document.getElementById("bin-"+i).value);
+  const msg=document.getElementById("bmsg-"+i);
+  const left=sku.budgetLeft||8000;
+  if(!amt||amt<=0){msg.textContent="填个金额";msg.style.color="var(--stop)";return;}
+  if(amt<=left){
+    sku.budgetLeft=left-amt;
+    document.getElementById("bdg-"+i).textContent="¥"+sku.budgetLeft;
+    msg.textContent="✓ 额度内·已投 ¥"+amt;msg.style.color="var(--go)";
+  }else{
+    msg.textContent="超额 → 提议加投·待主管核定";msg.style.color="var(--amber-deep)";
+    propose("加投预算",sku.name,"超额采买 ¥"+amt+"(剩¥"+left+")");
+  }
+};
+let _idx=0;
+function settle(i){
+  let k=0; for(const st of STAGES)for(const s of st.skus){if(s.kind==="sys")continue; if(k===i){if(!s.done){s.done=true; if(judge(s.j).grade==="达标")got+=s.inc;} } k++;}
+  render();
+}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));t.classList.add("on");
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("on"));
+  document.getElementById("p-"+t.dataset.t).classList.add("on");
+});
+// ===== 调一调 playground 实时重算 =====
+const P={rate:0.028,stage:"导入",attribution:"站内",trust:"high"};
+function bindSeg(id,key){const el=document.getElementById(id); if(!el)return;
+  el.querySelectorAll("button").forEach(b=>b.onclick=()=>{el.querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");P[key]=b.dataset.v;renderPlay();});}
+function renderPlay(){
+  const out=document.getElementById("out"); if(!out)return;
+  const r=judge(P);
+  const gc=r.grade==="达标"?"g-ok":r.grade==="未达标"?"g-no":"g-na";
+  const steps=[["定标",r.line],["量实",P.rate],["算差",r.gap==null?null:(r.gap>=0?"+":"")+r.gap],
+    ["关差",(r.grade==="达标"||r.grade==="未判级")?"—":"补救"],["验果",r.grade==="达标"?"Gate1点亮":"看上层"]];
+  const ring=steps.map(([k,v])=>{const lit=(k==="验果"&&r.grade==="达标")||(k==="量实"&&r.grade==="达标");
+    return `<div class="rstep ${lit?'lit':''}"><div class="k">${k}</div><div class="v">${v==null?'—':esc(v)}</div></div>`;}).join("");
+  let why="";
+  if(r.flags.includes("attribution_weak"))why=`<div class="pwhy sys">站外为主·回传测不到 → 未判级(不假装闭环·不是你执行问题)</div>`;
+  else if(r.flags.includes("stage_unknown"))why=`<div class="pwhy sys">阶段未知 → 未判级(不拿默认阶段顶替)</div>`;
+  else if(r.flags.includes("low_trust"))why=`<div class="pwhy sys">疑刷量 → 未判级(不进判级)</div>`;
+  else if(r.grade==="达标")why=`<div class="pwhy inc">达标 → 激励落袋 · Gate1 点亮</div>`;
+  else why=`<div class="pwhy sys">未达标${r.alert?' · 报警P2(成熟期病危)':''} → 关差补救·不落袋</div>`;
+  out.innerHTML=`<span class="grade ${gc}">${r.grade}</span> <span style="font-family:var(--mono);font-size:11px;color:#9a9da3;margin-left:8px">${esc(P.stage)} · 线 ${r.line??'—'}</span>${why}<div class="ring">${ring}</div>`;
+}
+const rg=document.getElementById("rate");
+if(rg)rg.oninput=e=>{P.rate=e.target.value/1000;document.getElementById("vRate").textContent=P.rate.toFixed(3);renderPlay();};
+bindSeg("segStage","stage");bindSeg("segAttr","attribution");bindSeg("segTrust","trust");
+setRole("emp"); render(); renderPlay(); renderCockpit();
+</script>
+</body>
+</html>
