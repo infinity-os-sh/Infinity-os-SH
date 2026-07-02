@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>O2O JBP Agent v4 · 盒马</title>
+<style>
+  :root{
+    --bg:#0C1015;--panel:#141A22;--panel2:#1A222C;--panel3:#212B36;--line:#25303C;
+    --ink:#D4DCE4;--dim:#7A8896;--cyan:#3FC9C0;--cyan-d:#1E6B66;
+    --amber:#E5A452;--amber-d:#7A5628;--green:#4FBF7B;--green-d:#245C3A;
+    --red:#D96B5E;--red-d:#6B2E28;--violet:#9B8CE0;--violet-d:#463F73;
+    --gold:#D9B45E;--gold-d:#6B5424;--fore:#5EA9D9;--fore-d:#24506B;
+    --mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+    --cjk:'PingFang SC','Microsoft YaHei',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--cjk);font-size:14px;line-height:1.6;padding-bottom:80px;}
+  .top{background:var(--panel);border-bottom:1px solid var(--line);padding:14px 18px;position:sticky;top:0;z-index:30;}
+  .top h1{font-size:16px;font-weight:800;}.top h1 .c{color:var(--cyan);}
+  .top .sub{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:3px;}
+  .wrap{max-width:940px;margin:0 auto;padding:16px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:14px;}
+  .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);margin-bottom:10px;}
+  .lbl .hint{color:var(--dim);text-transform:none;letter-spacing:0;font-size:10px;margin-left:6px;}
+
+  /* 预测卡·季度初 */
+  .forecast{background:linear-gradient(180deg,rgba(94,169,217,.08),var(--panel));border:1px solid var(--fore-d);border-radius:8px;padding:16px;margin-bottom:14px;}
+  .forecast h3{color:var(--fore);font-size:15px;margin-bottom:3px;}
+  .forecast .fdesc{font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:12px;}
+  .frow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .frow .who{flex:1;min-width:120px;font-size:13px;}
+  .frow .anchor{font-family:var(--mono);font-size:11px;color:var(--dim);}
+  .frow .fbtns{display:flex;gap:4px;align-items:center;}
+  .fbtn{width:28px;height:28px;border-radius:5px;border:1px solid var(--line);background:var(--panel2);color:var(--fore);font-family:var(--mono);font-size:14px;cursor:pointer;}
+  .fval{font-family:var(--mono);font-size:15px;font-weight:700;color:#fff;min-width:52px;text-align:center;}
+  .fnote{font-size:10px;color:var(--fore);font-family:var(--mono);}
+
+  .promise{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  @media(max-width:600px){.promise{grid-template-columns:1fr;}}
+  .pm{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:12px;}
+  .pm .n{font-family:var(--mono);font-size:18px;font-weight:700;color:#fff;}
+  .pm .t{font-size:11px;color:var(--dim);margin-top:2px;}
+  .pm .now{font-family:var(--mono);font-size:11px;color:var(--cyan);margin-top:4px;}
+  .pm .bar{height:5px;background:var(--line);border-radius:3px;margin-top:6px;overflow:hidden;}
+  .pm .fill{height:100%;width:0;transition:width .7s;}
+  .pm.gmv .fill{background:var(--cyan);}.pm.ful .fill{background:var(--green);}.pm.loss .fill{background:var(--amber);}
+
+  .timeline{padding:4px 0;}
+  .qrow{display:flex;align-items:center;gap:2px;overflow-x:auto;}
+  .qtag{font-family:var(--mono);font-size:10px;color:var(--gold);margin-right:6px;white-space:nowrap;}
+  .mgroup{display:flex;gap:3px;padding:3px;border:1px dashed var(--line);border-radius:6px;position:relative;}
+  .mgroup .mlab{position:absolute;top:-8px;left:6px;font-family:var(--mono);font-size:8px;color:var(--violet);background:var(--bg);padding:0 3px;}
+  .rnd{flex:0 0 auto;width:26px;height:26px;border-radius:5px;border:1px solid var(--line);background:var(--panel2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--dim);}
+  .rnd.done{background:var(--green-d);color:#9FE8BC;border-color:var(--green);}
+  .rnd.cur{background:var(--cyan-d);color:#fff;border-color:var(--cyan);box-shadow:0 0 0 2px rgba(63,201,192,.3);}
+  .rnd.lock{opacity:.35;}
+
+  button{font-family:var(--cjk);cursor:pointer;border:none;border-radius:6px;font-size:13px;font-weight:600;padding:9px 16px;}
+  .btn-fore{background:var(--fore);color:#04121A;width:100%;padding:12px;margin-top:12px;}
+  .btn-run{background:var(--cyan);color:#04110F;width:100%;margin-top:12px;}
+  .btn-gate{background:var(--amber);color:#1A1206;width:100%;padding:11px;margin-top:8px;}
+  .btn-mo{background:var(--violet);color:#0E0A1A;width:100%;padding:11px;margin-top:8px;}
+  .btn-qt{background:var(--gold);color:#1A1404;width:100%;padding:12px;margin-top:8px;}
+  button:active{transform:scale(.98);}button:disabled{opacity:.4;cursor:not-allowed;}
+
+  table.diff{width:100%;border-collapse:collapse;font-size:12px;}
+  table.diff th{text-align:left;font-family:var(--mono);font-size:9px;color:var(--dim);text-transform:uppercase;padding:6px 7px;border-bottom:1px solid var(--line);}
+  table.diff td{padding:7px;border-bottom:1px solid var(--line);}
+  .gp{color:var(--green);font-family:var(--mono);}.gn{color:var(--red);font-family:var(--mono);}
+  .sug{font-size:10px;padding:2px 6px;border-radius:9px;font-family:var(--mono);white-space:nowrap;}
+  .sug.up{background:var(--green-d);color:#9FE8BC;}.sug.down{background:var(--red-d);color:#E8A79F;}
+  .sug.esc{background:var(--amber-d);color:#F0C88A;}.sug.hold{background:var(--panel3);color:var(--dim);}
+  .sug.push{background:var(--violet-d);color:#C4B8F0;}
+  .stage{font-size:9px;padding:1px 5px;border-radius:8px;font-family:var(--mono);}
+  .stage.导入{background:var(--violet-d);color:#C4B8F0;}.stage.成长{background:var(--cyan-d);color:#8FE4DE;}.stage.成熟{background:var(--green-d);color:#9FE8BC;}
+
+  .gate-note{background:rgba(229,164,82,.1);border:1px solid var(--amber-d);border-radius:6px;padding:9px 12px;font-size:11px;color:#F0C88A;margin-top:8px;}
+  .gate-note b{color:var(--amber);}
+  .flow{font-family:var(--mono);font-size:10px;color:var(--dim);display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+  .flow .s{padding:3px 7px;background:var(--panel2);border-radius:4px;border:1px solid var(--line);}
+  .flow .s.on{color:var(--cyan);border-color:var(--cyan-d);}
+
+  .checkpanel{border-radius:8px;padding:16px;margin-bottom:14px;display:none;}
+  .checkpanel.mo{background:linear-gradient(180deg,rgba(155,140,224,.08),var(--panel));border:1px solid var(--violet-d);}
+  .checkpanel.qt{background:linear-gradient(180deg,rgba(217,180,94,.1),var(--panel));border:1px solid var(--gold-d);}
+  .checkpanel.show{display:block;}
+  .checkpanel h3{font-size:15px;margin-bottom:4px;}
+  .checkpanel.mo h3{color:var(--violet);}.checkpanel.qt h3{color:var(--gold);}
+  .checkpanel .focus{font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:12px;}
+  .checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+  @media(max-width:600px){.checkgrid{grid-template-columns:1fr;}}
+  .ci{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 12px;}
+  .ci .cl{font-family:var(--mono);font-size:9px;color:var(--dim);text-transform:uppercase;}
+  .ci .cv{font-size:15px;font-weight:700;color:#fff;margin-top:3px;font-family:var(--mono);}
+  .ci .cs{font-size:11px;margin-top:2px;}
+  .decision{background:var(--panel2);border-left:3px solid var(--violet);border-radius:0 6px 6px 0;padding:10px 12px;font-size:12px;margin-bottom:10px;}
+  .checkpanel.qt .decision{border-left-color:var(--gold);}
+  .decision b{color:var(--violet);}.checkpanel.qt .decision b{color:var(--gold);}
+
+  /* 预测记分卡·季度末 */
+  .scorecard{background:linear-gradient(180deg,rgba(94,169,217,.1),var(--panel));border:1px solid var(--fore-d);border-radius:8px;padding:16px;margin-bottom:14px;display:none;}
+  .scorecard.show{display:block;}
+  .scorecard h3{color:var(--fore);font-size:15px;margin-bottom:10px;}
+  .threediff{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+  @media(max-width:600px){.threediff{grid-template-columns:1fr;}}
+  .td{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:11px;text-align:center;}
+  .td .tl{font-family:var(--mono);font-size:9px;color:var(--dim);}
+  .td .tv{font-family:var(--mono);font-size:16px;font-weight:700;margin:3px 0;}
+  .td .tc{font-size:10px;color:var(--dim);}
+  .td.fore{border-color:var(--fore-d);}
+  .verdict{background:var(--panel2);border-left:3px solid var(--fore);border-radius:0 6px 6px 0;padding:11px 14px;font-size:12.5px;margin-bottom:10px;}
+  .verdict b{color:var(--fore);}
+  .meaning{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;}
+  @media(max-width:600px){.meaning{grid-template-columns:1fr;}}
+  .me{background:rgba(94,169,217,.06);border:1px solid var(--fore-d);border-radius:6px;padding:9px 11px;}
+  .me b{color:var(--fore);}
+
+  .verify{background:var(--panel2);border-left:3px solid var(--cyan);border-radius:0 6px 6px 0;padding:11px 14px;margin-top:10px;font-size:12px;display:none;}
+  .verify.show{display:block;}.verify b{color:var(--cyan);}
+  .verify .calc{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:5px;}
+
+  #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--panel2);border:1px solid var(--cyan-d);color:var(--ink);padding:11px 18px;border-radius:8px;font-size:12.5px;opacity:0;transition:.3s;z-index:100;max-width:90%;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  #toast.fore{border-color:var(--fore);}#toast.mo{border-color:var(--violet);}#toast.qt{border-color:var(--gold);}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>O2O <span class="c">JBP Agent</span> v4 · 盒马</h1>
+  <div class="sub">预测(判断力)+ 三级检测 + 滚动预算 · 预测=主管能力 · 建议型</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ◆ 季度初:主管报预测(建议型)-->
+  <div class="forecast" id="forecastcard">
+    <h3>◈ 季度初 · 主管报预测(建议型)</h3>
+    <div class="fdesc">系统出规则基线(历史外推=锚)· 主管押市场判断修正 → 敢预测且准=真懂市场</div>
+    <div id="forecastrows"></div>
+    <div style="font-size:11px;color:var(--dim);margin-top:8px;font-family:var(--mono)">系统基线=上季度实际×行业增长 · 你的调整=你对市场的判断(拐点:新店/竞品/季节)</div>
+    <button class="btn-fore" id="forebtn">✍️ 提交本季度预测 → 系统据信任度下预算 → 开跑</button>
+  </div>
+
+  <!-- 承诺 -->
+  <div class="card" id="promisecard" style="display:none">
+    <div class="lbl">JBP 年度承诺(和盒马)</div>
+    <div class="promise">
+      <div class="pm gmv"><div class="n">+30%</div><div class="t">生鲜线上GMV</div><div class="now" id="now0">当前 +0%</div><div class="bar"><div class="fill" id="f0"></div></div></div>
+      <div class="pm ful"><div class="n">95%</div><div class="t">履约达标率</div><div class="now" id="now1">当前 80%</div><div class="bar"><div class="fill" id="f1"></div></div></div>
+      <div class="pm loss"><div class="n">&lt;5%</div><div class="t">鲜度损耗率</div><div class="now" id="now2">当前 9%</div><div class="bar"><div class="fill" id="f2"></div></div></div>
+    </div>
+  </div>
+
+  <!-- 时间轴 -->
+  <div class="card" id="timelinecard" style="display:none">
+    <div class="lbl">季度推进 · 12 round(每4=1月·周运营/月经营/季度战略) <span class="hint" id="qlabel">Q1</span></div>
+    <div class="timeline"><div class="qrow" id="qrow"></div></div>
+    <div class="flow" id="flow">
+      <span class="s" id="fs0">Observe</span><span class="s" id="fs1">算差</span>
+      <span class="s" id="fs2">Diagnose</span><span class="s" id="fs3">滚动预算</span>
+      <span class="s" id="fs4">gate</span><span class="s" id="fs5">验果</span>
+    </div>
+    <button class="btn-run" id="runbtn">▶ Agent 跑 round 1(周·运营)</button>
+  </div>
+
+  <div class="card" id="diffcard" style="display:none">
+    <div class="lbl">◷ ROUND 算差(运营层)</div>
+    <div style="overflow-x:auto"><table class="diff"><thead><tr><th>店×SKU</th><th>阶段</th><th>目标</th><th>实</th><th>履约</th><th>损耗</th><th>差</th><th>建议</th></tr></thead><tbody id="diffbody"></tbody></table></div>
+  </div>
+
+  <div class="card" id="budgetcard" style="display:none">
+    <div class="lbl">◷ 滚动预算建议 · human_gate</div>
+    <div id="budgetlist"></div>
+    <div class="gate-note">⚠️ <b>涉钱铁律</b>:Agent只建议,批钱的手是你的。</div>
+    <button class="btn-gate" id="gatebtn">✍️ 批准滚动预算 → 验果 → 下round</button>
+  </div>
+
+  <div class="verify" id="verify"><b>验果</b>:回看 <b>承诺的标动没动</b> —— <div class="calc" id="verifycalc"></div></div>
+
+  <!-- 月度检测 -->
+  <div class="checkpanel mo" id="mopanel">
+    <h3 id="motitle">▦ 月度检测</h3>
+    <div class="focus" id="mofocus"></div>
+    <div class="checkgrid" id="mogrid"></div>
+    <div class="decision" id="modecision"></div>
+    <div class="gate-note">升到<b>经营/品类</b>看财务·可出新战术。<b>战术调整</b>=运营预算(小·可逆·品类经理拍)。</div>
+    <button class="btn-mo" id="mobtn">✍️ 采纳本月战术决策 → 下一月</button>
+  </div>
+
+  <!-- 季度末:预测记分卡(v4核心)-->
+  <div class="scorecard" id="scorecard">
+    <h3>◈ 季度末 · 三个差 · 预测记分卡</h3>
+    <div class="threediff" id="threediff"></div>
+    <div class="verdict" id="foreverdict"></div>
+    <div class="meaning">
+      <div class="me"><b>▸ 对股东</b><span id="meaning-share"></span></div>
+      <div class="me"><b>▸ 对员工</b><span id="meaning-emp"></span></div>
+    </div>
+  </div>
+
+  <!-- 季度战略 -->
+  <div class="checkpanel qt" id="qtpanel">
+    <h3>◆ 季度战略检测(收官)</h3>
+    <div class="focus">战略/结构 —— 小战略(品类/区域/渠道)· <b>战略调整=大钱·影响下季度·总部拍</b></div>
+    <div class="checkgrid" id="qtgrid"></div>
+    <div class="decision" id="qtdecision"></div>
+    <div class="gate-note">⚠️ 战略变动=高风险<b>human_gate</b>。调整<b>下沉成下季度定标+新预测基线</b>(连接律)。</div>
+    <button class="btn-qt" id="qtbtn">✍️ 拍板季度小战略 → 下沉Q2 → 下一季度(带新预测)</button>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+const STORES=[{id:'徐汇',name:'盒马·徐汇店',mature:true},{id:'浦东',name:'盒马·浦东店',mature:true},{id:'临港',name:'盒马·临港新店',mature:false}];
+const SKUS=[{id:'ljx',name:'六月鲜特级酱油'},{id:'cbl',name:'葱伴侣豆瓣酱'},{id:'hr',name:'禾然有机酱油'}];
+let PUHUO={'徐汇':{ljx:1,cbl:1,hr:1},'浦东':{ljx:1,cbl:1,hr:1},'临港':{ljx:1,cbl:0,hr:0}};
+function stageOf(st,sk){const s=STORES.find(x=>x.id===st);if(!s.mature)return'导入';if(sk==='cbl')return'成长';return'成熟';}
+const INVEST={导入:0.7,成长:0.42,成熟:0.25};
+
+let ROUND=1,QUARTER=1;
+let promise={gmv:0,ful:80,loss:9};
+let monthLog=[],quarterLog=[];
+// ◈ 预测:每个店的预测(建议型:系统基线锚 + 主管调整)
+let forecast={}; // storeId -> {anchor, adjust, final}
+const BASELINE={徐汇:340,浦东:300,临港:80}; // 系统规则基线(上季实际×增长)
+
+function toast(m,k){const t=document.getElementById('toast');t.textContent=m;t.className='show'+(k?' '+k:'');clearTimeout(t._h);t._h=setTimeout(()=>t.className='',2600);}
+
+// ◈ 渲染预测行(主管在基线上±调整)
+function renderForecast(){
+  const c=document.getElementById('forecastrows');c.innerHTML='';
+  STORES.forEach(st=>{
+    if(!forecast[st.id])forecast[st.id]={anchor:BASELINE[st.id],adjust:0};
+    const f=forecast[st.id];
+    const final=f.anchor+f.adjust;
+    const row=document.createElement('div');row.className='frow';
+    row.innerHTML=`<div class="who">${st.name}${st.mature?'':' <span class="fnote">新店·拐点难测</span>'}</div>
+      <div class="anchor">系统锚 ${f.anchor}万</div>
+      <div class="fbtns">
+        <button class="fbtn" data-st="${st.id}" data-d="-20">−</button>
+        <span class="fval" id="fv_${st.id}">${final}万</span>
+        <button class="fbtn" data-st="${st.id}" data-d="20">+</button>
+      </div>
+      <div class="fnote" id="fn_${st.id}">${f.adjust===0?'=锚':f.adjust>0?'上调(看好)':'下调(谨慎)'}</div>`;
+    c.appendChild(row);
+  });
+  document.querySelectorAll('.fbtn').forEach(b=>b.addEventListener('click',()=>{
+    const st=b.dataset.st,d=+b.dataset.d;
+    forecast[st].adjust+=d;
+    const f=forecast[st],final=f.anchor+f.adjust;
+    document.getElementById('fv_'+st).textContent=final+'万';
+    document.getElementById('fn_'+st).textContent=f.adjust===0?'=锚':f.adjust>0?'上调 +'+f.adjust+'(看好)':'下调 '+f.adjust+'(谨慎)';
+  }));
+}
+
+function submitForecast(){
+  STORES.forEach(st=>{forecast[st.id].final=forecast[st.id].anchor+forecast[st.id].adjust;});
+  document.getElementById('forecastcard').style.display='none';
+  document.getElementById('promisecard').style.display='block';
+  document.getElementById('timelinecard').style.display='block';
+  renderTimeline();
+  // 重置runbtn(修:否则Q2起跑时按钮停在round12+禁用,跑不动)
+  const rb=document.getElementById('runbtn');
+  rb.disabled=false;
+  rb.textContent='▶ Agent 跑 round '+ROUND+'(周·运营)';
+  setFlow(-1);
+  const totalF=STORES.reduce((s,st)=>s+forecast[st.id].final,0);
+  toast('◈ 预测已提交(合计'+totalF+'万)· 系统据信任度下预算 · 开跑','fore');
+}
+
+function renderTimeline(){
+  const qr=document.getElementById('qrow');qr.innerHTML='';
+  const qt=document.createElement('span');qt.className='qtag';qt.textContent='Q'+QUARTER;qr.appendChild(qt);
+  for(let m=0;m<3;m++){
+    const g=document.createElement('div');g.className='mgroup';
+    const lab=document.createElement('span');lab.className='mlab';lab.textContent='M'+(m+1);g.appendChild(lab);
+    for(let i=m*4+1;i<=m*4+4;i++){const d=document.createElement('div');d.className='rnd '+(i<ROUND?'done':i===ROUND?'cur':'lock');d.textContent=i;g.appendChild(d);}
+    qr.appendChild(g);
+  }
+  document.getElementById('qlabel').textContent='Q'+QUARTER;
+}
+function setFlow(n){for(let i=0;i<=5;i++)document.getElementById('fs'+i).className='s'+(i<=n?' on':'');}
+
+let curRows=[],pending=[];
+function runRound(){
+  setFlow(0);curRows=[];pending=[];
+  STORES.forEach(st=>SKUS.forEach(sk=>{
+    if(!PUHUO[st.id][sk.id])return;
+    const stage=stageOf(st.id,sk.id),base=st.mature?120:60,target=base;
+    const vol=stage==='导入'?0.5:stage==='成长'?0.3:0.15;
+    const actual=Math.round(target*(1-vol/2+Math.random()*vol));
+    const ful=Math.round(78+Math.random()*20),loss=Math.round(3+Math.random()*8);
+    curRows.push({store:st.id,storeName:st.name,sku:sk.name,stage,target,actual,ful,loss,gap:actual-target});
+  }));
+  setTimeout(()=>setFlow(1),150);setTimeout(()=>setFlow(2),350);
+  const tb=document.getElementById('diffbody');tb.innerHTML='';
+  let puhuoB=0,tiaojiaB=0;
+  curRows.forEach(r=>{
+    const ratio=r.actual/r.target;let sug,cls;const inv=INVEST[r.stage];
+    if(r.stage==='导入'){if(ratio>=0.8){sug='点亮✓加码';cls='push';}else{sug='未点亮·续投';cls='push';}puhuoB+=Math.round(1800*inv);}
+    else if(r.loss>6){sug='损耗超线→调价';cls='down';tiaojiaB+=Math.round((r.loss-5)*300);}
+    else if(r.ful<90){sug='履约低→补库存';cls='down';tiaojiaB+=Math.round((90-r.ful)*200);}
+    else if(ratio>=1.05){sug='成熟·收利润';cls='up';}
+    else if(ratio>=0.85){sug='维持';cls='hold';}
+    else if(ratio>=0.6){sug='止损观察';cls='down';}
+    else{sug='关不了→升一层';cls='esc';}
+    const gc=r.gap>=0?'gp':'gn',fc=r.ful>=90?'gp':'gn',lc=r.loss<=5?'gp':'gn';
+    tb.innerHTML+=`<tr><td>${r.storeName.replace('盒马·','')}<br><span style="color:var(--dim);font-size:10px">${r.sku}</span></td>
+      <td><span class="stage ${r.stage}">${r.stage}</span></td><td>${r.target}</td><td>${r.actual}</td>
+      <td class="${fc}">${r.ful}%</td><td class="${lc}">${r.loss}%</td><td class="${gc}">${r.gap>=0?'+':''}${r.gap}</td>
+      <td><span class="sug ${cls}">${sug}</span></td></tr>`;
+  });
+  document.getElementById('diffcard').style.display='block';
+  setTimeout(()=>setFlow(3),550);
+  pending=[];
+  if(puhuoB>0)pending.push({k:'铺货投入',amt:puhuoB});
+  if(tiaojiaB>0)pending.push({k:'损耗调价+补库存',amt:tiaojiaB});
+  const bl=document.getElementById('budgetlist');bl.innerHTML='';
+  pending.forEach(b=>bl.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:12px"><span>${b.k}</span><span style="font-family:var(--mono);color:var(--amber)">¥${b.amt}</span></div>`);
+  if(!pending.length)bl.innerHTML='<div style="color:var(--dim);font-size:12px;padding:6px 0">本round各SKU健康</div>';
+  document.getElementById('budgetcard').style.display='block';
+  document.getElementById('runbtn').disabled=true;
+  const rTotal=curRows.reduce((s,r)=>s+r.actual,0),rBudget=puhuoB+tiaojiaB;
+  const rFul=Math.round(curRows.reduce((s,r)=>s+r.ful,0)/curRows.length);
+  monthLog.push({round:ROUND,产出:rTotal,投入:rBudget,履约:rFul});
+  quarterLog.push({round:ROUND,产出:rTotal,投入:rBudget});
+  toast('Agent跑完round '+ROUND+'(运营层)· 待拍板');
+}
+
+function approveBudget(){
+  setFlow(4);
+  const avgFul=Math.round(curRows.reduce((s,r)=>s+r.ful,0)/curRows.length);
+  const avgLoss=(curRows.reduce((s,r)=>s+r.loss,0)/curRows.length).toFixed(1);
+  const oF=promise.ful,oL=promise.loss,oG=promise.gmv;
+  promise.ful=Math.min(95,promise.ful+(avgFul>promise.ful?(avgFul-promise.ful)*0.4:0.5));
+  promise.loss=Math.max(5,promise.loss-(avgLoss<promise.loss?(promise.loss-avgLoss)*0.4:0.3));
+  promise.gmv=Math.min(30,promise.gmv+30/12*(0.7+Math.random()*0.5));
+  document.getElementById('f0').style.width=(promise.gmv/30*100)+'%';
+  document.getElementById('f1').style.width=((promise.ful-80)/15*100)+'%';
+  document.getElementById('f2').style.width=((9-promise.loss)/4*100)+'%';
+  document.getElementById('now0').textContent='当前 +'+promise.gmv.toFixed(1)+'%';
+  document.getElementById('now1').textContent='当前 '+promise.ful.toFixed(1)+'%';
+  document.getElementById('now2').textContent='当前 '+promise.loss.toFixed(1)+'%';
+  const v=document.getElementById('verify');v.classList.add('show');
+  document.getElementById('verifycalc').innerHTML=`均履约${avgFul}% 均损耗${avgLoss}% → 履约${oF.toFixed(1)}→<b>${promise.ful.toFixed(1)}%</b> 损耗${oL.toFixed(1)}→<b>${promise.loss.toFixed(1)}%</b> GMV+${oG.toFixed(1)}→<b>+${promise.gmv.toFixed(1)}%</b> <span style="color:var(--cyan)">标动了✓</span>`;
+  toast('✍️批准·承诺推进·验果通过');
+  setTimeout(()=>{
+    setFlow(5);
+    document.getElementById('verify').classList.remove('show');
+    document.getElementById('diffcard').style.display='none';
+    document.getElementById('budgetcard').style.display='none';
+    if(ROUND%4===0){showMonthCheck(ROUND);}
+    else{ROUND++;renderTimeline();document.getElementById('runbtn').disabled=false;document.getElementById('runbtn').textContent='▶ Agent 跑 round '+ROUND+'(周·运营)';setFlow(-1);}
+  },1000);
+}
+
+const MONTH_FOCUS={1:{t:'第1月(R1-4)',f:'执行/运营质量 — 产出·财务·利益·资源 → 出新战术'},2:{t:'第2月(R5-8)',f:'财务+经营逻辑 — ROI/费效'},3:{t:'第3月(R9-12)',f:'经营+流程规则 — 执行到位·规则调整'}};
+function showMonthCheck(endRound){
+  const mn=endRound/4,foc=MONTH_FOCUS[mn];
+  document.getElementById('motitle').textContent='▦ 月度检测·'+foc.t;
+  document.getElementById('mofocus').textContent=foc.f;
+  const 产出=monthLog.reduce((s,x)=>s+x.产出,0),投入=monthLog.reduce((s,x)=>s+x.投入,0);
+  const 均履约=Math.round(monthLog.reduce((s,x)=>s+x.履约,0)/monthLog.length);
+  const roi=投入>0?(产出*10/投入).toFixed(1):'∞';
+  document.getElementById('mogrid').innerHTML=`
+    <div class="ci"><div class="cl">本月产出</div><div class="cv">${产出}</div><div class="cs" style="color:var(--green)">运营汇总</div></div>
+    <div class="ci"><div class="cl">资源投入</div><div class="cv">¥${投入}</div><div class="cs" style="color:var(--dim)">预算vs实际</div></div>
+    <div class="ci"><div class="cl">财务ROI</div><div class="cv">${roi}×</div><div class="cs" style="color:${roi>=3?'var(--green)':'var(--red)'}">${roi>=3?'健康':'偏低'}</div></div>
+    <div class="ci"><div class="cl">履约(盒马)</div><div class="cv">${均履约}%</div><div class="cs" style="color:${均履约>=90?'var(--green)':'var(--red)'}">${均履约>=90?'满意':'需补'}</div></div>`;
+  let dec;
+  if(mn===1)dec=roi>=3?'执行达标·维持战术':'投产比偏低→<b>新战术:导入SKU收窄,聚焦点亮快的</b>';
+  else if(mn===2)dec=均履约>=90?'财务经营健康·维持':'<b>新战术:履约资源前置到高GMV店</b>';
+  else dec='<b>调补货触发阈值,减少断货</b>·执行到位';
+  document.getElementById('modecision').innerHTML='<b>本月战术决策:</b>'+dec;
+  document.getElementById('mopanel').classList.add('show');
+  document.getElementById('mopanel').scrollIntoView({behavior:'smooth',block:'center'});
+  toast('▦ 月末·升经营层做月度检测','mo');
+}
+function adoptMonth(){
+  monthLog=[];
+  document.getElementById('mopanel').classList.remove('show');
+  if(ROUND===12){showScorecard();}
+  else{ROUND++;renderTimeline();document.getElementById('runbtn').disabled=false;document.getElementById('runbtn').textContent='▶ Agent 跑 round '+ROUND+'(周·运营)';setFlow(-1);toast('战术已采纳·下一月');}
+}
+
+// ◈ 季度末:预测记分卡(v4核心)——三个差
+function showScorecard(){
+  // 实际:本季度各店累积产出(mock:12round累积/映射到万)
+  const actualByStore={};
+  STORES.forEach(st=>{
+    // mock实际:成熟店接近预测,新店波动大(判断难)
+    const f=forecast[st.id].final;
+    const s=STORES.find(x=>x.id===st.id);
+    actualByStore[st.id]= s.mature? Math.round(f*(0.92+Math.random()*0.16)) : Math.round(f*(0.6+Math.random()*0.5));
+  });
+  const totalForecast=STORES.reduce((s,st)=>s+forecast[st.id].final,0);
+  const totalActual=STORES.reduce((s,st)=>s+actualByStore[st.id],0);
+  const totalTarget=Math.round(totalForecast*1.0); // 目标≈预测(简化)
+  const totalBudget=quarterLog.reduce((s,x)=>s+x.投入,0);
+
+  // 三个差
+  const 目标差=Math.round((totalActual/totalTarget-1)*100);   // 执行力
+  const 预测差=Math.round((totalActual/totalForecast-1)*100); // 判断力
+  const roi=(totalActual*10/Math.max(totalBudget,1)).toFixed(1); // 效率
+
+  document.getElementById('threediff').innerHTML=`
+    <div class="td"><div class="tl">目标 vs 实际</div><div class="tv ${目标差>=0?'gp':'gn'}">${目标差>=0?'+':''}${目标差}%</div><div class="tc">执行力(拼没拼)</div></div>
+    <div class="td fore"><div class="tl">预测 vs 实际 ★</div><div class="tv" style="color:var(--fore)">${预测差>=0?'+':''}${预测差}%</div><div class="tc">判断力(懂不懂市场)</div></div>
+    <div class="td"><div class="tl">预算 vs 实际</div><div class="tv" style="color:var(--amber)">${roi}×</div><div class="tc">资源效率(值不值)</div></div>`;
+
+  // 预测准度判定
+  const absErr=Math.abs(预测差);
+  let verdict,share,emp;
+  if(absErr<=10){
+    verdict='<b>预测准(±'+absErr+'%)= 真懂这块市场</b> → 下季度更大盘子+预算授权(信任转资源·正循环)';
+    share='预测准 → "说到做到" → 公司信用高 → 股东敢投';
+    emp='预测准 → 能力证明 → 值得提拔 → 从执行者变<b>经营者</b>';
+  }else if(预测差<0){
+    verdict='<b>高估了('+预测差+'%)= 判断偏乐观,市场没看懂</b> → 收紧预算+复盘"为什么看错"';
+    share='预测偏 → 数不可信 → 股东不敢投(不是业绩差,是不可预期)';
+    emp='高估 → 判断待提升 → 复盘市场认知';
+  }else{
+    verdict='<b>低估了(+'+预测差+'%)= 判断偏保守</b> → 保守也是一种不准,复盘为何没敢报';
+    share='低估 → 也是不准 → 影响资源分配准确性';
+    emp='低估 → 鼓励敢报数 → 对地盘负判断责任';
+  }
+  document.getElementById('foreverdict').innerHTML='◈ 预测记分卡:'+verdict;
+  document.getElementById('meaning-share').innerHTML=share;
+  document.getElementById('meaning-emp').innerHTML=emp;
+  document.getElementById('scorecard').classList.add('show');
+  document.getElementById('scorecard').scrollIntoView({behavior:'smooth',block:'center'});
+  toast('◈ 季度末·算三个差·预测准度进记分卡','fore');
+
+  // 记分卡后 → 季度战略
+  setTimeout(()=>showQuarterCheck(),400);
+}
+
+function showQuarterCheck(){
+  const 季投入=quarterLog.reduce((s,x)=>s+x.投入,0);
+  document.getElementById('qtgrid').innerHTML=`
+    <div class="ci"><div class="cl">季度GMV</div><div class="cv">+${promise.gmv.toFixed(1)}%</div><div class="cs" style="color:${promise.gmv>=25?'var(--green)':'var(--amber)'}">目标+30%</div></div>
+    <div class="ci"><div class="cl">季度履约</div><div class="cv">${promise.ful.toFixed(0)}%</div><div class="cs" style="color:${promise.ful>=93?'var(--green)':'var(--amber)'}">目标95%</div></div>
+    <div class="ci"><div class="cl">品类·区域</div><div class="cv">临港店</div><div class="cs" style="color:var(--violet)">新店未满·区域机会</div></div>
+    <div class="ci"><div class="cl">季度投入</div><div class="cv">¥${季投入}</div><div class="cs" style="color:var(--dim)">全季资源</div></div>`;
+  document.getElementById('qtdecision').innerHTML='<b>小战略调整(下沉Q2):</b><br>① 品类:葱伴侣/禾然在临港铺货扩品<br>② 区域:临港点亮达标→Q2加密<br>③ 渠道:履约达标→Q2提高GMV承诺+上调预测基线';
+  document.getElementById('qtpanel').classList.add('show');
+  toast('◆ 季度战略·检视小战略','qt');
+}
+function adoptQuarter(){
+  document.getElementById('qtpanel').classList.remove('show');
+  document.getElementById('scorecard').classList.remove('show');
+  QUARTER++;ROUND=1;monthLog=[];quarterLog=[];
+  PUHUO['临港']['cbl']=1;PUHUO['临港']['hr']=1;
+  // 战略下沉:上调预测基线(连接律:战略→新预测锚)
+  BASELINE['临港']=140; BASELINE['徐汇']=360; BASELINE['浦东']=320;
+  forecast={};
+  promise={gmv:0,ful:promise.ful,loss:promise.loss}; // 履约损耗继承
+  // 回到预测环节(下季度带新基线重新报预测)
+  document.getElementById('promisecard').style.display='none';
+  document.getElementById('timelinecard').style.display='none';
+  document.getElementById('forecastcard').style.display='block';
+  document.querySelector('#forecastcard h3').textContent='◈ Q'+QUARTER+' 季度初 · 主管报预测(带Q1战略调整后的新基线)';
+  renderForecast();
+  window.scrollTo({top:0,behavior:'smooth'});
+  toast('◆ Q1战略已拍板·下沉Q2定标+上调预测基线·第13round=Q2R1报新预测','qt');
+}
+
+document.getElementById('forebtn').addEventListener('click',submitForecast);
+document.getElementById('runbtn').addEventListener('click',runRound);
+document.getElementById('gatebtn').addEventListener('click',approveBudget);
+document.getElementById('mobtn').addEventListener('click',adoptMonth);
+document.getElementById('qtbtn').addEventListener('click',adoptQuarter);
+renderForecast();
+</script>
+</body>
+</html>

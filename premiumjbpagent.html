@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>精品超市 JBP Agent · 欣和</title>
+<style>
+  :root{
+    --bg:#12100C;--panel:#1B1813;--panel2:#221E18;--panel3:#2A2620;--line:#332E26;
+    --ink:#E4DCCC;--dim:#9A8E78;--gold2:#C9A961;--gold2-d:#6B5424;--wine:#A85E6B;
+    --amber:#D9A34E;--amber-d:#6B5024;--green:#5EBF7B;--green-d:#245C38;
+    --red:#D96B5E;--red-d:#6B2E28;--violet:#A88CE0;--violet-d:#4E3F73;
+    --gold:#D9C05E;--gold-d:#6B5C24;--fore:#5EB0D9;--fore-d:#24566B;
+    --mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+    --cjk:'PingFang SC','Microsoft YaHei',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--cjk);font-size:14px;line-height:1.6;padding-bottom:80px;}
+  .top{background:var(--panel);border-bottom:1px solid var(--line);padding:14px 18px;position:sticky;top:0;z-index:30;}
+  .top h1{font-size:16px;font-weight:800;}.top h1 .c{color:var(--gold2);}
+  .top .sub{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:3px;}
+  .wrap{max-width:940px;margin:0 auto;padding:16px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:14px;}
+  .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:10px;}
+  .lbl .hint{color:var(--dim);text-transform:none;letter-spacing:0;font-size:10px;margin-left:6px;}
+
+  .forecast{background:linear-gradient(180deg,rgba(94,176,217,.08),var(--panel));border:1px solid var(--fore-d);border-radius:8px;padding:16px;margin-bottom:14px;}
+  .forecast h3{color:var(--fore);font-size:15px;margin-bottom:3px;}
+  .forecast .fdesc{font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:12px;}
+  .frow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .frow .who{flex:1;min-width:140px;font-size:13px;}
+  .frow .anchor{font-family:var(--mono);font-size:11px;color:var(--dim);}
+  .fbtn{width:28px;height:28px;border-radius:5px;border:1px solid var(--line);background:var(--panel2);color:var(--fore);font-family:var(--mono);font-size:14px;cursor:pointer;}
+  .fval{font-family:var(--mono);font-size:15px;font-weight:700;color:#fff;min-width:52px;text-align:center;}
+  .fnote{font-size:10px;color:var(--fore);font-family:var(--mono);}
+
+  .promise{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  @media(max-width:600px){.promise{grid-template-columns:1fr;}}
+  .pm{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:12px;}
+  .pm .n{font-family:var(--mono);font-size:18px;font-weight:700;color:#fff;}
+  .pm .t{font-size:11px;color:var(--dim);margin-top:2px;}
+  .pm .now{font-family:var(--mono);font-size:11px;color:var(--gold2);margin-top:4px;}
+  .pm .bar{height:5px;background:var(--line);border-radius:3px;margin-top:6px;overflow:hidden;}
+  .pm .fill{height:100%;width:0;transition:width .7s;}
+  .pm.gmv .fill{background:var(--gold2);}.pm.ml .fill{background:var(--green);}.pm.tx .fill{background:var(--wine);}
+
+  .timeline{padding:4px 0;}
+  .qrow{display:flex;align-items:center;gap:2px;overflow-x:auto;}
+  .qtag{font-family:var(--mono);font-size:10px;color:var(--gold);margin-right:6px;white-space:nowrap;}
+  .mgroup{display:flex;gap:3px;padding:3px;border:1px dashed var(--line);border-radius:6px;position:relative;}
+  .mgroup .mlab{position:absolute;top:-8px;left:6px;font-family:var(--mono);font-size:8px;color:var(--violet);background:var(--bg);padding:0 3px;}
+  .rnd{flex:0 0 auto;width:26px;height:26px;border-radius:5px;border:1px solid var(--line);background:var(--panel2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--dim);}
+  .rnd.done{background:var(--gold2-d);color:#E8D4A0;border-color:var(--gold2);}
+  .rnd.cur{background:var(--gold2-d);color:#fff;border-color:var(--gold2);box-shadow:0 0 0 2px rgba(201,169,97,.3);}
+  .rnd.lock{opacity:.35;}
+
+  button{font-family:var(--cjk);cursor:pointer;border:none;border-radius:6px;font-size:13px;font-weight:600;padding:9px 16px;}
+  .btn-fore{background:var(--fore);color:#04121A;width:100%;padding:12px;margin-top:12px;}
+  .btn-run{background:var(--gold2);color:#1A1404;width:100%;margin-top:12px;}
+  .btn-gate{background:var(--amber);color:#1A1206;width:100%;padding:11px;margin-top:8px;}
+  .btn-mo{background:var(--violet);color:#0E0A1A;width:100%;padding:11px;margin-top:8px;}
+  .btn-qt{background:var(--gold);color:#1A1404;width:100%;padding:12px;margin-top:8px;}
+  button:active{transform:scale(.98);}button:disabled{opacity:.4;cursor:not-allowed;}
+
+  table.diff{width:100%;border-collapse:collapse;font-size:12px;}
+  table.diff th{text-align:left;font-family:var(--mono);font-size:9px;color:var(--dim);text-transform:uppercase;padding:6px 6px;border-bottom:1px solid var(--line);}
+  table.diff td{padding:7px 6px;border-bottom:1px solid var(--line);}
+  .gp{color:var(--green);font-family:var(--mono);}.gn{color:var(--red);font-family:var(--mono);}
+  .sug{font-size:10px;padding:2px 6px;border-radius:9px;font-family:var(--mono);white-space:nowrap;}
+  .sug.up{background:var(--green-d);color:#9FE8BC;}.sug.down{background:var(--red-d);color:#E8A79F;}
+  .sug.esc{background:var(--amber-d);color:#F0C88A;}.sug.hold{background:var(--panel3);color:var(--dim);}
+  .sug.boom{background:var(--gold2-d);color:#E8D4A0;font-weight:700;}.sug.tone{background:var(--red-d);color:#E8A79F;font-weight:700;}
+  .stage{font-size:9px;padding:1px 5px;border-radius:8px;font-family:var(--mono);}
+  .stage.导入{background:var(--violet-d);color:#C4B8F0;}.stage.成长{background:var(--fore-d);color:#9FD4E8;}.stage.成熟{background:var(--green-d);color:#9FE8BC;}
+
+  .gate-note{background:rgba(217,163,78,.1);border:1px solid var(--amber-d);border-radius:6px;padding:9px 12px;font-size:11px;color:#F0C88A;margin-top:8px;}
+  .gate-note b{color:var(--amber);}
+  .flow{font-family:var(--mono);font-size:10px;color:var(--dim);display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+  .flow .s{padding:3px 7px;background:var(--panel2);border-radius:4px;border:1px solid var(--line);}
+  .flow .s.on{color:var(--gold2);border-color:var(--gold2-d);}
+
+  .checkpanel{border-radius:8px;padding:16px;margin-bottom:14px;display:none;}
+  .checkpanel.mo{background:linear-gradient(180deg,rgba(168,140,224,.08),var(--panel));border:1px solid var(--violet-d);}
+  .checkpanel.qt{background:linear-gradient(180deg,rgba(217,192,94,.1),var(--panel));border:1px solid var(--gold-d);}
+  .checkpanel.show{display:block;}
+  .checkpanel h3{font-size:15px;margin-bottom:4px;}
+  .checkpanel.mo h3{color:var(--violet);}.checkpanel.qt h3{color:var(--gold);}
+  .checkpanel .focus{font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:12px;}
+  .checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+  @media(max-width:600px){.checkgrid{grid-template-columns:1fr;}}
+  .ci{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 12px;}
+  .ci .cl{font-family:var(--mono);font-size:9px;color:var(--dim);text-transform:uppercase;}
+  .ci .cv{font-size:15px;font-weight:700;color:#fff;margin-top:3px;font-family:var(--mono);}
+  .ci .cs{font-size:11px;margin-top:2px;}
+  .decision{background:var(--panel2);border-left:3px solid var(--violet);border-radius:0 6px 6px 0;padding:10px 12px;font-size:12px;margin-bottom:10px;}
+  .checkpanel.qt .decision{border-left-color:var(--gold);}
+  .decision b{color:var(--violet);}.checkpanel.qt .decision b{color:var(--gold);}
+
+  .scorecard{background:linear-gradient(180deg,rgba(94,176,217,.1),var(--panel));border:1px solid var(--fore-d);border-radius:8px;padding:16px;margin-bottom:14px;display:none;}
+  .scorecard.show{display:block;}
+  .scorecard h3{color:var(--fore);font-size:15px;margin-bottom:10px;}
+  .threediff{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+  @media(max-width:600px){.threediff{grid-template-columns:1fr;}}
+  .td{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:11px;text-align:center;}
+  .td .tl{font-family:var(--mono);font-size:9px;color:var(--dim);}
+  .td .tv{font-family:var(--mono);font-size:16px;font-weight:700;margin:3px 0;}
+  .td .tc{font-size:10px;color:var(--dim);}
+  .td.fore{border-color:var(--fore-d);}
+  .verdict{background:var(--panel2);border-left:3px solid var(--fore);border-radius:0 6px 6px 0;padding:11px 14px;font-size:12.5px;margin-bottom:10px;}
+  .verdict b{color:var(--fore);}
+  .meaning{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;}
+  @media(max-width:600px){.meaning{grid-template-columns:1fr;}}
+  .me{background:rgba(94,176,217,.06);border:1px solid var(--fore-d);border-radius:6px;padding:9px 11px;}
+  .me b{color:var(--fore);}
+
+  .verify{background:var(--panel2);border-left:3px solid var(--gold2);border-radius:0 6px 6px 0;padding:11px 14px;margin-top:10px;font-size:12px;display:none;}
+  .verify.show{display:block;}.verify b{color:var(--gold2);}
+  .verify .calc{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:5px;}
+
+  #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--panel2);border:1px solid var(--gold2-d);color:var(--ink);padding:11px 18px;border-radius:8px;font-size:12.5px;opacity:0;transition:.3s;z-index:100;max-width:90%;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  #toast.fore{border-color:var(--fore);}#toast.mo{border-color:var(--violet);}#toast.qt{border-color:var(--gold);}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>精品超市 <span class="c">JBP Agent</span> · 欣和</h1>
+  <div class="sub">中高端·体验溢价 · 验果=客群渗透 · 命门=调性匹配+高毛利 · 选品准入gate</div>
+</div>
+
+<div class="wrap">
+
+  <div class="forecast" id="forecastcard">
+    <h3>◈ 季度初 · 选品运营预测(建议型)</h3>
+    <div class="fdesc">系统锚=历史高端渗透 · 选品人押判断:这支欣和高端品能打动多少精超客群 → 敢预测且准=真懂中产品质客群</div>
+    <div id="forecastrows"></div>
+    <div style="font-size:11px;color:var(--dim);margin-top:8px;font-family:var(--mono)">精超特有:预测"高端客群渗透"(卖溢价不是走量) · 进口对标=拐点难测</div>
+    <button class="btn-fore" id="forebtn">✍️ 提交预测 → 系统据信任定选品位/体验资源 → 开跑</button>
+  </div>
+
+  <div class="card" id="promisecard" style="display:none">
+    <div class="lbl">JBP 年度承诺(和Ole/City Super选品人)</div>
+    <div class="promise">
+      <div class="pm gmv"><div class="n">+35%</div><div class="t">溢价GMV ⚑验果</div><div class="now" id="now0">当前 +0%</div><div class="bar"><div class="fill" id="f0"></div></div></div>
+      <div class="pm ml"><div class="n">≥45%</div><div class="t">高端线毛利率 ⚑命门</div><div class="now" id="now1">当前 32%</div><div class="bar"><div class="fill" id="f1"></div></div></div>
+      <div class="pm tx"><div class="n">≥90</div><div class="t">调性匹配分 ⚑命门</div><div class="now" id="now2">当前 70</div><div class="bar"><div class="fill" id="f2"></div></div></div>
+    </div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:8px">精超命门:调性匹配(低端品砸招牌·选品人把关)+ 高毛利(卖的是溢价体验,不是价格战)。进口对标。</div>
+  </div>
+
+  <div class="card" id="timelinecard" style="display:none">
+    <div class="lbl">季度推进 · 12 round(周溢价渗透/月高毛利财务/季度客群运营) <span class="hint" id="qlabel">Q1</span></div>
+    <div class="timeline"><div class="qrow" id="qrow"></div></div>
+    <div class="flow" id="flow">
+      <span class="s" id="fs0">Observe渗透/毛利/调性</span><span class="s" id="fs1">算差</span>
+      <span class="s" id="fs2">Diagnose</span><span class="s" id="fs3">选品/体验/品质叙事</span>
+      <span class="s" id="fs4">选品准入gate</span><span class="s" id="fs5">验果·客群渗透</span>
+    </div>
+    <button class="btn-run" id="runbtn">▶ Agent 跑 round 1(周·溢价渗透)</button>
+  </div>
+
+  <div class="card" id="diffcard" style="display:none">
+    <div class="lbl">◷ 高端SKU 算差 <span class="hint">渗透+毛利率+调性匹配(命门)</span></div>
+    <div style="overflow-x:auto"><table class="diff"><thead><tr><th>高端SKU</th><th>阶段</th><th>客群渗透</th><th>毛利率</th><th>调性</th><th>差</th><th>建议</th></tr></thead><tbody id="diffbody"></tbody></table></div>
+  </div>
+
+  <div class="card" id="budgetcard" style="display:none">
+    <div class="lbl">◷ 决策建议 · human_gate</div>
+    <div id="budgetlist"></div>
+    <div class="gate-note">⚠️ 精超两类gate:<b>选品准入</b>(调性匹配·选品人把关curation·不是批钱·低端品拒之门外)· <b>高端陈列/体验位</b>(品质叙事场景)。</div>
+    <button class="btn-gate" id="gatebtn">✍️ 选品人审调性+拍板体验位 → 验果 → 下round</button>
+  </div>
+
+  <div class="verify" id="verify"><b>验果</b>:回看 <b>高端客群渗透动没动</b> + <b>毛利率/调性</b>(命门)—— <div class="calc" id="verifycalc"></div></div>
+
+  <div class="checkpanel mo" id="mopanel">
+    <h3 id="motitle">▦ 月度检测</h3>
+    <div class="focus" id="mofocus"></div>
+    <div class="checkgrid" id="mogrid"></div>
+    <div class="decision" id="modecision"></div>
+    <div class="gate-note">升到<b>高毛利财务</b>看经营·出新战术(选品/体验/品质叙事调整)。</div>
+    <button class="btn-mo" id="mobtn">✍️ 采纳本月选品战术 → 下一月</button>
+  </div>
+
+  <div class="scorecard" id="scorecard">
+    <h3>◈ 季度末 · 三个差 · 选品运营预测记分卡</h3>
+    <div class="threediff" id="threediff"></div>
+    <div class="verdict" id="foreverdict"></div>
+    <div class="meaning">
+      <div class="me"><b>▸ 对股东</b><span id="meaning-share"></span></div>
+      <div class="me"><b>▸ 对选品人(员工)</b><span id="meaning-emp"></span></div>
+    </div>
+  </div>
+
+  <div class="checkpanel qt" id="qtpanel">
+    <h3>◆ 季度战略检测(收官)</h3>
+    <div class="focus">战略/结构 —— 客群运营 · 进口对标 · 高端线结构 · 体验场景</div>
+    <div class="checkgrid" id="qtgrid"></div>
+    <div class="decision" id="qtdecision"></div>
+    <div class="gate-note">⚠️ 战略变动<b>human_gate</b>。客群运营+高端线布局<b>下沉Q2定标+新预测基线</b>(连接律)。</div>
+    <button class="btn-qt" id="qtbtn">✍️ 拍板客群运营+高端线战略 → 下沉Q2 → 下一季度</button>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ===== 欣和高端产品(精超调性)=====
+const SKUS=[
+  {id:'hr有机酱油',name:'禾然有机·有机酱油',stage:'成熟'},
+  {id:'hr有机醋',name:'禾然有机·有机醋',stage:'成长'},
+  {id:'zx零添加',name:'遵循自然·0添加特级',stage:'成长'},
+  {id:'ljx零添加',name:'六月鲜·零添加生抽',stage:'成熟'},
+  {id:'hr有机油',name:'禾然有机·有机山茶油',stage:'导入'},
+  {id:'zx礼盒',name:'遵循自然·高端礼盒',stage:'导入'},
+];
+const INVEST={导入:0.7,成长:0.42,成熟:0.25};
+const BASELINE={hr有机酱油:85,hr有机醋:68,zx零添加:70,ljx零添加:80,hr有机油:45,zx礼盒:42}; // 高端渗透潜力基线
+
+let ROUND=1,QUARTER=1;
+let promise={gmv:0,maoli:32,tiaoxing:70}; // 溢价+0% 毛利32% 调性70
+let monthLog=[],quarterLog=[];
+let forecast={};
+
+function toast(m,k){const t=document.getElementById('toast');t.textContent=m;t.className='show'+(k?' '+k:'');clearTimeout(t._h);t._h=setTimeout(()=>t.className='',2600);}
+
+function renderForecast(){
+  const c=document.getElementById('forecastrows');c.innerHTML='';
+  SKUS.forEach(sk=>{
+    if(!forecast[sk.id])forecast[sk.id]={anchor:BASELINE[sk.id],adjust:0};
+    const f=forecast[sk.id],final=f.anchor+f.adjust;
+    const row=document.createElement('div');row.className='frow';
+    row.innerHTML=`<div class="who">${sk.name} <span class="stage ${sk.stage}">${sk.stage}</span>${sk.stage==='导入'?' <span class="fnote">新品·渗透难测</span>':''}</div>
+      <div class="anchor">锚 ${f.anchor}</div>
+      <div style="display:flex;gap:4px;align-items:center">
+        <button class="fbtn" data-sk="${sk.id}" data-d="-10">−</button>
+        <span class="fval" id="fv_${sk.id}">${final}</span>
+        <button class="fbtn" data-sk="${sk.id}" data-d="10">+</button>
+      </div>
+      <div class="fnote" id="fn_${sk.id}">${f.adjust===0?'=锚':f.adjust>0?'看好':'谨慎'}</div>`;
+    c.appendChild(row);
+  });
+  document.querySelectorAll('.fbtn').forEach(b=>b.addEventListener('click',()=>{
+    const sk=b.dataset.sk,d=+b.dataset.d;
+    forecast[sk].adjust+=d;
+    const f=forecast[sk],final=f.anchor+f.adjust;
+    document.getElementById('fv_'+sk).textContent=final;
+    document.getElementById('fn_'+sk).textContent=f.adjust===0?'=锚':f.adjust>0?'看好+'+f.adjust:'谨慎'+f.adjust;
+  }));
+}
+
+function submitForecast(){
+  Object.keys(forecast).forEach(k=>forecast[k].final=forecast[k].anchor+forecast[k].adjust);
+  document.getElementById('forecastcard').style.display='none';
+  document.getElementById('promisecard').style.display='block';
+  document.getElementById('timelinecard').style.display='block';
+  renderTimeline();
+  const rb=document.getElementById('runbtn');
+  rb.disabled=false; rb.textContent='▶ Agent 跑 round '+ROUND+'(周·溢价渗透)';
+  setFlow(-1);
+  toast('◈ 预测已提交 · 系统据信任定选品位/体验资源 · 开跑','fore');
+}
+
+function renderTimeline(){
+  const qr=document.getElementById('qrow');qr.innerHTML='';
+  const qt=document.createElement('span');qt.className='qtag';qt.textContent='Q'+QUARTER;qr.appendChild(qt);
+  for(let m=0;m<3;m++){
+    const g=document.createElement('div');g.className='mgroup';
+    const lab=document.createElement('span');lab.className='mlab';lab.textContent='M'+(m+1);g.appendChild(lab);
+    for(let i=m*4+1;i<=m*4+4;i++){const d=document.createElement('div');d.className='rnd '+(i<ROUND?'done':i===ROUND?'cur':'lock');d.textContent=i;g.appendChild(d);}
+    qr.appendChild(g);
+  }
+  document.getElementById('qlabel').textContent='Q'+QUARTER;
+}
+function setFlow(n){for(let i=0;i<=5;i++)document.getElementById('fs'+i).className='s'+(i<=n?' on':'');}
+
+let curRows=[],pending=[];
+function runRound(){
+  setFlow(0);curRows=[];pending=[];
+  SKUS.forEach(sk=>{
+    const stage=sk.stage,base=BASELINE[sk.id]||60,target=base;
+    const vol=stage==='导入'?0.5:stage==='成长'?0.3:0.15;
+    const shentou=Math.round(target*(1-vol/2+Math.random()*vol));  // 客群渗透
+    const maoli=Math.round(35+Math.random()*20);  // 毛利率%(命门)
+    const tiaoxing=Math.round(70+Math.random()*30);  // 调性匹配分(命门)
+    curRows.push({sku:sk.name,id:sk.id,stage,shentou,maoli,tiaoxing,target,gap:shentou-target});
+  });
+  setTimeout(()=>setFlow(1),150);setTimeout(()=>setFlow(2),350);
+  const tb=document.getElementById('diffbody');tb.innerHTML='';
+  let xuanpinB=0, tiyanB=0;
+  curRows.forEach(r=>{
+    const ratio=r.shentou/r.target;let sug,cls;const inv=INVEST[r.stage];
+    // 调性不匹配→砸招牌(命门·选品人拒)
+    if(r.tiaoxing<80){sug='调性不符→选品人拒/调整';cls='tone';}
+    else if(r.maoli<40){sug='毛利低→提溢价叙事';cls='down';tiyanB+=Math.round(1200);}
+    else if(r.stage==='导入'){if(ratio>=0.75){sug='高端渗透✓上体验位';cls='boom';tiyanB+=Math.round(1800*inv);}else{sug='新品试·养客群';cls='up';xuanpinB+=Math.round(1200*inv);}}
+    else if(ratio>=1.1){sug='渗透爆✓扩高端线';cls='boom';xuanpinB+=Math.round(1200);}
+    else if(ratio>=0.85){sug='维持选品位';cls='hold';}
+    else if(ratio>=0.6){sug='渗透弱·强化叙事';cls='down';tiyanB+=Math.round(1000);}
+    else{sug='客群不认·撤线';cls='esc';}
+    const gc=r.gap>=0?'gp':'gn';
+    const mc=r.maoli>=45?'gp':r.maoli>=40?'':'gn';
+    const tc=r.tiaoxing>=90?'gp':r.tiaoxing>=80?'':'gn';
+    tb.innerHTML+=`<tr><td>${r.sku}</td><td><span class="stage ${r.stage}">${r.stage}</span></td>
+      <td style="font-family:var(--mono);color:${r.shentou>=r.target?'var(--gold2)':'var(--amber)'}">${r.shentou}</td>
+      <td class="${mc}">${r.maoli}%</td><td class="${tc}">${r.tiaoxing}</td>
+      <td class="${gc}">${r.gap>=0?'+':''}${r.gap}</td><td><span class="sug ${cls}">${sug}</span></td></tr>`;
+  });
+  document.getElementById('diffcard').style.display='block';
+  setTimeout(()=>setFlow(3),550);
+  pending=[];
+  if(xuanpinB>0)pending.push({k:'选品准入(调性把关·curation)',amt:xuanpinB,curation:true});
+  if(tiyanB>0)pending.push({k:'高端陈列/体验位(品质叙事)',amt:tiyanB});
+  const bl=document.getElementById('budgetlist');bl.innerHTML='';
+  pending.forEach(b=>bl.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:12px"><span>${b.curation?'🎯':''}${b.k}</span><span style="font-family:var(--mono);color:var(--amber)">¥${b.amt}</span></div>`);
+  if(!pending.length)bl.innerHTML='<div style="color:var(--dim);font-size:12px;padding:6px 0">本round高端线健康·调性匹配</div>';
+  document.getElementById('budgetcard').style.display='block';
+  document.getElementById('runbtn').disabled=true;
+  const 均渗透=Math.round(curRows.reduce((s,r)=>s+r.shentou,0)/curRows.length);
+  const 均毛利=Math.round(curRows.reduce((s,r)=>s+r.maoli,0)/curRows.length);
+  const 均调性=Math.round(curRows.reduce((s,r)=>s+r.tiaoxing,0)/curRows.length);
+  monthLog.push({round:ROUND,渗透:均渗透,毛利:均毛利,调性:均调性,投入:xuanpinB+tiyanB});
+  quarterLog.push({round:ROUND,渗透:均渗透,投入:xuanpinB+tiyanB});
+  toast('Agent跑完round '+ROUND+'(溢价渗透·调性把关)· 待选品人拍板');
+}
+
+function approveBudget(){
+  setFlow(4);
+  const 均渗透=Math.round(curRows.reduce((s,r)=>s+r.shentou,0)/curRows.length);
+  const 均毛利=Math.round(curRows.reduce((s,r)=>s+r.maoli,0)/curRows.length);
+  const 均调性=Math.round(curRows.reduce((s,r)=>s+r.tiaoxing,0)/curRows.length);
+  const o0=promise.gmv,o1=promise.maoli,o2=promise.tiaoxing;
+  promise.gmv=Math.min(35,promise.gmv+35/12*(0.7+Math.random()*0.5));
+  promise.maoli=Math.min(45,promise.maoli+(均毛利>promise.maoli?(均毛利-promise.maoli)*0.3:0.4));
+  promise.tiaoxing=Math.min(90,promise.tiaoxing+(均调性>promise.tiaoxing?(均调性-promise.tiaoxing)*0.3:0.5));
+  document.getElementById('f0').style.width=(promise.gmv/35*100)+'%';
+  document.getElementById('f1').style.width=((promise.maoli-32)/13*100)+'%';
+  document.getElementById('f2').style.width=((promise.tiaoxing-70)/20*100)+'%';
+  document.getElementById('now0').textContent='当前 +'+promise.gmv.toFixed(1)+'%';
+  document.getElementById('now1').textContent='当前 '+promise.maoli.toFixed(0)+'%';
+  document.getElementById('now2').textContent='当前 '+promise.tiaoxing.toFixed(0);
+  const v=document.getElementById('verify');v.classList.add('show');
+  document.getElementById('verifycalc').innerHTML=`本round均渗透${均渗透} 毛利${均毛利}% 调性${均调性} → <b>溢价GMV +${o0.toFixed(1)}%→+${promise.gmv.toFixed(1)}%</b>(目标+35)· <b>毛利 ${o1.toFixed(0)}%→${promise.maoli.toFixed(0)}%</b>· 调性 ${o2.toFixed(0)}→${promise.tiaoxing.toFixed(0)}(命门)<span style="color:var(--gold2)"> 标动了✓</span>`;
+  toast('✍️选品人拍板·溢价标推进·验果通过');
+  setTimeout(()=>{
+    setFlow(5);
+    document.getElementById('verify').classList.remove('show');
+    document.getElementById('diffcard').style.display='none';
+    document.getElementById('budgetcard').style.display='none';
+    if(ROUND%4===0){showMonthCheck(ROUND);}
+    else{ROUND++;renderTimeline();document.getElementById('runbtn').disabled=false;document.getElementById('runbtn').textContent='▶ Agent 跑 round '+ROUND+'(周·溢价渗透)';setFlow(-1);}
+  },1000);
+}
+
+const MONTH_FOCUS={1:{t:'第1月(R1-4)',f:'执行/运营质量 — 渗透·毛利·调性匹配 → 出新战术'},2:{t:'第2月(R5-8)',f:'财务+经营逻辑 — 高毛利·溢价效率'},3:{t:'第3月(R9-12)',f:'经营+流程规则 — 选品规则·调性标准·体验场景'}};
+function showMonthCheck(endRound){
+  const mn=endRound/4,foc=MONTH_FOCUS[mn];
+  document.getElementById('motitle').textContent='▦ 月度检测·'+foc.t;
+  document.getElementById('mofocus').textContent=foc.f;
+  const 均渗透=Math.round(monthLog.reduce((s,x)=>s+x.渗透,0)/monthLog.length);
+  const 均毛利=Math.round(monthLog.reduce((s,x)=>s+x.毛利,0)/monthLog.length);
+  const 均调性=Math.round(monthLog.reduce((s,x)=>s+x.调性,0)/monthLog.length);
+  const 投入=monthLog.reduce((s,x)=>s+x.投入,0);
+  document.getElementById('mogrid').innerHTML=`
+    <div class="ci"><div class="cl">本月均渗透</div><div class="cv">${均渗透}</div><div class="cs" style="color:var(--gold2)">客群覆盖</div></div>
+    <div class="ci"><div class="cl">高端毛利(命门)</div><div class="cv">${均毛利}%</div><div class="cs" style="color:${均毛利>=42?'var(--green)':'var(--red)'}">${均毛利>=42?'溢价健康':'毛利偏低'}</div></div>
+    <div class="ci"><div class="cl">调性匹配(命门)</div><div class="cv">${均调性}</div><div class="cs" style="color:${均调性>=85?'var(--green)':'var(--red)'}">${均调性>=85?'调性稳':'砸招牌险'}</div></div>
+    <div class="ci"><div class="cl">选品/体验投入</div><div class="cv">¥${投入}</div><div class="cs" style="color:var(--dim)">品质叙事</div></div>`;
+  let dec;
+  if(mn===1)dec=均调性>=85?'调性稳·维持战术':'<b>新战术:调性不符的SKU撤线,保精超招牌</b>';
+  else if(mn===2)dec=均毛利>=42?'高毛利健康·维持':'<b>新战术:强化溢价叙事,提高端定价</b>';
+  else dec='<b>流程:确立选品调性标准+体验场景SOP</b>';
+  document.getElementById('modecision').innerHTML='<b>本月选品战术:</b>'+dec;
+  document.getElementById('mopanel').classList.add('show');
+  document.getElementById('mopanel').scrollIntoView({behavior:'smooth',block:'center'});
+  toast('▦ 月末·升经营层看高毛利+调性','mo');
+}
+function adoptMonth(){
+  monthLog=[];
+  document.getElementById('mopanel').classList.remove('show');
+  if(ROUND===12){showScorecard();}
+  else{ROUND++;renderTimeline();document.getElementById('runbtn').disabled=false;document.getElementById('runbtn').textContent='▶ Agent 跑 round '+ROUND+'(周·溢价渗透)';setFlow(-1);toast('选品战术已采纳·下一月');}
+}
+
+function showScorecard(){
+  const actualBy={},keys=Object.keys(forecast);
+  keys.forEach(k=>{
+    const sk=SKUS.find(x=>x.id===k),f=forecast[k].final;
+    actualBy[k]= sk.stage!=='导入'? Math.round(f*(0.9+Math.random()*0.2)) : Math.round(f*(0.5+Math.random()*0.6));
+  });
+  const totalF=keys.reduce((s,k)=>s+forecast[k].final,0);
+  const totalA=keys.reduce((s,k)=>s+actualBy[k],0);
+  const totalT=Math.round(totalF*1.0);
+  const 投入=quarterLog.reduce((s,x)=>s+x.投入,0);
+  const 目标差=Math.round((totalA/totalT-1)*100);
+  const 预测差=Math.round((totalA/totalF-1)*100);
+  const roi=(totalA*25/Math.max(投入,1)).toFixed(1);
+  document.getElementById('threediff').innerHTML=`
+    <div class="td"><div class="tl">目标 vs 实际</div><div class="tv ${目标差>=0?'gp':'gn'}">${目标差>=0?'+':''}${目标差}%</div><div class="tc">执行力(渗透达成)</div></div>
+    <div class="td fore"><div class="tl">预测 vs 实际 ★</div><div class="tv" style="color:var(--fore)">${预测差>=0?'+':''}${预测差}%</div><div class="tc">判断力(懂不懂品质客群)</div></div>
+    <div class="td"><div class="tl">预算 vs 实际</div><div class="tv" style="color:var(--amber)">${roi}×</div><div class="tc">选品效率</div></div>`;
+  const absErr=Math.abs(预测差);let verdict,share,emp;
+  if(absErr<=10){verdict='<b>预测准(±'+absErr+'%)= 真懂中产品质客群</b> → 下季度更大选品权限+高端线授权';share='预测准→"说到做到"→公司信用→股东敢投';emp='预测准→懂精超的证明→值得提拔→从选品人变<b>经营者</b>';}
+  else if(预测差<0){verdict='<b>高估了('+预测差+'%)= 判断偏乐观</b> → 收紧选品+复盘"为什么高估客群接受度"';share='预测偏→数不可信→股东难判断';emp='高估→客群判断待提升→复盘';}
+  else{verdict='<b>低估了(+'+预测差+'%)= 判断偏保守</b> → 复盘为何没敢押';share='低估→也不准→影响选品分配';emp='低估→鼓励敢押判断';}
+  document.getElementById('foreverdict').innerHTML='◈ 选品运营预测记分卡:'+verdict;
+  document.getElementById('meaning-share').innerHTML=share;
+  document.getElementById('meaning-emp').innerHTML=emp;
+  document.getElementById('scorecard').classList.add('show');
+  document.getElementById('scorecard').scrollIntoView({behavior:'smooth',block:'center'});
+  toast('◈ 季度末·算三个差·预测准度进记分卡','fore');
+  setTimeout(()=>showQuarterCheck(),400);
+}
+
+function showQuarterCheck(){
+  const 投入=quarterLog.reduce((s,x)=>s+x.投入,0);
+  document.getElementById('qtgrid').innerHTML=`
+    <div class="ci"><div class="cl">溢价GMV</div><div class="cv">+${promise.gmv.toFixed(0)}%</div><div class="cs" style="color:${promise.gmv>=30?'var(--green)':'var(--amber)'}">目标+35%</div></div>
+    <div class="ci"><div class="cl">高端毛利(命门)</div><div class="cv">${promise.maoli.toFixed(0)}%</div><div class="cs" style="color:${promise.maoli>=42?'var(--green)':'var(--amber)'}">目标45%</div></div>
+    <div class="ci"><div class="cl">调性匹配(命门)</div><div class="cv">${promise.tiaoxing.toFixed(0)}</div><div class="cs" style="color:${promise.tiaoxing>=85?'var(--green)':'var(--red)'}">目标90</div></div>
+    <div class="ci"><div class="cl">季度投入</div><div class="cv">¥${投入}</div><div class="cs" style="color:var(--dim)">选品+体验</div></div>`;
+  document.getElementById('qtdecision').innerHTML='<b>客群运营+高端线战略(下沉Q2):</b><br>① 客群运营:高端会员/私域深耕品质客群<br>② 进口对标:禾然有机对标进口有机·讲中国品质故事<br>③ 高端线扩:调性达标→Q2扩遵循自然线+上调渗透目标+预测基线';
+  document.getElementById('qtpanel').classList.add('show');
+  toast('◆ 季度战略·客群运营+高端线','qt');
+}
+
+function adoptQuarter(){
+  document.getElementById('qtpanel').classList.remove('show');
+  document.getElementById('scorecard').classList.remove('show');
+  QUARTER++;ROUND=1;monthLog=[];quarterLog=[];forecast={};
+  Object.keys(BASELINE).forEach(k=>BASELINE[k]+=8);
+  promise={gmv:0,maoli:promise.maoli,tiaoxing:promise.tiaoxing};
+  document.getElementById('promisecard').style.display='none';
+  document.getElementById('timelinecard').style.display='none';
+  document.getElementById('forecastcard').style.display='block';
+  document.querySelector('#forecastcard h3').textContent='◈ Q'+QUARTER+' 季度初 · 选品运营预测(带Q1客群高端线战略后新基线)';
+  renderForecast();
+  window.scrollTo({top:0,behavior:'smooth'});
+  toast('◆ Q1高端线战略已拍板·下沉Q2+新预测基线·第13round=Q2R1','qt');
+}
+
+document.getElementById('forebtn').addEventListener('click',submitForecast);
+document.getElementById('runbtn').addEventListener('click',runRound);
+document.getElementById('gatebtn').addEventListener('click',approveBudget);
+document.getElementById('mobtn').addEventListener('click',adoptMonth);
+document.getElementById('qtbtn').addEventListener('click',adoptQuarter);
+renderForecast();
+</script>
+</body>
+</html>
