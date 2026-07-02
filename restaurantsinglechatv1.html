@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>单店 BP · 对话式规则引擎 · 欣和</title>
+<style>
+  :root{
+    --bg:#14100A;--panel:#1E1810;--panel2:#291F14;--panel3:#33271A;--line:#42331F;
+    --ink:#EDE2CE;--dim:#9E8A6C;--tan:#D89B4E;--tan-d:#6B4A18;--gold:#D9BC6E;
+    --green:#6FBF7B;--green-d:#245C34;--red:#D97362;--red-d:#6B2E26;
+    --amber:#D9A34E;--amber-d:#6B5024;--user:#3A5578;--user-d:#243954;
+    --mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+    --cjk:'PingFang SC','Microsoft YaHei',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--cjk);font-size:14px;line-height:1.6;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+
+  .top{background:var(--panel);border-bottom:1px solid var(--line);padding:11px 16px;flex:0 0 auto;}
+  .top h1{font-size:15px;font-weight:800;}.top h1 .c{color:var(--tan);}
+  .top .tags{margin-top:5px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .tag{font-family:var(--mono);font-size:9px;border-radius:3px;padding:1px 6px;}
+  .tag.rule{color:var(--tan);border:1px solid var(--tan-d);}
+  .tag.trial{color:var(--gold);border:1px solid #6B5C24;}
+  .tag.loop{color:var(--green);border:1px solid var(--green-d);cursor:pointer;}
+  .tag.loop:active{transform:scale(.95);}
+
+  .chat{flex:1 1 auto;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
+  .chat::-webkit-scrollbar{width:6px;}.chat::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+  .msg{max-width:86%;display:flex;flex-direction:column;gap:3px;animation:rise .25s ease;}
+  @keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .msg.bot{align-self:flex-start;}
+  .msg.me{align-self:flex-end;align-items:flex-end;}
+  .who{font-family:var(--mono);font-size:9px;color:var(--dim);padding:0 4px;}
+  .bubble{padding:10px 13px;border-radius:12px;font-size:13.5px;white-space:pre-wrap;}
+  .bot .bubble{background:var(--panel2);border:1px solid var(--line);border-top-left-radius:3px;}
+  .me .bubble{background:var(--user-d);border:1px solid var(--user);border-top-right-radius:3px;}
+  .rulehint{font-family:var(--mono);font-size:9.5px;color:var(--tan);opacity:.75;padding:0 4px;}
+  .bubble b{color:var(--tan);}
+  .bubble .kv{font-family:var(--mono);font-size:12px;}
+  .bubble .men{color:var(--red);font-weight:700;}
+  .bubble .ok{color:var(--green);}
+  .bubble .bind{background:var(--panel3);border-radius:5px;padding:1px 6px;font-family:var(--mono);font-size:11px;color:var(--gold);}
+  .bubble .step{color:var(--dim);font-family:var(--mono);font-size:10px;}
+
+  .foot{flex:0 0 auto;background:var(--panel);border-top:1px solid var(--line);padding:9px 12px;}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px;}
+  .chip{font-family:var(--cjk);font-size:12.5px;padding:6px 12px;border-radius:16px;border:1px solid var(--tan-d);background:var(--panel2);color:var(--tan);cursor:pointer;}
+  .chip:active{transform:scale(.96);background:var(--panel3);}
+  .chip.gate{border-color:var(--amber);color:var(--amber);}
+  .chip.ghost{border-color:var(--line);color:var(--dim);}
+  .inrow{display:flex;gap:8px;align-items:center;}
+  .inrow input{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:9px 14px;color:var(--ink);font-family:var(--cjk);font-size:13.5px;outline:none;}
+  .inrow input:focus{border-color:var(--tan-d);}
+  .inrow button{background:var(--tan);color:#1A1206;border:none;border-radius:20px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--cjk);}
+  .inrow button:active{transform:scale(.96);}
+
+  /* loop_spec 抽屉 */
+  .drawer{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:50;align-items:flex-end;}
+  .drawer.show{display:flex;}
+  .drawer .sheet{background:var(--panel);border-top:2px solid var(--green-d);border-radius:16px 16px 0 0;width:100%;max-height:82vh;overflow-y:auto;padding:18px 16px 28px;animation:up .3s ease;}
+  @keyframes up{from{transform:translateY(30px);opacity:.5;}to{transform:translateY(0);opacity:1;}}
+  .sheet h3{font-size:15px;color:var(--green);margin-bottom:3px;}
+  .sheet .sub{font-family:var(--mono);font-size:10px;color:var(--dim);margin-bottom:14px;}
+  .specblk{margin-bottom:14px;}
+  .specblk .bt{font-family:var(--mono);font-size:10px;color:var(--tan);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+  .specrow{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:12px;}
+  .specrow .k{font-family:var(--mono);font-size:11px;color:var(--gold);min-width:120px;flex:0 0 auto;}
+  .specrow .v{color:var(--ink);}
+  .specrow .v .note{color:var(--dim);font-size:11px;}
+  .fill{display:inline-block;font-family:var(--mono);font-size:9px;padding:0 5px;border-radius:8px;background:var(--green-d);color:#AEE8BC;margin-left:4px;}
+  .pend{background:var(--amber-d);color:#F0C88A;}
+  .json{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px;font-family:var(--mono);font-size:10.5px;color:var(--dim);white-space:pre-wrap;line-height:1.7;}
+  .json .in{color:var(--tan);}.json .out{color:var(--green);}
+  .closed{width:100%;margin-top:10px;background:var(--panel2);border:1px solid var(--line);color:var(--dim);border-radius:8px;padding:10px;font-size:12px;cursor:pointer;}
+  .statusline{background:rgba(111,191,123,.08);border:1px solid var(--green-d);border-radius:6px;padding:9px 11px;font-size:11.5px;color:#AEE8BC;margin-top:10px;}
+  .statusline b{color:var(--green);}
+
+  #toast{position:fixed;left:50%;bottom:120px;transform:translateX(-50%) translateY(20px);background:var(--panel2);border:1px solid var(--tan-d);color:var(--ink);padding:10px 16px;border-radius:8px;font-size:12.5px;opacity:0;transition:.3s;z-index:80;max-width:88%;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>单店 BP · <span class="c">对话式规则引擎</span></h1>
+  <div class="tags">
+    <span class="tag rule">⚙ 规则引擎 · 非 AI 顾问</span>
+    <span class="tag trial">◈ TRIAL · mock 假水</span>
+    <span class="tag loop" id="loopbtn">◇ 查看 Loop 骨架</span>
+  </div>
+</div>
+
+<div class="chat" id="chat"></div>
+
+<div class="foot">
+  <div class="chips" id="chips"></div>
+  <div class="inrow">
+    <input id="input" placeholder="打字或点上面的建议…(如:目标46 / 跑 / 拍板 / 为什么)" autocomplete="off">
+    <button id="send">发送</button>
+  </div>
+</div>
+
+<!-- loop_spec 抽屉 -->
+<div class="drawer" id="drawer">
+  <div class="sheet">
+    <h3>◇ Loop 骨架 · loop_spec</h3>
+    <div class="sub">现在=假水试压 · trigger 保持"建议→人拍板"(未开自动·守 L5)· 数据接口预留</div>
+
+    <div class="specblk">
+      <div class="bt">5+1 组件</div>
+      <div class="specrow"><span class="k">trigger 触发</span><span class="v">你说"跑一轮" → 触发量实+算差 <span class="note">(现=人打字/点·未设自动)</span></span></div>
+      <div class="specrow"><span class="k">steps 步骤</span><span class="v">量实↑ → 校准(去TypeB) → 算差 → 诊断短板杠杆 → 关差建议</span></div>
+      <div class="specrow"><span class="k">停止条件</span><span class="v">渗透 ≥ 目标(达标)或 12 轮季度末</span></div>
+      <div class="specrow"><span class="k">memory 复盘</span><span class="v">每轮结果写入 <span class="note">(现=页面内 · 真实=写库)</span></span></div>
+      <div class="specrow"><span class="k">state 状态</span><span class="v">当前渗透/断货/短板杠杆(随轮更新)</span></div>
+      <div class="specrow"><span class="k">acceptance 验收</span><span class="v">验果=铺货渗透(标)动没动 · 非"任务做没做"</span></div>
+    </div>
+
+    <div class="specblk">
+      <div class="bt">4 道护栏(L4·护栏先于自动化)</div>
+      <div class="specrow"><span class="k">acceptance_criteria</span><span class="v">渗透达标才算关差成功 <span class="fill">已填</span></span></div>
+      <div class="specrow"><span class="k">permission_boundary</span><span class="v">补货金额上限·防压货 <span class="fill">已填</span></span></div>
+      <div class="specrow"><span class="k">human_gate</span><span class="v">补货/铺货必须你拍板(守 L5) <span class="fill">已填</span></span></div>
+      <div class="specrow"><span class="k">停止条件</span><span class="v">达标或季末停 <span class="fill">已填</span></span></div>
+    </div>
+
+    <div class="specblk">
+      <div class="bt">数据接口(标准化 JSON · 上一个 Output = 下一个 Input)</div>
+      <div class="json"><span class="in">IN  ← { 片区, 铺货渗透, 断货率, 复购F, 用量B, 单价ASP }</span>   <span style="color:var(--amber)">现=mock 假水 · 待接公司真实数据</span>
+<span class="out">OUT → { 短板杠杆, 关差建议, 补货金额, 验果 }</span>   → 下游节点 / 复盘 memory</div>
+    </div>
+
+    <div class="statusline">
+      <b>状态:</b>骨架已立 · 4 道护栏已填 · 假水已试压 · trigger 保持"建议→人拍板"(未开自动)· 数据接口预留。<br>
+      → 公司团队接真实数据时,把 mock 的 IN 换成真水即可,骨架一行不改。<b>这就是"Loop 先做、数据后接"。</b>
+    </div>
+
+    <button class="closed" id="drawerclose">收起</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ===== 同一套规则内核(单店五因子)· mock 假水:城东片区 =====
+const REGION={name:'城东·大排档密集区',N:420,P:38,F:16,B:2.2,ASP:8};
+const LEVER={
+  P:{name:'铺货渗透',act:'人海拉新小店 / 进新使用场景(如凉拌、蘸料)'},
+  F:{name:'复购频次',act:'SR 客情养复购 / 加爆款菜带补货频次'},
+  B:{name:'单店用量',act:'味达美/味极鲜进更多菜 / 做主料 / 加品项'},
+  ASP:{name:'单价结构',act:'推高端款升级单价'}
+};
+let S={phase:'welcome',targetP:null,round:0,curP:38,history:[],lastDiag:null};
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.className='show';clearTimeout(t._h);t._h=setTimeout(()=>t.className='',2400);}
+const chat=document.getElementById('chat');
+function scrollDown(){chat.scrollTop=chat.scrollHeight;}
+function botSay(html,rulehint){
+  const m=document.createElement('div');m.className='msg bot';
+  m.innerHTML=`<div class="who">规则引擎</div>${rulehint?`<div class="rulehint">规则识别:${rulehint}</div>`:''}<div class="bubble">${html}</div>`;
+  chat.appendChild(m);scrollDown();
+}
+function meSay(txt){
+  const m=document.createElement('div');m.className='msg me';
+  m.innerHTML=`<div class="who">你</div><div class="bubble">${txt}</div>`;
+  chat.appendChild(m);scrollDown();
+}
+function setChips(arr){
+  const c=document.getElementById('chips');c.innerHTML='';
+  arr.forEach(([label,val,cls])=>{
+    const b=document.createElement('button');b.className='chip'+(cls?' '+cls:'');b.textContent=label;
+    b.addEventListener('click',()=>handle(val,label));
+    c.appendChild(b);
+  });
+}
+
+// ===== 规则内核:跑一轮(量实↑ + 校准 + 算差 + 诊断) =====
+function runRound(){
+  S.round++;
+  const R=REGION;
+  // 量实↑(假水·围绕当前值波动)
+  const aP=Math.max(5,Math.round(S.curP*(0.9+Math.random()*0.12)));
+  const aF=+(R.F*(0.9+Math.random()*0.2)).toFixed(1);
+  const aB=+(R.B*(0.9+Math.random()*0.2)).toFixed(2);
+  const aASP=Math.round(R.ASP*(0.95+Math.random()*0.12));
+  const duanhuo=Math.round(Math.random()*14); // 断货率%(命门·适度触发)
+  // 校准(去TypeB假)——演示:偶尔上月有压货
+  const hadStuffing=Math.random()<0.35;
+  // 目标各杠杆
+  const tP=S.targetP,tF=+(R.F+1).toFixed(1),tB=+(R.B+0.3).toFixed(2),tASP=R.ASP+1;
+  const short={P:(tP-aP)/tP,F:(tF-aF)/tF,B:(tB-aB)/tB,ASP:(tASP-aASP)/tASP};
+  let bind='P',mx=-9;for(const k in short){if(short[k]>mx){mx=short[k];bind=k;}}
+  const gap=Math.max(0,tP-aP);
+  const menWarn=duanhuo>3;
+  // 关差建议 + 金额(human_gate)
+  let action,amount;
+  if(menWarn){action='补货保障(防断货 · 命门优先)';amount=5400;}
+  else{action='拉【'+LEVER[bind].name+'】:'+LEVER[bind].act;amount=(bind==='P'?4800:3200);}
+  S.lastDiag={aP,aF,aB,aASP,duanhuo,bind,gap,menWarn,action,amount,hadStuffing,tP};
+  S.history.push({round:S.round,aP,duanhuo,bind});
+
+  // 输出对话
+  let calib=hadStuffing
+    ? `校准:上月账里发现有一次店庆压货 → 剥掉假量,真实基线以动销为准。`
+    : `校准:核对无压货/促销虚高,实际可直接用。`;
+  let html=`<b>第 ${S.round} 轮</b> · ${R.name}\n`;
+  html+=`<span class="step">① 量实↑（假水）</span>\n`;
+  html+=`<span class="kv">铺货渗透 ${aP}% · 复购F ${aF} · 用量B ${aB} · 单价 ¥${aASP}</span>\n`;
+  html+=`<span class="step">② ${calib}</span>\n`;
+  html+=`<span class="step">③ 算差</span> 目标 ${tP}% − 实际 ${aP}% = 缺口 <b>${gap}%</b>\n`;
+  html+=`<span class="step">④ 诊断短板杠杆</span> → <span class="bind">${bind} ${LEVER[bind].name}</span>\n`;
+  if(menWarn) html+=`<span class="men">⚠ 命门告警:断货率 ${duanhuo}% > 3% 红线 → 断货会让老板换隔壁的货,直接杀 P 和 F。命门优先。</span>\n`;
+  else html+=`<span class="ok">✓ 命门:断货率 ${duanhuo}% 守住(<3%)。</span>\n`;
+  html+=`<span class="step">⑤ 关差建议(待你拍板)</span>\n`;
+  html+=`▸ ${action}\n▸ 涉及金额 ¥${amount} → <b>human_gate:要你拍板</b>(我不自动执行)`;
+  botSay(html,'"跑" → 触发 量实+校准+算差+诊断（写死规则，非AI生成）');
+  S.phase='diagnosed';
+  setChips([['✍️ 拍板这个动作','拍板','gate'],['为什么是这根杠杆?','为什么',''],['◇ Loop 骨架','骨架','ghost']]);
+}
+
+// ===== 关差 human_gate → 验果 =====
+function approveGate(){
+  const d=S.lastDiag;
+  const old=S.curP;
+  // 验果:渗透往目标动(拍板关差后·假水)
+  const step=d.menWarn?1:2; // 守命门那轮增长慢(先救火)
+  S.curP=Math.min(S.targetP,S.curP+step+Math.round(Math.random()*2));
+  let html=`✍️ 已记录你的拍板:<b>${d.action.split(':')[0]}</b>(¥${d.amount})。\n`;
+  html+=`<span class="step">这一步是你决定的 · 我只执行你拍板的(human_gate · 守 L5)</span>\n\n`;
+  html+=`<span class="step">⑥ 验果 —— 看"标动没动",非"任务做没做"</span>\n`;
+  html+=`铺货渗透 <b>${old}% → ${S.curP}%</b> `;
+  if(S.curP>=S.targetP){
+    html+=`<span class="ok">✓ 达到目标 ${S.targetP}%!</span>\n\n`;
+    html+=`<b>停止条件触发</b>:定标达成,这个环停(不是无限跑)。\n本季共 ${S.round} 轮 · 你押的目标准不准 = 判断力(记分卡)。`;
+    botSay(html,'"拍板" → 关差写入 + 验果比对（渗透是否动）');
+    S.phase='done';
+    setChips([['↻ 再设一个目标','重来',''],['◇ Loop 骨架','骨架','ghost']]);
+    toast('◈ 达标 · 停止条件触发 · 环停');
+    return;
+  }
+  html+=`<span class="ok">(标动了 ✓ 往 ${S.targetP}% 走,还没到)</span>\n`;
+  html+=`还差 ${S.targetP-S.curP}% → 要不要跑下一轮继续关差?`;
+  botSay(html,'"拍板" → 关差写入 + 验果比对（渗透是否动）');
+  S.phase='verified';
+  setChips([['▶ 跑下一轮','跑',''],['◇ Loop 骨架','骨架','ghost']]);
+  toast('✍️ 已拍板 · 验果:渗透动了');
+}
+
+// ===== 为什么(规则型解释·非AI) =====
+function explain(){
+  const d=S.lastDiag;if(!d){botSay('先跑一轮,我才有诊断可以解释。');return;}
+  let html;
+  if(d.menWarn){
+    html=`因为断货率 ${d.duanhuo}% 越过了 3% 红线。规则里断货是<b>命门</b>:老板一旦断货,当天就买隔壁的顶上,你的铺货和复购直接归零。所以规则强制<b>命门优先</b>——先补货保住有货,再谈拉杠杆。`;
+  }else{
+    html=`规则把缺口拆成四根杠杆(P铺货/F复购/B用量/ASP单价),算各自离目标的缺口比例,<b>缺口最大的那根 = ${d.bind} ${LEVER[d.bind].name}</b>,就是该拉的。\n这不是我"觉得",是写死的算差公式选出来的(第 ${d.round} 轮 ${d.bind} 缺口最大)。`;
+  }
+  botSay(html,'"为什么" → 调取本轮诊断依据（规则可追溯，非AI编）');
+  scrollDown();
+}
+
+// ===== 输入解析(关键词规则匹配·非AI理解) =====
+function handle(raw,display){
+  const txt=(raw||'').trim();
+  if(display) meSay(display); else meSay(txt);
+  // 数字 → 设目标
+  const num=txt.match(/(\d{1,2})/);
+  if(S.phase==='settarget'||(S.phase==='welcome'&&num)){
+    if(num){
+      let v=parseInt(num[1]);if(v<REGION.P)v=REGION.P+8;if(v>80)v=80;
+      S.targetP=v;S.curP=REGION.P;S.round=0;S.history=[];
+      botSay(`定标锁定 <b>${v}%</b>(红线 · 绝不倒推——这是往上够的目标,不是抄上月 ${REGION.P}%)。\n准备好就说"跑",我摸真+算差,告诉你该拉哪根杠杆。`,'识别到数字 '+v+' → 设为铺货渗透目标（定标↓）');
+      S.phase='ready';
+      setChips([['▶ 跑一轮','跑',''],['◇ Loop 骨架','骨架','ghost']]);
+      return;
+    }
+  }
+  // 关键词
+  if(/跑|下一轮|开始|run|继续/.test(txt)){
+    if(S.targetP==null){botSay('先设个目标(铺货渗透押到多少?比如说"46")。');S.phase='settarget';setChips([['押到 46%','46',''],['押到 50%','50',''],['押到 42%','42','']]);return;}
+    runRound();return;
+  }
+  if(/拍板|同意|批准|通过|ok|好的|好|approve/i.test(txt)){
+    if(S.phase==='diagnosed'){approveGate();}
+    else botSay('现在没有待拍板的动作。先说"跑"跑一轮,出了关差建议再拍板。');
+    return;
+  }
+  if(/为什么|为啥|解释|why|依据/.test(txt)){explain();return;}
+  if(/骨架|loop|接口|数据/.test(txt)){openDrawer();return;}
+  if(/重来|重置|再来|reset|新目标/.test(txt)){resetFlow();return;}
+  // 兜底
+  botSay('我是<b>规则引擎</b>,只认几个指令(不是能自由聊天的 AI):\n▸ 说个数字 = 设目标\n▸ "跑" = 量实+算差\n▸ "拍板" = 关差\n▸ "为什么" = 看诊断依据\n▸ "骨架" = 看 Loop 结构','未匹配到指令 → 回退到指令菜单（规则引擎不自由生成）');
+}
+
+function resetFlow(){
+  S={phase:'settarget',targetP:null,round:0,curP:38,history:[],lastDiag:null};
+  botSay(`重来。城东片区当前铺货渗透 <b>${REGION.P}%</b>,你想把目标押到多少?(输入数字,或点下面)`,'"重来" → 重置环 · 回到定标↓');
+  setChips([['押到 46%','46',''],['押到 50%','50',''],['押到 42%','42','']]);
+}
+
+// ===== loop 抽屉 =====
+function openDrawer(){document.getElementById('drawer').classList.add('show');}
+document.getElementById('loopbtn').addEventListener('click',openDrawer);
+document.getElementById('drawerclose').addEventListener('click',()=>document.getElementById('drawer').classList.remove('show'));
+document.getElementById('drawer').addEventListener('click',e=>{if(e.target.id==='drawer')document.getElementById('drawer').classList.remove('show');});
+
+// ===== 发送 =====
+document.getElementById('send').addEventListener('click',()=>{
+  const i=document.getElementById('input');if(!i.value.trim())return;handle(i.value);i.value='';
+});
+document.getElementById('input').addEventListener('keydown',e=>{if(e.key==='Enter'){document.getElementById('send').click();}});
+
+// ===== 开场 =====
+function boot(){
+  botSay(`你好,我是单店 BP 的<b>规则引擎</b>(不是 AI 顾问——我按写死的规则回你,可追溯)。\n\n这是假水演示:片区 <b>${REGION.name}</b>,当前铺货渗透 <b>${REGION.P}%</b>、复购 ${REGION.F}、用量 ${REGION.B}、单价 ¥${REGION.ASP}。\n\n第一步 <b>定标↓</b>:你想把铺货渗透目标押到多少?(往上够的红线,别抄上月)`,'开场 → 载入 mock 假水 · 进入定标↓');
+  S.phase='settarget';
+  setChips([['押到 46%','46',''],['押到 50%','50',''],['押到 42%','42',''],['◇ Loop 骨架','骨架','ghost']]);
+}
+boot();
+</script>
+</body>
+</html>
