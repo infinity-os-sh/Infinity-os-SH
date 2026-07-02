@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>餐饮北极星驾驶舱 · 欣和</title>
+<style>
+  :root{
+    --bg:#0D1014;--panel:#141922;--panel2:#1B2230;--panel3:#232C3D;--line:#2A3547;
+    --ink:#DCE4EF;--dim:#7E8CA0;--star:#E0B84E;--star-d:#6B5620;
+    --chain:#C9803E;--meal:#5E9EC9;--hotel:#B0506E;--single:#E0904E;
+    --green:#4EBF7B;--green-d:#1E5C38;--red:#D96B5E;--red-d:#6B2E28;
+    --amber:#D9A34E;--amber-d:#6B5024;--fore:#5EB0D9;--fore-d:#24566B;--violet:#A88CE0;
+    --mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+    --cjk:'PingFang SC','Microsoft YaHei',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--cjk);font-size:14px;line-height:1.6;padding-bottom:80px;}
+  .top{background:var(--panel);border-bottom:1px solid var(--line);padding:14px 18px;position:sticky;top:0;z-index:30;}
+  .top h1{font-size:16px;font-weight:800;}.top h1 .c{color:var(--star);}
+  .top .sub{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:3px;}
+  .top .tags{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;}
+  .tag{font-family:var(--mono);font-size:9px;border-radius:3px;padding:1px 6px;}
+  .tag.trial{color:var(--star);border:1px solid var(--star-d);}
+  .tag.od{color:var(--violet);border:1px solid #4E3F73;}
+  .tag.ns{color:var(--fore);border:1px solid var(--fore-d);}
+  .wrap{max-width:1000px;margin:0 auto;padding:16px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:14px;}
+  .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--star);margin-bottom:10px;}
+  .lbl .hint{color:var(--dim);text-transform:none;letter-spacing:0;font-size:10px;margin-left:6px;}
+
+  /* 守宪条 */
+  .creed{background:rgba(168,140,224,.07);border:1px solid rgba(168,140,224,.28);border-radius:8px;padding:11px 14px;margin-bottom:14px;font-size:11.5px;color:#C4B4E8;}
+  .creed b{color:var(--violet);}
+
+  /* 北极星总览headline */
+  .headline{background:linear-gradient(180deg,rgba(224,184,78,.1),var(--panel));border:1px solid var(--star-d);border-radius:8px;padding:18px;margin-bottom:14px;text-align:center;}
+  .headline .ttl{font-family:var(--mono);font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;}
+  .headline .big{font-family:var(--mono);font-size:34px;font-weight:800;color:#fff;margin:6px 0;}
+  .headline .sub2{font-size:12px;color:var(--dim);}
+  .headline .gap{font-family:var(--mono);font-size:15px;font-weight:700;margin-top:6px;}
+
+  /* 连接律流向图 */
+  .connlaw{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--dim);margin:10px 0 4px;}
+  .connlaw .box{padding:4px 9px;border:1px solid var(--line);border-radius:4px;background:var(--panel2);}
+  .connlaw .box.star{color:var(--star);border-color:var(--star-d);}
+  .connlaw .arr{color:var(--star);}
+
+  /* 定标分配 */
+  .alloc-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .alloc-row .name{flex:1;min-width:120px;font-size:13px;font-weight:600;}
+  .alloc-row .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;}
+  .dot.chain{background:var(--chain);}.dot.meal{background:var(--meal);}.dot.hotel{background:var(--hotel);}.dot.single{background:var(--single);}
+  .abtn{width:26px;height:26px;border-radius:5px;border:1px solid var(--line);background:var(--panel2);color:var(--star);font-family:var(--mono);font-size:13px;cursor:pointer;}
+  .aval{font-family:var(--mono);font-size:14px;font-weight:700;color:#fff;min-width:74px;text-align:center;}
+  .alloc-row .pct{font-family:var(--mono);font-size:10px;color:var(--dim);min-width:42px;text-align:right;}
+  .alloc-total{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;}
+  .alloc-total b{color:var(--star);}
+
+  button{font-family:var(--cjk);cursor:pointer;border:none;border-radius:6px;font-size:13px;font-weight:600;padding:10px 16px;}
+  .btn-pull{background:var(--fore);color:#04121A;width:100%;margin-top:12px;}
+  .btn-close{background:var(--star);color:#1A1404;width:100%;margin-top:10px;}
+  button:active{transform:scale(.98);}button:disabled{opacity:.4;cursor:not-allowed;}
+
+  /* 4子渠道卡片 */
+  .subgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:680px){.subgrid{grid-template-columns:1fr;}}
+  .sub{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:14px;border-top-width:3px;}
+  .sub.chain{border-top-color:var(--chain);}.sub.meal{border-top-color:var(--meal);}
+  .sub.hotel{border-top-color:var(--hotel);}.sub.single{border-top-color:var(--single);}
+  .sub .sh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .sub .sn{font-size:14px;font-weight:700;}
+  .sub .stage{font-size:9px;padding:1px 6px;border-radius:8px;font-family:var(--mono);}
+  .stage.导入{background:#4E3F73;color:#C4B8F0;}.stage.成长{background:var(--fore-d);color:#9FD4E8;}.stage.成熟{background:var(--green-d);color:#9FE8BC;}
+  .sub .nums{display:flex;gap:12px;margin-bottom:8px;}
+  .sub .nb{flex:1;}
+  .sub .nb .l{font-family:var(--mono);font-size:9px;color:var(--dim);}
+  .sub .nb .v{font-family:var(--mono);font-size:15px;font-weight:700;color:#fff;}
+  .sub .gap{font-family:var(--mono);font-size:12px;font-weight:700;}
+  .sub .meta{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:11px;display:grid;gap:4px;}
+  .sub .mrow{display:flex;justify-content:space-between;}
+  .sub .mrow .mk{color:var(--dim);font-family:var(--mono);font-size:10px;}
+  .sub .mrow .mv{font-size:11px;}
+  .mmen.ok{color:var(--green);}.mmen.warn{color:var(--red);}
+  .bind{font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:6px;background:var(--panel3);}
+
+  .diag{background:var(--panel2);border-left:3px solid var(--amber);border-radius:0 6px 6px 0;padding:12px 14px;margin-top:12px;font-size:12.5px;}
+  .diag b{color:var(--amber);}
+  .diag .alert{color:var(--red);font-weight:600;}
+
+  /* 关差下沉 */
+  .closepanel{background:linear-gradient(180deg,rgba(94,176,217,.08),var(--panel));border:1px solid var(--fore-d);border-radius:8px;padding:16px;margin-bottom:14px;display:none;}
+  .closepanel.show{display:block;}
+  .closepanel h3{color:var(--fore);font-size:15px;margin-bottom:4px;}
+  .closepanel .cdesc{font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:12px;}
+  .reco{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:11px 13px;margin-bottom:8px;font-size:12.5px;}
+  .reco b{color:var(--fore);}
+  .gate-note{background:rgba(217,163,78,.1);border:1px solid var(--amber-d);border-radius:6px;padding:9px 12px;font-size:11px;color:#F0C88A;margin-top:8px;}
+  .gate-note b{color:var(--amber);}
+
+  .verify{background:var(--panel2);border-left:3px solid var(--star);border-radius:0 6px 6px 0;padding:12px 14px;margin-bottom:14px;font-size:12.5px;display:none;}
+  .verify.show{display:block;}.verify b{color:var(--star);}
+  .verify .calc{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:5px;}
+
+  #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--panel2);border:1px solid var(--star-d);color:var(--ink);padding:11px 18px;border-radius:8px;font-size:12.5px;opacity:0;transition:.3s;z-index:100;max-width:90%;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  #toast.fore{border-color:var(--fore);}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>餐饮 <span class="c">北极星驾驶舱</span> · 欣和</h1>
+  <div class="sub">总部一屏看全餐饮 · 4 子渠道汇总 · 连接律:北极星↕子渠道</div>
+  <div class="tags">
+    <span class="tag trial">◈ TRIAL · mock 假数据</span>
+    <span class="tag od">on-demand · 纯展示不Loop化</span>
+    <span class="tag ns">北极星层 · 非自主Agent</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="creed">
+    <b>♡ 定位声明 ·</b> 本驾驶舱是<b>北极星层的汇总看板</b>,坐在 4 个子渠道 JBP Agent 之上。它<b>纯展示 + 总部拍板分配</b>(on-demand),<b>不 Loop 化、不是自主 Agent</b>——按 Loop 反例:看板类 Loop 无值。分配(定标↓)与关差下沉由<b>总部(人)拍板</b>,机器只汇总与诊断。
+  </div>
+
+  <div class="headline">
+    <div class="ttl">餐饮北极星 · 月度总采购额</div>
+    <div class="big" id="hl-actual">¥ —</div>
+    <div class="sub2" id="hl-target">目标(定标↓)¥1440万 · 点下方拉取实际</div>
+    <div class="gap" id="hl-gap"></div>
+    <div class="connlaw">
+      <span class="box star">北极星总目标</span><span class="arr">──定标↓分配──▶</span>
+      <span class="box">4 子渠道定标</span><span class="arr">◀──量实↑汇总──</span>
+      <span class="box">4 子渠道实际</span>
+    </div>
+  </div>
+
+  <div class="card" id="alloccard">
+    <div class="lbl">① 定标↓ · 总部分配餐饮总目标到 4 子渠道 <span class="hint">连接律:这个分配 = 各子渠道 JBP 的定标</span></div>
+    <div id="allocrows"></div>
+    <div class="alloc-total"><span>合计分配</span><span id="alloctotal"></span></div>
+    <button class="btn-pull" id="pullbtn">▶ 拉取 4 子渠道实际(量实↑)→ 算差诊断</button>
+  </div>
+
+  <div class="card" id="subcard" style="display:none">
+    <div class="lbl">② 量实↑ + 算差 · 4 子渠道健康度 <span class="hint">各子渠道校准后实际(去促销/压货假·TypeB) · 定标vs实际 · 命门 · 预测准度</span></div>
+    <div class="subgrid" id="subgrid"></div>
+    <div class="diag" id="diag"></div>
+  </div>
+
+  <div class="verify" id="verify"><b>验果</b>:回看 <b>餐饮整体采购额(北极星标)动没动</b>(非任务做没做)—— <div class="calc" id="verifycalc"></div></div>
+
+  <div class="closepanel" id="closepanel">
+    <h3>③ 关差 · 下沉成子渠道新定标(连接律)</h3>
+    <div class="cdesc">北极星关不了的差 → 决定往哪个子渠道加投/调整 → 这个决定 = 下一期该子渠道的定标(北极星关差 = 子渠道定标)</div>
+    <div id="recolist"></div>
+    <div class="gate-note">⚠️ 关差下沉是<b>战略资源再分配·总部(人)拍板</b>(human_gate)。机器只给建议,分配决定权在总部。</div>
+    <button class="btn-close" id="closebtn">✍️ 总部拍板下沉新定标 → 验果 → 下一期</button>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ===== TRIAL mock:餐饮4子渠道(北极星层汇总)· 单位千元/月 =====
+const SUBS=[
+  {id:'chain',cls:'chain',name:'连锁(中央厨房)',menmen:'批次一致性',menval:98,menok:true,bind:'P配方渗透',fore:6,stage:'成熟',baseActual:5400},
+  {id:'meal',cls:'meal',name:'团餐(食堂)',menmen:'断供率',menval:2,menok:true,bind:'W中标份额',fore:-9,stage:'成长',baseActual:4020},
+  {id:'hotel',cls:'hotel',name:'酒店(厨师长)',menmen:'厨师关系',menval:82,menok:true,bind:'P菜单渗透',fore:4,stage:'成熟',baseActual:1650},
+  {id:'single',cls:'single',name:'单店(SR人海)',menmen:'铺货+客情',menval:76,menok:true,bind:'P铺货渗透',fore:-14,stage:'成长',baseActual:2380},
+];
+const NS_TARGET=14400; // 北极星红线目标(千元/月=1440万)·定标↓·绝不倒推
+// 定标(总部分配·千元/月)
+let alloc={chain:5800,meal:4200,hotel:1800,single:2600};
+const STEP={chain:200,meal:200,hotel:100,single:100};
+let pulled=null; // 拉取的实际
+let northstarActual=null, northstarMoved=false;
+
+function toast(m,k){const t=document.getElementById('toast');t.textContent=m;t.className='show'+(k?' '+k:'');clearTimeout(t._h);t._h=setTimeout(()=>t.className='',2600);}
+function money(n){return (n/10).toFixed(0)+'万';} // 千元→万元(1万元=10千元)
+
+function totalAlloc(){return Object.values(alloc).reduce((a,b)=>a+b,0);}
+
+function renderAlloc(){
+  const c=document.getElementById('allocrows');c.innerHTML='';
+  const tot=totalAlloc();
+  SUBS.forEach(s=>{
+    const row=document.createElement('div');row.className='alloc-row';
+    row.innerHTML=`<div class="name"><span class="dot ${s.cls}"></span>${s.name}</div>
+      <div style="display:flex;gap:5px;align-items:center">
+        <button class="abtn" data-s="${s.id}" data-d="-1">−</button>
+        <span class="aval" id="av_${s.id}">¥${money(alloc[s.id])}</span>
+        <button class="abtn" data-s="${s.id}" data-d="1">+</button>
+      </div>
+      <div class="pct" id="ap_${s.id}">${Math.round(alloc[s.id]/tot*100)}%</div>`;
+    c.appendChild(row);
+  });
+  const diff=tot-NS_TARGET;const dcol=diff===0?'var(--green)':(diff>0?'var(--red)':'var(--amber)');const dtxt=diff===0?'✓ 与红线平衡':(diff>0?'超配 +¥'+money(diff):'缺口 ¥'+money(-diff));
+  document.getElementById('alloctotal').innerHTML=`<span>分配合计 <b>¥${money(tot)}</b> / 北极星红线 ¥${money(NS_TARGET)}(绝不倒推)</span><span style="color:${dcol};font-weight:700">${dtxt}</span>`;
+  document.getElementById('hl-target').textContent='目标(定标↓)¥'+money(tot)+' · 点下方拉取实际';
+  document.querySelectorAll('.abtn').forEach(b=>b.addEventListener('click',()=>{
+    const s=b.dataset.s,d=+b.dataset.d;
+    alloc[s]=Math.max(500,alloc[s]+d*STEP[s]);
+    renderAlloc();
+  }));
+}
+
+function pullActuals(){
+  // 量实↑:各子渠道实际(围绕baseActual小波动)
+  pulled={};
+  SUBS.forEach(s=>{pulled[s.id]=Math.round(s.baseActual*(0.95+Math.random()*0.08));});
+  northstarActual=Object.values(pulled).reduce((a,b)=>a+b,0);
+  const tgt=NS_TARGET; // 算差 vs 北极星红线(绝不用分配总额倒推)
+  // headline
+  document.getElementById('hl-actual').textContent='¥'+money(northstarActual);
+  const g=northstarActual-tgt, gp=Math.round(g/tgt*100);
+  document.getElementById('hl-gap').innerHTML=`算差:<span style="color:${g>=0?'var(--green)':'var(--red)'}">${g>=0?'+':''}¥${money(Math.abs(g))}(${gp>=0?'+':''}${gp}%)</span>`;
+  // 子渠道卡片
+  const sg=document.getElementById('subgrid');sg.innerHTML='';
+  let worst=null,worstRatio=1;
+  const alerts=[];
+  SUBS.forEach(s=>{
+    const t=alloc[s.id],a=pulled[s.id],gap=a-t,ratio=a/t;
+    if(ratio<worstRatio){worstRatio=ratio;worst=s;}
+    const menWarn=(s.id==='meal'&&s.menval>3)||(s.id==='chain'&&s.menval<96)||(s.id==='hotel'&&s.menval<80)||(s.id==='single'&&s.menval<75);
+    if(menWarn)alerts.push(s);
+    const menUnit=s.id==='meal'?'%':(s.id==='chain'?'%':'');
+    sg.innerHTML+=`<div class="sub ${s.cls}">
+      <div class="sh"><span class="sn">${s.name}</span><span class="stage ${s.stage}">${s.stage}</span></div>
+      <div class="nums">
+        <div class="nb"><div class="l">定标↓</div><div class="v">¥${money(t)}</div></div>
+        <div class="nb"><div class="l">实际↑</div><div class="v" style="color:${gap>=0?'var(--green)':'var(--amber)'}">¥${money(a)}</div></div>
+        <div class="nb"><div class="l">差</div><div class="gap" style="color:${gap>=0?'var(--green)':'var(--red)'}">${gap>=0?'+':''}${money(gap)}</div></div>
+      </div>
+      <div class="meta">
+        <div class="mrow"><span class="mk">命门·${s.menmen}</span><span class="mv mmen ${menWarn?'warn':'ok'}">${s.menval}${menUnit} ${menWarn?'⚠告警':'✓'}</span></div>
+        <div class="mrow"><span class="mk">主短板杠杆</span><span class="mv"><span class="bind">${s.bind}</span></span></div>
+        <div class="mrow"><span class="mk">预测准度</span><span class="mv" style="color:${Math.abs(s.fore)<=10?'var(--green)':'var(--red)'}">${s.fore>=0?'+':''}${s.fore}% ${Math.abs(s.fore)<=10?'(准)':'(偏)'}</span></div>
+      </div></div>`;
+  });
+  // 算差诊断
+  const worstGp=Math.round((worstRatio-1)*100);
+  let diag=`<b>算差诊断:</b>餐饮整体${northstarActual>=tgt?'达标':'差 ¥'+money(tgt-northstarActual)}。最拖后腿=<b style="color:var(--${worst.cls==='chain'?'chain':worst.cls==='meal'?'meal':worst.cls==='hotel'?'hotel':'single'})">${worst.name}</b>(实际/定标 ${worstGp}%·短板在 ${worst.bind})。`;
+  if(alerts.length)diag+=`<br><span class="alert">⚠️ 命门告警:${alerts.map(a=>a.name+'·'+a.menmen).join('、')} —— 命门失守会直接塌该子渠道,优先处理。</span>`;
+  else diag+=`<br>4 子渠道命门均守住 ✓。`;
+  document.getElementById('diag').innerHTML=diag+'<br><span style="color:var(--dim);font-family:var(--mono);font-size:10px">连接律:4子渠道实际 汇总↑ = 北极星实际 · 北极星关差 下沉↓ = 子渠道定标</span>';
+  document.getElementById('subcard').style.display='block';
+  document.getElementById('pullbtn').disabled=true;
+  // 关差下沉建议
+  buildClose(worst,alerts,tgt);
+  toast('◈ 量实↑已汇总 · 算差诊断出最短子渠道:'+worst.name,'fore');
+  document.getElementById('subcard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function buildClose(worst,alerts,tgt){
+  const rl=document.getElementById('recolist');rl.innerHTML='';
+  // 关差=下沉成子渠道新定标
+  rl.innerHTML+=`<div class="reco">① <b>加投最短子渠道</b>:${worst.name} 实际低于定标,关差=下期给它<b>更聚焦的定标</b>(拉 ${worst.bind})+资源倾斜。</div>`;
+  if(alerts.length)rl.innerHTML+=`<div class="reco">② <b>命门优先(红线)</b>:${alerts.map(a=>a.name).join('、')} 命门告警 → 下期定标里<b>命门达标是前置条件</b>,守住才谈增长。</div>`;
+  rl.innerHTML+=`<div class="reco">③ <b>高准度加授权</b>:预测准的子渠道(±≤10%)→ 下期给更大定标+预算授权(说到做到=信用)。</div>`;
+  document.getElementById('closepanel').classList.add('show');
+}
+
+function closeGap(){
+  // 验果:总部拍板下沉→北极星标(餐饮整体)动没动
+  const tgt=totalAlloc();
+  northstarMoved=true;
+  const v=document.getElementById('verify');v.classList.add('show');
+  const improved=Math.round(northstarActual*0.04);
+  document.getElementById('verifycalc').innerHTML=`总部拍板:关差下沉成子渠道新定标(连接律)。下期预期餐饮整体 ¥${money(northstarActual)} → ¥${money(northstarActual+improved)}(+¥${money(improved)})· <b>北极星标动了 ✓</b>(非"分配任务做没做",是餐饮整体采购额是否推进)`;
+  document.getElementById('closepanel').classList.remove('show');
+  v.scrollIntoView({behavior:'smooth',block:'center'});
+  toast('✍️ 总部拍板 · 关差下沉成4子渠道新定标 · 验果=北极星标动了');
+}
+
+document.getElementById('pullbtn').addEventListener('click',pullActuals);
+document.getElementById('closebtn').addEventListener('click',closeGap);
+renderAlloc();
+</script>
+</body>
+</html>
