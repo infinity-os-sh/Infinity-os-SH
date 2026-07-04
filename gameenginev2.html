@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>经营游戏引擎 · 四机制 · 欣和</title>
+<style>
+  :root{
+    --bg:#0B0A07;--panel:#15130D;--panel2:#1E1A11;--panel3:#282216;--line:#33291A;
+    --ink:#EEE6D4;--dim:#948360;--star:#E8C24E;--star-d:#6B5418;
+    --jbp:#5E9EC9;--jbp-d:#24566B;--ppl:#E0904E;--ppl-d:#6B4318;--dist:#B49BE0;--dist-d:#4E3F73;
+    --green:#6FBF7B;--green-d:#245C34;--red:#D97362;--red-d:#6B2E26;--amber:#D9A34E;
+    --mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+    --cjk:'PingFang SC','Microsoft YaHei',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--cjk);font-size:14px;line-height:1.6;padding-bottom:80px;}
+  .top{background:linear-gradient(180deg,#100E09,var(--panel));border-bottom:1px solid var(--line);padding:14px 16px;position:sticky;top:0;z-index:30;}
+  .top h1{font-size:15px;font-weight:800;}.top h1 .c{color:var(--star);}
+  .top .sub{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px;}
+  .top .tags{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;}
+  .tag{font-family:var(--mono);font-size:9px;border-radius:3px;padding:1px 6px;}
+  .tag.trial{color:var(--star);border:1px solid var(--star-d);}
+  .tag.wf{color:var(--jbp);border:1px solid var(--jbp-d);}
+  .wrap{max-width:900px;margin:0 auto;padding:16px;}
+
+  .creed{background:rgba(232,194,78,.06);border:1px solid var(--star-d);border-radius:8px;padding:10px 13px;margin-bottom:14px;font-size:11.5px;color:#F0D89A;}
+  .creed b{color:var(--star);}
+
+  .sec{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px;margin-bottom:14px;}
+  .sechead{font-size:14px;font-weight:800;margin-bottom:3px;}
+  .sechead .n{font-family:var(--mono);color:var(--star);}
+  .secsub{font-family:var(--mono);font-size:10px;color:var(--dim);margin-bottom:12px;}
+  .bea{font-family:var(--mono);font-size:9px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:1px 6px;margin-left:6px;}
+
+  /* 机制1 双线分解 */
+  .nsbox{text-align:center;background:radial-gradient(120% 100% at 50% 0,rgba(232,194,78,.12),transparent);border:1px solid var(--star-d);border-radius:9px;padding:12px;margin-bottom:12px;}
+  .nsbox .el{font-family:var(--mono);font-size:10px;color:var(--dim);text-transform:uppercase;}
+  .nsbox .big{font-family:var(--mono);font-size:30px;font-weight:800;color:#fff;}
+  .nsbox .big .u{font-size:12px;color:var(--star);}
+  .twolines{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+  @media(max-width:600px){.twolines{grid-template-columns:1fr;}}
+  .linebox{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:12px;}
+  .linebox .lt{font-family:var(--mono);font-size:11px;font-weight:700;margin-bottom:8px;}
+  .linebox.jbp .lt{color:var(--jbp);}.linebox.ppl .lt{color:var(--ppl);}
+  .brow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--line);font-size:12px;}
+  .brow:last-child{border-bottom:none;}
+  .brow .bk{color:var(--dim);}
+  .brow .bk .sub2{font-size:9px;color:var(--dist);font-family:var(--mono);}
+  .brow .bv{font-family:var(--mono);font-weight:700;color:#fff;}
+  .brow.indir{padding-left:14px;border-left:2px solid var(--dist-d);margin-left:4px;}
+  .brow.indir .bk{color:var(--dist);}
+  .sumrow{display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--star-d);font-family:var(--mono);font-size:12px;}
+  .sumrow b{color:var(--star);}
+  .reconcile{text-align:center;font-family:var(--mono);font-size:11px;margin-top:10px;padding:7px;border-radius:6px;}
+  .reconcile.ok{background:var(--green-d);color:#AEE8BC;}
+  .reconcile.bad{background:var(--red-d);color:#E8A79F;}
+  .ppl-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;}
+  .sr{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:5px 3px;text-align:center;}
+  .sr .sn{font-size:9px;color:var(--dim);}
+  .sr .sv{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ppl);}
+
+  /* 机制2 game/round */
+  .board{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px;}
+  .rd{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:7px 4px;text-align:center;position:relative;}
+  .rd.played{border-color:var(--green-d);background:rgba(111,191,123,.08);}
+  .rd.cur{border-color:var(--star);box-shadow:0 0 0 1px var(--star);}
+  .rd .rn{font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;}
+  .rd .rl{font-size:8px;color:var(--dim);}
+  .mlabel{display:flex;gap:6px;font-family:var(--mono);font-size:9px;color:var(--dim);margin-bottom:5px;}
+  .mlabel span{flex:1;text-align:center;}
+  .ringflow{font-family:var(--mono);font-size:10px;color:var(--dim);text-align:center;margin-top:6px;}
+  .ringflow b{color:var(--star);}
+
+  /* 机制3 防假 */
+  .traces{margin-top:4px;}
+  .trace{background:var(--panel2);border:1px solid var(--line);border-left-width:3px;border-radius:7px;padding:10px 12px;margin-bottom:8px;}
+  .trace.honest{border-left-color:var(--green);}
+  .trace.fake{border-left-color:var(--red);}
+  .trace.normal{border-left-color:var(--jbp);}
+  .trace .th{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .trace .tn{font-size:13px;font-weight:700;}
+  .trace .verdict{font-family:var(--mono);font-size:10px;padding:1px 8px;border-radius:8px;}
+  .verdict.pending{background:var(--panel3);color:var(--dim);}
+  .verdict.trust{background:var(--green-d);color:#AEE8BC;}
+  .verdict.doubt{background:var(--red-d);color:#E8A79F;}
+  .spark{display:flex;gap:3px;align-items:flex-end;height:34px;margin:6px 0;}
+  .spark .b{flex:1;border-radius:1px 1px 0 0;min-height:2px;}
+  .trace .tinfo{font-size:11px;color:var(--dim);}
+  .trace .tinfo b{color:var(--ink);}
+  .flag{background:rgba(217,115,98,.1);border:1px dashed var(--red);border-radius:6px;padding:7px 10px;font-size:11px;color:#E8A79F;margin-top:6px;}
+  .flag b{color:var(--red);}
+
+  button{font-family:var(--cjk);cursor:pointer;border:none;border-radius:7px;font-size:13px;font-weight:700;}
+  .runbtn{background:var(--star);color:#1A1404;width:100%;padding:12px;}
+  button:active{transform:scale(.99);}button:disabled{opacity:.5;}
+
+  #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);background:var(--panel2);border:1px solid var(--star-d);color:var(--ink);padding:10px 16px;border-radius:8px;font-size:12.5px;opacity:0;transition:.3s;z-index:80;max-width:88%;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>经营游戏引擎 · <span class="c">四机制设计</span> · 欣和</h1>
+  <div class="sub">以 ICA 标杆母版为底 · 补 4 件 ICA 相关机制(含生命周期分级防假+授权分级) · 机制设计 trial</div>
+  <div class="tags">
+    <span class="tag trial">◈ TRIAL · mock 假水</span>
+    <span class="tag wf">Workflow · 规则型</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="creed">
+    <b>◆ 这是机制设计,不是新 App ·</b> ICA APP(晶体管开关/救活换钱/五通道派单/授权分级/CB信用/三方评价)已经很成熟。这里补:①双线分解归一 ②Round=Game 结构 ③<b>跨round防假(按生命周期分级)</b> ④<b>授权分级(%阈值·HITL卡执行前)</b>。跑通证明规则成立后,再落进 ICA 母版。
+  </div>
+
+  <!-- 机制1 -->
+  <div class="sec">
+    <div class="sechead"><span class="n">机制1 ·</span> 双线分解归一<span class="bea">Workflow · L2 分解</span></div>
+    <div class="secsub">同一个北极星,两条线各自往下拆,都必须归到同一个数(定标↓·连接律)</div>
+    <div class="nsbox">
+      <div class="el">北极星目标(示例 100 · 映射真实 156M瓶)</div>
+      <div class="big">100<span class="u"> 单位</span></div>
+    </div>
+    <div class="twolines">
+      <div class="linebox jbp">
+        <div class="lt">▸ 线A · JBP线(按客户/渠道拆)</div>
+        <div class="brow"><span class="bk">餐饮 JBP</span><span class="bv">50</span></div>
+        <div class="brow"><span class="bk">消费者 JBP</span><span class="bv">50</span></div>
+        <div class="brow indir"><span class="bk">├ 直营 JBP<span class="sub2"> 直接对零售商/零售店</span></span><span class="bv">25</span></div>
+        <div class="brow indir"><span class="bk">└ 经销商间接 JBP<span class="sub2"> 经经销商→零售店</span></span><span class="bv">25</span></div>
+        <div class="sumrow"><span>合计</span><b>= 100 ✓</b></div>
+      </div>
+      <div class="linebox ppl">
+        <div class="lt">▸ 线B · 人线(按SR拆)</div>
+        <div class="ppl-grid" id="srgrid"></div>
+        <div class="sumrow"><span>10 个 SR 合计</span><b id="srsum">= 100 ✓</b></div>
+        <div class="tinfo" style="font-size:10px;color:var(--dim);margin-top:8px">每个 SR:<b style="color:var(--ppl)">我这份 = 公司总目标的一块;我崩了,公司总目标就完不成。</b></div>
+      </div>
+    </div>
+    <div class="reconcile ok" id="recon">✓ 两条线都归到北极星 100 · 连接律成立(A线关差=下层定标 · B线实际=上层实际)</div>
+  </div>
+
+  <!-- 机制2 -->
+  <div class="sec">
+    <div class="sechead"><span class="n">机制2 ·</span> Round = Game 结构<span class="bea">Workflow · 时间框架</span></div>
+    <div class="secsub">日/周/月一个个 round · 1月=4round · 1季=12round=1个 game · 每 round 跑一遍环</div>
+    <div class="mlabel"><span>第1月(R1-4)</span><span>第2月(R5-8)</span><span>第3月(R9-12)</span></div>
+    <div class="board" id="board"></div>
+    <div class="ringflow">每 round 跑环:<b>定标↓ → 量实↑ → 算差 → 关差 → 验果</b> · 12 round 收官 = 1 个 game(季)结算</div>
+    <button class="runbtn" id="advbtn" style="margin-top:10px">▶ 走一个 round(推进 game)</button>
+  </div>
+
+  <!-- 机制3 -->
+  <div class="sec">
+    <div class="sechead"><span class="n">机制3 ·</span> 跨round防假 · <b style="color:var(--star)">按生命周期分级</b><span class="bea">Workflow · L3 · 阶段切换</span></div>
+    <div class="secsub">CB=B+V+R−C−T · 长期服务非Uber一次性 · <b style="color:var(--amber)">★阈值按阶段切:导入看"点亮"·成熟看"结果"(不可一套标准套全程)</b></div>
+    <div class="tinfo" style="font-size:11px;color:var(--dim);margin-bottom:8px">规则(<b>分阶段</b>):<b>导入期</b>投60-80%·看点亮——结果低是<b style="color:var(--green)">正常不判假</b>,只有"报点亮但盘点实为OFF"才存疑;<b>成熟期</b>看利润——"报全ON·数据真但结果连续≥3round不好"才 fire。检测→flag给人复核(不自动罚·进tracker)。</div>
+    <div class="traces" id="traces"></div>
+    <button class="runbtn" id="detbtn">▶ 跑一局(12 round)· 看跨round防假检测</button>
+  </div>
+
+  <!-- 机制4 授权分级 -->
+  <div class="sec">
+    <div class="sechead"><span class="n">机制4 ·</span> 授权分级(%阈值 · HITL卡执行前)<span class="bea">Workflow · L3 · human_gate</span></div>
+    <div class="secsub">高风险动作(钱/权限/不可逆)按额度分级:小额自主 · 超线报上级 · 再超统一审批后才做(卡在执行前)</div>
+    <div class="tinfo" style="font-size:11px;color:var(--dim);margin-bottom:10px">示例:补货量 占 <b>月均进货(基准100件)</b> 的百分比 → 决定谁能拍板(ICA 授权逻辑)。调下面的量看落哪一档。</div>
+    <div class="linebox" style="background:var(--panel2)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <span style="font-size:12px">本次补货量</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="madjb" data-d="-5">−5</button>
+          <span style="font-family:var(--mono);font-size:18px;font-weight:800;color:#fff;min-width:70px;text-align:center" id="amt">8 件</span>
+          <button class="madjb" data-d="5">+5</button>
+        </div>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--dim)" id="pct">= 月均 8%</span>
+      </div>
+      <div id="tiers"></div>
+      <div id="verdict4" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.className='show';clearTimeout(t._h);t._h=setTimeout(()=>t.className='',2500);}
+
+// ===== 机制1:人线10个SR(合计=100) =====
+const SRS=[['张',10],['李',15],['王',5],['赵',12],['陈',8],['刘',10],['孙',13],['周',7],['吴',11],['郑',9]];
+function renderSR(){
+  document.getElementById('srgrid').innerHTML=SRS.map(([n,v])=>`<div class="sr"><div class="sn">${n}</div><div class="sv">${v}</div></div>`).join('');
+  const sum=SRS.reduce((s,[,v])=>s+v,0);
+  document.getElementById('srsum').textContent='= '+sum+(sum===100?' ✓':' ✗');
+  const r=document.getElementById('recon');
+  if(sum===100){r.className='reconcile ok';r.textContent='✓ 两条线都归到北极星 100 · 连接律成立(A线关差=下层定标 · B线实际=上层实际)';}
+  else{r.className='reconcile bad';r.textContent='✗ 人线合计 '+sum+' ≠ 北极星 100 · 有缺口/漏损 · 必须补齐(定标↓不允许漏)';}
+}
+
+// ===== 机制2:12 round 棋盘 =====
+let curRound=0;
+function renderBoard(){
+  document.getElementById('board').innerHTML=Array.from({length:12},(_,i)=>{
+    const r=i+1;const cls=r<curRound?'played':(r===curRound?'cur':'');
+    return `<div class="rd ${cls}"><div class="rn">R${r}</div><div class="rl">${r<=curRound?'✓环':'待跑'}</div></div>`;
+  }).join('');
+}
+document.getElementById('advbtn').addEventListener('click',()=>{
+  if(curRound>=12){curRound=0;renderBoard();toast('◈ 新一局 game 开始(季)· R1 起');return;}
+  curRound++;renderBoard();
+  const mn=Math.ceil(curRound/4);
+  if(curRound===12){toast('◈ R12 收官 · 1 个 game(季)结算完成 · 点再跑开新局');document.getElementById('advbtn').textContent='↻ 开新一局 game(季)';}
+  else{toast('▶ 第'+mn+'月 · R'+curRound+' · 跑完环(定标→量实→算差→关差→验果)');}
+});
+
+// ===== 机制3:跨round防假(3店12round) =====
+const STORES=[
+  {id:'honest',cls:'honest',nm:'诚实店·王老板',stage:'成熟',claim:'全ON·数据真',pattern:'improve',dianliang:true},
+  {id:'fake',cls:'fake',nm:'存疑店·某店',stage:'成熟',claim:'全ON·数据真(自报)',pattern:'flat_bad',dianliang:true},
+  {id:'newstore',cls:'normal',nm:'新店·导入期(赵老板)',stage:'导入',claim:'报点亮·数据真',pattern:'flat_bad',dianliang:true},
+  {id:'normal',cls:'normal',nm:'正常店·李老板',stage:'成长',claim:'部分ON·如实报',pattern:'normal',dianliang:true},
+];
+function genResults(pattern){
+  const arr=[];let v=pattern==='improve'?38:(pattern==='flat_bad'?32:40);
+  for(let i=0;i<12;i++){
+    if(pattern==='improve')v=Math.min(88,v+3+Math.random()*3);
+    else if(pattern==='flat_bad')v=32+Math.random()*5; // 一直低(上报却说全好)
+    else v=40+Math.random()*20;
+    arr.push(Math.round(v));
+  }
+  return arr;
+}
+function renderTraces(run){
+  document.getElementById('traces').innerHTML=STORES.map(s=>{
+    let verdict='<span class="verdict pending">待跑一局</span>',spark='',flag='';
+    if(run){
+      const res=s._res;
+      const badStreak=(()=>{let mx=0,c=0;res.forEach(v=>{if(v<40){c++;mx=Math.max(mx,c);}else c=0;});return mx;})();
+      const claimGood=s.pattern!=='normal';
+      const max=Math.max(...res);
+      spark='<div class="spark">'+res.map(v=>`<div class="b" style="height:${v/max*100}%;background:${v<40?'var(--red)':'var(--green)'}"></div>`).join('')+'</div>';
+      // ★阶段分级:导入看点亮(结果低不判假)·成熟看结果
+      if(s.stage==='导入'){
+        // 导入期:结果低是正常,只有"报点亮但盘点实为OFF"才存疑;这里点亮真→可信
+        if(!s.dianliang){
+          verdict='<span class="verdict doubt">⚠ 数据存疑</span>';
+          flag=`<div class="flag"><b>CB一致性 fire(导入期口径):</b>报"点亮"但盘点实为 OFF · 上报与事实不符 → flag 复核。</div>`;
+        }else{
+          verdict='<span class="verdict trust">✓ 数据可信(导入期)</span>';
+          flag=`<div class="flag" style="border-color:var(--star);color:#F0D89A"><b>★分阶段修正:</b>导入期<b>看点亮不看利润</b>·结果低是正常(投60-80%养市场)。点亮真=可信。<b>若用成熟期"结果起没起"套它,会把诚实新店冤枉成造假——这正是分阶段要避的坑。</b></div>`;
+        }
+      }else{ // 成熟/成长:看结果
+        const doubt=claimGood&&badStreak>=3&&s.pattern==='flat_bad';
+        if(doubt){
+          verdict='<span class="verdict doubt">⚠ 数据存疑</span>';
+          flag=`<div class="flag"><b>CB一致性 fire(成熟期口径):</b>报"${s.claim}"但结果连续 ${badStreak} round 低于线。<b>成熟期数据都真→结果就该起</b>;持续不符→数据造假概率大→flag 复核(不自动罚·进tracker)。</div>`;
+        }else if(s.pattern==='improve'){
+          verdict='<span class="verdict trust">✓ 数据可信</span>';
+          flag=`<div class="tinfo" style="margin-top:5px;color:var(--green)">上报真+执行到位→结果逐round改善→数据与结果一致,可信。</div>`;
+        }else{
+          verdict='<span class="verdict trust">✓ 正常波动</span>';
+          flag=`<div class="tinfo" style="margin-top:5px">如实上报(不全ON)·结果正常波动·无异常。</div>`;
+        }
+      }
+    }
+    return `<div class="trace ${s.cls}">
+      <div class="th"><span class="tn">${s.nm} <span style="font-family:var(--mono);font-size:9px;color:var(--dim)">[${s.stage}期]</span></span>${verdict}</div>
+      <div class="tinfo">上报:<b>${s.claim}</b></div>
+      ${spark}${flag}</div>`;
+  }).join('');
+}
+document.getElementById('detbtn').addEventListener('click',()=>{
+  STORES.forEach(s=>s._res=genResults(s.pattern));
+  renderTraces(true);
+  toast('◈ 跑完12round · 存疑店被跨round一致性检测揪出(结果连续不符上报)');
+});
+
+// ===== 机制4:授权分级(%阈值·HITL卡执行前) =====
+const BASE_BUY=100; // 月均进货基准100件
+let buyAmt=8;
+const TIERS=[
+  {id:1,cls:'t1',ti:'✋ 自主',rule:'≤5%(≤5件)',who:'SR 自己拍板',lo:0,hi:5},
+  {id:2,cls:'t2',ti:'🟡 报上级',rule:'5%~15%(5~15件)',who:'报 DSR/DOM 知会批准',lo:5,hi:15},
+  {id:3,cls:'t3',ti:'🔴 统一审批',rule:'>15%(>15件)',who:'总部/沈总统一审批·卡执行前',lo:15,hi:9999},
+];
+function tierOf(pct){return TIERS.find(t=>pct>t.lo&&pct<=t.hi)||TIERS[0];}
+function renderMech4(){
+  const pct=Math.round(buyAmt/BASE_BUY*100);
+  document.getElementById('amt').textContent=buyAmt+' 件';
+  document.getElementById('pct').textContent='= 月均 '+pct+'%';
+  const cur=tierOf(pct);
+  document.getElementById('tiers').innerHTML=TIERS.map(t=>
+    `<div class="tier ${t.cls} ${t.id===cur.id?'active':'dim2'}"><span class="ti">${t.ti}</span><span><b>${t.rule}</b> → ${t.who}</span></div>`).join('');
+  const v=document.getElementById('verdict4');
+  if(cur.id===1){v.className='v4box a1';v.innerHTML=`✋ <b>${buyAmt}件(${pct}%)</b> ≤5% → <b>SR 自主执行</b>,无需上报。`;}
+  else if(cur.id===2){v.className='v4box a2';v.innerHTML=`🟡 <b>${buyAmt}件(${pct}%)</b> 超5%线 → <b>先报 DSR/DOM 批准</b>再执行(HITL·卡执行前)。`;}
+  else{v.className='v4box a3';v.innerHTML=`🔴 <b>${buyAmt}件(${pct}%)</b> 超15%线 → <b>总部/沈总统一审批后才做</b>·未批不得执行(涉钱/不可逆·human_gate 卡在执行前·守 L5 人拍板)。`;}
+}
+document.querySelectorAll('.madjb').forEach(b=>b.addEventListener('click',()=>{
+  buyAmt=Math.max(0,buyAmt+ +b.dataset.d);renderMech4();
+  const pct=Math.round(buyAmt/BASE_BUY*100);const t=tierOf(pct);
+  toast('补货 '+buyAmt+'件('+pct+'%)→ '+t.ti.replace(/[✋🟡🔴] /,''));
+}));
+renderMech4();
+
+renderSR();renderBoard();renderTraces(false);
+</script>
+</body>
+</html>
