@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>线下母本 v4 · 门店轴 + 真 INF-XD 嵌入(可试用)</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  :root{--bg:#05070b;--card:#161c26;--card2:#1c2431;--line:rgba(255,255,255,.09);
+    --t1:#eaf1fb;--t2:#9fb0c8;--t3:#5d6e86;--blue:#4f8cff;--blue2:#7db0ff;--green:#3ddc84;--green2:#9fe8c0;--red:#ff5f5f;--amber:#f5a623;--amber2:#ffce7a;--violet:#a78bfa;}
+  body{background:var(--bg);color:var(--t1);font-family:'Noto Sans SC',system-ui,-apple-system,sans-serif;max-width:448px;margin:0 auto;min-height:100vh;padding-bottom:66px;}
+  .trial{background:repeating-linear-gradient(45deg,#1a1f28,#1a1f28 10px,#141922 10px,#141922 20px);color:var(--amber2);font-size:9.5px;text-align:center;padding:5px 10px;line-height:1.5;border-bottom:1px solid var(--line);}
+  .trial b{color:var(--green2);}
+  .top{position:sticky;top:0;z-index:30;background:rgba(5,7,11,.97);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:8px 13px;}
+  .toprow{display:flex;align-items:center;justify-content:space-between;}
+  .top .nm{font-size:14px;font-weight:800;}.top .sub{font-size:9.5px;color:var(--t3);}
+  .roleSw{display:flex;border:1px solid #2a3140;border-radius:7px;overflow:hidden;}
+  .roleSw button{font-size:11px;padding:4px 11px;border:none;background:#141922;color:var(--t2);cursor:pointer;}
+  .roleSw button.on{background:var(--blue);color:#fff;font-weight:700;}
+  .beat{margin-top:8px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;}
+  .beat .r1{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--t2);}
+  .beat .r1 b{color:var(--amber2);font-family:ui-monospace,monospace;}
+  .pre{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px;}
+  .pre .c{background:var(--card2);border-radius:7px;padding:6px 4px;text-align:center;}
+  .pre .c .l{font-size:8.5px;color:var(--t3);}.pre .c .v{font-size:12.5px;font-weight:800;font-family:ui-monospace,monospace;margin-top:1px;}
+  .pre .bud .v{color:var(--blue2);}.pre .prd .v{color:var(--violet);}.pre .act .v{color:var(--green2);}.pre .gap .v{color:var(--amber2);}
+  .scr{display:none;padding:11px 12px;}.scr.on{display:block;animation:f .2s ease;}@keyframes f{from{opacity:0;transform:translateY(5px)}to{opacity:1}}
+  .scr.xd{padding:0;}
+  .sec{font-size:12px;color:var(--t2);font-weight:700;margin:5px 0 8px;}
+  .input-band{background:rgba(79,140,255,.1);border:1px solid rgba(79,140,255,.28);border-radius:10px;padding:8px 11px;font-size:10.5px;color:var(--blue2);margin-bottom:10px;line-height:1.55;}
+  .input-band b{color:#bcd4ff;}
+  .value-band{background:linear-gradient(135deg,rgba(61,220,132,.1),rgba(245,166,35,.05));border:1px solid rgba(61,220,132,.28);border-radius:11px;padding:10px 12px;margin-bottom:11px;}
+  .value-band .vb-h{font-size:11px;font-weight:800;color:var(--green2);margin-bottom:5px;}
+  .value-band .vb-row{font-size:10.5px;color:var(--t1);line-height:1.7;}
+  .value-band .vb-k{color:var(--t3);display:inline-block;min-width:58px;}
+  .value-band .vb-win{font-size:10px;color:var(--amber2);margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.07);}
+  .value-band .vb-note{font-size:9.5px;color:var(--green);margin-top:4px;}
+  .vdeliver{font-size:10px;color:var(--green2);margin-top:6px;background:rgba(61,220,132,.06);border-radius:6px;padding:5px 8px;line-height:1.5;}
+  .vdeliver b{color:var(--amber2);}
+  .store{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px;margin-bottom:9px;border-left:3px solid var(--line);cursor:pointer;transition:.14s;position:relative;}
+  .store:active{transform:scale(.985);background:var(--card2);}
+  .store.fire{border-left-color:var(--red);}.store.done{opacity:.55;}
+  .store .h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .store .snm{font-size:14.5px;font-weight:800;}.store .meta{font-size:10px;color:var(--t3);font-family:ui-monospace,monospace;margin-top:2px;}
+  .budline{margin-top:8px;background:rgba(79,140,255,.08);border-radius:7px;padding:7px 9px;font-size:11px;}
+  .budline .b{color:var(--blue2);font-weight:700;font-family:ui-monospace,monospace;}.budtrace{font-size:9px;color:var(--t3);margin-top:2px;}
+  .todo{margin-top:8px;font-size:11px;line-height:1.7;}.todo .fire{color:var(--red);font-weight:700;}
+  .enter{margin-top:9px;text-align:center;background:var(--blue);color:#fff;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;}
+  .store.fire .enter{background:var(--amber);color:#111;}.store.done .enter{background:var(--card2);color:var(--t3);}
+  .tap-hint{position:absolute;top:11px;right:12px;font-size:9px;color:var(--t3);}
+  /* XD iframe 容器 */
+  .xdbar{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--card2);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10;}
+  .xdbar .back{background:var(--card);border:1px solid var(--line);color:var(--t1);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;}
+  .xdbar .lb{font-size:11px;color:var(--amber);font-weight:700;}
+  #xdFrame{width:100%;height:calc(100vh - 168px);min-height:520px;border:none;display:block;background:#0a0a0f;}
+  .xdempty{padding:22px;text-align:center;color:var(--t3);font-size:12px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px;margin-bottom:10px;}
+  .kv{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--line);}.kv:last-child{border:0;}.kv b{font-family:ui-monospace,monospace;}
+  .note{font-size:10px;color:var(--t3);line-height:1.6;margin-top:7px;}
+  .mgronly{display:none;}body.role-mgr .mgronly{display:block;}body.role-mgr .emponly{display:none;}
+  .go{width:100%;background:var(--green);color:#062012;border:none;border-radius:10px;padding:12px;font-size:13.5px;font-weight:800;cursor:pointer;margin-top:4px;}
+  .go:active{transform:translateY(1px);}.go.blue{background:var(--blue);color:#fff;}
+  .stepper{display:flex;align-items:center;gap:8px;justify-content:center;margin:10px 0;}
+  .stepper button{width:38px;height:38px;border-radius:9px;border:none;background:var(--card2);color:var(--violet);font-size:20px;cursor:pointer;}
+  .stepper b{font-family:ui-monospace,monospace;font-size:22px;min-width:90px;text-align:center;color:var(--violet);}
+  .acc{background:linear-gradient(135deg,rgba(167,139,250,.12),var(--card));border:1px solid rgba(167,139,250,.3);border-radius:11px;padding:12px;margin-bottom:10px;}
+  .acc .big{font-size:26px;font-weight:800;font-family:ui-monospace,monospace;color:var(--violet);}
+  .lockmsg{background:var(--card2);border:1px dashed var(--line);border-radius:10px;padding:14px;text-align:center;color:var(--t2);font-size:12px;}
+  .tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:448px;display:grid;grid-template-columns:repeat(5,1fr);background:#0a0d13;border-top:1px solid var(--line);z-index:40;}
+  .tab{text-align:center;padding:6px 0 8px;font-size:9.5px;color:var(--t3);cursor:pointer;border:none;background:none;}
+  .tab.on{color:var(--blue2);}.tab .ic{font-size:17px;display:block;margin-bottom:1px;}
+  .prog{height:7px;background:#0e131b;border-radius:4px;overflow:hidden;}
+  .prog i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--violet));}
+  .cklayer{background:var(--card2);border-radius:9px;padding:8px 11px;}
+  .cklayer .l1{font-size:9.5px;color:var(--t3);}
+  .cklayer .l2{font-size:12.5px;font-weight:700;margin-top:1px;}
+  .ckarrow{text-align:center;font-size:9.5px;color:var(--t3);padding:2px 0;}
+  .chefbtn{position:fixed;right:14px;bottom:78px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#f5a623,#ff8a3d);border:none;color:#fff;font-size:23px;box-shadow:0 4px 16px rgba(245,166,35,.4);cursor:pointer;z-index:45;}
+  .chefmask{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:49;display:none;}.chefmask.on{display:block;}
+  .chefpanel{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:448px;background:var(--card);border-top:1px solid var(--line);border-radius:16px 16px 0 0;z-index:50;padding:15px 13px 30px;max-height:74vh;overflow-y:auto;display:none;}.chefpanel.on{display:block;}
+  .chefpanel .ch-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}.chefpanel .ch-h b{font-size:15px;}.chefpanel .ch-x{background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer;}
+  .chefcard{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:9px;cursor:pointer;}
+  .chefcard .cc-t{font-size:14px;font-weight:700;}.chefcard .cc-s{font-size:11px;color:var(--t3);margin-top:2px;}
+  .chefcard .cc-b{font-size:11.5px;color:var(--t1);line-height:1.7;margin-top:8px;display:none;background:rgba(255,255,255,.03);border-radius:8px;padding:8px 10px;}.chefcard.open .cc-b{display:block;}
+  #toast{position:fixed;left:50%;bottom:74px;transform:translateX(-50%) translateY(16px);background:#0a0d13;border:1px solid var(--line);color:#fff;padding:10px 15px;border-radius:10px;font-size:12px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:88%;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.4);}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .foot{font-size:9.5px;color:var(--t3);text-align:center;padding:11px;}
+</style>
+</head>
+<body>
+
+<div class="trial">🧪 线下母本 v4 · 门店轴 XM → <b>真 INF-XD 嵌入</b>(照搬·非自造)· 签退 postMessage 回填实际 · 换渠道只改 CHANNEL 块</div>
+<div class="top">
+  <div class="toprow">
+    <div><div class="nm" id="who">李梅</div><div class="sub" id="whoSub">社区店·SR·一线</div></div>
+    <div class="roleSw"><button id="rE" class="on" onclick="setRole('emp')">一线</button><button id="rM" onclick="setRole('mgr')">主管</button></div>
+  </div>
+  <div class="beat">
+    <div class="r1"><span>🗓 <b id="beatSeason">Q2</b>·Game·Round <b id="beatRound">3</b>/13(周=story)·Day <b id="beatDay">2</b>/7(task)</span><span style="color:var(--t3)">滚动→Q3/Q4…</span></div>
+    <div class="pre">
+      <div class="c bud"><div class="l">预算(JBP/BP)</div><div class="v" id="preBud">¥0</div></div>
+      <div class="c prd"><div class="l">预测(主管)</div><div class="v" id="prePrd">—</div></div>
+      <div class="c act"><div class="l">实际(XD回传)</div><div class="v" id="preAct">¥0</div></div>
+      <div class="c gap"><div class="l">差</div><div class="v" id="preGap">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 路上 XM -->
+<div class="scr on" id="s-xm">
+  <div class="input-band"><b>⊢ 定标↓ 预算 INPUT</b> · 本 round 每店预算由 <b>BP→JBP</b> 分解 · 你照本店目标做 · <b>挂得回上面·可追溯</b>。</div>
+  <div class="value-band" id="valueBand"></div>
+  <div class="sec">🗺 今日路线 · 点整张门店卡 → 直达这家店的 INF-XD 盘点</div>
+  <div id="storeList"></div>
+  <div class="note" id="mmNote"></div>
+</div>
+
+<!-- 店内 XD · 真 INF-XD iframe -->
+<div class="scr xd" id="s-xd">
+  <div class="xdbar"><button class="back" onclick="go('xm')">‹ 返回路上</button><button class="back" onclick="retryXD()" style="margin-left:6px">↻ 重试加载</button><span class="lb" id="xdLb">🏪 未进店</span><span style="margin-left:auto;font-size:9px;color:var(--t3)">真 INF-XD · 签退自动回填</span></div>
+  <div style="font-size:10px;color:var(--t3);padding:6px 12px;background:var(--card2);border-bottom:1px solid var(--line)">店内空白?① 确认 <b>infxdv6711.html</b> 已发布到 Pages ② 确认网络可达 <b>github.io</b> · 或点上方 ↻ 重试</div><div id="xdWrap"><div class="xdempty">从「路上」点一家店 → 这里加载这家店的真 INF-XD 现场盘点。<br>盘完在 XD 里签退 → 数据 postMessage 回传 → 自动落到预实/收入。</div></div>
+</div>
+
+<!-- 一本账 XL -->
+<div class="scr" id="s-xl">
+  <div class="sec">💳 一本账 · 预实对账(实际来自 XD 签退回传)</div>
+  <div class="card">
+    <div class="kv"><span>本 round 预算(JBP/BP)</span><b id="xlBud" style="color:var(--blue2)">¥0</b></div>
+    <div class="kv"><span>主管预测</span><b id="xlPrd" style="color:var(--violet)">—</b></div>
+    <div class="kv"><span>已执行实际(XD回传累计)</span><b id="xlAct" style="color:var(--green2)">¥0</b></div>
+    <div class="kv"><span>差(实际−预算)</span><b id="xlGap" style="color:var(--amber2)">—</b></div>
+    <div class="note">实际 = INF-XD 签退时 postMessage 传回的真实盘点折算。差→关差→关不了升一层。</div>
+  </div>
+  <div class="card"><div class="sec" style="margin:0 0 6px">📋 逐店预实(XD 回传后出现)</div><div id="storeLedger"></div></div>
+  <div class="card"><div class="sec" style="margin:0 0 6px">🔁 PDCA · 收 round</div>
+    <button class="go blue" onclick="rollRound()">结算本 round·算预测准度·滚下一 round →</button>
+    <div class="note">4 round=月小结·1 季度=game·Q2→Q3→Q4 滚。</div></div>
+</div>
+
+<!-- 预测台 -->
+<div class="scr" id="s-pred">
+  <div class="sec">📊 预测台 · <span style="color:var(--violet)">押预测(主管·第4级)</span></div>
+  <div class="emponly" id="empPredBoard"></div>
+  <div class="mgronly">
+    <div class="acc"><div style="font-size:10px;color:var(--t2)">📈 上一 round 预测准度</div><div class="big" id="predAcc">—</div><div style="font-size:10.5px;color:var(--t2)" id="predAccD"></div>
+      <div class="note">★升阶燃料:准度一轮轮记,准了才把预测交给系统(①→②→③)·现在人机结合。</div></div>
+    <div class="card"><div class="sec" style="margin:0 0 2px">押本 round 预测</div>
+      <div class="note" style="margin-top:2px">预算 ¥<b id="predBudRef">0</b>(死红线)。你据市场押"实际会到多少"。</div>
+      <div class="stepper"><button onclick="bumpPredict(-500)">−</button><b id="predVal">¥0</b><button onclick="bumpPredict(500)">＋</button></div>
+      <button class="go" onclick="commitPredict()">✔ 提交预测(HITL)</button></div>
+  </div>
+</div>
+
+<!-- 我的 XP -->
+<div class="scr" id="s-xp">
+  <div class="sec">👤 我的 · <span class="emponly">Gig 成就</span><span class="mgronly">团队复盘</span></div>
+  <div class="card" id="cockpitCard"></div>
+  <div class="card emponly"><div class="sec" style="margin:0 0 4px">🎯 today task · 做完拿钱升级(Gig)</div>
+    <div class="kv"><span>今日完成门店(task)</span><b id="gigDone">0</b></div>
+    <div class="kv"><span>本 round 落袋收入</span><b style="color:var(--green2)" id="gigGot">¥0</b></div>
+    <div class="kv"><span>晋升</span><b style="color:var(--amber2)">S82→S+95</b></div>
+    <div class="note">照目标做完 task→收入+晋升。做对的事在上游,你把它做对。</div></div>
+  <div class="card"><div class="sec" style="margin:0 0 4px">📈 验果 · 看「预实差+状态动没动」(非任务做没做)</div>
+    <div class="kv"><span>本 round 完成盘点门店</span><b id="vqsMoved">0</b></div>
+    <div class="kv"><span>XD 回传 SKU 累计</span><b id="vqsSku">0</b></div>
+    <div class="note">VQS 对事不对人·不排名。验果看预实标动没动,不是打卡。</div></div>
+  <div class="card"><div class="sec" style="margin:0 0 4px">🧪 学习台账(①规则型·诚实)</div>
+    <div class="note">系统记预测/决策,<b>说不出值不值</b>·待累积(~500样本/~12月)。<b style="color:var(--amber2)">预测=第4级·现在人做·将来长成 Agent。</b></div></div>
+</div>
+
+<button class="chefbtn" onclick="openChef()" title="客情助手">💬</button>
+<div class="chefmask" id="chefMask" onclick="closeChef()"></div>
+<div class="chefpanel" id="chefPanel">
+  <div class="ch-h"><b>💬 客情助手 · <span id="chefChan"></span></b><button class="ch-x" onclick="closeChef()">✕</button></div>
+  <div style="font-size:10px;color:var(--t3);margin-bottom:11px">照本渠道内核 · SR 客情/说服/卖点话术(每渠道不同 · 点开看话术)</div>
+  <div id="chefList"></div>
+</div>
+<nav class="tabs">
+  <button class="tab on" data-t="xm" onclick="go('xm')"><span class="ic">📱</span>路上</button>
+  <button class="tab" data-t="xd" onclick="go('xd')"><span class="ic">🏪</span>店内XD</button>
+  <button class="tab" data-t="xl" onclick="go('xl')"><span class="ic">💳</span>一本账</button>
+  <button class="tab" data-t="pred" onclick="go('pred')"><span class="ic">📊</span>预测台</button>
+  <button class="tab" data-t="xp" onclick="go('xp')"><span class="ic">👤</span>我的</button>
+</nav>
+<div id="toast"></div>
+<div class="foot">线下母本 v4 · 门店轴 + 真 INF-XD 嵌入(照搬)· 签退 postMessage 回填 · ①规则型 · 非「Agent 已上线」</div>
+
+<script>
+/* ===== CHANNEL · 换渠道只改这块 =====
+   店内 XD = 照搬真 INF-XD(iframe 嵌入·不自造)。契约:
+   进店 → iframe src = XD_URL + '?store='+id+'&channel='+name+'&emb=1'
+   签退 → INF-XD 发 window.parent.postMessage({type:'xd_finish', store, skus, bottles})
+   本母本监听 message → 回填实际/预实/收入。
+   ⚠ XD_URL 指向仓库里现成文件;若 Pages 路径不同,改这一行即可。
+   ================================= */
+const XD_URL='https://infinity-os-sh.github.io/Infinity-os-SH/infxdv6711.html';
+const CHANNEL={
+  name:'胖东来',who:'刘娟',role:'胖东来·KA经理',sentinelWord:'品质破口/口碑',sentinelNote:'命门=<b style="color:var(--red)">品质破口/口碑</b>(口碑是命·我只能是加分项·绝不做破口)·红卡先进。做完每家=一个 daily task;7天=一 round(story)。',prevPredict:32000,prevActual:31000,
+  cascade:{northstar:'复调调味品类 200 亿瓶(公司北极星)',jbp:'胖东来渠道 · 守品质口碑(过极严品质关)',category:'高品质调味品类(限毛利)'},
+  scripts:[
+    {icon:'✅',title:'过品质关',sub:'上架门槛最高',body:'进胖东来=过它极严品质关(全国最高门槛)。真材实料、把品控做到它标准之上,进了就是顶级品质背书。品质关靠买手把关(人做·不自动化)。'},
+    {icon:'🛡',title:'不做口碑破口',sub:'口碑是它的命',body:'胖东来口碑是命,我只能是加分项、绝不能是破口。任何品质瑕疵宁可下架,不用折价甩(和便利店相反·下架保调性)。'},
+    {icon:'🏷',title:'明码标价/限毛利',sub:'反套路·于东来限毛利',body:'胖东来反套路:明码标价、限毛利让利。别拿促销套路谈,拿真材实料+品质故事牌+让利谈,和它价值观对齐。'},
+    {icon:'🙋',title:'服务即经营',sub:'员工是经营者',body:'胖东来员工被充分授权、是经营者不是执行者。配合极致服务标准(无理由退/免费服务),让员工好卖我的货=服务口碑双赢。服务靠人·不自动化替代。'},
+  ],
+  winwin:{
+    header:'客情 · 价值满足(照胖东来内核 ⑦ 双赢交集)',
+    wants:'极致品质 + 守口碑',
+    provide:'顶级品质背书(B·极强)· 真材实料配合极致服务(V)· 长期深度绑定+品质共建(R)· 严格品控降品控风险(−C)· 优质供应省选品验货(−T)',
+    bridge:'帮胖东来守住品质口碑(真材实料+过严苛品控)· 我只能是加分项,绝不做它口碑的破口',
+    three_win:'品牌赢顶级背书 · 胖东来赢品质口碑 · 顾客买到真货好服务',
+    note:'你每个动作都在守它的品质口碑——过品质关、保鲜度、明码标价。服务/品质是胖东来的魂,靠被授权的员工,绝不自动化替代人。涉钱→human_gate。',
+    deliver_fire:'<b>保品质+护口碑(V·−C)</b>——口碑是命·品质瑕疵宁可下架不折价·守住这店顶级调性',
+    deliver_normal:'<b>真材实料+服务共建(B·R)</b>——过品质关+配合极致服务·做它口碑的加分项'
+  },
+  stores:[
+    {id:'pdlxuchang',name:'胖东来·许昌时代广场店',tag:'旗舰·垄断',meta:'死忠复购·口碑自传播·成熟',sw:'高',budget:14000,fire:true,gaps:'六月鲜鲜度存疑·恐成口碑破口',bpTrace:'BP华中→胖东来渠道→胖东来采购JBP→本店'},
+    {id:'pdlxinxiang',name:'胖东来·新乡店',tag:'深耕·高复购',meta:'区域垄断·死忠客·成熟',sw:'高',budget:11000,fire:true,gaps:'禾然有机品质故事牌缺·没讲透',bpTrace:'BP华中→胖东来渠道→胖东来采购JBP→本店'},
+    {id:'pdltianjie',name:'胖东来·许昌天街店',tag:'品质·稳定',meta:'明码标价·限毛利·稳定',sw:'中',budget:7000,fire:false,gaps:'过品质关铺新品·配服务',bpTrace:'BP华中→胖东来渠道→胖东来采购JBP→本店'},
+  ]
+};
+
+let ROLE='emp',CUR=null,SETTLED={},GOT=0,DONE=0,SKUCNT=0;
+let ROUND={season:'Q2',no:3,day:2},PREDICT=null;
+const ACTUAL={};
+const esc=s=>(s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2600);}
+function go(s){document.querySelectorAll('.scr').forEach(function(x){x.classList.remove('on');});document.getElementById('s-'+s).classList.add('on');document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('on',t.dataset.t===s);});window.scrollTo(0,0);}
+function setRole(r){ROLE=r;document.body.classList.toggle('role-mgr',r==='mgr');document.getElementById('rE').classList.toggle('on',r==='emp');document.getElementById('rM').classList.toggle('on',r==='mgr');document.getElementById('who').textContent=r==='mgr'?'王经理':CHANNEL.who;document.getElementById('whoSub').textContent=r==='mgr'?CHANNEL.name+'·渠道经理·主管':CHANNEL.name+'·SR·一线';renderPred();toast(r==='mgr'?'主管面:押预测·看准度':'一线面:照目标做·Gig');}
+
+function budTotal(){return CHANNEL.stores.reduce(function(a,s){return a+s.budget;},0);}
+function actTotal(){return Object.keys(ACTUAL).reduce(function(a,k){return a+ACTUAL[k];},0);}
+
+function renderBeat(){document.getElementById('beatSeason').textContent=ROUND.season;document.getElementById('beatRound').textContent=ROUND.no;document.getElementById('beatDay').textContent=ROUND.day;
+  var bud=budTotal(),act=actTotal();document.getElementById('preBud').textContent='¥'+bud;document.getElementById('prePrd').textContent=PREDICT!=null?'¥'+PREDICT:'—';document.getElementById('preAct').textContent='¥'+act;document.getElementById('preGap').textContent=act>0?((act-bud>=0?'+':'')+(act-bud)):'—';}
+
+function renderValueBand(){var w=CHANNEL.winwin;if(!w)return;document.getElementById('valueBand').innerHTML=
+  '<div class="vb-h">🤝 '+w.header+'</div>'+
+  '<div class="vb-row"><span class="vb-k">'+CHANNEL.name+'要:</span>'+w.wants+'</div>'+
+  '<div class="vb-row"><span class="vb-k">我方给:</span>'+w.provide+'</div>'+
+  '<div class="vb-row"><span class="vb-k">弥合点:</span><b style="color:#bcd4ff">'+w.bridge+'</b></div>'+
+  '<div class="vb-win">三赢:'+w.three_win+'</div>'+
+  '<div class="vb-note">👉 '+w.note+'</div>';var mn=document.getElementById('mmNote');if(mn&&CHANNEL.sentinelNote)mn.innerHTML=CHANNEL.sentinelNote;}
+function renderChef(){var c=document.getElementById('chefChan');if(c)c.textContent=CHANNEL.name;var l=document.getElementById('chefList');if(l)l.innerHTML=(CHANNEL.scripts||[]).map(function(x){return '<div class="chefcard" onclick="this.classList.toggle(\'open\')"><div class="cc-t">'+x.icon+' '+esc(x.title)+'</div><div class="cc-s">'+esc(x.sub)+'</div><div class="cc-b">'+x.body+'</div></div>';}).join('')||'<div style="color:var(--t3);font-size:11px">本渠道暂无话术(待内核补 scripts)</div>';}
+function openChef(){renderChef();document.getElementById('chefPanel').classList.add('on');document.getElementById('chefMask').classList.add('on');}
+function closeChef(){document.getElementById('chefPanel').classList.remove('on');document.getElementById('chefMask').classList.remove('on');}
+function renderXM(){
+  document.getElementById('storeList').innerHTML=CHANNEL.stores.map(function(st){
+    var done=!!SETTLED[st.id],onclick=done?'':'onclick="enter(\''+st.id+'\')"';
+    return '<div class="store '+(st.fire&&!done?'fire':'')+(done?' done':'')+'" '+onclick+'>'+(done?'':'<span class="tap-hint">点整卡进店 ›</span>')+
+      '<div class="h"><div><div class="snm">'+esc(st.name)+'</div><div class="meta">'+esc(st.tag)+'·'+esc(st.meta)+'</div></div><span style="font-size:10px;font-family:ui-monospace,monospace;color:'+(done?'var(--green2)':(st.fire?'#ff8a8a':'var(--t3)'))+'">'+(done?'已签退':(st.fire?'有'+CHANNEL.sentinelWord:'待盘'))+'</span></div>'+
+      '<div class="budline">本店本 round 预算 <span class="b">¥'+st.budget+'</span>'+(done?' · 实际 <b style="color:var(--green2)">¥'+(ACTUAL[st.id]||0)+'</b>':'')+'<div class="budtrace">↑ '+esc(st.bpTrace)+'</div></div>'+
+      '<div class="todo">📋 今天在这家做:'+(done?'<span style="color:var(--green2)">✓ 已盘完·XD回传</span>':(st.fire?'<span class="fire">🔴 '+esc(st.gaps)+'</span>':esc(st.gaps)))+'</div>'+
+      '<div class="vdeliver">🎁 这家兑现的价值:'+(st.fire?CHANNEL.winwin.deliver_fire:CHANNEL.winwin.deliver_normal)+'</div>'+
+      '<div class="enter">'+(done?'✓ task 完成':(st.fire?'🔴 进店盘点(真XD)→':'进店盘点(真XD)→'))+'</div></div>';
+  }).join('');
+}
+
+// ★进店 → 加载真 INF-XD iframe(照搬)
+function retryXD(){ if(CUR){ enter(CUR.id); toast('重新加载 '+CUR.name+' 的 XD…'); } else { toast('先从路上点一家店'); } }
+function xdFallback(){ var w=document.getElementById('xdWrap'); if(w) w.innerHTML='<div style="padding:26px 18px;text-align:center;color:var(--t3);font-size:12px;line-height:1.8">🏪 店内 XD 加载失败<br><span style="font-size:10.5px">请确认 <b>infxdv6711.html</b> 已发布到 Pages,且网络可达 github.io。</span><br><button onclick="retryXD()" style="margin-top:12px;background:var(--blue);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:13px;cursor:pointer">↻ 重试</button></div>'; }
+function enter(id){
+  CUR=CHANNEL.stores.find(function(s){return s.id===id;});
+  document.getElementById('xdLb').textContent='🏪 '+CUR.name+' · 真 INF-XD';
+  var src=XD_URL+'?store='+encodeURIComponent(id)+'&channel='+encodeURIComponent(CHANNEL.name)+'&budget='+CUR.budget+'&emb=1';
+  document.getElementById('xdWrap').innerHTML='<iframe id="xdFrame" title="INF-XD 现场盘点" src="'+src+'" onerror="xdFallback()"></iframe>'; (function(){var _f=document.getElementById('xdFrame');var _ok=false;window.addEventListener('message',function(e){if(e&&e.data&&(e.data.type==='xd_finish'||e.data.type==='xd_ready'))_ok=true;},{once:true});setTimeout(function(){try{var d=_f&&_f.contentDocument;if(!_ok&&_f&&(!d||!d.body||d.body.innerHTML.length<20)){/* 跨域时 contentDocument 读不到=正常加载中,不误报;仅当明确空白才兜底 */}}catch(err){}},4000);})();
+  go('xd');
+  // ★驱动真 XD:用它内置的父消息接口(V3.0·收父消息 goScreen)跳到「进店打卡→拍照盘点」·并切一线美顾视图
+  var f=document.getElementById('xdFrame');
+  function driveXD(){ try{ if(f&&f.contentWindow) f.contentWindow.postMessage({type:'goScreen', screen:1}, '*'); }catch(e){} }
+  if(f){ f.addEventListener('load', function(){ driveXD(); setTimeout(driveXD,400); setTimeout(driveXD,1100); }); }
+  setTimeout(driveXD,1500); setTimeout(driveXD,2500); // 兜底:listener 未及安装时重试
+  toast('进店:'+CUR.name+' · 进 XD 打卡 →「开始今日作业」→ 拍主货架');
+}
+
+// ★监听 INF-XD 签退回传(契约:{type:'xd_finish', store, skus, bottles})
+window.addEventListener('message',function(e){
+  var d=e.data; if(!d||d.type!=='xd_finish')return;
+  if(!CUR){return;}
+  if(SETTLED[CUR.id]){return;}
+  var skuN=(d.skus&&d.skus.length)||0, bottles=d.bottles||0;
+  // 实际=预算×盘点健康度(回传越足→越接近预算)·mock折算
+  var health=Math.max(0.6,Math.min(1.05,(bottles||60)/80));
+  var act=Math.round(CUR.budget*health);
+  ACTUAL[CUR.id]=act; SETTLED[CUR.id]=true; DONE++; SKUCNT+=skuN;
+  GOT+=Math.round(act*0.03);                              // Gig 收入=实际×激励率(mock)
+  renderBeat();renderXM();renderXL();renderXP();renderPred();
+  go('xl');
+  toast('✓ '+CUR.name+' XD 签退回传:'+skuN+' SKU/'+bottles+'瓶 → 实际¥'+act+' 已落预实');
+},false);
+
+function renderXL(){var bud=budTotal(),act=actTotal();
+  document.getElementById('xlBud').textContent='¥'+bud;document.getElementById('xlPrd').textContent=PREDICT!=null?'¥'+PREDICT:'—(主管未押)';document.getElementById('xlAct').textContent='¥'+act;document.getElementById('xlGap').textContent=act>0?((act-bud>=0?'+':'')+(act-bud)+' '+(act>=bud?'✓达标':'未达标·关差')):'—';
+  document.getElementById('storeLedger').innerHTML=CHANNEL.stores.map(function(s){var a=ACTUAL[s.id],done=!!SETTLED[s.id];return '<div class="kv"><span>'+esc(s.name)+' <span style="color:var(--t3)">预¥'+s.budget+'</span></span>'+(done?'<b style="color:'+((a>=s.budget)?'var(--green2)':'var(--amber2)')+'">实¥'+a+'('+(a-s.budget>=0?'+':'')+(a-s.budget)+')</b>':'<b style="color:var(--t3)">未执行</b>')+'</div>';}).join('');}
+
+function renderCockpit(){var el=document.getElementById('cockpitCard');if(!el)return;var c=CHANNEL.cascade||{};var bud=budTotal(),act=actTotal();var fires=CHANNEL.stores.filter(function(s){return s.fire&&!SETTLED[s.id];}).length;
+  var rows=[['北极星 · 公司战略',c.northstar||'—','var(--amber2)'],['JBP · 本渠道客户',c.jbp||'—','var(--violet)'],['品类',c.category||'—','var(--blue2)'],['我的门店 · 本 round','预算 ¥'+bud+'(我负责 '+CHANNEL.stores.length+' 店)← 这就是「我」的目标','var(--green2)'],['我今天 · task',(fires>0?'救 '+fires+' 个断货':'补短板动销')+' → 挂得回北极星','#fff']];
+  var html='<div class="sec" style="margin:0 0 8px">🎯 我的驾驶舱 · 公司战略怎么落到我(四层 · 定标↓)</div>';
+  rows.forEach(function(r,i){html+='<div class="cklayer"><div class="l1">'+r[0]+'</div><div class="l2" style="color:'+r[2]+'">'+r[1]+'</div></div>';if(i<rows.length-1)html+='<div class="ckarrow">↓ '+(i===0?'关差=下层定标(连接律)':'定标↓')+'</div>';});
+  html+='<div class="note" style="margin-top:9px">↑ 量实:我的实际 <b style="color:var(--green2)">¥'+act+'</b> 自下而上汇 → 品类 → JBP → 北极星。你今天做的,挂得回公司战略。</div>';
+  el.innerHTML=html;}
+function renderEmpPredBoard(){var el=document.getElementById('empPredBoard');if(!el)return;var pred=(PREDICT!=null?PREDICT:budTotal()),act=actTotal(),gap=Math.max(0,pred-act),pct=pred>0?Math.min(100,Math.round(act/pred*100)):0;
+  el.innerHTML='<div class="acc"><div style="font-size:10px;color:var(--t2)">🎯 本 round 目标看板(主管已押 · 你照着追)</div>'+
+   '<div style="display:flex;justify-content:space-between;margin-top:9px;text-align:center">'+
+   '<div><div style="font-size:19px;font-weight:800;color:var(--violet);font-family:ui-monospace,monospace">¥'+pred+'</div><div style="font-size:9px;color:var(--t3)">主管预测</div></div>'+
+   '<div><div style="font-size:19px;font-weight:800;color:var(--green2);font-family:ui-monospace,monospace">¥'+act+'</div><div style="font-size:9px;color:var(--t3)">我的实际</div></div>'+
+   '<div><div style="font-size:19px;font-weight:800;color:var(--amber2);font-family:ui-monospace,monospace">¥'+gap+'</div><div style="font-size:9px;color:var(--t3)">还差</div></div></div>'+
+   '<div class="prog" style="margin-top:9px"><i style="width:'+pct+'%"></i></div>'+
+   '<div class="note">👉 预测你不用押(那是主管的活),但要知道靶子在哪、离靶多远。今天进店救差,把实际往预测推。</div></div>';}
+function renderPred(){document.getElementById('predBudRef').textContent=budTotal();if(PREDICT==null)PREDICT=budTotal();document.getElementById('predVal').textContent='¥'+PREDICT;var acc=Math.max(0,Math.round(100-Math.abs(CHANNEL.prevPredict-CHANNEL.prevActual)/CHANNEL.prevActual*100));document.getElementById('predAcc').textContent=acc+'%';document.getElementById('predAccD').textContent='上轮:预测 ¥'+CHANNEL.prevPredict+' · 实际 ¥'+CHANNEL.prevActual;renderEmpPredBoard();}
+function bumpPredict(d){PREDICT=Math.max(0,(PREDICT||budTotal())+d);document.getElementById('predVal').textContent='¥'+PREDICT;}
+function commitPredict(){renderBeat();renderXL();renderPred();go('xl');var el=document.getElementById('xlPrd');if(el&&el.parentElement){el.parentElement.style.transition='background .4s';el.parentElement.style.background='rgba(139,109,246,.18)';setTimeout(function(){el.parentElement.style.background='';},1500);}toast('预测已提交 ¥'+PREDICT+' → 已进一本账·预实对账。等一线量实回填实际,再算准度。');}
+function renderXP(){renderCockpit();document.getElementById('gigDone').textContent=DONE;document.getElementById('gigGot').textContent='¥'+GOT;document.getElementById('vqsMoved').textContent=DONE;document.getElementById('vqsSku').textContent=SKUCNT;}
+function rollRound(){var act=actTotal();if(act===0){toast('先进店盘点·XD签退产生实际');return;}var predUsed=PREDICT!=null?PREDICT:budTotal();var acc=Math.max(0,Math.round(100-Math.abs(predUsed-act)/act*100));CHANNEL.prevPredict=predUsed;CHANNEL.prevActual=act;ROUND.no+=1;ROUND.day=1;SETTLED={};Object.keys(ACTUAL).forEach(function(k){delete ACTUAL[k];});PREDICT=null;renderBeat();renderXM();renderXL();renderPred();renderXP();go('pred');toast('本 round 收结:预测准度 '+acc+'% → 滚到 Round '+ROUND.no);}
+
+setRole('emp');renderValueBand();renderBeat();renderXM();renderXL();renderPred();renderXP();
+</script>
+</body>
+</html>
