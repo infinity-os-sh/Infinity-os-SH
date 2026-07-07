@@ -131,6 +131,7 @@
     <div class="kv"><span>差(实际−预算)</span><b id="xlGap" style="color:var(--amber2)">—</b></div>
     <div class="note">实际 = INF-XD 签退时 postMessage 传回的真实盘点折算。差→关差→关不了升一层。</div>
   </div>
+  <div class="card" id="formulaCard"></div>
   <div class="card"><div class="sec" style="margin:0 0 6px">📋 逐店预实(XD 回传后出现)</div><div id="storeLedger"></div></div>
   <div class="card"><div class="sec" style="margin:0 0 6px">🔁 PDCA · 收 round</div>
     <button class="go blue" onclick="rollRound()">结算本 round·算预测准度·滚下一 round →</button>
@@ -197,6 +198,7 @@ const XD_URL='https://infinity-os-sh.github.io/Infinity-os-SH/infxdv6711.html';
 const CHANNEL={
   name:'会员店',who:'孙婕',role:'会员店·KA经理',sentinelWord:'汰换/末位淘汰',sentinelNote:'命门=<b style="color:var(--red)">汰换/末位淘汰</b>(动销/复购达不到就下架·20-25%汰换)·红卡先进。做完每家=一个 daily task;7天=一 round(story)。',prevPredict:45000,prevActual:42000,
   cascade:{northstar:'复调调味品类 200 亿瓶(公司北极星)',jbp:'会员店渠道 · 帮买手赢续费 KPI',category:'精选酱油品类(少而精)'},
+  formula:{label:'利润 = 会员数 × 续费率 × 会员费 − 选品成本',action:'会员共创/爆款保续费',factors:[{name:'会员数',bud:100,act:91},{name:'续费率',bud:100,act:64},{name:'会员费',bud:100,act:97}]},
   scripts:[
     {icon:'💰',title:'买手压价话术',sub:'采购压采购价',body:'会员店靠续费不靠差价:我这支是能拉续费的爆款,会员买到精选、复购带续费,你 KPI 才好看。独家配方帮你降采购成本,一起做大单品池。采购价/费用涉钱→报主管拍板(human_gate)。'},
     {icon:'⭐',title:'精选做爆',sub:'少而精·单品做大',body:'会员店赢者通吃:精选位就几支,做爆一支=需求集中、周转议价全改善。别铺数量,把这支做成品类爆款。'},
@@ -289,7 +291,11 @@ window.addEventListener('message',function(e){
   toast('✓ '+CUR.name+' XD 签退回传:'+skuN+' SKU/'+bottles+'瓶 → 实际¥'+act+' 已落预实');
 },false);
 
-function renderXL(){var bud=budTotal(),act=actTotal();
+function renderFormula(){var el=document.getElementById('formulaCard');if(!el)return;var f=CHANNEL.formula;if(!f){el.style.display='none';return;}var worst=null,wp=2;f.factors.forEach(function(x){var p=x.bud>0?x.act/x.bud:1;if(p<wp){wp=p;worst=x;}});
+  var h='<div class="sec" style="margin:0 0 6px">🧮 算差诊断 · 本渠道盈利公式(拆到最短因子)</div><div class="note" style="margin:0 0 9px"><b style="color:var(--blue2)">'+f.label+'</b></div>';
+  f.factors.forEach(function(x){var p=Math.round((x.bud>0?x.act/x.bud:1)*100),sh=(x===worst);h+='<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;font-size:11px"><span>'+x.name+(sh?' <b style="color:#ff8a8a">← 最短</b>':'')+'</span><span style="font-family:ui-monospace,monospace;color:'+(sh?'#ff8a8a':'var(--t2)')+'">'+p+'%</span></div><div class="prog"><i style="width:'+Math.min(100,p)+'%;'+(sh?'background:var(--red)':'')+'"></i></div></div>';});
+  h+='<div class="note" style="margin-top:8px">算差拆到最短因子 = <b style="color:#ff8a8a">'+(worst?worst.name:'—')+'</b> → 关差 = 拉这根(<b style="color:var(--amber2)">'+(f.action||'补短板')+'</b>)。<b>每渠道公式不同 → 拆的因子不同 → 关差动作不同。</b></div>';el.innerHTML=h;}
+function renderXL(){renderFormula();var bud=budTotal(),act=actTotal();
   document.getElementById('xlBud').textContent='¥'+bud;document.getElementById('xlPrd').textContent=PREDICT!=null?'¥'+PREDICT:'—(主管未押)';document.getElementById('xlAct').textContent='¥'+act;document.getElementById('xlGap').textContent=act>0?((act-bud>=0?'+':'')+(act-bud)+' '+(act>=bud?'✓达标':'未达标·关差')):'—';
   document.getElementById('storeLedger').innerHTML=CHANNEL.stores.map(function(s){var a=ACTUAL[s.id],done=!!SETTLED[s.id];return '<div class="kv"><span>'+esc(s.name)+' <span style="color:var(--t3)">预¥'+s.budget+'</span></span>'+(done?'<b style="color:'+((a>=s.budget)?'var(--green2)':'var(--amber2)')+'">实¥'+a+'('+(a-s.budget>=0?'+':'')+(a-s.budget)+')</b>':'<b style="color:var(--t3)">未执行</b>')+'</div>';}).join('');}
 

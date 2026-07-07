@@ -131,6 +131,7 @@
     <div class="kv"><span>差(实际−预算)</span><b id="xlGap" style="color:var(--amber2)">—</b></div>
     <div class="note">实际 = INF-XD 签退时 postMessage 传回的真实盘点折算。差→关差→关不了升一层。</div>
   </div>
+  <div class="card" id="formulaCard"></div>
   <div class="card"><div class="sec" style="margin:0 0 6px">📋 逐店预实(XD 回传后出现)</div><div id="storeLedger"></div></div>
   <div class="card"><div class="sec" style="margin:0 0 6px">🔁 PDCA · 收 round</div>
     <button class="go blue" onclick="rollRound()">结算本 round·算预测准度·滚下一 round →</button>
@@ -197,6 +198,7 @@ const XD_URL='https://infinity-os-sh.github.io/Infinity-os-SH/infxdv6711.html';
 const CHANNEL={
   name:'精品超市',who:'林悦',role:'精品超市·KA经理',sentinelWord:'调性破口/选品',sentinelNote:'命门=<b style="color:var(--red)">调性破口/选品不匹配</b>(高端调性·选品人做·[待内核])·红卡先进。做完每家=一个 daily task;7天=一 round(story)。',prevPredict:28000,prevActual:26800,
   cascade:{northstar:'复调调味品类 200 亿瓶(公司北极星)',jbp:'精品超市渠道 · 买手选品匹配调性 [待内核]',category:'高端/进口调味品类'},
+  formula:{label:'GMV = 客流 × 转化 × 高端客单 × 调性溢价 [待内核]',action:'选品匹配调性提转化 [待内核]',factors:[{name:'客流',bud:100,act:86},{name:'转化',bud:100,act:68},{name:'高端客单',bud:100,act:90},{name:'调性溢价',bud:100,act:82}]},
   scripts:[
     {icon:'🎯',title:'选品匹配调性',sub:'买手选品·人做·不自动化',body:'精品超市赢在调性:选品是买手的活(assistant 类·绝不 Loop 化替代)。我这支要和门店高端调性匹配,进对店、上对位,才是加分。[待精品超市内核校准]'},
     {icon:'✨',title:'高端锚卖点',sub:'品质/进口/小众',body:'精品超市客为品质和格调而来。禾然有机/欣和高端线做"高端锚",讲品质故事、摆精选位,不走量走调性。'},
@@ -289,7 +291,11 @@ window.addEventListener('message',function(e){
   toast('✓ '+CUR.name+' XD 签退回传:'+skuN+' SKU/'+bottles+'瓶 → 实际¥'+act+' 已落预实');
 },false);
 
-function renderXL(){var bud=budTotal(),act=actTotal();
+function renderFormula(){var el=document.getElementById('formulaCard');if(!el)return;var f=CHANNEL.formula;if(!f){el.style.display='none';return;}var worst=null,wp=2;f.factors.forEach(function(x){var p=x.bud>0?x.act/x.bud:1;if(p<wp){wp=p;worst=x;}});
+  var h='<div class="sec" style="margin:0 0 6px">🧮 算差诊断 · 本渠道盈利公式(拆到最短因子)</div><div class="note" style="margin:0 0 9px"><b style="color:var(--blue2)">'+f.label+'</b></div>';
+  f.factors.forEach(function(x){var p=Math.round((x.bud>0?x.act/x.bud:1)*100),sh=(x===worst);h+='<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;font-size:11px"><span>'+x.name+(sh?' <b style="color:#ff8a8a">← 最短</b>':'')+'</span><span style="font-family:ui-monospace,monospace;color:'+(sh?'#ff8a8a':'var(--t2)')+'">'+p+'%</span></div><div class="prog"><i style="width:'+Math.min(100,p)+'%;'+(sh?'background:var(--red)':'')+'"></i></div></div>';});
+  h+='<div class="note" style="margin-top:8px">算差拆到最短因子 = <b style="color:#ff8a8a">'+(worst?worst.name:'—')+'</b> → 关差 = 拉这根(<b style="color:var(--amber2)">'+(f.action||'补短板')+'</b>)。<b>每渠道公式不同 → 拆的因子不同 → 关差动作不同。</b></div>';el.innerHTML=h;}
+function renderXL(){renderFormula();var bud=budTotal(),act=actTotal();
   document.getElementById('xlBud').textContent='¥'+bud;document.getElementById('xlPrd').textContent=PREDICT!=null?'¥'+PREDICT:'—(主管未押)';document.getElementById('xlAct').textContent='¥'+act;document.getElementById('xlGap').textContent=act>0?((act-bud>=0?'+':'')+(act-bud)+' '+(act>=bud?'✓达标':'未达标·关差')):'—';
   document.getElementById('storeLedger').innerHTML=CHANNEL.stores.map(function(s){var a=ACTUAL[s.id],done=!!SETTLED[s.id];return '<div class="kv"><span>'+esc(s.name)+' <span style="color:var(--t3)">预¥'+s.budget+'</span></span>'+(done?'<b style="color:'+((a>=s.budget)?'var(--green2)':'var(--amber2)')+'">实¥'+a+'('+(a-s.budget>=0?'+':'')+(a-s.budget)+')</b>':'<b style="color:var(--t3)">未执行</b>')+'</div>';}).join('');}
 
