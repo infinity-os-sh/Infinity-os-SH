@@ -69,6 +69,19 @@
   .tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:448px;display:grid;grid-template-columns:repeat(5,1fr);background:#0a0d13;border-top:1px solid var(--line);z-index:40;}
   .tab{text-align:center;padding:6px 0 8px;font-size:9.5px;color:var(--t3);cursor:pointer;border:none;background:none;}
   .tab.on{color:var(--blue2);}.tab .ic{font-size:17px;display:block;margin-bottom:1px;}
+  .prog{height:7px;background:#0e131b;border-radius:4px;overflow:hidden;}
+  .prog i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--violet));}
+  .cklayer{background:var(--card2);border-radius:9px;padding:8px 11px;}
+  .cklayer .l1{font-size:9.5px;color:var(--t3);}
+  .cklayer .l2{font-size:12.5px;font-weight:700;margin-top:1px;}
+  .ckarrow{text-align:center;font-size:9.5px;color:var(--t3);padding:2px 0;}
+  .chefbtn{position:fixed;right:14px;bottom:78px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#f5a623,#ff8a3d);border:none;color:#fff;font-size:23px;box-shadow:0 4px 16px rgba(245,166,35,.4);cursor:pointer;z-index:45;}
+  .chefmask{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:49;display:none;}.chefmask.on{display:block;}
+  .chefpanel{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:448px;background:var(--card);border-top:1px solid var(--line);border-radius:16px 16px 0 0;z-index:50;padding:15px 13px 30px;max-height:74vh;overflow-y:auto;display:none;}.chefpanel.on{display:block;}
+  .chefpanel .ch-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}.chefpanel .ch-h b{font-size:15px;}.chefpanel .ch-x{background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer;}
+  .chefcard{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:9px;cursor:pointer;}
+  .chefcard .cc-t{font-size:14px;font-weight:700;}.chefcard .cc-s{font-size:11px;color:var(--t3);margin-top:2px;}
+  .chefcard .cc-b{font-size:11.5px;color:var(--t1);line-height:1.7;margin-top:8px;display:none;background:rgba(255,255,255,.03);border-radius:8px;padding:8px 10px;}.chefcard.open .cc-b{display:block;}
   #toast{position:fixed;left:50%;bottom:74px;transform:translateX(-50%) translateY(16px);background:#0a0d13;border:1px solid var(--line);color:#fff;padding:10px 15px;border-radius:10px;font-size:12px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:88%;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.4);}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
   .foot{font-size:9.5px;color:var(--t3);text-align:center;padding:11px;}
@@ -127,7 +140,7 @@
 <!-- 预测台 -->
 <div class="scr" id="s-pred">
   <div class="sec">📊 预测台 · <span style="color:var(--violet)">押预测(主管·第4级)</span></div>
-  <div class="emponly lockmsg">🔒 预测是<b>主管</b>的活。你是一线——照本店目标把事做对即可。<span style="color:var(--t3);font-size:10.5px;display:block;margin-top:5px">切「主管」可见。</span></div>
+  <div class="emponly" id="empPredBoard"></div>
   <div class="mgronly">
     <div class="acc"><div style="font-size:10px;color:var(--t2)">📈 上一 round 预测准度</div><div class="big" id="predAcc">—</div><div style="font-size:10.5px;color:var(--t2)" id="predAccD"></div>
       <div class="note">★升阶燃料:准度一轮轮记,准了才把预测交给系统(①→②→③)·现在人机结合。</div></div>
@@ -141,6 +154,7 @@
 <!-- 我的 XP -->
 <div class="scr" id="s-xp">
   <div class="sec">👤 我的 · <span class="emponly">Gig 成就</span><span class="mgronly">团队复盘</span></div>
+  <div class="card" id="cockpitCard"></div>
   <div class="card emponly"><div class="sec" style="margin:0 0 4px">🎯 today task · 做完拿钱升级(Gig)</div>
     <div class="kv"><span>今日完成门店(task)</span><b id="gigDone">0</b></div>
     <div class="kv"><span>本 round 落袋收入</span><b style="color:var(--green2)" id="gigGot">¥0</b></div>
@@ -154,6 +168,13 @@
     <div class="note">系统记预测/决策,<b>说不出值不值</b>·待累积(~500样本/~12月)。<b style="color:var(--amber2)">预测=第4级·现在人做·将来长成 Agent。</b></div></div>
 </div>
 
+<button class="chefbtn" onclick="openChef()" title="客情助手">💬</button>
+<div class="chefmask" id="chefMask" onclick="closeChef()"></div>
+<div class="chefpanel" id="chefPanel">
+  <div class="ch-h"><b>💬 客情助手 · <span id="chefChan"></span></b><button class="ch-x" onclick="closeChef()">✕</button></div>
+  <div style="font-size:10px;color:var(--t3);margin-bottom:11px">照本渠道内核 · SR 客情/说服/卖点话术(每渠道不同 · 点开看话术)</div>
+  <div id="chefList"></div>
+</div>
 <nav class="tabs">
   <button class="tab on" data-t="xm" onclick="go('xm')"><span class="ic">📱</span>路上</button>
   <button class="tab" data-t="xd" onclick="go('xd')"><span class="ic">🏪</span>店内XD</button>
@@ -174,9 +195,14 @@
    ================================= */
 const XD_URL='https://infinity-os-sh.github.io/Infinity-os-SH/infxdv6711.html';
 const CHANNEL={
-  name:'大卖场',who:'赵刚',role:'大卖场·KA经理',sentinelWord:'断货/掉排面',
-  sentinelNote:'命门=<b style="color:var(--red)">断货/掉排面</b>(走量渠道·排面掉=失客流)·红卡先进。做完每家=一个 daily task;7天=一 round(story)。',
-  prevPredict:38000,prevActual:35600,
+  name:'大卖场',who:'赵刚',role:'大卖场·KA经理',sentinelWord:'断货/掉排面',sentinelNote:'命门=<b style="color:var(--red)">断货/掉排面</b>(走量渠道·排面掉=失客流)·红卡先进。做完每家=一个 daily task;7天=一 round(story)。',prevPredict:38000,prevActual:35600,
+  cascade:{northstar:'复调调味品类 200 亿瓶(公司北极星)',jbp:'大卖场渠道 · KA 走量铺货',category:'家庭大宗调味品类'},
+  scripts:[
+    {icon:'💰',title:'费用/账期话术',sub:'采购压后台费用',body:'谈的是双重账:前台进销差+后台通道费。我用堆头/促销投入换你客流,返点账期一起谈,长期供货稳。堆头费用涉钱→报主管拍板(human_gate)。'},
+    {icon:'📦',title:'走量爆品卖点',sub:'带客流·坪效',body:'大卖场缺的是客流。我这支是能带客流的动销爆品,配促销/试吃拉人进场,你走量坪效双赢。'},
+    {icon:'🏗',title:'堆头/端架争取',sub:'资源位谈判',body:'端架被竞品挤占=我掉排面你掉动销。争回主排面+堆头,走量才起得来。资源位费用涉钱→报主管(human_gate)。'},
+    {icon:'🤝',title:'KA客情',sub:'账期/长期合作',body:'KA做的是长期关系:稳定供货+账期配合+数据帮你补货省理货时间。关系厚,资源位和促销档期才排得进。'},
+  ],
   winwin:{
     header:'客情 · 价值满足(照大卖场内核 ⑦ 双赢交集)',
     wants:'坪效 + 客流(受电商/O2O 分流·最缺客流)',
@@ -215,6 +241,9 @@ function renderValueBand(){var w=CHANNEL.winwin;if(!w)return;document.getElement
   '<div class="vb-row"><span class="vb-k">弥合点:</span><b style="color:#bcd4ff">'+w.bridge+'</b></div>'+
   '<div class="vb-win">三赢:'+w.three_win+'</div>'+
   '<div class="vb-note">👉 '+w.note+'</div>';var mn=document.getElementById('mmNote');if(mn&&CHANNEL.sentinelNote)mn.innerHTML=CHANNEL.sentinelNote;}
+function renderChef(){var c=document.getElementById('chefChan');if(c)c.textContent=CHANNEL.name;var l=document.getElementById('chefList');if(l)l.innerHTML=(CHANNEL.scripts||[]).map(function(x){return '<div class="chefcard" onclick="this.classList.toggle(\'open\')"><div class="cc-t">'+x.icon+' '+esc(x.title)+'</div><div class="cc-s">'+esc(x.sub)+'</div><div class="cc-b">'+x.body+'</div></div>';}).join('')||'<div style="color:var(--t3);font-size:11px">本渠道暂无话术(待内核补 scripts)</div>';}
+function openChef(){renderChef();document.getElementById('chefPanel').classList.add('on');document.getElementById('chefMask').classList.add('on');}
+function closeChef(){document.getElementById('chefPanel').classList.remove('on');document.getElementById('chefMask').classList.remove('on');}
 function renderXM(){
   document.getElementById('storeList').innerHTML=CHANNEL.stores.map(function(st){
     var done=!!SETTLED[st.id],onclick=done?'':'onclick="enter(\''+st.id+'\')"';
@@ -255,7 +284,7 @@ window.addEventListener('message',function(e){
   var act=Math.round(CUR.budget*health);
   ACTUAL[CUR.id]=act; SETTLED[CUR.id]=true; DONE++; SKUCNT+=skuN;
   GOT+=Math.round(act*0.03);                              // Gig 收入=实际×激励率(mock)
-  renderBeat();renderXM();renderXL();renderXP();
+  renderBeat();renderXM();renderXL();renderXP();renderPred();
   go('xl');
   toast('✓ '+CUR.name+' XD 签退回传:'+skuN+' SKU/'+bottles+'瓶 → 实际¥'+act+' 已落预实');
 },false);
@@ -264,10 +293,24 @@ function renderXL(){var bud=budTotal(),act=actTotal();
   document.getElementById('xlBud').textContent='¥'+bud;document.getElementById('xlPrd').textContent=PREDICT!=null?'¥'+PREDICT:'—(主管未押)';document.getElementById('xlAct').textContent='¥'+act;document.getElementById('xlGap').textContent=act>0?((act-bud>=0?'+':'')+(act-bud)+' '+(act>=bud?'✓达标':'未达标·关差')):'—';
   document.getElementById('storeLedger').innerHTML=CHANNEL.stores.map(function(s){var a=ACTUAL[s.id],done=!!SETTLED[s.id];return '<div class="kv"><span>'+esc(s.name)+' <span style="color:var(--t3)">预¥'+s.budget+'</span></span>'+(done?'<b style="color:'+((a>=s.budget)?'var(--green2)':'var(--amber2)')+'">实¥'+a+'('+(a-s.budget>=0?'+':'')+(a-s.budget)+')</b>':'<b style="color:var(--t3)">未执行</b>')+'</div>';}).join('');}
 
-function renderPred(){document.getElementById('predBudRef').textContent=budTotal();if(PREDICT==null)PREDICT=budTotal();document.getElementById('predVal').textContent='¥'+PREDICT;var acc=Math.max(0,Math.round(100-Math.abs(CHANNEL.prevPredict-CHANNEL.prevActual)/CHANNEL.prevActual*100));document.getElementById('predAcc').textContent=acc+'%';document.getElementById('predAccD').textContent='上轮:预测 ¥'+CHANNEL.prevPredict+' · 实际 ¥'+CHANNEL.prevActual;}
+function renderCockpit(){var el=document.getElementById('cockpitCard');if(!el)return;var c=CHANNEL.cascade||{};var bud=budTotal(),act=actTotal();var fires=CHANNEL.stores.filter(function(s){return s.fire&&!SETTLED[s.id];}).length;
+  var rows=[['北极星 · 公司战略',c.northstar||'—','var(--amber2)'],['JBP · 本渠道客户',c.jbp||'—','var(--violet)'],['品类',c.category||'—','var(--blue2)'],['我的门店 · 本 round','预算 ¥'+bud+'(我负责 '+CHANNEL.stores.length+' 店)← 这就是「我」的目标','var(--green2)'],['我今天 · task',(fires>0?'救 '+fires+' 个断货':'补短板动销')+' → 挂得回北极星','#fff']];
+  var html='<div class="sec" style="margin:0 0 8px">🎯 我的驾驶舱 · 公司战略怎么落到我(四层 · 定标↓)</div>';
+  rows.forEach(function(r,i){html+='<div class="cklayer"><div class="l1">'+r[0]+'</div><div class="l2" style="color:'+r[2]+'">'+r[1]+'</div></div>';if(i<rows.length-1)html+='<div class="ckarrow">↓ '+(i===0?'关差=下层定标(连接律)':'定标↓')+'</div>';});
+  html+='<div class="note" style="margin-top:9px">↑ 量实:我的实际 <b style="color:var(--green2)">¥'+act+'</b> 自下而上汇 → 品类 → JBP → 北极星。你今天做的,挂得回公司战略。</div>';
+  el.innerHTML=html;}
+function renderEmpPredBoard(){var el=document.getElementById('empPredBoard');if(!el)return;var pred=(PREDICT!=null?PREDICT:budTotal()),act=actTotal(),gap=Math.max(0,pred-act),pct=pred>0?Math.min(100,Math.round(act/pred*100)):0;
+  el.innerHTML='<div class="acc"><div style="font-size:10px;color:var(--t2)">🎯 本 round 目标看板(主管已押 · 你照着追)</div>'+
+   '<div style="display:flex;justify-content:space-between;margin-top:9px;text-align:center">'+
+   '<div><div style="font-size:19px;font-weight:800;color:var(--violet);font-family:ui-monospace,monospace">¥'+pred+'</div><div style="font-size:9px;color:var(--t3)">主管预测</div></div>'+
+   '<div><div style="font-size:19px;font-weight:800;color:var(--green2);font-family:ui-monospace,monospace">¥'+act+'</div><div style="font-size:9px;color:var(--t3)">我的实际</div></div>'+
+   '<div><div style="font-size:19px;font-weight:800;color:var(--amber2);font-family:ui-monospace,monospace">¥'+gap+'</div><div style="font-size:9px;color:var(--t3)">还差</div></div></div>'+
+   '<div class="prog" style="margin-top:9px"><i style="width:'+pct+'%"></i></div>'+
+   '<div class="note">👉 预测你不用押(那是主管的活),但要知道靶子在哪、离靶多远。今天进店救差,把实际往预测推。</div></div>';}
+function renderPred(){document.getElementById('predBudRef').textContent=budTotal();if(PREDICT==null)PREDICT=budTotal();document.getElementById('predVal').textContent='¥'+PREDICT;var acc=Math.max(0,Math.round(100-Math.abs(CHANNEL.prevPredict-CHANNEL.prevActual)/CHANNEL.prevActual*100));document.getElementById('predAcc').textContent=acc+'%';document.getElementById('predAccD').textContent='上轮:预测 ¥'+CHANNEL.prevPredict+' · 实际 ¥'+CHANNEL.prevActual;renderEmpPredBoard();}
 function bumpPredict(d){PREDICT=Math.max(0,(PREDICT||budTotal())+d);document.getElementById('predVal').textContent='¥'+PREDICT;}
 function commitPredict(){renderBeat();renderXL();toast('预测已提交 ¥'+PREDICT+'(人拍板·进预实与准度)');}
-function renderXP(){document.getElementById('gigDone').textContent=DONE;document.getElementById('gigGot').textContent='¥'+GOT;document.getElementById('vqsMoved').textContent=DONE;document.getElementById('vqsSku').textContent=SKUCNT;}
+function renderXP(){renderCockpit();document.getElementById('gigDone').textContent=DONE;document.getElementById('gigGot').textContent='¥'+GOT;document.getElementById('vqsMoved').textContent=DONE;document.getElementById('vqsSku').textContent=SKUCNT;}
 function rollRound(){var act=actTotal();if(act===0){toast('先进店盘点·XD签退产生实际');return;}var predUsed=PREDICT!=null?PREDICT:budTotal();var acc=Math.max(0,Math.round(100-Math.abs(predUsed-act)/act*100));CHANNEL.prevPredict=predUsed;CHANNEL.prevActual=act;ROUND.no+=1;ROUND.day=1;SETTLED={};Object.keys(ACTUAL).forEach(function(k){delete ACTUAL[k];});PREDICT=null;renderBeat();renderXM();renderXL();renderPred();renderXP();go('pred');toast('本 round 收结:预测准度 '+acc+'% → 滚到 Round '+ROUND.no);}
 
 setRole('emp');renderValueBand();renderBeat();renderXM();renderXL();renderPred();renderXP();
