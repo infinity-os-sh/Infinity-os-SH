@@ -119,7 +119,7 @@
     </div>
     <div class="who" id="who">抖音运营一线 <small>内容电商运营 · 抖音 · SKU/内容成交轴</small></div>
     <div class="lead">
-      <div class="big" id="bigline">导入期 · 种链能转</div>
+      <div class="big" id="bigline">导入期 · 算法冷启</div>
       <div class="second" id="second"></div>
     </div>
   </div>
@@ -187,6 +187,7 @@ const MOCK_DATA = {
                    3:{landing_split:{live_gpm:650,entry_rate:0.045,live_pay_cvr:0.036,card_gmv_share:0.18}},
                    5:{a3_to_a4_rate:0.11,new_customer_rate:0.12,seed_pools_refresh:{first_buyer_pool:1010}} },
     gate_result:{ gate:"Gate2", gate2_pass:true, next_stage:"mature",
+      hard_redline:{experience_score:4.7,refund_rate:0.05,bad_review_rate:0.03,pass:true},
       roi_lines:{roi_stoploss_line:1.0,roi_growth_hold_line:1.2},
       entry_gmv_split:{live_gmv_share:0.62,short_video_gmv_share:0.20,card_gmv_share:0.18} },
     human_gate_actions:[{k:"千川放量加投(跨档)",amt:25000,irr:false},{k:"直播加热",amt:6000,irr:false}] },
@@ -200,6 +201,7 @@ const MOCK_DATA = {
                    4:{live_dependence_gate:{live_gmv_share:0.48,live_gmv_share_max:0.55,pass:true},portfolio_guard:{crowd_overlap:0.38,overlap_max:0.45,pass:true}},
                    5:{a4_to_a5_rate:0.16,repurchase_rate:0.21,member_ltv:175} },
     gate_result:{ gate:"Gate3", gate3_pass:true, gate3_verdict:"stable_keep", next_action:"stay_mature_next_cycle",
+      hard_redline:{experience_score:4.8,refund_rate:0.04,bad_review_rate:0.02,pass:true},
       options:["stable_keep","stable_reduce_spend","refresh_restart","decline_stoploss","retire_archive"], portfolio_escalation:false },
     human_gate_actions:[{k:"降投维护(stable_reduce_spend)",amt:0,irr:true},{k:"组合内耗·升品类会诊",amt:0,irr:true}] },
   decline: { id:"DY-CVN-OLD", spu:"SPU_葱伴侣", name:"葱伴侣经典黄豆酱(老装)", stage:"decline",
@@ -212,6 +214,7 @@ const MOCK_DATA = {
                    4:{residual_authenticity_gate:{natural_traffic_verified:true,pass:true},bleed_gate:{negative_comment_ratio:0.06,pass:true}},
                    5:{migration_target_sku:"SKU_葱伴侣黄豆酱_新装260g",a5_migrate_ready:0.62} },
     gate_result:{ gate:"Gate4", gate4_verdict:"stoploss_hold",
+      hard_redline:{experience_score:4.6,brand_residual_risk_score:0.2,pass:true},
       chain:{ residual_signal:{natural_gmv:38000,card_gmv_share:0.71,pass:true},
               cost_squeeze:{new_spend:0,live_sessions:0,new_material_count:0,squeeze_executed:true,pass:true},
               bleed_control:{negative_comment_ratio:0.06,refund_rate_actual:0.05,pass:true},
@@ -230,6 +233,7 @@ const MOCK_DATA = {
                    4:{relapse_check:{same_pattern_detected:false,pass:true}},
                    5:{a5_wakeup_rate:0.14,early_repurchase_signal:true} },
     gate_result:{ gate:"Gate-R", gate_r_verdict:"back_to_growth", internal_status:null,
+      hard_redline:{experience_score:4.6,refund_rate:0.05,pass:true},
       options:["back_to_growth","retire_archive"], internal_status_options:["stay_renewal_fix"],
       root_cause_resolved:true, relapse_free:true, renewal_attempt_count:1, max_renewal_attempts:2 },
     human_gate_actions:[{k:"焕新采买(controlled_restart)",amt:4000,irr:false},{k:"二次淘汰",amt:0,irr:true}] },
@@ -318,7 +322,27 @@ function curMetrics(){
     return {...m,v,show,pass,inflated:(!S.calib&&m.raw!=null)};
   });
 }
-function gatePass(){ return curMetrics().every(m=>m.pass); }
+function gatePass(){
+  const metricPass = curMetrics().every(m=>m.pass);
+  const gr = curSKU().gate_result||{};
+  // 硬红线真参与判级:有 hard_redline 的期,红线 false → Gate 必 false
+  const redline = gr.hard_redline ? gr.hard_redline.pass===true : true;
+  if(S.stage==='decline'){
+    // Gate4:cost_squeeze 在先——没关掉付费引擎(squeeze_executed)不许判 stoploss_hold
+    const c=gr.chain||{};
+    return metricPass && redline
+      && c.residual_signal?.pass===true
+      && c.cost_squeeze?.pass===true && c.cost_squeeze?.squeeze_executed===true
+      && c.bleed_control?.pass===true
+      && c.migration_ready?.pass===true;
+  }
+  if(S.stage==='renewal'){
+    // Gate-R:根因未解/同雷再踩 → 不许 back_to_growth
+    return metricPass && redline
+      && gr.root_cause_resolved===true && gr.relapse_free===true;
+  }
+  return metricPass && redline;
+}
 
 /* ---------------- render: stage strip ---------------- */
 function renderStrip(){
@@ -345,7 +369,9 @@ function renderToday(){
   let mh=ms.map((m,i)=>`<div class="metric ${m.inflated?'':(m.pass?'ok':'bad')}" onclick="editMetric(${i})">
      <div class="mk">${m.label}${m.inflated?' <span style="color:#a8433a">含刷量</span>':''}</div><div class="mv">${fmt(m.show)}</div>
      <div class="mt">目标 ${m.dir==='lt'?'<':'≥'}${fmt(m.t)} · ${m.inflated?'去假前·不判级':(m.pass?'达标':'未达标')}</div></div>`).join('');
-  let chain=st.chain.map(c=>`<div class="cnode ${g?'p':'f'}"><b>${g?'✓':'…'}</b>${c[0]}</div>`).join('');
+  const grr=curSKU().gate_result||{};
+  let chain=st.chain.map((c,i)=>{const p=ms[i]?ms[i].pass:g;return `<div class="cnode ${p?'p':'f'}"><b>${p?'✓':'…'}</b>${c[0]}</div>`;}).join('');
+  if(grr.hard_redline) chain+=`<div class="cnode ${grr.hard_redline.pass?'p':'f'}"><b>${grr.hard_redline.pass?'✓':'⛔'}</b>硬红线·体验</div>`;
   const gd=st.guard?`<div class="card" style="margin-bottom:12px;border-left:3px solid var(--blue)">
       <div class="ph" style="margin:0 0 7px">🚪 本阶段专属门 · <b>${st.guard.name}</b></div>
       ${st.guard.items.map(x=>`<div class="hint" style="margin-top:3px">· ${x}</div>`).join('')}
@@ -408,7 +434,8 @@ function n6Verdict(){
   const gr=curSKU().gate_result; // 每条 SKU mock 自带的裁决快照(锁版稿)
   const passKey={import:"gate1_pass",growth:"gate2_pass",mature:"gate3_pass",decline:null,renewal:null,retire:null}[st];
   const base={ sku_id:SKU.id, spu_id:SKU.spu, lifecycle_stage:st, channel:"douyin", calibrated:true,
-    threshold_mode:"mock_baseline",
+    threshold_mode:"mock_baseline", calibration_required:true,
+    calibration_by:["category","price_band","video_length","traffic_source"],
     mock_gate_pass:(passKey?gr[passKey]:true), live_gate_pass:g };
   if(st==='import')  return {...base, ...gr, gate1_pass:g, next_stage:g?"growth":"stay_import"};
   if(st==='growth')  return {...base, ...gr, gate2_pass:g, next_stage:g?"mature":"stay_growth",
