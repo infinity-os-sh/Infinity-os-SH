@@ -17,8 +17,15 @@
   label{display:block;font-size:11px;font-family:var(--mono);color:var(--dim);margin:20px 0 7px;letter-spacing:.04em;}
   input,select{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;color:var(--ink);font-size:15px;padding:14px 16px;font-family:var(--cjk);outline:none;}
   input:focus,select:focus{border-color:var(--blue);}
+  input.bad{border-color:var(--red);background:#241a1a;}
+  input.ok{border-color:var(--go);}
   input::placeholder{color:#5a606c;}
+  .note{margin-top:9px;font-size:12.5px;line-height:1.55;display:none;}
+  .note.show{display:block;}
+  .note.err{color:var(--red);}
+  .note .em{font-family:var(--mono);font-size:11px;background:#2a2230;border:1px solid #4a3340;color:#e6b8c0;padding:1px 6px;border-radius:4px;}
   .btn{width:100%;margin-top:20px;background:var(--blue);color:#fff;border:none;border-radius:11px;font-size:16px;font-weight:700;padding:15px;cursor:pointer;font-family:var(--cjk);}
+  .btn:disabled{background:#2a303c;color:#5a606c;cursor:not-allowed;}
   .btn:active{transform:translateY(1px);}
   .hint{margin-top:16px;font-size:11px;font-family:var(--mono);color:#6a707c;line-height:1.6;}
   .who{margin-top:14px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px;display:none;}
@@ -46,10 +53,11 @@
 
     <label>手机号 / 工号</label>
     <input id="sr" placeholder="手机号 / 工号(如 SR-8801)" autocomplete="off" oninput="preview()">
+    <div class="note" id="note"></div>
 
     <div class="who" id="who"></div>
 
-    <button class="btn" onclick="enter()">进入</button>
+    <button class="btn" id="enterBtn" onclick="enter()">进入</button>
 
     <div class="samples">
       <div class="st">演示身份(mock·点即填):</div>
@@ -57,6 +65,8 @@
       <span class="chip" onclick="fill('SR-8802')">SR-8802 · 小红书·主管</span>
       <span class="chip" onclick="fill('SR-3301')">SR-3301 · 天猫·一线</span>
       <span class="chip" onclick="fill('SR-1201')">SR-1201 · 大卖场·一线</span>
+      <span class="chip" onclick="fill('SR-9901')">SR-9901 · 抖音·一线</span>
+      <span class="chip" onclick="fill('SR-9902')">SR-9902 · 抖音·主管</span>
     </div>
     <div class="hint">身份 = 内核第⑦项(收入/激励/权限/客情/责任)· 登录按身份路由到对应渠道 App · role 决定 human_gate 能否核定</div>
   </div>
@@ -70,7 +80,9 @@ const MOCK_DIRECTORY = {
   "SR-8801": { name:"王婷", channel:"xhs",         app:"xhsv1.html",         role:"emp", channelName:"小红书·内容运营" },
   "SR-8802": { name:"陈主管", channel:"xhs",       app:"xhsv1.html",         role:"mgr", channelName:"小红书·主管" },
   "SR-3301": { name:"李锐", channel:"tmall",       app:"tmallv1.html",       role:"emp", channelName:"天猫·旗舰店运营" },
-  "SR-1201": { name:"周敏", channel:"hypermarket", app:"hypermarketv1.html", role:"emp", channelName:"大卖场·BD" }
+  "SR-1201": { name:"周敏", channel:"hypermarket", app:"hypermarketv1.html", role:"emp", channelName:"大卖场·BD" },
+  "SR-9901": { name:"抖音运营一线", channel:"douyin", app:"douyinv1.html", role:"emp", channelName:"抖音·内容电商运营" },
+  "SR-9902": { name:"抖音主管",     channel:"douyin", app:"douyinv1.html", role:"mgr", channelName:"抖音·主管" }
   // …其余渠道 SR 同样在此登记,新增渠道只加一行,登录页不改结构
 };
 const MOCK_MODE = true; // 双轨·未配环境ID → 走 mock,不上传
@@ -82,25 +94,44 @@ function lookup(id){
 }
 function fill(id){ document.getElementById('sr').value=id; preview(); }
 function preview(){
-  const u=lookup(document.getElementById('sr').value);
-  const el=document.getElementById('who');
-  if(u){
-    el.className='who show';
-    el.innerHTML=`<div class="k">认出身份(mock)</div>
+  const raw=document.getElementById('sr').value.trim();
+  const u=lookup(raw);
+  const who=document.getElementById('who');
+  const note=document.getElementById('note');
+  const inp=document.getElementById('sr');
+  const btn=document.getElementById('enterBtn');
+  if(!raw){ // 空
+    who.className='who'; who.innerHTML='';
+    note.className='note'; note.innerHTML='';
+    inp.className=''; btn.disabled=false; return;
+  }
+  if(u){ // 已开通 → 显示身份·可进入
+    inp.className='ok'; btn.disabled=false;
+    note.className='note'; note.innerHTML='';
+    who.className='who show';
+    who.innerHTML=`<div class="k">认出身份(mock)</div>
       <div style="margin-top:4px"><span class="v">${u.name}</span>
       <span class="tag ${u.role==='mgr'?'mgr':''}">${u.role==='mgr'?'主管':'一线'}</span></div>
       <div class="k" style="margin-top:6px">渠道 · ${u.channelName} → ${u.app}</div>`;
-  } else { el.className='who'; el.innerHTML=''; }
+  } else { // 未开通 → 常驻红字提示·按钮置灰(不再"没反应")
+    inp.className='bad'; btn.disabled=true;
+    who.className='who'; who.innerHTML='';
+    note.className='note show err';
+    note.innerHTML=`⚠ 此工号 <span class="em">${raw}</span> 未开通(试验期为安全只放行白名单)<br>请点下方「演示身份」进入,或联系管理员在 ICA 身份簿登记。`;
+  }
 }
 function toast(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.className='toast show';
   setTimeout(()=>t.className='toast',2400);
 }
 function enter(){
-  const raw=document.getElementById('sr').value;
+  const raw=document.getElementById('sr').value.trim();
   const u=lookup(raw);
-  if(!u){ toast(raw?"未识别此工号(mock 身份簿里没有)":"请输入手机号 / 工号"); return; }
-  // 按身份路由到对应渠道 App，把 身份/渠道/权限 带过去(URL 参数)
+  if(!u){
+    preview(); // 触发常驻提示
+    toast(raw?"此工号未开通 · 请用下方演示身份":"请输入手机号 / 工号");
+    return;
+  }
   const q=`?sr=${encodeURIComponent(u.id)}&name=${encodeURIComponent(u.name)}&channel=${u.channel}&role=${u.role}`;
   toast(`进入 · ${u.name} · ${u.channelName}`);
   setTimeout(()=>{ location.href=u.app+q; }, 500);

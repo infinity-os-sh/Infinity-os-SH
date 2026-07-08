@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>抖音 · 内容电商运营</title>
+<style>
+  :root{--ink:#17191E;--paper:#F2F1EB;--surface:#FBFAF6;--amber:#A8612A;--amber-deep:#834A1F;--amber-tint:#EADFCB;
+    --slate:#6b6f76;--rule:#dcd7cb;--blue:#3a5a7a;--go:#3f7a4f;--red:#a8433a;--red-tint:#f0dcd8;--go-tint:#dbe7dc;
+    --mono:'JetBrains Mono','SF Mono',ui-monospace,monospace;--cjk:'PingFang SC','Noto Sans CJK SC',system-ui,sans-serif;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:#26282d;font-family:var(--cjk);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .phone{max-width:430px;margin:0 auto;min-height:100vh;background:var(--paper);display:flex;flex-direction:column;position:relative;}
+  .trialbar{background:repeating-linear-gradient(45deg,#2a2c31,#2a2c31 8px,#25272c 8px,#25272c 16px);color:#c9b48f;font-family:var(--mono);font-size:9.5px;padding:5px 12px;letter-spacing:.03em;line-height:1.5;}
+  .trialbar b{color:#e7d3a8;}
+  .hd{background:var(--ink);color:#F2F1EB;padding:11px 15px;}
+  .hd .who{font-weight:700;font-size:14.5px;}
+  .hd .who small{font-weight:400;color:#B7BAC0;font-family:var(--mono);font-size:10.5px;margin-left:5px;}
+  .hd .roles{float:right;display:flex;gap:5px;}
+  .role{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:2px;background:#2f3239;color:#B7BAC0;border:1px solid #3a3e45;cursor:pointer;}
+  .role.me{background:var(--amber);color:#fff;border-color:var(--amber);}
+  .hd .lead{margin-top:9px;}
+  .hd .big{font-size:19px;font-weight:800;letter-spacing:.01em;}
+  .hd .second{margin-top:7px;font-size:11px;color:#9a9da3;font-family:var(--mono);}
+  .hd .second b{color:#e7d3a8;}
+  /* stage strip — signature */
+  .stagestrip{display:flex;overflow-x:auto;gap:0;background:#1d1f24;border-top:1px solid #2f3239;-webkit-overflow-scrolling:touch;}
+  .stagestrip::-webkit-scrollbar{display:none;}
+  .sstep{flex:0 0 auto;padding:8px 12px 7px;font-family:var(--mono);font-size:11px;color:#7d818a;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;text-align:center;}
+  .sstep small{display:block;font-size:8.5px;color:#5e626b;margin-top:1px;}
+  .sstep.on{color:#F2F1EB;border-bottom-color:var(--amber);background:#232529;}
+  .sstep.on small{color:#c9b48f;}
+  .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:5;}
+  .tab{flex:1;text-align:center;padding:9px 2px;font-size:11px;color:var(--slate);cursor:pointer;border-bottom:2px solid transparent;}
+  .tab.on{color:var(--amber-deep);font-weight:700;border-bottom-color:var(--amber);}
+  .scroll{flex:1;overflow-y:auto;padding:13px 14px 90px;}
+  .ph{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--slate);margin:3px 0 11px;}
+  .ph b{color:var(--amber-deep);}
+  .card{background:var(--surface);border:1px solid var(--rule);border-radius:7px;padding:13px;margin-bottom:12px;}
+  .card.hot{border-left:3px solid var(--amber);}
+  .sku .nm{font-weight:800;font-size:15px;}
+  .sku .tag{font-family:var(--mono);font-size:9.5px;color:#fff;background:var(--red);padding:1px 6px;border-radius:2px;margin-left:6px;vertical-align:2px;}
+  .sku .tag.o{background:var(--go);}
+  .sku .act{font-size:12.5px;margin-top:7px;color:var(--ink);line-height:1.5;}
+  .line{font-family:var(--mono);font-size:10.5px;color:var(--slate);margin-top:6px;background:#efece3;padding:6px 9px;border-radius:4px;}
+  .line b{color:var(--amber-deep);}
+  .mrow{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;}
+  .metric{flex:1 1 44%;min-width:0;background:var(--paper);border:1px solid var(--rule);border-radius:5px;padding:7px 9px;cursor:pointer;}
+  .metric .mk{font-family:var(--mono);font-size:10px;color:var(--slate);}
+  .metric .mv{font-family:var(--mono);font-size:14px;font-weight:700;margin-top:2px;}
+  .metric.ok{border-color:#bcd3bf;background:var(--go-tint);}
+  .metric.ok .mv{color:var(--go);}
+  .metric.bad{border-color:#e0bdb7;background:var(--red-tint);}
+  .metric.bad .mv{color:var(--red);}
+  .metric .mt{font-family:var(--mono);font-size:9px;color:var(--slate);margin-top:1px;}
+  .gate{margin-top:11px;border:1px dashed var(--rule);border-radius:6px;padding:10px;background:var(--paper);}
+  .gate .gh{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:7px;}
+  .gate .gv{font-family:var(--mono);font-size:10px;padding:1px 7px;border-radius:3px;}
+  .gv.pass{background:var(--go-tint);color:var(--go);}.gv.fail{background:var(--red-tint);color:var(--red);}
+  .chain{display:flex;gap:5px;margin-top:9px;}
+  .cnode{flex:1;text-align:center;font-family:var(--mono);font-size:9px;padding:5px 2px;border-radius:4px;border:1px solid var(--rule);background:var(--surface);color:var(--slate);}
+  .cnode.p{background:var(--go-tint);border-color:#bcd3bf;color:var(--go);}
+  .cnode.f{background:var(--red-tint);border-color:#e0bdb7;color:var(--red);}
+  .cnode b{display:block;font-size:11px;}
+  .foot{display:flex;align-items:center;justify-content:space-between;margin-top:11px;padding-top:10px;border-top:1px solid var(--rule);}
+  .foot .inc{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--amber-deep);}
+  .foot.done .inc{color:var(--go);}
+  .btn{font-family:var(--cjk);font-size:12px;border:none;border-radius:5px;padding:8px 12px;cursor:pointer;background:var(--ink);color:#fff;}
+  .btn.o{background:var(--surface);color:var(--amber-deep);border:1px solid var(--amber-tint);}
+  .btn.sm{font-size:11px;padding:6px 10px;}
+  .btn:active{transform:translateY(1px);}
+  /* pipeline */
+  .node{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;margin-bottom:8px;cursor:pointer;}
+  .node .nh{display:flex;align-items:center;gap:8px;}
+  .node .nn{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--blue);}
+  .node .nr{font-size:12px;font-weight:700;}
+  .node .nd{font-size:11px;color:var(--slate);margin-top:4px;line-height:1.5;}
+  .node .money{font-family:var(--mono);font-size:9px;color:var(--red);border:1px solid var(--red-tint);background:var(--red-tint);padding:1px 6px;border-radius:3px;margin-left:auto;}
+  .art{display:none;margin-top:9px;background:#1d1f24;border-radius:5px;padding:9px 11px;overflow-x:auto;}
+  .art.show{display:block;}
+  .art pre{margin:0;font-family:var(--mono);font-size:9.5px;color:#c6cad2;line-height:1.55;white-space:pre;}
+  .art .ic{color:#7d818a;}.art .k{color:#c9b48f;}.art .v{color:#9db5c9;}.art .g{color:#84b58f;}.art .r{color:#c98f88;}
+  .arrow{text-align:center;color:var(--rule);font-family:var(--mono);font-size:11px;margin:-3px 0 5px;}
+  /* collect */
+  .ta{width:100%;border:1px solid var(--rule);border-radius:6px;padding:10px;font-family:var(--cjk);font-size:12.5px;resize:vertical;min-height:66px;background:var(--surface);}
+  .consumer{background:var(--ink);border-radius:7px;padding:11px 12px;margin-bottom:12px;}
+  .consumer .ch{font-family:var(--mono);font-size:10px;color:#c9b48f;margin-bottom:8px;}
+  .cthree{display:flex;gap:7px;}
+  .cthree .c{flex:1;background:#2a2c31;border-radius:5px;padding:8px;}
+  .cthree .ct{font-size:11px;font-weight:700;color:#F2F1EB;}
+  .cthree .cs{font-family:var(--mono);font-size:9px;color:#9a9da3;margin-top:3px;line-height:1.4;}
+  /* ledger / pend */
+  .pend{background:var(--amber-tint);border:1px solid #d8c4a4;border-radius:6px;padding:9px 11px;margin-bottom:8px;font-size:11.5px;}
+  .pend .pt{font-family:var(--mono);font-size:9.5px;color:var(--amber-deep);}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--rule);font-size:12px;}
+  .row .mono{font-family:var(--mono);font-size:12px;font-weight:700;}
+  .ring{display:flex;gap:4px;margin:4px 0 12px;}
+  .rstep{flex:1;text-align:center;font-family:var(--mono);font-size:9px;padding:6px 2px;border-radius:4px;border:1px solid var(--rule);background:var(--surface);color:var(--slate);cursor:pointer;}
+  .rstep.lit{background:var(--amber);color:#fff;border-color:var(--amber);}
+  .toastwrap{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);z-index:99;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:88%;max-width:390px;}
+  .toast{background:var(--ink);color:#fff;font-size:12px;padding:9px 14px;border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.28);opacity:0;transform:translateY(8px);transition:.24s;text-align:center;line-height:1.45;}
+  .toast.show{opacity:1;transform:translateY(0);}
+  .toast.go{background:#26503a;}.toast.warn{background:#7a4a1f;}.toast.red{background:#7a322b;}
+  .navbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);border-top:1px solid var(--rule);display:flex;}
+  .nav{flex:1;text-align:center;padding:8px 2px 9px;font-size:10.5px;color:var(--slate);cursor:pointer;}
+  .nav.on{color:var(--amber-deep);font-weight:700;}
+  .nav .ni{font-size:15px;display:block;}
+  .hint{font-family:var(--mono);font-size:9.5px;color:var(--slate);margin-top:4px;line-height:1.5;}
+  .kbd{font-family:var(--mono);font-size:9px;background:#efece3;border:1px solid var(--rule);border-radius:3px;padding:0 4px;}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="trialbar">试版(抖音·线上SKU/内容成交轴) · 表格SKU/数字=<b>演示假水</b>(待真数据灌入) · 结构/流程/判级/生命周期切换=真的 · 数据接口位见 <b>MOCK_DATA</b></div>
+  <div class="hd">
+    <div class="roles">
+      <span class="role me" id="rEmp" onclick="setRole('emp')">一线</span>
+      <span class="role" id="rMgr" onclick="setRole('mgr')">主管</span>
+    </div>
+    <div class="who" id="who">抖音运营一线 <small>内容电商运营 · 抖音 · SKU/内容成交轴</small></div>
+    <div class="lead">
+      <div class="big" id="bigline">导入期 · 种链能转</div>
+      <div class="second" id="second"></div>
+    </div>
+  </div>
+  <div class="stagestrip" id="strip"></div>
+  <div class="tabs">
+    <div class="tab on" data-t="today" onclick="setTab('today')">今日运营</div>
+    <div class="tab" data-t="pipe" onclick="setTab('pipe')">7节点</div>
+    <div class="tab" data-t="collect" onclick="setTab('collect')">量实采集</div>
+    <div class="tab" data-t="ledger" onclick="setTab('ledger')">一本账</div>
+    <div class="tab" data-t="cockpit" onclick="setTab('cockpit')">驾驶舱</div>
+  </div>
+  <div class="scroll" id="scroll"></div>
+</div>
+<div class="navbar">
+  <div class="nav on" data-n="today" onclick="setTab('today')"><span class="ni">📋</span>今日</div>
+  <div class="nav" data-n="pipe" onclick="setTab('pipe')"><span class="ni">🔗</span>7节点</div>
+  <div class="nav" data-n="collect" onclick="setTab('collect')"><span class="ni">🔍</span>量实</div>
+  <div class="nav" data-n="ledger" onclick="setTab('ledger')"><span class="ni">📒</span>账</div>
+  <div class="nav" data-n="cockpit" onclick="setTab('cockpit')"><span class="ni">🧭</span>驾驶舱</div>
+</div>
+<div class="toastwrap" id="tw"></div>
+
+<script>
+/* ============================================================
+   抖音 内容电商 SR · CHANNEL 块(那点差异·换这一块即换渠道)
+   ============================================================ */
+const CHANNEL = {
+  key:"douyin", name:"抖音", axis:"SKU/内容成交轴",
+  role:"内容电商运营", who:"抖音运营一线",
+  sentinel:"流量效率×成交效率×人群资产 · 断=素材疲劳/直播模型失效",
+  consumer:{ funnel:"5A", steps:["A1 了解","A2 吸引","A3 种草","A4 购买","A5 忠诚"] },
+  winwin:"平台要成交效率 × 品牌要人群资产沉淀",
+  // 6开关抖音口径翻译(Autonomy第①处)
+  dialect:{ 陈列:"商品卡坑位/货盘上架", 动销:"商品点击·GPM·成交转化", 认知:"3秒率/完播·A1-A2",
+            有货:"抖店库存·直播货盘", 复购:"A4→A5·复购率·LTV", 口碑:"体验分·互动质量" },
+  // 涉钱清单 → 全部 human_gate
+  money:["千川投放","星图达人采买","直播加热"],
+  sku_anchor:["六月鲜轻10克盐减盐酱油","味达美味极鲜酱油","禾然有机酱油"]
+};
+
+/* ============================================================
+   生命周期引擎 · 同7节点槽靠 lifecycle_stage 切换(抖音六期锁版)
+   ============================================================ */
+const MOCK_MODE = true;
+// ── 6 条 SKU 样本 · 每条自带完整 mock artifact ──
+const MOCK_DATA = {
+  import : { id:"DY-LYX-Q10", spu:"SPU_减盐系列", name:"六月鲜轻10克盐减盐酱油", stage:"import",
+    metrics:[ {k:"play_3s_rate",label:"3秒率",v:0.32,raw:0.41,t:0.20,dir:"gt"},
+              {k:"completion_rate",label:"完播率",v:0.28,t:0.25,dir:"gt"},
+              {k:"product_ctr",label:"商品点击率",v:0.09,t:0.06,dir:"gt"},
+              {k:"roi",label:"冷启ROI",v:1.3,t:1.0,dir:"gt"} ],
+    node_outputs:{ 1:{hook_3s:"凉拌菜一勺封神",product_card_bound:true},
+                   3:{gpm:420,cvr:0.031,channel_type:"in_app_closed_loop"},
+                   5:{a1_grow:0.35,a2_grow:0.22,seed_pools:{product_clicker_pool:1800,add_to_cart_pool:260,first_buyer_pool:95}} },
+    gate_result:{ gate:"Gate1", gate1_pass:true, next_stage:"growth",
+      hard_redline:{experience_score:4.7,refund_rate:0.05,bad_review_rate:0.03,pass:true},
+      verify_up:"品类层A1-A2人群资产上移" },
+    human_gate_actions:[] },
+  growth : { id:"DY-WDM-WJX", spu:"SPU_味极鲜", name:"味达美味极鲜酱油", stage:"growth",
+    metrics:[ {k:"exposure_growth",label:"曝光增长",v:2.6,t:2.0,dir:"gt"},
+              {k:"live_gpm",label:"直播GPM",v:650,raw:780,t:500,dir:"gt"},
+              {k:"a3_to_a4",label:"A3→A4",v:0.11,t:0.08,dir:"gt"},
+              {k:"roi_at_scale",label:"放量ROI",v:1.22,t:1.2,dir:"gt"} ],
+    node_outputs:{ 1:{validated_hook:"一勺出饭店味",material_matrix:8,material_fatigue:{avg_reuse:2.0}},
+                   3:{landing_split:{live_gpm:650,entry_rate:0.045,live_pay_cvr:0.036,card_gmv_share:0.18}},
+                   5:{a3_to_a4_rate:0.11,new_customer_rate:0.12,seed_pools_refresh:{first_buyer_pool:1010}} },
+    gate_result:{ gate:"Gate2", gate2_pass:true, next_stage:"mature",
+      roi_lines:{roi_stoploss_line:1.0,roi_growth_hold_line:1.2},
+      entry_gmv_split:{live_gmv_share:0.62,short_video_gmv_share:0.20,card_gmv_share:0.18} },
+    human_gate_actions:[{k:"千川放量加投(跨档)",amt:25000,irr:false},{k:"直播加热",amt:6000,irr:false}] },
+  mature : { id:"DY-LYX-TJ", spu:"SPU_六月鲜", name:"六月鲜特级原酿酱油", stage:"mature",
+    metrics:[ {k:"contribution_margin",label:"贡献利润率",v:0.175,t:0.15,dir:"gt"},
+              {k:"card_gmv_share",label:"商品卡占比",v:0.31,t:0.25,dir:"gt"},
+              {k:"a4_to_a5",label:"A4→A5",v:0.16,t:0.12,dir:"gt"},
+              {k:"stable_roi",label:"稳定ROI",v:1.28,t:1.2,dir:"gt"} ],
+    node_outputs:{ 2:{invest_mode:"harvest",invest_ratio:0.22,plans_cut:7},
+                   3:{contribution_profit:45600,gmv_split:{live_gmv_share:0.48,card_gmv_share:0.31},natural_traffic_share:0.42},
+                   4:{live_dependence_gate:{live_gmv_share:0.48,live_gmv_share_max:0.55,pass:true},portfolio_guard:{crowd_overlap:0.38,overlap_max:0.45,pass:true}},
+                   5:{a4_to_a5_rate:0.16,repurchase_rate:0.21,member_ltv:175} },
+    gate_result:{ gate:"Gate3", gate3_pass:true, gate3_verdict:"stable_keep", next_action:"stay_mature_next_cycle",
+      options:["stable_keep","stable_reduce_spend","refresh_restart","decline_stoploss","retire_archive"], portfolio_escalation:false },
+    human_gate_actions:[{k:"降投维护(stable_reduce_spend)",amt:0,irr:true},{k:"组合内耗·升品类会诊",amt:0,irr:true}] },
+  decline: { id:"DY-CVN-OLD", spu:"SPU_葱伴侣", name:"葱伴侣经典黄豆酱(老装)", stage:"decline",
+    metrics:[ {k:"natural_gmv",label:"残值自然GMV",v:38000,t:20000,dir:"gt"},
+              {k:"card_gmv_share",label:"商品卡占比",v:0.71,t:0.50,dir:"gt"},
+              {k:"refund_rate",label:"退款率",v:0.05,t:0.08,dir:"lt"},
+              {k:"contribution_profit",label:"残值利润",v:6800,t:0,dir:"gt"} ],
+    node_outputs:{ 1:{new_material_target:0,organic_asset_keep_count:6},
+                   2:{qianchuan_mode:"stopped",live_wind_down:{sessions_per_week:0,mode:"stopped"}},
+                   4:{residual_authenticity_gate:{natural_traffic_verified:true,pass:true},bleed_gate:{negative_comment_ratio:0.06,pass:true}},
+                   5:{migration_target_sku:"SKU_葱伴侣黄豆酱_新装260g",a5_migrate_ready:0.62} },
+    gate_result:{ gate:"Gate4", gate4_verdict:"stoploss_hold",
+      chain:{ residual_signal:{natural_gmv:38000,card_gmv_share:0.71,pass:true},
+              cost_squeeze:{new_spend:0,live_sessions:0,new_material_count:0,squeeze_executed:true,pass:true},
+              bleed_control:{negative_comment_ratio:0.06,refund_rate_actual:0.05,pass:true},
+              migration_ready:{migration_target_sku:"SKU_葱伴侣黄豆酱_新装260g",a5_migrate_ready:0.62,pass:true} },
+      stoploss_timer:{max_stoploss_hold_cycles:4,cycle_unit:"investment_cycle",current_hold_cycle:1,must_rejudge_after_cycle:true},
+      options:["stoploss_hold","refresh_restart","retire_archive"], structural_decline:false,
+      formula_note:"cost_squeeze.pass 必须在先·没关掉付费引擎不许判 stoploss_hold" },
+    human_gate_actions:[{k:"砍投(负贡献即砍)",amt:0,irr:true},{k:"焕新重启",amt:0,irr:true}] },
+  renewal: { id:"DY-HR-YJ", spu:"SPU_禾然有机", name:"禾然有机酱油", stage:"renewal",
+    metrics:[ {k:"play_3s_rate",label:"重启3秒率",v:0.29,t:0.20,dir:"gt"},
+              {k:"product_ctr",label:"商品点击率",v:0.07,t:0.05,dir:"gt"},
+              {k:"a5_wakeup",label:"老客唤醒率",v:0.14,t:0.10,dir:"gt"},
+              {k:"restart_roi",label:"重启ROI",v:1.25,t:1.0,dir:"gt"} ],
+    node_outputs:{ 1:{root_cause_type:"material_fatigue",matched_action:"new_material_restart"},
+                   2:{qianchuan_mode:"controlled_restart",budget:4000,a5_retarget_share:0.40},
+                   4:{relapse_check:{same_pattern_detected:false,pass:true}},
+                   5:{a5_wakeup_rate:0.14,early_repurchase_signal:true} },
+    gate_result:{ gate:"Gate-R", gate_r_verdict:"back_to_growth", internal_status:null,
+      options:["back_to_growth","retire_archive"], internal_status_options:["stay_renewal_fix"],
+      root_cause_resolved:true, relapse_free:true, renewal_attempt_count:1, max_renewal_attempts:2 },
+    human_gate_actions:[{k:"焕新采买(controlled_restart)",amt:4000,irr:false},{k:"二次淘汰",amt:0,irr:true}] },
+  retire : { id:"DY-ZXZR-DIS", spu:"SPU_遵循自然", name:"遵循自然零添加(停产装)", stage:"retire",
+    metrics:[ {k:"member_migration",label:"忠诚迁移率",v:0.28,t:0.20,dir:"gt"},
+              {k:"settlement_done",label:"三件套结清",v:1,t:1,dir:"gt"},
+              {k:"archive_kept",label:"归档不删",v:1,t:1,dir:"gt"} ],
+    node_outputs:{ 1:{videos_delisted_or_hidden:true,records_kept_queryable:true},
+                   2:{live_permanently_stopped:true,star_kol_contracts_closed:true,outstanding_payment:0},
+                   3:{product_card_delisted:true,douyin_shop_sku_removed:true},
+                   5:{migration_target_sku:"SKU_禾然有机酱油_500ml",migrated_member_rate:0.28} },
+    gate_result:{ gate:"Gate-T", gate_t_verdict:"terminal_archive", options:["terminal_archive"],
+      delist_checklist:{content_delisted:true,spend_settled:true,live_permanently_stopped:true,kol_contracts_closed:true,product_card_delisted:true,shop_sku_removed:true,inventory_cleared:true},
+      archive:{keep_record:true,"delete":false,lessons_to_memory:["品类结构性下滑未及时转型","直播模型失效后重启过晚"],reusable_assets_retained:["高胜率素材","A5老客包","SEO词"]},
+      terminal:true, archive_delete:false, reactivation_forbidden:true, reactivation_requires_new_sku_id:true, hitl_required:true },
+    human_gate_actions:[{k:"下架归档(delete=false)",amt:0,irr:true},{k:"不可复活确认",amt:0,irr:true}] }
+};
+function curSKU(){ return MOCK_DATA[S.stage]; }
+const SKU = new Proxy({}, { get:(_,k)=> curSKU()[k] });
+
+// STAGES = 阶段规则(主线/字段/门/环·数据归 MOCK_DATA)
+const STAGES = {
+  import:{ name:"导入期", tail:"算法冷启·内容拦人·初步成交", invest:"千川小额冷启·防未验证烧钱", gate:"Gate1",
+    verdict:"opp", vtext:"冷启要抓", field:"短视频脚本 / 3秒钩子 / 商品卡绑定",
+    guard:{ name:"假流量门+互动质量门+体验分门(硬红线)", items:["刷量播放不算·疑刷量→未判级","体验分/退款/差评=毕业硬红线(低了限流)"] },
+    chain:[["内容拦人",1],["算法冷启",1],["初步成交",1],["成本可控",1]],
+    nodes:["短视频/直播/商品卡数据上报(N0 Triage)","短视频脚本+3秒钩子+完播结构","星图试水+千川小额冷启","商品卡/抖店承接(站内闭环)","假流量+互动质量+体验分门","A1/A2冷启+种子池沉淀","Gate1:四判+体验红线才毕业"],
+    ring:5, inc:40 },
+  growth:{ name:"成长期", tail:"放量·直播起量·A3→A4", invest:"千川放量·再营销≥80%", gate:"Gate2",
+    verdict:"opp", vtext:"放量验守线", field:"素材矩阵 / 直播排期 / 种子池再营销",
+    guard:{ name:"放量衰减门+有效人群门", items:["放量后ROI衰减≤0.30·超限冻结加投回滚","泛流量≤20%不算有效放大·ROI双线(止损1.0/进成熟1.2)"] },
+    chain:[["短视频放量",1],["直播起量",1],["转化验证",1],["ROI守线",1]],
+    nodes:["含千川回流数据上报(N0)","validated hook批量二创+防疲劳","千川放量(种子池再营销)+直播排期","直播/短视频/商品卡三入口承接","假流量+有效人群+放量衰减+体验门","A3→A4转化+种子池刷新","Gate2:放大后效率仍成立才毕业"],
+    ring:5, inc:50 },
+  mature:{ name:"成熟期", tail:"守利收忠·自然成交接棒", invest:"投放收口20-25%·只留高ROI", gate:"Gate3",
+    verdict:"ok", vtext:"稳守现金牛", field:"稳定素材 / 商品卡SEO / 会员私域",
+    guard:{ name:"直播依赖门+组合防内耗", items:["直播占比≤0.55·付费直播≤0.40(增长是租来的?)","同品牌SKU人群重叠≤0.45·千川抬价→升品类会诊"] },
+    chain:[["利润守线",1],["三入口稳定",1],["忠诚沉淀",1],["效率稳定",1]],
+    nodes:["三入口成交/罗盘数据上报(N0)","稳定复用+疲劳监测+轻刷新","投放收口:砍低效计划(不可逆HITL)","可归因贡献利润+商品卡占比提升","直播依赖+疲劳+组合内耗+体验门","A4→A5+复购+LTV+私域","Gate3五出口:守/收/焕/退/淘"],
+    ring:5, inc:60, verdictOut:"stable_keep" },
+  decline:{ name:"衰退期", tail:"停投停播·榨残值·Gate4", invest:"默认停投·残值复投=例外", gate:"Gate4",
+    verdict:"ok", vtext:"止损维持", field:"Always-on存量 / 商品卡SEO词",
+    guard:{ name:"止损计时+残值真实性门", items:["stoploss_hold最长4投放周期·到期必重裁","先关付费引擎才判残值·假残值(刷单撑的)不算"] },
+    chain:[["残值成立",1],["成本挤干",1],["止血守线",1],["迁移就绪",1]],
+    nodes:["残值GMV/退款差评上报(N0)","停新产·保Always-on存量","默认停投·停播降频·残值复投=例外必核定","仅守ROI维持线·商品卡残值为主体","止血门+残值真实性门+体验门","榨存量·A5/私域迁移→替代SKU","Gate4退出裁决(先关引擎才判)"],
+    ring:5, inc:0, verdictOut:"stoploss_hold" },
+  renewal:{ name:"焕新期", tail:"带资产二次导入·根因门", invest:"投30-60%·controlled_restart", gate:"Gate-R",
+    verdict:"opp", vtext:"根因已解·重启", field:"根因匹配动作(6类)",
+    guard:{ name:"根因门(6类)+失败复检", items:["素材疲劳→新素材重启·直播模型失效→脚本重启·体验/价盘→升一层","焕新≤2次·同雷再踩即停(relapse_stoploss)"] },
+    chain:[["根因已解",1],["内容重启",1],["成交信号",1],["成本守线",1]],
+    nodes:["吃refresh_restart带资产入口(N0)","过根因门→按根因匹配动作","老客包喂千川小额重启+历史高ROI达人","商品卡/直播货盘重验承接","假流量+失败复检(同雷不再踩)+体验门","唤醒A5老客/私域+种子池重建","Gate-R:根因解+链再成立+≤2次"],
+    ring:5, inc:40, note:"焕新第 1/2 次" },
+  retire:{ name:"淘汰期", tail:"收尾三件套·归档不删·不可复活", invest:"零投放·永久停播", gate:"Gate-T", 
+    verdict:"ok", vtext:"体面收尾", field:"下架checklist(七项)",
+    guard:{ name:"收尾三件套+不可复活", items:["停播/停投结清/达人合同结清+商品卡撤+抖店下架","delete=false·教训入memory·重启须开新SKU ID"] },
+    chain:[["停播结清",1],["商品下架",1],["忠诚迁移",1],["归档终态",1]],
+    nodes:["吃retire_archive入口(N0)","全停新产·存量视频下架(保留可查)","停投结清+合同关闭+永久停播","商品卡撤+抖店SKU下架+清库存","下架期负评止血","A5/私域/粉丝迁移→替代SKU(例外四层)","Gate-T终态:checklist七项+不可复活"],
+    ring:5, inc:0, verdictOut:"terminal_archive" }
+};
+const ORDER = ["import","growth","mature","decline","renewal","retire"];
+
+/* ---------------- STATE ---------------- */
+const S = {
+  stage:"import", role:"emp", tab:"today",
+  budget:15000, pending:[], history:[], hGot:0, done:false,
+  ringLit:{}, // per-stage lit rings
+  metricEdited:{}, // stage->overrides
+  triageJson:null,
+  calib:true // TypeB:true=去假后(判级只认它)/false=去假前含刷量虚高
+};
+
+/* ---------------- helpers ---------------- */
+function toast(msg,kind){
+  const w=document.getElementById('tw');const d=document.createElement('div');
+  d.className='toast'+(kind?' '+kind:'');d.textContent=msg;w.appendChild(d);
+  requestAnimationFrame(()=>d.classList.add('show'));
+  setTimeout(()=>{d.classList.remove('show');setTimeout(()=>d.remove(),260);},2600);
+}
+function metricVal(mk){ const ov=S.metricEdited[S.stage]||{}; return (mk in ov)?ov[mk]:null; }
+function curMetrics(){
+  const ms=curSKU().metrics;const ov=S.metricEdited[S.stage]||{};
+  return ms.map(m=>{
+    const v=(m.k in ov)?ov[m.k]:m.v;              // 校准值(去假后)
+    const pass=m.dir==="lt"?(v<m.t):(v>=m.t);     // 判级恒用校准值(MUST:算差前先去假)
+    const show=(!S.calib && m.raw!=null)?m.raw:v;  // 显示值:去假前露raw虚高
+    return {...m,v,show,pass,inflated:(!S.calib&&m.raw!=null)};
+  });
+}
+function gatePass(){ return curMetrics().every(m=>m.pass); }
+
+/* ---------------- render: stage strip ---------------- */
+function renderStrip(){
+  const el=document.getElementById('strip');el.innerHTML='';
+  ORDER.forEach(k=>{const st=STAGES[k];const on=k===S.stage?' on':'';
+    el.insertAdjacentHTML('beforeend',
+      `<div class="sstep${on}" data-stg="${k}" onclick="setStage('${k}')">${st.name}<small>${MOCK_DATA[k].id}</small></div>`);
+  });
+}
+function renderHead(){
+  const st=STAGES[S.stage];
+  document.getElementById('bigline').textContent=`${st.name} · ${st.tail}`;
+  document.getElementById('who').innerHTML=`${CHANNEL.who} <small>${CHANNEL.role} · ${CHANNEL.name} · ${CHANNEL.axis}</small>`;
+  const g=gatePass();
+  document.getElementById('second').innerHTML=
+    `${st.invest} · 判据 <b>${st.gate}</b> · 当前 <b>${g?'四判全绿':'有未达标'}</b>${st.note?' · '+st.note:''}`;
+}
+
+/* ---------------- TODAY tab ---------------- */
+function renderToday(){
+  const st=STAGES[S.stage];const ms=curMetrics();const g=gatePass();
+  const vcls=st.verdict==='ok'?'o':(st.verdict==='opp'?'o':'');
+  const out=st.verdictOut?`<span class="sku tag">${st.verdictOut}</span>`:'';
+  let mh=ms.map((m,i)=>`<div class="metric ${m.inflated?'':(m.pass?'ok':'bad')}" onclick="editMetric(${i})">
+     <div class="mk">${m.label}${m.inflated?' <span style="color:#a8433a">含刷量</span>':''}</div><div class="mv">${fmt(m.show)}</div>
+     <div class="mt">目标 ${m.dir==='lt'?'<':'≥'}${fmt(m.t)} · ${m.inflated?'去假前·不判级':(m.pass?'达标':'未达标')}</div></div>`).join('');
+  let chain=st.chain.map(c=>`<div class="cnode ${g?'p':'f'}"><b>${g?'✓':'…'}</b>${c[0]}</div>`).join('');
+  const gd=st.guard?`<div class="card" style="margin-bottom:12px;border-left:3px solid var(--blue)">
+      <div class="ph" style="margin:0 0 7px">🚪 本阶段专属门 · <b>${st.guard.name}</b></div>
+      ${st.guard.items.map(x=>`<div class="hint" style="margin-top:3px">· ${x}</div>`).join('')}
+    </div>`:'';
+  const calibBtn=`<button class="btn sm o" onclick="toggleCalib()">${S.calib?'👁 看去假前(含刷量)':'✓ 去假后(TypeB)·判级用它'}</button>`;
+  const escBtn=!g?`<button class="btn sm" onclick="escalate()" style="margin-left:6px">↑ 升一层(关不了·品类会诊)</button>`:'';
+  const gateLabel=st.gate==='终态'?'终态裁决':st.gate+' 判据';
+  const gv=st.gate==='终态'?`<span class="gv pass">${st.verdictOut||'terminal'}</span>`
+    :(g?`<span class="gv pass">${st.verdictOut||'pass'}</span>`:`<span class="gv fail">未过·留本期修</span>`);
+  document.getElementById('scroll').innerHTML=`
+    <div class="ph">📋 今日运营 · 系统按<b>病危&gt;机会·主推优先·快见效优先</b>排好清单 · 生命周期=<b>${st.name}</b></div>
+    <div class="card hot sku">
+      <div><span class="nm">${SKU.name}</span><span class="sku tag ${vcls}">${st.vtext}</span>${out}</div>
+      <div class="act">本阶段动作 · ${st.nodes[1]}</div>
+      <div class="line">🎯 定标↓ 这SKU目标从 <b>北极星→JBP→品类</b> 一层层下来 · 字段(按阶段切)：<b>${st.field}</b></div>
+      <div class="mrow">${mh}</div>
+      <div class="hint" style="margin-bottom:7px">🧪 算差前先去假(蝴蝶TypeB)：${calibBtn}</div>
+      <div class="hint">👆 点任一指标可改数值 → ${st.gate} 实时重判(演示"算差"是真的)</div>
+      <div class="gate">
+        <div class="gh">⚖️ ${gateLabel} ${gv}</div>
+        <div class="chain">${chain}</div>
+        <div class="hint">验果=看上层标动没动(A1-A2资产/可归因GMV真升),非"发了几条"</div>
+        ${escBtn?'<div style="margin-top:9px">'+escBtn+'</div>':''}
+      </div>
+      <div class="foot ${S.done?'done':''}">
+        <span class="inc">${S.done?'已落袋 +':'全做对预计 +'}${st.inc} 激励值</span>
+        <button class="btn sm" onclick="settle()">▸ 模拟数据回流·真判级</button>
+      </div>
+      ${S.done?'<div class="line" style="margin-top:9px">✅ 验果上溯：本SKU标达成 → 品类层 <b>A认知资产 上移</b>(连接律·上一层标动了)</div>':''}
+    </div>
+    ${gd}
+    <div class="card">
+      <div class="ph" style="margin:0 0 8px">🔁 环 · 当前阶段五步(点亮=已跑到)</div>
+      <div class="ring" id="ring"></div>
+      <div class="hint">定标↓ → 量实↑ → 算差(去刷量假·TypeB) → 关差 → 验果</div>
+    </div>`;
+  renderRing();
+}
+function renderRing(){
+  const el=document.getElementById('ring');if(!el)return;
+  const steps=["定标↓","量实↑","算差","关差","验果"];
+  const lit=S.ringLit[S.stage]||0;
+  el.innerHTML=steps.map((s,i)=>`<div class="rstep ${i<lit?'lit':''}" onclick="stepRing(${i})">${s}</div>`).join('');
+}
+function fmt(v){ if(v>=1000)return v.toLocaleString(); if(v<1&&v>0)return v.toString(); return v; }
+
+/* ---------------- PIPELINE tab (7 nodes + Artifacts) ---------------- */
+const NODEDEF=[
+  {n:"N0",nm:"数据上报 Triage",money:0},
+  {n:"N1",nm:"内容/素材计划",money:0},
+  {n:"N2",nm:"星图/千川/直播排期",money:1},
+  {n:"N3",nm:"站内承接(卡/店/播)",money:0},
+  {n:"N4",nm:"质量可信门",money:0},
+  {n:"N5",nm:"人群资产/迁移",money:0},
+  {n:"N6",nm:"判级/裁决",money:0}
+];
+// N6 六期专属 Gate/裁决 Artifact
+function n6Verdict(){
+  const st=S.stage, g=gatePass();
+  const gr=curSKU().gate_result; // 每条 SKU mock 自带的裁决快照(锁版稿)
+  const passKey={import:"gate1_pass",growth:"gate2_pass",mature:"gate3_pass",decline:null,renewal:null,retire:null}[st];
+  const base={ sku_id:SKU.id, spu_id:SKU.spu, lifecycle_stage:st, channel:"douyin", calibrated:true,
+    threshold_mode:"mock_baseline",
+    mock_gate_pass:(passKey?gr[passKey]:true), live_gate_pass:g };
+  if(st==='import')  return {...base, ...gr, gate1_pass:g, next_stage:g?"growth":"stay_import"};
+  if(st==='growth')  return {...base, ...gr, gate2_pass:g, next_stage:g?"mature":"stay_growth",
+    roi_rule:"<1.0止损·1.0-1.2留修·≥1.2进成熟"};
+  if(st==='mature')  return {...base, ...gr, gate3_pass:g, gate3_verdict:g?"stable_keep":"stable_reduce_spend",
+    next_action:g?"stay_mature_next_cycle":"harvest_mode"};
+  // Gate4:cost_squeeze 在先·verdict 恒在 options 内
+  if(st==='decline') return {...base, ...gr, gate4_verdict:g?"stoploss_hold":"refresh_restart"};
+  // Gate-R:出口与期内状态分轴
+  if(st==='renewal') return {...base, ...gr,
+    gate_r_verdict:g?"back_to_growth":null, internal_status:g?null:"stay_renewal_fix"};
+  // Gate-T 终态(terminal/archive_delete:false/不可复活)
+  return {...base, ...gr};
+}
+// 每节点 Input/Process/Output/Next(验收"上Output=下Input")· Output 优先用该 SKU mock 的 node_outputs
+function nodeIO(i){
+  const st=S.stage, stg=STAGES[st], ms=curMetrics(), no=curSKU().node_outputs||{};
+  const IO=[
+    { Input:"短视频/直播/商品卡/千川数据上报", Process:"路由→归一 SKU/字段·假流量打flag",
+      Output:{ channel:"douyin", lifecycle_stage:st, sku_id:SKU.id, spu_id:SKU.spu, calibrated:true }, Next:"N1 / N4 / N6" },
+    { Input:"N0.Output + 品类定标↓", Process:st==='import'?"3秒钩子+完播结构+商品卡绑定":(st==='renewal'?"过根因门→按根因匹配动作":stg.nodes[1]),
+      Output:{ lifecycle_stage:st, field:stg.field, ...(no[1]||{}) }, Next:"N2 / N3" },
+    { Input:"N1.Output(素材/脚本)", Process:st==='decline'?"默认停投·停播降频·残值复投=例外":(st==='retire'?"停投结清+合同关闭+永久停播":"星图尺子+千川定向→采买/排期"),
+      Output:{ lifecycle_stage:st, ...(no[2]||{spend_actual:0}), hitl_required:true }, Next:"N3" },
+    { Input:"N1+N2.Output", Process:st==='retire'?"商品卡撤+抖店下架+清库存":"站内闭环承接(卡/店/播)",
+      Output:{ lifecycle_stage:st, channel_type:"in_app_closed_loop", ...(no[3]||{landing:ms.slice(0,2).reduce((a,m)=>(a[m.k]=m.v,a),{})}) }, Next:"N4" },
+    { Input:"N3.Output + 互动/订单回流", Process:"假流量门(TypeB)+ "+(stg.guard?stg.guard.name:"体验门"),
+      Output:{ lifecycle_stage:st, fake_traffic_gate:{pass:true}, guard:stg.guard?stg.guard.name:"—", ...(no[4]||{}) }, Next:"N5" },
+    { Input:"N4.Output", Process:st==='retire'?"A5/私域迁移→替代SKU(例外四层)":(st==='mature'?"A4→A5+复购+LTV":(st==='decline'?"榨存量+迁移准备":"5A人群+种子池")),
+      Output:{ lifecycle_stage:st, ...(no[5]||{pass:true}) }, Next:"N6" },
+    { Input:"N0…N5 全链回流(去假后)", Process:"算差→"+stg.gate+" 判级→裁决/分流",
+      Output:n6Verdict(), Next:n6Next() }
+  ];
+  return IO[i];
+}
+function n6Next(){
+  const st=S.stage,g=gatePass();
+  if(st==='import')return g?"→ 成长期 N0":"留导入期修(关差定位断步)";
+  if(st==='growth')return g?"→ 成熟期 N0(ROI≥1.2)":"留成长期修/止损";
+  if(st==='mature')return g?"→ 继续成熟(stable_keep)":"五出口分流(HITL)";
+  if(st==='decline')return "止损维持(计时4周期)/焕新/淘汰(全HITL)";
+  if(st==='renewal')return g?"→ 回成长期":"留本期修(internal_status)/次数用尽→淘汰";
+  return "终态·无出口(不可复活·重启须新SKU ID)";
+}
+function artFor(i){
+  const io=nodeIO(i);
+  return "// Input:  "+io.Input+"\n// Process:"+io.Process+"\n// Next:   "+io.Next+"\n"+JSON.stringify({Output:io.Output},null,1);
+}
+function renderPipe(){
+  const st=STAGES[S.stage];
+  let h=`<div class="ph">🔗 7节点槽 · <b>${SKU.id}</b> · lifecycle_stage=<b>${S.stage}</b> · 点节点看 Input/Process/Output/Next(上Output=下Input)</div>`;
+  NODEDEF.forEach((nd,i)=>{
+    h+=`<div class="node" onclick="toggleArt(${i})">
+      <div class="nh"><span class="nn">${nd.n}</span><span class="nr">${nd.nm}</span>
+        ${nd.money?'<span class="money">涉钱·HITL</span>':''}</div>
+      <div class="nd">${st.nodes[i]}</div>
+      <div class="art" id="art${i}"><pre>${colorJson(artFor(i))}</pre></div>
+    </div>`;
+    if(i<6)h+=`<div class="arrow">↓ Artifact</div>`;
+  });
+  h+=`<div class="card"><div class="hint">🔒 全 Workflow(建设①规则型)· Agent三件套不全(数据未回流+涉钱HITL)→ loop_spec=N/A · 点任一节点看它这阶段的 JSON 契约</div></div>`;
+  document.getElementById('scroll').innerHTML=h;
+}
+function colorJson(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/^(\/\/.*)$/gm,'<span class="ic">$1</span>')
+    .replace(/"([^"]+)":/g,'<span class="k">"$1"</span>:')
+    .replace(/: ?"([^"]*)"/g,': <span class="v">"$1"</span>')
+    .replace(/: ?(true)/g,': <span class="g">$1</span>')
+    .replace(/: ?(false)/g,': <span class="r">$1</span>');
+}
+function toggleArt(i){ const a=document.getElementById('art'+i); if(a)a.classList.toggle('show'); }
+
+/* ---------------- COLLECT tab (N0 一句话上报) ---------------- */
+function renderCollect(){
+  const d=CHANNEL.dialect;
+  document.getElementById('scroll').innerHTML=`
+    <div class="ph">🔍 量实↑ · 抖店罗盘/千川/星图机采为主 + 人工补 · N0 Triage</div>
+    <div class="consumer">
+      <div class="ch">📣 6开关 · 抖音口径翻译(Autonomy第①处 · 换渠道只换这翻译)</div>
+      <div class="cthree" style="flex-wrap:wrap">
+        <div class="c" style="flex:1 1 30%"><div class="ct">陈列</div><div class="cs">${d.陈列}</div></div>
+        <div class="c" style="flex:1 1 30%"><div class="ct">动销</div><div class="cs">${d.动销}</div></div>
+        <div class="c" style="flex:1 1 30%"><div class="ct">认知</div><div class="cs">${d.认知}</div></div>
+        <div class="c" style="flex:1 1 30%"><div class="ct">有货</div><div class="cs">${d.有货}</div></div>
+        <div class="c" style="flex:1 1 30%"><div class="ct">复购</div><div class="cs">${d.复购}</div></div>
+        <div class="c" style="flex:1 1 30%"><div class="ct">口碑</div><div class="cs">${d.口碑}</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ph" style="margin:0 0 9px">🎙 一句话上报 → 系统解析成标准结构(接 库存上报Skill·N0)</div>
+      <textarea class="ta" id="talk" placeholder="像平时那样发一句，例：减盐款3秒率32%，直播GPM 650，某条视频疑似刷量，体验分4.7"></textarea>
+      <div style="margin-top:9px"><button class="btn sm" onclick="doTriage()">⚙ 解析成结构</button>
+        <span class="hint">演示解析·真实接 POST /intake/triage?channel=douyin&stage=${S.stage}</span></div>
+      <div class="art ${S.triageJson?'show':''}" id="triageOut">${S.triageJson?'<pre>'+colorJson(S.triageJson)+'</pre>':''}</div>
+    </div>
+    <div class="card">
+      <div class="ph" style="margin:0 0 6px">🧪 洗量校准(蝴蝶TypeB) · 算差前先去假</div>
+      <div class="hint">去刷量播放/异常订单/机器人：疑假流量→打flag未判级 · 放量衰减→冻结加投 · <b>假流量不算·假残值不算</b></div>
+    </div>`;
+}
+function doTriage(){
+  const t=(document.getElementById('talk').value||'').trim();
+  const seed=t||"减盐款3秒率32%完播涨了，直播GPM 650，某条视频疑似刷量，体验分4.7";
+  const items=[];
+  if(/刷量|机器人|异常订单|bot/i.test(seed)) items.push({type:"疑似假流量",flag:"low_trust",note:"未判级(假流量门拦·TypeB)"});
+  if(/竞品|抢量|竞价|千禾|海天/.test(seed)) items.push({type:"竞品竞价压力",gate:"portfolio/竞价监测",risk:"competitor_bid_pressure"});
+  let m2=seed.match(/GPM\s*([\d.]+)/i); if(m2) items.push({type:"直播GPM上报",value:parseFloat(m2[1]),field:"live_gpm"});
+  m2=seed.match(/3\s*秒率?\s*([\d.]+)/); if(m2) items.push({type:"3秒率上报",value:parseFloat(m2[1]),field:"play_3s_rate"});
+  m2=seed.match(/体验分\s*([\d.]+)/); if(m2) items.push({type:"体验分上报",value:parseFloat(m2[1]),field:"experience_score",note:"硬红线字段"});
+  if(/完播/.test(seed)) items.push({type:"完播信号",field:"completion_rate"});
+  if(items.length===0) items.push({type:"通用经营信号",note:"已归一"});
+  const json={ channel:"douyin", lifecycle_stage:S.stage, sku_id:SKU.id, spu_id:SKU.spu,
+    ts:"2026-07-08T14:20:00+08:00", items, flags:items.some(i=>i.flag)?["low_trust"]:[],
+    calibrated:true, next:"→ N1/N4/N6" };
+  S.triageJson=JSON.stringify(json,null,1);
+  renderCollect();
+  toast("已解析成标准 JSON("+items.length+" 条信号)· channel=douyin · stage="+S.stage,"go");
+}
+
+/* ---------------- LEDGER tab (统一 HUMAN_GATE_QUEUE) ---------------- */
+// 各阶段关键动作 = 每条 SKU mock 自带的 human_gate_actions(卡执行前进同一队列)
+function renderLedger(){
+  const st=STAGES[S.stage];
+  const acts=curSKU().human_gate_actions||[];
+  const actBtns = acts.length? acts.map((a,i)=>`<button class="btn sm ${a.irr?'':'o'}" onclick="gateAction('${S.stage}',${i})" style="margin:0 6px 6px 0">${a.irr?'⚠ ':''}${a.k}${a.amt?' ¥'+a.amt.toLocaleString():''}</button>`).join('')
+    : '<div class="hint">本阶段无额外关键动作(导入期主要是千川冷启+星图试水)。</div>';
+  let pend=S.pending.length? S.pending.map((p)=>`
+    <div class="pend"><div class="pt">⏳ 卡执行前·等主管核定 · ${p.kind}${p.irr?' · <span style="color:#a8433a">不可逆</span>':''}</div>
+      ${p.text}${p.amt?' · <b>¥'+p.amt.toLocaleString()+'</b>':''}</div>`).join('') 
+    : `<div class="hint">HUMAN_GATE_QUEUE 空。涉钱/不可逆动作(采买/砍投/下架/焕新/淘汰)都会进这里。</div>`;
+  document.getElementById('scroll').innerHTML=`
+    <div class="ph">📒 一本账 · 统一 <b>HUMAN_GATE_QUEUE</b> · 全生命周期护栏(卡执行前)</div>
+    <div class="card">
+      <div class="row"><span>本SKU本阶段预算</span><span class="mono" style="color:${S.budget<0?'var(--red)':'inherit'}">¥${S.budget.toLocaleString()}${S.budget<0?' · 超额授权(待追加)':''}</span></div>
+      <div class="row"><span>已落袋激励</span><span class="mono" style="color:var(--go)">+${S.hGot}</span></div>
+      <div class="row"><span>当前 SKU · 阶段</span><span class="mono">${SKU.id} · ${st.name}</span></div>
+    </div>
+    <div class="card">
+      <div class="ph" style="margin:0 0 9px">💰 千川/星图/直播加热(N2·涉钱→HITL)</div>
+      ${(S.stage==='decline'||S.stage==='retire')
+        ? `<div class="hint" style="margin-bottom:9px;color:var(--red)">⛔ ${st.name}：停投/零采买(new_spend_allowed=false)· 任何采买都不能额度内自动执行,必须进队列核定</div>
+           ${S.stage==='retire'?'':'<button class="btn sm" onclick="buy(2000)">残值复投(例外·≤¥2,000·ROI≥1.5·必核定)</button>'}`
+        : `<button class="btn sm o" onclick="buy(5000)">投 ¥5,000(额度内自主)</button>
+           <button class="btn sm" onclick="buy(20000)" style="margin-left:6px">投 ¥20,000(超额·提议)</button>`}
+    </div>
+    <div class="card">
+      <div class="ph" style="margin:0 0 9px">🚨 本阶段关键动作(砍投/下架/焕新/淘汰=不可逆·全卡执行前)</div>
+      ${actBtns}
+    </div>
+    <div class="card">
+      <div class="ph" style="margin:0 0 9px">📥 HUMAN_GATE_QUEUE(${S.pending.length})</div>
+      ${pend}
+    </div>`;
+}
+function gateAction(stg,i){
+  const a=MOCK_DATA[stg].human_gate_actions[i];
+  S.pending.push({kind:a.k, text:SKU.name+" · "+STAGES[stg].name, amt:a.amt||0, irr:a.irr});
+  renderLedger(); if(S.tab==='cockpit')renderCockpit();
+  toast((a.irr?"⚠ 不可逆动作":"涉钱动作")+" → 进 HUMAN_GATE_QUEUE · 卡执行前,等主管核定","warn");
+}
+function buy(amt){
+  if(S.stage==='decline'||S.stage==='retire'){
+    S.pending.push({kind:S.stage==='retire'?"淘汰期禁采买·需核定":"衰退期残值复投·例外需核定",
+      text:SKU.name+" · "+STAGES[S.stage].name, amt, irr:true});
+    renderLedger(); if(S.tab==='cockpit')renderCockpit();
+    toast("⛔ 本阶段禁止额度内自动采买 → 强制进 HUMAN_GATE_QUEUE,等主管核定","red"); return;
+  }
+  if(amt<=S.budget){ S.budget-=amt; renderLedger();
+    toast("额度内自主放行 · 已投千川/星图 ¥"+amt.toLocaleString()+" · 剩 ¥"+S.budget.toLocaleString(),"go"); }
+  else { S.pending.push({kind:"千川/星图采买超额",text:SKU.name+"·千川计划/星图矩阵",amt,irr:false});
+    renderLedger(); if(S.tab==='cockpit')renderCockpit();
+    toast("超额 → 涉钱进 HUMAN_GATE_QUEUE · 已挂起,等主管核定","warn"); }
+}
+
+/* ---------------- COCKPIT tab (role switch) ---------------- */
+function renderCockpit(){
+  if(S.role==='emp'){
+    const g=gatePass();
+    document.getElementById('scroll').innerHTML=`
+      <div class="ph">🧭 我的驾驶舱 · 一线视角(SKU/内容层)</div>
+      <div class="card">
+        <div class="sku"><span class="nm">${SKU.name}</span></div>
+        <div class="line">我这层：${STAGES[S.stage].name} · 目标差距 ${g?'已抹平':'有缺口'} · 最短板见「今日运营」红灯指标</div>
+        <div class="hint" style="margin-top:8px">一线只转 SKU 层；关不了的差(结构性/品类)→升一层(主管品类会诊)</div>
+      </div>
+      <div class="card"><div class="ph" style="margin:0 0 6px">↑ 我的提议(升给主管)</div>
+        ${S.pending.length?S.pending.map(p=>`<div class="row"><span>${p.kind}</span><span class="mono">${p.amt?'¥'+p.amt.toLocaleString():(p.irr?'不可逆':'—')}</span></div>`).join(''):'<div class="hint">暂无</div>'}
+      </div>`;
+  } else {
+    document.getElementById('scroll').innerHTML=`
+      <div class="ph">🧭 驾驶舱 · 主管视角(品类层)</div>
+      <div class="card">
+        <div class="ph" style="margin:0 0 8px">🔔 ${S.pending.length} 条待核定(HUMAN_GATE_QUEUE·涉钱/不可逆/分歧)</div>
+        ${S.pending.length? S.pending.map((p,i)=>`
+          <div class="pend"><div class="pt">${p.kind}${p.irr?' · <span style="color:#a8433a">不可逆</span>':''}</div>${p.text}${p.amt?' · <b>¥'+p.amt.toLocaleString()+'</b>':''}
+          <div style="margin-top:7px"><button class="btn sm" onclick="approve(${i})">✓ 核定通过</button>
+          <button class="btn sm o" onclick="reject(${i})" style="margin-left:6px">✗ 驳回</button></div></div>`).join('')
+          : '<div class="hint">暂无待核提议。</div>'}
+      </div>
+      <div class="card">
+        <div class="ph" style="margin:0 0 6px">🗂 HUMAN_GATE_HISTORY(${S.history.length}) · 核定留痕</div>
+        ${S.history.length? S.history.slice(0,5).map(h=>`<div class="row"><span>${h.ts} · ${h.kind}</span><span class="mono" style="color:${h.result==='通过'?'var(--go)':'var(--red)'}">${h.result}</span></div>`).join('') : '<div class="hint">暂无核定记录。通过/驳回都会留痕。</div>'}
+      </div>
+      <div class="card">
+        <div class="ph" style="margin:0 0 6px">品类层 · 连接律</div>
+        <div class="hint">上层关差=下层定标 · 一线关不了的差(组合内耗/结构性衰退)在这层会诊(战略店会诊)</div>
+      </div>`;
+  }
+}
+function reject(i){
+  const p=S.pending[i];if(!p)return;
+  S.pending.splice(i,1);
+  S.history.unshift({...p, result:"驳回", ts:"W28"}); // HUMAN_GATE_HISTORY 留痕
+  renderCockpit();
+  toast("✗ 已驳回 · "+p.kind+" 退回一线(记原因·未执行·已留痕)","red");
+}
+function approve(i){
+  const p=S.pending[i];if(!p)return;
+  if(p.amt){
+    if(p.amt>S.budget){ p.budget_override=true; }   // 超额授权:留痕,主管有权批
+    S.budget-=p.amt;                                  // 照扣(可为负=已用超额授权额度)
+  }
+  S.pending.splice(i,1);
+  S.history.unshift({...p, result:"通过", ts:"W28"}); // HUMAN_GATE_HISTORY 留痕
+  renderCockpit(); 
+  toast("✓ 已核定通过 · "+p.kind+(p.amt?" ¥"+p.amt.toLocaleString()+(p.budget_override?"(超额授权·预算转负)":"")+" 执行":(p.irr?" 执行(不可逆)":" 执行"))+" · 已留痕",p.budget_override?"warn":"go");
+}
+
+/* ---------------- interactions that MUTATE state ---------------- */
+function setStage(k){
+  if(!STAGES[k])return; S.stage=k; S.done=false;
+  renderStrip(); renderHead(); rerender();
+  const st=STAGES[k];
+  toast("切到 "+st.name+" · 引擎不变,阈值/字段/指标/"+st.gate+" 全部按 stage 重渲染","go");
+}
+function setRole(r){
+  S.role=r;
+  document.getElementById('rEmp').className='role'+(r==='emp'?' me':'');
+  document.getElementById('rMgr').className='role'+(r==='mgr'?' me':'');
+  if(S.tab==='cockpit')renderCockpit();
+  toast(r==='emp'?"切到一线视角(SKU层)":"切到主管视角(品类层)");
+}
+function setTab(t){
+  S.tab=t;
+  document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.dataset.t===t));
+  document.querySelectorAll('.nav').forEach(e=>e.classList.toggle('on',e.dataset.n===t));
+  rerender();
+}
+function rerender(){
+  if(S.tab==='today')renderToday();
+  else if(S.tab==='pipe')renderPipe();
+  else if(S.tab==='collect')renderCollect();
+  else if(S.tab==='ledger')renderLedger();
+  else if(S.tab==='cockpit')renderCockpit();
+}
+function editMetric(i){
+  const st=STAGES[S.stage];const m=curSKU().metrics[i];
+  const cur=(S.metricEdited[S.stage]&&(m.k in S.metricEdited[S.stage]))?S.metricEdited[S.stage][m.k]:m.v;
+  // toggle: 达标 <-> 未达标 by nudging across threshold
+  const passNow = m.dir==='lt'?(cur<m.t):(cur>=m.t);
+  const nv = passNow ? (m.dir==='lt'? +(m.t+ (m.t*0.15||0.1)).toFixed(3) : +(m.t*0.85).toFixed(3))
+                     : (m.dir==='lt'? +(m.t*0.85).toFixed(3) : +(m.t*1.15).toFixed(3));
+  S.metricEdited[S.stage]=S.metricEdited[S.stage]||{}; S.metricEdited[S.stage][m.k]=nv;
+  renderToday();
+  toast(m.k+" 改为 "+fmt(nv)+" → "+st.gate+" 重判："+(gatePass()?"四判全绿":"该判未达标·留本期修"), gatePass()?'go':'red');
+}
+function toggleCalib(){
+  S.calib=!S.calib; renderToday();
+  toast(S.calib?"去假后(TypeB)· 判级只认这个真值":"去假前 · 含刷量虚高 · 这些数不进算差","warn");
+}
+function escalate(){
+  S.pending.push({kind:"关差关不了·升品类会诊",text:SKU.name+" · "+STAGES[S.stage].name+" 结构性未达标",amt:0,irr:true});
+  if(S.tab==='cockpit')renderCockpit();
+  toast("↑ 已升一层 · 关不了的差 → 主管品类层会诊(连接律·规律③)","warn");
+}
+function stepRing(i){
+  S.ringLit[S.stage]=i+1; renderRing();
+  const names=["定标↓","量实↑","算差(去假)","关差","验果"];
+  toast("环 · 跑到「"+names[i]+"」"+(i===4?" · 验果=看上层标动没动":""));
+}
+function settle(){
+  if(!gatePass()){ toast("有指标未达标 → 关差没关,滚明天,不放大断链","red"); return; }
+  const st=STAGES[S.stage];
+  if(st.inc===0){ S.done=true; renderToday(); toast("本阶段不计增长激励(衰退/淘汰按残值/收尾结算)","warn"); return; }
+  S.hGot+=st.inc; S.done=true; renderToday();
+  toast("✓ 数据回流确认 · "+st.gate+" 达标落袋 +"+st.inc+" · 验果上溯：品类层A认知资产上移","go");
+}
+
+/* ---------------- boot ---------------- */
+/* ── 读登录页带来的身份(URL 参数)· 单独打开无参数则回落默认 ── */
+(function readIdentity(){
+  const p=new URLSearchParams(location.search);
+  const name=p.get('name'), role=p.get('role'), ch=p.get('channel');
+  if(name) CHANNEL.who=name;                         // 顶部姓名由登录带入
+  if(role==='emp'||role==='mgr') S.role=role;        // 权限:决定 human_gate 能否核定
+  // channel 用于校验(本 App=douyin);登录路由已保证进对的 App，这里只做温和提示
+  if(ch && ch!==CHANNEL.key){ /* 渠道不匹配:仍按本 App 跑,登录页负责路由 */ }
+})();
+
+renderStrip(); renderHead(); renderToday();
+// 若登录带入的是主管，初始高亮主管
+if(S.role==='mgr'){ document.getElementById('rEmp').className='role'; document.getElementById('rMgr').className='role me'; }
+</script>
+</body>
+</html>
