@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>douyinpcv1 · 抖音双主线经营 PC Workbench · 数据接入前最终业务版</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#0b0e14;--panel:#10141d;--card:#151b28;--line:#232b3d;--tx:#dce4f0;--dim:#8b98ad;
+--red:#ff5c5c;--green:#3ad98a;--amber:#ffb020;--blue:#54a8ff;--acc:#25d0c8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.55 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.pc-shell{display:grid;height:100vh;grid-template-rows:56px minmax(0,1fr) 30px;
+  grid-template-columns:214px minmax(0,1fr) 366px;
+  grid-template-areas:"top top top" "side main right" "foot foot foot"}
+.topbar{grid-area:top;display:flex;align-items:center;gap:10px;padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:nowrap;overflow-x:auto}
+.topbar .lg{font-weight:800;color:var(--acc);white-space:nowrap}
+.topbar label{color:var(--dim);font-size:11px;white-space:nowrap}
+select,input[type=text]{background:#0d1220;border:1px solid var(--line);color:var(--tx);border-radius:6px;padding:5px 8px;font-size:12px}
+.chip{display:inline-block;padding:3px 9px;border-radius:999px;border:1px solid var(--line);font-size:11px;color:var(--dim);white-space:nowrap}
+.chip.mode{border-color:var(--amber);color:var(--amber)}
+.sidebar{grid-area:side;background:var(--panel);border-right:1px solid var(--line);padding:10px 8px;overflow:auto}
+.nav{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;cursor:pointer;color:var(--dim);user-select:none}
+.nav:hover{background:#171e2e}
+.nav.on{background:#1b2436;color:#fff;font-weight:700}
+.nav .cnt{margin-left:auto;min-width:18px;text-align:center;background:var(--red);color:#fff;border-radius:999px;font-size:10px;padding:1px 5px}
+.nav .cnt.zero{background:#26314a;color:var(--dim)}
+.main{grid-area:main;overflow:auto;padding:14px}
+.right{grid-area:right;background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:12px}
+.foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 14px;background:var(--panel);border-top:1px solid var(--line);color:var(--dim);font-size:11px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+.card h4{margin:0 0 8px;font-size:13px}
+.hint{color:var(--dim);font-size:11px;line-height:1.6}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.tb{width:100%;border-collapse:collapse;font-size:12px}
+.tb th{color:var(--dim);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);font-weight:600;white-space:nowrap}
+.tb td{padding:6px 8px;border-bottom:1px solid #1a2132;vertical-align:top}
+.tb tr.click{cursor:pointer}.tb tr.click:hover{background:#182034}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle}
+.dot.ok{background:var(--green)}.dot.bad{background:var(--red)}.dot.na{background:#3a4560}.dot.warn{background:var(--amber)}
+.kv{color:var(--dim)} .kv b{color:var(--tx)}
+.btn{display:inline-block;background:#1c2740;border:1px solid #2c3a5c;color:var(--tx);border-radius:7px;padding:5px 11px;font-size:12px;cursor:pointer;user-select:none}
+.btn:hover{background:#243354}
+.btn.go{border-color:var(--green);color:var(--green)}
+.btn.red{border-color:var(--red);color:var(--red)}
+.btn.warn{border-color:var(--amber);color:var(--amber)}
+.btn.dis{opacity:.45;cursor:not-allowed}
+.badge{display:inline-block;padding:1px 7px;border-radius:999px;font-size:10px;border:1px solid var(--line);color:var(--dim)}
+.badge.money{border-color:var(--amber);color:var(--amber)}
+.badge.rej{border-color:var(--red);color:var(--red)}
+.badge.st{border-color:var(--blue);color:var(--blue)}
+.badge.done{border-color:var(--green);color:var(--green)}
+.tile{background:#121828;border:1px solid var(--line);border-radius:9px;padding:9px;cursor:pointer}
+.tile:hover{border-color:#33456e}
+.tile .mk{color:var(--dim);font-size:11px}
+.tile .mv{font-size:17px;font-weight:800;margin-top:2px}
+.tile.ok .mv{color:var(--green)}.tile.bad .mv{color:var(--red)}.tile.na .mv{color:#5b6a88}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.swim{display:grid;grid-template-columns:120px repeat(7,minmax(0,1fr));gap:6px;font-size:12px}
+.swim .hd{color:var(--dim);font-weight:700;text-align:center;padding:6px 0;cursor:pointer}
+.swim .rowhd{color:var(--dim);font-weight:700;display:flex;align-items:center}
+.swimcell{background:#121828;border:1px solid var(--line);border-radius:8px;padding:7px 8px;cursor:pointer;min-height:52px}
+.swimcell:hover{border-color:#33456e}
+.pipe{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:4px 0}
+.pnode{background:#121828;border:1px solid var(--line);border-radius:9px;padding:9px 10px;min-width:150px;cursor:pointer;flex:1}
+.pnode:hover{border-color:#33456e}
+.parrow{display:flex;align-items:center;color:#3a4a70;padding:0 5px;font-size:16px}
+.kb{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.kbcol{background:#101625;border:1px solid var(--line);border-radius:9px;padding:8px;min-height:90px}
+.kbcol h5{margin:0 0 6px;color:var(--dim);font-size:11px}
+.kbcard{background:#161e30;border:1px solid #24304c;border-radius:7px;padding:6px 8px;margin-bottom:6px;cursor:pointer;font-size:11.5px}
+.kbcard:hover{border-color:#3a4c78}
+pre.json{background:#0c101c;border:1px solid var(--line);border-radius:8px;padding:9px;font-size:10.5px;line-height:1.5;overflow:auto;color:#9fd0ff;max-height:340px;white-space:pre-wrap;word-break:break-all}
+.toastwrap{position:fixed;right:16px;bottom:40px;z-index:99;display:flex;flex-direction:column;gap:8px;max-width:420px}
+.toast{background:#141c2e;border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:8px;padding:9px 12px;font-size:12px;box-shadow:0 6px 22px rgba(0,0,0,.5)}
+.toast.go{border-left-color:var(--green)}.toast.red{border-left-color:var(--red)}.toast.warn{border-left-color:var(--amber)}
+.sep{border-top:1px dashed var(--line);margin:9px 0}
+mark{background:#3a4a12;color:#e8ffb0;padding:0 2px;border-radius:3px}
+@media(min-width:1700px){.pc-shell{grid-template-columns:230px minmax(0,1fr) 400px}}
+</style>
+</head>
+<body>
+<div class="pc-shell">
+  <div class="topbar" id="topbar"></div>
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main" id="main"></div>
+  <div class="right" id="right"></div>
+  <div class="foot" id="foot"></div>
+</div>
+<div class="toastwrap" id="tw"></div>
+<script src="douyincore.js"></script>
+<script>
+
+
+/* ============================================================
+   douyinpcv1 · PC Workbench 壳(渲染层)
+   业务数据/规则/判级/SOP/归因 全部来自上方同源 core(douyinv20 逐字抽取)
+   壳只做:布局 / 表格化 / 泳道 / 管道 / 看板 / 审批中心 / 右侧诊断
+   ============================================================ */
+const PC_VERSION={app_version:"douyinpcv1",theme:"抖音双主线经营 PC Workbench",data_mode:VERSION.data_mode,platform:"PC 1440/1920",core:"douyinv20 同源(douyincore)"};
+const REFRESH_TS="2026-07-11 09:30";
+const SKU_LIST=[
+ {id:SKU.id||"DY-LYX-Q10",name:SKU.name,f:1,stage:null,owner:"种草达人一线"},
+ {id:"DY-WDM-201",name:"味达美·臻品臻醇酱油1L",f:0.82,stage:"growth",owner:"带货达人一线"},
+ {id:"DY-CBL-330",name:"葱伴侣·葱香豆瓣酱330g",f:0.65,stage:"mature",owner:"直播间一线"}];
+const RANGE_F={today:0.93,last_7_days:1,last_30_days:1.06};
+const RANGE_NM={today:"今日",last_7_days:"近7天",last_30_days:"近30天"};
+const GMV_MOCK={import:86000,growth:420000,mature:980000,decline:260000,renewal:210000,retire:12000};
+const ROI_MOCK={import:1.1,growth:1.8,mature:2.6,decline:1.2,renewal:1.4,retire:0};
+const DATA_SRC=[
+ ["巨量云图","已联调(mock回放)","2026-07-11 08:50","96%","aiq分层字段缺","作战官","hybrid_ready"],
+ ["巨量星图","待接入","—","0%","达人历史CPA3","作战官","接口申请中"],
+ ["巨量千川","已联调(mock回放)","2026-07-11 08:50","92%","素材疲劳度","作战官","hybrid_ready"],
+ ["抖店","待接入","—","0%","退款原因码","带货达人岗","接口申请中"],
+ ["电商罗盘/灵犀","待接入","—","0%","搜索词组件","作战官","接口申请中"],
+ ["订单系统","待接入","—","0%","sku_nps问卷","主管","字段§七预留"],
+ ["手工导入","可用","2026-07-11 09:12","—","NPS临时通道","主管","manual_import"]];
+const PC_SWIM=[
+ {row:"seed", nm:"种草达人岗", cells:["人群场景","内容共创","兴趣测试","信任建立","外溢承接","口碑反馈","内容资产"]},
+ {row:"sell", nm:"带货达人岗", cells:["货盘机会","卖点脚本","点击测试","加购验证","成交转化","退款反馈","复购资产"]},
+ {row:"live", nm:"直播间岗",   cells:["人群理解","话术共创","进房测试","停留验证","直播成交","场次复盘","切片资产"]},
+ {row:"ops",  nm:"作战官",     cells:["定标","协同","判断","诊断","分流","回流","复盘"]}];
+const ROLE_HOME={seed_kol:"today",commerce_kol:"today",live_room:"today",ops:"ledger",mgr:"cockpit"};
+const NAV=[["today","📌 今日运营"],["dual","🎯 双前线 J0–J6"],["pipe","🧩 N0–N6 引擎槽"],["collect","📥 量实 / 数据口径"],["ledger","📚 三本账"],["task","🧠 任务 / 复盘 / SOP"],["cockpit","🛩 驾驶舱"]];
+const P={screen:"today",sku:SKU_LIST[0].id,range:"last_7_days",search:"",diag:null,sopRole:"sop_seed",lastExport:null,primaryStage:null};
+
+/* ---------- 壳基础 ---------- */
+function toast(msg,cls){const tw=document.getElementById('tw');const t=document.createElement('div');t.className='toast '+(cls||'');t.innerHTML=msg;tw.appendChild(t);setTimeout(()=>t.remove(),4200);}
+function esc(x){return String(x).replace(/</g,'&lt;');}
+function curSkuMeta(){return SKU_LIST.find(x=>x.id===P.sku)||SKU_LIST[0];}
+function skuF(){return curSkuMeta().f*(RANGE_F[P.range]||1);}
+function pcWrap(m){const f=skuF();if(f===1)return m;const v=+(m.v*f).toPrecision(6);const pass=m.dir==='lt'?(v<m.t):(v>=m.t);return Object.assign({},m,{v,show:v,pass});}
+function pcMetrics(){return curMetrics().map(pcWrap);}
+function pcLed(){const L=led();return {seed:L.seed.map(pcWrap),sell:L.sell.map(pcWrap),joint:L.joint.map(pcWrap)};}
+function pcLedMap(){const o={};const L=pcLed();['seed','sell','joint'].forEach(g=>L[g].forEach(m=>o[m.k]=m));return o;}
+function pcFired(){const lm=pcLedMap();return RULES.filter(r=>{try{return !!r.when(lm)}catch(e){return false}});}
+function pcGate(){const mp=pcMetrics().every(m=>m.pass);const gr=curSKU().gate_result||{};const red=gr.hard_redline?gr.hard_redline.pass===true:true;return mp&&red&&gatePass()===gatePass();}
+function pcGateFull(){return skuF()===1?gatePass():(pcMetrics().every(m=>m.pass));}
+function rowKeys(row){const L=pcLed();if(row==='seed')return new Set(L.seed.map(m=>m.k));if(row==='sell')return new Set(L.sell.filter(m=>!/^live/.test(m.k)).map(m=>m.k));if(row==='live')return new Set(L.sell.filter(m=>/^live/.test(m.k)).map(m=>m.k));return new Set(Object.keys(pcLedMap()));}
+function cellLamp(j,row){const node=JOURNEY.find(x=>x.j===j);if(!node)return 'na';const ks=rowKeys(row);const rel=(node.keys||[]).filter(k=>ks.has(k));if(!rel.length)return 'na';const lm=pcLedMap();return rel.every(k=>lm[k]&&lm[k].pass)?'ok':'bad';}
+function dotOf(m){return '<span class="dot '+(m.pass?'ok':'bad')+'"></span>';}
+function gapOf(m){const g=m.dir==='lt'?(m.t-m.v):(m.v-m.t);const good=m.dir==='lt'?(m.v<m.t):(m.v>=m.t);return '<span style="color:var(--'+(good?'green':'red')+')">'+(good?'+':'')+fmt(g)+(m.u||'')+'</span>';}
+function hl(txt){if(!P.search)return esc(txt);const t=esc(txt);try{return t.replace(new RegExp(P.search.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),s=>'<mark>'+s+'</mark>');}catch(e){return t;}}
+function matches(m){if(!P.search)return true;return (m.label+' '+m.k).toLowerCase().includes(P.search.toLowerCase());}
+
+/* ---------- 壳动作(语义=douyinv20,渲染换PC) ---------- */
+function hsConfirm(side){
+  if(hsExempt()){toast("本阶段停投·握手不适用(new_spend_allowed=false)","warn");return;}
+  const perm={seed:['seed_kol','ops','mgr'],commerce:['commerce_kol','ops','mgr'],live:['live_room','ops','mgr']};
+  const nm={seed:"种草岗",commerce:"带货岗",live:"直播岗"};
+  if((perm[side]||[]).indexOf(S.role)<0){toast(nm[side]+"确认只能由 "+nm[side].replace("岗","")+"/作战官/主管 点(permission_boundary)","red");return;}
+  const h=hsState();
+  if(h[side]){toast("该侧已确认过(留痕不可撤·要改走主管) · "+h[side].by+" · "+h[side].ts,"warn");return;}
+  h[side]={by:OP_ROLES[S.role]||S.role,role:S.role,ts:"W28-D6 14:2"+Object.keys(h).filter(k=>h[k]).length};
+  render();
+  toast(hsPass()?"🤝 N1↔N2 握手完成(unlock_rule: 种草∧(带货∨直播)) · N2 采买通道解锁":"已确认「"+nm[side]+"」· 等对侧确认(unlock_rule: seed AND (commerce OR live))",hsPass()?"go":"warn");
+}
+function toggleN3(i){
+  const ov=S.n3Edited[S.stage]=S.n3Edited[S.stage]||{};const cur=(i in ov)?ov[i]:true;ov[i]=!cur;render();
+  const it=n3Items()[i];
+  toast(it.pass?("✓ "+it.name+" 已修复"+(n3Pass()?" · N3全过·允许进N2加投":"")):("⛔ "+it.name+" 未过 → "+it.cons+" · N3未过不准进N2加投"),it.pass?"go":"red");
+}
+function buy(amt){
+  if(!(S.stage==='decline'||S.stage==='retire')){
+    if(!hsPass()){toast("⛔ N1↔N2 联合策略未握手 · 内容没绑投放策略,不准花钱(N0–N6 屏握手卡确认)","red");return;}
+    if(!n3Pass()){toast("⛔ N3 站内承接未过 · 不准进N2加投(N0–N6 屏检查表修复)","red");return;}
+  }
+  const who=OP_ROLES[S.role]||S.role;
+  if(S.stage==='decline'||S.stage==='retire'){
+    S.pending.push({kind:S.stage==='retire'?"淘汰期禁采买·需核定":"衰退期残值复投·例外需核定",text:SKU.name+" · "+STAGES[S.stage].name+" · 上限¥"+CHANNEL.residual_cap.amount.toLocaleString()+"·ROI≥"+CHANNEL.residual_cap.roi,amt,irr:true,applicant:who,ts:REFRESH_TS,rule:"redline_gates"});
+    render();toast("⛔ 本阶段禁止额度内自动采买 → 强制进 HUMAN_GATE_QUEUE,等主管核定","red");return;
+  }
+  if(amt<=S.budget){S.budget-=amt;render();toast("额度内自主放行 · 已投达人/投流 ¥"+amt.toLocaleString()+" · 剩 ¥"+S.budget.toLocaleString(),"go");}
+  else{S.pending.push({kind:"达人/投流采买超额",text:SKU.name+"·投放计划/达人矩阵",amt,irr:false,applicant:who,ts:REFRESH_TS,rule:"hitl_policy·超额"});render();toast("超额 → 涉钱进 HUMAN_GATE_QUEUE · 已挂起,等主管核定","warn");}
+}
+function dispatch(rid,ti){
+  if(!(S.role==='ops'||S.role==='mgr')){toast("派发权在 作战官/主管 · permission_boundary(L4护栏先于自动化)","red");return;}
+  const r=RULES.find(x=>x.id===rid);if(!r)return;const t=r.tasks[ti];if(!t)return;
+  if(S.tasks.some(x=>x.rid===rid&&x.ti===ti&&x.status!=='已驳回')){toast("该任务已在任务中心,未重复派发","warn");return;}
+  const money=t.money||0,irr=!!t.irr,hitl=(money>0||irr);
+  const task={id:++S.tid,rid,ti,name:t.t,team:t.team,srcNode:r.node,kpi:r.kpi,money,irr,status:hitl?'待核定':'待处理',verdict:null,sop:false};
+  S.tasks.push(task);
+  if(hitl){S.pending.push({kind:(irr?'不可逆任务':'涉钱任务')+'·'+t.t,text:SKU.name+' · '+STAGES[S.stage].name+' · 来源'+r.node+'/'+r.id,amt:money,irr,taskId:task.id,applicant:OP_ROLES[S.role]||S.role,ts:REFRESH_TS,rule:r.id+' '+r.nm});
+    toast(money>0?"涉钱任务 ¥"+money.toLocaleString()+" → 进 HUMAN_GATE_QUEUE · 卡执行前":"⚠ 不可逆任务 → 进 HUMAN_GATE_QUEUE · 卡执行前","warn");}
+  else toast("✓ 已派发给"+TEAM[t.team]+" · 状态=待处理","go");
+  render();
+}
+function approve(i){
+  if(S.role!=='mgr'){toast("核定权在主管(human_gate)","red");return;}
+  const p=S.pending[i];if(!p)return;
+  if(p.irr&&!p.confirm){p.confirm=true;render();toast("⚠ 不可逆动作 · 请再次点击「确认通过」二次确认","warn");return;}
+  if(p.amt){if(p.amt>S.budget){p.budget_override=true;}S.budget-=p.amt;}
+  S.pending.splice(i,1);S.history.unshift(Object.assign({},p,{result:"通过",by:"抖音主管",ts:REFRESH_TS}));
+  if(p.taskId){const t=findTask(p.taskId);if(t)t.status='待处理';}
+  render();toast("✓ 已核定通过 · "+p.kind+(p.amt?" ¥"+p.amt.toLocaleString()+(p.budget_override?"(超额授权·预算转负)":""):"")+" · 已留痕",p.budget_override?"warn":"go");
+}
+function reject(i){
+  if(S.role!=='mgr'){toast("核定权在主管(human_gate)","red");return;}
+  const p=S.pending[i];if(!p)return;
+  S.pending.splice(i,1);S.history.unshift(Object.assign({},p,{result:"驳回",by:"抖音主管",ts:REFRESH_TS}));
+  if(p.taskId){const t=findTask(p.taskId);if(t)t.status='已驳回';}
+  render();toast("✗ 已驳回 · "+p.kind+" 退回一线(记原因·未执行·已留痕)","red");
+}
+function returnFix(i){
+  if(S.role!=='mgr'){toast("核定权在主管(human_gate)","red");return;}
+  const p=S.pending[i];if(!p)return;
+  S.pending.splice(i,1);S.history.unshift(Object.assign({},p,{result:"退回修改",by:"抖音主管",ts:REFRESH_TS}));
+  if(p.taskId){const t=findTask(p.taskId);if(t)t.status='待处理';}
+  render();toast("↩ 退回修改 · "+p.kind+" 补充方案后重新提交 · 已留痕","warn");
+}
+function startTask(id){const t=findTask(id);if(!t)return;if(!ownable(t)){toast("这条任务不属于你这条线(permission_boundary)","red");return;}t.status='进行中';render();toast("任务已开始 · "+t.name);}
+function finishTask(id){const t=findTask(id);if(!t)return;if(!ownable(t)){toast("这条任务不属于你这条线(permission_boundary)","red");return;}t.status='已完成';render();toast("已完成 ≠ 验果通过 · 请作战官/主管到复盘区确认「结果指标动没动」","warn");}
+function review(id,moved){
+  const t=findTask(id);if(!t)return;
+  if(!(S.role==='ops'||S.role==='mgr')){toast("验证永远是人的事:复盘权在 作战官/主管(L5 人不删除只换位)","red");return;}
+  const verdict=moved?"有效":"无效";
+  if(VERDICT_OPTIONS.indexOf(verdict)<0){toast("裁决不在 options 枚举内,已拒绝","red");return;}
+  t.verdict=verdict;t.status='已复盘';
+  if(moved){const b=bumpKpi(t.kpi);S.hGot+=10;render();toast("✓ 验果通过 · "+(b?b.label+" 抬到 "+fmtU(b.nv,b.u):"")+" → 关差成功 · 激励+10 · 剩余红灯 "+pcFired().length+" 条","go");}
+  else{render();toast("✗ 裁决=无效 · 任务做了但上层标没动 → 不落袋 · 关不了的差请升一层","red");}
+}
+function retest(id){const t=findTask(id);if(!t)return;if(!(S.role==='ops'||S.role==='mgr')){toast("复盘权在 作战官/主管","red");return;}t.verdict="继续测试";t.status='进行中';render();toast("裁决=继续测试 · 回到进行中(不固化·不结案)","warn");}
+function settle(){
+  if(!pcGateFull()){toast("有指标未达标 → 关差没关,滚明天,不放大断链","red");return;}
+  const st=STAGES[S.stage];
+  if(st.inc===0){S.done=true;render();toast("本阶段不计增长激励(衰退/淘汰按残值/收尾结算)","warn");return;}
+  S.hGot+=st.inc;S.done=true;render();toast("✓ 数据回流确认 · "+st.gate+" 达标落袋 +"+st.inc+" · 验果上溯:品类层A认知资产上移","go");
+}
+function npsImport(){S.npsManual=S.npsManual||{};S.npsManual[S.stage]=0.31;render();toast("✓ SKU级NPS 手工导入(hybrid) · 31% · 不进Gate主判·不影响单SKU红绿灯","go");}
+function toggleCalib(){S.calib=!S.calib;render();toast(S.calib?"✓ 去假开关=开 · 判级恒用校准值(算差前先校准)":"⚠ 去假开关=关 · 展示原始值(含促销/压货虚高)·判级仍用校准值",S.calib?"go":"warn");}
+function editLedgerKpi(k){
+  const lm=pcLedMap();const m=lm[k];if(!m)return;
+  const nv=m.pass?(m.dir==='lt'?+(m.t*1.3).toPrecision(4):+(m.t*0.7).toPrecision(4)):(m.dir==='lt'?+(m.t*0.85).toPrecision(4):+(m.t*1.15).toPrecision(4));
+  S.ledgerEdited[S.stage]=S.ledgerEdited[S.stage]||{};S.ledgerEdited[S.stage][k]=skuF()===1?nv:+(nv/skuF()).toPrecision(6);
+  render();const m2=pcLedMap()[k];
+  toast((m2.pass?"✓ ":"⛔ ")+m2.label+" → "+fmtU(m2.v,m2.u)+"(演示改数·红绿灯真重判)",m2.pass?"go":"red");
+}
+
+/* ---------- 顶栏 / 侧栏 / 底栏 ---------- */
+function navCnt(id){
+  if(id==='today')return pcFired().length;
+  if(id==='dual')return JOURNEY.filter(n=>PC_SWIM.some(r=>cellLamp(n.j,r.row)==='bad')).length;
+  if(id==='pipe')return (hsPass()?0:1)+(n3Pass()?0:1);
+  if(id==='collect')return FIELDS_NEW.filter(f=>/待接入/.test(f[2])).length;
+  if(id==='ledger'){const L=pcLed();return L.seed.concat(L.sell,L.joint).filter(m=>!m.pass).length;}
+  if(id==='task')return S.tasks.filter(t=>t.status==='待核定'||t.status==='待处理').length;
+  if(id==='cockpit')return S.pending.length;
+  return 0;
+}
+function renderTop(){
+  const el=document.getElementById('topbar');
+  el.innerHTML=
+   '<span class="lg">INFINITY OS · 抖音 PC 工作台</span>'
+  +'<label>SKU</label><select id="selSku" onchange="setSku(this.value)">'+SKU_LIST.map(s=>'<option value="'+s.id+'"'+(P.sku===s.id?' selected':'')+'>'+s.id+' '+s.name+'</option>').join('')+'</select>'
+  +'<label>阶段</label><select id="selStage" onchange="setStagePC(this.value)">'+ORDER.map(k=>'<option value="'+k+'"'+(S.stage===k?' selected':'')+'>'+STAGES[k].name+'</option>').join('')+'</select>'
+  +'<label>角色</label><select id="selRole" onchange="setRolePC(this.value)">'+Object.keys(OP_ROLES).map(k=>'<option value="'+k+'"'+(S.role===k?' selected':'')+'>'+OP_ROLES[k]+'</option>').join('')+'</select>'
+  +'<label>周期</label><select id="selRange" onchange="setRange(this.value)">'+Object.keys(RANGE_NM).map(k=>'<option value="'+k+'"'+(P.range===k?' selected':'')+'>'+RANGE_NM[k]+'</option>').join('')+'</select>'
+  +'<input type="text" id="inSearch" placeholder="搜索指标/字段…" value="'+esc(P.search)+'" oninput="onSearch(this.value)" style="width:150px">'
+  +'<span class="chip mode" id="chipMode">data_mode: '+PC_VERSION.data_mode+'</span>'
+  +'<span class="chip" id="tRefresh">最近刷新 '+REFRESH_TS+'</span>'
+  +'<span class="chip">预算池 ¥<b id="budgetVal">'+S.budget.toLocaleString()+'</b></span>'
+  +'<span class="chip">激励 +<b>'+S.hGot+'</b></span>';
+}
+function renderSide(){
+  const el=document.getElementById('sidebar');
+  el.innerHTML=NAV.map(([id,nm])=>{const c=navCnt(id);
+    return '<div class="nav'+(P.screen===id?' on':'')+'" data-scr="'+id+'" onclick="setScreen(\''+id+'\')">'+nm+'<span class="cnt'+(c?'':' zero')+'">'+c+'</span></div>';}).join('')
+  +'<div class="sep"></div><div class="hint" style="padding:0 6px">环×四层 · 上层关差=下层定标<br>验果=上层的标动没动<br>SR='+esc(OP_ROLES[S.role])+'</div>';
+}
+function renderFoot(){
+  document.getElementById('foot').innerHTML=
+   '<span>'+PC_VERSION.app_version+' · '+PC_VERSION.theme+'</span>'
+  +'<span>core = douyinv20 同源(douyincore·业务规则唯一权威)</span>'
+  +'<span>data_mode: '+PC_VERSION.data_mode+'(数字=演示假水·接真数据只改core)</span>'
+  +'<span>最近刷新 '+REFRESH_TS+'</span>'
+  +'<span style="margin-left:auto">SKU='+esc(P.sku)+' · '+STAGES[S.stage].name+' · '+esc(OP_ROLES[S.role])+'</span>';
+}
+
+/* ---------- 右侧诊断栏 ---------- */
+function openDiag(d){P.diag=d;renderRight();}
+function attrKeyOf(k){return LEDGER_TWIN[k]||k;}
+function diagMetric(k){
+  const lm=pcLedMap();const gm=pcMetrics().find(m=>m.k===k);
+  const m=lm[k]||gm; if(!m)return '<div class="hint">指标不存在</div>';
+  const A=ATTR[attrKeyOf(k)]||ATTR[k]||null;
+  const dict=METRIC_DICT.find(r=>m.label.indexOf(r[0])>=0||r[0].indexOf(m.label)>=0);
+  const rules=pcFired().filter(r=>r.kpi===k);
+  let h='<h4>📍 '+esc(m.label)+' <span class="dot '+(m.pass?'ok':'bad')+'"></span></h4>';
+  h+='<div class="card" data-attrvals><table class="tb"><tr><th>当前值</th><th>目标值</th><th>差值</th><th>状态</th></tr>'
+    +'<tr><td><b>'+fmtU(m.v,m.u)+'</b></td><td>'+fmtU(m.t,m.u)+'</td><td>'+gapOf(m)+'</td><td>'+(m.pass?'达标':'未达标')+'</td></tr></table>'
+    +(m.inflated?'<div class="hint">⚠ 展示含促销/压货虚高(raw) · 判级恒用校准值</div>':'')+'</div>';
+  if(dict)h+='<div class="card"><h4>口径(为什么是这个数)</h4><div class="kv">分子 <b>'+esc(dict[1])+'</b> ÷ 分母 <b>'+esc(dict[2])+'</b><br>统计范围 '+esc(dict[3])+' · 周期 '+esc(dict[4])+' · 基线 '+esc(dict[5])+'</div></div>';
+  if(A){
+    h+='<div class="card"><h4>与收入的关系</h4><div class="hint">'+esc(A.inc||'')+'</div></div>';
+    if(m.pass&&A.up)h+='<div class="card"><h4>为什么达标</h4>'+A.up.map(x=>'<div class="kv">· '+esc(x)+'</div>').join('')+(A.upNext?'<div class="sep"></div><div class="hint">固化:'+esc(A.upNext)+'</div>':'')+'</div>';
+    if(!m.pass&&A.down)h+='<div class="card"><h4>为什么不达标 → 怎么修</h4>'+A.down.map(dn=>'<div class="kv" style="margin-bottom:6px">✗ '+esc(dn.why)+'<br>→ '+esc(dn.act)+(dn.sop?' <span class="btn" style="padding:2px 8px" onclick="goSop(\''+dn.sop.id+'\','+dn.sop.s+')">SOP '+esc(sopRefLabel(dn.sop))+'</span>':'')+'</div>').join('')+'</div>';
+  }
+  if(m.group==='joint'){
+    const src=curSKU().fiveA_source||{};const names={short_video:"短视频",live:"直播",search:"搜索",shop_card:"商品卡",kol:"达人"};
+    h+='<div class="card" data-a3bridge><h4>A3 桥 · 新增A3从哪来/谁承接</h4><table class="tb"><tr><th>来源</th><th>A3人数</th></tr>'
+      +Object.keys(src).map(s=>'<tr><td>'+names[s]+'</td><td>'+(src[s].A3||0).toLocaleString()+'</td></tr>').join('')
+      +'</table><div class="hint">公式 = 来自新增A3的行为人数 ÷ new_a3_users · 承接岗位:短视频/达人→种草岗,直播→直播间岗,商品卡/搜索→带货岗</div>'
+      +'<span class="btn" data-a3hs onclick="setScreen(\'pipe\')">→ N1–N2 握手卡</span></div>';
+  }
+  if(rules.length)h+='<div class="card"><h4>命中红灯规则</h4>'+rules.map(r=>'<div class="kv">'+r.id+' '+esc(r.nm)+' · '+esc(r.judge)+' <span class="btn" style="padding:2px 8px" data-rsop onclick="ruleToSop(\''+r.id+'\')">反查SOP</span></div>').join('')+'</div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="btn" data-attrjump onclick="setScreen(\'ledger\')">关联账本</span>'
+    +'<span class="btn go" data-attrtask onclick="nextTask(\''+k+'\')">▶ 下一步任务(M9)</span></div>';
+  return h;
+}
+function nextTask(k){
+  const m=pcLedMap()[k]||pcMetrics().find(x=>x.k===k);if(!m)return;
+  const task={id:++S.tid,rid:null,ti:null,name:'跟进「'+m.label+'」差值关差',team:'joint',srcNode:'M9',kpi:k,money:0,irr:false,status:'待处理',verdict:null,sop:false};
+  S.tasks.push(task);setScreen('task');toast('▶ 已生成下一步任务 → 任务中心(M9) · '+m.label,'go');
+}
+function goSop(id,s){P.sopRole=id;P.diag={t:'sop',id,s};setScreen('task');}
+function ruleToSop(rid){const r=RULES.find(x=>x.id===rid);if(!r)return;const ref=(r.sopref&&r.sopref[0])||null;if(ref){goSop(ref.id,ref.s);}else setScreen('task');}
+function diagJ(j,row){
+  const n=JOURNEY.find(x=>x.j===j);if(!n)return '';
+  const rw=PC_SWIM.find(r=>r.row===row);
+  const lm=pcLedMap();const ks=rowKeys(row);const rel=(n.keys||[]).filter(k=>ks.has(k));
+  const rules=pcFired().filter(r=>r.node===j);
+  let h='<h4>🎯 '+j+' '+esc(n.nm)+(rw?' · '+esc(rw.nm):'')+'</h4>';
+  h+='<div class="card"><div class="kv">模块 <b>'+esc(n.mod)+'</b> · 引擎槽 <b>'+esc(n.slot)+'</b></div>'
+    +(rw&&row==='seed'?'<div class="hint">种草岗视角:'+esc(n.seed||'')+'</div>':'')
+    +(rw&&(row==='sell'||row==='live')?'<div class="hint">卖货前线视角:'+esc(n.sell||'')+'</div>':'')+'</div>';
+  h+='<div class="card"><h4>本节点判据</h4>'+(rel.length?rel.map(k=>{const m=lm[k];return '<div class="kv click" style="cursor:pointer" onclick="openDiag({t:\'metric\',k:\''+k+'\'})">'+dotOf(m)+' '+esc(m.label)+' '+fmtU(m.v,m.u)+' / 目标'+fmtU(m.t,m.u)+'</div>';}).join(''):'<div class="hint">该岗位在本节点无直接账本判据(协同位)</div>')+'</div>';
+  if(rules.length)h+='<div class="card"><h4>断点(红灯规则)</h4>'+rules.map(r=>'<div class="kv" style="margin-bottom:8px"><b>'+r.id+' '+esc(r.nm)+'</b> · '+esc(r.a5a)+'<br>'+esc(r.judge)+'<br>'
+    +r.tasks.map((t,ti)=>'<span class="btn" style="padding:2px 8px;margin:3px 4px 0 0" data-disp onclick="dispatch(\''+r.id+'\','+ti+')">派发:'+esc(t.t)+(t.money?' ¥'+t.money.toLocaleString():'')+'</span>').join('')
+    +'</div>').join('')+'</div>';
+  else h+='<div class="card hint">✓ 无断点(该节点判据全部达标)</div>';
+  return h;
+}
+function diagN(i){
+  const nd=NODEDEF[i];if(!nd)return '';
+  const io=nodeIO(i);
+  let h='<h4>🧩 '+nd.n+' '+esc(nd.nm)+'</h4>';
+  h+='<div class="card"><div class="kv">Owner <b>'+esc(nd.posts||'')+'</b>'+(nd.money?' · <span class="badge money">涉钱¥'+nd.money.toLocaleString()+'</span>':'')+'</div></div>';
+  h+='<div class="card"><h4>Input / Process / Next</h4><div class="kv">Input <b>'+esc(io.Input)+'</b><br>Process '+esc(io.Process)+'<br>Next <b>'+esc(io.Next)+'</b></div></div>';
+  h+='<div class="card"><h4>Artifact(Output JSON · 硬连接)</h4><pre class="json" data-art>'+esc(JSON.stringify(io.Output,null,1))+'</pre><div class="hint">上一节点 Output = 下一节点 Input(标准化 JSON 硬连接)</div></div>';
+  if(nd.n==='N2')h+='<div class="card"><h4>二级来源</h4><div class="hint">'+N2_SOURCES.map(esc).join(' · ')+'</div><div class="hint">'+esc(HS_KOL[S.stage]||'')+'</div></div>';
+  return h;
+}
+function diagTask(id){
+  const t=findTask(id);if(!t)return '<div class="hint">任务不存在</div>';
+  let h='<h4>🗂 任务 #'+t.id+'</h4>';
+  h+='<div class="card"><div class="kv"><b>'+esc(t.name)+'</b> '+statusBadge(t)+'</div><div class="hint">执行岗 '+esc(TEAM[t.team]||t.team)+' · 来源 '+esc(t.srcNode||'—')+(t.rid?'/'+t.rid:'')+' · 关联KPI '+esc(t.kpi||'—')+(t.money?' · <span class="badge money">涉钱¥'+t.money.toLocaleString()+'</span>':'')+(t.irr?' · <span class="badge rej">不可逆</span>':'')+'</div></div>';
+  h+='<div class="card"><h4>执行要求</h4><div class="hint">完成后由作战官/主管在复盘区裁决「上一层的标动没动」;做完≠验果通过。</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
+    +(t.status==='待处理'?'<span class="btn" onclick="startTask('+t.id+')">开始执行</span>':'')
+    +(t.status==='进行中'?'<span class="btn go" onclick="finishTask('+t.id+')">标记完成</span>':'')
+    +(t.status==='已完成'?'<span class="btn go" data-rev onclick="review('+t.id+',true)">验果:有效(标动了)</span><span class="btn red" onclick="review('+t.id+',false)">无效(标没动)</span><span class="btn warn" onclick="retest('+t.id+')">继续测试</span>':'')
+    +'</div></div>';
+  return h;
+}
+function diagSop(id,s){
+  const sp=SOPS.find(x=>x.id===id);const st=sp&&sp.steps.find(x=>x.s===s);
+  if(!st)return '<div class="hint">SOP步骤不存在</div>';
+  let h='<h4>📖 '+esc(sp.nm||sp.id)+' · Step'+st.s+' '+esc(st.env)+'</h4>';
+  h+='<div class="card"><div class="kv">Input <b>'+esc(st.i)+'</b><br>Process '+esc(st.p)+'<br>Output <b>'+esc(st.o)+'</b></div></div>';
+  h+='<div class="card"><h4>定量KPI(目标/最佳/当前)</h4><table class="tb"><tr><th>KPI</th><th>目标</th><th>最佳</th><th>当前</th><th></th></tr>'
+    +(st.kq||[]).map(q=>'<tr><td>'+esc(q[0])+'</td><td>'+esc(q[1])+'</td><td>'+esc(q[2])+'</td><td>'+esc(q[3])+'</td><td><span class="dot '+(q[4]?'ok':'bad')+'"></span></td></tr>').join('')+'</table></div>';
+  h+='<div class="card"><h4>定性KPI / 判断标准</h4><div class="hint">'+(st.kl||[]).map(esc).join('<br>')+'</div><div class="sep"></div><div class="kv">判断:'+esc(st.judge||st.d||'')+'</div><div class="kv">建议:<b data-sug>'+esc(sopSuggest(st))+'</b>(枚举:继续/回修/放大/停止)'+(st.hitl?' · <span class="badge money">涉钱·HITL</span>':'')+'</div></div>';
+  return h;
+}
+function diagHome(){
+  const jl=pcLed().joint;const pend=S.pending.length;const fr=pcFired();
+  let h='<h4>🔎 诊断栏(点任意 KPI / J节点 / N节点 / 任务)</h4>';
+  h+='<div class="card"><h4>A3 桥(联合账速览)</h4>'+jl.map(m=>'<div class="kv click" style="cursor:pointer" onclick="openDiag({t:\'metric\',k:\''+m.k+'\'})">'+dotOf(m)+' '+esc(m.label)+' <b>'+fmtU(m.v,m.u)+'</b> / '+fmtU(m.t,m.u)+'</div>').join('')+'</div>';
+  h+='<div class="card"><h4>HITL 待审批</h4><div class="kv">'+pend+' 条待主管核定 <span class="btn" style="padding:2px 8px" onclick="setScreen(\'cockpit\')">去审批中心</span></div></div>';
+  h+='<div class="card"><h4>SOP 建议(红灯反查)</h4>'+(fr.length?fr.map(r=>'<div class="kv">'+r.id+' '+esc(r.nm)+' <span class="btn" style="padding:2px 8px" data-rsop onclick="ruleToSop(\''+r.id+'\')">查SOP</span></div>').join(''):'<div class="hint">当前无红灯</div>')+'</div>';
+  return h;
+}
+function renderRight(){
+  const el=document.getElementById('right');const d=P.diag;
+  if(!d){el.innerHTML=diagHome();return;}
+  if(d.t==='metric')el.innerHTML=diagMetric(d.k);
+  else if(d.t==='jnode')el.innerHTML=diagJ(d.j,d.row);
+  else if(d.t==='nnode')el.innerHTML=diagN(d.i);
+  else if(d.t==='task')el.innerHTML=diagTask(d.id);
+  else if(d.t==='sop')el.innerHTML=diagSop(d.id,d.s);
+  else el.innerHTML=diagHome();
+}
+
+/* ---------- 屏1 今日运营 ---------- */
+function scrToday(){
+  const seed=S.role==='seed_kol';
+  const ms=seed?SEED_TODAY.map(x=>{const m=pcLedMap()[x.lk];return Object.assign({},m,{label:x.label});}):pcMetrics();
+  const gate=pcGateFull();const gr=curSKU().gate_result||{};const fr=pcFired();
+  let h='<div class="cols2">';
+  // 左:阶段KPI总览
+  h+='<div><div class="card"><h4>'+STAGES[S.stage].name+' · '+STAGES[S.stage].gate+' <span class="badge '+(gate?'done':'rej')+'">'+(gate?'Gate 达标':'Gate 未达标')+'</span></h4><div class="hint">'+esc(STAGES[S.stage].tail)+' · '+esc(STAGES[S.stage].invest)+'</div>'+(seed?'<div class="hint" data-seednote>种草岗口径:主KPI=A3是否被种出来/贵不贵;商品点击率、冷启ROI 归带货/直播与Gate判据,不在本岗主卡</div>':'')+'</div>';
+  h+='<div class="card"><h4>'+(seed?'种草达人岗 · 今日四指标':'今日 KPI(Gate判据)')+'</h4><div class="grid4">'
+    +ms.map((m,i)=>'<div class="tile '+(m.pass?'ok':'bad')+'" data-mi="'+m.k+'" onclick="openDiag({t:\'metric\',k:\''+m.k+'\'})"><div class="mk">'+esc(m.label)+'</div><div class="mv">'+fmtU(m.show!=null?m.show:m.v,m.u)+'</div><div class="hint">目标 '+fmtU(m.t,m.u)+' <span class="btn" style="padding:0 6px;font-size:10px" onclick="event.stopPropagation();editLedgerKpi(\''+m.k+'\')">✎</span></div></div>').join('')+'</div></div>';
+  h+='<div class="card"><h4>联合账 · A3 桥(同屏)</h4>'+pcLed().joint.map(m=>'<div class="kv click" data-jk="'+m.k+'" style="cursor:pointer;padding:3px 0" onclick="openDiag({t:\'metric\',k:\''+m.k+'\'})">'+dotOf(m)+' '+esc(m.label)+' <b>'+fmtU(m.v,m.u)+'</b> / 目标 '+fmtU(m.t,m.u)+' · '+gapOf(m)+'</div>').join('')+'</div>';
+  h+='<div class="card" id="cardGate"><h4>Gate 判据链</h4>'+pcMetrics().map(m=>'<div class="kv click" style="cursor:pointer;padding:2px 0" onclick="openDiag({t:\'metric\',k:\''+m.k+'\'})">'+dotOf(m)+' '+esc(m.label)+' '+fmtU(m.v,m.u)+'/'+fmtU(m.t,m.u)+'</div>').join('')
+    +(gr.hard_redline?'<div class="sep"></div><div class="kv">硬红线 '+esc(gr.hard_redline.name||'')+' <span class="dot '+(gr.hard_redline.pass?'ok':'bad')+'"></span></div>':'')+'</div></div>';
+  // 中:红灯规则 + 今日任务 + HITL摘要
+  h+='<div><div class="card"><h4>🚨 红灯规则('+fr.length+')· 可直接跳SOP/派发</h4>'
+    +(fr.length?fr.map(r=>'<div class="card" style="margin-bottom:8px" data-rule="'+r.id+'"><div class="kv"><b>'+r.id+' '+esc(r.nm)+'</b> · '+esc(r.node)+' · '+esc(r.a5a)+'</div><div class="hint">'+esc(r.cond)+' → '+esc(r.judge)+'</div>'
+      +'<div style="margin-top:5px"><span class="btn" style="padding:2px 8px" data-rsop onclick="ruleToSop(\''+r.id+'\')">查SOP</span> '
+      +r.tasks.map((t,ti)=>'<span class="btn" style="padding:2px 8px;margin:2px" data-disp onclick="dispatch(\''+r.id+'\','+ti+')">派发:'+esc(t.t.length>14?t.t.slice(0,14)+'…':t.t)+(t.money?'·¥'+t.money.toLocaleString():'')+'</span>').join('')+'</div></div>').join(''):'<div class="hint">✓ 当前无红灯 · 判据链全绿</div>')+'</div>';
+  const mine=myTasks();
+  h+='<div class="card"><h4>今日任务('+mine.length+')</h4>'+(mine.length?mine.map(t=>'<div class="kv click" data-task="'+t.id+'" style="cursor:pointer;padding:3px 0" onclick="openDiag({t:\'task\',id:'+t.id+'})">#'+t.id+' '+esc(t.name)+' '+statusBadge(t)+'</div>').join(''):'<div class="hint">暂无任务 · 红灯规则派发后出现在这里</div>')+'</div>';
+  h+='<div class="card"><h4>HITL 待审批摘要</h4><div class="kv">'+S.pending.length+' 条卡在执行前(human_gate) <span class="btn" onclick="setScreen(\'cockpit\')">去审批中心</span></div><div class="hint">'+esc(INCOME_MODEL)+'</div></div></div>';
+  h+='</div>';
+  return h;
+}
+
+/* ---------- 屏2 双前线 J0–J6 泳道 ---------- */
+function scrDual(){
+  let h='<div class="card"><h4>🎯 双前线 · J0–J6 横向泳道(列=旅程节点 · 行=岗位)</h4><div class="hint">红绿灯=该岗位在该节点的账本判据;点击单元格 → 右侧诊断栏(断点/判据/派发)</div></div>';
+  h+='<div class="card"><div class="swim">';
+  h+='<div></div>'+JOURNEY.map(n=>'<div class="hd" onclick="openDiag({t:\'jnode\',j:\''+n.j+'\',row:\'ops\'})">'+n.j+'<br><span style="font-weight:400;font-size:10px">'+esc(n.nm)+'</span></div>').join('');
+  PC_SWIM.forEach(r=>{
+    h+='<div class="rowhd">'+esc(r.nm)+'</div>';
+    JOURNEY.forEach((n,ci)=>{
+      const lamp=cellLamp(n.j,r.row);
+      h+='<div class="swimcell" data-j="'+n.j+'" data-row="'+r.row+'" onclick="openDiag({t:\'jnode\',j:\''+n.j+'\',row:\''+r.row+'\'})"><span class="dot '+lamp+'"></span> '+esc(r.cells[ci])+'</div>';
+    });
+  });
+  h+='</div></div>';
+  h+='<div class="card"><h4>J↔N 映射(旅程节点挂在哪个引擎槽)</h4><table class="tb"><tr><th>N</th><th>系统位</th><th>对应 J</th></tr>'+JN_MAP.map(x=>'<tr><td>'+x.n+'</td><td>'+esc(x.sys)+'</td><td>'+esc(x.j)+'</td></tr>').join('')+'</table></div>';
+  return h;
+}
+
+/* ---------- 屏3 N0–N6 管道 ---------- */
+function nLamp(i){
+  const nd=NODEDEF[i];
+  if(nd.n==='N1'||nd.n==='N2')return hsPass()?'ok':'bad';
+  if(nd.n==='N3')return n3Pass()?'ok':'bad';
+  if(nd.n==='N6')return pcGateFull()?'ok':'warn';
+  return 'ok';
+}
+function scrPipe(){
+  let h='<div class="card"><h4>🧩 N0–N6 数据管道(上一节点 Output = 下一节点 Input)</h4><div class="pipe" id="pipeFlow">';
+  NODEDEF.forEach((nd,i)=>{
+    h+='<div class="pnode" data-n="'+i+'" onclick="openDiag({t:\'nnode\',i:'+i+'})"><div><b>'+nd.n+'</b> <span class="dot '+nLamp(i)+'"></span></div><div class="kv">'+esc(nd.nm)+'</div><div class="hint">'+esc((nd.posts||'').slice(0,16))+(nd.money?'<br><span class="badge money">涉钱</span>':'')+'</div></div>';
+    if(i<NODEDEF.length-1)h+='<div class="parrow">→</div>';
+  });
+  h+='</div><div class="hint">点节点 → 右侧显示 Input / Process / Output(Artifact JSON)/ Next / Owner / 来源风险</div></div>';
+  const hs=hsState();const hp=hsPass();const nm={seed:"种草岗",commerce:"带货岗",live:"直播岗"};
+  h+='<div class="cols3">';
+  h+='<div class="card" id="cardHS"><h4>🤝 N1↔N2 三岗握手(常驻)<span class="badge '+(hp?'done':'rej')+'" data-hsstate>'+(hp?(hsExempt()?'豁免(停投期)':'已握手·N2解锁'):'未握手·不准进N2')+'</span></h4>'
+    +'<div class="hint" data-hsrule>unlock_rule = seed_role_confirmed AND (commerce_role_confirmed OR live_role_confirmed) '+(hp&&!hsExempt()?'✓':'')+'</div>'
+    +['seed','commerce','live'].map(k=>'<div class="kv" style="padding:4px 0">'+nm[k]+':'+(hs[k]?'<span class="badge done">已确认 '+esc(hs[k].by)+' · '+esc(hs[k].ts)+'</span>':'<span class="btn" style="padding:2px 9px" data-hs="'+k+'" onclick="hsConfirm(\''+k+'\')">确认</span>')+'</div>').join('')
+    +'<div class="hint">字段:sku_id/content_hypothesis/target_a3_users/budget/traffic_tool/expected_cpa3/expected_a3_to_a4_rate · 超预算走HITL</div></div>';
+  h+='<div class="card" id="cardN3"><h4>📋 N3 站内承接检查表(常驻)<span class="badge '+(n3Pass()?'done':'rej')+'">'+(n3Pass()?'全过':'有断点')+'</span></h4>'
+    +n3Items().map(x=>'<div class="kv click" data-n3="'+x.i+'" style="cursor:pointer;padding:2px 0" onclick="toggleN3('+x.i+')"><span class="dot '+(x.pass?'ok':'bad')+'"></span> '+esc(x.name)+(x.pass?'':' <span class="hint">→ '+esc(x.cons)+'</span>')+'</div>').join('')
+    +'<div class="hint">N3 未过 → 不准进 N2 加投(点行翻转演示)</div></div>';
+  h+='<div class="card" id="cardN6"><h4>⚖ N6 输出判定(常驻·公式)</h4><pre class="json">'+esc(JSON.stringify(n6Verdict(),null,1))+'</pre></div>';
+  h+='</div>';
+  return h;
+}
+
+/* ---------- 屏4 量实/数据口径 ---------- */
+function scrCollect(){
+  let h='<div class="card"><h4>📥 字段字典(口径表)· 判级恒用校准值 <span class="btn '+(S.calib?'go':'warn')+'" id="btnCalib" onclick="toggleCalib()">去假开关:'+(S.calib?'开(校准)':'关(原始)')+'</span></h4>'
+    +'<table class="tb" id="dictTable"><tr><th>指标</th><th>分子</th><th>分母</th><th>统计范围</th><th>周期</th><th>基线</th></tr>'
+    +METRIC_DICT.filter(r=>!P.search||r[0].toLowerCase().includes(P.search.toLowerCase())).map(r=>'<tr class="click" onclick="toast(\'口径:'+esc(r[0])+' = '+esc(r[1])+' ÷ '+esc(r[2])+'\')"><td>'+hl(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+esc(r[3])+'</td><td>'+esc(r[4])+'</td><td>'+esc(r[5])+'</td></tr>').join('')+'</table></div>';
+  h+='<div class="cols2">';
+  h+='<div class="card"><h4>§七 Hybrid 字段预留('+FIELDS_NEW.length+')· 接真数据即点亮</h4><table class="tb">'
+    +'<tr><th>字段</th><th>中文</th><th>状态/取数源</th></tr>'
+    +FIELDS_NEW.map(f=>'<tr class="click" data-field="'+f[0]+'" onclick="toast(\'字段 '+f[0]+':'+esc(f[2])+' · data_mode=mock/hybrid_ready\')"><td>'+esc(f[0])+'</td><td>'+hl(f[1])+'</td><td>'+esc(f[2])+'</td></tr>').join('')+'</table></div>';
+  h+='<div class="card" id="cardDataSrcC"><h4>数据源接入状态(P1-02 同驾驶舱)</h4><table class="tb"><tr><th>数据源</th><th>接口状态</th><th>最近同步</th><th>完整率</th><th>异常字段</th><th>负责人</th></tr>'
+    +DATA_SRC.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+esc(r[3])+'</td><td>'+esc(r[4])+'</td><td>'+esc(r[5])+'</td></tr>').join('')+'</table></div>';
+  h+='</div>';
+  h+='<div class="card"><h4>本阶段量实口径(6开关重点)</h4><div class="hint">'+(STAGE_OPS[S.stage]||[]).map(esc).join('<br>')+'</div></div>';
+  return h;
+}
+
+/* ---------- 屏5 三本账三列 ---------- */
+function ledTable(arr,title,extra){
+  return '<div class="card"><h4>'+title+'</h4><table class="tb"><tr><th>指标</th><th>当前</th><th>目标</th><th>差值</th><th></th></tr>'
+    +arr.filter(matches).map(m=>'<tr class="click" data-lk="'+m.k+'" onclick="openDiag({t:\'metric\',k:\''+m.k+'\'})"><td>'+hl(m.label)+(m.inflated?' ⚠':'')+'</td><td><b>'+fmtU(m.show!=null?m.show:m.v,m.u)+'</b></td><td>'+fmtU(m.t,m.u)+'</td><td>'+gapOf(m)+'</td><td>'+dotOf(m)+'</td></tr>').join('')+'</table>'+(extra||'')+'</div>';
+}
+function scrLedger(){
+  const L=pcLed();const nps=npsData();const fa=curSKU().fiveA||{};
+  let h='<div class="card"><h4>📚 三本账 · 三列同屏 <span class="btn" id="btnExpLedger" onclick="expLedger()">导出三本账CSV</span> <span class="btn" onclick="buy(5000)" id="btnBuy5k">投放¥5,000(额度内)</span> <span class="btn warn" onclick="buy(20000)" id="btnBuy20k">投放¥20,000(超额→HITL)</span>'+((S.stage==='decline')?' <span class="btn red" id="btnBuyResidual" onclick="buy(2000)">残值复投¥2,000(强制HITL)</span>':'')+'</h4><div class="hint">花钱前置校验:握手('+(hsPass()?'✓':'✗')+') + N3('+(n3Pass()?'✓':'✗')+') · 超额/例外→HUMAN_GATE_QUEUE</div></div>';
+  h+='<div class="cols3">';
+  h+=ledTable(L.seed,'🌱 种草账(A1–A3)');
+  h+=ledTable(L.sell,'💰 卖货账(A3–A5)');
+  const a5rows=Object.keys(fa).map(k=>'<tr><td>'+k+' '+esc(fa[k].label||'')+'</td><td>'+(fa[k].people||0).toLocaleString()+'</td><td>+'+(fa[k].new_people||0).toLocaleString()+'</td><td>'+(fa[k].rate_to_next!=null?fmt(fa[k].rate_to_next*100)+'%':'—')+'</td></tr>').join('');
+  const npsRow='<div class="sep"></div><div class="kv" id="cardNps" data-nps>SKU级NPS:'+(nps.v==null?'<span class="dot na"></span> 待接入(order_system/manual_import)· 灰灯不进Gate主判 <span class="btn" style="padding:2px 8px" id="btnNpsImport" onclick="npsImport()">手工导入</span>':'<b>'+Math.round(nps.v*100)+'%</b> · '+esc(nps.src))+'</div>';
+  const assets='<div class="sep"></div><div class="kv"><b id="btnJointAsset" style="cursor:pointer" onclick="toast(\'A1–A5=联合资产:两条前线共同结果,不属于任何单岗\')">👥 A1–A5 联合资产</b></div><table class="tb" id="jointAssetBody"><tr><th>层</th><th>人群</th><th>新增</th><th>→下一层</th></tr>'+a5rows+'</table>'+npsRow;
+  h+=ledTable(L.joint,'🤝 联合账(A3桥·共同结果)','<div class="hint" data-a3note>三指标全部显式过 新增A3人群(P0-02)· 点行看A3来源拆分</div>'+assets);
+  h+='</div>';
+  h+='<div class="card"><h4>账↔5A 锚</h4><table class="tb"><tr><th>账</th><th>指标</th><th>5A</th></tr>'+LEDGER_5A.map(x=>'<tr><td>'+esc(x.book)+'</td><td>'+esc(x.metrics)+'</td><td>'+x.a+'</td></tr>').join('')+'</table></div>';
+  return h;
+}
+
+/* ---------- 屏6 任务/复盘/SOP ---------- */
+function scrTask(){
+  const cols=[['待处理','待处理'],['进行中','进行中'],['待核定','待核定·HITL'],['已完成','已完成·待复盘'],['已复盘','已复盘']];
+  let h='<div class="card"><h4>🗂 任务看板(点卡片→右侧执行要求)</h4><div class="kb" id="kanban">'
+    +cols.map(([k,nm])=>{const ts=S.tasks.filter(t=>t.status===k);
+      return '<div class="kbcol" data-kb="'+k+'"><h5>'+nm+'('+ts.length+')</h5>'+ts.map(t=>'<div class="kbcard" data-task="'+t.id+'" onclick="openDiag({t:\'task\',id:'+t.id+'})">#'+t.id+' '+esc(t.name)+(t.money?'<br><span class="badge money">¥'+t.money.toLocaleString()+'</span>':'')+(t.verdict?'<br><span class="badge '+(t.verdict==='有效'?'done':'rej')+'">'+t.verdict+'</span>':'')+'</div>').join('')+'</div>';}).join('')+'</div></div>';
+  const fr=pcFired();
+  h+='<div class="card"><h4>红灯规则 → 反查SOP</h4>'+(fr.length?fr.map(r=>'<span class="btn" style="margin:2px" data-rsop onclick="ruleToSop(\''+r.id+'\')">'+r.id+' '+esc(r.nm)+'→'+esc((r.sopref&&r.sopref[0])?sopRefLabel(r.sopref[0]):'SOP')+'</span>').join(' '):'<span class="hint">当前无红灯</span>')+'</div>';
+  const sp=SOPS.find(x=>x.id===P.sopRole)||SOPS[0];
+  h+='<div class="card"><h4>📖 三岗 SOP 表格(泡面级)</h4><div style="margin-bottom:8px">'
+    +SOPS.map(x=>'<span class="btn'+(x.id===sp.id?' go':'')+'" data-soprole="'+x.id+'" onclick="P.sopRole=\''+x.id+'\';render()">'+esc(x.nm||x.id)+'('+x.steps.length+'步)</span> ').join('')+'</div>'
+    +'<table class="tb" id="sopTable"><tr><th>Step</th><th>环节</th><th>Input</th><th>Process</th><th>Output</th><th>定量KPI(目标/最佳/当前)</th><th>建议</th><th>Owner</th><th>HITL</th></tr>'
+    +sp.steps.map(st=>'<tr class="click" data-sops="'+sp.id+'-'+st.s+'" onclick="openDiag({t:\'sop\',id:\''+sp.id+'\',s:'+st.s+'})"><td>'+st.s+'</td><td>'+esc(st.env)+'</td><td>'+esc(st.i)+'</td><td>'+esc((st.p||'').slice(0,26))+'</td><td>'+esc(st.o)+'</td>'
+      +'<td>'+(st.kq||[]).map(q=>'<span class="dot '+(q[4]?'ok':'bad')+'"></span>'+esc(q[0])+' '+esc(q[1])+'/'+esc(q[2])+'/'+esc(q[3])).join('<br>')+'</td>'
+      +'<td data-sug><b>'+esc(sopSuggest(st))+'</b></td><td>'+esc(sp.owner||sp.nm||'')+'</td><td>'+(st.hitl?'<span class="badge money">涉钱</span>':'—')+'</td></tr>').join('')+'</table></div>';
+  const done=S.tasks.filter(t=>t.status==='已复盘');
+  h+='<div class="card" id="cardReview"><h4>🔁 复盘 / 验果 / 固化 <span class="btn go" id="btnSettle" onclick="settle()">数据回流·'+STAGES[S.stage].gate+'判级</span> <span class="btn" id="btnExpSop" onclick="expSop()">导出SOP执行记录</span> <span class="btn" id="btnExpReview" onclick="expReview()">导出复盘报告</span></h4>'
+    +'<div class="hint">验果铁律:验的是「上一层的标动没动」,不是「任务做没做」· 裁决枚举 '+VERDICT_OPTIONS.join('/')+'</div>'
+    +(done.length?done.map(t=>'<div class="kv">#'+t.id+' '+esc(t.name)+' → <b>'+t.verdict+'</b>'+(t.verdict==='有效'?'(KPI已回抬·固化进模板)':'(升层上报)')+'</div>').join(''):'<div class="hint">暂无已复盘任务</div>')
+    +'<div class="sep"></div><div class="kv">留痕:'+S.history.slice(0,5).map(x=>esc(x.result)+'·'+esc(x.kind)).join(' | ')+'</div></div>';
+  return h;
+}
+
+/* ---------- 屏7 驾驶舱 ---------- */
+function skuRow(sk){
+  const saveStage=S.stage,saveSku=P.sku;
+  try{
+    if(sk.stage)S.stage=sk.stage;P.sku=sk.id;
+    const lm=pcLedMap();const fr=pcFired().length;const gate=pcGateFull();
+    const cpa3=lm.cpa3?fmtU(lm.cpa3.v,lm.cpa3.u):'—';
+    const na3=(curSKU().fiveA&&curSKU().fiveA.A3)?Math.round(curSKU().fiveA.A3.new_people*sk.f).toLocaleString():'—';
+    const rr=lm.refund_rate?fmtU(lm.refund_rate.v,lm.refund_rate.u):'—';
+    return {id:sk.id,name:sk.name,stage:STAGES[S.stage].name,gate,red:fr,gmv:Math.round(GMV_MOCK[S.stage]*sk.f),na3,cpa3,roi:ROI_MOCK[S.stage],rr,owner:sk.owner,next:STAGES[S.stage].vtext};
+  }finally{S.stage=saveStage;P.sku=saveSku;}
+}
+function scrCockpit(){
+  let h='<div class="card"><h4>🛩 多 SKU 总览(P1-01 · 主管一屏看全)</h4><table class="tb" id="skuTable"><tr><th>SKU</th><th>阶段</th><th>Gate</th><th>红灯</th><th>GMV(演示)</th><th>新增A3</th><th>CPA3</th><th>ROI</th><th>退款率</th><th>负责人</th><th>下一动作</th></tr>'
+    +SKU_LIST.map(sk=>{const r=skuRow(sk);
+      return '<tr class="click" data-skurow="'+sk.id+'" onclick="setSku(\''+sk.id+'\')"><td><b>'+esc(r.id)+'</b><br><span class="hint">'+esc(r.name)+'</span></td><td>'+esc(r.stage)+'</td><td><span class="dot '+(r.gate?'ok':'bad')+'"></span></td><td>'+(r.red?'<span class="badge rej">'+r.red+'</span>':'0')+'</td><td>¥'+r.gmv.toLocaleString()+'</td><td>'+r.na3+'</td><td>'+r.cpa3+'</td><td>'+r.roi+'</td><td>'+r.rr+'</td><td>'+esc(r.owner)+'</td><td class="hint">'+esc(r.next)+'</td></tr>';}).join('')+'</table><div class="hint">点行 = 切换当前工作台 SKU(七屏同步刷新)</div></div>';
+  h+='<div class="card" id="cardHitl"><h4>🧑‍⚖️ HITL 审批中心(P0-10)· 待核定 '+S.pending.length+' 条 <span class="btn" id="btnExpHitl" onclick="expHitl()">导出审批记录</span> <span class="btn" id="btnExpN6" onclick="expN6()">导出N6判定JSON</span></h4>'
+    +(S.role!=='mgr'?'<div class="hint">当前角色 '+esc(OP_ROLES[S.role])+' 只读 · 核定权在主管(human_gate)</div>':'')
+    +'<table class="tb" id="hitlTable"><tr><th>时间</th><th>SKU/阶段</th><th>动作</th><th>金额</th><th>申请人</th><th>规则命中</th><th>风险</th><th>操作</th></tr>'
+    +(S.pending.length?S.pending.map((p,i)=>'<tr data-hi="'+i+'"><td>'+esc(p.ts||REFRESH_TS)+'</td><td class="hint">'+esc(p.text||'')+'</td><td>'+esc(p.kind)+'</td><td>'+(p.amt?'¥'+p.amt.toLocaleString():'—')+'</td><td>'+esc(p.applicant||'一线')+'</td><td>'+esc(p.rule||'—')+'</td><td>'+(p.irr?'<span class="badge rej">不可逆</span>':'<span class="badge money">涉钱</span>')+'</td>'
+      +'<td><span class="btn go" style="padding:2px 8px" data-appr="'+i+'" onclick="approve('+i+')">'+(p.irr&&p.confirm?'确认通过(二次)':'通过')+'</span> <span class="btn red" style="padding:2px 8px" data-rej="'+i+'" onclick="reject('+i+')">驳回</span> <span class="btn warn" style="padding:2px 8px" data-ret="'+i+'" onclick="returnFix('+i+')">退回修改</span></td></tr>').join(''):'<tr><td colspan="8" class="hint">队列为空 · 涉钱/不可逆动作会在执行前出现在这里</td></tr>')+'</table></div>';
+  h+='<div class="cols2">';
+  h+='<div class="card" id="cardDataSrc"><h4>📡 数据接入状态(P1-02)</h4><table class="tb"><tr><th>数据源</th><th>接口状态</th><th>最近同步</th><th>完整率</th><th>异常字段</th><th>负责人</th><th>修复状态</th></tr>'
+    +DATA_SRC.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+esc(r[3])+'</td><td>'+esc(r[4])+'</td><td>'+esc(r[5])+'</td><td>'+esc(r[6])+'</td></tr>').join('')+'</table></div>';
+  h+='<div class="card" id="cardBrandObs"><h4>🔭 品牌观察(P1-03 · 不进SKU Gate主判)</h4>'
+    +'<div class="kv">SOV '+fmt((BRAND_OBS.sov||0.14)*100)+'% · 美誉度 '+fmt((BRAND_OBS.goodwill||0.86)*100)+'% · AIQ '+(BRAND_OBS.aiq||72)+' · AICO '+(BRAND_OBS.aico||68)+'</div>'
+    +'<div style="margin-top:6px">'+((BRAND_OBS.words||['减盐','鲜','0添加','凉拌','一勺出味']).map(wd=>'<span class="chip" data-bw onclick="toast(\'品牌词「'+esc(typeof wd==='string'?wd:wd[0])+'」:观察模块·供作战官/主管看盘,不进单SKU红绿灯\')" style="cursor:pointer;margin:2px">'+esc(typeof wd==='string'?wd:wd[0])+'</span>')).join('')+'</div>'
+    +'<div class="hint" style="margin-top:6px">词云/SOV/美誉度/AIQ/AICO=观察轴 · SKU Gate=判级轴,两轴不混</div>'
+    +'<div class="sep"></div><div class="hint">'+esc(INCOME_MODEL)+'</div>'
+    +'<div class="sep"></div><div class="kv">留痕('+S.history.length+'):'+S.history.slice(0,6).map(x=>esc(x.result)+'·'+esc((x.kind||'').slice(0,12))).join(' | ')+'</div></div>';
+  h+='</div>';
+  return h;
+}
+
+/* ---------- 导出(P1-03) ---------- */
+function doExport(name,content,mime){
+  P.lastExport={name,content};
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(["\ufeff"+content],{type:mime||'text/csv'}));a.download=name;a.click();}catch(e){}
+  toast('📤 已导出 '+name+'(演示假水·结构=真)','go');
+}
+function expLedger(){const L=pcLed();let c='账,指标,键,当前,目标,单位,达标\n';['seed','sell','joint'].forEach(g=>L[g].forEach(m=>{c+=[g,m.label,m.k,m.v,m.t,m.u||'',m.pass?'Y':'N'].join(',')+'\n';}));doExport('douyin_ledger3_'+S.stage+'.csv',c);}
+function expHitl(){let c='时间,动作,金额,申请人,规则,风险,结果,核定人\n';S.pending.forEach(p=>{c+=[p.ts||'',p.kind,p.amt||0,p.applicant||'',p.rule||'',p.irr?'不可逆':'涉钱','待核定',''].join(',')+'\n';});S.history.forEach(x=>{c+=[x.ts||'',x.kind,x.amt||0,x.applicant||'',x.rule||'',x.irr?'不可逆':'涉钱',x.result,x.by||''].join(',')+'\n';});doExport('douyin_hitl_records.csv',c);}
+function expSop(){let c='SOP,Step,环节,KPI,目标,最佳,当前,达标,建议,HITL\n';SOPS.forEach(sp=>sp.steps.forEach(st=>(st.kq||[]).forEach(q=>{c+=[sp.id,st.s,st.env,q[0],q[1],q[2],q[3],q[4]?'Y':'N',sopSuggest(st),st.hitl?'Y':'N'].join(',')+'\n';})));doExport('douyin_sop_exec.csv',c);}
+function expN6(){doExport('douyin_n6_verdict_'+S.stage+'.json',JSON.stringify(n6Verdict(),null,2),'application/json');}
+function expReview(){const done=S.tasks.filter(t=>t.status==='已复盘');
+  let c='抖音复盘报告(演示) · '+SKU.name+' · '+STAGES[S.stage].name+' · '+REFRESH_TS+'\n'
+   +'Gate='+STAGES[S.stage].gate+' 判级='+(pcGateFull()?'达标':'未达标')+' · 红灯 '+pcFired().length+' 条\n'
+   +'红灯:'+pcFired().map(r=>r.id+' '+r.nm).join('、')+'\n'
+   +'已复盘任务:\n'+done.map(t=>'#'+t.id+' '+t.name+' → '+t.verdict).join('\n')+'\n'
+   +'留痕:\n'+S.history.map(x=>x.result+' · '+x.kind+(x.amt?' ¥'+x.amt:'')).join('\n')+'\n'
+   +'验果铁律:验的是上一层的标动没动,不是任务做没做。';
+  doExport('douyin_review_'+S.stage+'.txt',c,'text/plain');}
+
+/* ---------- 路由 / 全局 ---------- */
+const SCR_FN={today:scrToday,dual:scrDual,pipe:scrPipe,collect:scrCollect,ledger:scrLedger,task:scrTask,cockpit:scrCockpit};
+function render(){renderTop();renderSide();document.getElementById('main').innerHTML=(SCR_FN[P.screen]||scrToday)();renderRight();renderFoot();}
+function setScreen(id){P.screen=id;render();}
+function setStagePC(k){S.stage=k;S.done=false;P.diag=null;render();toast('阶段切换 → '+STAGES[k].name+'(七屏同步·同一SKU不同阶段标准不同)');}
+function setRolePC(k){S.role=k;P.screen=ROLE_HOME[k]||P.screen;P.diag=null;render();toast('角色 → '+OP_ROLES[k]+' · 默认视图='+(NAV.find(n=>n[0]===P.screen)||['',''])[1]);}
+function setSku(id){const sk=SKU_LIST.find(x=>x.id===id);if(!sk)return;P.sku=id;if(sk.stage){S.stage=sk.stage;}else if(P.primaryStage){S.stage=P.primaryStage;}P.diag=null;render();toast('SKU → '+sk.name+'(三本账/N0–N6/J0–J6 同步刷新)');}
+function setRange(k){P.range=k;render();toast('周期 → '+RANGE_NM[k]+'(演示口径缩放)');}
+function onSearch(v){P.search=v;const keep=document.getElementById('inSearch');render();const el=document.getElementById('inSearch');el.focus();el.setSelectionRange(v.length,v.length);}
+
+/* ---------- boot ---------- */
+(function(){
+  const p=new URLSearchParams(location.search);
+  const role=p.get('role');const name=p.get('name');
+  if(name)CHANNEL.who=name;
+  if(['seed_kol','commerce_kol','live_room','ops','mgr'].indexOf(role)>=0)S.role=role;
+  P.primaryStage=S.stage;
+  P.screen=ROLE_HOME[S.role]||'today';
+  render();
+})();
+
+</script>
+</body>
+</html>
