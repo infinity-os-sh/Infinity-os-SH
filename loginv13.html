@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>SR 登录 · INFINITY OS</title>
+<style>
+  :root{--bg:#0b0d12;--card:#161a22;--card2:#1d222c;--line:#2a303c;--ink:#e8eaed;--dim:#8b909c;--blue:#5b8cff;--amber:#e0a23a;--go:#4fae6a;--red:#c96b60;
+    --mono:'JetBrains Mono','SF Mono',ui-monospace,monospace;--cjk:'PingFang SC','Noto Sans CJK SC',system-ui,sans-serif;}
+  *{box-sizing:border-box;}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:var(--cjk);display:flex;align-items:center;justify-content:center;-webkit-font-smoothing:antialiased;}
+  .wrap{width:100%;max-width:460px;padding:24px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:30px 28px 28px;}
+  h1{margin:0 0 6px;font-size:24px;font-weight:800;letter-spacing:.02em;}
+  .sub{font-size:14px;color:var(--dim);line-height:1.6;}
+  .warn{margin-top:6px;font-size:13px;color:var(--amber);}
+  label{display:block;font-size:11px;font-family:var(--mono);color:var(--dim);margin:20px 0 7px;letter-spacing:.04em;}
+  input,select{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;color:var(--ink);font-size:15px;padding:14px 16px;font-family:var(--cjk);outline:none;}
+  input:focus,select:focus{border-color:var(--blue);}
+  input.bad{border-color:var(--red);background:#241a1a;}
+  input.ok{border-color:var(--go);}
+  input::placeholder{color:#5a606c;}
+  .note{margin-top:9px;font-size:12.5px;line-height:1.55;display:none;}
+  .note.show{display:block;}
+  .note.err{color:var(--red);}
+  .note .em{font-family:var(--mono);font-size:11px;background:#2a2230;border:1px solid #4a3340;color:#e6b8c0;padding:1px 6px;border-radius:4px;}
+  .btn{width:100%;margin-top:20px;background:var(--blue);color:#fff;border:none;border-radius:11px;font-size:16px;font-weight:700;padding:15px;cursor:pointer;font-family:var(--cjk);}
+  .btn:disabled{background:#2a303c;color:#5a606c;cursor:not-allowed;}
+  .btn:active{transform:translateY(1px);}
+  .hint{margin-top:16px;font-size:11px;font-family:var(--mono);color:#6a707c;line-height:1.6;}
+  .who{margin-top:14px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px;display:none;}
+  .who.show{display:block;}
+  .who .k{font-family:var(--mono);font-size:10px;color:var(--dim);}
+  .who .v{font-weight:700;}
+  .who .tag{font-family:var(--mono);font-size:10px;padding:1px 7px;border-radius:3px;background:#25406b;color:#a9c4ff;margin-left:6px;}
+  .who .tag.mgr{background:#5a4620;color:#e0c07a;}
+  .row{display:flex;gap:10px;}
+  .row>*{flex:1;}
+  .samples{margin-top:14px;}
+  .samples .st{font-family:var(--mono);font-size:10px;color:var(--dim);margin-bottom:6px;}
+  .chip{display:inline-block;font-family:var(--mono);font-size:11px;background:var(--card2);border:1px solid var(--line);color:var(--dim);padding:5px 9px;border-radius:6px;margin:0 5px 5px 0;cursor:pointer;}
+  .chip:hover{border-color:var(--blue);color:var(--ink);}
+  .toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(8px);background:#20242e;border:1px solid var(--line);color:#fff;font-size:13px;padding:10px 16px;border-radius:8px;opacity:0;transition:.24s;pointer-events:none;text-align:center;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>SR 登录</h1>
+    <div class="sub">手机号 / 工号(与 ICA 同一套身份)。</div>
+    <div class="warn">⚠ 双轨·mock(未配环境ID·演示·不上传)</div>
+
+    <label>手机号 / 工号</label>
+    <input id="sr" placeholder="手机号 / 工号(如 SR-9901)" autocomplete="off" oninput="preview()">
+    <div class="note" id="note"></div>
+
+    <div class="who" id="who"></div>
+
+    <button class="btn" id="enterBtn" onclick="enter()">进入</button>
+
+    <div class="samples">
+      <div class="st">演示身份(mock·点即填):</div>
+      <span class="chip" onclick="fill('SR-8801')">SR-8801 · 小红书·种草笔记</span>
+      <span class="chip" onclick="fill('SR-8803')">SR-8803 · 小红书·买手带货</span>
+      <span class="chip" onclick="fill('SR-8804')">SR-8804 · 小红书·店播</span>
+      <span class="chip" onclick="fill('SR-8805')">SR-8805 · 小红书·作战官</span>
+      <span class="chip" onclick="fill('SR-8802')">SR-8802 · 小红书·主管</span>
+      <span class="chip" onclick="fill('SR-3301')">SR-3301 · 天猫·一线</span>
+      <span class="chip" onclick="fill('SR-3302')">SR-3302 · 天猫·主管</span>
+      <span class="chip" onclick="fill('SR-1201')">SR-1201 · 大卖场·一线</span>
+      <span class="chip" onclick="fill('SR-9901')">SR-9901 · 抖音·种草达人</span>
+      <span class="chip" onclick="fill('SR-9903')">SR-9903 · 抖音·带货达人</span>
+      <span class="chip" onclick="fill('SR-9904')">SR-9904 · 抖音·直播间</span>
+      <span class="chip" onclick="fill('SR-9905')">SR-9905 · 抖音·作战官</span>
+      <span class="chip" onclick="fill('SR-9902')">SR-9902 · 抖音·主管</span>
+    </div>
+    <div class="hint">身份 = 内核第⑦项(收入/激励/权限/客情/责任)· 登录按身份路由到对应渠道 App · role 决定 human_gate 能否核定<br>抖音 douyinv19 与 小红书 xhsv2 均为五岗身份(1引擎×N渠道·母版回灌) · 小红书三岗=种草笔记/买手带货/店播直播</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── mock 身份簿(SR 与 ICA 同一套身份)· 真实版本改成查 ICA 身份服务 ──
+   一个 SR = { 姓名, 渠道(路由到哪个 App), 权限role } · 渠道通用律:登录是平台层,所有渠道 App 共用一页
+   抖音 V0.3 起 role 用五岗白名单(seed_kol/commerce_kol/live_room/ops/mgr),与 douyinv9 readIdentity() 对齐 */
+const MOCK_DIRECTORY = {
+  "SR-8801": { name:"种草笔记一线", channel:"xhs", app:"xhsv2.html", role:"seed_kol",     channelName:"小红书·种草笔记岗(A1→A3)" },
+  "SR-8803": { name:"买手带货一线", channel:"xhs", app:"xhsv2.html", role:"commerce_kol", channelName:"小红书·买手带货岗(A3→A5)" },
+  "SR-8804": { name:"店播一线",     channel:"xhs", app:"xhsv2.html", role:"live_room",    channelName:"小红书·店播直播岗(A3→A5)" },
+  "SR-8805": { name:"作战官",       channel:"xhs", app:"xhsv2.html", role:"ops",          channelName:"小红书·数据/Agent作战官" },
+  "SR-8802": { name:"小红书主管", channel:"xhs", app:"xhsv2.html", role:"mgr", channelName:"小红书·主管" },
+  "SR-3301": { name:"天猫运营一线", channel:"tmall", app:"tmallv2.html", role:"emp", channelName:"天猫·旗舰店运营" },
+  "SR-3302": { name:"天猫主管",     channel:"tmall", app:"tmallv2.html", role:"mgr", channelName:"天猫·主管" },
+  "SR-1201": { name:"周敏", channel:"hypermarket", app:"hypermarketv1.html", role:"emp", channelName:"大卖场·BD" },
+  "SR-9901": { name:"种草达人一线", channel:"douyin", app:"douyinv19.html", role:"seed_kol",     channelName:"抖音·种草达人岗(A1→A3)" },
+  "SR-9903": { name:"带货达人一线", channel:"douyin", app:"douyinv19.html", role:"commerce_kol", channelName:"抖音·带货达人岗(A3→A5)" },
+  "SR-9904": { name:"直播间一线", channel:"douyin", app:"douyinv19.html", role:"live_room",    channelName:"抖音·直播间岗(A3→A5)" },
+  "SR-9905": { name:"作战官", channel:"douyin", app:"douyinv19.html", role:"ops",        channelName:"抖音·数据/Agent作战官" },
+  "SR-9902": { name:"抖音主管", channel:"douyin", app:"douyinv19.html", role:"mgr",      channelName:"抖音·主管" }
+  // …其余渠道 SR 同样在此登记,新增渠道只加一行,登录页不改结构
+};
+const MOCK_MODE = true; // 双轨·未配环境ID → 走 mock,不上传
+/* 路由基址:file://本地 与 github.io 用相对路径(同目录);
+   其他宿主(如预览容器)用 GitHub Pages 绝对地址,保证「点了一定能进」 */
+const PAGES_BASE = "https://infinity-os-sh.github.io/Infinity-os-SH/";
+function appUrl(app){
+  const onHttp = location.protocol.indexOf("http")===0;
+  const onPages = /github\.io$/.test(location.hostname);
+  return (onHttp && !onPages) ? (PAGES_BASE + app) : app;
+}
+
+function lookup(id){
+  if(!id) return null;
+  const key=id.trim().toUpperCase();
+  return MOCK_DIRECTORY[key] ? {id:key, ...MOCK_DIRECTORY[key]} : null;
+}
+function fill(id){ document.getElementById('sr').value=id; preview(); }
+function roleLabel(r){
+  return {emp:"一线",mgr:"主管",seed_kol:"种草达人岗",commerce_kol:"带货达人岗",live_room:"直播间岗",ops:"作战官"}[r]||r;
+}
+function preview(){
+  const raw=document.getElementById('sr').value.trim();
+  const u=lookup(raw);
+  const who=document.getElementById('who');
+  const note=document.getElementById('note');
+  const inp=document.getElementById('sr');
+  const btn=document.getElementById('enterBtn');
+  if(!raw){ // 空
+    who.className='who'; who.innerHTML='';
+    note.className='note'; note.innerHTML='';
+    inp.className=''; btn.disabled=false; return;
+  }
+  if(u){ // 已开通 → 显示身份·可进入
+    inp.className='ok'; btn.disabled=false;
+    note.className='note'; note.innerHTML='';
+    who.className='who show';
+    who.innerHTML=`<div class="k">认出身份(mock)</div>
+      <div style="margin-top:4px"><span class="v">${u.name}</span>
+      <span class="tag ${u.role==='mgr'?'mgr':''}">${roleLabel(u.role)}</span></div>
+      <div class="k" style="margin-top:6px">渠道 · ${u.channelName} → ${u.app}</div>`;
+  } else { // 未开通 → 常驻红字提示·按钮置灰(不再"没反应")
+    inp.className='bad'; btn.disabled=true;
+    who.className='who'; who.innerHTML='';
+    note.className='note show err';
+    note.innerHTML=`⚠ 此工号 <span class="em">${raw}</span> 未开通(试验期为安全只放行白名单)<br>请点下方「演示身份」进入,或联系管理员在 ICA 身份簿登记。`;
+  }
+}
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.className='toast show';
+  setTimeout(()=>t.className='toast',2400);
+}
+function enter(){
+  const raw=document.getElementById('sr').value.trim();
+  const u=lookup(raw);
+  if(!u){
+    preview(); // 触发常驻提示
+    toast(raw?"此工号未开通 · 请用下方演示身份":"请输入手机号 / 工号");
+    return;
+  }
+  const q=`?sr=${encodeURIComponent(u.id)}&name=${encodeURIComponent(u.name)}&channel=${u.channel}&role=${u.role}`;
+  toast(`进入 · ${u.name} · ${u.channelName}`);
+  setTimeout(()=>{ location.href=appUrl(u.app)+q; }, 500);
+}
+// 回车即进入
+document.getElementById('sr').addEventListener('keydown',e=>{ if(e.key==='Enter')enter(); });
+</script>
+</body>
+</html>

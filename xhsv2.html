@@ -1,0 +1,2213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>小红书双主线经营 App V0.3 / 规则型 Agent V0.1(母版回灌)</title>
+<style>
+  :root{--ink:#17191E;--paper:#F2F1EB;--surface:#FBFAF6;--amber:#A8612A;--amber-deep:#834A1F;--amber-tint:#EADFCB;
+    --slate:#6b6f76;--rule:#dcd7cb;--blue:#3a5a7a;--go:#3f7a4f;--red:#a8433a;--red-tint:#f0dcd8;--go-tint:#dbe7dc;
+    --warn:#b0821f;--warn-tint:#f2e7c8;
+    --mono:'JetBrains Mono','SF Mono',ui-monospace,monospace;--cjk:'PingFang SC','Noto Sans CJK SC',system-ui,sans-serif;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:#26282d;font-family:var(--cjk);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .phone{max-width:430px;margin:0 auto;min-height:100vh;background:var(--paper);display:flex;flex-direction:column;position:relative;}
+  .trialbar{background:repeating-linear-gradient(45deg,#2a2c31,#2a2c31 8px,#25272c 8px,#25272c 16px);color:#c9b48f;font-family:var(--mono);font-size:9.5px;padding:5px 12px;letter-spacing:.03em;line-height:1.5;}
+  .trialbar b{color:#e7d3a8;}
+  .hd{background:var(--ink);color:#F2F1EB;padding:11px 15px;}
+  .hd .who{font-weight:700;font-size:14px;}
+  .hd .who small{font-weight:400;color:#B7BAC0;font-family:var(--mono);font-size:10px;margin-left:5px;}
+  .hd .roles{float:right;display:flex;gap:4px;}
+  .role{font-family:var(--mono);font-size:9.5px;padding:3px 6px;border-radius:2px;background:#2f3239;color:#B7BAC0;border:1px solid #3a3e45;cursor:pointer;}
+  .role.me{background:var(--amber);color:#fff;border-color:var(--amber);}
+  .hd .lead{margin-top:9px;}
+  .hd .big{font-size:18.5px;font-weight:800;letter-spacing:.01em;}
+  .hd .second{margin-top:7px;font-size:11px;color:#9a9da3;font-family:var(--mono);}
+  .hd .second b{color:#e7d3a8;}
+  .stagestrip{display:flex;overflow-x:auto;gap:0;background:#1d1f24;border-top:1px solid #2f3239;-webkit-overflow-scrolling:touch;}
+  .stagestrip::-webkit-scrollbar{display:none;}
+  .sstep{flex:0 0 auto;padding:8px 12px 7px;font-family:var(--mono);font-size:11px;color:#7d818a;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;text-align:center;}
+  .sstep small{display:block;font-size:8.5px;color:#5e626b;margin-top:1px;}
+  .sstep.on{color:#F2F1EB;border-bottom-color:var(--amber);background:#232529;}
+  .sstep.on small{color:#c9b48f;}
+  .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:5;overflow-x:auto;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{flex:1 0 auto;text-align:center;padding:9px 7px;font-size:10.5px;color:var(--slate);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
+  .tab.on{color:var(--amber-deep);font-weight:700;border-bottom-color:var(--amber);}
+  .scroll{flex:1;overflow-y:auto;padding:13px 14px 92px;}
+  .ph{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--slate);margin:3px 0 11px;}
+  .ph b{color:var(--amber-deep);}
+  .card{background:var(--surface);border:1px solid var(--rule);border-radius:7px;padding:13px;margin-bottom:12px;}
+  .card.hot{border-left:3px solid var(--amber);}
+  .card.seedc{border-left:3px solid var(--blue);}
+  .card.sellc{border-left:3px solid var(--amber);}
+  .card.jointc{border-left:3px solid var(--go);}
+  .sku .nm{font-weight:800;font-size:15px;}
+  .sku .tag{font-family:var(--mono);font-size:9.5px;color:#fff;background:var(--red);padding:1px 6px;border-radius:2px;margin-left:6px;vertical-align:2px;}
+  .sku .tag.o{background:var(--go);}
+  .sku .act{font-size:12.5px;margin-top:7px;color:var(--ink);line-height:1.5;}
+  .line{font-family:var(--mono);font-size:10.5px;color:var(--slate);margin-top:6px;background:#efece3;padding:6px 9px;border-radius:4px;}
+  .line b{color:var(--amber-deep);}
+  .mrow{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;}
+  .metric{flex:1 1 44%;min-width:0;background:var(--paper);border:1px solid var(--rule);border-radius:5px;padding:7px 9px;cursor:pointer;}
+  .metric .mk{font-family:var(--mono);font-size:10px;color:var(--slate);}
+  .metric .mv{font-family:var(--mono);font-size:14px;font-weight:700;margin-top:2px;}
+  .metric.ok{border-color:#bcd3bf;background:var(--go-tint);}
+  .metric.ok .mv{color:var(--go);}
+  .metric.bad{border-color:#e0bdb7;background:var(--red-tint);}
+  .metric.bad .mv{color:var(--red);}
+  .metric .mt{font-family:var(--mono);font-size:9px;color:var(--slate);margin-top:1px;}
+  .gate{margin-top:11px;border:1px dashed var(--rule);border-radius:6px;padding:10px;background:var(--paper);}
+  .gate .gh{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:7px;}
+  .gate .gv{font-family:var(--mono);font-size:10px;padding:1px 7px;border-radius:3px;}
+  .gv.pass{background:var(--go-tint);color:var(--go);}.gv.fail{background:var(--red-tint);color:var(--red);}
+  .chain{display:flex;gap:5px;margin-top:9px;}
+  .cnode{flex:1;text-align:center;font-family:var(--mono);font-size:9px;padding:5px 2px;border-radius:4px;border:1px solid var(--rule);background:var(--surface);color:var(--slate);}
+  .cnode.p{background:var(--go-tint);border-color:#bcd3bf;color:var(--go);}
+  .cnode.f{background:var(--red-tint);border-color:#e0bdb7;color:var(--red);}
+  .cnode b{display:block;font-size:11px;}
+  .foot{display:flex;align-items:center;justify-content:space-between;margin-top:11px;padding-top:10px;border-top:1px solid var(--rule);}
+  .foot .inc{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--amber-deep);}
+  .foot.done .inc{color:var(--go);}
+  .btn{font-family:var(--cjk);font-size:12px;border:none;border-radius:5px;padding:8px 12px;cursor:pointer;background:var(--ink);color:#fff;}
+  .btn.o{background:var(--surface);color:var(--amber-deep);border:1px solid var(--amber-tint);}
+  .btn.sm{font-size:11px;padding:6px 10px;}
+  .btn.xs{font-size:10px;padding:4px 8px;}
+  .btn.go{background:#2f6244;}
+  .btn.red{background:#7a322b;}
+  .btn:active{transform:translateY(1px);}
+  .node{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;margin-bottom:8px;cursor:pointer;}
+  .node .nh{display:flex;align-items:center;gap:8px;}
+  .node .nn{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--blue);}
+  .node .nr{font-size:12px;font-weight:700;}
+  .node .nd{font-size:11px;color:var(--slate);margin-top:4px;line-height:1.5;}
+  .node .money{font-family:var(--mono);font-size:9px;color:var(--red);border:1px solid var(--red-tint);background:var(--red-tint);padding:1px 6px;border-radius:3px;margin-left:auto;}
+  .art{display:none;margin-top:9px;background:#1d1f24;border-radius:5px;padding:9px 11px;overflow-x:auto;}
+  .art.show{display:block;}
+  .art pre{margin:0;font-family:var(--mono);font-size:9.5px;color:#c6cad2;line-height:1.55;white-space:pre;}
+  .art .ic{color:#7d818a;}.art .k{color:#c9b48f;}.art .v{color:#9db5c9;}.art .g{color:#84b58f;}.art .r{color:#c98f88;}
+  .arrow{text-align:center;color:var(--rule);font-family:var(--mono);font-size:11px;margin:-3px 0 5px;}
+  .ta{width:100%;border:1px solid var(--rule);border-radius:6px;padding:10px;font-family:var(--cjk);font-size:12.5px;resize:vertical;min-height:66px;background:var(--surface);}
+  .consumer{background:var(--ink);border-radius:7px;padding:11px 12px;margin-bottom:12px;}
+  .consumer .ch{font-family:var(--mono);font-size:10px;color:#c9b48f;margin-bottom:8px;}
+  .cthree{display:flex;gap:7px;}
+  .cthree .c{flex:1;background:#2a2c31;border-radius:5px;padding:8px;}
+  .cthree .ct{font-size:11px;font-weight:700;color:#F2F1EB;}
+  .cthree .cs{font-family:var(--mono);font-size:9px;color:#9a9da3;margin-top:3px;line-height:1.4;}
+  .pend{background:var(--amber-tint);border:1px solid #d8c4a4;border-radius:6px;padding:9px 11px;margin-bottom:8px;font-size:11.5px;}
+  .pend .pt{font-family:var(--mono);font-size:9.5px;color:var(--amber-deep);}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--rule);font-size:12px;}
+  .row .mono{font-family:var(--mono);font-size:12px;font-weight:700;}
+  .ring{display:flex;gap:4px;margin:4px 0 12px;}
+  .rstep{flex:1;text-align:center;font-family:var(--mono);font-size:9px;padding:6px 2px;border-radius:4px;border:1px solid var(--rule);background:var(--surface);color:var(--slate);cursor:pointer;}
+  .rstep.lit{background:var(--amber);color:#fff;border-color:var(--amber);}
+  /* journey */
+  .jn{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:9px 11px;margin-bottom:7px;cursor:pointer;}
+  .jn .jh{display:flex;align-items:center;gap:8px;}
+  .jn .jc{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--blue);}
+  .jn .jt{font-size:12.5px;font-weight:700;}
+  .lamp{width:11px;height:11px;border-radius:50%;margin-left:auto;flex:0 0 auto;}
+  .lamp.g{background:var(--go);}.lamp.y{background:var(--warn);}.lamp.r{background:var(--red);}
+  .jbody{display:none;margin-top:8px;}
+  .jbody.show{display:block;}
+  .jrow{display:flex;gap:7px;margin-top:6px;}
+  .jcell{flex:1;border:1px solid var(--rule);border-radius:5px;padding:7px 8px;background:var(--paper);}
+  .jcell .jk{font-family:var(--mono);font-size:9px;color:var(--slate);}
+  .jcell .jv{font-size:11px;margin-top:3px;line-height:1.45;}
+  .jcell.seed{border-left:2px solid var(--blue);}
+  .jcell.sell{border-left:2px solid var(--amber);}
+  /* task */
+  .task{border:1px solid var(--rule);border-radius:6px;padding:9px 11px;margin-bottom:7px;background:var(--surface);}
+  .task .tt{font-size:12.5px;font-weight:700;}
+  .task .tm{font-family:var(--mono);font-size:9.5px;color:var(--slate);margin-top:3px;}
+  .badge{font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:3px;background:#efece3;border:1px solid var(--rule);color:var(--slate);margin-left:5px;}
+  .badge.seed{background:#dde6ee;border-color:#b9c8d6;color:var(--blue);}
+  .badge.sell{background:var(--amber-tint);border-color:#d8c4a4;color:var(--amber-deep);}
+  .badge.joint{background:var(--go-tint);border-color:#bcd3bf;color:var(--go);}
+  .badge.money{background:var(--red-tint);border-color:#e0bdb7;color:var(--red);}
+  .badge.st{background:var(--warn-tint);border-color:#ddc98a;color:#7a5a14;}
+  .badge.done{background:var(--go-tint);border-color:#bcd3bf;color:var(--go);}
+  .badge.rej{background:var(--red-tint);border-color:#e0bdb7;color:var(--red);}
+  .rule{border:1px solid var(--rule);border-left:3px solid var(--red);border-radius:6px;padding:10px 11px;margin-bottom:9px;background:var(--surface);}
+  .rule .rh{font-size:12.5px;font-weight:800;}
+  .rule .rj{font-size:11.5px;color:var(--ink);margin-top:4px;line-height:1.5;}
+  .rule .rc{font-family:var(--mono);font-size:9.5px;color:var(--slate);margin-top:5px;background:#efece3;padding:5px 8px;border-radius:4px;line-height:1.5;}
+  .badge.seed_kol{background:#dde6ee;border-color:#b9c8d6;color:var(--blue);}
+  .badge.commerce_kol{background:var(--amber-tint);border-color:#d8c4a4;color:var(--amber-deep);}
+  .badge.live_room{background:#e6dcee;border-color:#c9b9d6;color:#5a3a7a;}
+  .chk{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--rule);font-size:11.5px;cursor:pointer;}
+  .chk .cst{font-family:var(--mono);font-size:10px;padding:1px 7px;border-radius:3px;}
+  .chk .cst.p{background:var(--go-tint);color:var(--go);}
+  .chk .cst.f{background:var(--red-tint);color:var(--red);}
+  .fx{border:1px solid var(--rule);border-left:3px solid var(--blue);border-radius:6px;padding:9px 11px;margin-bottom:8px;background:var(--surface);cursor:pointer;}
+  .fx .fh{font-size:12px;font-weight:800;display:flex;align-items:center;gap:7px;}
+  .fx .ff{font-family:var(--mono);font-size:9.5px;color:var(--slate);margin-top:4px;background:#efece3;padding:5px 8px;border-radius:4px;}
+  .fx.bad{border-left-color:var(--red);}
+  .sopstep{border-top:1px solid var(--rule);padding:7px 0;font-size:11px;}
+  .sopstep .st1{font-weight:700;font-size:12px;}
+  .sopstep .st2{font-family:var(--mono);font-size:9.5px;color:var(--slate);margin-top:3px;line-height:1.55;}
+  .attr{border:1px solid var(--rule);border-left:4px solid var(--blue);border-radius:8px;background:#fff;padding:11px 12px;margin-top:9px;}
+  .attr.win{border-left-color:var(--go);}
+  .attr.lose{border-left-color:var(--red);}
+  .attr .ah{font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .attr .delta{font-family:var(--mono);font-size:12px;padding:2px 8px;border-radius:4px;}
+  .attr .delta.up{background:var(--go-tint);color:var(--go);}
+  .attr .delta.dn{background:var(--red-tint);color:var(--red);}
+  .attr .sec{margin-top:8px;font-size:11px;line-height:1.7;}
+  .attr .sec .t{font-weight:800;font-size:11px;}
+  .attr .inc{background:var(--warn-tint);border:1px solid #dcc98f;border-radius:6px;padding:7px 10px;margin-top:8px;font-size:11px;line-height:1.6;}
+  .attr .why{border-top:1px dashed var(--rule);padding:6px 0;}
+  .attr .why .wa{color:var(--blue);}
+  .metric.open{outline:2px solid var(--blue);}
+  .flash{animation:flashbg 1.1s ease 2;}
+  @keyframes flashbg{0%{background:var(--warn-tint);box-shadow:0 0 0 2px var(--warn) inset;}100%{background:transparent;box-shadow:none;}}
+  .metric{position:relative;}
+  .editpen{position:absolute;top:5px;right:7px;font-size:11px;color:var(--slate);opacity:.7;padding:2px 4px;cursor:pointer;}
+  .editpen:active{color:var(--amber-deep);}
+  .toastwrap{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);z-index:99;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:88%;max-width:390px;}
+  .toast{background:var(--ink);color:#fff;font-size:12px;padding:9px 14px;border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.28);opacity:0;transform:translateY(8px);transition:.24s;text-align:center;line-height:1.45;}
+  .toast.show{opacity:1;transform:translateY(0);}
+  .toast.go{background:#26503a;}.toast.warn{background:#7a4a1f;}.toast.red{background:#7a322b;}
+  .navbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);border-top:1px solid var(--rule);display:flex;}
+  .nav{flex:1;text-align:center;padding:8px 1px 9px;font-size:9.5px;color:var(--slate);cursor:pointer;}
+  .nav.on{color:var(--amber-deep);font-weight:700;}
+  .nav .ni{font-size:14px;display:block;}
+  .hint{font-family:var(--mono);font-size:9.5px;color:var(--slate);margin-top:4px;line-height:1.5;}
+  .hint b{color:var(--amber-deep);}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="trialbar">试版(小红书·双主线经营 <b>App V0.3·<b>母版回灌版</b>(引擎=douyinv19·只换CHANNEL语义)</b> / 规则型 Agent V0.1) · <b>7 个一级主屏 × 11 个业务模块</b> · <b>J0–J6=经营旅程</b> / <b>N0–N6=系统引擎槽</b>(映射·不可混用) · 数字=<b>演示假水</b> · 接口位:<b>MOCK_DATA.ledger3 / fiveA / fiveA_source / N6.Output</b></div>
+  <div class="hd">
+    <div class="roles">
+      <span class="role me" id="rSeedKol" onclick="setRole('seed_kol')">种草笔记</span>
+      <span class="role" id="rCommKol" onclick="setRole('commerce_kol')">买手带货</span>
+      <span class="role" id="rLive" onclick="setRole('live_room')">店播</span>
+      <span class="role" id="rOps" onclick="setRole('ops')">作战官</span>
+      <span class="role" id="rMgr" onclick="setRole('mgr')">主管</span>
+    </div>
+    <div class="who" id="who">小红书双前线 <small>双主线 · 三本账 · J0–J6 / N0–N6</small></div>
+    <div class="lead">
+      <div class="big" id="bigline">导入期 · 算法冷启</div>
+      <div class="second" id="second"></div>
+    </div>
+  </div>
+  <div class="stagestrip" id="strip"></div>
+  <div class="tabs">
+    <div class="tab on" data-t="today" onclick="setTab('today')">今日</div>
+    <div class="tab" data-t="dual" onclick="setTab('dual')">双前线</div>
+    <div class="tab" data-t="pipe" onclick="setTab('pipe')">N0–N6</div>
+    <div class="tab" data-t="collect" onclick="setTab('collect')">量实</div>
+    <div class="tab" data-t="ledger" onclick="setTab('ledger')">三本账</div>
+    <div class="tab" data-t="task" onclick="setTab('task')">任务/复盘</div>
+    <div class="tab" data-t="cockpit" onclick="setTab('cockpit')">驾驶舱</div>
+  </div>
+  <div class="scroll" id="scroll"></div>
+</div>
+<div class="navbar">
+  <div class="nav on" data-n="today" onclick="setTab('today')"><span class="ni">📋</span>今日</div>
+  <div class="nav" data-n="dual" onclick="setTab('dual')"><span class="ni">⚔️</span>双前线</div>
+  <div class="nav" data-n="pipe" onclick="setTab('pipe')"><span class="ni">🔗</span>引擎槽</div>
+  <div class="nav" data-n="collect" onclick="setTab('collect')"><span class="ni">🔍</span>量实</div>
+  <div class="nav" data-n="ledger" onclick="setTab('ledger')"><span class="ni">📒</span>三本账</div>
+  <div class="nav" data-n="task" onclick="setTab('task')"><span class="ni">🎯</span>任务</div>
+  <div class="nav" data-n="cockpit" onclick="setTab('cockpit')"><span class="ni">🧭</span>驾驶舱</div>
+</div>
+<div class="toastwrap" id="tw"></div>
+
+<script>
+/* ============================================================
+   小红书 内容电商 SR · CHANNEL 块(那点差异·换这一块即换渠道)
+   Alignment(骨架·不动):环×四层 / 连接律 / 七节点槽 N0-N6 / SKU锚 / BEA / 判级
+   Autonomy(只在两处):① 6开关口径翻译  ② 那点差异=双前线(种草线×卖货线)
+   ============================================================ */
+const CHANNEL = {
+  key:"xhs", name:"小红书", axis:"笔记种草×商销闭环轴",
+  role:"双前线经营", who:"小红书双前线",
+  sentinel:"流量效率×成交效率×人群资产 · 断=素材疲劳/直播模型失效",
+  consumer:{ funnel:"5A", steps:["A1 了解","A2 吸引","A3 种草","A4 购买","A5 忠诚"] },
+  winwin:"平台要成交效率 × 品牌要人群资产沉淀",
+  // 那点差异(Autonomy第②处):小红书是唯一必须两条一线同时作战的渠道
+  frontlines:{
+    seed_kol:{ nm:"种草笔记岗", team:"种草团队", range:"A1→A3", def:"制造购买理由", out:"达人筛选·内容共创·自然数据·投放放量·素材授权" },
+    commerce_kol:{ nm:"买手带货岗", team:"卖货团队", range:"A3→A5", def:"完成购买动作(买手带货)", out:"选品·邀约·素材制作·发布监控·视频加热" },
+    live_room:{ nm:"店播直播岗", team:"卖货团队", range:"A3→A5", def:"完成购买动作(店播/买手播)", out:"目标·货组·话术·场景·投流·场次复盘" },
+    ops:{ nm:"数据/Agent作战官", def:"一条龙看 N0–N6 协同", out:"红黄绿判断·断点诊断·任务派发·复盘沉淀" }
+  },
+  // 6开关小红书口径翻译(Autonomy第①处)
+  dialect:{ 陈列:"搜索坑位+信息流笔记位(去假后曝光)", 动销:"商销笔记成交+买手/店播GMV", 认知:"品牌词搜索占比+看后搜",
+            有货:"商销链接可购+库存可售天数", 复购:"新客复购率(A4→A5)", 口碑:"评论情感+退货率(硬红线)" },
+  money:["投流(聚光等)","达人采买(蒲公英/精选联盟/纯佣/付费)","直播加热","优惠券","组合装/货盘变更"],
+  sku_anchor:["六月鲜轻10克盐减盐酱油","味达美味极鲜酱油","禾然有机酱油"],
+  residual_cap:{ amount:5000, roi:1.5 }   // 渠道锁定:小红书残值复投 ≤¥5,000 · ROI≥1.5
+};
+const TEAM={seed_kol:"种草笔记岗",commerce_kol:"买手带货岗",live_room:"店播直播岗",joint:"联合(作战官)"};
+const OP_ROLES={seed_kol:"种草笔记岗",commerce_kol:"买手带货岗",live_room:"店播直播岗",ops:"作战官",mgr:"主管"};
+/* 修改4:N2 二级来源(蒲公英只是下单渠道,不等于达人测试) */
+const N2_SOURCES=["蒲公英达人","买手(带货)达人","纯佣买手","付费合作","聚光(信息流/搜索)","薯条","直播排期(店播/买手播)","自然流笔记"];
+/* 修改3:N1↔N2 握手 · 达人类型按阶段 */
+const HS_KOL={import:"种草达人为主(二级来源:蒲公英/纯佣)",growth:"三岗并进(种草+带货+直播)",mature:"带货/直播为主·只留高ROI",decline:"不适用(停投)",renewal:"历史高ROI达人受控重启",retire:"不适用(零采买)"};
+/* 修改8:N3 站内承接检查表(九项) */
+const N3_CHECK=[
+  ["商销笔记是否绑定","未绑定 = 不准投放"],["商销店铺是否可售","不可售 = 不准放大"],["库存可售天数≥7","不足 = 不准加投"],
+  ["SKU价格是否合理","异常 = 回商品运营"],["详情页是否完整","不完整 = 回N3修"],["直播货盘是否匹配","不匹配 = 不准直播放量"],
+  ["客服响应是否达标","不达标 = 风险"],["评价分是否达标","不达标 = 质量门"],["购买路径是否有断点","有断点 = 回修"]];
+/* 修改5:指标口径表(分子/分母/取数范围/周期/目标来源) */
+const METRIC_DICT=[
+  ["封面点击率","观看≥3秒人数","有效播放人数","正在消耗活跃视频","日/7日","大盘均值+自身历史"],
+  ["完播率","看满60秒或整条完播","有效播放人数","活跃视频","日/7日","按视频时长校准"],
+  ["互动率","点赞+评论+分享","有效播放人数","活跃视频","日/7日","品类基准"],
+  ["CPM","投放费用","曝光量/1000","投放计划","日/7日","品类/阶段基准"],
+  ["笔记GPM","笔记成交GMV","笔记曝光/1000","笔记","日/7日","阶段目标"],
+  ["直播GPM","直播成交GMV","直播曝光/1000","直播间","场次/日","阶段目标"],
+  ["CPA3","达人/投放费用","新增A3人群量","种草达人/投放","活动期","历史+预算"],
+  ["看后搜率","看后搜次数","播放量","挂小蓝词内容","日/活动期","品牌基准"],
+  ["商品点击率","商品点击人数","内容观看人数","挂商销链接内容","日/7日","阶段目标"],
+  ["加购率","加购人数","商品点击人数","商销笔记","日/7日","阶段目标"],
+  ["转化率","支付人数","商品点击人数","商销笔记/直播","日/场次","阶段目标"],
+  ["内容数量口径","活跃视频(正在消耗)","—","非全部历史视频","日","口径声明"]];
+/* 修改6:判定公式 · 每阶段当前值(演示假水) */
+const FORMULA_MOCK={
+  import:{valid_crowd:0.86,decay:-0.05,fatigue:{days:1,reuse:1.2}},
+  growth:{valid_crowd:0.81,decay:-0.12,fatigue:{days:2,reuse:2.0}},
+  mature:{valid_crowd:0.84,decay:-0.08,fatigue:{days:4,reuse:4.6}},
+  decline:{valid_crowd:0.88,decay:0,fatigue:{days:0,reuse:0}},
+  renewal:{valid_crowd:0.82,decay:-0.06,fatigue:{days:1,reuse:1.0}},
+  retire:{valid_crowd:0,decay:0,fatigue:{days:0,reuse:0}}};
+/* 修改9:一本账费用下钻(示意口径·演示假水) */
+const COST_DRILL={
+  import:{rows:[["基础预算(冷启/测试)",6000],["放量预算",0],["种草达人预算(达人采买/BGC)",4000],["带货达人预算(纯佣/付费)",2000],["自播预算(素材/场景/加热)",1500],["投流预算(聚光·笔记/直播)",1000],["优惠券预算(券/组合装)",500]],spent:4200,trend:[["近7日 ROI","1.05 → 1.30","↗"],["近7日 GMV","1.2万 → 2.6万/日","↗"],["近7日消耗","¥800 → ¥1,400/日","↗"],["近7日 A3→A4","9% → 11%","↗"]]},
+  growth:{rows:[["基础预算",4000],["放量预算",26000],["种草达人预算",9000],["带货达人预算",8000],["自播预算",6000],["投流预算(聚光)",5000],["优惠券预算",2000]],spent:31000,trend:[["近7日 ROI","1.18 → 1.24","↗"],["近7日 GMV","8.9万 → 14.2万/日","↗"],["近7日消耗","¥3,800 → ¥5,600/日","↗"],["近7日 A3→A4","8% → 9%","↗"]]},
+  mature:{rows:[["基础预算",2000],["放量预算",0],["种草达人预算",3000],["带货达人预算",6000],["自播预算",8000],["投流预算(聚光)",5000],["优惠券预算",1000]],spent:9800,trend:[["近7日 ROI","1.30 → 1.27","→"],["近7日 GMV","18.8万 → 19.2万/日","→"],["近7日消耗","¥3,000 → ¥2,700/日","↘"],["近7日 A3→A4","12% → 12%","→"]]},
+  decline:{rows:[["残值复投池(例外·≤¥5,000·ROI≥1.5)",5000],["其余预算",0]],spent:0,trend:[["近7日 ROI","—(停投)","—"],["近7日 GMV","5.8千 → 5.2千/日","↘"],["近7日消耗","¥0","—"],["近7日 A3→A4","10% → 10%","→"]]},
+  renewal:{rows:[["受控重启预算(投流·历史高ROI素材)",4000],["种草达人预算",2500],["自播预算",1000],["优惠券预算",500]],spent:2600,trend:[["近7日 ROI","0.92 → 1.25","↗"],["近7日 GMV","1.4万 → 3.1万/日","↗"],["近7日消耗","¥500 → ¥900/日","↗"],["近7日 A3→A4","8% → 10%","↗"]]},
+  retire:{rows:[["零投放",0]],spent:0,trend:[["近7日 ROI","—","—"],["近7日 GMV","清尾","↘"],["近7日消耗","¥0","—"],["近7日 A3→A4","—","—"]]}};
+/* 修改10:各生命周期运营反馈专属字段(提示层) */
+const STAGE_OPS={
+  import:["CPM 口径(人群精准度+量级)","内容胜率(不只看三秒/完播)","CPA3 / 看后搜率(已入种草账)","内容数量口径=活跃视频","商品点击后的转化率(痛点是否真实)"],
+  growth:["笔记GPM(已入卖货账)","当日GMV(放量规模)","O/A1/A2→A4 直接转化(不只看A3→A4)","素材消耗能力(能否跑量)","放量衰减公式+有效人群定义(见 N0–N6 判定公式卡)"],
+  mature:["SKU包装规格结构(SKU锚·DS定调不可动)","SPU下钻仅参考·不替代SKU","商销笔记自然成交占比(自然接棒)","直播依赖:自播/达播分开","人群流失率 + A4种子池复用(新品内测)"],
+  decline:["外部趋势/热点/竞品热词(残值复投机会)","停播降频标准明确","残值真实性公式(防假残值)","A5迁移目标SKU(老客不丢)","替代SKU推荐(旧品导流新品)"],
+  renewal:["新客拉新率(已入种草账·小红书更看新客)","素材消耗能力(只看老客唤醒不够)","换新次数可配置(默认≤2)","根因六类明确化","老客包→私域/会员召回,不喂聚光"],
+  retire:["素材数据归档可查(视频下架后)","数据下载/Excel留档(防平台过期)","合同结清状态(达人/直播/投放)","迁移结果(A5是否迁移成功)","不可复活确认留痕"]};
+/* 修改2:三条泡面级 SOP 模板(M11 · Input/Process/Output/KPI/决策/责任岗) */
+const SOP_DECISIONS=["继续","回修","放大","停止"];
+const SOPS=[
+ {id:"sop_seed",nm:"种草笔记 SOP",owner:"seed_kol",range:"A1→A3",steps:[
+  {s:1,env:"达人筛选",i:"人群/场景/SKU锚",p:"类目匹配+粉丝画像+历史CPA3",o:"达人候选表",k:"匹配度",d:"继续/回修"},
+  {s:2,env:"达人合作",i:"候选表+预算",p:"蒲公英/精选联盟/纯佣/付费四通道询价",o:"合作清单(涉钱→HITL)",k:"CPA3预估",d:"继续/停止"},
+  {s:3,env:"内容制作",i:"内容假设(N1↔N2握手)",p:"脚本共创+3秒钩子+信任证据",o:"成片",k:"内容胜率预判",d:"继续/回修"},
+  {s:4,env:"视频发布",i:"成片+挂商销链接/小蓝词",p:"发布+绑定SKU",o:"上线视频",k:"发布合规",d:"继续"},
+  {s:5,env:"自然数据监测",i:"24-48h自然数据",p:"3秒率/完播/互动/看后搜",o:"自然胜率判定",k:"三秒率/看后搜率",d:"放大/回修/停止"},
+  {s:6,env:"投放",i:"过自然门的视频",p:"投流加热(聚光/薯条·握手预算内)",o:"投放计划",k:"CPM/CPA3",d:"继续/停止"},
+  {s:7,env:"放量",i:"ROI/衰减数据",p:"放量衰减公式守线",o:"放量计划",k:"衰减率≥-30%",d:"放大/回修"},
+  {s:8,env:"复盘",i:"全量数据",p:"验果=新增A3动没动",o:"复盘结论(枚举)",k:"新增A3/CPA3",d:"继续/回修"},
+  {s:9,env:"素材授权",i:"高胜率素材",p:"授权采买入库",o:"可复用素材资产",k:"授权数",d:"继续"}]},
+ {id:"sop_comm",nm:"买手带货 SOP",owner:"commerce_kol",range:"A3→A5",steps:[
+  {s:1,env:"选品",i:"货盘/SKU锚",p:"商品角色定位(引流/爆/利润)",o:"选品表",k:"佣金率×转化预估",d:"继续/回修"},
+  {s:2,env:"内容策划",i:"选品表+A3人群",p:"卖点→场景话术",o:"带货脚本",k:"脚本过检率",d:"继续/回修"},
+  {s:3,env:"达人筛选",i:"带货达人库",p:"历史GPM+粉丝购买力",o:"候选表",k:"预估GPM",d:"继续"},
+  {s:4,env:"邀约",i:"候选表",p:"纯佣/付费谈判(涉钱→HITL)",o:"合作确认",k:"成本",d:"继续/停止"},
+  {s:5,env:"素材制作",i:"脚本+样品",p:"拍摄+挂商销链接",o:"带货视频",k:"商品点击率预判",d:"继续/回修"},
+  {s:6,env:"发布监控",i:"上线视频",p:"点击/加购/转化实时",o:"监控日报",k:"商品点击率/加购率",d:"放大/回修"},
+  {s:7,env:"视频加热",i:"过门视频",p:"投流加热(聚光·握手预算内)",o:"加热计划",k:"GPM/ROI",d:"放大/回修"},
+  {s:8,env:"视频/直播复盘",i:"全量数据",p:"验果=A3→A4动没动",o:"复盘结论",k:"转化率/GMV",d:"继续/停止"}]},
+ {id:"sop_live",nm:"店播直播 SOP",owner:"live_room",range:"A3→A5",steps:[
+  {s:1,env:"目标制定",i:"阶段定标↓",p:"场次GMV/GPM目标拆解",o:"场次目标卡",k:"GPM目标",d:"继续"},
+  {s:2,env:"货组制定",i:"货盘+库存(N3检查表)",p:"引流款/主推款/利润款排布",o:"货组表",k:"客单结构",d:"继续/回修"},
+  {s:3,env:"直播话术",i:"内容假设+疑虑清单",p:"开场/演示/解释/促单/收尾五段",o:"话术脚本",k:"停留/互动",d:"继续/回修"},
+  {s:4,env:"场景搭建",i:"场地+SKU",p:"场景还原(做饭/试吃)",o:"直播间场景",k:"进房率",d:"继续"},
+  {s:5,env:"视频产出",i:"直播切片",p:"高光切片二创",o:"切片素材",k:"切片GPM",d:"继续"},
+  {s:6,env:"直播复盘",i:"场次数据",p:"停留/转化/促单段位诊断",o:"场次复盘",k:"直播GPM/成交率",d:"放大/回修"},
+  {s:7,env:"投流加热",i:"过门场次",p:"投流直播加热(聚光·握手预算内·涉钱)",o:"加热计划",k:"ROI",d:"放大/回修"},
+  {s:8,env:"视频复盘",i:"切片数据",p:"验果=切片带来的A4",o:"复盘结论",k:"切片GPM",d:"继续/停止"}]}];
+/* 屏 = 一级导航入口 · 模块 = 屏内业务功能块 · App V0.3 = 7 个一级主屏 + 11 个业务模块 */
+const SCREENS=[
+  {id:"today",  no:1, nm:"今日",                    mods:["M1 今日运营"]},
+  {id:"dual",   no:2, nm:"双前线 · J0–J6 经营旅程", mods:["M2 人群场景池","M3 内容×商品共创","M4 兴趣测试","M5 信任转化","M6 直播/成交","M7 体验反馈","M8 复购资产"]},
+  {id:"pipe",   no:3, nm:"N0–N6 引擎槽",            mods:["(引擎槽·系统处理管道)"]},
+  {id:"collect",no:4, nm:"量实",                    mods:["N0 Triage","6开关小红书口径","去假校准"]},
+  {id:"ledger", no:5, nm:"三本账",                  mods:["种草账/卖货账/联合账","预算 + HITL"]},
+  {id:"task",   no:6, nm:"任务/复盘",               mods:["M9 任务中心","M10 复盘中心","M11 三岗 SOP 模板"]},
+  {id:"cockpit",no:7, nm:"驾驶舱",                  mods:["一线视角/主管视角","HUMAN_GATE_QUEUE + 核定留痕"]}
+];
+/* 三本账 ↔ 5A 对应关系(修改4:说明卡·不变成四本账) */
+const LEDGER_5A=[
+  {book:"种草账",metrics:"曝光、3秒留存、完播",a:"A1"},
+  {book:"种草账",metrics:"互动、评论、收藏",a:"A2"},
+  {book:"种草账",metrics:"搜索增长、加购、深度评论",a:"A3"},
+  {book:"卖货账",metrics:"下单人数、成交转化率、GMV",a:"A4"},
+  {book:"联合账",metrics:"内容→商品点击率",a:"A2→A3"},
+  {book:"联合账",metrics:"内容→成交转化率",a:"A3→A4"},
+  {book:"联合账",metrics:"新客复购率",a:"A4→A5"}
+];
+const A5A_SOURCE_LABEL={short_video:"图文笔记",live:"直播",search:"搜索",shop_card:"商销笔记",kol:"达人"};
+/* J↔N 映射表:J=经营旅程(人怎么打仗) N=系统引擎槽(数据怎么流) 映射但不可互相改名 */
+const JN_MAP=[
+  {n:"N0",sys:"数据上报 Triage",               j:"J2 兴趣测试 / J5 体验反馈(回流入口)"},
+  {n:"N1",sys:"内容 / 素材计划",               j:"J0 人群场景定义 / J1 内容×商品共创"},
+  {n:"N2",sys:"达人 / 投流 / 直播排期",        j:"J1 内容×商品共创(涉钱→HITL)"},
+  {n:"N3",sys:"站内承接:商销笔记/店铺/直播",     j:"J4 交易转化"},
+  {n:"N4",sys:"质量可信门",                    j:"J2 兴趣测试 / J3 信任建立 / J5 体验反馈"},
+  {n:"N5",sys:"人群资产 / 迁移",               j:"J6 复购资产"},
+  {n:"N6",sys:"判级 / 裁决",                   j:"(不对应 J · 裁决层:Gate1-4/R/T)"}
+];
+const VERDICT_OPTIONS=["有效","无效","继续测试","固化SOP"];   // 所有裁决必须在 options 枚举内
+
+/* ============================================================
+   经营七节点(消费者旅程 J0-J6)= 任务书语言
+   注意:它不是引擎槽 N0-N6。引擎槽=处理管道(骨架),J=消费者旅程(渠道内容)。
+   下面 slot 字段给出 J→N 的映射,两者硬连接,不混为一谈。
+   ============================================================ */
+const JOURNEY=[
+  {j:"J0",nm:"人群场景定义",mod:"M2 人群场景池",slot:"N1(计划)·定标↓",keys:["search_growth"],
+   seed:"找人群、场景、痛点",sell:"判断购买力和货盘机会"},
+  {j:"J1",nm:"内容 × 商品共创",mod:"M3 内容×商品共创",slot:"N1(计划)",keys:["content_ctr"],
+   seed:"脚本、达人、笔记、直播主题",sell:"商销笔记、组合装、价格机制"},
+  {j:"J2",nm:"兴趣测试",mod:"M4 兴趣测试",slot:"N0(量实)+N4(门)",keys:["retain_3s","completion","interact","collect"],
+   seed:"播放、完播、互动、收藏",sell:"点击、进店、加购"},
+  {j:"J3",nm:"信任建立",mod:"M5 信任转化",slot:"N4(质量可信门)",keys:["comment_howto","add_cart"],
+   seed:"配料、试吃、评论、真实反馈",sell:"加购、询单、直播停留"},
+  {j:"J4",nm:"交易转化",mod:"M6 直播/成交",slot:"N3(站内承接)",keys:["cvr","live_stay","live_cvr"],
+   seed:"直播中继续讲场景价值",sell:"下单、GMV、客单、转化率"},
+  {j:"J5",nm:"体验反馈",mod:"M7 体验反馈",slot:"N0(回流)+N4(体验硬红线)",keys:["refund_rate","good_review"],
+   seed:"好评、晒单、使用场景再传播",sell:"退款、差评、客服、物流"},
+  {j:"J6",nm:"复购资产",mod:"M8 复购资产",slot:"N5(人群资产/迁移)",keys:["repurchase","new_repurchase"],
+   seed:"内容、人群、品牌词资产",sell:"会员、复购、家庭装、利润品"}
+];
+
+/* ============================================================
+   规则型 Agent V0.1 基础规则(七条)· 不宣称是完整 AI Agent
+   BEA 判级:IF-THEN = AgentLadder 第3级因果 = 仍是 Workflow · 真 Agent 留到 V0.2/V0.3(接真数据+反馈循环)
+   三件套缺席(无环境反馈loop / 无停止条件 / 人在检查点由 HITL 承担)→ loop_spec = N/A
+   MUST:规则恒用「去假后」校准值判定(算差前先去假·蝴蝶TypeB)
+   ============================================================ */
+const RULES=[
+  {id:"R1",node:"J2",nm:"爆文不带货",a5a:"A1/A2 有效,但 A2→A3 断",sopref:[{id:"sop_seed",s:3},{id:"sop_seed",s:5}],cond:"播放高 · 完播高 · 商品点击率低",kpi:"content_ctr",
+   when:m=>m.retain_3s.pass&&m.completion.pass&&!m.content_ctr.pass,
+   judge:"内容有吸引力,但商品钩子弱(种草没接住卖货)",
+   tasks:[{t:"把产品出现点前置到第5秒",team:"seed_kol"},{t:"商销笔记主图改「一勺出味」",team:"commerce_kol"},
+          {t:"评论区置顶购买理由",team:"seed_kol"},{t:"直播增加该场景讲解段",team:"live_room"}]},
+  {id:"R2",node:"J3",nm:"点得动·加不动(商销承接弱)",a5a:"A2→A3 断",sopref:[{id:"sop_comm",s:5}],extra:"N3 承接检查表",cond:"商品点击率高 · 加购率低",kpi:"add_cart",
+   when:m=>m.product_ctr.pass&&!m.add_cart.pass,
+   judge:"用户有兴趣,但商品承接不足",
+   tasks:[{t:"商品标题补场景词",team:"commerce_kol"},{t:"内容补使用场景演示",team:"seed_kol"},
+          {t:"商销笔记增加评价证据",team:"commerce_kol"},{t:"检查价格与组合装(涉钱)",team:"commerce_kol",money:1500}]},
+  {id:"R3",node:"J5",nm:"卖得动·退得多",a5a:"A4 质量风险",sopref:[{id:"sop_live",s:3},{id:"sop_comm",s:5}],extra:"N3 详情一致性",cond:"成交转化达标 · 退款率超线",kpi:"refund_rate",
+   when:m=>m.cvr.pass&&!m.refund_rate.pass,
+   judge:"卖出去了,但体验或预期有问题(内容承诺过度)",
+   tasks:[{t:"回看直播话术是否夸大",team:"live_room"},{t:"检查商品详情一致性",team:"commerce_kol"},
+          {t:"差评关键词聚类",team:"joint"},{t:"包裹加使用说明+菜谱卡(涉钱)",team:"commerce_kol",money:3000}]},
+  {id:"R4",node:"J4",nm:"收藏高·下单低(小红书典型)",a5a:"A3→A4 断",sopref:[{id:"sop_live",s:3},{id:"sop_comm",s:2}],cond:"收藏率高 · 成交转化率低",kpi:"cvr",
+   when:m=>m.collect.pass&&!m.cvr.pass,
+   judge:"用户觉得有用,但购买紧迫感不足",
+   tasks:[{t:"直播承接该收藏人群",team:"live_room"},{t:"限时券(涉钱·HITL)",team:"commerce_kol",money:8000},
+          {t:"打「今天为什么买」话术",team:"seed_kol"},{t:"设计体验装(货盘变更·不可逆)",team:"commerce_kol",irr:true}]},
+  {id:"R5",node:"J6",nm:"好评高·复购低",a5a:"A4→A5 断",sopref:[{id:"sop_comm",s:1},{id:"sop_live",s:2}],cond:"好评率高 · 复购率低",kpi:"repurchase",
+   when:m=>m.good_review.pass&&!m.repurchase.pass,
+   judge:"产品体验不错,但复购机制不足",
+   tasks:[{t:"复购券定向老客(涉钱)",team:"commerce_kol",money:12000},{t:"推出家庭装(货盘变更·不可逆)",team:"commerce_kol",irr:true},
+          {t:"会员召回",team:"joint"},{t:"拍老客使用场景内容",team:"seed_kol"}]},
+  {id:"R6",node:"J3",nm:"评论集中问「哪里买/怎么用」",a5a:"A3 信任问题",sopref:[{id:"sop_seed",s:3},{id:"sop_live",s:3}],cond:"「怎么用」评论占比超线",kpi:"comment_howto",
+   when:m=>!m.comment_howto.pass,
+   judge:"使用教育不足(信任卡在不会用)",
+   tasks:[{t:"拍 3 条菜谱视频",team:"seed_kol"},{t:"商品详情增加使用方式",team:"commerce_kol"},
+          {t:"直播增加演示段",team:"live_room"}]},
+  {id:"R7",node:"J4",nm:"店播停留高·促单弱",a5a:"A3→A4 直播转化弱",sopref:[{id:"sop_live",s:3},{id:"sop_live",s:6}],cond:"直播停留高 · 直播成交率低",kpi:"live_cvr",
+   when:m=>m.live_stay.pass&&m.live_stay.v>0&&!m.live_cvr.pass,
+   judge:"讲得有吸引力,但促单弱",
+   tasks:[{t:"直播增加商品利益点",team:"live_room"},{t:"限时机制+组合装解释(涉钱)",team:"live_room",money:5000},
+          {t:"购买路径提示",team:"commerce_kol"},{t:"场景强化话术",team:"seed_kol"}]}
+];
+
+/* ============================================================
+   生命周期引擎 · 同 N0–N6 引擎槽靠 lifecycle_stage 切换(小红书六期锁版)
+   ============================================================ */
+const MOCK_MODE = true;
+const MOCK_DATA = {
+  import : { id:"XHS-LYX-Q10", spu:"SPU_减盐系列", name:"六月鲜轻10克盐减盐酱油", stage:"import",
+    scene:{crowd:"控盐家庭",scene:"爸妈日常炒菜",pain:"想少盐又怕没味",reason:"少盐但有鲜味",priority:"高",status:"测试中"},
+    metrics:[ {k:"play_3s_rate",label:"封面点击率",v:0.32,raw:0.41,t:0.20,dir:"gt"},
+              {k:"completion_rate",label:"阅读完成率",v:0.28,t:0.25,dir:"gt"},
+              {k:"product_ctr",label:"商销点击率",v:0.09,t:0.06,dir:"gt"},
+              {k:"roi",label:"冷启ROI",v:1.3,t:1.0,dir:"gt"} ],
+    ledger3:{
+      seed:[ {k:"exposure",label:"曝光量",v:820000,raw:1150000,t:500000,dir:"gt",u:""},
+             {k:"retain_3s",label:"封面点击(去假后)",v:0.32,raw:0.41,t:0.20,dir:"gt",u:"%"},
+             {k:"completion",label:"阅读完成率",v:0.28,t:0.25,dir:"gt",u:"%"},
+             {k:"interact",label:"互动率",v:0.052,raw:0.081,t:0.04,dir:"gt",u:"%"},
+             {k:"collect",label:"收藏率",v:0.031,t:0.025,dir:"gt",u:"%"},
+             {k:"comment_howto",label:"评论「怎么用」占比",v:0.34,t:0.20,dir:"lt",u:"%"},
+             {k:"content_ctr",label:"内容带出商品点击率",v:0.09,t:0.06,dir:"gt",u:"%"},
+             {k:"search_growth",label:"搜索增长",v:0.18,t:0.10,dir:"gt",u:"%"},
+             {k:"new_a3",label:"新增A3人群",v:6800,t:5000,dir:"gt",u:""},
+             {k:"cpa3",label:"CPA3",v:5.8,t:8,dir:"lt",u:"¥"},
+             {k:"post_search",label:"看后搜率",v:0.021,t:0.015,dir:"gt",u:"%"},
+             {k:"iq",label:"互动质量CES(正向占比)",v:0.72,t:0.65,dir:"gt",u:"%"} ],
+      sell:[ {k:"product_ctr",label:"商销点击率",v:0.09,t:0.06,dir:"gt",u:"%"},
+             {k:"add_cart",label:"加购率",v:0.021,t:0.035,dir:"gt",u:"%"},
+             {k:"cvr",label:"成交转化率",v:0.031,t:0.025,dir:"gt",u:"%"},
+             {k:"gmv",label:"GMV",v:186000,t:120000,dir:"gt",u:"¥"},
+             {k:"aov",label:"客单价",v:58,t:45,dir:"gt",u:"¥"},
+             {k:"refund_rate",label:"退款率",v:0.05,t:0.08,dir:"lt",u:"%"},
+             {k:"good_review",label:"好评率",v:0.96,t:0.92,dir:"gt",u:"%"},
+             {k:"repurchase",label:"复购率",v:0.06,t:0.05,dir:"gt",u:"%"},
+             {k:"live_stay",label:"直播停留",v:52,t:40,dir:"gt",u:"s"},
+             {k:"live_cvr",label:"直播成交率",v:0.028,t:0.02,dir:"gt",u:"%"} ],
+      joint:[{k:"c2ctr",label:"内容→商品点击率",v:0.09,raw:0.064,t:0.06,dir:"gt",u:"%"},
+             {k:"c2cvr",label:"内容→成交转化率",v:0.0028,t:0.0020,dir:"gt",u:"%"},
+             {k:"new_repurchase",label:"新客复购率",v:0.06,t:0.05,dir:"gt",u:"%"}] },
+    fiveA:{
+      A1:{label:"了解",people:820000,new_people:120000,rate_to_next:0.18},
+      A2:{label:"吸引",people:147600,new_people:26000,rate_to_next:0.22},
+      A3:{label:"种草",people:32472,new_people:6800,rate_to_next:0.11},
+      A4:{label:"购买",people:3572,new_people:760,rate_to_next:0.06},
+      A5:{label:"忠诚",people:214,new_people:38,rate_to_next:null} },
+    fiveA_source:{
+      short_video:{A1:520000,A2:78000,A3:14000,A4:1200},
+      live:{A1:180000,A2:42000,A3:11000,A4:1800},
+      search:{A1:60000,A2:15000,A3:5200,A4:420},
+      shop_card:{A1:40000,A2:8600,A3:2200,A4:152},
+      kol:{A1:20000,A2:4000,A3:72,A4:0} },
+    node_outputs:{ 1:{hook_3s:"凉拌菜一勺封神",product_card_bound:true},
+                   3:{gpm:420,cvr:0.031,channel_type:"in_app_closed_loop"},
+                   5:{a1_grow:0.35,a2_grow:0.22,seed_pools:{product_clicker_pool:1800,add_to_cart_pool:260,first_buyer_pool:95}} },
+    gate_result:{ gate:"Gate1", gate1_pass:true, next_stage:"growth",
+      hard_redline:{experience_score:4.7,refund_rate:0.05,bad_review_rate:0.03,pass:true},
+      verify_up:"品类层A1-A2人群资产上移" },
+    human_gate_actions:[] },
+  growth : { id:"XHS-WDM-WJX", spu:"SPU_味极鲜", name:"味达美味极鲜酱油", stage:"growth",
+    scene:{crowd:"一人食白领",scene:"下班十分钟晚餐",pain:"不想复杂做饭又不想将就",reason:"一勺出饭店味",priority:"高",status:"放大中"},
+    metrics:[ {k:"exposure_growth",label:"曝光增长",v:2.6,t:2.0,dir:"gt"},
+              {k:"live_gpm",label:"直播GPM",v:650,raw:780,t:500,dir:"gt"},
+              {k:"a3_to_a4",label:"A3→A4",v:0.11,t:0.08,dir:"gt"},
+              {k:"roi_at_scale",label:"放量ROI",v:1.22,t:1.2,dir:"gt"} ],
+    ledger3:{
+      seed:[ {k:"exposure",label:"曝光量",v:2400000,raw:3100000,t:1500000,dir:"gt",u:""},
+             {k:"retain_3s",label:"封面点击(去假后)",v:0.30,raw:0.38,t:0.22,dir:"gt",u:"%"},
+             {k:"completion",label:"阅读完成率",v:0.26,t:0.25,dir:"gt",u:"%"},
+             {k:"interact",label:"互动率",v:0.061,raw:0.092,t:0.045,dir:"gt",u:"%"},
+             {k:"collect",label:"收藏率",v:0.048,t:0.030,dir:"gt",u:"%"},
+             {k:"comment_howto",label:"评论「怎么用」占比",v:0.16,t:0.20,dir:"lt",u:"%"},
+             {k:"content_ctr",label:"内容带出商品点击率",v:0.085,t:0.06,dir:"gt",u:"%"},
+             {k:"search_growth",label:"搜索增长",v:0.32,t:0.15,dir:"gt",u:"%"},
+             {k:"new_a3",label:"新增A3人群",v:24500,t:20000,dir:"gt",u:""},
+             {k:"cpa3",label:"CPA3",v:6.5,t:8,dir:"lt",u:"¥"},
+             {k:"post_search",label:"看后搜率",v:0.034,t:0.020,dir:"gt",u:"%"},
+             {k:"iq",label:"互动质量CES(正向占比)",v:0.69,t:0.65,dir:"gt",u:"%"} ],
+      sell:[ {k:"product_ctr",label:"商销点击率",v:0.085,t:0.06,dir:"gt",u:"%"},
+             {k:"add_cart",label:"加购率",v:0.052,t:0.035,dir:"gt",u:"%"},
+             {k:"cvr",label:"成交转化率",v:0.018,t:0.028,dir:"gt",u:"%"},
+             {k:"gmv",label:"GMV",v:940000,t:600000,dir:"gt",u:"¥"},
+             {k:"sv_gpm",label:"笔记GPM",v:380,t:300,dir:"gt",u:"¥"},
+             {k:"aov",label:"客单价",v:62,t:50,dir:"gt",u:"¥"},
+             {k:"refund_rate",label:"退款率",v:0.06,t:0.08,dir:"lt",u:"%"},
+             {k:"good_review",label:"好评率",v:0.95,t:0.92,dir:"gt",u:"%"},
+             {k:"repurchase",label:"复购率",v:0.09,t:0.08,dir:"gt",u:"%"},
+             {k:"live_stay",label:"直播停留",v:96,t:60,dir:"gt",u:"s"},
+             {k:"live_cvr",label:"直播成交率",v:0.012,t:0.025,dir:"gt",u:"%"} ],
+      joint:[{k:"c2ctr",label:"内容→商品点击率",v:0.085,raw:0.066,t:0.06,dir:"gt",u:"%"},
+             {k:"c2cvr",label:"内容→成交转化率",v:0.0015,t:0.0020,dir:"gt",u:"%"},
+             {k:"new_repurchase",label:"新客复购率",v:0.09,t:0.08,dir:"gt",u:"%"}] },
+    fiveA:{
+      A1:{label:"了解",people:2400000,new_people:640000,rate_to_next:0.21},
+      A2:{label:"吸引",people:504000,new_people:118000,rate_to_next:0.19},
+      A3:{label:"种草",people:95760,new_people:24500,rate_to_next:0.09},
+      A4:{label:"购买",people:8618,new_people:2100,rate_to_next:0.09},
+      A5:{label:"忠诚",people:776,new_people:190,rate_to_next:null} },
+    fiveA_source:{
+      short_video:{A1:1300000,A2:255000,A3:38000,A4:2400},
+      live:{A1:720000,A2:172000,A3:41000,A4:5100},
+      search:{A1:190000,A2:42000,A3:10500,A4:820},
+      shop_card:{A1:120000,A2:24000,A3:5100,A4:280},
+      kol:{A1:70000,A2:11000,A3:1160,A4:18} },
+    node_outputs:{ 1:{validated_hook:"一勺出饭店味",material_matrix:8,material_fatigue:{avg_reuse:2.0}},
+                   3:{landing_split:{live_gpm:650,entry_rate:0.045,live_pay_cvr:0.036,card_gmv_share:0.18}},
+                   5:{a3_to_a4_rate:0.11,new_customer_rate:0.12,seed_pools_refresh:{first_buyer_pool:1010}} },
+    gate_result:{ gate:"Gate2", gate2_pass:true, next_stage:"mature",
+      hard_redline:{experience_score:4.7,refund_rate:0.05,bad_review_rate:0.03,pass:true},
+      roi_lines:{roi_stoploss_line:1.0,roi_growth_hold_line:1.2},
+      entry_gmv_split:{live_gmv_share:0.62,short_video_gmv_share:0.20,card_gmv_share:0.18} },
+    human_gate_actions:[{k:"投流放量加投(跨档)",amt:25000,irr:false},{k:"直播加热",amt:6000,irr:false}] },
+  mature : { id:"XHS-LYX-TJ", spu:"SPU_六月鲜", name:"六月鲜特级原酿酱油", stage:"mature",
+    scene:{crowd:"品质家庭",scene:"日常炒菜/蒸鱼",pain:"要好酱油但不想踩坑",reason:"原酿本味",priority:"中",status:"SOP"},
+    metrics:[ {k:"contribution_margin",label:"贡献利润率",v:0.175,t:0.15,dir:"gt"},
+              {k:"card_gmv_share",label:"商销笔记占比",v:0.31,t:0.25,dir:"gt"},
+              {k:"a4_to_a5",label:"A4→A5",v:0.16,t:0.12,dir:"gt"},
+              {k:"stable_roi",label:"稳定ROI",v:1.28,t:1.2,dir:"gt"} ],
+    ledger3:{
+      seed:[ {k:"exposure",label:"曝光量",v:1650000,t:1000000,dir:"gt",u:""},
+             {k:"retain_3s",label:"封面点击(去假后)",v:0.27,t:0.22,dir:"gt",u:"%"},
+             {k:"completion",label:"阅读完成率",v:0.25,t:0.24,dir:"gt",u:"%"},
+             {k:"interact",label:"互动率",v:0.048,t:0.040,dir:"gt",u:"%"},
+             {k:"collect",label:"收藏率",v:0.034,t:0.030,dir:"gt",u:"%"},
+             {k:"comment_howto",label:"评论「怎么用」占比",v:0.12,t:0.20,dir:"lt",u:"%"},
+             {k:"content_ctr",label:"内容带出商品点击率",v:0.078,t:0.06,dir:"gt",u:"%"},
+             {k:"search_growth",label:"搜索增长",v:0.11,t:0.08,dir:"gt",u:"%"},
+             {k:"new_a3",label:"新增A3人群",v:8200,t:6000,dir:"gt",u:""},
+             {k:"cpa3",label:"CPA3",v:7.2,t:9,dir:"lt",u:"¥"},
+             {k:"post_search",label:"看后搜率",v:0.018,t:0.012,dir:"gt",u:"%"},
+             {k:"iq",label:"互动质量CES(正向占比)",v:0.74,t:0.65,dir:"gt",u:"%"} ],
+      sell:[ {k:"product_ctr",label:"商销点击率",v:0.078,t:0.06,dir:"gt",u:"%"},
+             {k:"add_cart",label:"加购率",v:0.058,t:0.040,dir:"gt",u:"%"},
+             {k:"cvr",label:"成交转化率",v:0.034,t:0.028,dir:"gt",u:"%"},
+             {k:"gmv",label:"GMV",v:1380000,t:1000000,dir:"gt",u:"¥"},
+             {k:"aov",label:"客单价",v:71,t:60,dir:"gt",u:"¥"},
+             {k:"refund_rate",label:"退款率",v:0.04,t:0.06,dir:"lt",u:"%"},
+             {k:"good_review",label:"好评率",v:0.97,t:0.93,dir:"gt",u:"%"},
+             {k:"repurchase",label:"复购率",v:0.10,t:0.18,dir:"gt",u:"%"},
+             {k:"live_stay",label:"直播停留",v:78,t:60,dir:"gt",u:"s"},
+             {k:"live_cvr",label:"直播成交率",v:0.031,t:0.025,dir:"gt",u:"%"} ],
+      joint:[{k:"c2ctr",label:"内容→商品点击率",v:0.078,t:0.06,dir:"gt",u:"%"},
+             {k:"c2cvr",label:"内容→成交转化率",v:0.0027,t:0.0022,dir:"gt",u:"%"},
+             {k:"new_repurchase",label:"新客复购率",v:0.10,t:0.18,dir:"gt",u:"%"}] },
+    fiveA:{
+      A1:{label:"了解",people:1650000,new_people:180000,rate_to_next:0.20},
+      A2:{label:"吸引",people:330000,new_people:41000,rate_to_next:0.17},
+      A3:{label:"种草",people:56100,new_people:8200,rate_to_next:0.12},
+      A4:{label:"购买",people:6732,new_people:930,rate_to_next:0.16},
+      A5:{label:"忠诚",people:1077,new_people:145,rate_to_next:null} },
+    fiveA_source:{
+      short_video:{A1:620000,A2:112000,A3:16000,A4:1500},
+      live:{A1:520000,A2:118000,A3:22000,A4:2900},
+      search:{A1:280000,A2:58000,A3:12000,A4:1400},
+      shop_card:{A1:180000,A2:35000,A3:5600,A4:880},
+      kol:{A1:50000,A2:7000,A3:500,A4:52} },
+    node_outputs:{ 2:{invest_mode:"harvest",invest_ratio:0.22,plans_cut:7},
+                   3:{contribution_profit:45600,gmv_split:{live_gmv_share:0.48,card_gmv_share:0.31},natural_traffic_share:0.42},
+                   4:{live_dependence_gate:{live_gmv_share:0.48,live_gmv_share_max:0.55,pass:true},portfolio_guard:{crowd_overlap:0.38,overlap_max:0.45,pass:true}},
+                   5:{a4_to_a5_rate:0.16,repurchase_rate:0.21,member_ltv:175} },
+    gate_result:{ gate:"Gate3", gate3_pass:true, gate3_verdict:"stable_keep", next_action:"stay_mature_next_cycle",
+      hard_redline:{experience_score:4.8,refund_rate:0.04,bad_review_rate:0.02,pass:true},
+      options:["stable_keep","stable_reduce_spend","refresh_restart","decline_stoploss","retire_archive"], portfolio_escalation:false },
+    human_gate_actions:[{k:"降投维护(stable_reduce_spend)",amt:0,irr:true},{k:"组合内耗·升品类会诊",amt:0,irr:true}] },
+  decline: { id:"XHS-CVN-OLD", spu:"SPU_葱伴侣", name:"葱伴侣经典黄豆酱(老装)", stage:"decline",
+    scene:{crowd:"存量老客",scene:"东北菜蘸酱",pain:"老装规格不合适",reason:"习惯口味",priority:"低",status:"暂停"},
+    metrics:[ {k:"natural_gmv",label:"残值自然GMV",v:38000,t:20000,dir:"gt"},
+              {k:"card_gmv_share",label:"商销笔记占比",v:0.71,t:0.50,dir:"gt"},
+              {k:"refund_rate",label:"退款率",v:0.05,t:0.08,dir:"lt"},
+              {k:"contribution_profit",label:"残值利润",v:6800,t:0,dir:"gt"} ],
+    ledger3:{
+      seed:[ {k:"exposure",label:"曝光量(自然)",v:210000,t:100000,dir:"gt",u:""},
+             {k:"retain_3s",label:"封面点击(去假后)",v:0.18,t:0.15,dir:"gt",u:"%"},
+             {k:"completion",label:"阅读完成率",v:0.21,t:0.18,dir:"gt",u:"%"},
+             {k:"interact",label:"互动率",v:0.019,t:0.015,dir:"gt",u:"%"},
+             {k:"collect",label:"收藏率",v:0.012,t:0.010,dir:"gt",u:"%"},
+             {k:"comment_howto",label:"评论「怎么用」占比",v:0.09,t:0.20,dir:"lt",u:"%"},
+             {k:"content_ctr",label:"内容带出商品点击率",v:0.052,t:0.040,dir:"gt",u:"%"},
+             {k:"search_growth",label:"搜索增长",v:-0.12,t:-0.30,dir:"gt",u:"%"},
+             {k:"new_a3",label:"新增A3人群(自然)",v:120,t:100,dir:"gt",u:""},
+             {k:"cpa3",label:"CPA3(停投=0)",v:0,t:9,dir:"lt",u:"¥"},
+             {k:"post_search",label:"看后搜率",v:0.006,t:0.004,dir:"gt",u:"%"},
+             {k:"iq",label:"互动质量CES(正向占比)",v:0.66,t:0.60,dir:"gt",u:"%"} ],
+      sell:[ {k:"product_ctr",label:"商销点击率",v:0.052,t:0.040,dir:"gt",u:"%"},
+             {k:"add_cart",label:"加购率",v:0.033,t:0.025,dir:"gt",u:"%"},
+             {k:"cvr",label:"成交转化率",v:0.026,t:0.020,dir:"gt",u:"%"},
+             {k:"gmv",label:"残值GMV",v:38000,t:20000,dir:"gt",u:"¥"},
+             {k:"aov",label:"客单价",v:49,t:40,dir:"gt",u:"¥"},
+             {k:"refund_rate",label:"退款率",v:0.05,t:0.08,dir:"lt",u:"%"},
+             {k:"good_review",label:"好评率",v:0.94,t:0.90,dir:"gt",u:"%"},
+             {k:"repurchase",label:"复购率",v:0.07,t:0.15,dir:"gt",u:"%"},
+             {k:"live_stay",label:"直播停留(已停播)",v:0,t:0,dir:"gt",u:"s"},
+             {k:"live_cvr",label:"直播成交率(已停播)",v:0,t:0,dir:"gt",u:"%"} ],
+      joint:[{k:"c2ctr",label:"内容→商品点击率",v:0.052,t:0.040,dir:"gt",u:"%"},
+             {k:"c2cvr",label:"内容→成交转化率",v:0.0014,t:0.0012,dir:"gt",u:"%"},
+             {k:"new_repurchase",label:"新客复购率",v:0.07,t:0.15,dir:"gt",u:"%"}] },
+    fiveA:{
+      A1:{label:"了解",people:210000,new_people:8000,rate_to_next:0.11},
+      A2:{label:"吸引",people:23100,new_people:900,rate_to_next:0.14},
+      A3:{label:"种草",people:3234,new_people:120,rate_to_next:0.10},
+      A4:{label:"购买",people:323,new_people:31,rate_to_next:0.07},
+      A5:{label:"忠诚",people:412,new_people:2,rate_to_next:null} },
+    fiveA_source:{
+      short_video:{A1:60000,A2:5200,A3:620,A4:40},
+      live:{A1:0,A2:0,A3:0,A4:0},
+      search:{A1:90000,A2:11000,A3:1800,A4:180},
+      shop_card:{A1:60000,A2:6900,A3:814,A4:103},
+      kol:{A1:0,A2:0,A3:0,A4:0} },
+    node_outputs:{ 1:{new_material_target:0,organic_asset_keep_count:6},
+                   2:{qianchuan_mode:"stopped",live_wind_down:{sessions_per_week:0,mode:"stopped"}},
+                   4:{residual_authenticity_gate:{natural_traffic_verified:true,pass:true},bleed_gate:{negative_comment_ratio:0.06,pass:true}},
+                   5:{migration_target_sku:"SKU_葱伴侣黄豆酱_新装260g",a5_migrate_ready:0.62} },
+    gate_result:{ gate:"Gate4", gate4_verdict:"stoploss_hold",
+      hard_redline:{experience_score:4.6,brand_residual_risk_score:0.2,pass:true},
+      chain:{ residual_signal:{natural_gmv:38000,card_gmv_share:0.71,pass:true},
+              cost_squeeze:{new_spend:0,live_sessions:0,new_material_count:0,squeeze_executed:true,pass:true},
+              bleed_control:{negative_comment_ratio:0.06,refund_rate_actual:0.05,pass:true},
+              migration_ready:{migration_target_sku:"SKU_葱伴侣黄豆酱_新装260g",a5_migrate_ready:0.62,pass:true} },
+      stoploss_timer:{max_stoploss_hold_cycles:4,cycle_unit:"investment_cycle",current_hold_cycle:1,must_rejudge_after_cycle:true},
+      options:["stoploss_hold","refresh_restart","retire_archive"], structural_decline:false,
+      formula_note:"cost_squeeze.pass 必须在先·没关掉付费引擎不许判 stoploss_hold" },
+    human_gate_actions:[{k:"砍投(负贡献即砍)",amt:0,irr:true},{k:"焕新重启",amt:0,irr:true}] },
+  renewal: { id:"XHS-HR-YJ", spu:"SPU_禾然有机", name:"禾然有机酱油", stage:"renewal",
+    scene:{crowd:"儿童家庭",scene:"给孩子做饭",pain:"配料表看不懂",reason:"有机·零添加",priority:"高",status:"测试中"},
+    metrics:[ {k:"play_3s_rate",label:"重启封面点击率",v:0.29,t:0.20,dir:"gt"},
+              {k:"product_ctr",label:"商销点击率",v:0.07,t:0.05,dir:"gt"},
+              {k:"a5_wakeup",label:"老客唤醒率",v:0.14,t:0.10,dir:"gt"},
+              {k:"restart_roi",label:"重启ROI",v:1.25,t:1.0,dir:"gt"} ],
+    ledger3:{
+      seed:[ {k:"exposure",label:"曝光量",v:640000,raw:810000,t:400000,dir:"gt",u:""},
+             {k:"retain_3s",label:"封面点击(去假后)",v:0.29,t:0.20,dir:"gt",u:"%"},
+             {k:"completion",label:"阅读完成率",v:0.27,t:0.24,dir:"gt",u:"%"},
+             {k:"interact",label:"互动率",v:0.055,t:0.040,dir:"gt",u:"%"},
+             {k:"collect",label:"收藏率",v:0.036,t:0.030,dir:"gt",u:"%"},
+             {k:"comment_howto",label:"评论「怎么用」占比",v:0.28,t:0.20,dir:"lt",u:"%"},
+             {k:"content_ctr",label:"内容带出商品点击率",v:0.048,t:0.050,dir:"gt",u:"%"},
+             {k:"search_growth",label:"搜索增长",v:0.21,t:0.10,dir:"gt",u:"%"},
+             {k:"new_a3",label:"新增A3人群",v:5200,t:4000,dir:"gt",u:""},
+             {k:"cpa3",label:"CPA3",v:7.0,t:8,dir:"lt",u:"¥"},
+             {k:"new_pull",label:"新客拉新率",v:0.46,t:0.40,dir:"gt",u:"%"},
+             {k:"post_search",label:"看后搜率",v:0.019,t:0.012,dir:"gt",u:"%"},
+             {k:"iq",label:"互动质量CES(正向占比)",v:0.70,t:0.65,dir:"gt",u:"%"} ],
+      sell:[ {k:"product_ctr",label:"商销点击率",v:0.048,t:0.050,dir:"gt",u:"%"},
+             {k:"add_cart",label:"加购率",v:0.030,t:0.028,dir:"gt",u:"%"},
+             {k:"cvr",label:"成交转化率",v:0.022,t:0.020,dir:"gt",u:"%"},
+             {k:"gmv",label:"GMV",v:96000,t:60000,dir:"gt",u:"¥"},
+             {k:"aov",label:"客单价",v:66,t:55,dir:"gt",u:"¥"},
+             {k:"refund_rate",label:"退款率",v:0.05,t:0.08,dir:"lt",u:"%"},
+             {k:"good_review",label:"好评率",v:0.95,t:0.92,dir:"gt",u:"%"},
+             {k:"repurchase",label:"复购率",v:0.11,t:0.10,dir:"gt",u:"%"},
+             {k:"live_stay",label:"直播停留",v:61,t:50,dir:"gt",u:"s"},
+             {k:"live_cvr",label:"直播成交率",v:0.026,t:0.020,dir:"gt",u:"%"} ],
+      joint:[{k:"c2ctr",label:"内容→商品点击率",v:0.048,raw:0.038,t:0.050,dir:"gt",u:"%"},
+             {k:"c2cvr",label:"内容→成交转化率",v:0.0011,t:0.0010,dir:"gt",u:"%"},
+             {k:"new_repurchase",label:"新客复购率",v:0.11,t:0.10,dir:"gt",u:"%"}] },
+    fiveA:{
+      A1:{label:"了解",people:640000,new_people:210000,rate_to_next:0.16},
+      A2:{label:"吸引",people:102400,new_people:31000,rate_to_next:0.15},
+      A3:{label:"种草",people:15360,new_people:5200,rate_to_next:0.10},
+      A4:{label:"购买",people:1536,new_people:520,rate_to_next:0.14},
+      A5:{label:"忠诚",people:215,new_people:72,rate_to_next:null} },
+    fiveA_source:{
+      short_video:{A1:380000,A2:58000,A3:8200,A4:700},
+      live:{A1:110000,A2:22000,A3:4100,A4:520},
+      search:{A1:70000,A2:12000,A3:2200,A4:200},
+      shop_card:{A1:50000,A2:7400,A3:800,A4:110},
+      kol:{A1:30000,A2:3000,A3:60,A4:6} },
+    node_outputs:{ 1:{root_cause_type:"material_fatigue",matched_action:"new_material_restart"},
+                   2:{qianchuan_mode:"controlled_restart",budget:4000,creative_source:"历史高ROI素材",a5_usage:"private_recall_only",qianchuan_note:"聚光不圈老客包"},
+                   4:{relapse_check:{same_pattern_detected:false,pass:true}},
+                   5:{a5_wakeup_rate:0.14,early_repurchase_signal:true} },
+    gate_result:{ gate:"Gate-R", gate_r_verdict:"back_to_growth", internal_status:null,
+      hard_redline:{experience_score:4.6,refund_rate:0.05,pass:true},
+      options:["back_to_growth","retire_archive"], internal_status_options:["stay_renewal_fix"],
+      root_cause_resolved:true, relapse_free:true, renewal_attempt_count:1, max_renewal_attempts:2 },
+    human_gate_actions:[{k:"焕新采买(controlled_restart)",amt:4000,irr:false},{k:"二次淘汰",amt:0,irr:true}] },
+  retire : { id:"XHS-ZXZR-DIS", spu:"SPU_遵循自然", name:"遵循自然零添加(停产装)", stage:"retire",
+    scene:{crowd:"存量忠诚客",scene:"—",pain:"—",reason:"—",priority:"低",status:"暂停"},
+    no_new_task:true,
+    metrics:[ {k:"member_migration",label:"忠诚迁移率",v:0.28,t:0.20,dir:"gt"},
+              {k:"settlement_done",label:"三件套结清",v:1,t:1,dir:"gt"},
+              {k:"archive_kept",label:"归档不删",v:1,t:1,dir:"gt"} ],
+    ledger3:{
+      seed:[ {k:"exposure",label:"曝光量(残余)",v:42000,t:0,dir:"gt",u:""},
+             {k:"retain_3s",label:"封面点击(去假后)",v:0.12,t:0,dir:"gt",u:"%"},
+             {k:"completion",label:"阅读完成率",v:0.15,t:0,dir:"gt",u:"%"},
+             {k:"interact",label:"互动率",v:0.008,t:0,dir:"gt",u:"%"},
+             {k:"collect",label:"收藏率",v:0.004,t:0,dir:"gt",u:"%"},
+             {k:"comment_howto",label:"评论「怎么用」占比",v:0.05,t:0.20,dir:"lt",u:"%"},
+             {k:"content_ctr",label:"内容带出商品点击率",v:0.020,t:0,dir:"gt",u:"%"},
+             {k:"search_growth",label:"搜索增长",v:-0.40,t:-1,dir:"gt",u:"%"},
+             {k:"new_a3",label:"新增A3人群(归零)",v:0,t:0,dir:"gt",u:""},
+             {k:"cpa3",label:"CPA3(零投放)",v:0,t:9,dir:"lt",u:"¥"},
+             {k:"post_search",label:"看后搜率",v:0.001,t:0,dir:"gt",u:"%"},
+             {k:"iq",label:"互动质量CES(正向占比)",v:0.60,t:0,dir:"gt",u:"%"} ],
+      sell:[ {k:"product_ctr",label:"商销点击率",v:0.020,t:0,dir:"gt",u:"%"},
+             {k:"add_cart",label:"加购率",v:0.010,t:0,dir:"gt",u:"%"},
+             {k:"cvr",label:"成交转化率",v:0.012,t:0,dir:"gt",u:"%"},
+             {k:"gmv",label:"清尾GMV",v:4200,t:0,dir:"gt",u:"¥"},
+             {k:"aov",label:"客单价",v:44,t:0,dir:"gt",u:"¥"},
+             {k:"refund_rate",label:"退款率",v:0.03,t:0.08,dir:"lt",u:"%"},
+             {k:"good_review",label:"好评率",v:0.93,t:0.90,dir:"gt",u:"%"},
+             {k:"repurchase",label:"忠诚迁移率",v:0.28,t:0.20,dir:"gt",u:"%"},
+             {k:"live_stay",label:"直播停留(永久停播)",v:0,t:0,dir:"gt",u:"s"},
+             {k:"live_cvr",label:"直播成交率(永久停播)",v:0,t:0,dir:"gt",u:"%"} ],
+      joint:[{k:"c2ctr",label:"内容→商品点击率",v:0.020,t:0,dir:"gt",u:"%"},
+             {k:"c2cvr",label:"内容→成交转化率",v:0.0006,t:0,dir:"gt",u:"%"},
+             {k:"new_repurchase",label:"忠诚迁移率",v:0.28,t:0.20,dir:"gt",u:"%"}] },
+    fiveA:{
+      A1:{label:"了解",people:42000,new_people:0,rate_to_next:0.08},
+      A2:{label:"吸引",people:3360,new_people:0,rate_to_next:0.10},
+      A3:{label:"种草",people:336,new_people:0,rate_to_next:0.09},
+      A4:{label:"购买",people:30,new_people:0,rate_to_next:0.28},
+      A5:{label:"忠诚",people:186,new_people:0,rate_to_next:null,migrating:true} },
+    fiveA_source:{
+      short_video:{A1:12000,A2:900,A3:80,A4:6},
+      live:{A1:0,A2:0,A3:0,A4:0},
+      search:{A1:18000,A2:1500,A3:180,A4:16},
+      shop_card:{A1:12000,A2:960,A3:76,A4:8},
+      kol:{A1:0,A2:0,A3:0,A4:0} },
+    node_outputs:{ 1:{videos_delisted_or_hidden:true,records_kept_queryable:true},
+                   2:{live_permanently_stopped:true,star_kol_contracts_closed:true,outstanding_payment:0},
+                   3:{product_card_delisted:true,douyin_shop_sku_removed:true},
+                   5:{migration_target_sku:"SKU_禾然有机酱油_500ml",migrated_member_rate:0.28} },
+    gate_result:{ gate:"Gate-T", gate_t_verdict:"terminal_archive", options:["terminal_archive"],
+      delist_checklist:{content_delisted:true,spend_settled:true,live_permanently_stopped:true,kol_contracts_closed:true,product_card_delisted:true,shop_sku_removed:true,inventory_cleared:true},
+      archive:{keep_record:true,"delete":false,lessons_to_memory:["品类结构性下滑未及时转型","直播模型失效后重启过晚"],reusable_assets_retained:["高胜率素材","A5老客包","SEO词"]},
+      terminal:true, archive_delete:false, reactivation_forbidden:true, reactivation_requires_new_sku_id:true, hitl_required:true },
+    human_gate_actions:[{k:"下架归档(delete=false)",amt:0,irr:true},{k:"不可复活确认",amt:0,irr:true}] }
+};
+function curSKU(){ return MOCK_DATA[S.stage]; }
+const SKU = new Proxy({}, { get:(_,k)=> curSKU()[k] });
+
+const STAGES = {
+  import:{ name:"导入期", tail:"算法冷启·内容拦人·初步成交", invest:"投流小额冷启·防未验证烧钱(工具:聚光)", gate:"Gate1",
+    verdict:"opp", vtext:"冷启要抓", field:"笔记脚本 / 3秒钩子 / 商销笔记绑定",
+    guard:{ name:"假流量门+互动质量门+体验分门(硬红线)", items:["刷量播放不算·疑刷量→未判级","体验分/退款/差评=毕业硬红线(低了限流)"] },
+    chain:[["内容拦人",1],["算法冷启",1],["初步成交",1],["成本可控",1]],
+    nodes:["笔记/直播/商销笔记数据上报(N0 Triage)","笔记脚本+3秒钩子+完播结构","达人测试+投流小额冷启(二级来源:蒲公英/纯佣/聚光)","商销笔记/商销店铺承接(站内闭环)","假流量+互动质量+体验分门","A1/A2冷启+种子池沉淀","Gate1:四判+体验红线才毕业"],
+    ring:5, inc:40 },
+  growth:{ name:"成长期", tail:"放量·直播起量·A3→A4", invest:"投流放量+高意向人群再验证≥80%", gate:"Gate2",
+    verdict:"opp", vtext:"放量验守线", field:"素材矩阵 / 直播排期 / 种子池再营销",
+    guard:{ name:"放量衰减门+有效人群门", items:["放量后ROI衰减≤0.30·超限冻结加投回滚","泛流量≤20%不算有效放大·ROI双线(止损1.0/进成熟1.2)"] },
+    chain:[["笔记放量",1],["直播起量",1],["转化验证",1],["ROI守线",1]],
+    nodes:["含投流回流数据上报(N0)","validated hook批量二创+防疲劳","投流放量(种子池再营销)+直播排期","直播/笔记/商销笔记三入口承接","假流量+有效人群+放量衰减+体验门","A3→A4转化+种子池刷新","Gate2:放大后效率仍成立才毕业"],
+    ring:5, inc:50 },
+  mature:{ name:"成熟期", tail:"守利收忠·自然成交接棒", invest:"投放收口20-25%·只留高ROI", gate:"Gate3",
+    verdict:"ok", vtext:"稳守现金牛", field:"稳定素材 / 商销笔记SEO / 会员私域",
+    guard:{ name:"直播依赖门+组合防内耗", items:["直播占比≤0.55·付费直播≤0.40(增长是租来的?)","同品牌SKU人群重叠≤0.45·投流抬价→升品类会诊"] },
+    chain:[["利润守线",1],["三入口稳定",1],["忠诚沉淀",1],["效率稳定",1]],
+    nodes:["三入口成交/罗盘数据上报(N0)","稳定复用+疲劳监测+轻刷新","投放收口:砍低效计划(不可逆HITL)","可归因贡献利润+商销笔记占比提升","直播依赖+疲劳+组合内耗+体验门","A4→A5+复购+LTV+私域","Gate3五出口:守/收/焕/退/淘"],
+    ring:5, inc:60, verdictOut:"stable_keep" },
+  decline:{ name:"衰退期", tail:"停投停播·榨残值·Gate4", invest:"默认停投·残值复投=例外", gate:"Gate4",
+    verdict:"ok", vtext:"止损维持", field:"Always-on存量 / 商销笔记SEO词",
+    guard:{ name:"止损计时+残值真实性门", items:["stoploss_hold最长4投放周期·到期必重裁","先关付费引擎才判残值·假残值(刷单撑的)不算"] },
+    chain:[["残值成立",1],["成本挤干",1],["止血守线",1],["迁移就绪",1]],
+    nodes:["残值GMV/退款差评上报(N0)","停新产·保Always-on存量","默认停投·停播降频·残值复投=例外必核定","仅守ROI维持线·商销笔记残值为主体","止血门+残值真实性门+体验门","榨存量·A5/私域迁移→替代SKU","Gate4退出裁决(先关引擎才判)"],
+    ring:5, inc:0, verdictOut:"stoploss_hold" },
+  renewal:{ name:"焕新期", tail:"带资产二次导入·根因门", invest:"投30-60%·controlled_restart", gate:"Gate-R",
+    verdict:"opp", vtext:"根因已解·重启", field:"根因匹配动作(6类)",
+    guard:{ name:"根因门(6类)+失败复检", items:["素材疲劳→新素材重启·直播模型失效→脚本重启·体验/价盘→升一层","焕新≤2次·同雷再踩即停(relapse_stoploss)"] },
+    chain:[["根因已解",1],["内容重启",1],["成交信号",1],["成本守线",1]],
+    nodes:["吃refresh_restart带资产入口(N0)","过根因门→按根因匹配动作","老客包→私域/会员召回+内容洞察 · 投流(聚光)仅用历史高ROI素材受控重启","商销笔记/直播货盘重验承接","假流量+失败复检(同雷不再踩)+体验门","唤醒A5老客/私域+种子池重建","Gate-R:根因解+链再成立+≤2次"],
+    ring:5, inc:40, note:"焕新第 1/2 次" },
+  retire:{ name:"淘汰期", tail:"收尾三件套·归档不删·不可复活", invest:"零投放·永久停播", gate:"Gate-T",
+    verdict:"ok", vtext:"体面收尾", field:"下架checklist(七项)",
+    guard:{ name:"收尾三件套+不可复活", items:["停播/停投结清/达人合同结清+商销笔记撤+商销店铺下架","delete=false·教训入memory·重启须开新SKU ID"] },
+    chain:[["停播结清",1],["商品下架",1],["忠诚迁移",1],["归档终态",1]],
+    nodes:["吃retire_archive入口(N0)","全停新产·存量视频下架(保留可查)","停投结清+合同关闭+永久停播","商销笔记撤+商销店铺SKU下架+清库存","下架期负评止血","A5/私域/粉丝迁移→替代SKU(例外四层)","Gate-T终态:checklist七项+不可复活"],
+    ring:5, inc:0, verdictOut:"terminal_archive" }
+};
+const ORDER = ["import","growth","mature","decline","renewal","retire"];
+
+/* ---------------- STATE ---------------- */
+const S = {
+  stage:"import", role:"seed_kol", tab:"today",
+  budget:15000, pending:[], history:[], hGot:0, done:false,
+  ringLit:{}, metricEdited:{}, ledgerEdited:{}, triageJson:null,
+  tasks:[], tid:0, sop:[], jOpen:{}, show5ASrc:false, hs:{}, n3Edited:{}, sopOpen:{}, attrOpen:null,
+  calib:true
+};
+
+/* ---------------- helpers ---------------- */
+function toast(msg,kind){
+  const w=document.getElementById('tw');const d=document.createElement('div');
+  d.className='toast'+(kind?' '+kind:'');d.textContent=msg;w.appendChild(d);
+  requestAnimationFrame(()=>d.classList.add('show'));
+  setTimeout(()=>{d.classList.remove('show');setTimeout(()=>d.remove(),260);},2600);
+}
+function fmt(v){ if(v>=1000)return v.toLocaleString(); if(v<1&&v>0)return v.toString(); return v; }
+function fmtU(v,u){
+  if(u==='%') return (v*100).toFixed(Math.abs(v)<0.01?2:1)+'%';
+  if(u==='¥') return '¥'+v.toLocaleString();
+  if(u==='s') return v+'s';
+  return v>=1000?v.toLocaleString():String(v);
+}
+function curMetrics(){
+  const ms=curSKU().metrics;const ov=S.metricEdited[S.stage]||{};
+  return ms.map(m=>{
+    const v=(m.k in ov)?ov[m.k]:m.v;
+    const pass=m.dir==="lt"?(v<m.t):(v>=m.t);      // 判级恒用校准值(MUST:算差前先去假)
+    const show=(!S.calib && m.raw!=null)?m.raw:v;
+    return {...m,v,show,pass,inflated:(!S.calib&&m.raw!=null)};
+  });
+}
+function gatePass(){
+  const metricPass = curMetrics().every(m=>m.pass);
+  const gr = curSKU().gate_result||{};
+  const redline = gr.hard_redline ? gr.hard_redline.pass===true : true;
+  if(S.stage==='decline'){
+    const c=gr.chain||{};
+    return metricPass && redline
+      && c.residual_signal?.pass===true
+      && c.cost_squeeze?.pass===true && c.cost_squeeze?.squeeze_executed===true
+      && c.bleed_control?.pass===true
+      && c.migration_ready?.pass===true;
+  }
+  if(S.stage==='renewal'){
+    return metricPass && redline && gr.root_cause_resolved===true && gr.relapse_free===true;
+  }
+  return metricPass && redline;
+}
+
+/* ---------------- 三本账 · 计算层 ---------------- */
+function led(){
+  const L=curSKU().ledger3; const ov=S.ledgerEdited[S.stage]||{};
+  const wrap=(arr,group)=>arr.map((m,i)=>{
+    const v=(m.k in ov)?ov[m.k]:m.v;
+    const pass=m.dir==='lt'?(v<m.t):(v>=m.t);            // 判级恒用校准值
+    const show=(!S.calib&&m.raw!=null)?m.raw:v;           // 去假前露 raw 虚高
+    return {...m,group,i,v,show,pass,inflated:(!S.calib&&m.raw!=null)};
+  });
+  return {seed:wrap(L.seed,'seed'),sell:wrap(L.sell,'sell'),joint:wrap(L.joint,'joint')};
+}
+function ledMap(){ const l=led(); const m={}; [...l.seed,...l.sell,...l.joint].forEach(x=>{ if(!(x.k in m)) m[x.k]=x; }); return m; }
+function ruleFires(r){ const m=ledMap(); try{ return r.when(m); }catch(e){ return false; } }
+function firedRules(){
+  const m=ledMap();                       // MUST:恒用去假后的校准值
+  if(curSKU().no_new_task) return [];     // 淘汰期不派新任务(只走收尾三件套)
+  return RULES.filter(r=>{ try{ return r.when(m); }catch(e){ return false; } });
+}
+function jLight(node){
+  const m=ledMap(); const ks=node.keys.filter(k=>m[k]);
+  if(!ks.length) return 'g';
+  const p=ks.filter(k=>m[k].pass).length;
+  return p===ks.length?'g':(p===0?'r':'y');
+}
+function bumpKpi(k){
+  const m=ledMap()[k]; if(!m) return null;
+  const nv = m.dir==='lt' ? +(m.t*0.85).toFixed(4) : +(m.t*1.15).toFixed(4);
+  S.ledgerEdited[S.stage]=S.ledgerEdited[S.stage]||{}; S.ledgerEdited[S.stage][k]=nv;
+  return {label:m.label,nv,u:m.u};
+}
+
+/* ---------------- N1↔N2 强制握手(修改3) ---------------- */
+function hsState(){ if(!S.hs[S.stage]) S.hs[S.stage]={seed:false,sell:false}; return S.hs[S.stage]; }
+function hsExempt(){ return S.stage==='decline'||S.stage==='retire'; }
+function hsPass(){ if(hsExempt()) return true; const h=hsState(); return h.seed&&h.sell; }
+function hsConfirm(side){
+  if(hsExempt()){ toast("本阶段停投·握手不适用(new_spend_allowed=false)","warn"); return; }
+  const okSeed=['seed_kol','ops','mgr'], okSell=['commerce_kol','live_room','ops','mgr'];
+  if(side==='seed' && okSeed.indexOf(S.role)<0){ toast("种草岗确认只能由 种草笔记岗/作战官/主管 点(permission_boundary)","red"); return; }
+  if(side==='sell' && okSell.indexOf(S.role)<0){ toast("卖货岗确认只能由 带货/直播岗/作战官/主管 点(permission_boundary)","red"); return; }
+  const h=hsState();
+  if(h[side]){ toast("该侧已确认过(留痕不可撤·要改走主管)","warn"); return; }
+  h[side]=true;
+  if(S.tab==='pipe') renderPipe();
+  toast(hsPass()?"🤝 N1↔N2 握手完成 · N2 采买通道解锁(内容与投放=一件事)":"已确认一侧 · 等另一侧确认(内容没绑投放策略,不准花钱)", hsPass()?"go":"warn");
+}
+function hsCard(){
+  if(hsExempt()) return `<div class="card" id="cardHS" style="border-left:3px solid var(--rule)">
+    <div class="ph" style="margin:0">🤝 N1↔N2 联合策略握手 · <span class="gv fail">本阶段不适用</span></div>
+    <div class="hint" style="margin-top:6px">${STAGES[S.stage].name}默认停投/零采买 · 任何例外采买直接进 HUMAN_GATE_QUEUE,不走握手。</div></div>`;
+  const h=hsState(), sc=curSKU().scene||{}, fa=curSKU().fiveA, no=curSKU().node_outputs||{};
+  const hypo=(no[1]&&(no[1].hook_3s||no[1].validated_hook))||STAGES[S.stage].field;
+  const pass=hsPass();
+  return `<div class="card" id="cardHS" style="border-left:3px solid ${pass?'var(--go)':'var(--red)'}">
+    <div class="ph" style="margin:0 0 8px">🤝 N1↔N2 联合策略握手卡(事前联合决策·非事后交接) <span class="gv ${pass?'pass':'fail'}" data-hsstate>${pass?'已握手·N2解锁':'未握手·不准进入N2投放'}</span></div>
+    <div class="row" data-hsl="scene" onclick="setTab('dual');flashEl('#cardScene');toast('🎯 打谁在场景池定(双前线屏) · 握手卡的内容假设从这来','go')" style="cursor:pointer"><span>SKU / 人群 / 场景 <span style="color:var(--blue);font-size:9px">↘场景池</span></span><span class="mono" style="font-size:9.5px">${SKU.id} · ${sc.crowd} · ${sc.scene}</span></div>
+    <div class="row"><span>内容假设(为什么能种草)</span><span class="mono" style="font-size:9.5px">${hypo}</span></div>
+    <div class="row" data-hsl="a3" onclick="setTab('today');flashEl('#cardSeedQuality');toast('🌱 A3目标落在种草质量小卡(新增A3/CPA3) · 达标=种草笔记岗战功','go')" style="cursor:pointer"><span>目标:本期新增 A3 <span style="color:var(--blue);font-size:9px">↘种草质量</span></span><span class="mono">+${fa.A3.new_people.toLocaleString()}</span></div>
+    <div class="row"><span>达人类型</span><span class="mono" style="font-size:9.5px">${HS_KOL[S.stage]}</span></div>
+    <div class="row"><span>投放方式(二级来源)</span><span class="mono" style="font-size:9px;max-width:55%;text-align:right">${N2_SOURCES.slice(0,6).join("/")}</span></div>
+    <div class="row" data-hsl="budget" onclick="setTab('ledger');flashEl('#cardCost');toast('💸 预算在一本账费用下钻对账 · 涉钱/超额进HITL','go')" style="cursor:pointer"><span>预算 / 站内承接(N3) <span style="color:var(--blue);font-size:9px">↘费用下钻</span></span><span class="mono">¥${S.budget.toLocaleString()} · ${n3Pass()?'已就绪':'⛔未就绪'}</span></div>
+    <div style="margin-top:9px">
+      <button class="btn sm ${h.seed?'go':''}" data-hs="seed" onclick="hsConfirm('seed')">${h.seed?'✓ 种草岗已确认':'种草岗确认'}</button>
+      <button class="btn sm ${h.sell?'go':'o'}" data-hs="sell" onclick="hsConfirm('sell')" style="margin-left:6px">${h.sell?'✓ 卖货岗已确认':'卖货岗确认'}</button>
+    </div>
+    <div class="hint" style="margin-top:8px">规则:①无联合确认不准进N2投放 ②内容没绑投放策略不准花钱 ③投放没绑内容假设不准加投 ④A3目标没写清不准放量 · 涉钱/超额仍进HITL</div>
+  </div>`;
+}
+/* ---------------- N3 站内承接检查表(修改8) ---------------- */
+function n3Items(){
+  const ov=S.n3Edited[S.stage]||{};
+  return N3_CHECK.map((c,i)=>({i,name:c[0],cons:c[1],pass:(i in ov)?ov[i]:true}));
+}
+function n3Pass(){ return n3Items().every(x=>x.pass); }
+function toggleN3(i){
+  const ov=S.n3Edited[S.stage]=S.n3Edited[S.stage]||{};
+  const cur=(i in ov)?ov[i]:true; ov[i]=!cur;
+  if(S.tab==='pipe') renderPipe();
+  const it=n3Items()[i];
+  toast(it.pass?("✓ "+it.name+" 已修复"+(n3Pass()?" · N3全过·允许进N2加投":"")) : ("⛔ "+it.name+" 未过 → "+it.cons+" · N3未过不准进N2加投"), it.pass?"go":"red");
+}
+function n3Card(){
+  const items=n3Items(); const p=n3Pass();
+  return `<div class="card" id="cardN3" style="border-left:3px solid ${p?'var(--go)':'var(--red)'}">
+    <div class="ph" style="margin:0 0 7px">🛒 N3 站内承接检查表(九项·点行翻转演示) <span class="gv ${p?'pass':'fail'}" data-n3state>${p?'全过·可加投':'未过·不准进N2加投'}</span></div>
+    ${items.map(x=>`<div class="chk" data-n3="${x.i}" onclick="toggleN3(${x.i})"><span>${x.name}<br><span class="hint" style="margin:0">${x.cons}</span></span><span class="cst ${x.pass?'p':'f'}">${x.pass?'✓ 过':'⛔ 未过'}</span></div>`).join('')}
+    <div class="hint" style="margin-top:7px">规则:N3未过不准进N2加投 · 商销笔记未绑定不准花钱 · 库存不足不准放量 · 购买路径断不准直播加热</div>
+  </div>`;
+}
+/* ---------------- 判定公式卡(修改6) ---------------- */
+function formulaRows(){
+  const fm=FORMULA_MOCK[S.stage];
+  const ex=led().seed.find(m=>m.k==='exposure');
+  const fake=(ex&&ex.raw!=null)?+( (ex.raw-ex.v)/ex.raw ).toFixed(3):0.03;
+  const fat=fm.fatigue;
+  const fatPass=(fat.reuse<=4)&&(fat.days<=3);
+  return [
+    {k:"fake",nm:"假流量率",f:"疑似无效播放 / 总播放",cur:(fake*100).toFixed(1)+"%",thr:"≤35%",pass:fake<=0.35,act:"超线→打flag未判级+清洗(TypeB),不进算差"},
+    {k:"crowd",nm:"有效人群率",f:"目标人群A2/A3 / 总A2/A3",cur:(fm.valid_crowd*100).toFixed(0)+"%",thr:"≥80%",pass:fm.valid_crowd>=0.80,act:"泛流量>20%→收紧定向,不算有效放大"},
+    {k:"decay",nm:"放量衰减率",f:"放量后ROI / 放量前ROI − 1",cur:(fm.decay*100).toFixed(0)+"%",thr:"≥−30%",pass:fm.decay>=-0.30,act:"超限→冻结加投·回滚·回N1更新素材"},
+    {k:"fatigue",nm:"素材疲劳率",f:"连续N日CTR/GPM下滑 + 素材复用次数",cur:"下滑"+fat.days+"日·复用"+fat.reuse+"次",thr:"下滑≤3日 且 复用≤4次",pass:fatPass,act:"疲劳→轻刷新素材·砍低效计划(不可逆走HITL)"}
+  ];
+}
+function fxAction(k){
+  const r=formulaRows().find(x=>x.k===k); if(!r)return;
+  toast((r.pass?"✓ ":"⛔ ")+r.nm+" 当前 "+r.cur+"(阈值 "+r.thr+") · 动作:"+r.act, r.pass?"go":"red");
+}
+function formulaCard(){
+  return `<div class="card" id="cardFormula">
+    <div class="ph" style="margin:0 0 8px">🧮 判定公式卡(公式/阈值/当前值/判定/动作 · 点卡看动作)</div>
+    ${formulaRows().map(r=>`<div class="fx ${r.pass?'':'bad'}" data-fx="${r.k}" onclick="fxAction('${r.k}')">
+      <div class="fh">${r.nm} <span class="gv ${r.pass?'pass':'fail'}">${r.pass?'绿':'红'}</span><span class="mono" style="margin-left:auto;font-size:11px">${r.cur}</span></div>
+      <div class="ff">${r.f} · 阈值 ${r.thr} · 动作:${r.act}</div></div>`).join('')}
+    <div class="hint">公式=业务侧可见的门(假流量/有效人群/放量衰减/疲劳) · 判级恒用去假后值</div>
+  </div>`;
+}
+/* ---------------- 费用下钻(修改9) ---------------- */
+function costDrillCard(){
+  const c=COST_DRILL[S.stage]; const total=c.rows.reduce((a,r)=>a+r[1],0);
+  const remain=total-c.spent;
+  return `<div class="card" id="cardCost">
+    <div class="ph" style="margin:0 0 8px">💸 一本账 · 费用下钻(自播/达人/投流/直播/BGC · 示意口径)</div>
+    ${c.rows.map(r=>`<div class="row" data-cost="${r[0]}" onclick="costWhy('${r[0]}')" style="cursor:pointer"><span>${r[0]} <span style="color:var(--blue);font-size:9px">↘谁花·哪个模式</span></span><span class="mono">¥${r[1].toLocaleString()}</span></div>`).join('')}
+    <div class="row"><span><b>花费进度</b></span><span class="mono">¥${c.spent.toLocaleString()} / ¥${total.toLocaleString()}(剩 ¥${remain.toLocaleString()})</span></div>
+    <div class="hint" style="margin-top:7px"><span class="badge money">模式A·逐笔审批</span> 投流加投/达人采买/直播加热 → 每笔进HITL<br>
+    <span class="badge st">模式B·预算池</span> BGC内容池/方舟操盘(已一次性规划)→ 池内动态·超池才进HITL</div>
+    <div class="ph" style="margin:10px 0 6px">📈 防误杀趋势(ROI未达标但趋势爬升→不直接砍·进绿色通道复核)</div>
+    ${c.trend.map(t=>`<div class="row" data-trend="${t[0]}" onclick="trendWhy('${t[0]}')" style="cursor:pointer"><span>${t[0]} <span style="color:var(--blue);font-size:9px">↘</span></span><span class="mono" style="color:${t[2]==='↗'?'var(--go)':(t[2]==='↘'?'var(--red)':'var(--slate)')}">${t[1]} ${t[2]}</span></div>`).join('')}
+  </div>`;
+}
+/* ---------------- 三岗 SOP 模板 M11(修改2) ---------------- */
+function sopStepOf(ref){
+  const sp=SOPS.find(x=>x.id===ref.id); if(!sp)return null;
+  const st=sp.steps.find(x=>x.s===ref.s); if(!st)return null;
+  return {sop:sp,st};
+}
+function sopRefLabel(ref){
+  const x=sopStepOf(ref); if(!x)return "";
+  return x.sop.nm+" Step"+ref.s+" "+x.st.env;
+}
+function sopRefGo(rid,idx){
+  const r=RULES.find(x=>x.id===rid); if(!r||!r.sopref)return;
+  const ref=r.sopref[idx]; const x=sopStepOf(ref); if(!x)return;
+  S.sopOpen[ref.id]=true;
+  if(S.tab==='task') renderTask();
+  toast("📖 "+r.id+" 回到 "+x.sop.nm+"("+TEAM[x.sop.owner]+") · Step"+ref.s+" "+x.st.env+" · Input:"+x.st.i+" → "+x.st.p,"go");
+}
+function toggleSop(id){
+  S.sopOpen[id]=!S.sopOpen[id];
+  if(S.tab==='task') renderTask();
+  toast(S.sopOpen[id]?"展开 SOP · 每步 Input/Process/Output/KPI/决策":"收起 SOP");
+}
+function sopModule(){
+  const mine = (S.role==='ops'||S.role==='mgr') ? SOPS : SOPS.filter(x=>x.owner===S.role);
+  let list = mine.length?mine:SOPS; // joint 任务视角兜底
+  /* 跨岗查看:归因卡跳来的别岗 SOP(已展开的)强制可见,标注跨岗 */
+  SOPS.forEach(sp=>{ if(S.sopOpen[sp.id] && list.indexOf(sp)<0) list=list.concat([{...sp,cross:true}]); });
+  return `<div class="card" id="cardSOP">
+    <div class="ph" style="margin:0 0 8px">📖 <b>M11 三岗 SOP 模板</b>(泡面级·照着做) · 当前视角只看${(S.role==='ops'||S.role==='mgr')?'三岗一条龙':'本岗'}</div>
+    ${list.map(sp=>{
+      const open=S.sopOpen[sp.id];
+      return `<div class="rule" data-sop="${sp.id}" style="border-left-color:var(--blue)">
+        <div class="rh" onclick="toggleSop('${sp.id}')" style="cursor:pointer">${sp.nm} <span class="badge ${sp.owner}">${TEAM[sp.owner]}</span><span class="badge">${sp.range}</span><span class="badge">${sp.steps.length}步</span>${sp.cross?'<span class="badge money">跨岗查看</span>':''} ${open?'▴':'▾'}</div>
+        ${open?sp.steps.map(st=>`<div class="sopstep" data-sopstep="${sp.id}-${st.s}" onclick="event.stopPropagation();stepWhy('${sp.id}',${st.s})" style="cursor:pointer">
+          <div class="st1">Step ${st.s} · ${st.env} <span style="color:var(--blue);font-size:9px">↘KPI落点</span></div>
+          <div class="st2">Input:${st.i} → Process:${st.p} → Output:${st.o}<br>KPI:${st.k} · 决策:${st.d}</div>
+        </div>`).join(''):''}
+      </div>`;
+    }).join('')}
+    <div class="hint">SOP 决策枚举 = ${JSON.stringify(SOP_DECISIONS)} · 涉钱步骤(达人合作/邀约/加热)派发即进HITL · 复盘步=验果(结果指标动没动)</div>
+  </div>`;
+}
+
+/* ---------------- 5A 人群资产渲染 ---------------- */
+function fiveABar(){
+  const fa=curSKU().fiveA; const keys=["A1","A2","A3","A4","A5"];
+  const arrows={A1:"A1→A2",A2:"A2→A3",A3:"A3→A4",A4:"A4→A5"};
+  return `<div style="display:flex;flex-direction:column;gap:0">`+keys.map((k,i)=>{
+    const a=fa[k];
+    const rate=a.rate_to_next!=null?`${arrows[k]} ${(a.rate_to_next*100).toFixed(0)}%`:"—";
+    return `<div class="row" data-fa="${k}" onclick="fiveAJump('${k}')" style="cursor:pointer;border-bottom:${i<4?'1px solid var(--rule)':'none'}">
+      <span><b class="mono" style="color:var(--blue)">${k}</b> ${a.label}</span>
+      <span class="mono" style="font-size:11px">${a.people.toLocaleString()} <span style="color:var(--go)">+${a.new_people.toLocaleString()}</span> · <span style="color:var(--amber-deep)">${rate}</span></span>
+    </div>`;
+  }).join("")+`</div>`;
+}
+function fiveASrcTable(){
+  const src=curSKU().fiveA_source;
+  const head=`<div class="row" style="font-family:var(--mono);font-size:9.5px;color:var(--slate)"><span>来源</span><span>A1 / A2 / A3 / A4</span></div>`;
+  return head+Object.keys(src).map(k=>{
+    const v=src[k];
+    return `<div class="row" data-fsrc="${k}"><span>${A5A_SOURCE_LABEL[k]}</span>
+      <span class="mono" style="font-size:10px">${v.A1.toLocaleString()} / ${v.A2.toLocaleString()} / ${v.A3.toLocaleString()} / ${v.A4.toLocaleString()}</span></div>`;
+  }).join("");
+}
+function toggle5ASrc(){
+  S.show5ASrc=!S.show5ASrc;
+  const w=document.getElementById('fiveASrcWrap'); if(w)w.style.display=S.show5ASrc?'block':'none';
+  const b=document.getElementById('btn5ASrc'); if(b)b.textContent=S.show5ASrc?'收起来源拆分':'▾ 5A 来源拆分(A3 谁种的·A4 谁转的)';
+  toast(S.show5ASrc?"5A 来源拆分:知道 A3 是谁种出来的、A4 是谁转化出来的":"已收起来源拆分");
+}
+
+/* ---------------- render: strip / head ---------------- */
+function renderStrip(){
+  const el=document.getElementById('strip');el.innerHTML='';
+  ORDER.forEach(k=>{const st=STAGES[k];const on=k===S.stage?' on':'';
+    el.insertAdjacentHTML('beforeend',
+      `<div class="sstep${on}" data-stg="${k}" onclick="setStage('${k}')">${st.name}<small>${MOCK_DATA[k].id}</small></div>`);
+  });
+}
+function renderHead(){
+  const st=STAGES[S.stage];
+  document.getElementById('bigline').textContent=`${st.name} · ${st.tail}`;
+  const fl=CHANNEL.frontlines[S.role]||{nm:"主管",def:"品类层核定"};
+  document.getElementById('who').innerHTML=`${CHANNEL.who}·<span id="whoRole">${fl.nm}</span> <small>${CHANNEL.name} · ${CHANNEL.axis}</small>`;
+  const g=gatePass(); const fr=firedRules().length;
+  document.getElementById('second').innerHTML=
+    `${st.invest} · 判据 <b>${st.gate}</b> · <b>${g?'四判全绿':'有未达标'}</b> · 规则红灯 <b>${fr}</b> 条${st.note?' · '+st.note:''}`;
+}
+
+/* ---------------- TODAY tab ---------------- */
+function renderToday(){
+  const st=STAGES[S.stage];const ms=curMetrics();const g=gatePass();const L=led();
+  const vcls=st.verdict==='ok'?'o':(st.verdict==='opp'?'o':'');
+  const out=st.verdictOut?`<span class="sku tag">${st.verdictOut}</span>`:'';
+  let mh=ms.map((m,i)=>`<div class="metric ${m.inflated?'':(m.pass?'ok':'bad')}" data-mi="${i}" onclick="openAttr('${m.k}')">
+     <span class="editpen" data-edit="${i}" onclick="event.stopPropagation();editMetric(${i})">✎</span>
+     <div class="mk">${m.label}${m.inflated?' <span style="color:#a8433a">含刷量</span>':''}</div><div class="mv">${fmt(m.show)}</div>
+     <div class="mt">目标 ${m.dir==='lt'?'<':'≥'}${fmt(m.t)} · ${m.inflated?'去假前·不判级':(m.pass?'达标':'未达标')} · <span style="color:var(--blue)">点=为什么/收入</span></div></div>`).join('');
+  const attrH=(S.attrOpen&&ms.some(m=>m.k===S.attrOpen))?attrCard():'';
+  const grr=curSKU().gate_result||{};
+  let chain=st.chain.map((c,i)=>{const p=ms[i]?ms[i].pass:g;
+    const clk=ms[i]?` data-chain="${i}" onclick="openAttr('${ms[i].k}')" style="cursor:pointer"`:'';
+    return `<div class="cnode ${p?'p':'f'}"${clk}><b>${p?'✓':'…'}</b>${c[0]}</div>`;}).join('');
+  if(grr.hard_redline) chain+=`<div class="cnode ${grr.hard_redline.pass?'p':'f'}" data-chain="redline" onclick="jumpRedline()" style="cursor:pointer"><b>${grr.hard_redline.pass?'✓':'⛔'}</b>硬红线·体验</div>`;
+  const gd=st.guard?`<div class="card" id="cardGuard" onclick="jumpGuard()" style="margin-bottom:12px;border-left:3px solid var(--blue);cursor:pointer">
+      <div class="ph" style="margin:0 0 7px">🚪 本阶段专属门 · <b>${st.guard.name}</b> <span style="color:var(--blue);font-size:10px;font-weight:400">点=看公式/阈值(N0–N6判定公式卡)</span></div>
+      ${st.guard.items.map(x=>`<div class="hint" style="margin-top:3px">· ${x}</div>`).join('')}
+    </div>`:'';
+  const calibBtn=`<button class="btn sm o" id="btnCalibToday" onclick="toggleCalib()">${S.calib?'👁 看去假前(含刷量)':'✓ 去假后(TypeB)·判级用它'}</button>`;
+  const escBtn=!g?`<button class="btn sm" id="btnEsc" onclick="escalate()" style="margin-left:6px">↑ 升一层(关不了·品类会诊)</button>`:'';
+  const gateLabel=st.gate==='终态'?'终态裁决':st.gate+' 判据';
+  const gv=st.gate==='终态'?`<span class="gv pass">${st.verdictOut||'terminal'}</span>`
+    :(g?`<span class="gv pass">${st.verdictOut||'pass'}</span>`:`<span class="gv fail">未过·留本期修</span>`);
+  const jm=L.joint.map(m=>`<div class="metric ${m.pass?'ok':'bad'}" style="flex:1 1 30%" data-jk="${m.k}" onclick="openAttr('${m.k}')">
+      <div class="mk">${m.label}</div><div class="mv">${fmtU(m.show,m.u)}</div>
+      <div class="mt">${m.pass?'连上了':'断了'} · <span style="color:var(--blue)">点=两侧归因</span></div></div>`).join('');
+  const fr=firedRules();
+  document.getElementById('scroll').innerHTML=`
+    <div class="ph">📋 一级屏 1 · 今日 <span class="badge">M1 今日运营</span> · 系统按<b>病危&gt;机会·主推优先·快见效优先</b>排清单 · 生命周期=<b>${st.name}</b></div>
+    <div class="card hot sku">
+      <div><span class="nm">${SKU.name}</span><span class="sku tag ${vcls}">${st.vtext}</span>${out}</div>
+      <div class="act">本阶段动作 · ${st.nodes[1]}</div>
+      <div class="line">🎯 定标↓ 这SKU目标从 <b>北极星→JBP→品类</b> 一层层下来 · 字段(按阶段切)：<b>${st.field}</b></div>
+      <div class="mrow">${mh}</div>
+      ${attrH}
+      <div class="hint" style="margin-bottom:7px">🧪 算差前先去假(蝴蝶TypeB)：${calibBtn}</div>
+      <div class="hint">🔗 <b>联动链</b>:指标块→归因卡(为什么/收入)→回SOP步(怎么改)→派任务→复盘验果→固化SOP→激励值 · <b>本屏从上到下=环转一圈</b>:定标↓(目标行)→量实/算差(四块+判据链)→交接(联合账/5A)→关差入口(专属门)→验果(环五步)<br>👆 点指标块=<b>差值归因卡</b> · 点判据链/5A行/专属门/字段卡=各自联动 · 点角落<b>✎</b>=改数值 → ${st.gate} 实时重判(演示"算差"是真的)</div>
+      <div class="gate" id="gateBox">
+        <div class="gh">⚖️ ${gateLabel} ${gv}</div>
+        <div class="chain">${chain}</div>
+        <div class="hint">验果=看上层标动没动(A1-A2资产/可归因GMV真升),非"发了几条"</div>
+        ${escBtn?'<div style="margin-top:9px">'+escBtn+'</div>':''}
+      </div>
+      <div class="foot ${S.done?'done':''}">
+        <span class="inc">${S.done?'已落袋 +':'全做对预计 +'}${st.inc} 激励值</span>
+        <button class="btn sm" id="btnSettle" onclick="settle()">▸ 模拟数据回流·真判级</button>
+      </div>
+      ${S.done?'<div class="line" style="margin-top:9px">✅ 验果上溯：本SKU标达成 → 品类层 <b>A认知资产 上移</b>(连接律·上一层标动了)</div>':''}
+    </div>
+    <div class="card jointc" id="cardJointHealth">
+      <div class="ph" style="margin:0 0 7px">🔀 双主线连接体检 · 联合账三 KPI(第一版只看这三个)</div>
+      <div class="mrow">${jm}</div>
+      <div id="jointAttr">${(S.attrOpen&&ATTR[S.attrOpen]&&ATTR[S.attrOpen].joint)?attrCard():''}</div>
+      <div class="hint" style="margin-top:8px">种草组让用户「想买」· 卖货组让用户「现在买」· <b>联合账验证「想买」有没有真的变成「买了且还会再买」</b></div>
+      <div class="hint">🚨 规则型 Agent V0.1 当前红灯 <b>${fr.length}</b> 条 → 去「任务/复盘」屏看断点与派发</div>
+    </div>
+    <div class="card" id="card5A">
+      <div class="ph" style="margin:0 0 7px">👥 5A 人群资产 · <b>今天不是只看 GMV,是看 A1→A4 有没有往前走</b></div>
+      ${fiveABar()}
+      <div class="hint" style="margin-top:7px">数据源:灵犀 5A(接口位 <b>MOCK_DATA.fiveA</b> · 演示假水)${curSKU().fiveA.A5.migrating?' · ⚠ A5 忠诚人群迁移中→替代SKU':''}</div>
+      <div style="margin-top:8px"><button class="btn xs o" id="btn5ASrc" onclick="toggle5ASrc()">${S.show5ASrc?'收起来源拆分':'▾ 5A 来源拆分(A3 谁种的·A4 谁转的)'}</button></div>
+      <div id="fiveASrcWrap" style="display:${S.show5ASrc?'block':'none'};margin-top:8px">${fiveASrcTable()}</div>
+    </div>
+    <div class="card seedc" id="cardSeedQuality">
+      <div class="ph" style="margin:0 0 7px">🌱 种草质量小卡(不让 App 偏成交轴)</div>
+      <div class="mrow">${['new_a3','cpa3','post_search','iq'].map(k=>{const m=ledMap()[k];if(!m)return '';
+        return `<div class="metric ${m.pass?'ok':'bad'}" data-sq="${k}" onclick="openAttr('${k}')"><div class="mk">${m.label}</div><div class="mv">${fmtU(m.show,m.u)}</div><div class="mt">目标 ${m.dir==='lt'?'<':'≥'}${fmtU(m.t,m.u)} · <span style="color:var(--blue)">点=为什么/收入</span></div></div>`;}).join('')}</div>
+      <div id="sqAttr">${(S.attrOpen&&['new_a3','cpa3','post_search','iq'].indexOf(S.attrOpen)>=0)?attrCard():''}</div>
+      <div class="hint" style="margin-top:7px">CPA3 = 达人/投放费用 ÷ 新增A3人群量 · 看后搜率 = 看后搜次数 ÷ 播放量(口径见「量实」屏口径表)</div>
+    </div>
+    <div class="card" id="cardStageOps" onclick="jumpDict()" style="cursor:pointer">
+      <div class="ph" style="margin:0 0 7px">🧾 ${STAGES[S.stage].name} · 运营反馈专属字段(HCD补全) <span style="color:var(--blue);font-size:10px;font-weight:400">点=看口径表(量实屏)</span></div>
+      ${STAGE_OPS[S.stage].map(x=>`<div class="hint" style="margin-top:3px">· ${x}</div>`).join('')}
+    </div>
+    ${gd}
+    <div class="card">
+      <div class="ph" style="margin:0 0 8px">🔁 环 · 当前阶段五步(点亮=已跑到)</div>
+      <div class="ring" id="ring"></div>
+      <div class="hint">定标↓ → 量实↑ → 算差(去刷量假·TypeB) → 关差 → 验果</div>
+    </div>
+    <div class="card" id="cardScreenMap">
+      <div class="ph" style="margin:0 0 8px">🗺 口径 · <b>屏 = 一级导航入口</b> · <b>模块 = 屏内业务功能块</b></div>
+      <div class="hint" style="margin-bottom:6px">App V0.3 共 <b>7 个一级主屏</b> + <b>11 个业务模块</b>。不设 10 个一级屏。</div>
+      ${SCREENS.map(sc=>`<div class="row" data-screen="${sc.id}"><span>一级屏 ${sc.no} · ${sc.nm}</span><span class="mono" style="font-size:9px;max-width:52%;text-align:right">${sc.mods.join(" / ")}</span></div>`).join("")}
+      <div class="hint" style="margin-top:7px">今日 = 一线当天要做什么 · 驾驶舱 = 主管/作战官看全局与核定(两屏不重复,不叫「总驾驶舱」)</div>
+      <div class="hint" id="m11note" style="margin-top:5px"><b>M11 三岗 SOP 模板</b> 属于第 6 屏「任务/复盘」,<b>不新增第 8 屏</b>:① 达人种草 SOP A1→A3 ② 带货达人 SOP A3→A5 ③ 直播间 SOP A3→A5(HCD反馈的泡面级作业层,与 M9「做什么」/M10「有没有效」分工:M11 = 每岗一步一步怎么做)</div>
+    </div>`;
+  renderRing();
+}
+function renderRing(){
+  const el=document.getElementById('ring');if(!el)return;
+  const steps=["定标↓","量实↑","算差","关差","验果"];
+  const lit=S.ringLit[S.stage]||0;
+  el.innerHTML=steps.map((s,i)=>`<div class="rstep ${i<lit?'lit':''}" data-ri="${i}" onclick="stepRing(${i})">${s}</div>`).join('');
+}
+
+/* ---------------- DUAL tab (双前线 · 经营七节点 J0-J6) ---------------- */
+function renderDual(){
+  const f=CHANNEL.frontlines; const sc=curSKU().scene||{};
+  let h=`<div class="ph">⚔️ 一级屏 2 · <b>双前线 · J0–J6 经营旅程</b> · 这一屏是「每天怎么打仗」,不是技术管道 · 那点差异(Autonomy第②处)</div>
+    <div class="consumer">
+      <div class="ch">📣 三岗作战卡 · 团队层两队,一线层三岗(岗≠队:运营方式/KPI/环境不同,一个岗做不了两件事)</div>
+      <div class="cthree">
+        <div class="c" data-post="seed_kol" onclick="postJump('seed_kol')" style="cursor:pointer"><div class="ct">种草笔记岗</div><div class="cs">${f.seed_kol.team} · ${f.seed_kol.range}<br>${f.seed_kol.out}<br><span style="color:#a9c4ff">点=本岗SOP+战功指标</span></div></div>
+        <div class="c" data-post="commerce_kol" onclick="postJump('commerce_kol')" style="cursor:pointer"><div class="ct">买手带货岗</div><div class="cs">${f.commerce_kol.team} · ${f.commerce_kol.range}<br>${f.commerce_kol.out}<br><span style="color:#a9c4ff">点=本岗SOP+战功指标</span></div></div>
+        <div class="c" data-post="live_room" onclick="postJump('live_room')" style="cursor:pointer"><div class="ct">店播直播岗</div><div class="cs">${f.live_room.team} · ${f.live_room.range}<br>${f.live_room.out}<br><span style="color:#a9c4ff">点=本岗SOP+战功指标</span></div></div>
+      </div>
+      <div class="ch" style="margin-top:8px" data-opsrow onclick="opsJump()" >作战官 / 主管 · 一条龙看 N0–N6 协同、核定、复盘 · <span style="color:#a9c4ff;cursor:pointer">点=去驾驶舱</span></div>
+    </div>
+    <div class="card" id="cardScene" onclick="sceneJump()" style="cursor:pointer">
+      <div class="ph" style="margin:0 0 7px">🎯 <b>J0</b> 人群场景池 <span class="badge">M2</span>(本SKU绑定) <span style="color:var(--blue);font-size:10px;font-weight:400">点=去N1↔N2握手卡(内容假设从这来)</span></div>
+      <div class="row"><span>人群 / 场景</span><span class="mono">${sc.crowd} / ${sc.scene}</span></div>
+      <div class="row"><span>痛点</span><span class="mono">${sc.pain}</span></div>
+      <div class="row"><span>购买理由</span><span class="mono">${sc.reason}</span></div>
+      <div class="row"><span>优先级 / 状态</span><span class="mono">${sc.priority} / ${sc.status}</span></div>
+      <div class="hint" style="margin-top:6px">绑定 SKU：<b>${SKU.id}</b> · ${SKU.name}</div>
+    </div>
+    <div class="ph">🚦 <b>J0–J6 经营旅程</b>(消费者旅程 · 非引擎槽)· 红黄绿由<b>去假后</b>指标实时算 · 点开看两条线各自的任务</div>`;
+  JOURNEY.forEach((n,i)=>{
+    const lt=jLight(n); const open=S.jOpen[n.j]?' show':'';
+    const m=ledMap();
+    const kv=n.keys.filter(k=>m[k]).map(k=>`<span class="badge ${m[k].pass?'done':'rej'}" data-jkey="${n.j}-${k}" onclick="event.stopPropagation();jumpMetric('${k}')" style="cursor:pointer">${m[k].label} ${fmtU(m[k].show,m[k].u)} ↘</span>`).join(' ');
+    const rchips=firedRules().filter(r=>r.node===n.j).map(r=>`<span class="badge money" data-jrule="${n.j}-${r.id}" onclick="event.stopPropagation();attrGoSop('${r.sopref[0].id}',${r.sopref[0].s},'${r.nm}')" style="cursor:pointer">${r.id} ${r.a5a} → 回SOP</span>`).join(' ');
+    const rs=firedRules().filter(r=>r.node===n.j);
+    h+=`<div class="jn" data-j="${n.j}" onclick="toggleJ('${n.j}')">
+      <div class="jh"><span class="jc">${n.j}</span><span class="jt">${n.nm}</span><span class="badge" data-mod="${n.j}">${n.mod.split(' ')[0]}</span>
+        ${rs.length?`<span class="badge money">红灯 ${rs.length}</span>`:''}
+        <span class="lamp ${lt}" data-lamp="${n.j}"></span></div>
+      <div class="jbody${open}" id="jb${n.j}">
+        <div class="hint">业务模块：<b>${n.mod}</b> · 映射引擎槽：<b>${n.slot}</b><br>J=经营旅程(人怎么打仗) · N=引擎槽(数据怎么流) · 两者<b>映射但不可混用</b></div>
+        <div class="jrow">
+          <div class="jcell seed"><div class="jk">种草任务</div><div class="jv">${n.seed}</div></div>
+          <div class="jcell sell"><div class="jk">卖货任务</div><div class="jv">${n.sell}</div></div>
+        </div>
+        <div class="hint" style="margin-top:7px">量此节点的指标(点=账本原位)：${kv||'—'}</div>
+        ${rchips?`<div class="hint" style="margin-top:5px">断点归因(点=直落该岗SOP那一步)：${rchips}</div>`:''}
+        <div style="margin-top:8px"><button class="btn xs" data-diag="${n.j}" onclick="event.stopPropagation();diagnose('${n.j}')">🔎 诊断本节点</button></div>
+      </div>
+    </div>`;
+  });
+  h+=`<div class="card"><div class="hint">🔒 BEA 决策门：J0–J6 状态灯与任务生成<b>全部能写死</b>(阈值+IF-THEN)→ <b>Workflow·分类→路由</b>,不是 Agent。<br>V0.1 = <b>规则型 Agent 原型</b>,不宣称完整 AI Agent;建议型②/行动型③等真数据回流(V0.2/V0.3)再做 · <b>loop_spec = N/A</b></div></div>`;
+  document.getElementById('scroll').innerHTML=h;
+}
+function toggleJ(j){
+  S.jOpen[j]=!S.jOpen[j];
+  const el=document.getElementById('jb'+j); if(el) el.classList.toggle('show');
+  toast(S.jOpen[j]?j+" 展开 · 看两条线各自的任务":j+" 收起");
+}
+function diagnose(j){
+  const rs=firedRules().filter(r=>r.node===j);
+  const n=JOURNEY.find(x=>x.j===j);
+  if(!rs.length){ toast("✓ "+j+" "+n.nm+" 无断点(该节点判据全部达标)","go"); return; }
+  toast("🚨 "+j+" 断点 "+rs.length+" 条："+rs.map(r=>r.nm+"("+r.a5a+"→"+(r.sopref&&r.sopref[0]?sopRefLabel(r.sopref[0]):"")+")").join("、")+" → 任务中心可派发","red");
+}
+
+/* ---------------- PIPELINE tab (引擎槽 N0-N6 + Artifacts) ---------------- */
+const NODEDEF=[
+  {n:"N0",nm:"数据上报 Triage",money:0},
+  {n:"N1",nm:"内容/素材计划",money:0,posts:"种草笔记岗主导 · 带货/直播岗共创货盘"},
+  {n:"N2",nm:"达人/投流/直播排期",money:1,posts:"三岗共用采买通道(过握手后)"},
+  {n:"N3",nm:"站内承接(卡/店/播)",money:0,posts:"带货/直播岗主责 · 商品运营协同"},
+  {n:"N4",nm:"质量可信门",money:0,posts:"作战官主责(三岗数据汇口)"},
+  {n:"N5",nm:"人群资产/迁移",money:0},
+  {n:"N6",nm:"判级/裁决",money:0}
+];
+function n6Verdict(){
+  const st=S.stage, g=gatePass();
+  const gr=curSKU().gate_result;
+  const passKey={import:"gate1_pass",growth:"gate2_pass",mature:"gate3_pass",decline:null,renewal:null,retire:null}[st];
+  const l=led();
+  const base={ sku_id:SKU.id, spu_id:SKU.spu, lifecycle_stage:st, channel:"xhs", calibrated:true,
+    threshold_mode:"mock_baseline", calibration_required:true,
+    calibration_by:["category","price_band","video_length","traffic_source"],
+    dual_line:{ seed_pass:l.seed.every(m=>m.pass), sell_pass:l.sell.every(m=>m.pass), joint_pass:l.joint.every(m=>m.pass) },
+    fiveA_snapshot:{ A1:curSKU().fiveA.A1.people, A2:curSKU().fiveA.A2.people, A3:curSKU().fiveA.A3.people, A4:curSKU().fiveA.A4.people, A5:curSKU().fiveA.A5.people },
+    fiveA_breaks:firedRules().map(r=>r.a5a),
+    sop_bindings:firedRules().map(r=>({rule:r.id,back_to:(r.sopref||[]).map(sopRefLabel)})),
+    agent_red_lights:firedRules().map(r=>r.id),
+    mock_gate_pass:(passKey?gr[passKey]:true), live_gate_pass:g };
+  if(st==='import')  return {...base, ...gr, gate1_pass:g, next_stage:g?"growth":"stay_import"};
+  if(st==='growth')  return {...base, ...gr, gate2_pass:g, next_stage:g?"mature":"stay_growth",
+    roi_rule:"<1.0止损·1.0-1.2留修·≥1.2进成熟"};
+  if(st==='mature')  return {...base, ...gr, gate3_pass:g, gate3_verdict:g?"stable_keep":"stable_reduce_spend",
+    next_action:g?"stay_mature_next_cycle":"harvest_mode"};
+  if(st==='decline') return {...base, ...gr, gate4_verdict:g?"stoploss_hold":"refresh_restart"};
+  if(st==='renewal') return {...base, ...gr,
+    gate_r_verdict:g?"back_to_growth":null, internal_status:g?null:"stay_renewal_fix"};
+  return {...base, ...gr};
+}
+function nodeIO(i){
+  const st=S.stage, stg=STAGES[st], ms=curMetrics(), no=curSKU().node_outputs||{};
+  const IO=[
+    { Input:"笔记/直播/商销笔记/投流数据上报", Process:"路由→归一 SKU/字段·假流量打flag",
+      Output:{ channel:"xhs", lifecycle_stage:st, sku_id:SKU.id, spu_id:SKU.spu, calibrated:true }, Next:"N1 / N4 / N6" },
+    { Input:"N0.Output + 品类定标↓", Process:st==='import'?"3秒钩子+完播结构+商销笔记绑定":(st==='renewal'?"过根因门→按根因匹配动作":stg.nodes[1]),
+      Output:{ lifecycle_stage:st, field:stg.field, journey_slot:"J0/J1", ...(no[1]||{}) }, Next:"N2 / N3" },
+    { Input:"N1.Output(素材/脚本)", Process:st==='decline'?"默认停投·停播降频·残值复投=例外":(st==='retire'?"停投结清+合同关闭+永久停播":"达人/投流策略→采买/排期(二级来源见N2)"),
+      Output:{ lifecycle_stage:st, ...(no[2]||{spend_actual:0}), hitl_required:true }, Next:"N3" },
+    { Input:"N1+N2.Output", Process:st==='retire'?"商销笔记撤+商销店铺下架+清库存":"站内闭环承接(卡/店/播)",
+      Output:{ lifecycle_stage:st, channel_type:"in_app_closed_loop", journey_slot:"J4", ...(no[3]||{landing:ms.slice(0,2).reduce((a,m)=>(a[m.k]=m.v,a),{})}) }, Next:"N4" },
+    { Input:"N3.Output + 互动/订单回流", Process:"假流量门(TypeB)+ "+(stg.guard?stg.guard.name:"体验门"),
+      Output:{ lifecycle_stage:st, fake_traffic_gate:{pass:true}, guard:stg.guard?stg.guard.name:"—", journey_slot:"J2/J3/J5", ...(no[4]||{}) }, Next:"N5" },
+    { Input:"N4.Output", Process:st==='retire'?"A5/私域迁移→替代SKU(例外四层)":(st==='mature'?"A4→A5+复购+LTV":(st==='decline'?"榨存量+迁移准备":"5A人群+种子池")),
+      Output:{ lifecycle_stage:st, journey_slot:"J6", ...(no[5]||{pass:true}) }, Next:"N6" },
+    { Input:"N0…N5 全链回流(去假后)", Process:"算差→"+stg.gate+" 判级→裁决/分流",
+      Output:n6Verdict(), Next:n6Next() }
+  ];
+  return IO[i];
+}
+function n6Next(){
+  const st=S.stage,g=gatePass();
+  if(st==='import')return g?"→ 成长期 N0":"留导入期修(关差定位断步)";
+  if(st==='growth')return g?"→ 成熟期 N0(ROI≥1.2)":"留成长期修/止损";
+  if(st==='mature')return g?"→ 继续成熟(stable_keep)":"五出口分流(HITL)";
+  if(st==='decline')return "止损维持(计时4周期)/焕新/淘汰(全HITL)";
+  if(st==='renewal')return g?"→ 回成长期":"留本期修(internal_status)/次数用尽→淘汰";
+  return "终态·无出口(不可复活·重启须新SKU ID)";
+}
+function artFor(i){
+  const io=nodeIO(i);
+  return "// Input:  "+io.Input+"\n// Process:"+io.Process+"\n// Next:   "+io.Next+"\n"+JSON.stringify({Output:io.Output},null,1);
+}
+function renderPipe(){
+  const st=STAGES[S.stage];
+  let h=`<div class="ph">🔗 一级屏 3 · <b>N0–N6 引擎槽</b>(系统处理管道·非经营旅程)· <b>${SKU.id}</b> · lifecycle_stage=<b>${S.stage}</b> · 上一个 Output = 下一个 Input<br><span style="font-weight:400;font-size:10px">🔗 本屏=<b>数据怎么流</b>:两道闸(N1↔N2握手·N3承接表)+一张数学(判定公式)+一张翻译(J↔N) · 每槽标了<b>数从哪来→到哪去</b>,点↘即切</span></div>`;
+  NODEDEF.forEach((nd,i)=>{
+    h+=`<div class="node" data-node="${i}" onclick="toggleArt(${i})">
+      <div class="nh"><span class="nn">${nd.n}</span><span class="nr">${nd.nm}</span>
+        ${nd.money?'<span class="money">涉钱·HITL</span>':''}</div>
+      <div class="nd">${st.nodes[i]}${nd.posts?'<br><span style="color:var(--blue)">三岗:'+nd.posts+'</span>':''}${i===2?'<br><span style="color:var(--amber-deep)">二级来源:'+N2_SOURCES.join(' / ')+'</span>':''}<br><span class="badge" data-nlink="${nd.n}" onclick="event.stopPropagation();nLinkGo('${nd.n}')" style="cursor:pointer;color:var(--blue)">${N_LINK[nd.n].lbl}</span></div>
+      <div class="art" id="art${i}"><pre>${colorJson(artFor(i))}</pre></div>
+    </div>`;
+    if(i===3)h+=n3Card();
+    if(i<6)h+=`<div class="arrow">↓ Artifact</div>`;
+    if(i===1)h+=hsCard()+`<div class="arrow">↓ 握手Artifact(双方确认→N2解锁)</div>`;
+  });
+  h+=formulaCard();
+  h+=`<div class="card" id="cardJNMap">
+    <div class="ph" style="margin:0 0 8px">🔀 J ↔ N 映射表(<b>映射但不可互相改名</b>)</div>
+    ${JN_MAP.map(x=>`<div class="row" data-jn="${x.n}" onclick="jnJump('${x.n}')" style="cursor:pointer"><span><b>${x.n}</b> ${x.sys} <span style="color:var(--blue);font-size:9px">↘</span></span><span class="mono" style="font-size:9px;max-width:52%;text-align:right">${x.j}</span></div>`).join('')}
+    <div class="hint" style="margin-top:7px">旧写法「N0 人群场景 / N1 内容商品 / N2 兴趣测试…」<b>已废止</b> → 那是 <b>J0–J6 经营旅程</b>,不是引擎槽。</div>
+  </div>
+  <div class="card"><div class="hint">🔒 全 Workflow(建设①规则型)· Agent三件套不全(环境反馈loop缺 + 涉钱走HITL)→ <b>loop_spec=N/A</b> · N6.Output 现已带 <b>dual_line</b> 与 <b>agent_red_lights</b>,把双主线结果硬连接到判级</div></div>`;
+  document.getElementById('scroll').innerHTML=h;
+}
+function colorJson(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/^(\/\/.*)$/gm,'<span class="ic">$1</span>')
+    .replace(/"([^"]+)":/g,'<span class="k">"$1"</span>:')
+    .replace(/: ?"([^"]*)"/g,': <span class="v">"$1"</span>')
+    .replace(/: ?(true)/g,': <span class="g">$1</span>')
+    .replace(/: ?(false)/g,': <span class="r">$1</span>');
+}
+function toggleArt(i){ const a=document.getElementById('art'+i); if(a)a.classList.toggle('show'); }
+
+/* ---------------- COLLECT tab ---------------- */
+function renderCollect(){
+  const d=CHANNEL.dialect;
+  document.getElementById('scroll').innerHTML=`
+    <div class="ph">🔍 一级屏 4 · 量实↑ · 平台机采为主(商销罗盘/聚光/蒲公英) + 人工补 · <b>N0 Triage</b>(引擎槽入口)<br><span style="font-weight:400;font-size:10px">🔗 本屏=<b>环的第二步·信息脉络最弱处</b>:先冻结口径(口径表)→数据进门先去假(TypeB)→归一到账本原位 · 6开关=渠道翻译器,每个开关落到哪本账、算谁的战功,点↘即见</span></div>
+    <div class="consumer">
+      <div class="ch">📣 6开关 · 小红书口径翻译(Autonomy第①处 · 换渠道只换这翻译)</div>
+      <div class="cthree" style="flex-wrap:wrap">
+        <div class="c" style="flex:1 1 30%" data-dial="陈列" onclick="dialectJump('陈列')" style2="" ><div class="ct">陈列 <span style="color:#a9c4ff;font-size:9px">↘</span></div><div class="cs">${d.陈列}</div></div>
+        <div class="c" style="flex:1 1 30%" data-dial="动销" onclick="dialectJump('动销')" style2="" ><div class="ct">动销 <span style="color:#a9c4ff;font-size:9px">↘</span></div><div class="cs">${d.动销}</div></div>
+        <div class="c" style="flex:1 1 30%" data-dial="认知" onclick="dialectJump('认知')" style2="" ><div class="ct">认知 <span style="color:#a9c4ff;font-size:9px">↘</span></div><div class="cs">${d.认知}</div></div>
+        <div class="c" style="flex:1 1 30%" data-dial="有货" onclick="dialectJump('有货')" style2="" ><div class="ct">有货 <span style="color:#a9c4ff;font-size:9px">↘</span></div><div class="cs">${d.有货}</div></div>
+        <div class="c" style="flex:1 1 30%" data-dial="复购" onclick="dialectJump('复购')" style2="" ><div class="ct">复购 <span style="color:#a9c4ff;font-size:9px">↘</span></div><div class="cs">${d.复购}</div></div>
+        <div class="c" style="flex:1 1 30%" data-dial="口碑" onclick="dialectJump('口碑')" style2="" ><div class="ct">口碑 <span style="color:#a9c4ff;font-size:9px">↘</span></div><div class="cs">${d.口碑}</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ph" style="margin:0 0 9px" id="cardTriage">🎙 一句话上报 → 系统解析成标准结构(接 库存上报Skill·N0)</div>
+      <textarea class="ta" id="talk" placeholder="像平时那样发一句，例：减盐款3秒率32%，直播GPM 650，某条视频疑似刷量，体验分4.7，评论都在问怎么用"></textarea>
+      <div style="margin-top:9px"><button class="btn sm" id="btnTriage" onclick="doTriage()">⚙ 解析成结构</button>
+        <span class="hint">演示解析·真实接 POST /intake/triage?channel=xhs&stage=${S.stage}</span></div>
+      <div class="art ${S.triageJson?'show':''}" id="triageOut">${S.triageJson?'<pre>'+colorJson(S.triageJson)+'</pre>':''}</div>
+      <div id="triageLinks">${S.triageJson?triageLinkChips():''}</div>
+    </div>
+    <div class="card" id="cardMetricDict">
+      <div class="ph" style="margin:0 0 8px">📏 指标口径表(分子/分母/取数范围/周期/目标来源 · 修改5)</div>
+      ${METRIC_DICT.map(r=>`<div class="row" data-dict="${r[0]}" onclick="dictJump('${r[0]}')" style="align-items:flex-start;cursor:pointer"><span style="flex:0 0 34%"><b>${r[0]}</b> <span style="color:var(--blue);font-size:9px">↘用在哪</span><br><span class="hint" style="margin:0">${r[4]} · ${r[5]}</span></span><span class="mono" style="font-size:9.5px;text-align:right;max-width:64%">${r[1]} ÷ ${r[2]}<br>范围:${r[3]}</span></div>`).join('')}
+      <div class="hint" style="margin-top:7px">口径先冻结再取数:目标值=大盘均值+自身历史(可实时校正),不是上架定死。</div>
+    </div>
+    <div class="card" id="cardCalib" onclick="calibJumpN4()" style="cursor:pointer">
+      <div class="ph" style="margin:0 0 6px">🧪 洗量校准(蝴蝶TypeB) · 算差前先去假 <span style="color:var(--blue);font-size:10px;font-weight:400">点=看假流量公式(N4门)</span></div>
+      <div class="hint">去刷量播放/异常订单/机器人：疑假流量→打flag未判级 · 放量衰减→冻结加投 · <b>假流量不算·假残值不算</b></div>
+      <div class="hint" style="margin-top:6px">⚠️ 刷量让<b>种草账</b>好看,却让<b>联合账</b>(内容→点击/成交)更难看 → 所以判级恒用去假后值</div>
+    </div>`;
+}
+function triageLinkChips(){
+  let j; try{ j=JSON.parse(S.triageJson); }catch(e){ return ''; }
+  const chips=[];
+  (j.items||[]).forEach((it,ix)=>{
+    if(it.field && ledMap()[it.field]) chips.push(`<span class="badge done" data-tgo="f-${it.field}" onclick="triageGo('field','${it.field}')" style="cursor:pointer">${it.type} ↘账本原位</span>`);
+    if(it.rule_hit) chips.push(`<span class="badge money" data-tgo="r-${it.rule_hit}" onclick="triageGo('rule','${it.rule_hit}')" style="cursor:pointer">${it.rule_hit} 命中 ↘回SOP</span>`);
+    if(it.flag) chips.push(`<span class="badge rej" data-tgo="flag" onclick="triageGo('flag')" style="cursor:pointer">${it.type} ↘假流量门</span>`);
+  });
+  return chips.length?`<div class="hint" style="margin-top:7px">信号落点(点=切过去):${chips.join(' ')}</div>`:'';
+}
+function doTriage(){
+  const t=(document.getElementById('talk').value||'').trim();
+  const seed=t||"减盐款3秒率32%完播涨了，直播GPM 650，某条视频疑似刷量，体验分4.7，评论都在问怎么用";
+  const items=[];
+  if(/刷量|机器人|异常订单|bot/i.test(seed)) items.push({type:"疑似假流量",flag:"low_trust",note:"未判级(假流量门拦·TypeB)"});
+  if(/竞品|抢量|竞价|千禾|海天/.test(seed)) items.push({type:"竞品竞价压力",gate:"portfolio/竞价监测",risk:"competitor_bid_pressure"});
+  let m2=seed.match(/GPM\s*([\d.]+)/i); if(m2) items.push({type:"直播GPM上报",value:parseFloat(m2[1]),field:"live_gpm",line:"sell"});
+  m2=seed.match(/3\s*秒率?\s*([\d.]+)/); if(m2) items.push({type:"3秒率上报",value:parseFloat(m2[1]),field:"retain_3s",line:"seed"});
+  m2=seed.match(/体验分\s*([\d.]+)/); if(m2) items.push({type:"体验分上报",value:parseFloat(m2[1]),field:"experience_score",note:"硬红线字段",line:"sell"});
+  if(/完播/.test(seed)) items.push({type:"完播信号",field:"completion",line:"seed"});
+  if(/怎么用|不会用|教程/.test(seed)) items.push({type:"评论「怎么用」聚集",field:"comment_howto",line:"joint",rule_hit:"R6"});
+  if(items.length===0) items.push({type:"通用经营信号",note:"已归一"});
+  const json={ channel:"xhs", lifecycle_stage:S.stage, sku_id:SKU.id, spu_id:SKU.spu,
+    ts:"2026-07-09T14:20:00+08:00", items, flags:items.some(i=>i.flag)?["low_trust"]:[],
+    calibrated:true, next:"→ N1/N4/N6 · 命中规则进任务中心" };
+  S.triageJson=JSON.stringify(json,null,1);
+  renderCollect();
+  toast("已解析成标准 JSON("+items.length+" 条信号)· channel=xhs · stage="+S.stage,"go");
+}
+
+/* ---------------- LEDGER tab (三本账 + HUMAN_GATE_QUEUE) ---------------- */
+function ledCard(title,cls,arr,note){
+  const mh=arr.map(m=>`<div class="metric ${m.inflated?'':(m.pass?'ok':'bad')}" data-lk="${m.k}" onclick="toggleLedger('${m.group}',${m.i})">
+     <span class="editpen" data-lwhy="${m.k}" onclick="event.stopPropagation();ledgerWhy('${m.k}')" title="谁的战功/去归因">↘</span>
+      <div class="mk">${m.label}${m.inflated?' <span style="color:#a8433a">含刷量</span>':''}</div>
+      <div class="mv">${fmtU(m.show,m.u)}</div>
+      <div class="mt">目标 ${m.dir==='lt'?'<':'≥'}${fmtU(m.t,m.u)} · ${m.inflated?'去假前·不判级':(m.pass?'达标':'未达标')}</div></div>`).join('');
+  return `<div class="card ${cls}">
+    <div class="ph" style="margin:0 0 7px">${title}</div>
+    <div class="mrow">${mh}</div>
+    <div class="hint" style="margin-top:8px">${note}</div></div>`;
+}
+function renderLedger(){
+  const st=STAGES[S.stage]; const L=led();
+  const acts=curSKU().human_gate_actions||[];
+  const actBtns = acts.length? acts.map((a,i)=>`<button class="btn sm ${a.irr?'':'o'}" data-act="${i}" onclick="gateAction('${S.stage}',${i})" style="margin:0 6px 6px 0">${a.irr?'⚠ ':''}${a.k}${a.amt?' ¥'+a.amt.toLocaleString():''}</button>`).join('')
+    : '<div class="hint">本阶段无额外关键动作(导入期主要是投流小额冷启+达人测试)。</div>';
+  let pend=S.pending.length? S.pending.map((p)=>`
+    <div class="pend"><div class="pt">⏳ 卡执行前·等主管核定 · ${p.kind}${p.irr?' · <span style="color:#a8433a">不可逆</span>':''}</div>
+      ${p.text}${p.amt?' · <b>¥'+p.amt.toLocaleString()+'</b>':''}</div>`).join('')
+    : `<div class="hint">HUMAN_GATE_QUEUE 空。涉钱/不可逆动作(采买/砍投/下架/焕新/淘汰/发券/货盘变更)都会进这里。</div>`;
+  const calibBtn=`<button class="btn sm o" id="btnCalibLed" onclick="toggleCalib()">${S.calib?'👁 看去假前(含刷量)':'✓ 去假后(TypeB)·判级用它'}</button>`;
+  document.getElementById('scroll').innerHTML=`
+    <div class="ph">📒 一级屏 5 · 三本账 · 种草账 / 卖货账 / 联合账 · 点指标块=翻转演示(规则实时重判) · 点块角<b>↘</b>=谁的战功/盯它的规则/去归因<br><span style="font-weight:400;font-size:10px">🔗 本屏=<b>钱和数的总账</b>:三本账服务5A增长(↔卡可点跳) · 费用下钻每桶标了<b>谁花·哪个模式(A逐笔/B池)</b> · 趋势行↘=防误杀口径与衰减公式</span></div>
+    <div class="card"><div class="hint">🧪 算差前先去假(蝴蝶TypeB)：${calibBtn} · <b>规则与判级恒用去假后值</b></div></div>
+    <div class="card" id="cardLedger5A">
+      <div class="ph" style="margin:0 0 7px">👥 三本账 ↔ 5A 对应关系(仍是三本账·不设第四本账)</div>
+      ${LEDGER_5A.map(x=>`<div class="row" data-l5a="${x.a}" onclick="l5aJump('${x.a}')" style="cursor:pointer"><span>${x.book} · ${x.metrics} <span style="color:var(--blue);font-size:9px">↘</span></span><span class="mono" style="color:var(--blue)">${x.a}</span></div>`).join('')}
+      <div class="hint" style="margin-top:7px">三本账不是散的:它们都在服务 <b>5A 人群资产增长</b>。</div>
+    </div>
+    ${ledCard("🌱 种草账 · 用户为什么想买？","seedc",L.seed,"制造购买理由。刷量只污染这本账,不许进算差。")}
+    ${ledCard("🛒 卖货账 · 用户为什么现在买？","sellc",L.sell,"完成购买动作。退款率是硬红线来源之一。")}
+    ${ledCard("🔀 联合账 · 两条线连上了吗？(第一版只做三个KPI)","jointc",L.joint,"口径:由内容→交易归因回流,不是前两账简单相除。三个都绿=一加一大于二。")}
+    <div class="card">
+      <div class="row"><span>本SKU本阶段预算</span><span class="mono" id="budgetVal" style="color:${S.budget<0?'var(--red)':'inherit'}">¥${S.budget.toLocaleString()}${S.budget<0?' · 超额授权(待追加)':''}</span></div>
+      <div class="row"><span>已落袋激励</span><span class="mono" style="color:var(--go)" id="hgot">+${S.hGot}</span></div>
+      <div class="row"><span>当前 SKU · 阶段</span><span class="mono">${SKU.id} · ${st.name}</span></div>
+    </div>
+    ${costDrillCard()}
+    <div class="card">
+      <div class="ph" style="margin:0 0 9px">💰 达人/投流/直播加热(N2·涉钱→HITL)${(S.stage!=='decline'&&S.stage!=='retire')?(hsPass()?(n3Pass()?'':' · <span style="color:var(--red)">⛔N3未过</span>'):' · <span style="color:var(--red)">⛔未握手</span>'):''}</div>
+      ${(S.stage==='decline'||S.stage==='retire')
+        ? `<div class="hint" style="margin-bottom:9px;color:var(--red)">⛔ ${st.name}：停投/零采买(new_spend_allowed=false)· 任何采买都不能额度内自动执行,必须进队列核定</div>
+           ${S.stage==='retire'?'':'<button class="btn sm" id="btnBuyResidual" onclick="buy('+CHANNEL.residual_cap.amount+')">残值复投(例外·≤¥'+CHANNEL.residual_cap.amount.toLocaleString()+'·ROI≥'+CHANNEL.residual_cap.roi+'·必核定)</button>'}`
+        : `<button class="btn sm o" id="btnBuy5k" onclick="buy(5000)">投 ¥5,000(额度内自主)</button>
+           <button class="btn sm" id="btnBuy20k" onclick="buy(20000)" style="margin-left:6px">投 ¥20,000(超额·提议)</button>`}
+    </div>
+    <div class="card">
+      <div class="ph" style="margin:0 0 9px">🚨 本阶段关键动作(砍投/下架/焕新/淘汰=不可逆·全卡执行前)</div>
+      ${actBtns}
+    </div>
+    <div class="card">
+      <div class="ph" style="margin:0 0 9px">📥 HUMAN_GATE_QUEUE(<span id="pendCount">${S.pending.length}</span>)</div>
+      ${pend}
+    </div>`;
+}
+function toggleLedger(group,i){
+  const arr=led()[group]; const m=arr[i]; if(!m)return;
+  const passNow=m.pass;
+  const nv = passNow ? (m.dir==='lt'? +(m.t*1.25).toFixed(4) : +(m.t*0.80).toFixed(4))
+                     : (m.dir==='lt'? +(m.t*0.80).toFixed(4) : +(m.t*1.20).toFixed(4));
+  S.ledgerEdited[S.stage]=S.ledgerEdited[S.stage]||{}; S.ledgerEdited[S.stage][m.k]=nv;
+  const before=firedRules().length; renderLedger(); renderHead();
+  const after=firedRules().length;
+  toast(m.label+" 改为 "+fmtU(nv,m.u)+" → Agent规则重判：红灯 "+before+" → "+after+" 条", after>before?'red':(after<before?'go':'warn'));
+}
+function gateAction(stg,i){
+  const a=MOCK_DATA[stg].human_gate_actions[i];
+  S.pending.push({kind:a.k, text:SKU.name+" · "+STAGES[stg].name, amt:a.amt||0, irr:a.irr});
+  renderLedger(); if(S.tab==='cockpit')renderCockpit();
+  toast((a.irr?"⚠ 不可逆动作":"涉钱动作")+" → 进 HUMAN_GATE_QUEUE · 卡执行前,等主管核定","warn");
+}
+function buy(amt){
+  if(!(S.stage==='decline'||S.stage==='retire')){
+    if(!hsPass()){ toast("⛔ N1↔N2 联合策略未握手 · 内容没绑投放策略,不准花钱(去 N0–N6 屏握手卡确认)","red"); return; }
+    if(!n3Pass()){ toast("⛔ N3 站内承接未过(商销笔记/库存/路径有断点) · 不准进N2加投(去 N0–N6 屏检查表修复)","red"); return; }
+  }
+  if(S.stage==='decline'||S.stage==='retire'){
+    S.pending.push({kind:S.stage==='retire'?"淘汰期禁采买·需核定":"衰退期残值复投·例外需核定",
+      text:SKU.name+" · "+STAGES[S.stage].name+" · 上限¥"+CHANNEL.residual_cap.amount.toLocaleString()+"·ROI≥"+CHANNEL.residual_cap.roi, amt, irr:true});
+    renderLedger(); if(S.tab==='cockpit')renderCockpit();
+    toast("⛔ 本阶段禁止额度内自动采买 → 强制进 HUMAN_GATE_QUEUE,等主管核定","red"); return;
+  }
+  if(amt<=S.budget){ S.budget-=amt; renderLedger();
+    toast("额度内自主放行 · 已投达人/投流 ¥"+amt.toLocaleString()+" · 剩 ¥"+S.budget.toLocaleString(),"go"); }
+  else { S.pending.push({kind:"达人/投流采买超额",text:SKU.name+"·投放计划/达人矩阵",amt,irr:false});
+    renderLedger(); if(S.tab==='cockpit')renderCockpit();
+    toast("超额 → 涉钱进 HUMAN_GATE_QUEUE · 已挂起,等主管核定","warn"); }
+}
+
+/* ---------------- TASK tab (Agent规则 → 任务中心 → 复盘中心) ---------------- */
+function myTasks(){
+  if(S.role==='ops'||S.role==='mgr') return S.tasks;
+  return S.tasks.filter(t=>t.team===S.role||t.team==='joint');
+}
+function statusBadge(t){
+  if(t.status==='已驳回')return '<span class="badge rej">已驳回</span>';
+  if(t.status==='待核定')return '<span class="badge money">待核定·HITL</span>';
+  if(t.status==='已复盘')return `<span class="badge ${t.verdict==='无效'?'rej':'done'}">已复盘·${t.verdict}</span>`;
+  if(t.status==='已完成')return '<span class="badge st">已完成·待复盘</span>';
+  if(t.status==='进行中')return '<span class="badge st">进行中</span>';
+  return '<span class="badge">待处理</span>';
+}
+function renderTask(){
+  const fr=firedRules(); const st=STAGES[S.stage];
+  let rh='';
+  if(curSKU().no_new_task){
+    rh=`<div class="card"><div class="hint">⛔ ${st.name}：<b>不派新任务</b>。只走收尾三件套(停播/停投结清/合同结清)+ 商销笔记撤 + 商销店铺下架 + 忠诚迁移。规则引擎已挂起。</div></div>`;
+  } else if(!fr.length){
+    rh=`<div class="card"><div class="hint">✓ 当前 <b>0</b> 条红灯:三本账判据全部达标。回三本账页点任一指标可制造断点(演示"算差"是真的)。</div></div>`;
+  } else {
+    rh=fr.map(r=>{
+      const done=S.tasks.filter(t=>t.rid===r.id&&t.status!=='已驳回').length;
+      const tb=r.tasks.map((t,i)=>{
+        const exists=S.tasks.some(x=>x.rid===r.id&&x.ti===i&&x.status!=='已驳回');
+        const money=t.money?`<span class="badge money">¥${t.money.toLocaleString()}·HITL</span>`:(t.irr?'<span class="badge money">不可逆·HITL</span>':'');
+        return `<div class="task"><div class="tt">${t.t}</div>
+          <div class="tm">责任组 <span class="badge ${t.team}" data-pteam="${r.id}-${i}" onclick="event.stopPropagation();teamWhy('${t.team}')" style="cursor:pointer">${TEAM[t.team]} ↘</span>${money}</div>
+          <div style="margin-top:7px">${exists?'<span class="badge done">已派发</span>':
+            `<button class="btn xs" data-disp="${r.id}-${i}" onclick="dispatch('${r.id}',${i})">▸ 派发</button>`}</div></div>`;
+      }).join('');
+      return `<div class="rule" data-rule="${r.id}">
+        <div class="rh">🚨 ${r.id} ${r.nm} <span class="badge">${r.node}</span><span class="badge seed" data-a5a="${r.id}">${r.a5a}</span></div>
+        <div class="rc">触发条件：${r.cond} · <b>5A 断点：${r.a5a}</b></div>
+        <div class="rc" data-ruleSop="${r.id}">📖 回到SOP：${(r.sopref||[]).map((rf,ix)=>`<span class="badge ${(SOPS.find(z=>z.id===rf.id)||{}).owner||''}" data-sopref="${r.id}-${ix}" onclick="event.stopPropagation();sopRefGo('${r.id}',${ix})" style="cursor:pointer">${sopRefLabel(rf)}</span>`).join(' ')}${r.extra?` <span class="badge">+ ${r.extra}</span>`:''}</div>
+        <div class="rj">判断：${r.judge}</div>
+        <div class="rc">结果指标(复盘看它动没动)：<b>${ledMap()[r.kpi]?ledMap()[r.kpi].label:r.kpi}</b> <span class="badge done" data-rkpi="${r.id}" onclick="event.stopPropagation();ledgerWhy('${r.kpi}')" style="cursor:pointer">↘谁的战功/去归因</span> · 已派发 ${done}/${r.tasks.length}</div>
+        <div style="margin-top:8px">${tb}</div></div>`;
+    }).join('');
+  }
+  const mt=myTasks();
+  const th=mt.length? mt.map(t=>{
+    const canOwn=(S.role==='ops'||S.role==='mgr'||t.team===S.role||t.team==='joint');
+    let btns='';
+    if(t.status==='待处理'&&canOwn) btns=`<button class="btn xs" data-start="${t.id}" onclick="startTask(${t.id})">开始</button>`;
+    else if(t.status==='进行中'&&canOwn) btns=`<button class="btn xs" data-finish="${t.id}" onclick="finishTask(${t.id})">标记完成</button>`;
+    else if(t.status==='已完成') btns=`<button class="btn xs go" data-rev1="${t.id}" onclick="review(${t.id},true)">✓ 结果指标动了</button>
+        <button class="btn xs red" data-rev0="${t.id}" onclick="review(${t.id},false)" style="margin-left:6px">✗ 没动</button>`;
+    else if(t.status==='已复盘'&&t.verdict==='有效') btns=`<button class="btn xs o" data-sop="${t.id}" onclick="toSop(${t.id})">📌 固化SOP</button>
+        <button class="btn xs o" data-retest="${t.id}" onclick="retest(${t.id})" style="margin-left:6px">继续测试</button>`;
+    else if(t.status==='已复盘'&&t.verdict==='无效') btns=`<button class="btn xs" data-esc2="${t.id}" onclick="escalate()">↑ 升一层(关不了)</button>
+        <button class="btn xs o" data-retest="${t.id}" onclick="retest(${t.id})" style="margin-left:6px">继续测试</button>`;
+    return `<div class="task" data-task="${t.id}">
+      <div class="tt">${t.name}</div>
+      <div class="tm">来源 ${t.srcNode} · 规则 ${t.rid} · <span class="badge ${t.team}" data-tteam="${t.id}" onclick="event.stopPropagation();teamWhy('${t.team}')" style="cursor:pointer">${TEAM[t.team]} ↘</span>${statusBadge(t)}</div>
+      <div class="tm">结果指标：${ledMap()[t.kpi]?ledMap()[t.kpi].label:t.kpi} <span class="badge done" data-tkpi="${t.id}" onclick="event.stopPropagation();ledgerWhy('${t.kpi}')" style="cursor:pointer">↘</span>${t.sop?' · <span class="badge done">已入SOP</span>':''}</div>
+      <div style="margin-top:7px">${btns||'<span class="hint">无可执行动作(权限/状态)</span>'}</div></div>`;
+  }).join('') : '<div class="hint">暂无任务。上面诊断出红灯后,由<b>作战官</b>派发。</div>';
+  const sopH=S.sop.length? S.sop.map(s=>`<div class="row"><span>${s.name}</span><span class="mono" style="color:var(--go)">${s.stage}</span></div>`).join('')
+    : '<div class="hint">暂无 SOP。只有「结果指标真的动了(验果通过)」的任务才允许固化。</div>';
+  document.getElementById('scroll').innerHTML=`
+    <div class="ph">🎯 一级屏 6 · 任务/复盘 <span class="badge">M9 任务中心</span><span class="badge">M10 复盘中心</span><span class="badge">M11 三岗 SOP 模板</span><br><span style="font-weight:400;font-size:10px">🔗 本屏=<b>关差与验果的现场</b>:M11怎么做→M9做什么→M10有没有效 · 主链:红灯→5A断点→回SOP步→派发→验果(标动没动)→固化/升层 · SOP每步↘=KPI落点 · 规则/任务上的指标与岗位徽章均可点回</span></div>
+    <div class="card"><div class="hint">🧠 <b>规则型 Agent V0.1</b>(不宣称完整 AI Agent)：这七条是 <b>IF-THEN 因果(AgentLadder 第3级)</b> → <b>仍是 Workflow</b>。真 Agent 留到 V0.2/V0.3(接真数据+反馈循环)。<br>护栏先于自动化(L4)：涉钱/不可逆任务 <b>派发即卡进 HUMAN_GATE_QUEUE</b>,主管核定后才落到执行人。</div></div>
+    ${sopModule()}
+    ${rh}
+    <div class="card">
+      <div class="ph" style="margin:0 0 8px">📥 <b>M9 任务中心</b> · 我的任务(<span id="myTaskCount">${mt.length}</span>) · 当前视角 <b>${(CHANNEL.frontlines[S.role]||{nm:'主管'}).nm}</b></div>
+      ${th}
+    </div>
+    <div class="card">
+      <div class="ph" style="margin:0 0 8px">🔎 <b>M10 复盘中心</b> · <b>验果 = 看上一层的标动没动,不是任务做没做</b></div>
+      <div class="hint">「已完成」只代表动作做了。只有点「结果指标动了」→ 该 KPI 真被抬过阈值 → 对应规则红灯自动熄灭 → 才算 <b>关差成功</b>。<br>选「没动」→ 裁决=无效 → 不落袋激励 → 关不了的差<b>升一层</b>(连接律·规律③)。</div>
+      <div class="hint" style="margin-top:6px">裁决枚举 verdict_options = ${JSON.stringify(VERDICT_OPTIONS)}</div>
+    </div>
+    <div class="card">
+      <div class="ph" style="margin:0 0 8px">📌 SOP 沉淀(<span id="sopCount">${S.sop.length}</span>)</div>
+      ${sopH}
+    </div>
+    <div class="card"><div class="hint">建设三阶段:<b>①规则型(V0.1·现在)</b> → ②建议型(V0.2) → ③行动型(V0.3·自动派任务+学习闭环=真Agent,等数据回流)。<b>loop_spec = N/A</b>(不重复发生的经营裁决 + 无线上 evaluator)</div></div>`;
+}
+function dispatch(rid,ti){
+  if(!(S.role==='ops'||S.role==='mgr')){ toast("派发权在 作战官/主管 · permission_boundary(L4护栏先于自动化)","red"); return; }
+  const r=RULES.find(x=>x.id===rid); if(!r)return;
+  const t=r.tasks[ti]; if(!t)return;
+  if(S.tasks.some(x=>x.rid===rid&&x.ti===ti&&x.status!=='已驳回')){ toast("该任务已在任务中心,未重复派发","warn"); return; }
+  const money=t.money||0, irr=!!t.irr;
+  const hitl=(money>0||irr);
+  const task={id:++S.tid, rid, ti, name:t.t, team:t.team, srcNode:r.node, kpi:r.kpi, money, irr,
+    status:hitl?'待核定':'待处理', verdict:null, sop:false};
+  S.tasks.push(task);
+  if(hitl){
+    S.pending.push({kind:(irr?'不可逆任务':'涉钱任务')+'·'+t.t, text:SKU.name+' · '+STAGES[S.stage].name+' · 来源'+r.node+'/'+r.id, amt:money, irr, taskId:task.id});
+    const blocked=(S.stage==='decline'||S.stage==='retire')&&money>0;
+    toast(blocked? "⛔ "+STAGES[S.stage].name+"禁额度内采买 → 强制进 HUMAN_GATE_QUEUE"
+                 : (money>0? "涉钱任务 ¥"+money.toLocaleString()+" → 进 HUMAN_GATE_QUEUE · 卡执行前"
+                           : "⚠ 不可逆任务(货盘变更) → 进 HUMAN_GATE_QUEUE · 卡执行前"), blocked?'red':'warn');
+  } else {
+    toast("✓ 已派发给"+TEAM[t.team]+" · 状态=待处理","go");
+  }
+  renderTask();
+}
+function ownable(t){ return S.role==='ops'||S.role==='mgr'||t.team===S.role||t.team==='joint'; }
+function findTask(id){ return S.tasks.find(t=>t.id===id); }
+function startTask(id){
+  const t=findTask(id); if(!t)return;
+  if(!ownable(t)){ toast("这条任务不属于你这条线(permission_boundary)","red"); return; }
+  t.status='进行中'; renderTask(); toast("任务已开始 · "+t.name);
+}
+function finishTask(id){
+  const t=findTask(id); if(!t)return;
+  if(!ownable(t)){ toast("这条任务不属于你这条线(permission_boundary)","red"); return; }
+  t.status='已完成'; renderTask();
+  toast("已完成 ≠ 验果通过 · 请作战官/主管到复盘中心确认「结果指标动没动」","warn");
+}
+function review(id,moved){
+  const t=findTask(id); if(!t)return;
+  if(!(S.role==='ops'||S.role==='mgr')){ toast("验证永远是人的事:复盘权在 作战官/主管(L5 人不删除只换位)","red"); return; }
+  const verdict = moved?"有效":"无效";
+  if(VERDICT_OPTIONS.indexOf(verdict)<0){ toast("裁决不在 options 枚举内,已拒绝","red"); return; }
+  t.verdict=verdict; t.status='已复盘';
+  if(moved){
+    const b=bumpKpi(t.kpi); S.hGot+=10;
+    const before=b?1:0;
+    renderTask(); renderHead();
+    const left=firedRules().length;
+    toast("✓ 验果通过 · "+(b?b.label+" 抬到 "+fmtU(b.nv,b.u):"")+" → 关差成功 · 激励+10 · 剩余红灯 "+left+" 条","go");
+  } else {
+    renderTask(); renderHead();
+    toast("✗ 裁决=无效 · 任务做了但上层标没动 → 不落袋 · 关不了的差请升一层","red");
+  }
+}
+function retest(id){
+  const t=findTask(id); if(!t)return;
+  if(!(S.role==='ops'||S.role==='mgr')){ toast("复盘权在 作战官/主管","red"); return; }
+  t.verdict="继续测试"; t.status='进行中'; renderTask();
+  toast("裁决=继续测试 · 回到进行中(不固化·不结案)","warn");
+}
+function toSop(id){
+  const t=findTask(id); if(!t)return;
+  if(t.verdict!=="有效"){ toast("只有验果「有效」的任务才允许固化 SOP","red"); return; }
+  t.verdict="固化SOP"; t.sop=true;
+  S.sop.push({name:t.name, stage:STAGES[S.stage].name});
+  renderTask(); toast("📌 已固化为 SOP · 复盘沉淀(有效打法→可复制)","go");
+}
+
+/* ---------------- COCKPIT tab ---------------- */
+function renderCockpit(){
+  const L=led(); const fr=firedRules();
+  const seedPass=L.seed.filter(m=>m.pass).length, sellPass=L.sell.filter(m=>m.pass).length, jointPass=L.joint.filter(m=>m.pass).length;
+  const idx=`<div class="card">
+      <div class="ph" style="margin:0 0 8px">📊 三本账指数(达标项/总项)</div>
+      <div class="mrow">
+        <div class="metric ${seedPass===L.seed.length?'ok':'bad'}" style="flex:1 1 30%" data-idx="seed" onclick="idxJump('seed')"><div class="mk">种草指数 ↘</div><div class="mv">${seedPass}/${L.seed.length}</div></div>
+        <div class="metric ${sellPass===L.sell.length?'ok':'bad'}" style="flex:1 1 30%" data-idx="sell" onclick="idxJump('sell')"><div class="mk">卖货指数 ↘</div><div class="mv">${sellPass}/${L.sell.length}</div></div>
+        <div class="metric ${jointPass===L.joint.length?'ok':'bad'}" style="flex:1 1 30%" data-idx="joint" onclick="idxJump('joint')"><div class="mk">联合转化指数 ↘</div><div class="mv">${jointPass}/${L.joint.length}</div></div>
+      </div>
+    </div>`;
+  const lamps=`<div class="card">
+      <div class="ph" style="margin:0 0 8px">🚦 J0–J6 经营旅程 状态灯(非引擎槽)</div>
+      <div class="chain">${JOURNEY.map(n=>{const l=jLight(n);return `<div class="cnode ${l==='g'?'p':(l==='r'?'f':'')}" data-cl="${n.j}" onclick="lampJump('${n.j}')" style="cursor:pointer"><b>${l==='g'?'✓':(l==='r'?'⛔':'!')}</b>${n.j}</div>`;}).join('')}</div>
+      <div class="hint" style="margin-top:7px">绿=判据全达标 · 黄=部分 · 红=全未达标</div>
+    </div>`;
+  const alarms=`<div class="card">
+      <div class="ph" style="margin:0 0 8px">🚨 今日红灯预警(<span id="alarmCount">${fr.length}</span>) · 规则型 Agent V0.1</div>
+      ${fr.length? fr.map(r=>`<div class="row" data-alarm="${r.id}" onclick="alarmJump('${r.id}')" style="cursor:pointer"><span>${r.id} ${r.nm} · ${r.node}<br><span class="hint" style="margin:0">↩ ${(r.sopref||[]).map(sopRefLabel).join(" / ")} <span style="color:var(--blue)">点=直落SOP</span></span></span><span class="mono" style="color:var(--red);font-size:10px">${r.a5a}</span></div>`).join('')
+        : '<div class="hint">无红灯。(淘汰期规则挂起)</div>'}
+    </div>`;
+  const todo=`<div class="card">
+      <div class="ph" style="margin:0 0 8px">📋 今日待处理任务(${S.tasks.filter(t=>t.status==='待处理'||t.status==='进行中').length})</div>
+      ${S.tasks.filter(t=>t.status==='待处理'||t.status==='进行中').map(t=>`<div class="row" data-ctask="${t.id}" onclick="ctaskGo(${t.id})" style="cursor:pointer"><span>${t.name} <span style="color:var(--blue);font-size:9px">↘</span></span><span class="mono">${TEAM[t.team]}</span></div>`).join('')||'<div class="hint">暂无</div>'}
+    </div>`;
+  if(S.role!=='mgr'){
+    const g=gatePass();
+    document.getElementById('scroll').innerHTML=`
+      <div class="ph">🧭 一级屏 7 · 驾驶舱 · ${(CHANNEL.frontlines[S.role]||{nm:''}).nm}视角(SKU/内容层) · 与「今日」不重复<br><span style="font-weight:400;font-size:10px">🔗 本屏=<b>我的全局</b>:三指数↘账本 · J灯↘双前线 · 红灯↘直落SOP · 提议↘任务屏 · 关不了的差升一层</span></div>
+      <div class="card">
+        <div class="sku"><span class="nm">${SKU.name}</span></div>
+        <div class="line">我这层：${STAGES[S.stage].name} · 目标差距 ${g?'已抹平':'有缺口'} · 最短板见「今日运营」红灯指标</div>
+        <div class="hint" style="margin-top:8px">一线只转 SKU 层；关不了的差(结构性/品类)→升一层(主管品类会诊)</div>
+      </div>
+      ${idx}${lamps}${alarms}${todo}
+      <div class="card" id="cardProposal" onclick="proposalJump()" style="cursor:pointer"><div class="ph" style="margin:0 0 6px">↑ 我的提议(升给主管) <span style="color:var(--blue);font-size:10px;font-weight:400">点=去任务屏(派发/复盘)</span></div>
+        ${S.pending.length?S.pending.map(p=>`<div class="row"><span>${p.kind}</span><span class="mono">${p.amt?'¥'+p.amt.toLocaleString():(p.irr?'不可逆':'—')}</span></div>`).join(''):'<div class="hint">暂无</div>'}
+      </div>`;
+  } else {
+    document.getElementById('scroll').innerHTML=`
+      <div class="ph">🧭 一级屏 7 · 驾驶舱 · 主管视角(品类层) · 全局 + 核定<br><span style="font-weight:400;font-size:10px">🔗 本屏=<b>核定与升层端</b>:队列卡执行前(涉钱项↘看钱从哪个桶扣) · 红灯↘直落SOP · J灯↘双前线 · 三指数↘账本 · 留痕↘口径 · 核定≠验果</span></div>
+      <div class="card">
+        <div class="ph" style="margin:0 0 8px">🔔 <span id="pendCount2">${S.pending.length}</span> 条待核定(HUMAN_GATE_QUEUE·涉钱/不可逆/分歧)</div>
+        ${S.pending.length? S.pending.map((p,i)=>`
+          <div class="pend"><div class="pt">${p.kind}${p.irr?' · <span style="color:#a8433a">不可逆</span>':''} <span class="badge money" data-qcost="${i}" onclick="event.stopPropagation();qCost('${p.kind}',${p.amt||0})" style="cursor:pointer">↘钱从哪个桶扣</span></div>${p.text}${p.amt?' · <b>¥'+p.amt.toLocaleString()+'</b>':''}
+          <div style="margin-top:7px"><button class="btn sm" data-appr="${i}" onclick="approve(${i})">✓ 核定通过</button>
+          <button class="btn sm o" data-rej="${i}" onclick="reject(${i})" style="margin-left:6px">✗ 驳回</button></div></div>`).join('')
+          : '<div class="hint">暂无待核提议。</div>'}
+      </div>
+      ${idx}${lamps}${alarms}
+      <div class="card">
+        <div class="ph" style="margin:0 0 6px">🗂 HUMAN_GATE_HISTORY(<span id="histCount">${S.history.length}</span>) · 核定留痕</div>
+        ${S.history.length? S.history.slice(0,5).map(h=>`<div class="row" data-hist onclick="histWhy()" style="cursor:pointer"><span>${h.ts} · ${h.kind} <span style="color:var(--blue);font-size:9px">↘口径</span></span><span class="mono" style="color:${h.result==='通过'?'var(--go)':'var(--red)'}">${h.result}</span></div>`).join('') : '<div class="hint">暂无核定记录。通过/驳回都会留痕。</div>'}
+      </div>
+      <div class="card">
+        <div class="ph" style="margin:0 0 6px">品类层 · 连接律</div>
+        <div class="hint">上层关差=下层定标 · 一线关不了的差(组合内耗/结构性衰退/两线协同失败)在这层会诊(战略店会诊)</div>
+      </div>`;
+  }
+}
+function reject(i){
+  const p=S.pending[i];if(!p)return;
+  S.pending.splice(i,1);
+  S.history.unshift({...p, result:"驳回", ts:"W28"});
+  if(p.taskId){ const t=findTask(p.taskId); if(t) t.status='已驳回'; }
+  renderCockpit();
+  toast("✗ 已驳回 · "+p.kind+" 退回一线(记原因·未执行·已留痕)","red");
+}
+function approve(i){
+  const p=S.pending[i];if(!p)return;
+  if(p.amt){ if(p.amt>S.budget){ p.budget_override=true; } S.budget-=p.amt; }
+  S.pending.splice(i,1);
+  S.history.unshift({...p, result:"通过", ts:"W28"});
+  if(p.taskId){ const t=findTask(p.taskId); if(t) t.status='待处理'; }
+  renderCockpit();
+  toast("✓ 已核定通过 · "+p.kind+(p.amt?" ¥"+p.amt.toLocaleString()+(p.budget_override?"(超额授权·预算转负)":"")+" 执行":(p.irr?" 执行(不可逆)":" 执行"))+(p.taskId?" · 任务落到执行人":"")+" · 已留痕",p.budget_override?"warn":"go");
+}
+
+/* ---------------- interactions that MUTATE state ---------------- */
+function setStage(k){
+  if(!STAGES[k])return; S.stage=k; S.done=false;
+  renderStrip(); renderHead(); rerender();
+  const st=STAGES[k];
+  toast("切到 "+st.name+" · 引擎不变,阈值/字段/三本账/"+st.gate+"/规则 全部按 stage 重渲染","go");
+}
+function setRole(r){
+  S.role=r;
+  [['seed_kol','rSeedKol'],['commerce_kol','rCommKol'],['live_room','rLive'],['ops','rOps'],['mgr','rMgr']].forEach(([k,id])=>{
+    document.getElementById(id).className='role'+(r===k?' me':'');
+  });
+  renderHead(); rerender();
+  const nm=OP_ROLES[r]||'主管(品类层)';
+  toast("切到 "+nm+" 视角"+(r==='mgr'?"(可核定 HUMAN_GATE)":(r==='ops'?"(可派发+复盘·一条龙)":"(只看本岗SOP与任务)")));
+}
+function setTab(t){
+  S.tab=t;
+  document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.dataset.t===t));
+  document.querySelectorAll('.nav').forEach(e=>e.classList.toggle('on',e.dataset.n===t));
+  rerender();
+}
+function rerender(){
+  if(S.tab==='today')renderToday();
+  else if(S.tab==='dual')renderDual();
+  else if(S.tab==='pipe')renderPipe();
+  else if(S.tab==='collect')renderCollect();
+  else if(S.tab==='ledger')renderLedger();
+  else if(S.tab==='task')renderTask();
+  else if(S.tab==='cockpit')renderCockpit();
+}
+/* ── 指标归因层(SR两问:①跟我收入什么关系 ②我做对/做错了什么)──
+   收入模型(内核第⑦项·小红书):SR收入 = 底薪 + 战功分(结果指标达标) + Gate毕业奖 + 效率提成(省下的投放费按比例)
+   环的翻译:>目标 = 关差成功→固化(下次更省力) · <目标 = 差值→归因→动作→回SOP步 */
+const INCOME_MODEL="SR收入 = 底薪 + 战功分(结果指标达标计分) + Gate毕业奖(整SKU阶段毕业) + 效率提成(CPA3/ROI省下的投放费按比例)";
+const ATTR={
+  play_3s_rate:{inc:"3秒率进 Gate 判据 → 达标计【内容战功分】;整期达标助 Gate 毕业 → 毕业奖",
+    up:["3秒钩子放在痛点上(凉拌菜场景一勺封神)","前3秒产品/利益点出现,没有慢热开场","封面与首帧同一信息,不骗点"],
+    upNext:"把这条钩子写进内容模板库→下条视频直接复用,省一轮测试",
+    down:[{why:"开场慢热/钩子晚于5秒",act:"产品出现点前置到第5秒内",sop:{id:"sop_seed",s:3}},{why:"封面与内容不符,点进即划走",act:"封面首帧统一利益点",sop:{id:"sop_seed",s:3}}]},
+  completion_rate:{inc:"完播率进 Gate 判据 → 内容战功分 + 助毕业奖",
+    up:["完播结构:钩子→演示→反转→收尾,没有中段拖沓","时长按信息量裁,不凑30秒"],
+    upNext:"该结构进 SOP 模板,新素材按结构填空",
+    down:[{why:"中段信息密度掉,第8-15秒流失",act:"砍过场,演示直接上结果",sop:{id:"sop_seed",s:3}},{why:"时长虚胖",act:"按完播曲线裁时长",sop:{id:"sop_seed",s:5}}]},
+  product_ctr:{inc:"商品点击率=内容带货的钱眼 → 达标计【联动战功分】(种草+卖货共享)",
+    up:["商品钩子与内容痛点同一句话(一勺出味)","挂商销链接时机在演示高点,不在片尾"],
+    upNext:"把该挂商销链接时机固化为规则→同类素材统一",
+    down:[{why:"内容热但商品钩子弱(R1)",act:"主图/标题改成内容同款话术",sop:{id:"sop_comm",s:5}},{why:"挂商销链接位置在片尾,流量到不了",act:"挂商销链接前移到演示高点",sop:{id:"sop_seed",s:4}}]},
+  roi:{inc:"冷启ROI≥1 → 投放费没白烧 → 计【效率提成】基数;不达标烧的是预算池",
+    up:["小额冷启守住了(未验证不加钱)","只给过自然门的素材投放"],
+    upNext:"把过门素材的共性写进达人筛选标准,降低下轮CPA3",
+    down:[{why:"未过自然门就投,CPM买了泛流量",act:"停投→回自然数据门重测",sop:{id:"sop_seed",s:5}},{why:"定向过宽",act:"收紧定向到目标人群包",sop:{id:"sop_seed",s:6}}]},
+  exposure_growth:{inc:"曝光增长=放量凭证 → 助 Gate2 毕业奖",
+    up:["validated hook 批量二创,素材消耗能力跟上了","投流放量绑了种子池再验证"],
+    upNext:"二创模板沉淀→下轮放量不缺素材",
+    down:[{why:"素材供给跟不上消耗",act:"二创矩阵补量",sop:{id:"sop_seed",s:3}},{why:"放量衰减超线被冻结",act:"回N1更新素材再放",sop:{id:"sop_seed",s:7}}]},
+  live_gpm:{inc:"直播GPM=店播直播岗核心战功分;达标计入场次奖金",
+    up:["货组排布对(引流款拉人·主推款成交)","促单段在停留高点打出"],
+    upNext:"该场话术五段沉淀为直播间SOP话术模板",
+    down:[{why:"停留高但促单弱(R7)",act:"促单话术+限时机制重打",sop:{id:"sop_live",s:3}},{why:"货组与人群不配",act:"回货组制定重排",sop:{id:"sop_live",s:2}}]},
+  a3_to_a4:{inc:"A3→A4=种草变成钱的那一跳 → 联动战功分(两组共享·防内耗)",
+    up:["直播/商销笔记承接了种草人群,没漏","收藏人群被定向承接"],
+    upNext:"承接链路固化:每条种草内容发布即绑承接位",
+    down:[{why:"收藏高成交低(R4)·紧迫感不足",act:"限时机制+今天为什么买话术",sop:{id:"sop_live",s:3}},{why:"承接位没备好(N3)",act:"过N3九项检查再放量",sop:{id:"sop_comm",s:6}}]},
+  roi_at_scale:{inc:"放量ROI守住 → 效率提成放大;跌破线冻结加投,提成基数归零",
+    up:["放量衰减率守在-30%内","素材疲劳前轻刷新"],
+    upNext:"衰减监测节奏(日看)写进个人清单",
+    down:[{why:"放量后ROI跳水",act:"冻结加投·回滚上一档",sop:{id:"sop_seed",s:7}},{why:"素材复用过度疲劳",act:"轻刷新素材",sop:{id:"sop_seed",s:3}}]},
+  contribution_margin:{inc:"贡献利润率=成熟期战功主指标 → 直接挂季度奖",
+    up:["投放降到25%档,自然成交接棒","高ROI计划留,低效计划砍了"],
+    upNext:"砍计划的判断标准固化→下季度不用重学",
+    down:[{why:"还在用成长期投法,费用吃利润",act:"cost_squeeze:降投放档位",sop:{id:"sop_comm",s:7}},{why:"促销过度透支",act:"promo_off_test 验自然力",sop:{id:"sop_live",s:6}}]},
+  card_gmv_share:{inc:"商销笔记自然成交占比=不花钱的收入 → 效率提成大头",
+    up:["搜索词/详情页承接住了品牌搜索","卡片评价分维护到位"],
+    upNext:"高转化详情结构模板化",
+    down:[{why:"点击高转化低,详情页断点",act:"回N3查详情一致性",sop:{id:"sop_comm",s:5}},{why:"评价分掉,质量门预警",act:"差评聚类回修",sop:{id:"sop_comm",s:8}}]},
+  a4_to_a5:{inc:"A4→A5=复购资产 → 长效战功分(权重逐季上调)",
+    up:["复购机制在包裹/会员位埋了钩子","老客内容持续供给"],
+    upNext:"复购钩子清单固化到发货SOP",
+    down:[{why:"好评高复购低(R5)·机制缺",act:"复购券/家庭装设计(HITL)",sop:{id:"sop_comm",s:1}},{why:"老客无触达",act:"会员召回+老客内容",sop:{id:"sop_live",s:2}}]},
+  stable_roi:{inc:"稳定ROI=成熟期效率提成基数(连续达标才计)",
+    up:["三稳窗口≥4周期,结构没漂","直播依赖降到自播为主"],upNext:"稳定结构写进季度BP",
+    down:[{why:"付费依赖回升",act:"降付费档·验自然力",sop:{id:"sop_live",s:7}}]},
+  natural_gmv:{inc:"残值自然GMV=停投后的白拿收入 → 残值战功(小而真)",
+    up:["停投停播执行到位,自然位没拆","历史素材长尾还在带货"],upNext:"残值口径周报,防假残值",
+    down:[{why:"自然位被下架误伤",act:"恢复自然承接位",sop:{id:"sop_comm",s:6}}]},
+  refund_rate:{inc:"退款率=质量红线;超线扣联动战功,连累两组",
+    up:["话术没夸大,详情与实物一致","包裹加了使用说明"],upNext:"预期管理话术进模板",
+    down:[{why:"话术夸大(R3)",act:"回看直播话术修正",sop:{id:"sop_live",s:3}},{why:"详情与实物不符",act:"详情一致性修复",sop:{id:"sop_comm",s:5}}]},
+  contribution_profit:{inc:"残值利润>0 才允许残值复投(≤¥5,000·ROI≥1.5) → 例外池不占战功",
+    up:["残值复投全走HITL,没私投"],upNext:"残值真实性公式周检",
+    down:[{why:"假残值(清库存冲量)",act:"残值真实性公式复核",sop:{id:"sop_comm",s:8}}]},
+  a5_wakeup:{inc:"老客唤醒率=焕新期战功主指标(唤醒成本远低于拉新)",
+    up:["老客包走私域/会员召回,没喂聚光","唤醒内容用老客场景"],upNext:"唤醒话术模板沉淀",
+    down:[{why:"只发券不给理由",act:"老客内容+召回组合",sop:{id:"sop_seed",s:3}}]},
+  product_ctr_renewal:{inc:"",up:[],down:[]},
+  restart_roi:{inc:"重启ROI≥1 → 焕新毕业奖;≤2次机会,烧完转淘汰",
+    up:["只用历史高ROI素材受控重启","根因先过门再花钱"],upNext:"重启素材白名单固化",
+    down:[{why:"根因没解就重启",act:"回根因门(六类)重判",sop:{id:"sop_seed",s:8}}]},
+  member_migration:{inc:"忠诚迁移率=退出战功(老客不丢=下个SKU的冷启资产)",
+    up:["A5迁移目标SKU提前定好","迁移话术在会员位跑"],upNext:"迁移清单进新SKU导入包",
+    down:[{why:"无目标SKU承接",act:"定替代SKU再迁移",sop:{id:"sop_comm",s:1}}]},
+  settlement_done:{inc:"三件套结清=合规底线;未结清冻结该SKU全部战功结算",
+    up:["达人/直播/投放合同全关闭"],upNext:"结清清单模板化",
+    down:[{why:"合同尾款挂账",act:"财务结清+留痕",sop:{id:"sop_comm",s:4}}]},
+  archive_kept:{inc:"归档不删=数据资产;归档完成计【资产战功】",
+    up:["视频下架但数据Excel留档","记录可查"],upNext:"归档模板下轮直接套",
+    down:[{why:"平台数据过期没下载",act:"补数据下载留档",sop:{id:"sop_seed",s:8}}]},
+  c2ctr:{inc:"内容→商品点击率=A2→A3 交接 KPI → 【联动战功分】种草×带货五五共享(同源消费者·非零和·防内耗)",
+    joint:true,
+    up:["【种草侧】内容痛点与商品钩子同一句话,用户看完就想点","【卖货侧】商销笔记主图/标题用了内容同款话术,点进不落差","【交接】挂商销链接放在演示高点,不在片尾"],
+    upNext:"把「内容话术=商品话术」写进握手卡内容假设 → 每条新内容发布前对一次口径",
+    down:[{why:"【种草侧】内容热但商品钩子弱(R1)·用户被内容拦住却没理由点商品",act:"产品出现点前置+钩子改成购买理由",sop:{id:"sop_seed",s:3}},
+          {why:"【卖货侧】主图/标题与内容脱节,点进即退",act:"主图标题改成内容同款话术",sop:{id:"sop_comm",s:5}}]},
+  c2cvr:{inc:"内容→成交转化率=A3→A4 交接 KPI → 【联动战功大头】+ 直播场次奖金挂它",
+    joint:true,
+    up:["【种草侧】种出来的是精准A3(有效人群率≥80%),不是泛流量","【卖货侧】直播/商销笔记承接了种草人群·货组价格与内容承诺一致","【交接】N3 九项检查全过,购买路径无断点"],
+    upNext:"承接链路固化:每条种草内容发布即绑定承接位(握手卡第⑨项)",
+    down:[{why:"【卖货侧】收藏高成交低(R4)·紧迫感不足",act:"限时机制+「今天为什么买」话术",sop:{id:"sop_live",s:3}},
+          {why:"【交接】承接位没备好·点了没地方买",act:"过N3九项检查再放量",sop:{id:"sop_comm",s:6}},
+          {why:"【种草侧】种的是泛人群·到承接就漏",act:"收紧定向·回有效人群门",sop:{id:"sop_seed",s:6}}]},
+  new_repurchase:{inc:"新客复购率=A4→A5 交接 KPI → 【长效战功分】(权重逐季上调)+会员资产分·两组共享",
+    joint:true,
+    up:["【卖货侧】包裹/会员位埋了复购钩子(菜谱卡/组合装)","【种草侧】老客场景内容持续供给,买过的人还被内容触达","【交接】体验与内容承诺一致·退款率守住(R3没亮)"],
+    upNext:"复购钩子清单进发货SOP·老客内容排进内容日历",
+    down:[{why:"【卖货侧】好评高复购低(R5)·机制缺",act:"复购券/家庭装设计(涉钱·HITL)",sop:{id:"sop_comm",s:1}},
+          {why:"【种草侧】买完即失联·无老客内容",act:"拍老客使用场景内容+会员召回",sop:{id:"sop_seed",s:3}},
+          {why:"【交接】体验落差·话术透支预期",act:"预期管理话术修正",sop:{id:"sop_live",s:3}}]},
+  new_a3:{inc:"新增A3=种草笔记岗核心战功分(按人头计)",
+    up:["达人选得准(类目匹配+历史CPA3)","内容假设过握手,不是盲拍"],upNext:"高产达人进白名单",
+    down:[{why:"达人泛,A3种不出来",act:"回达人筛选重选",sop:{id:"sop_seed",s:1}}]},
+  cpa3:{inc:"CPA3 每降¥1 → 省下的投放费按比例计【效率提成】(直接是钱)",
+    up:["自然门先过再投,没买泛流量","四通道询价压了达人成本"],upNext:"高效达人组合固化",
+    down:[{why:"未过门就投放",act:"回自然数据监测",sop:{id:"sop_seed",s:5}},{why:"达人报价虚高",act:"四通道重询价",sop:{id:"sop_seed",s:2}}]},
+  post_search:{inc:"看后搜率=品牌心智战功(季度权重上调中)",
+    up:["小蓝词挂对了,搜索承接住"],upNext:"高看后搜内容进模板库",
+    down:[{why:"内容没给搜索理由",act:"埋品牌记忆点+小蓝词",sop:{id:"sop_seed",s:4}}]},
+  iq:{inc:"互动质量(正向占比)=去假后的真战功;刷出来的互动不计分",
+    up:["评论区运营在答疑,正向沉淀"],upNext:"高频疑问进内容选题",
+    down:[{why:"「怎么用」扎堆(R6)",act:"拍菜谱/使用教育内容",sop:{id:"sop_seed",s:3}}]}
+};
+/* 四判/质量 tile 切入路由:今日=算差结果,点它回"量实↑原位"
+   目的地优先级:①三本账同键行 ②KPI_JUMP 显式映射(同族键/费用下钻/口径表/5A/N6) */
+const KPI_JUMP={
+  play_3s_rate:{t:"ledger",k:"retain_3s",why:"Gate口径=3秒率 · 账本原位=种草账「3秒留存」· 口径见量实屏口径表「三秒率」"},
+  completion_rate:{t:"ledger",k:"completion",why:"账本原位=种草账「完播」"},
+  exposure_growth:{t:"ledger",k:"exposure",why:"账本原位=种草账「曝光」(去假后) · 增长率由两期曝光算"},
+  a3_to_a4:{t:"ledger",k:"c2cvr",why:"A3→A4 = 联合账「内容→成交转化率」"},
+  a4_to_a5:{t:"ledger",k:"new_repurchase",why:"A4→A5 = 联合账「新客复购率」"},
+  live_gpm:{t:"dict",k:"直播GPM",why:"直播GPM 口径=直播成交GMV÷直播曝光/1000 · 数据在直播罗盘(接口位)"},
+  roi:{t:"cost",why:"ROI 属钱类 → 费用下钻(花费进度+防误杀趋势)"},
+  roi_at_scale:{t:"cost",why:"放量ROI → 费用下钻(放量预算桶+近7日ROI趋势·衰减公式见N0–N6)"},
+  stable_roi:{t:"cost",why:"稳定ROI → 费用下钻(收割结构:自播/带货为主)"},
+  restart_roi:{t:"cost",why:"重启ROI → 费用下钻(受控重启预算·投流只用历史高ROI素材)"},
+  contribution_margin:{t:"cost",why:"贡献利润率 属钱类 → 费用下钻"},
+  contribution_profit:{t:"cost",why:"残值利润 属钱类 → 费用下钻(残值池≤¥5,000·ROI≥1.5)"},
+  natural_gmv:{t:"cost",why:"残值自然GMV=停投后的自然成交 → 费用下钻(残值池口径)"},
+  card_gmv_share:{t:"ledger",k:"gmv",why:"商销笔记占比=商销笔记GMV÷总GMV · 账本原位=卖货账GMV(拆分在商销笔记数据接口位)"},
+  refund_rate:{t:"ledger",k:"refund_rate",why:"账本原位=卖货账「退款率」· 触发R3=A4质量风险"},
+  a5_wakeup:{t:"today5a",why:"老客唤醒率 → 5A 资产条 A5 层(焕新=A5老客/私域唤醒·不喂聚光)"},
+  member_migration:{t:"pipe6",why:"忠诚迁移率=退出闭环 → N6 判级 Artifact(fiveA_snapshot·迁移留痕)"},
+  settlement_done:{t:"pipe6",why:"三件套结清=达人/直播/投放合同 → N6 判级 Artifact(redline_gates)"},
+  archive_kept:{t:"pipe6",why:"归档不删 → N6 判级 Artifact(records_kept_queryable)"}
+};
+function flashEl(sel){
+  setTimeout(()=>{
+    const el=document.querySelector(sel);
+    if(!el) return;
+    el.scrollIntoView({behavior:"smooth",block:"center"});
+    el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+    setTimeout(()=>el.classList.remove("flash"),2600);
+  },120);
+}
+function metricRules(lk){
+  const rs=RULES.filter(r=>r.kpi===lk).map(r=>r.id+" "+r.nm);
+  return rs.length?(" · 触发规则:"+rs.join("/")):"";
+}
+function attrMetricOf(k){
+  const gm=curMetrics().find(m=>m.k===k); if(gm) return gm;
+  const lm=ledMap()[k]; if(lm) return lm;
+  return null;
+}
+/* 驾驶舱联动:三指数→账本 · J灯→双前线 · 红灯→SOP · 队列涉钱→费用 · 提议→任务 */
+function idxJump(book){
+  setTab("ledger");
+  flashEl(book==="seed"?".seedc":(book==="sell"?".sellc":".jointc"));
+  const nm={seed:"种草账",sell:"卖货账",joint:"联合账"}[book];
+  toast("📊 "+nm+"指数=达标项/总项 → 去"+nm+"看是哪几项没达标(点行↘看战功归属)","go");
+}
+function lampJump(j){
+  setTab("dual"); S.jOpen[j]=true; renderDual(); flashEl('[data-j="'+j+'"]');
+  const n=JOURNEY.find(x=>x.j===j);
+  toast("🚦 "+j+" "+(n?n.nm:"")+" → 双前线已展开:量它的指标+断点归因都在节点里","go");
+}
+function alarmJump(rid){
+  const r=RULES.find(x=>x.id===rid); if(!r) return;
+  if(r.sopref&&r.sopref[0]) attrGoSop(r.sopref[0].id,r.sopref[0].s,r.nm);
+}
+function qCost(kind,amt){
+  setTab("ledger"); flashEl("#cardCost");
+  const extra=(S.stage==='decline'||S.stage==='retire')?" · 残值例外:≤¥5,000·ROI≥1.5":"";
+  toast("💸 "+kind+(amt?" ¥"+amt.toLocaleString():"")+" · 核定通过后从对应预算桶扣减(费用下钻对账)"+extra,"go");
+}
+function ctaskGo(id){
+  const t=S.tasks.find(x=>x.id===id); setTab("task");
+  toast("📥 去任务屏处理:"+(t?t.name:"")+" · 执行权在责任岗·验果在复盘中心","go");
+}
+function histWhy(){ toast("🗂 留痕口径:通过/驳回都记录(时间+事项+结果) · 验果=看上层标动没动,核定≠验果","go"); }
+function proposalJump(){ setTab("task"); toast("↑ 我的提议卡在 HUMAN_GATE_QUEUE · 派发/复盘在任务屏 · 核定权在主管","go"); }
+/* SOP 步骤 → 该步KPI的落点(口径表使用位/费用下钻) */
+const STEP_KPI_WORDS=["封面点击率","完播","CPA3","看后搜","商品点击率","加购","转化率","直播GPM","GPM","CPM"];
+const STEP_KPI_MAP={"完播":"完播率","看后搜":"看后搜率","加购":"加购率","GPM":"直播GPM"};
+function stepWhy(sopId,sn){
+  const sp=SOPS.find(x=>x.id===sopId); if(!sp)return;
+  const st=sp.steps.find(x=>x.s===sn); if(!st)return;
+  const money=/涉钱|HITL/.test(st.p+st.o);
+  if(money){ setTab("ledger"); flashEl("#cardCost");
+    toast("📖 Step"+sn+" "+st.env+" · 涉钱步:派发即进HITL · 花费在费用下钻对账 · KPI="+st.k,"warn"); return; }
+  const hit=STEP_KPI_WORDS.find(w=>st.k.indexOf(w)>=0);
+  if(hit){
+    const name=STEP_KPI_MAP[hit]||hit;
+    if(DICT_LINK[name]){ dictJump(name);
+      toast("📖 Step"+sn+" "+st.env+" · KPI="+st.k+" · 决策枚举:"+st.d,"go"); return; }
+  }
+  toast("📖 Step"+sn+" "+st.env+" · Input:"+st.i+" → "+st.p+" → "+st.o+" · KPI:"+st.k+" · 决策:"+st.d,"go");
+}
+/* 任务/规则上的岗位徽章 → 本岗SOP+战功(joint→作战官) */
+function teamWhy(team){
+  if(team==='joint'){ toast("🧭 联合(作战官) · 复盘验果与升层由作战官/主管拍板 · 战功两组共享","go"); return; }
+  postJump(team);
+}
+/* 账本行 → 谁的战功·哪条规则盯·可归因则去归因(今日屏) */
+const LEDGER_TWIN={retain_3s:"play_3s_rate",completion:"completion_rate",exposure:"exposure_growth",cvr:"c2cvr",add_cart:"c2cvr",live_cvr:"live_gpm",live_stay:"live_gpm",gmv:"roi"};
+function ledgerOwn(k){
+  const L=led();
+  if(L.joint.some(m=>m.k===k)) return "两组共享(联动战功)";
+  if(L.sell.some(m=>m.k===k)) return /live/.test(k)?"店播直播岗":"买手带货岗";
+  return "种草笔记岗";
+}
+function canAttr(k){
+  if(!k||!ATTR[k]||!ATTR[k].inc) return false;
+  if(ATTR[k].joint) return !!ledMap()[k];
+  if(['new_a3','cpa3','post_search','iq'].indexOf(k)>=0) return !!ledMap()[k];
+  return curMetrics().some(m=>m.k===k);
+}
+function ledgerWhy(k){
+  const lm=ledMap(); const m=lm[k]; if(!m) return;
+  const rs=RULES.filter(r=>r.kpi===k).map(r=>r.id+" "+r.nm);
+  const twin=ATTR[k]?k:LEDGER_TWIN[k];
+  const base="📒 "+m.label+" · 战功归属:"+ledgerOwn(k)+(rs.length?(" · 盯它的规则:"+rs.join("/")):" · 无直盯规则(进Gate/门口径)");
+  if(canAttr(twin)){
+    S.attrOpen=twin; setTab("today");
+    setTimeout(()=>{const el=document.getElementById("attrCard");if(el)el.scrollIntoView({behavior:"smooth",block:"center"});},150);
+    toast(base+" → 已打开归因卡(为什么/收入)","go");
+  } else {
+    toast(base,"go");
+  }
+}
+/* 三本账↔5A 行 → 5A层/交接KPI归因 */
+function l5aJump(a){
+  if(a.indexOf("→")>=0){
+    const kpi={"A2→A3":"c2ctr","A3→A4":"c2cvr","A4→A5":"new_repurchase"}[a];
+    S.attrOpen=kpi; setTab("today");
+    setTimeout(()=>{const el=document.getElementById("attrCard");if(el)el.scrollIntoView({behavior:"smooth",block:"center"});},150);
+    toast("🔀 "+a+" 这一跳由联合账度量 → 已打开交接KPI归因(两侧)","go");
+  } else {
+    setTab("today"); flashEl("#card5A");
+    const own=(FIVEA_LINK[a]||{}).own||"";
+    toast("👥 "+a+" 层 → 5A资产条 · 责任岗:"+own,"go");
+  }
+}
+/* 费用桶/趋势行联动 */
+function costWhy(label){
+  let own="握手预算内", mode="模式B·预算池";
+  if(/聚光|投流/.test(label)){own="三岗共用采买通道";mode="模式A·逐笔审批(HITL)";}
+  else if(/种草达人/.test(label)){own="种草笔记岗";mode="模式A·逐笔审批(达人采买HITL)";}
+  else if(/带货达人/.test(label)){own="买手带货岗";mode="模式A·逐笔审批";}
+  else if(/自播|直播/.test(label)){own="店播直播岗";mode="模式A·逐笔审批(加热HITL)";}
+  else if(/优惠券/.test(label)){own="带货/直播岗";mode="模式A(发券=涉钱HITL)";}
+  else if(/BGC|方舟/.test(label)){mode="模式B·预算池(池内动态·超池HITL)";}
+  else if(/残值/.test(label)){own="例外池";mode="强制HITL(≤¥5,000·ROI≥1.5)";}
+  toast("💸 "+label+" · 花钱的岗:"+own+" · "+mode,"go");
+}
+function trendWhy(label){
+  if(/ROI/.test(label)){ setTab("pipe"); flashEl("#cardFormula"); toast("📈 ROI趋势爬升→不直接砍(绿色通道) · 衰减守线看判定公式卡「放量衰减率」","go"); }
+  else if(/A3→A4/.test(label)){ S.attrOpen="c2cvr"; setTab("today"); setTimeout(()=>{const el=document.getElementById("attrCard");if(el)el.scrollIntoView({behavior:"smooth",block:"center"});},150); toast("📈 A3→A4 趋势=交接KPI → 已打开两侧归因","go"); }
+  else { toast("📈 "+label+" · 防误杀口径:趋势向好不砍,进绿色通道复核","go"); }
+}
+/* 6开关 → 小红书口径落在哪个账本键(点=原位) · 谁的战功 */
+const DIALECT_LINK={
+  "陈列":{k:"exposure",own:"种草笔记岗",why:"小红书的陈列=坑位/流量位 → 落在种草账「曝光」(去假后)"},
+  "动销":{k:"gmv",own:"带货/直播岗",why:"动销 → 卖货账「GMV/转化」"},
+  "认知":{k:"post_search",own:"种草笔记岗",why:"认知 → 种草账「看后搜率/搜索增长」(品牌心智战功)"},
+  "有货":{k:null,n3:2,own:"买手带货岗",why:"有货 → N3 承接检查表「库存可售天数」·不足不准加投"},
+  "复购":{k:"new_repurchase",own:"两组共享",why:"复购 → 联合账「新客复购率」(A4→A5·长效战功)"},
+  "口碑":{k:"refund_rate",own:"两组连带",why:"口碑 → 卖货账「退款率/体验分」·超线扣联动战功"}
+};
+function dialectJump(name){
+  const D=DIALECT_LINK[name]; if(!D) return;
+  if(D.k){ setTab("ledger"); flashEl('[data-lk="'+D.k+'"]'); }
+  else { setTab("pipe"); flashEl("#cardN3"); }
+  toast("🔁 "+name+"(开关) · "+D.why+" · 责任:"+D.own,"go");
+}
+/* 口径表每行 → 该指标的使用位(账本原位/费用/公式/判据) */
+const DICT_LINK={
+  "封面点击率":{t:"ledger",k:"retain_3s",use:"Gate1判据+种草战功"},
+  "完播率":{t:"ledger",k:"completion",use:"Gate1判据+内容战功"},
+  "互动率":{t:"ledger",k:"interact",use:"互动质量去假后计战功"},
+  "CPM":{t:"cost",use:"投放效率·费用下钻对账"},
+  "笔记GPM":{t:"ledger",k:"gmv",use:"成长期卖货账(sv_gpm)·放量凭证"},
+  "直播GPM":{t:"formula",use:"店播直播岗场次奖金·放量衰减公式盯它"},
+  "CPA3":{t:"ledger",k:"cpa3",use:"效率提成基数(省下的投放费)"},
+  "看后搜率":{t:"ledger",k:"post_search",use:"品牌心智战功"},
+  "商品点击率":{t:"ledger",k:"product_ctr",use:"Gate1判据+联动战功(R1盯它)"},
+  "加购率":{t:"ledger",k:"add_cart",use:"R2盯它·带货岗承接战功"},
+  "转化率":{t:"ledger",k:"cvr",use:"R4盯它·A3→A4交接"},
+  "内容数量口径":{t:"formula",use:"活跃视频口径·素材疲劳公式的分母"}
+};
+function dictJump(name){
+  const D=DICT_LINK[name]; if(!D) return;
+  if(D.t==="ledger"){ setTab("ledger"); flashEl('[data-lk="'+D.k+'"]'); }
+  else if(D.t==="cost"){ setTab("ledger"); flashEl("#cardCost"); }
+  else { setTab("pipe"); flashEl("#cardFormula"); }
+  toast("📏 "+name+" · 用在:"+D.use,"go");
+}
+function calibJumpN4(){ setTab("pipe"); flashEl("#cardFormula");
+  toast("🧪 去假的数学=判定公式卡「假流量率」·超线打flag未判级 · 门在N4质量可信门","warn"); }
+/* Triage 信号 → 落点(账本原位/规则SOP/N4门) */
+function triageGo(kind,val){
+  if(kind==="field"){ setTab("ledger"); flashEl('[data-lk="'+val+'"]'); toast("🎙 该信号归一到账本原位:"+val,"go"); }
+  else if(kind==="rule"){ const r=RULES.find(x=>x.id===val); if(r&&r.sopref){ attrGoSop(r.sopref[0].id,r.sopref[0].s,r.nm); } }
+  else if(kind==="flag"){ calibJumpN4(); }
+}
+/* N0–N6 每槽的数据流联动:数从哪来 → 到哪去(点=切过去) */
+const N_LINK={
+  N0:{lbl:"↘ 量实原位(数从这来)", go:()=>{setTab("collect");flashEl("#cardTriage");}, why:"N0 吃量实屏的上报/机采,先Triage去假再进管道"},
+  N1:{lbl:"↘ J1 内容×商品共创",   go:()=>{setTab("dual");S.jOpen["J1"]=true;renderDual();flashEl('[data-j="J1"]');}, why:"N1 的经营语义=J0/J1:打谁、拍什么"},
+  N2:{lbl:"↘ 费用下钻(钱花在哪)", go:()=>{setTab("ledger");flashEl("#cardCost");}, why:"N2 花的每一笔在一本账费用下钻里对账·涉钱进HITL"},
+  N3:{lbl:"↘ 下方承接检查表",     go:()=>{flashEl("#cardN3");}, why:"N3 九项未过不准进N2加投"},
+  N4:{lbl:"↘ 判定公式卡(门的数学)",go:()=>{flashEl("#cardFormula");}, why:"N4 三道门的公式/阈值/动作都在公式卡"},
+  N5:{lbl:"↘ 今日 5A 资产条",     go:()=>{setTab("today");flashEl("#card5A");}, why:"N5 的产出=5A人群资产,每一跳有责任岗"},
+  N6:{lbl:"↘ 今日 Gate 判据链",   go:()=>{setTab("today");flashEl("#gateBox");}, why:"N6 裁决=今日屏Gate判据链的后台,输出带fiveA快照+SOP绑定"}
+};
+function nLinkGo(n){ const L=N_LINK[n]; if(!L)return; L.go(); toast("🔗 "+n+" · "+L.why,"go"); }
+/* J↔N 映射行:点=去它的经营语义/裁决位 */
+function jnJump(n){
+  if(n==="N6"){ nLinkGo("N6"); return; }
+  const j={N0:"J2",N1:"J1",N2:"J1",N3:"J4",N4:"J3",N5:"J6"}[n];
+  setTab("dual"); S.jOpen[j]=true; renderDual(); flashEl('[data-j="'+j+'"]');
+  toast("🔀 "+n+"(系统语言) ↔ "+j+"(经营语言) · 映射但不可混用 · 已展开 "+j,"go");
+}
+/* 三岗 → 本岗SOP × 本岗战功指标(点岗即见"我该照哪本做·我的钱挂哪些数") */
+const POST_LINK={
+  seed_kol:{sop:"sop_seed",kpis:["play_3s_rate","completion_rate","new_a3","cpa3","post_search","iq"],
+    inc:"战功=内容战功分(3秒/完播/看后搜)+按人头计的新增A3+CPA3省下的效率提成"},
+  commerce_kol:{sop:"sop_comm",kpis:["product_ctr","add_cart","cvr","gmv"],
+    inc:"战功=商品承接战功(点击/加购/转化/GMV)+联动战功分(与种草共享)"},
+  live_room:{sop:"sop_live",kpis:["live_stay","live_cvr","live_gpm"],
+    inc:"战功=直播GPM场次奖金+促单战功(停留→成交)+联动战功分"}
+};
+function postJump(k){
+  const P=POST_LINK[k]; if(!P) return;
+  const lm=ledMap(); const gm={}; curMetrics().forEach(m=>gm[m.k]=m);
+  const names=P.kpis.map(x=>(lm[x]||gm[x]||{label:x}).label).join("/");
+  S.sopOpen[P.sop]=true; setTab("task");
+  setTimeout(()=>{const el=document.querySelector('[data-sop="'+P.sop+'"]');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),2600);}},150);
+  toast("👤 "+TEAM[k]+" · "+P.inc+" · 战功指标:"+names+" → 已展开本岗SOP","go");
+}
+function opsJump(){ setTab("cockpit"); toast("🧭 作战官/主管 → 驾驶舱:一条龙看 N0–N6 协同 · HUMAN_GATE 核定 · 复盘验果","go"); }
+function sceneJump(){
+  setTab("pipe"); flashEl("#cardHS");
+  toast("🎯 场景池 = N1↔N2 握手卡的「内容假设」来源:打谁(人群/场景/痛点/购买理由)在这定 · 定标↓的人群端","go");
+}
+/* 5A 每一跳的责任岗 × 度量它的联合KPI(交接) */
+const FIVEA_LINK={
+  A1:{own:"种草笔记岗(A1→A3)",note:"曝光/内容拦人",go:{t:"ledger",k:"exposure"}},
+  A2:{own:"种草笔记岗(A1→A3)",note:"A2→A3 这一跳由联合账「内容→商品点击率」度量",go:{t:"attr",k:"c2ctr"}},
+  A3:{own:"种草→卖货 交接处",note:"A3→A4 这一跳由联合账「内容→成交转化率」度量",go:{t:"attr",k:"c2cvr"}},
+  A4:{own:"买手带货岗/店播直播岗(A3→A5)",note:"A4→A5 这一跳由联合账「新客复购率」度量",go:{t:"attr",k:"new_repurchase"}},
+  A5:{own:"复购资产(两组共同沉淀)",note:"A5 忠诚人群 = 下个SKU的冷启资产",go:{t:"attr",k:"new_repurchase"}}
+};
+function fiveAJump(k){
+  const L=FIVEA_LINK[k]; if(!L) return;
+  toast("👥 "+k+" · 责任岗:"+L.own+" · "+L.note,"go");
+  if(L.go.t==="attr"){ S.attrOpen=L.go.k; renderToday();
+    setTimeout(()=>{const el=document.getElementById('attrCard');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},120);
+  } else { jumpMetric===undefined?0:0; setTab("ledger"); flashEl('[data-lk="'+L.go.k+'"]'); }
+}
+function jumpRedline(){
+  setTab("pipe"); flashEl('[data-node="4"]');
+  toast("⛔ 硬红线·体验 → N4 质量可信门(假流量+互动质量+体验分) · 超线=毕业冻结·连累联动战功","warn");
+}
+function jumpGuard(){
+  setTab("pipe"); flashEl("#cardFormula");
+  toast("🚪 专属门的公式/阈值/当前值/动作 → N0–N6 屏「判定公式卡」","go");
+}
+function jumpDict(){
+  setTab("collect"); flashEl("#cardMetricDict");
+  toast("📏 这些字段的分子/分母/取数范围/周期 → 量实屏「指标口径表」","go");
+}
+function openAttr(k){
+  S.attrOpen = (S.attrOpen===k)?null:k;
+  renderToday();
+  if(S.attrOpen){
+    setTimeout(()=>{const el=document.getElementById('attrCard');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},100);
+    const m=attrMetricOf(k);
+    if(m) toast((m.pass?'✅ ':'🔧 ')+m.label+(m.pass?' 大于目标 → 看做对了什么·能不能再提效':' 小于目标 → 看差在哪·回哪一步改'),m.pass?'go':'warn');
+  }
+}
+function attrGoSop(id,st,btnLbl){
+  S.sopOpen[id]=true; setTab('task');
+  const sp=SOPS.find(x=>x.id===id); const step=sp?sp.steps.find(x=>x.s===st):null;
+  setTimeout(()=>{const el=document.querySelector('[data-sopstep="'+id+'-'+st+'"]');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),2600);}},150);
+  if(sp&&step) toast('↪ 回到 '+sp.nm+' Step'+st+' '+step.env+' · '+btnLbl,'go');
+}
+function attrCard(){
+  const k=S.attrOpen; if(!k) return '';
+  const m=attrMetricOf(k); const A=ATTR[k];
+  if(!m||!A||!A.inc) return '';
+  const gapAbs=m.dir==='lt'?(m.t-m.show):(m.show-m.t);
+  const gapPct=m.t? Math.round(gapAbs/Math.abs(m.t)*100) : 0;
+  const win=m.pass;
+  const deltaTxt=(win?'+':'')+(m.dir==='lt'?(win?'低于线 ':'超线 '):'')+fmt(Math.abs(gapAbs))+(m.t?'('+(gapAbs>=0?'+':'')+gapPct+'%)':'');
+  const rulesHit=RULES.filter(r=>r.kpi===k&&ruleFires(r)).map(r=>r.id+' '+r.nm);
+  const upH=A.up.map(x=>`<div class="why">✓ ${x}</div>`).join('');
+  const dnH=(A.down||[]).map((d,ix)=>`<div class="why">✗ ${d.why}<br><span class="wa">→ ${d.act}</span>
+     <button class="btn xs o" data-attrsop="${k}-${ix}" onclick="attrGoSop('${d.sop.id}',${d.sop.s},'${d.act}')" style="margin-left:6px">回SOP Step${d.sop.s}</button></div>`).join('');
+  return `<div class="attr ${win?'win':'lose'}" id="attrCard">
+    <div class="ah">${win?'✅':'🔧'} ${m.label} · 差值 <span class="delta ${win?'up':'dn'}" data-delta>${deltaTxt}</span>
+      <span class="badge">${win?'大于目标=做对了什么':'小于目标=差在哪'}</span></div>
+    ${A.joint?`<div class="sec" data-jointline style="margin-top:6px;background:#eef2f6;border-radius:6px;padding:6px 9px">🔀 <b>双线关联</b>:这是种草×卖货的<b>交接KPI</b> · 归因分【种草侧】【卖货侧】【交接】三处 · 战功两组共享(同源消费者·非零和)</div>`:''}
+    <div class="inc" data-inc>💰 <b>跟我收入的关系</b>:${A.inc}<br><span class="hint" style="margin:2px 0 0">${INCOME_MODEL}</span></div>
+    ${win?`<div class="sec"><div class="t">✅ ${A.joint?'两侧各做对了什么(复盘即两组战功凭证)':'这次做对了(复盘即战功凭证)'}:</div>${upH}</div>
+      <div class="sec"><div class="t">📈 下次再提效:</div><div class="why" style="border-top:none">${A.upNext}
+        <button class="btn xs go" data-attrfix onclick="toast('已标记为SOP候选 · 验果通过后在复盘中心固化(只有结果指标真动了才允许)','go')" style="margin-left:6px">📌 标为SOP候选</button></div></div>`
+    :`<div class="sec"><div class="t">🔧 差在哪 · 原因 → 动作 → 回哪一步:</div>${dnH}
+      ${rulesHit.length?`<div class="hint" style="margin-top:5px">已触发规则:${rulesHit.join(' / ')} → 任务中心可派发</div>`:''}</div>`}
+    <div class="sec" style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn xs o" data-attrjump onclick="jumpMetric('${k}')">↘ 看数据原位(账本/口径/费用)</button>
+      <button class="btn xs" data-attrclose onclick="openAttr('${k}')">收起</button>
+    </div>
+  </div>`;
+}
+function jumpMetric(k){
+  const lm=ledMap();
+  const lbl=(curMetrics().find(m=>m.k===k)||lm[k]||{label:k}).label;
+  const J=KPI_JUMP[k]||(lm[k]?{t:"ledger",k:k,why:""}:null);
+  if(!J){ toast(lbl+" · 暂无账本原位(接口位待焊)","warn"); return; }
+  if(J.t==="ledger"){
+    const book=led().seed.some(m=>m.k===J.k)?"种草账":(led().sell.some(m=>m.k===J.k)?"卖货账":"联合账");
+    setTab("ledger"); flashEl('[data-lk="'+J.k+'"]');
+    toast("↘ "+lbl+" · 原位:"+book+"「"+(lm[J.k]?lm[J.k].label:J.k)+"」· 参与 "+STAGES[S.stage].gate+" 判据"+metricRules(J.k)+(J.why?" · "+J.why:""),"go");
+  }else if(J.t==="cost"){
+    setTab("ledger"); flashEl("#cardCost");
+    toast("↘ "+lbl+" · "+J.why,"go");
+  }else if(J.t==="dict"){
+    setTab("collect"); flashEl('[data-dict="'+J.k+'"]');
+    toast("↘ "+lbl+" · "+J.why,"go");
+  }else if(J.t==="today5a"){
+    setTab("today"); flashEl("#card5A");
+    toast("↘ "+lbl+" · "+J.why,"go");
+  }else if(J.t==="pipe6"){
+    setTab("pipe");
+    setTimeout(()=>{ const a=document.getElementById("art6"); if(a&&!a.classList.contains("show")) toggleArt(6); },140);
+    flashEl('[data-node="6"]');
+    toast("↘ "+lbl+" · "+J.why,"go");
+  }
+}
+function editMetric(i){
+  const st=STAGES[S.stage];const m=curSKU().metrics[i];
+  const cur=(S.metricEdited[S.stage]&&(m.k in S.metricEdited[S.stage]))?S.metricEdited[S.stage][m.k]:m.v;
+  const passNow = m.dir==='lt'?(cur<m.t):(cur>=m.t);
+  const nv = passNow ? (m.dir==='lt'? +(m.t+ (m.t*0.15||0.1)).toFixed(3) : +(m.t*0.85).toFixed(3))
+                     : (m.dir==='lt'? +(m.t*0.85).toFixed(3) : +(m.t*1.15).toFixed(3));
+  S.metricEdited[S.stage]=S.metricEdited[S.stage]||{}; S.metricEdited[S.stage][m.k]=nv;
+  renderToday(); renderHead();
+  toast(m.k+" 改为 "+fmt(nv)+" → "+st.gate+" 重判："+(gatePass()?"四判全绿":"该判未达标·留本期修"), gatePass()?'go':'red');
+}
+function toggleCalib(){
+  S.calib=!S.calib; rerender(); renderHead();
+  toast(S.calib?"去假后(TypeB)· 判级与规则只认这个真值":"去假前 · 含刷量虚高 · 这些数不进算差(种草账好看≠联合账连上)","warn");
+}
+function escalate(){
+  S.pending.push({kind:"关差关不了·升品类会诊",text:SKU.name+" · "+STAGES[S.stage].name+" 结构性未达标/双线协同失败",amt:0,irr:true});
+  if(S.tab==='cockpit')renderCockpit(); else if(S.tab==='task')renderTask();
+  toast("↑ 已升一层 · 关不了的差 → 主管品类层会诊(连接律·规律③)","warn");
+}
+function stepRing(i){
+  S.ringLit[S.stage]=i+1; renderRing();
+  const names=["定标↓","量实↑","算差(去假)","关差","验果"];
+  toast("环 · 跑到「"+names[i]+"」"+(i===4?" · 验果=看上层标动没动":""));
+}
+function settle(){
+  if(!gatePass()){ toast("有指标未达标 → 关差没关,滚明天,不放大断链","red"); return; }
+  const st=STAGES[S.stage];
+  if(st.inc===0){ S.done=true; renderToday(); toast("本阶段不计增长激励(衰退/淘汰按残值/收尾结算)","warn"); return; }
+  S.hGot+=st.inc; S.done=true; renderToday();
+  toast("✓ 数据回流确认 · "+st.gate+" 达标落袋 +"+st.inc+" · 验果上溯：品类层A认知资产上移","go");
+}
+
+/* ---------------- boot ---------------- */
+(function readIdentity(){
+  const p=new URLSearchParams(location.search);
+  const name=p.get('name'), role=p.get('role'), ch=p.get('channel');
+  if(name) CHANNEL.who=name;
+  if(['seed_kol','commerce_kol','live_room','ops','mgr'].indexOf(role)>=0) S.role=role;
+  if(ch && ch!==CHANNEL.key){ /* 渠道不匹配:登录页负责路由 */ }
+})();
+renderStrip(); renderHead(); renderToday();
+[['seed_kol','rSeedKol'],['commerce_kol','rCommKol'],['live_room','rLive'],['ops','rOps'],['mgr','rMgr']].forEach(([k,id])=>{
+  document.getElementById(id).className='role'+(S.role===k?' me':'');
+});
+</script>
+</body>
+</html>
