@@ -1,0 +1,2044 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>天猫 v11 · SKU生命周期经营 Agent</title>
+<style>
+:root{--ink:#17191E;--paper:#F2F1EB;--surface:#FBFAF6;--amber:#A8612A;--amber-deep:#834A1F;--amber-tint:#EADFCB;
+  --slate:#6b6f76;--rule:#dcd7cb;--blue:#3a5a7a;--go:#3f7a4f;--red:#a8433a;--red-tint:#f0dcd8;--go-tint:#dbe7dc;
+  --mono:'JetBrains Mono','SF Mono',ui-monospace,monospace;--cjk:'PingFang SC','Noto Sans CJK SC',system-ui,sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#26282d;font-family:var(--cjk);color:var(--ink);-webkit-font-smoothing:antialiased;font-size:13px;}
+button{cursor:pointer;font-family:var(--cjk);font-size:12px;border:1px solid var(--amber-tint);border-radius:5px;padding:7px 11px;background:var(--surface);color:var(--amber-deep);}
+button:active{transform:translateY(1px);}
+button:focus,select:focus,input:focus{outline:2px solid var(--blue);}
+button:disabled{opacity:.4;cursor:not-allowed;}
+input,select{background:var(--surface);border:1px solid var(--rule);color:var(--ink);border-radius:5px;padding:5px 8px;font-size:12px;font-family:var(--cjk);}
+.phone{max-width:430px;margin:0 auto;min-height:100vh;background:var(--paper);display:flex;flex-direction:column;position:relative;}
+.trialbar{background:repeating-linear-gradient(45deg,#2a2c31,#2a2c31 8px,#25272c 8px,#25272c 16px);color:#c9b48f;font-family:var(--mono);font-size:9.5px;padding:5px 12px;letter-spacing:.03em;line-height:1.5;}
+.trialbar b{color:#e7d3a8;}
+.hd{background:var(--ink);color:#F2F1EB;padding:11px 15px;}
+.hd .who{font-weight:700;font-size:14.5px;}
+.hd .who small{font-weight:400;color:#B7BAC0;font-family:var(--mono);font-size:10.5px;margin-left:5px;}
+.roles{float:right;display:flex;gap:4px;flex-wrap:wrap;}
+.roleb{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:2px;background:#2f3239;color:#B7BAC0;border:1px solid #3a3e45;}
+.roleb.on{background:var(--amber);color:#fff;border-color:var(--amber);}
+.hd .second{margin-top:9px;font-size:11px;color:#9a9da3;font-family:var(--mono);display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.hd .second select{background:#2f3239;border-color:#3a3e45;color:#F2F1EB;font-size:11px;max-width:230px;}
+.cyb{font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:2px;background:#2f3239;color:#B7BAC0;border:1px solid #3a3e45;}
+.cyb.on{background:var(--amber);color:#fff;border-color:var(--amber);}
+.mockchip{font-family:var(--mono);font-size:9px;color:#e7d3a8;border:1px dashed #5a5136;padding:1px 6px;border-radius:2px;}
+.stagestrip{display:flex;overflow-x:auto;background:#1d1f24;border-top:1px solid #2f3239;-webkit-overflow-scrolling:touch;}
+.stagestrip::-webkit-scrollbar{display:none;}
+.stgb{flex:1 0 auto;padding:8px 12px 7px;font-family:var(--mono);font-size:11px;color:#7d818a;border:none;border-radius:0;background:transparent;border-bottom:2px solid transparent;white-space:nowrap;text-align:center;}
+.stgb.on{color:#F2F1EB;border-bottom-color:var(--amber);background:#232529;}
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:5;}
+.navb{flex:1;text-align:center;padding:9px 2px;font-size:11px;color:var(--slate);border:none;border-radius:0;background:transparent;border-bottom:2px solid transparent;}
+.navb.on{color:var(--amber-deep);font-weight:700;border-bottom-color:var(--amber);background:var(--surface);}
+.body-row{flex:1;display:flex;min-height:0;}
+.main{flex:1;overflow-y:auto;padding:13px 14px 90px;min-width:0;}
+.side{display:none;background:var(--surface);border-left:1px solid var(--rule);padding:13px;width:320px;overflow-y:auto;}
+.side .sh{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--amber-deep);}
+.card{overflow-x:auto;background:var(--surface);border:1px solid var(--rule);border-radius:7px;padding:13px;margin-bottom:12px;}
+.card h3{font-size:13.5px;font-weight:800;margin-bottom:7px;}
+.card h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--amber-deep);margin:10px 0 5px;}
+.sub{font-size:11.5px;color:var(--slate);line-height:1.55;}
+.tiny{font-family:var(--mono);font-size:9.5px;color:var(--slate);line-height:1.6;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.tile{background:var(--paper);border:1px solid var(--rule);border-radius:5px;padding:8px 10px;cursor:pointer;}
+.tile .v{font-family:var(--mono);font-size:15px;font-weight:700;margin:2px 0;}
+.tile .lbl{font-family:var(--mono);font-size:10px;color:var(--slate);}
+.st-red{background:var(--red-tint);border-color:#e0bdb7;}.st-red .v{color:var(--red);}
+.st-green{background:var(--go-tint);border-color:#bcd3bf;}.st-green .v{color:var(--go);}
+.st-amber{background:var(--amber-tint);border-color:#d8c39a;}.st-amber .v{color:var(--amber-deep);}
+.st-gray{background:#e9e7df;opacity:.85;}.st-gray .v{color:var(--slate);}
+.pill{display:inline-block;font-family:var(--mono);font-size:9.5px;border-radius:2px;padding:1px 7px;margin-right:4px;}
+.p-red{background:var(--red-tint);color:var(--red);}
+.p-green{background:var(--go-tint);color:var(--go);}
+.p-amber{background:var(--amber-tint);color:var(--amber-deep);}
+.p-gray{background:#e9e7df;color:var(--slate);}
+.p-blue{background:#dde5ee;color:var(--blue);}
+.p-purple{background:#e7dff0;color:#6b4b9e;}
+.row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.spread{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+table{width:100%;border-collapse:collapse;font-size:11.5px;}
+th,td{text-align:left;padding:6px 7px;border-bottom:1px solid var(--rule);}
+th{font-family:var(--mono);font-size:10px;color:var(--slate);font-weight:500;}
+.jnode,.nnode{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;margin-bottom:8px;cursor:pointer;}
+.jnode.open,.nnode.open{border-left:3px solid var(--amber);}
+.jnode b,.nnode b{font-size:12.5px;}
+.attrcard{background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--amber);border-radius:6px;padding:12px;margin-top:8px;}
+.attrcard .seg{margin-bottom:8px;padding-left:8px;border-left:2px solid var(--rule);}
+.attrcard .seg b{font-size:12px;}
+.chk{display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid var(--rule);cursor:pointer;font-size:12px;}
+.chk.done{color:var(--go);}
+.feest{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0;}
+.feest span{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:2px;background:var(--paper);color:var(--slate);border:1px solid var(--rule);}
+.feest span.hit{background:var(--go-tint);color:var(--go);border-color:#bcd3bf;}
+.feest span.cur{background:var(--amber-tint);color:var(--amber-deep);border-color:#d8c39a;}
+#tw{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:99;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;}
+#tw .t{background:#17191Ee6;color:#F2F1EB;padding:8px 16px;border-radius:20px;font-size:12px;max-width:86vw;}
+.jsonbox{background:#1d1f24;border:1px solid #2f3239;border-radius:6px;padding:10px;font-family:var(--mono);font-size:10px;white-space:pre-wrap;word-break:break-all;color:#c9d8a8;max-height:260px;overflow:auto;}
+.gaunt{width:100%;height:8px;background:var(--paper);border-radius:4px;overflow:hidden;margin:4px 0;}
+.gaunt i{display:block;height:100%;background:var(--go);}
+.mnav{display:none;}
+.oidCards{display:none;}
+@media (max-width:767px){ .oidTable{display:none;} .oidCards{display:block;} }
+@media (min-width:1360px){ .phone{max-width:1330px;} }
+@media (min-width:1600px){ .phone{max-width:1560px;} .grid3{grid-template-columns:repeat(3,1fr);} }
+.teamTable th{position:sticky;top:0;background:var(--surface);z-index:2;}
+.teamTable th:first-child,.teamTable td:first-child{position:sticky;left:0;background:var(--surface);z-index:3;}
+.dimTab.on{background:var(--amber);color:#fff;border-color:var(--amber);}
+@media (min-width:1200px){
+  .phone{display:grid;grid-template-columns:168px 1fr;grid-template-rows:auto auto auto 1fr;}
+  .trialbar{grid-column:1/3;}
+  .hd{grid-column:1/3;}
+  .stagestrip{grid-column:1/3;}
+  .tabs{grid-column:1;grid-row:4;flex-direction:column;border-bottom:none;border-right:1px solid var(--rule);position:static;align-items:stretch;height:100%;}
+  .navb{text-align:left;padding:11px 14px;border-bottom:none;border-left:3px solid transparent;font-size:12.5px;}
+  .navb.on{border-left-color:var(--amber);border-bottom:none;}
+  .body-row{grid-column:2;grid-row:4;}
+}
+
+.drawerbtn{display:none;}
+@media (min-width:1200px){
+  .phone{max-width:1240px;}
+  .side{display:block;}
+  .main{padding:16px 20px 60px;}
+  .grid3{grid-template-columns:1fr 1fr 1fr;}
+}
+@media (max-width:1199px){
+  .phone{max-width:760px;}
+  .side.open{display:block;position:fixed;right:0;top:0;bottom:0;width:320px;z-index:50;box-shadow:-8px 0 30px #0006;}
+  .drawerbtn{display:inline-block;}
+}
+@media (max-width:767px){
+  .phone{max-width:430px;}
+  .side.open{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;max-height:70vh;border-top:1px solid var(--rule);border-left:none;border-radius:12px 12px 0 0;box-shadow:0 -8px 30px #0006;}
+  .grid2,.grid3{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="phone app-shell">
+  <div class="trialbar"><b>TRIAL · MOCK 假水试跑</b> — 天猫v3引擎 · 七屏×四岗×J/N×六期×三本账 · 全链路可点 · 未接真实数据源</div>
+  <div class="hd">
+    <div class="who">天猫 v11 <small>SKU生命周期经营 Agent</small><span class="roles" id="roleBox"></span></div>
+    <div class="second">
+      <select id="skuSel"></select>
+      <button class="cyb" id="cyN">日销</button><button class="cyb" id="cyC">大促</button>
+      <span class="mockchip" id="mockBadge">MOCK</span>
+    </div>
+  </div>
+  <div class="stagestrip" id="stgBox"></div>
+  <div class="tabs">
+    <button class="navb" data-s="1">今日经营</button>
+    <button class="navb" data-s="2">J旅程</button>
+    <button class="navb" data-s="3">N引擎</button>
+    <button class="navb" data-s="4">量实校准</button>
+    <button class="navb" data-s="5">三本账</button>
+    <button class="navb" data-s="6">任务复盘</button>
+    <button class="navb" data-s="7">驾驶舱</button>
+  </div>
+  <div class="body-row">
+    <main class="main" id="main"></main>
+    <aside class="side" id="side">
+      <div class="spread"><b class="sh">证据 / 归因</b><button onclick="closeSide()" class="drawerbtn">✕</button></div>
+      <div id="sideBody"><div class="sub" style="margin-top:8px">点击任一红绿灯/指标瓦片,这里显示:为什么→数据来源/公式→规则→责任岗→SOP step→任务→验果。</div></div>
+    </aside>
+  </div>
+</div>
+<div class="mnav" id="mnav"></div>
+<div id="tw"></div>
+
+<script>
+/* =========================================================
+   天猫 v5 (=v4.1闭环补强) · SKU生命周期经营 Agent 前台 · TRIAL/MOCK
+   本轮:P0-01费用过滤 P0-02财务权限 P0-03全量SOP P0-04规则执行器
+        P0-05交接状态机 P1-01大促回看Artifact P1-02生命周期真迁移
+        P1-03出口枚举 P1-04 OneID来源下钻 P1-05规则回放/回滚
+        P1-06数据源矩阵 P1-07驾驶舱信息隔离 + 三层值/费用全字段/演示阈值标注
+   ========================================================= */
+const MOCK_MODE = true;
+
+/* ---------- 角色(新增 fin 财务岗;sys=系统接口仅日志) ---------- */
+const ROLES = {
+  mkt:{n:'营销岗 A', scope:'新品信息·SEO·主图详情·内容·舆情'},
+  ad :{n:'推广岗 I', scope:'渠道预算·词·人群·创意·投放'},
+  ops:{n:'店铺运营岗 P', scope:'上架·库存·链接·活动·达播·成交'},
+  crm:{n:'用户运营岗 L', scope:'分层·触达·复购·唤醒·人群资产'},
+  cmd:{n:'联合作战官', scope:'跨岗编排·关差·派发·验果'},
+  mgr:{n:'主管/品类', scope:'品类层资源·重大裁决·核定'},
+  fin:{n:'财务岗', scope:'到账回写·消耗对账·开票结清'}
+};
+
+/* ---------- 六生命周期(演示阈值·待业务×IT×TAG专场确认) ---------- */
+const STAGES = {
+  intro:  {n:'导入', goal:'测词测图·合规首购·效率校正', res:'小额测试;默认观察30天(日/7日辅助)',
+    mainKpi:['ctr','cvr','cart','roi'],
+    gate:[['ctr','>=',3.5,'%'],['cvr','>=',2.0,'%'],['roi','>=',1.2,''],['badReview','<=',1.0,'%']]},
+  growth: {n:'成长', goal:'扩量并让免费流量接棒', res:'逐级加码,放量后仍守线',
+    mainKpi:['clicks','freeShare','freeVol','roi'],
+    gate:[['freeShare','>=',35,'%'],['freeVol','>=',8000,'UV/期'],['roi','>=',1.5,''],['ctr','>=',3.0,'%']]},
+  mature: {n:'成熟', goal:'规模·利润·老客资产', res:'投放收口,素材轻刷新,大促单列',
+    mainKpi:['profit','gmv','freeShare','repurchase','uvValue'],
+    gate:[['profit','>=',120000,'元/期'],['freeShare','>=',55,'%'],['repurchase','>=',18,'%'],['uvValue','>=',4.5,'元']]},
+  decline:{n:'衰退', goal:'停投验残值·清货护价', res:'默认停投;残值复投属例外需HITL',
+    mainKpi:['organicGmv','residProfit','refundRate'],
+    gate:[['organicGmv','>=',30000,'元/期'],['residProfit','>=',8000,'元/期'],['refundRate','<=',3.0,'%']]},
+  renew:  {n:'焕新', goal:'根因解决后受控重启(链接三路裁决)', res:'重启预算受控;最多次数可配(当前≤2)',
+    mainKpi:['ctr','cvr','cart','roi'],
+    gate:[['ctr','>=',3.2,'%'],['cvr','>=',2.2,'%'],['roi','>=',1.3,''],['badReview','<=',1.0,'%']]},
+  retire: {n:'淘汰', goal:'体面收尾·资产迁移', res:'零新增投放;不可复活',
+    mainKpi:[], gate:[]}
+};
+const STAGE_ORDER = ['intro','growth','mature','decline','renew','retire'];
+
+/* ---------- 出口枚举(P1-03) ---------- */
+const EXITS = {
+  intro:  [['to_growth','进入成长'],['keep_testing','继续测试'],['stop','停止']],
+  growth: [['to_mature','进入成熟'],['rework','回修'],['stop','停止']],
+  mature: [['stable_keep','守'],['stable_reduce_spend','收'],['refresh_restart','焕新'],['decline_stoploss','衰退'],['retire_archive','淘汰']],
+  decline:[['maintain','维持'],['refresh_restart','焕新'],['retire_archive','淘汰']],
+  renew:  [['back_to_growth','回成长'],['keep_fixing','继续修复'],['retire_archive','淘汰']],
+  retire: [['terminal_archive','终态归档']]
+};
+const EXIT_TARGET = {to_growth:'growth', to_mature:'mature', refresh_restart:'renew', decline_stoploss:'decline', retire_archive:'retire', back_to_growth:'growth'};
+
+/* ---------- 指标字典 ---------- */
+const METRICS = {
+  ctr:       {n:'CTR', unit:'%', src:'生意参谋·流量看板', formula:'点击量/曝光量', owner:'ad',  sop:'A-3', ledger:'ad'},
+  cvr:       {n:'支付CVR', unit:'%', src:'生意参谋·交易', formula:'支付买家数/访客数', owner:'ops', sop:'P-3', ledger:'deal'},
+  cart:      {n:'加购率', unit:'%', src:'生意参谋·行为(兴趣/购买意向,不归复购)', formula:'加购人数/访客数', owner:'mkt', sop:'A-7', ledger:'asset'},
+  roi:       {n:'ROI(真实)', unit:'', src:'推广后台+退款回冲', formula:'(GMV-退款-异常订单)/花费', owner:'ad', sop:'I-6', ledger:'ad'},
+  clicks:    {n:'点击量', unit:'', src:'生意参谋', formula:'Σ点击', owner:'ad', sop:'I-5', ledger:'ad'},
+  freeShare: {n:'免费流量占比', unit:'%', src:'生意参谋·流量结构', formula:'免费UV/总UV(须与量级并看)', owner:'mkt', sop:'A-4', ledger:'asset'},
+  freeVol:   {n:'免费流量量级', unit:'UV', src:'生意参谋·流量结构', formula:'免费UV绝对值', owner:'mkt', sop:'A-4', ledger:'asset'},
+  gmv:       {n:'GMV(回冲后)', unit:'元', src:'交易+退款回冲', formula:'支付GMV-退款-取消-异常', owner:'ops', sop:'P-5', ledger:'deal'},
+  profit:    {n:'贡献利润', unit:'元', src:'财务口径(平台费/投放/佣金/券/物流/退款/税费)', formula:'GMV-COGS-费用全项', owner:'ops', sop:'P-5', ledger:'deal'},
+  uvValue:   {n:'UV价值', unit:'元', src:'生意参谋', formula:'GMV/UV', owner:'ops', sop:'P-5', ledger:'deal'},
+  aov:       {n:'客单价', unit:'元', src:'生意参谋', formula:'GMV/支付买家数', owner:'ops', sop:'P-5', ledger:'deal'},
+  firstBuy:  {n:'首购数', unit:'', src:'CRM/会员(导入期主看)', formula:'首次购买买家数', owner:'crm', sop:'L-6', ledger:'deal'},
+  repurchase:{n:'老客复购率', unit:'%', src:'CRM/会员(SKU级优先)', formula:'复购老客/老客', owner:'crm', sop:'L-6', ledger:'deal'},
+  organicGmv:{n:'自然搜索GMV', unit:'元', src:'生意参谋·搜索', formula:'自然搜索成交', owner:'mkt', sop:'A-4', ledger:'asset'},
+  residProfit:{n:'残值利润', unit:'元', src:'财务口径', formula:'停投后贡献利润', owner:'ops', sop:'P-8', ledger:'deal'},
+  refundRate:{n:'退款率', unit:'%', direction:'lt', src:'交易·售后', formula:'退款订单/支付订单', owner:'ops', sop:'P-5', ledger:'deal'},
+  badReview: {n:'差评率', unit:'%', direction:'lt', src:'评价·体验', formula:'差评/总评价', owner:'ops', sop:'P-3', ledger:'deal'}
+};
+
+/* ---------- MOCK SKU(全欣和·B2C/POP能力矩阵) ---------- */
+const SKUS = [
+ {id:'TM-6001', name:'六月鲜·轻盐特级酱油 500ml', spu:'SPU-61', item:'item-885201', shop:'欣和官方旗舰店(B2C)', model:'B2C', stage:'intro',
+  m:{normal:{ctr:3.1,cvr:1.7,cart:6.2,roi:1.05,clicks:4200,freeShare:18,freeVol:2100,gmv:38000,profit:4200,uvValue:3.1,aov:39,firstBuy:820,repurchase:4,organicGmv:6800,residProfit:0,refundRate:1.8,badReview:0.6},
+     campaign:{ctr:4.8,cvr:3.9,cart:9.1,roi:2.4,clicks:15200,freeShare:9,freeVol:1400,gmv:216000,profit:16000,uvValue:5.8,aov:35,firstBuy:5100,repurchase:3,organicGmv:5100,residProfit:0,refundRate:2.9,badReview:0.8}},
+  stock:{depth:36,arrivalDays:5,fulfil:'ok'}, anomaly:14, refundAmt:1900, stopLossSet:false},
+ {id:'TM-6002', name:'味达美·味极鲜酱油 1L', spu:'SPU-62', item:'item-885322', shop:'欣和官方旗舰店(B2C)', model:'B2C', stage:'growth',
+  m:{normal:{ctr:3.6,cvr:2.6,cart:7.4,roi:1.62,clicks:21500,freeShare:31,freeVol:6900,gmv:412000,profit:52000,uvValue:4.2,aov:33,firstBuy:2900,repurchase:11,organicGmv:98000,residProfit:0,refundRate:1.4,badReview:0.4},
+     campaign:{ctr:5.2,cvr:4.4,cart:10.2,roi:2.1,clicks:64000,freeShare:14,freeVol:5200,gmv:1680000,profit:132000,uvValue:6.4,aov:31,firstBuy:15800,repurchase:9,organicGmv:76000,residProfit:0,refundRate:2.2,badReview:0.5}},
+  stock:{depth:58,arrivalDays:7,fulfil:'ok'}, anomaly:31, refundAmt:5200, stopLossSet:true},
+ {id:'TM-6003', name:'葱伴侣·六月香豆瓣酱 800g', spu:'SPU-63', item:'item-886019', shop:'欣和官方旗舰店(B2C)', model:'B2C', stage:'mature',
+  m:{normal:{ctr:3.0,cvr:3.4,cart:6.0,roi:2.3,clicks:30800,freeShare:61,freeVol:26800,gmv:930000,profit:141000,uvValue:5.1,aov:29,firstBuy:3400,repurchase:22,organicGmv:512000,residProfit:0,refundRate:1.1,badReview:0.3},
+     campaign:{ctr:4.1,cvr:4.9,cart:8.8,roi:2.6,clicks:88000,freeShare:38,freeVol:21000,gmv:2890000,profit:361000,uvValue:7.0,aov:28,firstBuy:11800,repurchase:19,organicGmv:402000,residProfit:0,refundRate:1.9,badReview:0.4}},
+  stock:{depth:44,arrivalDays:6,fulfil:'ok'}, anomaly:9, refundAmt:8600, stopLossSet:true},
+ {id:'TM-6004', name:'禾然有机·有机酱油 500ml', spu:'SPU-64', item:'item-886240', shop:'禾然有机专营店(POP)', model:'POP', stage:'decline',
+  m:{normal:{ctr:2.1,cvr:2.2,cart:4.1,roi:0.8,clicks:5200,freeShare:72,freeVol:4900,gmv:64000,profit:9800,uvValue:3.6,aov:45,firstBuy:410,repurchase:null,organicGmv:41000,residProfit:9200,refundRate:2.4,badReview:0.9},
+     campaign:{ctr:2.9,cvr:3.0,cart:5.5,roi:1.1,clicks:9800,freeShare:51,freeVol:4100,gmv:168000,profit:15000,uvValue:4.4,aov:42,firstBuy:1400,repurchase:null,organicGmv:36000,residProfit:8800,refundRate:3.4,badReview:1.1}},
+  stock:{depth:21,arrivalDays:12,fulfil:'slow'}, anomaly:4, refundAmt:2100, stopLossSet:true,
+  caps:{repurchase:'POP店铺SKU级老客字段平台不可得', firstBuy:'仅店铺级,SKU级未接入'}},
+ {id:'TM-6005', name:'遵循自然·有机料酒 480ml', spu:'SPU-65', item:'item-886511', shop:'欣和官方旗舰店(B2C)', model:'B2C', stage:'renew',
+  m:{normal:{ctr:3.4,cvr:2.4,cart:6.8,roi:1.35,clicks:6100,freeShare:26,freeVol:2600,gmv:82000,profit:10400,uvValue:3.8,aov:36,firstBuy:640,repurchase:8,organicGmv:19000,residProfit:0,refundRate:1.6,badReview:0.7},
+     campaign:{ctr:4.4,cvr:3.6,cart:8.4,roi:1.8,clicks:13400,freeShare:15,freeVol:2100,gmv:236000,profit:21000,uvValue:5.2,aov:34,firstBuy:2600,repurchase:7,organicGmv:15000,residProfit:0,refundRate:2.5,badReview:0.9}},
+  stock:{depth:40,arrivalDays:8,fulfil:'ok'}, anomaly:6, refundAmt:1400, stopLossSet:true, renewCount:1},
+ {id:'TM-6006', name:'味达美·臻品料酒 老包装 500ml', spu:'SPU-65', item:'item-880007', shop:'欣和官方旗舰店(B2C)', model:'B2C', stage:'retire',
+  m:{normal:{ctr:1.2,cvr:1.1,cart:2.0,roi:0,clicks:400,freeShare:96,freeVol:900,gmv:5200,profit:600,uvValue:1.8,aov:30,firstBuy:20,repurchase:2,organicGmv:5000,residProfit:600,refundRate:2.8,badReview:1.4},
+     campaign:{ctr:1.2,cvr:1.1,cart:2.0,roi:0,clicks:400,freeShare:96,freeVol:900,gmv:5200,profit:600,uvValue:1.8,aov:30,firstBuy:20,repurchase:2,organicGmv:5000,residProfit:600,refundRate:2.8,badReview:1.4}},
+  stock:{depth:3,arrivalDays:0,fulfil:'stop'}, anomaly:0, refundAmt:300, stopLossSet:true}
+];
+
+/* ---------- 规则表(版本+历史,支持回放/回滚 P1-05) ---------- */
+const RULES = [
+ {id:'R-GATE-INTRO', name:'导入期Gate阈值', version:'v3.1', approver:'主管·占位', effective:'2026-07-01',
+  expr:'CTR≥3.5% ∧ 支付CVR≥2.0% ∧ 真实ROI≥1.2 ∧ 差评率≤1.0%',
+  params:{ctr:{op:'>=',value:3.5},cvr:{op:'>=',value:2.0},roi:{op:'>=',value:1.2},badReview:{op:'<=',value:1.0}},
+  hist:[{version:'v3.0', effective:'2026-05-01', expr:'CTR≥3.0% ∧ 支付CVR≥1.8% ∧ 真实ROI≥1.1 ∧ 差评率≤1.0%', params:{ctr:{op:'>=',value:3.0},cvr:{op:'>=',value:1.8},roi:{op:'>=',value:1.1},badReview:{op:'<=',value:1.0}}, approver:'主管·占位'}]},
+ {id:'R-GATE-GROWTH', name:'成长期Gate阈值', version:'v2.4', approver:'主管·占位', effective:'2026-07-01',
+  expr:'免费占比≥35% ∧ 免费量级≥8000UV ∧ ROI≥1.5 ∧ CTR≥3.0%',
+  params:{freeShare:{op:'>=',value:35},freeVol:{op:'>=',value:8000},roi:{op:'>=',value:1.5},ctr:{op:'>=',value:3.0}}, hist:[]},
+ {id:'R-GATE-MATURE', name:'成熟期Gate阈值', version:'v2.2', approver:'主管·占位', effective:'2026-07-01',
+  expr:'贡献利润≥12万/期 ∧ 免费占比≥55% ∧ 老客复购≥18% ∧ UV价值≥4.5',
+  params:{profit:{op:'>=',value:120000},freeShare:{op:'>=',value:55},repurchase:{op:'>=',value:18},uvValue:{op:'>=',value:4.5}}, hist:[]},
+ {id:'R-GATE-DECLINE', name:'衰退期Gate阈值', version:'v2.1', approver:'主管·占位', effective:'2026-07-01',
+  expr:'自然搜索GMV≥3万 ∧ 残值利润≥8千 ∧ 退款率≤3.0%',
+  params:{organicGmv:{op:'>=',value:30000},residProfit:{op:'>=',value:8000},refundRate:{op:'<=',value:3.0}}, hist:[]},
+ {id:'R-GATE-RENEW', name:'焕新期Gate阈值', version:'v2.1', approver:'主管·占位', effective:'2026-07-01',
+  expr:'CTR≥3.2% ∧ CVR≥2.2% ∧ ROI≥1.3 ∧ 差评率≤1.0%',
+  params:{ctr:{op:'>=',value:3.2},cvr:{op:'>=',value:2.2},roi:{op:'>=',value:1.3},badReview:{op:'<=',value:1.0}}, hist:[]},
+ {id:'R-GATE-RETIRE', name:'淘汰期十项门(引用R-RETIRE)', version:'v3.0', approver:'主管·占位', effective:'2026-07-01',
+  expr:'同R-RETIRE:十项Checklist铁门', hist:[]},
+ {id:'R-N2-UNLOCK', name:'N1↔N2解锁(握手)', version:'v3.0', approver:'主管·占位', effective:'2026-07-01',
+  expr:'营销确认 ∧ 推广确认 ∧ N3九项承接全通过 ∧ 预算到账,才允许N2新增花钱', hist:[]},
+ {id:'R-CYCLE', name:'Cycle分账与后测', version:'v3.0', approver:'主管·占位', effective:'2026-07-01',
+  expr:'normal/campaign双基线;活动期不自动毕业;活动后30天回看透支', hist:[]},
+ {id:'R-CALIB', name:'校准先于算差', version:'v3.2', approver:'主管·占位', effective:'2026-07-05',
+  expr:'异常订单剔除+退款回冲+活动分账完成前,Gate判定与算差锁定', hist:[{version:'v3.1',effective:'2026-06-01',expr:'仅要求退款回冲',approver:'主管·占位'}]},
+ {id:'R-RETIRE', name:'淘汰十项铁门', version:'v3.0', approver:'主管·占位', effective:'2026-07-01',
+  expr:'十项Checklist任一未完成,禁止terminal_archive', hist:[]}
+];
+
+/* ---------- 数据源矩阵(P1-06 数据契约) ---------- */
+const DATASOURCES = [
+ {src:'生意参谋·流量/搜索', api:'sycm.traffic.query', mode:'API拉取', freq:'日更', delay:'T+1', pk:'item_id+date', owner:'IT·数据(占位)', backfill:'可回补90天', retain:'2年', degrade:'失败→前值灰显+data_gap', diff:'B2C/POP均可得'},
+ {src:'生意参谋·交易', api:'sycm.trade.query', mode:'API拉取', freq:'日更', delay:'T+1', pk:'order_id_token', owner:'IT·数据(占位)', backfill:'可回补90天', retain:'3年', degrade:'失败→前值灰显', diff:'B2C/POP均可得'},
+ {src:'推广后台(万相台等,名称配置化)', api:'adhub.report.pull', mode:'API拉取', freq:'小时', delay:'≤2h', pk:'campaign_id+plan_id', owner:'推广岗+IT', backfill:'可回补30天', retain:'2年', degrade:'失败→暂停自动判级', diff:'B2C/POP均可得'},
+ {src:'CRM/会员·老客', api:'crm.member.sync', mode:'API+安全环境', freq:'日更', delay:'T+1', pk:'brand_one_id', owner:'用户运营+数据负责人', backfill:'按授权期', retain:'按同意期限', degrade:'不可得→灰显置信度降级', diff:'B2C可得SKU级;POP仅店铺级'},
+ {src:'库存/WMS', api:'wms.stock.query', mode:'API拉取', freq:'小时', delay:'≤1h', pk:'sku_id+wh_id', owner:'供应链(占位)', backfill:'不可回补', retain:'1年', degrade:'失败→N3库存项转人工', diff:'均可得'},
+ {src:'人工补证', api:'—(页面录入)', mode:'人工', freq:'按需', delay:'即时', pk:'edit_id', owner:'提交岗+主管', backfill:'—', retain:'与审计同期', degrade:'—', diff:'三层值:原值/校准值/补证值'}
+];
+
+/* ---------- J/N ---------- */
+const JNODES = [
+ {j:'J0', q:'谁在搜、为什么搜、机会在哪里', obj:'人群/场景/需求/竞品/站外授权素材词', owner:'营销+推广', out:'机会池·目标人群·核心词组',
+  detail:{机会词:['轻盐酱油','0添加酱油','儿童酱油平替','凉拌生抽'],人群:'一二线25-40健康敏感家庭',竞品:'两个头部0添加品牌(占位)'}},
+ {j:'J1', q:'提供什么商品与购买理由', obj:'SKU/规格/卖点/标题/主图/内容', owner:'营销', out:'商品定位卡·品牌资产绑定·创意包',
+  detail:{定位卡:'轻盐=减25%钠·特级鲜味不减',品牌资产:'三层资产库v2·已绑定标题主图详情',创意包:'主图A/B×3·短视频脚本×2'}},
+ {j:'J2', q:'能否获得曝光和点击', obj:'搜索/推荐/内容场/付费计划', owner:'推广', out:'词/人群/创意测试报告',
+  detail:{测试:'词包12组·人群包4组·创意6条',胜出:'词组「轻盐酱油」CTR 4.6%·创意A2'}},
+ {j:'J3', q:'进店后能否被承接', obj:'链接/详情/评价/问大家/库存/价格', owner:'店铺运营', out:'承接九项检查·可放量状态',
+  detail:{说明:'九项检查见N3;任一不过=not_ready,阻断放量'}},
+ {j:'J4', q:'能否成交且赚钱', obj:'支付/客单/GMV/成本/利润', owner:'店铺运营+推广', out:'成交与贡献利润结果',
+  detail:{口径:'GMV/ROI均为退款与异常回冲后真实值;贡献利润扣平台费/投放/佣金/券/物流/税费'}},
+ {j:'J5', q:'体验是否支持持续权重', obj:'退款/差评/客服/物流/破损', owner:'店铺运营+营销', out:'体验根因与修复任务',
+  detail:{当前根因:'物流破损占差评42%(MOCK)·已派修复任务'}},
+ {j:'J6', q:'能否形成老客与复购资产', obj:'会员/老客/人群包/LTV/迁移', owner:'用户运营', out:'One ID/平台人群资产·复购与迁移结果',
+  detail:{说明:'老客口径SKU级优先;POP不可得时降级显示,绝不用店铺值冒充'}}
+];
+const NNODES = [
+ {n:'N0', duty:'采集·标准化·校准·路由', inp:'生意参谋/推广/交易/CRM/库存/人工', out:'统一ID事件·质量分·cycle标签', map:'全部J'},
+ {n:'N1', duty:'商品/搜索/内容计划', inp:'品牌资产·J0机会池·SKU锚', out:'标题主图详情/词组/内容/目标', map:'J0–J1'},
+ {n:'N2', duty:'推广/活动/内容排期(涉钱)', inp:'N1计划·预算·HITL·平台玩法', out:'渠道预算·计划·人群包·排期', map:'J2'},
+ {n:'N3', duty:'站内承接与履约硬门', inp:'链接·库存·价格·评价·路径', out:'ready/not_ready及阻断原因', map:'J3'},
+ {n:'N4', duty:'可信与风险门', inp:'异常订单·退款回冲·体验·付费依赖', out:'校准指标·红线·风险标签', map:'J2–J5'},
+ {n:'N5', duty:'商品/推广/用户资产沉淀', inp:'高胜率词/素材/计划/人群/老客', out:'可复用资产·迁移对象·One ID证据', map:'J6'},
+ {n:'N6', duty:'生命周期判级与裁决', inp:'N0–N5 Artifact·Gate规则·HITL', out:'阶段·出口·任务·证据·规则版本', map:'全旅程结果'}
+];
+/* 联动地图(v5.1):J/N→跨屏落点 */
+const JMETA={
+ J0:{nn:'N1', sop:'A-4', ledger:'asset', metric:'freeShare'},
+ J1:{nn:'N1', sop:'A-3', ledger:'asset', metric:'cart'},
+ J2:{nn:'N2', sop:'I-4', ledger:'ad', metric:'ctr'},
+ J3:{nn:'N3', sop:'P-3', ledger:'asset', metric:'cvr'},
+ J4:{nn:'N4', sop:'P-5', ledger:'deal', metric:'profit'},
+ J5:{nn:'N4', sop:'P-3', ledger:'deal', metric:'badReview'},
+ J6:{nn:'N5', sop:'L-6', ledger:'deal', metric:'repurchase'}
+};
+const LEDGER_NAME={asset:'商品与搜索资产账', ad:'推广效率账', deal:'成交与用户资产账'};
+const PLATFORM_CN={xiaohongshu:'小红书', douyin:'抖音', tmall:'天猫站内', wechat:'微信', offline:'线下', unknown:'未知'};
+const LEDGER_DRILL={
+ asset:[
+  {t:'标题(词覆盖82%·v3)', kids:[{t:'核心词组:轻盐酱油/0添加酱油/凉拌生抽/儿童酱油平替'},{t:'合规检查:通过·品牌白名单v2'}]},
+  {t:'主图(A2胜出·CTR 4.6%)', kids:[{t:'在测:A1/A2/A3 · 视频×1'},{t:'下一批:A-9素材迭代排期中'}]},
+  {t:'内容(逛逛GG-1107·曝光1.2万)', kids:[{t:'授权素材:2条(授权书AUTH-31/32)'}]},
+  {t:'关键词库(56词·覆盖82%)', kids:[{t:'防御词×8 · 长尾×32 · 核心×16'}]},
+  {t:'自然搜索(GMV ¥6,800/期)', kids:[{t:'核心词自然排名:第2页(MOCK)'}]},
+  {t:'链接资产(健康分92)', kids:[{t:'评价132条·差评0.6%·问大家已维护'}]}
+ ],
+ ad:[
+  {t:'渠道:搜索推广(占花费74%)', kids:[
+    {t:'计划 PLAN-A2(在投·守线)', kids:[{t:'关键词:轻盐酱油 CPC¥1.2 CTR4.6%'},{t:'人群包:健康敏感家庭包(E3聚合)'},{t:'创意:A2胜出'},{t:'费用:FEE-1(点费用单去屏5闭环)'}]}]},
+  {t:'渠道:场景推荐(占花费26%)', kids:[{t:'计划 PLAN-B1(待N2解锁)'}]},
+  {t:'预算偏差 +4% · 付费依赖82%', kids:[{t:'止损线:日耗≥800且ROI<0.8停'}]}
+ ],
+ deal:[
+  {t:'订单(回冲后972单/期)', kids:[{t:'退款回冲¥1,900 · 异常剔除14单(合规识别)'}]},
+  {t:'首购 820人(导入期主看)', kids:[{t:'首购来源:搜索62%·推荐24%·内容14%'}]},
+  {t:'老客/复购(4%)', kids:[{t:'SKU级口径·B2C可得'}]},
+  {t:'LTV ¥86/12月(MOCK)', kids:[{t:'高价值分层:L-1人群包已建'}]},
+  {t:'One ID证据(E1 412人)', kids:[{t:'去屏7查看来源证据链(主管/用户运营)'}]}
+ ]
+};
+function drillTree(nodes,pref){
+  return nodes.map((n,i)=>`<div class="chk ldrow" data-ld="${pref}-${i}">▸ ${n.t}</div>`+
+    (n.kids?`<div id="${pref}-${i}" style="display:none;padding-left:18px">${drillTree(n.kids,pref+'-'+i)}</div>`:'')).join('');
+}
+function jump(scr,focus){S.focus=focus||null;S.screen=scr;rerender()}
+const JBP_MOCK={
+ jbp_id:'JBP-TM-2026', platform_id:'tmall', review_cycle:'月度',
+ profile:{平台目标:'食品类目健康化增长', 用户价值:'0添加/轻盐心智', 供给需求:'差异化货盘+内容供给', 生态规则:'价盘保护·合规经营', 风险红线:'不刷量·不破价'},
+ joint_goal:'轻盐酱油类目年GMV 1200万·免费流量占比≥50%',
+ joint_value:'消费者:减钠健康 · 平台:类目增量 · 品牌:心智资产 · 员工:战功兑现',
+ joint_gain:'类目坑位资源 × 品牌独家供给,双向增量分成(占位)',
+ commitments:[
+  {id:'CMT-1', side:'平台', text:'类目日精品卡位×2·大促蓄水资源包', owner:'mgr', linked_task:null, status:'待拆解'},
+  {id:'CMT-2', side:'公司', text:'轻盐新品独家首发+逛逛内容20条/季', owner:'mkt', linked_task:null, status:'待拆解'},
+  {id:'CMT-3', side:'公司', text:'大促库存深度≥45天·48h发货率≥99%', owner:'ops', linked_task:null, status:'待拆解'}
+ ],
+ scorecard:[
+  {kpi:'类目GMV(万/季)', baseline:210, target:300, current:238, owner:'mgr', cycle:'2026Q3', evidence:'三本账·成交账', status:'兑现中'},
+  {kpi:'免费流量占比%', baseline:31, target:50, current:31, owner:'mkt', cycle:'2026Q3', evidence:'资产账', status:'兑现中'},
+  {kpi:'老客复购%', baseline:11, target:16, current:11, owner:'crm', cycle:'2026Q3', evidence:'OneID·E1/E2', status:'兑现中'}
+ ],
+ reviews:[]
+};
+const SUP_QUEUES={approve:'待核定',supervise:'待督办',accept:'待验收',review:'待复盘',escalate:'待升层',back:'待背书'};
+const N3_ITEMS = ['链接健康(无违规/权重正常)','详情页完整且与主图一致','评价数达阶段线且无恶性差评置顶','问大家已维护','库存深度≥安全线(可售天数)','到货周期≤放量窗口','价格盘无异常(未破线)','购买路径通(PC/手机实测)','止损线已写入计划'];
+
+/* ---------- One ID 证据等级 + 来源明细(P1-04) ---------- */
+const ONEID = [
+ {lv:'E1', name:'确定性One ID', ev:'用户授权后平台标识/CRM token合法匹配', txt:'确定性同一用户', cnt:1240, conf:0.98},
+ {lv:'E2', name:'唯一链路', ev:'专属券码/唯一链接/二维码/活动报名后成交', txt:'活动直接归因', cnt:3860, conf:0.92},
+ {lv:'E3', name:'安全人群匹配', ev:'平台数据安全环境输出的聚合匹配', txt:'人群级匹配·不暴露个人', cnt:52000, conf:0.75},
+ {lv:'E4', name:'增量实验', ev:'曝光/对照组·地区/时间实验', txt:'增量归因估算', cnt:0, conf:0.6},
+ {lv:'E5', name:'时间相关', ev:'站外投放后品牌词/销量同期变化', txt:'相关性·不宣称个人因果', cnt:null, conf:0.4}
+];
+const ONEID_ROWS = [
+ {evidence_level:'E1', source_platform:'xiaohongshu', source_campaign_id:'CMP-2607-01', source_content_id:'NOTE-88121', matched_sku_id:'TM-6001', attribution_window:'30天', direct_or_assist:'直接', first_touch:'站外种草平台A·NOTE-88121', last_touch:'天猫搜索「轻盐酱油」', match_method:'One ID(授权CRM token)', consent_expiry:'2027-01-31', cnt:412},
+ {evidence_level:'E2', source_platform:'douyin', source_campaign_id:'CMP-2606-07', source_content_id:'VID-30442', matched_sku_id:'TM-6002', attribution_window:'15天', direct_or_assist:'直接', first_touch:'站外短视频·VID-30442', last_touch:'专属券码核销', match_method:'专属券码', consent_expiry:'—(非个人级)', cnt:1860},
+ {evidence_level:'E3', source_platform:'wechat', source_campaign_id:'CMP-2606-11', source_content_id:'—(人群级)', matched_sku_id:'TM-6003', attribution_window:'30天', direct_or_assist:'辅助', first_touch:'安全环境聚合人群', last_touch:'—(不落个人)', match_method:'安全人群匹配', consent_expiry:'—(聚合口径)', cnt:52000},
+ {evidence_level:'E2', source_platform:'tmall', source_channel:'逛逛', source_campaign_id:'CMP-2607-03', source_content_id:'GG-1107', matched_sku_id:'TM-6003', attribution_window:'7天', direct_or_assist:'辅助', first_touch:'逛逛内容GG-1107', last_touch:'购物车直接成交', match_method:'唯一链接', consent_expiry:'—(非个人级)', cnt:940}
+];
+
+/* ---------- 四岗SOP·全量工程化(P0-03) ---------- */
+function sop(id,name,owner,input,process,output,next_owner,next_step,kpi,formula,target,best,current,sla,hitl,evidence){
+  return {id,name,owner,input,process,output,next_owner,next_step,kpi,formula,target,historical_best:best,current,sla_hours:sla,hitl,evidence};
+}
+const SOP_STEPS = [
+ /* 营销岗 12 */
+ sop('A-1','新品资料包接收','mkt',['总部新品手册','卖进故事','规格与价盘'],['核对资料完整性','建立SKU档案','缺项向品牌中台索取'],'新品档案包','mkt','A-2','资料齐套率','齐套项/应有项',1,1,0.95,24,false,['档案链接']),
+ sop('A-2','系统商品信息录入','mkt',['新品档案包'],['类目/属性/规格录入','建立SKU/SPU/链接三颗粒度关系','品牌白名单检查'],'商品信息完整档','ops','P-1','信息完整率','完整字段/必填字段',1,1,0.97,24,false,['后台截图']),
+ sop('A-3','主图与详情页制作','mkt',['品牌标准素材','产品卖进故事','平台尺寸规范'],['确认主图利益点','制作5张主图','制作主图视频','完成详情页版式','进行品牌合规检查'],'主图、详情、推广创意成套素材','ops','P-1','素材准时交付率','按时交付素材数/应交付素材数',1,1,0.92,48,false,['素材链接','品牌确认记录']),
+ sop('A-4','SEO标题词组优化','mkt',['J0机会词池','竞词表','类目热词'],['组合核心词+属性词+场景词','标题合规检查','词覆盖度校验'],'标题v版+词库','ad','I-2','核心词覆盖率','已覆盖核心词/目标核心词',0.9,0.95,0.82,24,false,['词库表']),
+ sop('A-5','备货协同确认','mkt',['销售预测','库存深度'],['与供应链确认到货周期','锁定安全库存','写入N3库存项'],'备货确认单','ops','P-2','到货准时率','准时到货批次/总批次',0.95,1,0.9,48,false,['供应链回执']),
+ sop('A-6','上架前检查','mkt',['商品信息档','素材包'],['上架九项预检','品牌合规复核','价格盘核对'],'上架检查单','ops','P-1','预检通过率','一次通过项/九项',1,1,0.89,24,false,['检查单']),
+ sop('A-7','30天效果跟踪','mkt',['N0日报','测试报告'],['CTR/加购/收藏跟踪','断点归因','产出迭代建议'],'30天效果报告','cmd','—','报告准时率','准时报告/应交报告',1,1,1,24,false,['报告链接']),
+ sop('A-8','舆情监控','mkt',['评价/问大家','站外声量'],['负面识别分级','响应或升级','记录处理结果'],'舆情周报','ops','P-3','负面响应时效','2h内响应负面/负面总数',0.9,1,0.85,2,true,['舆情台账']),
+ sop('A-9','素材迭代','mkt',['I-6四层下钻数据'],['淘汰低效素材','产出新批次创意','标注假设'],'素材v+1包','ad','I-4','素材胜出率','胜出素材/测试素材',0.3,0.5,0.24,48,false,['迭代记录']),
+ sop('A-10','跨平台授权素材接入','mkt',['站外授权书','素材包'],['授权书校验','素材版本登记','SKU绑定'],'授权素材库','mkt','A-11','授权完备率','有授权素材/接入素材',1,1,1,24,true,['授权书编号']),
+ sop('A-11','逛逛内容分发','mkt',['授权素材库','排期表'],['内容排期','发布','曝光结果回收'],'分发结果报告','cmd','—','内容曝光达成率','实际曝光/目标曝光',0.8,1.1,0.7,72,false,['逛逛后台数据']),
+ sop('A-12','下市甘特图','mkt',['淘汰裁决','十项清单'],['下市节点排布','与十项Checklist对齐','同步各岗'],'下市甘特图','ops','P-8','节点对齐率','对齐节点/十项节点',1,1,1,48,false,['甘特图链接']),
+ /* 推广岗 6 */
+ sop('I-1','需求提报','ad',['A-4词库','阶段目标','预算池余额'],['目标拆解到渠道','预算需求测算','写明预期与止损'],'投放需求单','ad','I-2','提报及时率','按期提报/应提报',1,1,1,24,false,['需求单']),
+ sop('I-2','预算/词/人群规划','ad',['需求单','费用到账状态'],['渠道预算分配','词分组(核心/长尾/防御)','人群包设计'],'投放规划书','ad','I-3','规划完整率','完整要素/应有要素',1,1,0.94,24,true,['规划书']),
+ sop('I-3','多渠道建计划','ad',['规划书','A-3创意包'],['分渠道建计划','逐计划挂止损线','计划自检清单'],'计划清单','ad','I-4','止损线覆盖率','挂止损计划/总计划',1,1,1,24,false,['计划截图']),
+ sop('I-4','小额测试','ad',['计划清单'],['小额起量','收集词/人群/创意数据','产出胜出组合'],'测试报告','ops','P-3','测试CTR','测试期点击/曝光',0.035,0.048,0.031,72,false,['测试报告']),
+ sop('I-5','放量执行','ad',['测试报告','N3 ready状态'],['逐级加码','守真实ROI线','记录放量节点'],'放量记录','ad','I-6','放量守线率','守线天数/放量天数',0.9,1,0.86,24,false,['放量日志']),
+ sop('I-6','每日监控与迭代','ad',['N0小时级数据'],['渠道→词→人群→创意四层下钻','差值归因','执行迭代动作'],'日迭代记录','mkt','A-9','真实ROI','(GMV-退款-异常)/花费',1.2,2.6,1.05,24,false,['下钻记录']),
+ /* 店铺运营岗 8 */
+ sop('P-1','上架','ops',['A-2信息档','A-3素材包','A-6检查单'],['后台上架','链接三颗粒度核对','首日巡检'],'在售链接','ops','P-3','一次上架成功率','一次成功/上架次数',1,1,0.96,24,false,['链接ID']),
+ sop('P-2','库存管理','ops',['WMS库存','A-5备货单'],['安全线监控','补货触发','断货预警升级'],'库存健康报告','ad','I-5','可售天数达标率','达标天数/统计天数',0.95,1,0.92,24,false,['库存快照']),
+ sop('P-3','链接维护(承接九项)','ops',['I-4测试报告','评价/问大家'],['九项逐项检查','不过项整改','更新ready状态'],'承接九项结果','ad','I-5','九项通过率','通过项/9',1,1,0.78,24,false,['九项清单']),
+ sop('P-4','平台活动/大促','ops',['活动准入规则','货盘'],['活动报名','赛马跟进','价盘与库存联动','活动打标campaign_cycle'],'活动执行记录','ops','P-5','活动目标达成率','实际/目标',0.9,1.2,0.85,48,true,['活动后台']),
+ sop('P-5','数据复盘','ops',['三本账','N4校准结果'],['目标vs基线vs结果','断点定位','产出关差任务'],'复盘报告','crm','L-1','复盘准时率','准时复盘/应复盘',1,1,1,48,false,['复盘链接']),
+ sop('P-6','生命周期运营','ops',['N6判级Artifact'],['按阶段执行资源原则','出口证据整理','提交裁决'],'阶段执行记录','mgr','—','出口证据完备率','完备证据/应有证据',1,1,0.9,48,true,['证据包']),
+ sop('P-7','达播','ops',['选品单','价盘规则'],['选品寄样','价盘/合同/费用','排期跟播','复盘开票'],'达播全链路记录','fin','—','达播ROI','达播成交/达播费用',1.5,2.8,1.3,96,true,['合同编号','开票记录']),
+ sop('P-8','下架/清货','ops',['A-12甘特图','十项清单'],['清货节奏执行','价格保护','十项证据回填'],'清货完成单','mgr','—','清货完成率','已清库存/应清库存',1,1,0.6,120,true,['仓库回执']),
+ /* 用户运营岗 7 */
+ sop('L-1','RFM/生命周期分层','crm',['CRM数据','P-5复盘'],['RFM打分','分层定义','人群包生成'],'分层人群包','crm','L-2','分层覆盖率','已分层用户/总用户',0.95,1,0.9,48,false,['人群包ID']),
+ sop('L-2','触达策略','crm',['分层人群包','阶段目标'],['分层触达设计','频次与渠道规划','合规检查(同意范围)'],'触达策略单','crm','L-3','策略合规率','合规触达/总触达',1,1,1,24,true,['同意范围记录']),
+ Object.assign(sop('L-3','内容权益设计','crm',['触达策略单','预算'],['权益梯度设计','内容匹配','成本测算'],'权益方案','crm','L-4','权益成本比','权益成本/带动GMV',0.08,0.05,0.1,48,true,['方案链接']),{dir:'lt'}),
+ sop('L-4','执行触达','crm',['权益方案'],['分批发送','异常暂停','效果实时监控'],'触达执行记录','crm','L-5','触达转化率','转化人数/触达人数',0.05,0.09,0.04,24,false,['发送记录']),
+ sop('L-5','优质用户运营','crm',['触达结果'],['高价值用户识别','专属权益','口碑引导(合规)'],'优质用户台账','crm','L-6','高价值留存率','留存高价值/高价值总数',0.85,0.92,0.8,72,false,['台账']),
+ sop('L-6','全链路复盘','crm',['触达数据','交易数据'],['首购/复购归因','LTV测算','断点定位'],'用户复盘报告','cmd','—','老客复购率','复购老客/老客',0.18,0.24,0.16,48,false,['报告链接']),
+ sop('L-7','素材/人群包沉淀','crm',['复盘报告'],['高胜率人群包归档','触达素材归档','写入N5资产'],'可复用资产清单','mkt','A-10','资产复用率','被复用资产/沉淀资产',0.4,0.6,0.3,72,false,['N5资产ID'])
+];
+const SOPS_META = {mkt:'营销岗SOP(12步)', ad:'推广岗SOP(6步)', ops:'店铺运营岗SOP(8类)', crm:'用户运营岗SOP(7步)'};
+const DECISIONS = ['继续','回修','放大','停止','升级'];
+
+/* ---------- 费用权限矩阵(P0-02) ---------- */
+const FEE_PERM = {
+  propose:['mkt','ad','ops','crm','cmd'],
+  approve:['mgr'], reject:['mgr'], return:['mgr'],
+  ext:['mgr','cmd'],           /* 主管/授权流程人员 */
+  fund:['fin'],                /* 财务岗或系统接口 */
+  consume:['ad','fin'],        /* 推广岗+财务接口 */
+  invoice:['fin'],
+  viewAll:['mgr','fin']
+};
+const FEE_FLOW=['proposed','approved','external','funded','consumed','invoiced'];
+const FEE_CN={proposed:'一线提议',approved:'主管核定',external:'OA/邮件申请',funded:'财务到账',consumed:'消耗对账',invoiced:'开票结清',rejected:'已驳回',returned:'退回补证'};
+
+/* =========================================================
+   全局状态 S
+   ========================================================= */
+const S = {
+  screen:1, role:'ops', skuId:'TM-6001', cycle:'normal',
+  stageOverride:null,
+  calib:{}, handshake:{}, n3:{},
+  override:{},          /* 三层值:人工补证不覆盖raw(具体问题2) */
+  pending:[], fees:[], tasks:[], gaps:[], edits:[], audit:[], sops:[],
+  retire:{}, frozen:[], campaignPost:{},
+  handoffs:[],          /* 跨岗交接状态机(P0-05) */
+  focus:null,           /* 跨屏联动落点(v5.1) */
+  supTasks:[],          /* 主管任务中心(PC P0-1) */
+  backings:[],          /* 背书记录 */
+  savedViews:[],        /* 团队全景保存视图(PC P0-2) */
+  teamFilter:{role:'',sku:'',status:'',src:''}, teamPage:1, teamSel:[],
+  perfLoaded:false,     /* PC-AC13 万级任务压测 */
+  stSeq:1, jbp:null,
+  feeSeq:1, taskSeq:1, penSeq:1, hoSeq:1
+};
+SKUS.forEach(k=>{
+  S.calib[k.id]={anomaly:false,refund:false,split:false};
+  S.handshake[k.id]={mkt:false,ad:false};
+  S.n3[k.id]=N3_ITEMS.map((_,i)=> k.stage==='mature'? true : i<6);
+  S.override[k.id]={normal:{},campaign:{}};
+  S.retire[k.id]=[
+   ['订单全部发货','未发货订单=0'],['售后全部完结','未结售后=0'],['主图/详情/链接下架','截图/接口状态'],
+   ['短视频等内容下架','内容清单'],['关联解绑(套装/优惠/外挂链)','关联=0'],['库存归零与残次处理','仓库回执'],
+   ['数据归因留底','归档包路径'],['推广计划全部关停','计划状态与余额'],['高权重计划/人群包合规迁移','迁移批准记录'],
+   ['财务账单/提点/开票结清','财务回执']
+  ].map(x=>({name:x[0],evReq:x[1],done:false,ev:''}));
+});
+S.n3['TM-6003']=N3_ITEMS.map(()=>true);
+S.fees.push({id:'FEE-'+(S.feeSeq++), skuId:'TM-6001', by:'ad', amount:8000, use:'导入期词包小额测试(直通车)', cycle:'normal', plan:'PLAN-A2', expect:'CTR≥3.5%·ROI守1.2', stopLoss:'日耗≥800且ROI<0.8停', bucket:'测试预算池', over:false, state:'proposed', log:[ev0('FEE_PROPOSED','ad')]});
+S.tasks.push(
+ {id:'T-'+(S.taskSeq++), title:'物流破损差评根因修复(换缓冲包材)', role:'ops', sop:'P-3', src:'J5体验根因', skuId:'TM-6002', status:'open', baseline:0.4, target:0.3, result:null, verify:null, fixed:false, upStd:'成长期体验红线', ruleKey:null, dir:'lt'},
+ {id:'T-'+(S.taskSeq++), title:'老客分层唤醒(轻盐首购人群二触)', role:'crm', sop:'L-2', src:'J6资产', skuId:'TM-6003', status:'open', baseline:22, target:24, result:null, verify:null, fixed:false, upStd:'成熟期老客复购线', ruleKey:null}
+);
+/* 交接假水:HO-2预置为已提交且已过SLA(供超时检查) */
+S.handoffs.push(
+ {id:'HO-1', from_role:'mkt', from_step:'A-3', to_role:'ad', to_step:'I-3', output_artifact:'创意包v2(主图×3+短视频脚本×2)', submitted_at:null, due_h:24, due_at:null, accepted_at:null, status:'draft', rejection_reason:'', skuId:'TM-6001'},
+ {id:'HO-2', from_role:'ad', from_step:'I-4', to_role:'ops', to_step:'P-3', output_artifact:'词/人群/创意测试报告v1', submitted_at:Date.now()-30*3600e3, due_h:24, due_at:Date.now()-6*3600e3, accepted_at:null, status:'submitted', rejection_reason:'', skuId:'TM-6001'},
+ {id:'HO-3', from_role:'ops', from_step:'P-5', to_role:'crm', to_step:'L-1', output_artifact:'周复盘报告', submitted_at:Date.now()-2*3600e3, due_h:48, due_at:Date.now()+46*3600e3, accepted_at:Date.now()-1*3600e3, status:'accepted', rejection_reason:'', skuId:'TM-6003'}
+);
+S.hoSeq=4;
+
+function stampTask(t){ t.version=t.version||1; t.created_at=t.created_at||Date.now(); if(t.sla_h&&!t.due_at)t.due_at=t.created_at+t.sla_h*3600e3; t.acceptance_status=t.acceptance_status||'pending'; t.evidence_completeness=t.evidence_completeness??true; return t }
+/* ====== 生产化试跑层:StateStore适配器(trial=localStorage;生产换API,见claudecode任务书) ====== */
+const STORE_KEY='tmallv11state', SCHEMA_VER=1;
+let _persistTimer=null;
+function schedulePersist(){
+  if(S.persistDown)return;
+  if(_persistTimer)return;
+  _persistTimer=setTimeout(()=>{_persistTimer=null;persistState()},300);
+}
+function flushPersist(){ if(_persistTimer){clearTimeout(_persistTimer);_persistTimer=null} if(!S.persistDown)persistState(); }
+function persistState(){
+  try{
+    const snap={schema:SCHEMA_VER, saved_at:Date.now(),
+      tasks:S.tasks.filter(t=>!t.pt), supTasks:S.supTasks, backings:S.backings, fees:S.fees, pending:S.pending,
+      handoffs:S.handoffs, calib:S.calib, handshake:S.handshake, n3:S.n3, override:S.override, edits:S.edits,
+      retire:S.retire, frozen:S.frozen, campaignPost:S.campaignPost, gaps:S.gaps, sops:S.sops,
+      savedViews:S.savedViews, jbp:S.jbp, skustages:SKUS.map(k=>k.stage), rules:RULES.map(r=>({id:r.id,version:r.version,expr:r.expr,params:r.params,hist:r.hist})),
+      audit:S.audit.slice(0,120), seqs:{f:S.feeSeq,t:S.taskSeq,p:S.penSeq,h:S.hoSeq,s:S.stSeq}};
+    const str=JSON.stringify(snap);
+    if(typeof localStorage!=='undefined'){
+      try{ localStorage.setItem(STORE_KEY, str); }
+      catch(qe){ /* P1-4: 隐私模式/超限降级,只提示一次 */
+        if(!S.persistDown){ S.persistDown=true; toast('持久化不可用(隐私模式或存储超限):试跑继续,但刷新后不保留'); }
+      }
+    }
+    return str;
+  }catch(e){return null}
+}
+function loadStateFrom(str){
+  try{
+    const s=typeof str==='string'? JSON.parse(str) : str;
+    if(!s||s.schema!==SCHEMA_VER) return false;
+    Object.assign(S,{tasks:s.tasks,supTasks:s.supTasks,backings:s.backings,fees:s.fees,pending:s.pending,
+      handoffs:s.handoffs,calib:s.calib,handshake:s.handshake,n3:s.n3,override:s.override,edits:s.edits,
+      retire:s.retire,frozen:s.frozen,campaignPost:s.campaignPost,gaps:s.gaps,sops:s.sops,
+      savedViews:s.savedViews,jbp:s.jbp,audit:s.audit});
+    s.skustages.forEach((st,i)=>SKUS[i].stage=st);
+    s.rules.forEach(rr=>{const r=RULES.find(x=>x.id===rr.id);if(r)Object.assign(r,rr)});
+    S.feeSeq=s.seqs.f;S.taskSeq=s.seqs.t;S.penSeq=s.seqs.p;S.hoSeq=s.seqs.h;S.stSeq=s.seqs.s;
+    return true;
+  }catch(e){return false}
+}
+function restoreState(){
+  try{
+    if(typeof localStorage==='undefined')return false;
+    const raw=localStorage.getItem(STORE_KEY);
+    return raw? loadStateFrom(raw):false;
+  }catch(e){return false}
+}
+function resetTrial(){
+  try{if(typeof localStorage!=='undefined')localStorage.removeItem(STORE_KEY)}catch(e){}
+  S.persistDown=true; /* 阻断重置后再落盘 */
+  toast('试跑数据已重置,正在回到初始假水…');
+  try{ location.reload(); }catch(e){ /* jsdom等环境无导航:提示手动刷新 */ toast('请手动刷新页面完成重置'); }
+}
+function reqId(){return 'req-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7)}
+function ev0(type,who){return {t:new Date().toISOString().slice(0,16).replace('T',' '), type, who}}
+function audit(type,detail){S.audit.unshift({t:ev0(type,S.role).t, who:ROLES[S.role].n, type, detail, request_id:reqId()}); if(S.audit.length>300)S.audit.pop(); schedulePersist();}
+
+/* ---------- 主管任务引擎(PC P0-1):从既有状态派生六队列,去重留痕 ---------- */
+function stKey(q,src){return q+'|'+src}
+function supEnsure(q,srcKey,fields){
+  if(S.supTasks.some(t=>t.key===stKey(q,srcKey))) return null;
+  const t=Object.assign({id:'ST-'+(S.stSeq++), key:stKey(q,srcKey), queue:q, supervisor:'mgr',
+    created_at:Date.now(), sla_h:24, due_at:Date.now()+24*3600e3, status:'open',
+    decision:null, reason:'', risk_note:'', follow_up_owner:'', follow_up_date:'',
+    risk_level:'中', strategic_weight:1, impact_type:'—', impact_amount:0,
+    evidence_required:true, evidence_received:true, backing_status:'none'}, fields);
+  S.supTasks.push(t);
+  audit('SUPERVISOR_TASK_CREATED', t.id+' ['+SUP_QUEUES[q]+'] '+t.title);
+  return t;
+}
+function syncSupervisorTasks(){
+  /* 待核定:HITL队列+费用提议 */
+  S.pending.filter(p=>p.status==='pending').forEach(p=>supEnsure('approve','HITL:'+p.id,{title:p.title, source_type:'hitl', source_task_id:p.id, skuId:p.skuId, impact_type:p.type}));
+  S.fees.filter(f=>f.state==='proposed'&&!f.pt).forEach(f=>supEnsure('approve','FEE:'+f.id,{title:'费用核定 '+f.id+' ¥'+f.amount, source_type:'fee', source_task_id:f.id, skuId:f.skuId, impact_type:'涉钱', impact_amount:f.amount}));
+  /* 待督办:任务超SLA+交接超时/待接收 */
+  const now=Date.now();
+  S.tasks.filter(t=>!t.pt&&t.status==='open'&&t.due_at&&now>t.due_at).forEach(t=>supEnsure('supervise','OVER:'+t.id,{title:'任务超时督办 '+t.id+' '+t.title, source_type:'task_overdue', source_task_id:t.id, skuId:t.skuId, risk_level:'高'}));
+  S.handoffs.filter(o=>o.status==='overdue'||o.status==='submitted').forEach(o=>supEnsure('supervise','HO:'+o.id,{title:'交接督办 '+o.id+'('+(o.status==='overdue'?'已超时':'待接收')+')', source_type:'handoff', source_task_id:o.id, skuId:o.skuId}));
+  /* 待验收:一线标记完成未验果 */
+  S.tasks.filter(t=>!t.pt&&t.status==='done'&&!t.verify&&t.acceptance_status==='pending').forEach(t=>supEnsure('accept','ACC:'+t.id,{title:'验收核查 '+t.id+' '+t.title, source_type:'task_done', source_task_id:t.id, skuId:t.skuId}));
+  /* 待复盘:同规则重复命中≥2 + 大促回看 */
+  const hitCount={};
+  S.audit.filter(a=>a.type==='RULE_FIRED').forEach(a=>{hitCount[a.detail.split(' 命中')[0]]=(hitCount[a.detail.split(' 命中')[0]]||0)+1});
+  Object.keys(hitCount).filter(k=>hitCount[k]>=2).forEach(k=>supEnsure('review','RPT:'+k,{title:'重复命中复盘 '+k+'(×'+hitCount[k]+') 判断:执行问题还是规则/资源问题', source_type:'rule_repeat', source_rule_id:k}));
+  Object.keys(S.campaignPost).forEach(sk=>supEnsure('review','CPR:'+sk,{title:'大促后30天复盘 '+sk, source_type:'campaign_post', skuId:sk}));
+  /* 待升层 */
+  S.audit.filter(a=>a.type==='ESCALATED').forEach((a,i)=>supEnsure('escalate','ESC:'+i,{title:'升层处理:'+a.detail, source_type:'escalation'}));
+  /* 待背书:阶段迁移+固化战功+大额费用闭环 */
+  S.frozen.forEach(f=>supEnsure('back','TRANS:'+f.skuId+':'+f.exit,{title:'生命周期迁移背书 '+f.skuId+' 出口:'+f.exit, source_type:'lifecycle', skuId:f.skuId, strategic_weight:2, impact_type:'阶段迁移'}));
+  S.tasks.filter(t=>!t.pt&&t.verify==='valid'&&t.fixed).forEach(t=>supEnsure('back','FIX:'+t.id,{title:'重大成果背书 '+t.id+' '+t.title, source_type:'result', source_task_id:t.id, skuId:t.skuId}));
+  S.fees.filter(f=>f.over&&f.state==='invoiced').forEach(f=>supEnsure('back','FEEB:'+f.id,{title:'超额费用结果背书 '+f.id, source_type:'fee_major', source_task_id:f.id, skuId:f.skuId, impact_amount:f.amount}));
+}
+function supBack(stId, decision, reason, risk, fOwner, fDate){
+  const t=S.supTasks.find(x=>x.id===stId); if(!t)return false;
+  if(S.role!=='mgr' && !(S.role==='fin'&&(t.source_type||'').startsWith('fee'))){toast('权限不足:背书仅主管(费用类可财务)');return false}
+  if(!reason||!fDate){toast('背书必须填依据与复查日期(不得以已读代替)');return false}
+  t.decision=decision; t.reason=reason; t.risk_note=risk||'—'; t.follow_up_owner=fOwner||'mgr'; t.follow_up_date=fDate;
+  t.backing_status = decision==='同意'?'backed':decision==='退回补证'?'returned':decision;
+  t.status = decision==='同意'||decision==='不同意' ? 'done':'open';
+  S.backings.push({stId, decision, reason, risk:t.risk_note, follow_up_owner:t.follow_up_owner, follow_up_date:fDate, by:ROLES[S.role].n, t:ev0('B','x').t, source_task_id:t.source_task_id||null, source_key:t.key});
+  audit(decision==='同意'?'SUPERVISOR_BACKED':'SUPERVISOR_RETURNED', t.id+' '+decision+' 依据:'+reason+' 复查:'+fDate);
+  return true;
+}
+function backedFor(taskId){return S.backings.some(b=>b.decision==='同意'&&b.source_task_id===taskId)}
+function supFollowupCheck(){
+  let n=0; const today=new Date().toISOString().slice(0,10);
+  S.backings.filter(b=>b.decision==='同意'&&b.follow_up_date<=today&&!b.followed).forEach(b=>{
+    b.followed=true;
+    supEnsure('review','FUP:'+b.stId,{title:'背书复查到期 '+b.stId+'(复查人:'+b.follow_up_owner+')', source_type:'followup'});
+    n++;
+  });
+  toast(n?('复查检查:生成'+n+'条主管复查任务'):'复查检查:无到期'); rerender();
+}
+/* ---------- 执行力驾驶舱(PC P0-3):十指标,过程/结果分离 ---------- */
+function execMetrics(){
+  const now=Date.now();
+  const T=S.tasks.filter(t=>!t.pt);
+  const dued=T.filter(t=>t.due_at&&(t.status!=='open'||now>t.due_at));
+  const onTime=T.filter(t=>t.due_at&&t.status!=='open'&&(t.done_at||now)<=t.due_at);
+  const overdue=T.filter(t=>t.due_at&&t.status==='open'&&now>t.due_at);
+  const submitted=T.filter(t=>t.status!=='open');
+  const firstPass=submitted.filter(t=>t.acceptance_status!=='returned');
+  const needEv=T; const evOk=T.filter(t=>t.evidence_completeness);
+  const verified=T.filter(t=>t.verify); const valid=T.filter(t=>t.verify==='valid');
+  const hits=S.audit.filter(a=>a.type==='RULE_FIRED').length;
+  const rptKeys={}; S.audit.filter(a=>a.type==='RULE_FIRED').forEach(a=>{const k=a.detail.split(' vs ')[0];rptKeys[k]=(rptKeys[k]||0)+1});
+  const repeats=Object.values(rptKeys).filter(v=>v>=2).reduce((s,v)=>s+v,0);
+  const hoDue=S.handoffs.filter(o=>o.submitted_at);
+  const hoOn=S.handoffs.filter(o=>o.accepted_at&&o.due_at&&o.accepted_at<=o.due_at);
+  const sopA=T.filter(t=>t.sop&&t.sop!=='—');
+  const stDue=S.supTasks.filter(t=>now>t.due_at||t.status==='done');
+  const stOn=S.supTasks.filter(t=>t.status==='done');
+  const backNeed=S.supTasks.filter(t=>t.queue==='back');
+  const backDone=backNeed.filter(t=>t.backing_status==='backed');
+  const pct=(a,b)=>b? Math.round(a/b*100):null;
+  return [
+   {k:'onTime', n:'按时完成率', v:pct(onTime.length,dued.length), f:'按SLA完成/到期任务', kind:'过程', drill:{status:'done'}},
+   {k:'overdue', n:'超时率', v:pct(overdue.length,dued.length), f:'已超时/到期任务', kind:'过程', drill:{status:'overdue'}},
+   {k:'firstPass', n:'一次验收通过率', v:pct(firstPass.length,submitted.length), f:'首提即通过/提交验收', kind:'过程', drill:{status:'done'}},
+   {k:'evid', n:'证据完整率', v:pct(evOk.length,needEv.length), f:'证据齐备/需证据', kind:'过程', drill:{}},
+   {k:'valid', n:'验果有效率', v:pct(valid.length,verified.length), f:'验果有效/已验果', kind:'结果', drill:{status:'valid'}},
+   {k:'repeat', n:'重复问题率', v:pct(repeats,hits), f:'重复规则命中/全部命中', kind:'结果', drill:{src:'规则命中'}},
+   {k:'hoOn', n:'交接按时率', v:pct(hoOn.length,hoDue.length), f:'SLA内接收/应接收', kind:'过程', drill:{}},
+   {k:'sopA', n:'SOP采用率', v:pct(sopA.length,T.length), f:'绑定SOP任务/适用任务', kind:'过程', drill:{}},
+   {k:'mgrOn', n:'主管处理及时率', v:pct(stOn.length,stDue.length||S.supTasks.length), f:'主管SLA内处理/到期', kind:'过程', drill:{}},
+   {k:'mgrBack', n:'主管背书完成率', v:pct(backDone.length,backNeed.length), f:'已背书/应背书', kind:'结果', drill:{}}
+  ];
+}
+/* ---------- 团队全景过滤/分页(PC P0-2 + PC-AC13) ---------- */
+function teamRows(){
+  const f=S.teamFilter;
+  return S.tasks.filter(t=>
+    (!f.role||t.role===f.role)&&(!f.sku||t.skuId===f.sku)&&(!f.src||(t.src||'').includes(f.src))&&
+    (!f.status|| (f.status==='overdue'? (t.status==='open'&&t.due_at&&Date.now()>t.due_at) : f.status==='valid'? t.verify==='valid' : f.status==='invalid'? t.verify==='invalid' : f.status==='done'? t.status==='done' : t.status===f.status))
+  );
+}
+function loadPerf(){
+  if(S.perfLoaded){toast('压测数据已装载');return}
+  for(let i=0;i<10000;i++){
+    S.tasks.push({id:'PT-'+i, pt:true, title:'压测任务#'+i, role:['mkt','ad','ops','crm'][i%4], sop:'A-'+((i%12)+1), src:'压测', skuId:SKUS[i%6].id, status:i%3?'open':'done', baseline:0,target:1,result:null,verify:i%7?null:'valid',fixed:false,upStd:'—',ruleKey:null, created_at:Date.now()-i*1e4, due_at:Date.now()+((i%5)-2)*3600e3});
+  }
+  S.perfLoaded=true; audit('PERF_LOADED','装载1万Mock任务(pt标记,不入指标/队列)');
+  toast('已装载10,000条Mock任务;用全景筛选+分页验证性能'); rerender();
+}
+/* ---------- 激励接口(PC P1-4) ---------- */
+function incentiveRows(){
+  const T=S.tasks.filter(t=>!t.pt&&t.status!=='open');
+  return Object.keys(ROLES).filter(r=>['mkt','ad','ops','crm'].includes(r)).map(r=>{
+    const mine=T.filter(t=>t.role===r);
+    const proc=mine.filter(t=>t.sop&&t.sop!=='—'&&t.evidence_completeness).length;
+    const win=mine.filter(t=>t.verify==='valid'&&t.fixed&&backedFor(t.id)).length;
+    const winPend=mine.filter(t=>t.verify==='valid'&&t.fixed&&!backedFor(t.id)).length;
+    const asset=S.sops.filter(s=>SOP_STEPS.some(st=>st.owner===r&&s.startsWith(st.id))).length;
+    return {role:ROLES[r].n, proc, win, winPend, asset, risk:0};
+  });
+}
+/* ---------- 工具 ---------- */
+function $(q){return document.querySelector(q)}
+function toast(msg){
+  const w=$('#tw'); const d=document.createElement('div'); d.className='t'; d.textContent=msg;
+  w.appendChild(d); setTimeout(()=>{d.style.opacity='0';d.style.transition='opacity .3s';setTimeout(()=>d.remove(),320)},2200);
+}
+function curSKU(){return SKUS.find(k=>k.id===S.skuId)}
+function curStage(){return S.stageOverride || curSKU().stage}
+function stageCfg(){return STAGES[curStage()]}
+function rawVal(sku,k){ if(sku.caps && sku.caps[k]) return null; return sku.m[S.cycle][k]; }
+function mvalFor(sku,k){ /* 最终判级值 = 补证值 ?? 原值(经校准口径) */
+  if(sku.caps && sku.caps[k]) return null;
+  const ov=S.override[sku.id][S.cycle][k];
+  return (ov!==undefined)? ov.val : sku.m[S.cycle][k];
+}
+function mval(k){return mvalFor(curSKU(),k)}
+function calibDone(id){const c=S.calib[id||S.skuId];return c.anomaly&&c.refund&&c.split}
+function n3pass(id){return S.n3[id||S.skuId].every(Boolean)}
+function fmt(v,unit){if(v===null||v===undefined)return '—';return (typeof v==='number'? (v>=10000? (v/10000).toFixed(1)+'万': v) : v)+(unit||'')}
+function canSeeAllFees(){return FEE_PERM.viewAll.includes(S.role)}
+
+function gateLine(stage,k,fallback){
+  const r=RULES.find(x=>x.id==='R-GATE-'+stage.toUpperCase());
+  if(r&&r.params&&r.params[k]) return r.params[k].value;
+  if(r&&r.param&&r.param[k]!==undefined) return r.param[k];
+  return fallback;
+}
+function gateEval(){
+  const sku=curSKU(), st=stageCfg();
+  if(!st.gate.length) return {mode:'retire'};
+  if(S.cycle==='campaign') return {mode:'blocked-cycle', reason:'大促cycle不用于毕业判定;活动后30天回看透支'};
+  if(!calibDone(sku.id)) return {mode:'blocked-calib', reason:'校准未完成(异常剔除/退款回冲/活动分账),Gate与算差锁定'};
+  const rows = st.gate.map(g=>{
+    const [k,op,v0,u]=g; const v=gateLine(curStage(),k,v0); const cur=mval(k);
+    let pass=null;
+    if(cur!==null) pass = op==='>='? cur>=v : cur<=v;
+    return {k,op,v,u,cur,pass};
+  });
+  const gray = rows.filter(r=>r.pass===null).length;
+  const fail = rows.filter(r=>r.pass===false).length;
+  return {mode:'eval', rows, gray, fail, pass: fail===0 && gray===0, degraded: gray>0};
+}
+function light(k){
+  const st=stageCfg(); const cur=mval(k);
+  if(cur===null) return 'gray';
+  const g=st.gate.find(x=>x[0]===k);
+  if(!g) return 'green';
+  const gl=gateLine(curStage(),k,g[2]);
+  const pass = g[1]==='>='? cur>=gl : cur<=gl;
+  if(pass) return 'green';
+  const near = g[1]==='>='? cur>=gl*0.85 : cur<=gl*1.15;
+  return near?'amber':'red';
+}
+
+/* =========================================================
+   规则执行器(P0-04):扫描→命中→断点→自动派任务→绑SOP→去重
+   ========================================================= */
+function firedRules(sku){
+  sku=sku||curSKU(); const out=[];
+  if(S.cycle!=='normal') return out;              /* 大促不判 */
+  if(!calibDone(sku.id)) return out;              /* 校准先于算差 */
+  const st=STAGES[sku.stage];
+  st.gate.forEach(g=>{
+    const [k,op,v0]=g; const v=gateLine(sku.stage,k,v0); const cur=mvalFor(sku,k);
+    if(cur===null) return;
+    const pass=op==='>='?cur>=v:cur<=v;
+    if(!pass) out.push({rule:'R-GATE-'+sku.stage.toUpperCase(), metric:k, cur, line:op+''+v, owner:METRICS[k].owner, sop:METRICS[k].sop, skuId:sku.id});
+  });
+  return out;
+}
+function ruleEvidence(f){
+  const rr=RULES.find(r=>r.id===f.rule);
+  return {rule_id:f.rule, rule_version:rr?rr.version:'unversioned', metric:f.metric, current:f.cur, line:f.line, calib:'done', cycle:'normal_cycle', quality_score:0.93, t:ev0('RULE_FIRED','sys').t};
+}
+function dedupeTask(skuId,ruleKey){
+  return S.tasks.some(t=>t.skuId===skuId && t.status==='open' && t.ruleKey===ruleKey);
+}
+function generateTasksFromRules(){
+  const fired=firedRules();
+  let created=0;
+  fired.forEach(f=>{
+    const key=f.rule+':'+f.metric;
+    audit('RULE_FIRED', f.rule+' 命中 '+METRICS[f.metric].n+'='+f.cur+' vs '+f.line);
+    if(dedupeTask(f.skuId,key)) return;
+    const g=STAGES[SKUS.find(k=>k.id===f.skuId).stage].gate.find(x=>x[0]===f.metric);
+    S.tasks.push({id:'T-'+(S.taskSeq++), title:'规则命中·'+METRICS[f.metric].n+'未达线('+f.cur+' vs '+f.line+')', role:f.owner, sop:f.sop,
+      src:'规则命中·'+f.rule, skuId:f.skuId, status:'open', baseline:f.cur, target:g?g[2]:null, result:null, verify:null, fixed:false,
+      upStd:STAGES[SKUS.find(k=>k.id===f.skuId).stage].n+'期Gate·'+METRICS[f.metric].n+'线', ruleKey:key, dir:METRICS[f.metric].direction||'gt', sla_h:48, evidence:ruleEvidence(f)});
+    stampTask(S.tasks[S.tasks.length-1]);
+    audit('TASK_CREATED','规则自动派发→'+ROLES[f.owner].n+' '+f.sop+'(48h验果)');
+    created++;
+  });
+  if(created) toast('规则扫描:命中'+fired.length+'条,新派任务'+created+'条(去重后)');
+  else if(fired.length) toast('规则扫描:命中'+fired.length+'条,均已有在办任务(去重)');
+  else toast('规则扫描:无命中');
+  return created;
+}
+
+/* =========================================================
+   生命周期真迁移(P1-02)
+   ========================================================= */
+function applyTransition(p){
+  const sku=SKUS.find(k=>k.id===p.skuId);
+  const tgt=EXIT_TARGET[p.exit];
+  if(tgt&&sku.stage===tgt){audit('IDEMPOTENT_BLOCKED','迁移重复提交:已在'+tgt);toast('幂等:SKU已在目标阶段,忽略重复迁移');return}
+  S.frozen.push({skuId:sku.id, from_stage:sku.stage, cycle_id:S.cycle+'_2026Q3', frozen_metrics:JSON.parse(JSON.stringify(sku.m.normal)), exit:p.exit, t:ev0('F','sys').t});
+  audit('LIFECYCLE_TRANSITION', sku.id+' '+STAGES[sku.stage].n+'→'+(tgt?STAGES[tgt].n:'(原阶段)')+' 出口:'+p.exit+' 理由:'+(p.reason||'—'));
+  if(tgt){
+    sku.stage=tgt;
+    audit('CYCLE_CREATED', sku.id+' 新阶段cycle: '+tgt+'_C1(上一阶段结果已冻结)');
+    toast('阶段迁移完成:'+STAGES[tgt].n+'期·上阶段结果冻结·新cycle创建');
+  } else toast('裁决通过:'+p.exitLabel+'(原阶段继续)');
+  S.stageOverride=null;
+}
+
+/* =========================================================
+   大促后30天回看 Artifact(P1-01)
+   ========================================================= */
+function buildPostReview(sku){
+  const n=sku.m.normal, c=sku.m.campaign;
+  const rows=[
+   {item:'自然搜索GMV', pre30:n.organicGmv, during:c.organicGmv, post7:Math.round(n.organicGmv*0.86), post30:Math.round(n.organicGmv*0.9), judge:'轻度回落·观察'},
+   {item:'免费流量量级', pre30:n.freeVol, during:c.freeVol, post7:Math.round(n.freeVol*0.88), post30:Math.round(n.freeVol*0.95), judge:'基本回稳'},
+   {item:'客单价', pre30:n.aov, during:c.aov, post7:n.aov-2, post30:n.aov-1, judge:'轻微受损·价盘需护'},
+   {item:'老客复购率', pre30:n.repurchase, during:c.repurchase, post7:n.repurchase, post30:n.repurchase, judge:'未透支'},
+   {item:'贡献利润', pre30:n.profit, during:c.profit, post7:Math.round(n.profit*0.8), post30:Math.round(n.profit*0.92), judge:'优惠吃掉部分利润·30天回补中'}
+  ];
+  const verdict='轻度透支·观察(不触发降级);价盘与自然搜索列入下cycle关差';
+  const art={artifact:'campaign_post_review', sku_id:sku.id, campaign_cycle:'campaign_2026Q3', windows:['pre30','during','post7','post30'], rows, verdict, rule_version:RULES[2].version, mock:true, t:ev0('R','sys').t};
+  S.campaignPost[sku.id]=art;
+  audit('SCORE_COMPUTED','campaign_post_review生成:'+sku.id+' → '+verdict);
+  return art;
+}
+
+/* =========================================================
+   规则回放/回滚(P1-05)
+   ========================================================= */
+function evalParams(sku,params,fbParams){
+  let pass=true;
+  Object.keys(params).forEach(k=>{
+    const cur=mvalFor(sku,k); if(cur===null)return;
+    const p=params[k];
+    if(!(p.op==='>='? cur>=p.value : cur<=p.value)) pass=false;
+  });
+  return pass;
+}
+function ruleReplay(ruleId){
+  const r=RULES.find(x=>x.id===ruleId);
+  if(!r||!r.hist.length||!r.params) return {ok:false,msg:'该规则无可回放的参数化历史版本'};
+  const old=r.hist[r.hist.length-1];
+  const oldParams=Object.assign({},r.params,old.params||{});
+  const stage=ruleId.replace('R-GATE-','').toLowerCase();
+  const affected=[];
+  SKUS.filter(k=>k.stage===stage).forEach(k=>{
+    const newV=evalParams(k,r.params), oldV=evalParams(k,oldParams);
+    if(newV!==oldV) affected.push({sku:k.id, old:old.version+(oldV?'过':'不过'), now:r.version+(newV?'过':'不过')});
+  });
+  audit('RULE_REPLAY', ruleId+' '+old.version+' vs '+r.version+' 判定翻转SKU数='+affected.length);
+  return {ok:true, old, affected};
+}
+function ruleRollback(ruleId, reason){
+  if(S.role!=='mgr'){audit('RULE_ROLLBACK_DENIED',ruleId+' 非主管拒绝');return false}
+  if(!reason||!String(reason).trim()) return false;
+  const r=RULES.find(x=>x.id===ruleId);
+  if(!r.hist.length) return false;
+  const old=r.hist.pop();
+  r.hist.push({version:r.version, effective:r.effective, expr:r.expr, params:r.params, approver:r.approver});
+  Object.assign(r,{version:old.version, effective:ev0('x','x').t.slice(0,10), expr:old.expr, params:Object.assign({},r.params,old.params||{})});
+  audit('RULE_ROLLBACK', ruleId+' 回滚至 '+old.version+' 理由:'+reason);
+  return true;
+}
+
+/* =========================================================
+   侧栏归因下钻
+   ========================================================= */
+function drill(k){
+  const md=METRICS[k], st=stageCfg(), cur=mval(k), sku=curSKU();
+  const g=st.gate.find(x=>x[0]===k);
+  const lt=light(k);
+  const relTask=S.tasks.find(t=>t.skuId===sku.id && t.status!=='closed' && ((t.ruleKey||'').includes(':'+k) || (t.src||'').includes(md.n.split('(')[0])));
+  const ov=S.override[sku.id][S.cycle][k];
+  let html='<div class="attrcard">';
+  html+=`<div class="spread"><b>${md.n}</b><span class="pill p-${lt==='gray'?'gray':lt==='green'?'green':lt==='amber'?'amber':'red'}">${lt==='gray'?'未接入/不可得':lt==='green'?'通过':lt==='amber'?'临界':'红灯'}</span></div>`;
+  if(cur===null){
+    html+=`<div class="seg"><b>为什么灰</b><div class="sub">${(sku.caps&&sku.caps[k])||'字段未接入'}(${sku.model}能力矩阵)</div><div class="sub">不参与全绿/全红;Gate转人工补证或降置信度</div></div>`;
+    html+=`<button onclick="makeGap('${k}')">生成 data_gap 任务</button>`;
+  }else{
+    html+=`<div class="seg"><b>①差值(inc)</b><div class="sub">最终判级值 ${fmt(cur,md.unit)}${ov?'(补证值;原值'+fmt(rawVal(sku,k),md.unit)+')':''}${g? ' vs 阶段线 '+g[1]+g[2]+(g[3]||md.unit):' ·本阶段非Gate项'} · cycle=${S.cycle==='normal'?'日销':'大促'}</div></div>`;
+    html+=`<div class="seg"><b>②数据来源/公式</b><div class="sub">${md.src}<br>公式:${md.formula} · formula_version=v3 · quality_score=0.93(MOCK)</div></div>`;
+    html+=`<div class="seg"><b>③规则(up)</b><div class="sub">${g?('规则 R-GATE-'+curStage().toUpperCase()+' · 演示阈值,待业务×IT×TAG专场确认'):'—'}</div></div>`;
+    html+=`<div class="seg"><b>④责任岗→SOP step(down)</b><div class="sub">${ROLES[md.owner].n} → ${md.sop}</div></div>`;
+    html+=`<div class="seg"><b>⑤任务→验果</b><div class="sub">${relTask? relTask.id+' · '+relTask.title+' · 状态:'+(relTask.verify||relTask.status):'暂无绑定任务'}</div>${lt==='red'&&!relTask?`<button onclick="taskFromLight('${k}')">从红灯派任务</button>`:''}</div>`;
+  }
+  html+='</div>';
+  $('#sideBody').innerHTML=html;
+  if(window.innerWidth<1200)$('#side').classList.add('open');
+}
+function closeSide(){$('#side').classList.remove('open')}
+function makeGap(k){
+  const md=METRICS[k], sku=curSKU();
+  if(S.gaps.some(g=>g.skuId===sku.id&&g.field===k) && S.tasks.some(t=>t.src==='数据缺失'&&t.skuId===sku.id&&t.status==='open'&&t.title.includes(md.n))){
+    toast('该字段已有未关闭的data_gap任务(去重)'); return;
+  }
+  S.gaps.push({id:'GAP-'+(S.gaps.length+1), field:k, name:md.n, skuId:sku.id, model:sku.model, t:ev0('GAP','sys').t});
+  S.tasks.push({id:'T-'+(S.taskSeq++), title:'data_gap:接入'+md.n+'('+sku.model+')', role:'cmd', sop:'—', src:'数据缺失', skuId:sku.id, status:'open', baseline:null,target:null,result:null,verify:null,fixed:false, upStd:'数据契约·能力矩阵', ruleKey:null});
+  audit('DATA_GAP', md.n); toast('已生成 data_gap 任务'); rerender();
+}
+function taskFromLight(k){
+  const md=METRICS[k], sku=curSKU(), g=stageCfg().gate.find(x=>x[0]===k);
+  S.tasks.push({id:'T-'+(S.taskSeq++), title:'红灯修复:'+md.n+'未达线', role:md.owner, sop:md.sop, src:'红灯·'+md.n, skuId:sku.id, status:'open', baseline:mval(k), target:g?g[2]:null, result:null, verify:null, fixed:false, upStd:stageCfg().n+'期Gate·'+md.n+'线', ruleKey:null});
+  audit('TASK_CREATED','红灯派发 '+md.n); toast('任务已派发至 '+ROLES[md.owner].n); rerender();
+}
+
+/* =========================================================
+   屏1 · 今日经营(+规则扫描 +交接状态机 +出口枚举)
+   ========================================================= */
+/* ====== PC补强:第六屏角色中心 ====== */
+function renderSupCenter(){
+  const qs=Object.keys(SUP_QUEUES);
+  let h=`<div class="card"><div class="spread"><h3>主管任务中心(六队列 · 主管有自己的SLA)</h3>
+    <div class="row"><button id="btnFollowCheck">复查到期检查</button><span class="tiny">核定≠完成 · 背书≠有效 · 不得以已读代替背书</span></div></div>
+  <div class="grid3" id="supQGrid">`;
+  qs.forEach(q=>{
+    const list=S.supTasks.filter(t=>t.queue===q&&t.status==='open');
+    h+=`<div class="tile ${list.length?'st-amber':'st-green'}" data-supq="${q}"><div class="lbl">${SUP_QUEUES[q]} →明细</div><div class="v">${list.length}</div></div>`;
+  });
+  h+=`</div><div id="supQBody">`;
+  const openQ=S.supQOpen||'back';
+  const list=S.supTasks.filter(t=>t.queue===openQ);
+  h+=`<h4>${SUP_QUEUES[openQ]} 队列明细</h4>`;
+  if(!list.length)h+=`<div class="sub">空。</div>`;
+  list.slice(0,8).forEach(t=>{
+    const late=Date.now()>t.due_at&&t.status==='open';
+    h+=`<div class="card" style="margin-bottom:8px"><div class="spread"><b>${t.id} · ${t.title}</b>
+      <span class="pill p-${t.status==='done'?'green':late?'red':'amber'}">${t.status==='done'?(t.decision||'已处理'):late?'主管SLA超时':'SLA内'}</span></div>
+    <div class="tiny">来源:${t.source_type} · SKU:${t.skuId||'—'} · 影响:${t.impact_type}${t.impact_amount?'·¥'+t.impact_amount:''} · 风险:${t.risk_level} · 战略权重:${t.strategic_weight} · 截止:${new Date(t.due_at).toISOString().slice(5,16).replace('T',' ')}</div>
+    <div class="row" style="margin-top:6px">`;
+    if(t.status==='open'){
+      if(openQ==='approve') h+=`<button data-st-go5="${t.id}">去处理(屏5核定)</button>`;
+      if(openQ==='supervise') h+=`<button data-st-urge="${t.id}">催办</button><button data-st-up="${t.id}">升级</button>`;
+      if(openQ==='accept') h+=`<button data-st-evid="${t.id}">核查证据</button><button data-st-accept="${t.id}">验收通过</button><input class="stReason" data-st="${t.id}" placeholder="退回理由" style="width:110px"><button data-st-return="${t.id}">退回</button>`;
+      if(openQ==='review') h+=`<input class="stReason" data-st="${t.id}" placeholder="复盘结论(必填)" style="width:180px"><button data-st-review="${t.id}">形成结论+派下一步任务</button>`;
+      if(openQ==='escalate') h+=`<button data-st-esc="${t.id}">升品类/JBP层(上层接受)</button>`;
+      if(openQ==='back'){
+        h+=`<button data-st-evid="${t.id}">查看原始证据</button>
+        <select class="stDec" data-st="${t.id}"><option>同意</option><option>退回补证</option><option>不同意</option><option>升级</option></select>
+        <input class="stReason" data-st="${t.id}" placeholder="背书依据(必填)" style="width:140px">
+        <input class="stRisk" data-st="${t.id}" placeholder="风险说明" style="width:100px">
+        <input class="stFDate" data-st="${t.id}" type="date" style="width:130px">
+        <button data-st-back="${t.id}">背书</button>`;
+      }
+    } else h+=`<span class="tiny">依据:${t.reason} · 风险:${t.risk_note} · 复查:${t.follow_up_date||'—'}(${t.follow_up_owner||'—'})</span>`;
+    h+=`</div></div>`;
+  });
+  h+=`</div></div>`;
+  return h;
+}
+function renderTeamPanorama(){
+  const f=S.teamFilter, rows=teamRows();
+  const page=S.teamPage, ps=50, pages=Math.max(1,Math.ceil(rows.length/ps));
+  if(S.teamSort) rows.sort((a,b)=>S.teamSort==='asc'? (a.due_at||9e15)-(b.due_at||9e15) : (b.due_at||0)-(a.due_at||0));
+  const view=rows.slice((page-1)*ps,page*ps);
+  const cnt=s=>rows.filter(t=> s==='overdue'? (t.status==='open'&&t.due_at&&Date.now()>t.due_at) : s==='valid'? t.verify==='valid' : s==='invalid'? t.verify==='invalid' : s==='done'? (t.status==='done'&&!t.verify) : t.status===s).length;
+  /* 重复问题聚类 */
+  const clu={}; S.tasks.filter(t=>!t.pt&&t.ruleKey).forEach(t=>{const k=t.skuId+':'+t.ruleKey.split(':')[0];clu[k]=(clu[k]||0)+1});
+  const rpt=Object.keys(clu).filter(k=>clu[k]>=2);
+  let h=`<div class="card"><div class="spread"><h3>团队任务全景(${rows.length}条 · 第${page}/${pages}页)</h3>
+    <div class="row"><button id="btnPerf">${S.perfLoaded?'压测已装载':'性能压测:装载1万任务'}</button><button id="btnExport">导出(水印/脱敏)</button></div></div>
+  <div class="row" style="margin:6px 0">
+    <select id="tfRole"><option value="">全岗位</option>${['mkt','ad','ops','crm','cmd'].map(r=>`<option value="${r}" ${f.role===r?'selected':''}>${ROLES[r].n}</option>`).join('')}</select>
+    <select id="tfSku"><option value="">全SKU</option>${SKUS.map(k=>`<option ${f.sku===k.id?'selected':''}>${k.id}</option>`).join('')}</select>
+    <select id="tfStatus"><option value="">全状态</option>${[['open','进行中'],['done','待验果'],['valid','有效'],['invalid','无效'],['overdue','超时']].map(x=>`<option value="${x[0]}" ${f.status===x[0]?'selected':''}>${x[1]}</option>`).join('')}</select>
+    <input id="tfSrc" placeholder="来源含…" value="${f.src}" style="width:90px"><button id="btnTf">筛选</button>
+    <input id="svName" placeholder="视图名" style="width:80px"><button id="btnSaveView">保存视图</button>
+    ${S.savedViews.map((v,i)=>`<button class="svApply" data-sv="${i}">${v.name}</button>`).join('')}
+  </div>
+  <div class="row" style="margin:6px 0">${[['open','进行中'],['done','待验果'],['valid','有效'],['invalid','无效'],['overdue','超时']].map(x=>`<span class="pill p-${x[0]==='overdue'||x[0]==='invalid'?'red':x[0]==='valid'?'green':'blue'}">${x[1]} ${cnt(x[0])}</span>`).join('')}</div>
+  ${rpt.length?`<div class="sub" style="color:var(--red)">⚠ 重复问题聚类:${rpt.join(' · ')} — 判断是执行问题还是规则/资源问题(已入主管待复盘)</div>`:''}
+  <table class="teamTable" id="teamTable"><tr><th></th><th>任务</th><th>岗</th><th>SKU</th><th>状态</th><th id="thSla" style="cursor:pointer">SLA ${S.teamSort==='asc'?'↑':S.teamSort==='desc'?'↓':'⇅'}</th><th>来源</th></tr>`;
+  view.forEach(t=>{
+    const late=t.status==='open'&&t.due_at&&Date.now()>t.due_at;
+    h+=`<tr class="ttRow"><td><input type="checkbox" class="tSel" data-t="${t.id}" ${S.teamSel.includes(t.id)?'checked':''}></td>
+    <td class="tiny">${t.id} ${t.title.slice(0,18)}</td><td>${ROLES[t.role]?ROLES[t.role].n.slice(0,2):t.role}</td><td>${t.skuId}</td>
+    <td>${t.verify?`<span class="pill p-${t.verify==='valid'?'green':'red'}">${t.verify}</span>`:t.status==='done'?'待验果':late?'<span class="pill p-red">超时</span>':'进行中'}</td>
+    <td class="tiny">${t.due_at?new Date(t.due_at).toISOString().slice(5,16).replace('T',' '):'—'}</td><td class="tiny">${(t.src||'').slice(0,10)}</td></tr>`;
+  });
+  h+=`</table><div class="row" style="margin-top:6px"><button id="tpPrev">上页</button><span class="tiny">第${page}/${pages}页</span><button id="tpNext">下页</button></div>
+  <h4>批量操作(需理由·影响预览·审计)</h4>
+  <div class="row"><select id="batchAct"><option value="owner">改Owner→作战官</option><option value="pri">优先级→高</option><option value="due">截止+48h</option><option value="esc">升级</option></select>
+  <input id="batchReason" placeholder="批量理由(必填)" style="width:160px">
+  <button id="btnBatch" class="${S.batchArm?'':''}" style="${S.batchArm?'background:var(--amber);color:#fff;border-color:var(--amber)':''}">${S.batchArm?'⚠ 再次点击确认执行('+S.batchArm.ids.length+'条)':'执行批量(已选'+S.teamSel.length+'条)'}</button>
+  ${S.batchArm?'<button id="btnBatchCancel">取消</button>':''}</div>
+  ${S.batchArm?`<div class="sub" style="margin-top:6px;border:1px dashed var(--amber);border-radius:6px;padding:8px;color:var(--amber-deep)"><b>影响预览(待确认):</b>『${S.batchArm.actLabel}』将作用于 ${S.batchArm.ids.length} 条任务:${S.batchArm.ids.slice(0,5).join(' · ')}${S.batchArm.ids.length>5?' …':''} · 理由:${S.batchArm.reason}</div>`:''}</div>`;
+  return h;
+}
+function renderExecCockpit(){
+  const M=execMetrics();
+  let h=`<div class="card"><h3>执行力驾驶舱(过程完成≠结果有效 · 点指标回任务明细)</h3><div class="grid3">`;
+  M.forEach(m=>{
+    h+=`<div class="tile ${m.kind==='结果'?'st-amber':''} exTile" data-ex="${m.k}"><div class="lbl">${m.n} <span class="pill p-${m.kind==='结果'?'amber':'blue'}">${m.kind}</span></div><div class="v">${m.v===null?'—':m.v+'%'}</div><div class="tiny">${m.f}</div></div>`;
+  });
+  const proc=M.filter(m=>m.kind==='过程'&&m.v!==null), res=M.filter(m=>m.kind==='结果'&&m.v!==null);
+  h+=`</div><div class="sub" style="margin-top:8px">禁止误导:过程均值${proc.length?Math.round(proc.reduce((s,m)=>s+m.v,0)/proc.length):'—'}% vs 结果有效率${(M.find(m=>m.k==='valid').v)??'—'}%——任务100%完成但验果有效率低,不判执行优秀。</div></div>`;
+  return h;
+}
+function renderCmdCenter(){
+  const blocked=S.handoffs.filter(o=>['overdue','submitted','returned'].includes(o.status));
+  return `<div class="card"><h3>跨岗任务中心(作战官)</h3>
+  <h4>阻塞与未关差</h4>${blocked.map(o=>`<div class="tiny">⛔ ${o.id} ${o.from_step}→${o.to_step} · ${HO_CN[o.status]}</div>`).join('')||'<div class="sub">无阻塞</div>'}
+  <h4>升级队列</h4><div class="tiny">${S.audit.filter(a=>a.type==='ESCALATED').length}条已升层 · 资源协调走屏5费用/HITL</div>
+  <h4>支持任务区(品牌/数据)</h4><div class="tiny">data_gap ${S.gaps.length}条(屏4) · 品牌审核:授权素材${2}份已过(占位) · 规则/数据质量:见屏7审计</div></div>`;
+}
+function renderFinCenter(){
+  const b=s=>S.fees.filter(f=>f.state===s);
+  return `<div class="card"><h3>财务任务中心</h3><div class="grid3">
+  <div class="tile" data-fin="external"><div class="lbl">待到账</div><div class="v">${b('external').length}</div></div>
+  <div class="tile" data-fin="funded"><div class="lbl">待对账</div><div class="v">${b('funded').length}</div></div>
+  <div class="tile" data-fin="consumed"><div class="lbl">待开票</div><div class="v">${b('consumed').length}</div></div></div>
+  <div class="tiny" style="margin-top:6px">异常差异:0(MOCK) · 点卡→屏5费用闭环</div></div>`;
+}
+const HO_CN={draft:'草稿',submitted:'已提交·待接收',accepted:'已接收',returned:'退回补充',overdue:'已超时',completed:'已完成'};
+function renderS1(){
+  const sku=curSKU(), st=stageCfg(), ge=gateEval();
+  const myTasks=S.tasks.filter(t=> (S.role==='cmd'||S.role==='mgr')? true : t.role===S.role).filter(t=>t.status==='open');
+  let h=`<div class="card"><div class="spread">
+    <div><h3>${sku.name}</h3><div class="sub">${sku.shop} · ${sku.model} · item=${sku.item} · spu=${sku.spu}</div></div>
+    <div class="row"><span class="pill p-blue">真实阶段:${STAGES[sku.stage].n}期</span>${S.stageOverride&&S.stageOverride!==sku.stage?`<span class="pill p-amber">当前查看:${st.n}期口径(非真实迁移)</span>`:''}<span class="pill p-${S.cycle==='campaign'?'amber':'gray'}">${S.cycle==='campaign'?'大促cycle':'日销cycle'}</span><span class="pill p-purple">MOCK</span></div>
+  </div>
+  <div class="sub" style="margin-top:6px">阶段目标:${st.goal} · 资源原则:${st.res}</div>
+  <div class="sub">出口:${(EXITS[curStage()]||[]).map(e=>e[1]).join(' / ')}</div></div>`;
+
+  const kpis = st.mainKpi.length? st.mainKpi : ['organicGmv','refundRate'];
+  h+=`<div class="card"><div class="spread"><h3>红绿灯(点瓦片下钻归因)</h3><button id="btnRuleScan">规则扫描·自动派发</button></div><div class="grid3" id="lightGrid">`;
+  kpis.forEach(k=>{
+    const md=METRICS[k], lt=light(k), cur=mval(k);
+    h+=`<div class="tile st-${lt}" data-drill="${k}"><div class="lbl">${md.n}</div><div class="v">${cur===null?'未接入':fmt(cur,md.unit)}</div><div class="tiny">${cur===null?'平台不可得·灰':lt==='green'?'达线':lt==='amber'?'临界':'未达线'}</div></div>`;
+  });
+  h+=`</div></div>`;
+
+  h+=`<div class="card"><div class="spread"><h3>Gate 判定</h3><span class="pill p-amber">演示阈值·待业务×IT×TAG专场确认</span></div>`;
+  if(ge.mode==='retire'){
+    h+=`<div class="sub">淘汰期无Gate;走十项Checklist(屏6)。</div>`;
+  }else if(ge.mode==='blocked-cycle'){
+    h+=`<div class="pill p-amber">已锁</div><div class="sub" style="margin-top:6px">${ge.reason}</div>`;
+  }else if(ge.mode==='blocked-calib'){
+    h+=`<div class="pill p-red">已锁</div><div class="sub" style="margin-top:6px">${ge.reason} → 去屏4完成校准</div>`;
+  }else{
+    h+=`<table><tr><th>判据</th><th>阶段线</th><th>最终判级值</th><th>判定</th></tr>`;
+    ge.rows.forEach(r=>{
+      const md=METRICS[r.k];
+      h+=`<tr><td>${md.n}</td><td>${r.op}${r.v}${r.u||md.unit}</td><td>${r.cur===null?'未接入':fmt(r.cur,md.unit)}</td><td>${r.pass===null?'<span class="pill p-gray">人工补证</span>':r.pass?'<span class="pill p-green">过</span>':'<span class="pill p-red">不过</span>'}</td></tr>`;
+    });
+    h+=`</table><div style="margin-top:8px" class="row">`;
+    h+=`<span class="pill p-${ge.pass?'green':ge.degraded?'gray':'red'}">${ge.pass?'Gate通过':ge.degraded?'降级判定·需人工补证':'未通过·先关差'}</span></div>`;
+    if(ge.pass && curStage()===sku.stage){
+      h+=`<div class="row" style="margin-top:8px">
+        <select id="exitSel">${(EXITS[sku.stage]||[]).map(e=>`<option value="${e[0]}">${e[1]}(${e[0]})</option>`).join('')}</select>
+        <input id="exitReason" placeholder="出口理由与证据(必填)" style="width:200px">
+        <button id="btnGateSubmit">提交主管裁决</button></div>`;
+    }
+  }
+  h+=`</div>`;
+
+  h+=`<div class="card"><h3>今日SKU任务(${ROLES[S.role].n})</h3>`;
+  if(!myTasks.length) h+=`<div class="sub">本岗无待办。</div>`;
+  myTasks.slice(0,6).forEach(t=>{
+    h+=`<div class="spread" style="padding:6px 0;border-bottom:1px solid var(--rule)"><div><b>${t.title}</b><div class="tiny">${t.id} · 来源:${t.src} · SOP:${t.sop} · 岗:${ROLES[t.role].n}${t.sla_h?' · SLA:'+t.sla_h+'h':''}</div></div><button data-goto6="1">去处理</button></div>`;
+  });
+  h+=`</div>`;
+
+  /* 跨岗交接状态机(P0-05) */
+  h+=`<div class="card"><div class="spread"><h3>跨岗交接(Output→下游owner确认·SLA)</h3><button id="btnHoCheck">超时检查</button></div><div id="hoBox">`;
+  const visHo = ['mgr','cmd'].includes(S.role)? S.handoffs : S.handoffs.filter(o=>o.from_role===S.role||o.to_role===S.role);
+  if(!visHo.length) h+=`<div class="sub">与本岗无关的交接不展示(隔离);主管/作战官可见全量。</div>`;
+  visHo.forEach(o=>{
+    const mineFrom=o.from_role===S.role, mineTo=o.to_role===S.role;
+    h+=`<div class="card" style="margin-bottom:8px"><div class="spread"><b>${o.id} · ${o.from_step}→${o.to_step} · <span class="tchip" data-ho-art="${o.id}" style="cursor:pointer;text-decoration:underline">${o.output_artifact}</span></b>
+      <span class="pill p-${o.status==='completed'?'green':o.status==='overdue'?'red':o.status==='returned'?'amber':o.status==='accepted'?'blue':'gray'}">${HO_CN[o.status]}</span></div>
+    <div class="tiny">${ROLES[o.from_role].n} → ${ROLES[o.to_role].n} · SLA ${o.due_h}h${o.due_at?' · 截止:'+new Date(o.due_at).toISOString().slice(5,16).replace('T',' '):''}${o.rejection_reason?' · 退回原因:'+o.rejection_reason:''} · SKU:${o.skuId}</div>
+    <div class="row" style="margin-top:6px">`;
+    if((o.status==='draft'||o.status==='returned') && mineFrom) h+=`<button data-ho-submit="${o.id}">提交交接</button>`;
+    if(o.status==='submitted' && mineTo) h+=`<button data-ho-accept="${o.id}">接收</button><input class="hoReason" data-ho="${o.id}" placeholder="退回原因" style="width:130px"><button data-ho-return="${o.id}">退回补充</button>`;
+    if(o.status==='overdue' && mineTo) h+=`<button data-ho-accept="${o.id}">补接收</button>`;
+    if(o.status==='accepted' && mineTo) h+=`<button data-ho-complete="${o.id}">确认完成</button>`;
+    if(!mineFrom && !mineTo) h+=`<span class="tiny">只读(主管/作战官视角)</span>`;
+    h+=`</div></div>`;
+  });
+  h+=`</div></div>`;
+  return h;
+}
+
+/* ---------- 屏2 J ---------- */
+function renderS2(){
+  let h=`<div class="card"><h3>AIPL经营旅程 J0–J6(消费者和商品走到了哪里)</h3><div class="sub">J回答消费者链;N回答系统处理——不可混用,旧写法废止。点击节点展开。</div></div>`;
+  JNODES.forEach((j,i)=>{
+    h+=`<div class="jnode" data-j="${i}"><div class="spread"><b>${j.j} · ${j.q}</b><span class="pill p-blue">${j.owner}</span></div>
+      <div class="tiny">对象:${j.obj} · 输出:${j.out}</div>
+      <div class="jdetail" style="display:none;margin-top:8px"><div class="jsonbox">${escJson(j.detail)}</div>
+        <div class="tiny" style="margin-top:4px">映射系统节点:${NNODES.filter(n=>n.map.includes(j.j)||n.map.includes('全部')||n.map.includes('全旅程')).map(n=>n.n).join(' / ')||'N0'}</div>
+        <div class="row" style="margin-top:8px">
+          <button data-go-n="${JMETA[j.j].nn}">去${JMETA[j.j].nn}</button>
+          <button data-go-ledger="${JMETA[j.j].ledger}">看${LEDGER_NAME[JMETA[j.j].ledger]}</button>
+          <button data-go-sop="${JMETA[j.j].sop}">回${JMETA[j.j].sop} SOP</button>
+          <button data-go-jtasks="${JMETA[j.j].metric}">看本节点任务</button>
+          <button data-go-jrule="${JMETA[j.j].metric}">看规则证据</button>
+        </div>
+      </div></div>`;
+  });
+  return h;
+}
+function escJson(o){return JSON.stringify(o,null,2).replace(/</g,'&lt;')}
+
+/* ---------- 屏3 N ---------- */
+function renderS3(){
+  const sku=curSKU(), hs=S.handshake[sku.id], n3ok=n3pass(sku.id);
+  let h=`<div class="card"><h3>系统引擎 N0–N6(系统怎样处理、检查和裁决)</h3></div>`;
+  h+=`<div class="card"><h3>N1↔N2 解锁(涉钱硬门)</h3>
+  <div class="sub">规则 ${RULES[1].id}:营销确认 ∧ 推广确认 ∧ N3九项通过 ∧ 预算到账,才允许N2新增花钱。</div>
+  <div class="row" style="margin:10px 0">
+    <button id="hsMkt" data-ver="${hs.v||1}">${hs.mkt?'✓ 营销已确认':'营销岗确认商品/内容假设'}</button>
+    <button id="hsAd" data-ver="${hs.v||1}">${hs.mkt!==undefined?'':''}${hs.ad?'✓ 推广已确认':'推广岗确认投放策略'}</button>
+    <span class="pill p-${n3ok?'green':'red'}" id="hsN3">N3承接:${n3ok?'ready':'not_ready'}</span>
+  </div>
+  <div class="row"><span class="pill p-${hs.mkt&&hs.ad&&n3ok?'green':'red'}" id="hsLock">${hs.mkt&&hs.ad&&n3ok?'N2已解锁':'N2锁定'}</span>
+  <button id="btnLaunch">N2新增投放计划(PLAN-B1 · ¥5,000)</button></div>
+  <div class="tiny" id="hsWhy" style="margin-top:6px">${hs.mkt&&hs.ad&&n3ok?'':'阻断原因:'+[!hs.mkt?'营销未确认':'',!hs.ad?'推广未确认':'',!n3ok?'N3九项未全过':''].filter(Boolean).join(' · ')}</div></div>`;
+  h+=`<div class="card"><h3>N3 · 站内承接九项(硬门·店铺运营岗)</h3><div id="n3box">`;
+  S.n3[sku.id].forEach((v,i)=>{ h+=`<div class="chk ${v?'done':''} n3i" data-n3="${i}">${v?'☑':'☐'} ${N3_ITEMS[i]}</div>`; });
+  h+=`</div><div class="tiny" style="margin-top:6px">库存深度:${sku.stock.depth}天 · 到货周期:${sku.stock.arrivalDays}天 · 履约:${sku.stock.fulfil} · 止损线:${sku.stopLossSet?'已写':'未写'}</div></div>`;
+  h+=`<div class="card"><h3>引擎管道</h3>`;
+  NNODES.forEach((n,i)=>{
+    h+=`<div class="nnode" data-n="${i}"><div class="spread"><b>${n.n} · ${n.duty}</b><span class="tiny">映射 ${n.map}</span></div>
+    <div class="tiny">入:${n.inp} → 出:${n.out}</div>
+    <div class="ndetail" style="display:${S.focus&&S.focus.nnode===n.n?'block':'none'};margin-top:8px"><div class="jsonbox">${escJson(nArtifact(n.n))}</div>
+    <div class="row" style="margin-top:8px">${nBtns(n.n)}</div></div></div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+function nBtns(n){
+  const B=(lbl,attr)=>`<button ${attr}>${lbl}</button>`;
+  if(n==='N0') return B('去量实校准','data-go-s4="1"')+B('数据源矩阵/data_gap','data-go-s4="1"');
+  if(n==='N1') return B('去J0/J1','data-go-s2="1"')+B('营销SOP','data-go-sop="A-3"');
+  if(n==='N2') return B('费用下钻','data-go-ledger="ad"')+B('推广SOP','data-go-sop="I-3"')+B('HITL队列','data-go-s5="1"');
+  if(n==='N3') return B('承接九项在本屏上方','data-n3-top="1"')+B('库存/备货SOP','data-go-sop="P-2"');
+  if(n==='N4') return B('去校准(异常/回冲)','data-go-s4="1"')+B('风险红线规则','data-go-jrule="badReview"');
+  if(n==='N5') return B('三本账资产','data-go-ledger="asset"')+B('One ID(屏7·主管/用户运营)','data-go-s7="1"');
+  if(n==='N6') return B('去Gate','data-go-s1="1"')+B('HITL队列','data-go-s5="1"')+B('冻结档案','data-go-s6="1"');
+  return '';
+}
+function nArtifact(n){
+  const sku=curSKU();
+  const base={sku_id:sku.id, spu_id:sku.spu, item_id:sku.item, shop_id:'SHOP-XH01', lifecycle_id:'LC-'+sku.id, cycle_id:S.cycle+'_2026Q3', rule_version:'v3', formula_version:'v3', quality_score:0.93, confidence:0.9, mock:true};
+  if(n==='N6'){
+    const ge=gateEval();
+    return Object.assign({}, base, {stage:curStage(), gate: ge.mode==='eval'? (ge.pass?'pass':'fail'):'locked('+ge.mode+')', exits:(EXITS[curStage()]||[]).map(e=>e[0]), evidence:'N0–N5 Artifact链', hitl_required:true, note:'核定≠验果;阶段出口须主管HITL后真实迁移'});
+  }
+  if(n==='N4') return Object.assign({}, base, {anomaly_orders:sku.anomaly, refund_writeback:sku.refundAmt, redline:{badReview:'≤1.0%',refundRate:'≤3.0%'}, risk_tags: sku.anomaly>20?['异常订单偏高·仅识别·合规处理']:[]});
+  return base;
+}
+
+/* ---------- 屏4 量实校准(三层值+回看Artifact+数据源矩阵) ---------- */
+function renderS4(){
+  const sku=curSKU(), c=S.calib[sku.id];
+  let h=`<div class="card"><h3>量实与校准(校准先于算差·宪法级)</h3><div class="sub">规则 ${RULES[3].id} ${RULES[3].version}:三项未完成,Gate/算差/规则派发全部锁定。人工可补证,不可无痕改原值。</div>
+  <div class="grid3" style="margin-top:10px">
+    <div class="tile ${c.anomaly?'st-green':'st-amber'}" id="cbAnomaly"><div class="lbl">① 异常订单剔除</div><div class="v">${c.anomaly?'已完成':'待处理'}</div><div class="tiny">识别${sku.anomaly}单(仅识别·合规回冲,不提供任何违规操作建议)</div></div>
+    <div class="tile ${c.refund?'st-green':'st-amber'}" id="cbRefund"><div class="lbl">② 退款回冲</div><div class="v">${c.refund?'已完成':'待处理'}</div><div class="tiny">退款¥${sku.refundAmt}回冲真实ROI/GMV/利润</div></div>
+    <div class="tile ${c.split?'st-green':'st-amber'}" id="cbSplit"><div class="lbl">③ 活动分账</div><div class="v">${c.split?'已完成':'待处理'}</div><div class="tiny">normal/campaign双基线打标</div></div>
+  </div></div>`;
+
+  h+=`<div class="card"><h3>人工补充量实(三层值·原值永不覆盖)</h3>
+  <div class="row"><select id="editK">${Object.keys(METRICS).map(k=>`<option value="${k}">${METRICS[k].n}</option>`).join('')}</select>
+  <input id="editV" type="number" step="0.1" placeholder="补证值" style="width:100px">
+  <input id="editNote" placeholder="补证理由(必填)" style="width:180px">
+  <button id="btnEdit">提交补证</button></div>
+  <table style="margin-top:8px"><tr><th>指标</th><th>原值raw(保留)</th><th>补证值</th><th>最终判级值</th><th>人</th><th>理由</th><th>时间</th></tr>
+  ${S.edits.map((e,i)=>`<tr><td>${METRICS[e.metric].n}</td><td>${e.raw}</td><td>${e.revoked?'<s>'+e.val+'</s>':e.val}</td><td><b>${e.revoked? e.raw : e.val}</b></td><td>${e.who}</td><td>${e.note}${e.revoked?' · 已撤销':''}</td><td class="tiny">${e.time}${e.revoked?'':' <button class="edRevoke" data-ed="'+i+'">撤销</button>'}</td></tr>`).join('')||'<tr><td colspan="7" class="sub">暂无补证</td></tr>'}</table></div>`;
+
+  h+=`<div class="card"><h3>数据质量与缺失字段(${sku.model}能力矩阵)</h3><div id="gapBox">`;
+  if(sku.caps){
+    Object.keys(sku.caps).forEach(k=>{
+      h+=`<div class="tile st-gray" style="margin-bottom:8px"><div class="lbl">${METRICS[k].n}</div><div class="v">未接入 / 平台不可得</div><div class="tiny">${sku.caps[k]} · 不参与全绿/全红 · 置信度降级</div><button data-gap="${k}" style="margin-top:6px">生成 data_gap 任务</button></div>`;
+    });
+  } else h+=`<div class="sub">B2C全字段可得(MOCK);无缺失。</div>`;
+  h+=`</div><h4>data_gap 记录</h4>${S.gaps.map(g=>`<div class="tiny">${g.id} · ${g.name} · ${g.model} · ${g.t}</div>`).join('')||'<div class="sub">无</div>'}</div>`;
+
+  /* P1-01 回看Artifact */
+  const pr=S.campaignPost[sku.id];
+  h+=`<div class="card"><div class="spread"><h3>活动后30天透支回看(campaign_post_review)</h3><button id="btnPostReview">生成回看Artifact</button></div>`;
+  if(pr){
+    h+=`<table><tr><th>项</th><th>活动前30天</th><th>活动期</th><th>后7天</th><th>后30天</th><th>判定</th></tr>`;
+    pr.rows.forEach(r=>{h+=`<tr><td>${r.item}</td><td>${fmt(r.pre30)}</td><td>${fmt(r.during)}</td><td>${fmt(r.post7)}</td><td>${fmt(r.post30)}</td><td class="tiny">${r.judge}</td></tr>`});
+    h+=`</table><div class="sub" style="margin-top:6px">结论:${pr.verdict}</div><div class="jsonbox" style="margin-top:6px">${escJson(pr)}</div>`;
+  } else h+=`<div class="sub">尚未生成;点击按钮对比 活动前30天/活动期/后7天/后30天 四窗口。</div>`;
+  h+=`</div>`;
+
+  /* P1-06 数据源矩阵 */
+  h+=`<div class="card"><h3>数据源矩阵(数据契约·P1-06)</h3>
+  <table><tr><th>数据源</th><th>接口</th><th>拉取</th><th>频率</th><th>延迟</th><th>主键</th><th>负责人</th><th>回补</th><th>保存期</th><th>失败降级</th><th>B2C/POP差异</th></tr>
+  ${DATASOURCES.map(d=>`<tr><td>${d.src}</td><td class="tiny">${d.api}</td><td>${d.mode}</td><td>${d.freq}</td><td>${d.delay}</td><td class="tiny">${d.pk}</td><td class="tiny">${d.owner}</td><td class="tiny">${d.backfill}</td><td>${d.retain}</td><td class="tiny">${d.degrade}</td><td class="tiny">${d.diff}</td></tr>`).join('')}</table></div>`;
+  return h;
+}
+
+/* ---------- 屏5 三本账+费用(P0-01/02 + 全字段申请) ---------- */
+function renderS5(){
+  const sku=curSKU();
+  const L=(k)=>fmt(mval(k),METRICS[k]?METRICS[k].unit:'');
+  const dl=S.ledgerOpen;
+  let h=`<div class="card"><h3>三本账(${S.cycle==='campaign'?'大促账':'日销账'} · 双账分列 · 点卡片下钻)</h3><div class="grid3">
+   <div class="tile ${dl==='asset'?'st-amber':''}" data-ledger="asset"><div class="lbl">① 商品与搜索资产账(营销+运营)</div>
+     <div class="tiny" style="margin-top:6px">CTR ${L('ctr')} · 免费占比 ${L('freeShare')} · 免费量级 ${L('freeVol')}UV<br>加购率 ${L('cart')} · 自然搜索GMV ${L('organicGmv')}<br><span class="pill p-amber">免费流量:占比+量级并看,防停投虚高</span></div></div>
+   <div class="tile ${dl==='ad'?'st-amber':''}" data-ledger="ad"><div class="lbl">② 推广效率账(推广)</div>
+     <div class="tiny" style="margin-top:6px">花费 ¥1.2万(MOCK) · 点击 ${L('clicks')} · 真实ROI ${L('roi')}<br>付费依赖 ${100-(mval('freeShare')||0)}% · 预算偏差 +4%<br><span class="pill p-blue">四层下钻:渠道→词→人群→创意</span></div></div>
+   <div class="tile ${dl==='deal'?'st-amber':''}" data-ledger="deal"><div class="lbl">③ 成交与用户资产账(运营+用户运营)</div>
+     <div class="tiny" style="margin-top:6px">支付CVR ${L('cvr')} · GMV ${L('gmv')} · 贡献利润 ${L('profit')}<br>UV价值 ${L('uvValue')} · 客单 ${L('aov')} · 首购 ${L('firstBuy')} · 老客复购 ${L('repurchase')}<br><span class="pill p-gray">GMV非全期主KPI;仅成熟期入规模Gate</span></div></div>
+  </div>${dl?`<div id="ledgerDrill" style="margin-top:10px"><h4>${LEDGER_NAME[dl]} · 分层下钻</h4>${drillTree(LEDGER_DRILL[dl],'ld')}</div>`:''}</div>`;
+
+  h+=`<div class="card"><h3>费用闭环(提议→核定→外部申请→到账→消耗→开票)</h3>
+  <div class="sub">审批≠资金到账;未到账不显示可执行。审批≠效果有效;效果在屏6验果。权限:核定=主管 · OA=主管/作战官 · 到账/开票=财务岗 · 消耗=推广+财务。</div>`;
+  if(FEE_PERM.propose.includes(S.role)){
+    h+=`<div class="row" style="margin:8px 0"><input id="feeAmt" type="number" placeholder="金额¥*" style="width:80px"><input id="feeUse" placeholder="用途*" style="width:120px"><input id="feePlan" placeholder="计划*" style="width:100px"><input id="feeExpect" placeholder="预期指标*" style="width:130px"><input id="feeStop" placeholder="止损线*" style="width:130px">
+    <select id="feeBucket"><option>测试预算池</option><option>放量预算池</option><option>活动预算池</option></select><button id="btnFeeNew">提交费用提议</button></div>
+    <div class="tiny">*必填;超¥20,000自动标记超额并计入申请次数(店铺上限可配)。</div>`;
+  } else h+=`<div class="sub">当前角色无费用提议权限(四岗/作战官可提)。</div>`;
+  h+=`<div id="feeList">`;
+  const visFees = canSeeAllFees()? S.fees : S.fees.filter(f=>f.skuId===sku.id);   /* P0-01 */
+  if(!visFees.length) h+=`<div class="sub">本SKU暂无费用单${canSeeAllFees()?'':'(全量仅主管/财务可见)'}。</div>`;
+  visFees.forEach(f=>{
+    h+=`<div class="card" style="margin-bottom:8px"><div class="spread"><b>${f.id} · ¥${f.amount} · ${f.use}${f.over?' <span class="pill p-red">超额</span>':''}</b><span class="pill p-${f.state==='rejected'?'red':f.state==='invoiced'?'green':'amber'}">${FEE_CN[f.state]}</span></div>
+    <div class="tiny">SKU:${f.skuId} · cycle:${f.cycle} · 预算桶:${f.bucket} · 计划:${f.plan} · 预期:${f.expect} · 止损:${f.stopLoss}</div>
+    <div class="feest">${FEE_FLOW.map(s=>`<span class="${FEE_FLOW.indexOf(f.state)>FEE_FLOW.indexOf(s)?'hit':f.state===s?'cur':''}">${FEE_CN[s]}</span>`).join('')}</div>
+    <div class="row">`;
+    if(f.state==='proposed'){
+      if(FEE_PERM.approve.includes(S.role)) h+=`<input class="feeReason" data-f="${f.id}" placeholder="核定理由(必填)" style="width:160px"><button data-fee-approve="${f.id}">核定通过</button><button data-fee-reject="${f.id}">驳回</button><button data-fee-return="${f.id}">退回补证</button>`;
+      else h+=`<span class="tiny">待主管核定</span>`;
+    }
+    if(f.state==='approved'){ if(FEE_PERM.ext.includes(S.role)) h+=`<button data-fee-ext="${f.id}">生成OA/邮件流程单</button>`; else h+=`<span class="tiny">待主管/作战官发起OA</span>`; }
+    if(f.state==='external'){ h+=`<span class="pill p-red">未到账·不可执行</span>`; if(FEE_PERM.fund.includes(S.role)) h+=`<button data-fee-fund="${f.id}">财务到账回写</button>`; else h+=`<span class="tiny">待财务岗/系统接口到账回写</span>`; }
+    if(f.state==='funded'){ h+=`<span class="pill p-green">可执行</span>`; if(FEE_PERM.consume.includes(S.role)) h+=`<button data-fee-consume="${f.id}">记录消耗对账</button>`; }
+    if(f.state==='consumed'){ if(FEE_PERM.invoice.includes(S.role)) h+=`<button data-fee-invoice="${f.id}">开票与差异核对</button>`; else h+=`<span class="tiny">待财务岗开票结清</span>`; }
+    if(f.state==='invoiced') h+=`<span class="pill p-green">闭环完成</span>`;
+    h+=`</div><div class="tiny" style="margin-top:4px">${f.log.map(l=>l.t+' '+l.type+'('+l.who+')').join(' → ')}</div></div>`;
+  });
+  h+=`</div></div>`;
+
+  h+=`<div class="card"><h3>HITL 队列(涉钱/改价/下架/合同/残值复投/阶段出口)</h3>`;
+  if(!S.pending.length) h+=`<div class="sub">队列空。</div>`;
+  S.pending.forEach(p=>{
+    h+=`<div class="spread" style="padding:6px 0;border-bottom:1px solid var(--rule)"><div><b>${p.title}</b><div class="tiny">${p.id} · ${p.type} · 提交:${ROLES[p.by].n} · ${p.reason?('理由:'+p.reason+' · '):''}状态:${p.status}</div></div>
+    <div class="row">${p.status==='pending'?`<button data-hitl-ok="${p.id}">核定</button><button data-hitl-no="${p.id}">驳回</button>`:`<span class="pill p-${p.status==='approved'?'green':'red'}">${p.status}</span>`}</div></div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+
+/* ---------- 屏6 任务/复盘/SOP(全量SOP) ---------- */
+function renderS6(){
+  const sku=curSKU();
+  let h='';
+  if(S.role==='mgr'){ syncSupervisorTasks(); h+=renderSupCenter()+renderTeamPanorama()+renderExecCockpit(); }
+  else if(S.role==='cmd'){ h+=renderCmdCenter(); }
+  else if(S.role==='fin'){ h+=renderFinCenter(); }
+  h+=`<div class="card"><h3>M9 ${S.role==='mgr'?'(下方为通用任务区)':''}任务中心(规则/红灯→SOP step→执行→验果→仅有效可固化)</h3><div id="taskList">`;
+  const list=S.tasks.filter(t=> (S.role==='cmd'||S.role==='mgr')? true : t.role===S.role);
+  if(!list.length) h+=`<div class="sub">本岗无任务。</div>`;
+  list.forEach(t=>{
+    h+=`<div class="card" style="margin-bottom:8px"><div class="spread"><b>${t.title}</b><span class="pill p-${t.verify==='valid'?'green':t.verify==='invalid'?'red':t.status==='done'?'amber':'blue'}">${t.verify? (t.verify==='valid'?'验果:有效':'验果:无效') : t.status==='done'?'待验果':'进行中'}</span></div>
+    <div class="tiny">${t.id} · 岗:${ROLES[t.role].n} · SOP:<span class="pill p-blue tchip" data-t-sop="${t.sop}" style="cursor:pointer">${t.sop}</span> · 来源:${t.evidence?`<span class="pill p-amber tchip" data-t-rule="${t.id}" style="cursor:pointer">${t.src}</span>`:t.src} · SKU:${t.skuId}${t.sla_h?' · SLA:'+t.sla_h+'h':''}<br>基线:${t.baseline??'—'} → 目标:${t.target??'—'} · 上层标:${t.ruleKey?`<span class="pill p-blue tchip" data-t-metric="${t.ruleKey.split(':')[1]}" style="cursor:pointer">${t.upStd}</span>`:t.upStd}${t.verify?` · <span class="pill p-${t.verify==='valid'?'green':'red'} tchip" data-t-vf="${t.id}" style="cursor:pointer">验果对比</span>`:''}</div>
+    <div class="row" style="margin-top:6px">`;
+    if(t.status==='open') h+=`<button data-task-done="${t.id}" data-ver="${t.version||1}">标记执行完成</button>`;
+    if(t.status==='done'&&!t.verify) h+=`<input data-task-res="${t.id}" type="number" step="0.1" placeholder="结果值" style="width:90px"><button data-task-verify="${t.id}" data-ver="${t.version||1}">验果(看上层标动没动)</button>`;
+    if(t.verify==='valid'&&!t.fixed) h+=`<button data-task-fix="${t.id}">固化SOP经验</button>`;
+    if(t.verify==='valid'&&t.fixed&&t.status!=='closed') h+=`<span class="pill p-green">已固化</span><button data-task-close="${t.id}">关闭归档(需主管背书)</button>`;
+    if(t.status==='closed') h+=`<span class="pill p-green">已关闭·战功入账</span>`;
+    if(t.verify==='invalid') h+=`<span class="pill p-red">记录无效/继续测试 · 不计主要战功</span>`;
+    h+=`</div><div class="tiny" style="margin-top:4px">决策枚举:${DECISIONS.join(' / ')}</div></div>`;
+  });
+  h+=`</div></div>`;
+
+  if(curStage()==='retire'){
+    const rc=S.retire[sku.id];
+    h+=`<div class="card"><h3>淘汰期十项Checklist(铁门)</h3><div id="rcBox">`;
+    rc.forEach((it,i)=>{
+      h+=`<div class="chk ${it.done?'done':''}"><span class="rcItem" data-rc="${i}" data-ver="${it.v||1}" style="cursor:pointer">${it.done?'☑':'☐'} ${i+1}. ${it.name}</span>
+      <input data-rcev="${i}" placeholder="证据:${it.evReq}" value="${it.ev}" style="flex:1;min-width:120px"></div>`;
+    });
+    const allDone=rc.every(x=>x.done&&x.ev);
+    h+=`</div><div class="row" style="margin-top:8px"><button id="btnArchive" ${allDone?'':'disabled'}>terminal_archive 终态归档</button>
+    <span class="pill p-${allDone?'green':'red'}">${allDone?'十项齐备':'任一未完成不得归档'}</span></div></div>`;
+  }
+
+  h+=`<div class="card"><h3>M10 复盘中心</h3><div class="sub">cycle结束复盘:目标 vs 基线 vs 结果 · 过程分+结果分分离 · 仅结果改善且无红线计主要战功。</div>
+  <h4>已固化SOP经验(N5资产)</h4>${S.sops.map(s=>`<div class="tiny">✦ ${s}</div>`).join('')||'<div class="sub">暂无;完成有效验果后固化。</div>'}
+  <h4>阶段冻结档案(lifecycle_transition)</h4>${S.frozen.map(f=>`<div class="tiny">❄ ${f.skuId} · ${STAGES[f.from_stage].n}期结果冻结 · 出口:${f.exit} · ${f.t}</div>`).join('')||'<div class="sub">暂无迁移。</div>'}</div>`;
+
+  let sopRole = (S.role==='cmd'||S.role==='mgr'||S.role==='fin')?'ops':S.role;
+  let openStep=null;
+  if(S.focus&&S.focus.sop){ const st=SOP_STEPS.find(x=>x.id===S.focus.sop); if(st){sopRole=st.owner; openStep=st.id;} }
+  h+=`<div class="card"><h3>M11 四岗泡面级SOP(点步骤展开·全字段)</h3>
+  <div class="row" style="margin-bottom:6px">${['mkt','ad','ops','crm'].map(r=>`<button class="sopTab" data-sop="${r}">${ROLES[r].n}</button>`).join('')}</div>
+  <div id="sopBody">${sopSteps(sopRole, openStep)}</div></div>`;
+  return h;
+}
+function sopSteps(r, openId){
+  const steps=SOP_STEPS.filter(s=>s.owner===r);
+  return `<div class="tiny" style="margin-bottom:6px">${SOPS_META[r]} · 每步:owner/Input/Process/Output/KPI公式/目标/历史最佳/当前值/判定/SLA/HITL/next_owner/evidence</div>`+
+  steps.map(s=>{
+    const judge = s.current>=s.target? '达标' : (s.current>=s.target*0.9?'临界':'未达');
+    return `<div class="jnode sopStep ${openId===s.id?'open':''}" data-step="${s.id}"><div class="spread"><b>${s.id} · ${s.name}</b><span class="pill p-${judge==='达标'?'green':judge==='临界'?'amber':'red'}">${judge}</span></div>
+    <div class="sopDetail" style="display:${openId===s.id?'block':'none'};margin-top:8px">
+      <table>
+      <tr><th>owner</th><td>${ROLES[s.owner].n}</td><th>SLA</th><td>${s.sla_hours}h · HITL:${s.hitl?'是':'否'}</td></tr>
+      <tr><th>Input</th><td colspan="3">${s.input.join(' · ')}</td></tr>
+      <tr><th>Process</th><td colspan="3">${s.process.map((p,i)=>(i+1)+'.'+p).join(' → ')}</td></tr>
+      <tr><th>Output</th><td colspan="3">${s.output} → 交接:${s.next_owner==='—'?'—':ROLES[s.next_owner]?ROLES[s.next_owner].n:s.next_owner}${s.next_step&&s.next_step!=='—'?'·'+s.next_step:''}</td></tr>
+      <tr><th>KPI</th><td>${s.kpi}</td><th>公式</th><td>${s.formula}</td></tr>
+      <tr><th>目标</th><td>${s.target}</td><th>历史最佳/当前</th><td>${s.historical_best} / <b>${s.current}</b></td></tr>
+      <tr><th>evidence</th><td colspan="3">${s.evidence.join(' · ')}</td></tr>
+      </table>
+      <div class="row" style="margin-top:8px">
+        <button data-sop-dispatch="${s.id}">按此步骤派任务</button>
+        <button data-sop-tasks="${s.id}">查看当前绑定任务</button>
+        <button data-sop-hist="${s.id}">历史成功样本</button>
+        <button data-go-s1ho="1">去下游交接</button>
+      </div></div></div>`;
+  }).join('');
+}
+
+/* ---------- 屏7 驾驶舱(P1-07信息隔离 + P1-04来源 + P1-05回放) ---------- */
+function renderS7(){
+  const sku=curSKU();
+  let h=`<div class="card"><h3>本岗全局(${ROLES[S.role].n} · 数字卡=入口)</h3><div class="grid3">
+    <div class="tile" data-cp="tasks"><div class="lbl">本岗开放任务 →屏6</div><div class="v">${S.tasks.filter(t=>t.status==='open'&&((S.role==='cmd'||S.role==='mgr')?true:t.role===S.role)).length}</div></div>
+    <div class="tile" data-cp="ho"><div class="lbl">与我相关交接 →屏1</div><div class="v">${S.handoffs.filter(o=>o.from_role===S.role||o.to_role===S.role||['mgr','cmd'].includes(S.role)).length}</div></div>
+    <div class="tile" data-cp="gap"><div class="lbl">data_gap →屏4</div><div class="v">${S.gaps.length}</div></div>
+  </div></div>`;
+
+  /* 品类层:仅主管 */
+  if(S.role==='mgr'){
+    h+=`<div class="card"><h3>主管品类层(六SKU阶段分布·仅主管可见)</h3><table><tr><th>SKU</th><th>阶段</th><th>模式</th><th>Gate</th></tr>`;
+    SKUS.forEach(k=>{ h+=`<tr class="cpSku" data-cp-sku="${k.id}" style="cursor:pointer"><td>${k.name}</td><td><span class="pill p-blue">${STAGES[k.stage].n}</span></td><td>${k.model}</td><td class="tiny">${k.stage==='retire'?'十项门':calibDone(k.id)?'可判':'校准锁'}</td></tr>`; });
+    h+=`</table></div>`;
+  } else if(S.role==='cmd'){
+    h+=`<div class="card"><h3>跨岗任务队列(作战官)</h3>${S.tasks.filter(t=>t.status==='open').map(t=>`<div class="tiny">${t.id} · ${ROLES[t.role].n} · ${t.title}</div>`).join('')||'<div class="sub">空</div>'}</div>`;
+  } else if(S.role==='fin'){
+    h+=`<div class="card"><h3>费用与结清(财务视角)</h3><table><tr><th>费用单</th><th>SKU</th><th>金额</th><th>状态</th></tr>${S.fees.map(f=>`<tr class="cpFee" data-cp-fee="${f.skuId}" style="cursor:pointer"><td>${f.id}</td><td>${f.skuId}</td><td>¥${f.amount}</td><td>${FEE_CN[f.state]}</td></tr>`).join('')}</table></div>`;
+  } else {
+    h+=`<div class="card"><div class="sub">品类层全景仅主管可见;本岗请关注上方任务、交接与本SKU账本(信息隔离·P1-07)。</div></div>`;
+  }
+
+  /* One ID:主管/用户运营可见来源下钻 */
+  if(S.role==='mgr'||S.role==='crm'){
+    h+=`<div class="card"><h3>跨平台承接 · Brand One ID(证据分级·合规)</h3>
+    <div class="sub">Brand One ID=品牌自有统一客户主键;仅在合法授权+平台允许+可匹配条件下关联。各平台身份存平台域token(platform_user_token),绝不互当同一ID;严禁用同名/头像/地址猜人。</div>
+    <div id="oneidBox"><table style="margin-top:8px"><tr><th>等级</th><th>证据</th><th>系统表述</th><th>覆盖(MOCK)</th><th>置信度</th></tr>`;
+    ONEID.forEach(o=>{ h+=`<tr><td><span class="pill p-${o.lv==='E1'?'green':o.lv==='E5'?'gray':'blue'}">${o.lv}</span> ${o.name}</td><td class="tiny">${o.ev}</td><td>${o.txt}</td><td>${o.cnt===null?'—(相关性口径)':o.cnt===0?'未开实验':fmt(o.cnt)}</td><td>${o.conf}</td></tr>`; });
+    h+=`</table>
+    <h4>来源下钻(哪个平台·哪篇内容·哪个活动 → 哪个SKU)</h4>
+    <div class="oidCards">${ONEID_ROWS.map((r,i)=>`<div class="tile oidRow oidCard" data-oid="${i}" style="margin-bottom:8px"><div class="lbl">${r.evidence_level} · ${PLATFORM_CN[r.source_platform]||r.source_platform}</div><div class="v" style="font-size:12px">${r.source_campaign_id} → ${r.matched_sku_id}</div><div class="tiny">点击查看完整证据链</div></div>`).join('')}</div>
+    <table class="oidTable"><tr><th>等级</th><th>source_platform</th><th>campaign</th><th>content</th><th>matched_sku_id</th><th>窗口</th><th>直接/辅助</th><th>first_touch</th><th>last_touch</th><th>match_method</th><th>consent_expiry</th><th>人数</th></tr>
+    ${ONEID_ROWS.map((r,i)=>`<tr class="oidRow" data-oid="${i}" style="cursor:pointer"><td>${r.evidence_level}</td><td class="tiny">${PLATFORM_CN[r.source_platform]||r.source_platform}(${r.source_platform})</td><td class="tiny">${r.source_campaign_id}</td><td class="tiny">${r.source_content_id}</td><td>${r.matched_sku_id}</td><td>${r.attribution_window}</td><td>${r.direct_or_assist}</td><td class="tiny">${r.first_touch}</td><td class="tiny">${r.last_touch}</td><td class="tiny">${r.match_method}</td><td class="tiny">${r.consent_expiry}</td><td>${fmt(r.cnt)}</td></tr>`).join('')}</table>
+    <div class="grid3" style="margin-top:8px">
+      <div class="tile"><div class="lbl">匹配覆盖率</div><div class="v">6.4%</div><div class="tiny">brand_one_id可匹配/总买家</div></div>
+      <div class="tile"><div class="lbl">同意覆盖率</div><div class="v">4.1%</div><div class="tiny">consent_scope有效·可撤回/删除/脱敏</div></div>
+      <div class="tile st-gray"><div class="lbl">无授权用户</div><div class="v">无法归因</div><div class="tiny">不显示个人级确定归因·不制造精准幻觉</div></div>
+    </div></div></div>`;
+  }
+
+  if(S.role==='cmd'||S.role==='mgr'){
+    h+=`<div class="card"><h3>升级队列(关不了的差=升一层)</h3>
+    <div class="sub">SKU层关不了→品类层;品类层关不了→JBP/北极星。占位:导入期ROI守线连续2期未关(TM-6001)→ 已升品类层。</div>
+    <button id="btnEsc">升级当前SKU未关差</button></div>`;
+  }
+
+  /* 规则版本+回放+回滚:主管 */
+  if(S.role==='mgr'){
+    h+=`<div class="card"><h3>规则版本与口径(历史/回放/回滚)</h3><table><tr><th>规则</th><th>版本</th><th>批准人</th><th>生效</th><th>内容</th><th>操作</th></tr>`;
+    RULES.forEach(r=>{h+=`<tr><td>${r.id}</td><td>${r.version}</td><td>${r.approver}</td><td>${r.effective}</td><td class="tiny">${r.expr}</td>
+      <td class="row">${r.hist.length?`<button data-rule-hist="${r.id}">历史</button>`:''}${r.params&&r.hist.length?`<button data-rule-replay="${r.id}">回放对比</button>`:''}${r.hist.length?`<input class="ruleReason" data-r="${r.id}" placeholder="回滚理由" style="width:90px"><button data-rule-roll="${r.id}">回滚</button>`:''}</td></tr>`});
+    h+=`</table><div id="ruleOut"></div></div>`;
+
+    h+=renderPortfolio()+renderMultiDim()+renderJBP()+renderIncentive();
+    h+=`<div class="card"><h3>审计日志(规则/改值/审批/裁决/迁移全留痕)</h3><div id="auditBox" style="max-height:220px;overflow:auto">`;
+    h+=S.audit.slice(0,40).map(a=>`<div class="tiny">${a.t} · ${a.who} · ${a.type} · ${a.detail}</div>`).join('')||'<div class="sub">暂无。</div>';
+    h+=`</div></div>`;
+  } else if(S.role==='fin'){
+    h+=`<div class="card"><h3>审计日志(费用相关)</h3><div id="auditBox" style="max-height:220px;overflow:auto">${S.audit.filter(a=>a.type.startsWith('FEE')||a.type==='APPROVED'||a.type==='REJECTED').slice(0,30).map(a=>`<div class="tiny">${a.t} · ${a.who} · ${a.type} · ${a.detail}</div>`).join('')||'<div class="sub">暂无。</div>'}</div></div>`;
+  }
+  return h;
+}
+
+/* ====== PC补强:屏7主管模块(P1) ====== */
+function renderPortfolio(){
+  const agg={};
+  STAGE_ORDER.forEach(s=>agg[s]={n:0,gmv:0,profit:0});
+  SKUS.forEach(k=>{agg[k.stage].n++;agg[k.stage].gmv+=k.m.normal.gmv;agg[k.stage].profit+=k.m.normal.profit});
+  const sug={intro:'继续小额测试',growth:'放大(守线)',mature:'维持·收口投放',decline:'停投验残值',renew:'受控重启',retire:'体面收尾'};
+  const sim=S.simPct??0;
+  const g0=SKUS.filter(k=>k.stage==='growth').reduce((s,k)=>s+k.m.normal.gmv,0);
+  const est={gmv:Math.round(g0*(1+sim/100*0.6)), profit:Math.round(g0*0.126*(1+sim/100*0.35)), free:Math.round(31*(1+sim/100*0.1)), rep:11, risk:sim>30?'高(透支自然力)':sim<-30?'高(权重回落)':'中'};
+  return `<div class="card"><h3>生命周期组合与资源决策(品类层)</h3>
+  <table><tr><th>阶段</th><th>SKU数</th><th>GMV/期</th><th>利润/期</th><th>建议</th></tr>
+  ${STAGE_ORDER.map(s=>`<tr><td>${STAGES[s].n}</td><td>${agg[s].n}</td><td>${fmt(agg[s].gmv,'元')}</td><td>${fmt(agg[s].profit,'元')}</td><td class="tiny">${sug[s]}</td></tr>`).join('')}</table>
+  <h4>战略SKU例外</h4>
+  <div class="row"><select id="strSku">${SKUS.map(k=>`<option>${k.id}</option>`).join('')}</select>
+  <input id="strW" type="number" placeholder="战略权重" style="width:80px"><input id="strWhy" placeholder="救援理由" style="width:130px"><input id="strBud" type="number" placeholder="额外预算¥" style="width:90px"><input id="strDate" type="date" style="width:130px"><button id="btnStr">设为战略SKU(HITL)</button></div>
+  <h4>预算模拟(AI只建议·主管HITL核定)</h4>
+  <div class="row"><input id="simPct" type="number" value="${sim}" style="width:70px">% <button id="btnSim">模拟成长期预算变化</button></div>
+  <table><tr><th>GMV</th><th>利润</th><th>免费占比</th><th>复购</th><th>风险</th></tr>
+  <tr><td>${fmt(est.gmv,'元')}</td><td>${fmt(est.profit,'元')}</td><td>${est.free}%</td><td>${est.rep}%</td><td>${est.risk}</td></tr></table>
+  <div class="row" style="margin-top:6px"><button id="btnSimAdopt">采纳建议→进HITL</button><span class="pill p-purple">MOCK演示算法</span></div></div>`;
+}
+function renderMultiDim(){
+  const dim=S.dimOpen||'商品';
+  const DATA={
+   '组织':['公司→食品事业部','→天猫平台→欣和官方旗舰店','→天猫小组(四岗)→个人任务(全景可查)'],
+   '商品':['调味品类→SPU-61 六月鲜','→TM-6001 轻盐酱油(导入)→item-885201','生命周期与利润见组合表'],
+   '投放':['搜索推广→PLAN-A2','→关键词「轻盐酱油」/人群「健康家庭」/创意A2','费用FEE-1闭环见屏5'],
+   '消费者':['来源平台(E1-E5)→人群','→首购820→复购4%→LTV¥86','OneID证据链见上方'],
+   '时间':['2026→Q3→7月→本周','→normal_cycle/campaign_cycle','活动前中后透支回看见屏4'],
+   '合作':['天猫平台→JBP-TM-2026','→三共同→承诺→任务→Scorecard','见下方JBP模块']
+  };
+  return `<div class="card"><h3>多维经营分析(六维下钻)</h3>
+  <div class="row" style="margin-bottom:6px">${Object.keys(DATA).map(d=>`<button class="dimTab ${dim===d?'on':''}" data-dim="${d}">${d}</button>`).join('')}</div>
+  <div id="dimBody">${DATA[dim].map(x=>`<div class="chk">▸ ${x}</div>`).join('')}</div></div>`;
+}
+function renderJBP(){
+  const J=S.jbp;
+  return `<div class="card"><h3>BP/JBP管理(${J.jbp_id} · ${J.review_cycle}复盘)</h3>
+  <div class="sub">共同目标:${J.joint_goal}<br>共同价值:${J.joint_value}<br>共同收益:${J.joint_gain}</div>
+  <h4>平台需求画像</h4><div class="tiny">${Object.keys(J.profile).map(k=>k+':'+J.profile[k]).join(' · ')}</div>
+  <h4>双方承诺 → 拆任务</h4>
+  ${J.commitments.map(c=>`<div class="spread" style="padding:5px 0;border-bottom:1px solid var(--rule)"><div class="tiny"><b>${c.id}</b>(${c.side}) ${c.text} · Owner:${ROLES[c.owner]?ROLES[c.owner].n:c.owner} · ${c.linked_task?('已拆:'+c.linked_task+'('+((S.tasks.find(t=>t.id===c.linked_task)||{}).verify||'执行中')+')'):c.status}</div>
+   ${c.linked_task?'':`<button data-jbp-split="${c.id}">拆为任务</button>`}</div>`).join('')}
+  <h4>Scorecard(承诺兑现回写)</h4>
+  <table><tr><th>KPI</th><th>基线</th><th>目标</th><th>当前</th><th>差值</th><th>Owner</th><th>证据</th><th>状态</th></tr>
+  ${J.scorecard.map(s=>`<tr><td>${s.kpi}</td><td>${s.baseline}</td><td>${s.target}</td><td>${s.current}</td><td>${(s.target-s.current).toFixed?Math.round((s.target-s.current)*10)/10:s.target-s.current}</td><td>${ROLES[s.owner]?ROLES[s.owner].n:s.owner}</td><td class="tiny">${s.evidence}</td><td><span class="pill p-${s.status==='已兑现'?'green':'amber'}">${s.status}</span></td></tr>`).join('')}</table>
+  <div class="row" style="margin-top:6px"><input id="jbpNote" placeholder="本期复盘结论" style="width:200px"><button id="btnJbpReview">月/季复盘(JBP_REVIEWED)</button></div>
+  ${J.reviews.map(r=>`<div class="tiny">✦ ${r.t} ${r.note} · 完成率${r.rate}%</div>`).join('')}</div>`;
+}
+function renderIncentive(){
+  const rows=incentiveRows();
+  return `<div class="card"><h3>任务与员工激励接口</h3>
+  <div class="sub">激励门槛:主要战功=任务完成∧证据通过∧验果有效∧无合规红线∧主管背书完成——主管背书本身不是发奖金依据。</div>
+  <table><tr><th>岗位</th><th>过程履职分</th><th>主要战功(已背书)</th><th>待背书战功</th><th>资产沉淀分</th><th>风险扣分</th></tr>
+  ${rows.map(r=>`<tr><td>${r.role}</td><td>${r.proc}</td><td><b>${r.win}</b></td><td>${r.winPend}</td><td>${r.asset}</td><td>${r.risk}</td></tr>`).join('')}</table></div>`;
+}
+/* =========================================================
+   渲染与绑定
+   ========================================================= */
+function rerender(){
+  setTimeout(()=>{document.querySelectorAll('.tile,.chk').forEach(el=>{if(!el.hasAttribute('tabindex'))el.setAttribute('tabindex','0')})},0);
+  document.querySelectorAll('.navb').forEach(b=>b.classList.toggle('on', b.dataset.s==String(S.screen)));
+  document.querySelectorAll('#mnav button').forEach(b=>b.classList.toggle('on', b.dataset.s==String(S.screen)));
+  document.querySelectorAll('.roleb').forEach(b=>b.classList.toggle('on', b.dataset.r===S.role));
+  document.querySelectorAll('.stgb').forEach(b=>b.classList.toggle('on', b.dataset.st===curStage()));
+  $('#cyN').classList.toggle('on', S.cycle==='normal');
+  $('#cyC').classList.toggle('on', S.cycle==='campaign');
+  const R={1:renderS1,2:renderS2,3:renderS3,4:renderS4,5:renderS5,6:renderS6,7:renderS7};
+  $('#main').innerHTML=R[S.screen]();
+  bindMain();
+  S.focus=null;
+  hashWrite();
+}
+function bindMain(){
+  const m=$('#main');
+  m.querySelectorAll('[data-drill]').forEach(el=>el.addEventListener('click',()=>drill(el.dataset.drill)));
+  m.querySelectorAll('[data-gap]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();makeGap(el.dataset.gap)}));
+  m.querySelectorAll('[data-goto6]').forEach(el=>el.addEventListener('click',()=>{S.screen=6;rerender()}));
+  m.querySelectorAll('.jnode:not(.sopStep)').forEach(el=>el.addEventListener('click',()=>{
+    const d=el.querySelector('.jdetail'); if(!d)return; const open=d.style.display!=='none';
+    d.style.display=open?'none':'block'; el.classList.toggle('open',!open);
+  }));
+  bindSopBody();
+  m.querySelectorAll('.nnode').forEach(el=>el.addEventListener('click',()=>{
+    const d=el.querySelector('.ndetail'); const open=d.style.display!=='none';
+    d.style.display=open?'none':'block'; el.classList.toggle('open',!open);
+  }));
+  /* ===== v5.1 联动处理器 ===== */
+  m.querySelectorAll('[data-go-n]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();jump(3,{nnode:el.dataset.goN})}));
+  m.querySelectorAll('[data-go-ledger]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();S.ledgerOpen=el.dataset.goLedger;jump(5)}));
+  m.querySelectorAll('[data-go-sop]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();jump(6,{sop:el.dataset.goSop})}));
+  m.querySelectorAll('[data-go-jtasks]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();jump(6)}));
+  m.querySelectorAll('[data-go-jrule]').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation();
+    const k=el.dataset.goJrule;
+    const fired=firedRules().filter(f=>f.metric===k);
+    $('#sideBody').innerHTML=`<div class="attrcard"><b>规则证据 · ${METRICS[k].n}</b>${fired.length?fired.map(f=>`<div class="jsonbox" style="margin-top:6px">${escJson(ruleEvidence(f))}</div>`).join(''):'<div class="sub" style="margin-top:6px">当前无命中(未校准/大促/达线)。红线口径:差评≤1.0%·退款≤3.0%</div>'}</div>`;
+    if(window.innerWidth<1200)$('#side').classList.add('open');
+  }));
+  [['data-go-s1','1'],['data-go-s2','2'],['data-go-s4','4'],['data-go-s5','5'],['data-go-s6','6'],['data-go-s7','7'],['data-go-s1ho','1']].forEach(([a,s])=>{
+    m.querySelectorAll('['+a+']').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();jump(+s)}));
+  });
+  m.querySelectorAll('[data-n3-top]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();toast('承接九项在本屏「N3」卡片,店铺运营岗可勾选')}));
+  m.querySelectorAll('[data-ledger]').forEach(el=>el.addEventListener('click',()=>{
+    S.ledgerOpen = S.ledgerOpen===el.dataset.ledger? null : el.dataset.ledger; rerender();
+  }));
+  m.querySelectorAll('.ldrow').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation();
+    const d=m.querySelector('[id="'+el.dataset.ld+'"]'); if(!d)return;
+    d.style.display=d.style.display==='none'?'block':'none';
+  }));
+  m.querySelectorAll('[data-t-sop]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();jump(6,{sop:el.dataset.tSop})}));
+  m.querySelectorAll('[data-t-rule]').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation();
+    const t=S.tasks.find(x=>x.id===el.dataset.tRule);
+    $('#sideBody').innerHTML=`<div class="attrcard"><b>规则证据 · ${t.id}</b><div class="jsonbox" style="margin-top:6px">${escJson(t.evidence)}</div></div>`;
+    if(window.innerWidth<1200)$('#side').classList.add('open');
+  }));
+  m.querySelectorAll('[data-t-metric]').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation(); const k=el.dataset.tMetric; jump(1); drill(k);
+  }));
+  m.querySelectorAll('[data-t-vf]').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation();
+    const t=S.tasks.find(x=>x.id===el.dataset.tVf);
+    $('#sideBody').innerHTML=`<div class="attrcard"><b>验果对比 · ${t.id}</b>
+    <table style="margin-top:6px"><tr><th>基线</th><td>${t.baseline}</td></tr><tr><th>上层标(目标)</th><td>${t.target}</td></tr><tr><th>结果</th><td><b>${t.result}</b></td></tr><tr><th>验果</th><td>${t.verify==='valid'?'有效·上层标已动':'无效·上层标未动'}</td></tr></table>
+    <button data-t-metric="${(t.ruleKey||':').split(':')[1]}" style="margin-top:8px">${t.ruleKey?'回到对应指标':''}</button></div>`;
+    if(window.innerWidth<1200)$('#side').classList.add('open');
+  }));
+  bindSopButtons(m);
+  bindMainTail(m);
+}
+function bindSopBody(){
+  const host=$('#sopBody')||$('#main'); if(!host)return;
+  host.querySelectorAll('.sopStep').forEach(el=>{
+    if(el.dataset.bound)return; el.dataset.bound='1';
+    el.addEventListener('click',()=>{
+      const d=el.querySelector('.sopDetail'); const open=d.style.display!=='none';
+      d.style.display=open?'none':'block'; el.classList.toggle('open',!open);
+    });
+  });
+  bindSopButtons(host);
+}
+function bindSopButtons(host){
+  host.querySelectorAll('[data-sop-dispatch]').forEach(el=>{ if(el.dataset.bound)return; el.dataset.bound='1'; el.addEventListener('click',e=>{
+    e.stopPropagation();
+    const st=SOP_STEPS.find(x=>x.id===el.dataset.sopDispatch);
+    const dup=S.tasks.find(t=>t.sop===st.id&&t.skuId===S.skuId&&t.status==='open'&&t.src==='SOP派发');
+    if(dup){toast('已有开放任务 '+dup.id+'(同步骤同SKU去重);先执行/验果后再派'); return;}
+    S.tasks.push({id:'T-'+(S.taskSeq++), title:'SOP手动派发:'+st.id+' '+st.name, role:st.owner, sop:st.id, src:'SOP派发', skuId:S.skuId, status:'open', baseline:st.current, target:st.target, result:null, verify:null, fixed:false, upStd:st.kpi+'('+st.formula+')', ruleKey:null, dir:st.dir||'gt', sla_h:st.sla_hours, due:new Date(Date.now()+st.sla_hours*3600e3).toISOString().slice(0,16).replace('T',' '), priority:'medium', owner_confirm:ROLES[st.owner].n+'(待确认)'});
+    audit('TASK_CREATED','SOP步骤派发 '+st.id+'→'+ROLES[st.owner].n); toast('已按 '+st.id+' 派任务(SLA '+st.sla_hours+'h)'); rerender();
+  })});
+  host.querySelectorAll('[data-sop-tasks]').forEach(el=>{ if(el.dataset.bound2)return; el.dataset.bound2='1'; el.addEventListener('click',e=>{
+    e.stopPropagation();
+    const id=el.dataset.sopTasks;
+    const list=S.tasks.filter(t=>t.sop===id);
+    $('#sideBody').innerHTML=`<div class="attrcard"><b>绑定任务 · ${id}</b>${list.map(t=>`<div class="tiny" style="margin-top:6px">${t.id} · ${t.title} · ${t.verify||t.status}</div>`).join('')||'<div class="sub" style="margin-top:6px">暂无</div>'}</div>`;
+    if(window.innerWidth<1200)$('#side').classList.add('open');
+  })});
+  host.querySelectorAll('[data-sop-hist]').forEach(el=>{ if(el.dataset.bound3)return; el.dataset.bound3='1'; el.addEventListener('click',e=>{
+    e.stopPropagation();
+    const id=el.dataset.sopHist;
+    const list=S.sops.filter(s=>s.startsWith(id));
+    $('#sideBody').innerHTML=`<div class="attrcard"><b>历史成功样本 · ${id}</b>${list.map(s=>`<div class="tiny" style="margin-top:6px">✦ ${s}</div>`).join('')||'<div class="sub" style="margin-top:6px">暂无有效固化样本</div>'}</div>`;
+    if(window.innerWidth<1200)$('#side').classList.add('open');
+  })});
+}
+function bindMainTail(m){
+  m.querySelectorAll('[data-cp]').forEach(el=>el.addEventListener('click',()=>{
+    const t=el.dataset.cp;
+    if(t==='tasks')jump(6); else if(t==='ho')jump(1); else jump(4);
+  }));
+  m.querySelectorAll('[data-cp-sku]').forEach(el=>el.addEventListener('click',()=>{S.skuId=el.dataset.cpSku;S.stageOverride=null;jump(1)}));
+  m.querySelectorAll('[data-cp-fee]').forEach(el=>el.addEventListener('click',()=>{S.skuId=el.dataset.cpFee;jump(5)}));
+  m.querySelectorAll('[data-ho-art]').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation();
+    const o=S.handoffs.find(x=>x.id===el.dataset.hoArt);
+    $('#sideBody').innerHTML=`<div class="attrcard"><b>交接Artifact · ${o.output_artifact}</b>
+    <table style="margin-top:6px"><tr><th>版本</th><td>v2</td></tr><tr><th>文件/链接</th><td class="tiny">brand-assets/占位路径/${o.id}.zip</td></tr>
+    <tr><th>创建人</th><td>${ROLES[o.from_role].n}</td></tr><tr><th>提交时间</th><td class="tiny">${o.submitted_at?new Date(o.submitted_at).toISOString().slice(0,16).replace('T',' '):'未提交'}</td></tr>
+    <tr><th>品牌审核</th><td>已过品牌合规(占位)</td></tr><tr><th>相关SKU</th><td>${o.skuId}</td></tr>
+    <tr><th>下游意见</th><td>${o.rejection_reason||'—'}</td></tr><tr><th>需补充</th><td>${o.status==='returned'?'是':'否'}</td></tr></table></div>`;
+    if(window.innerWidth<1200)$('#side').classList.add('open');
+  }));
+  m.querySelectorAll('.oidRow').forEach(el=>el.addEventListener('click',()=>{
+    const r=ONEID_ROWS[+el.dataset.oid];
+    $('#sideBody').innerHTML=`<div class="attrcard"><b>归因证据链 · ${r.evidence_level}</b>
+    <table style="margin-top:6px">
+    <tr><th>来源平台</th><td>${PLATFORM_CN[r.source_platform]||r.source_platform}(${r.source_platform})</td></tr>
+    <tr><th>活动</th><td>${r.source_campaign_id}</td></tr><tr><th>内容</th><td>${r.source_content_id}</td></tr>
+    <tr><th>首触</th><td class="tiny">${r.first_touch}</td></tr><tr><th>末触</th><td class="tiny">${r.last_touch}</td></tr>
+    <tr><th>匹配方式</th><td>${r.match_method}</td></tr><tr><th>落点SKU</th><td>${r.matched_sku_id}</td></tr>
+    <tr><th>窗口</th><td>${r.attribution_window}</td></tr><tr><th>直接/辅助</th><td>${r.direct_or_assist}</td></tr>
+    <tr><th>同意范围/到期</th><td class="tiny">${r.consent_expiry}</td></tr><tr><th>覆盖人数</th><td>${fmt(r.cnt)}(聚合口径)</td></tr></table>
+    <div class="sub" style="margin-top:6px"><b>为什么可认定${r.direct_or_assist}归因:</b>${r.evidence_level==='E1'?'用户明确授权后,CRM token与平台标识合法匹配,个体级确定性同一用户。':r.evidence_level==='E2'?'专属券码/唯一链接仅经该内容发放,核销即构成唯一链路,无需个人身份猜测。':'人群级聚合匹配,不落到个人。'}</div></div>`;
+    if(window.innerWidth<1200)$('#side').classList.add('open');
+  }));
+  /* 规则扫描 */
+  const brs=$('#btnRuleScan'); if(brs) brs.addEventListener('click',()=>{generateTasksFromRules();rerender()});
+  /* 握手 */
+  const hsGuard=(el)=>{const hs=S.handshake[S.skuId]; const ex=+(el.dataset.ver||1); if((hs.v||1)!==ex){toast('并发冲突:握手状态已被他人修改,已刷新');audit('VERSION_CONFLICT','handshake '+S.skuId);rerender();return false} hs.v=(hs.v||1)+1; return true};
+  const hm=$('#hsMkt'); if(hm) hm.addEventListener('click',()=>{
+    if(S.role!=='mkt'){toast('权限不足:仅营销岗可确认商品/内容假设');return}
+    if(!hsGuard(hm))return;
+    S.handshake[S.skuId].mkt=!S.handshake[S.skuId].mkt; audit('HANDSHAKE','营销确认='+S.handshake[S.skuId].mkt); rerender();
+  });
+  const ha=$('#hsAd'); if(ha) ha.addEventListener('click',()=>{
+    if(S.role!=='ad'){toast('权限不足:仅推广岗可确认投放策略');return}
+    if(!hsGuard(ha))return;
+    S.handshake[S.skuId].ad=!S.handshake[S.skuId].ad; audit('HANDSHAKE','推广确认='+S.handshake[S.skuId].ad); rerender();
+  });
+  const bl=$('#btnLaunch'); if(bl) bl.addEventListener('click',()=>{
+    const hs=S.handshake[S.skuId];
+    if(curStage()==='retire'){toast('淘汰期零新增投放·不可复活');audit('N2_BLOCKED','淘汰期');return}
+    if(curStage()==='decline'){
+      S.pending.push({id:'HITL-'+(S.penSeq++),type:'残值复投(衰退期例外)',title:'衰退期残值复投 ¥5,000 · '+S.skuId,by:S.role,skuId:S.skuId,status:'pending',reason:''});
+      audit('HITL_REQUESTED','残值复投'); toast('衰退期默认停投;残值复投已进HITL队列(屏5)'); rerender(); return;
+    }
+    if(!(hs.mkt&&hs.ad&&n3pass())){
+      const why=[!hs.mkt?'营销未确认':'',!hs.ad?'推广未确认':'',!n3pass()?'N3九项未全过':''].filter(Boolean).join(' · ');
+      toast('N2锁定,阻断新增投放:'+why); audit('N2_BLOCKED',why); return;
+    }
+    const fee=S.fees.find(f=>f.skuId===S.skuId&&f.state==='funded');
+    if(!fee){toast('握手通过,但预算未到账(费用闭环未到funded)·不可执行');audit('N2_BLOCKED','预算未到账');return}
+    audit('N2_LAUNCH','PLAN-B1投放启动'); toast('N2投放计划已启动(MOCK):PLAN-B1');
+  });
+  m.querySelectorAll('.n3i').forEach(el=>el.addEventListener('click',()=>{
+    if(S.role!=='ops'&&S.role!=='mgr'){toast('权限不足:承接九项由店铺运营岗维护');return}
+    const i=+el.dataset.n3; S.n3[S.skuId][i]=!S.n3[S.skuId][i];
+    audit('N3_CHECK',N3_ITEMS[i]+'='+S.n3[S.skuId][i]); rerender();
+  }));
+  /* 校准(完成三项后自动规则扫描 P0-04) */
+  [['cbAnomaly','anomaly','异常订单剔除(仅合规识别与回冲)'],['cbRefund','refund','退款回冲'],['cbSplit','split','活动分账']].forEach(([id,k,nm])=>{
+    const el=$('#'+id); if(el) el.addEventListener('click',()=>{
+      S.calib[S.skuId][k]=!S.calib[S.skuId][k]; audit('METRIC_CALIBRATED',nm+'='+S.calib[S.skuId][k]);
+      toast(nm+(S.calib[S.skuId][k]?'完成':'撤销'));
+      if(calibDone(S.skuId)){ generateTasksFromRules(); }
+      rerender();
+    });
+  });
+  /* 补证(三层值) */
+  const be=$('#btnEdit'); if(be) be.addEventListener('click',()=>{
+    const k=$('#editK').value, v=parseFloat($('#editV').value), note=$('#editNote').value.trim();
+    if(isNaN(v)){toast('请填补证值');return}
+    if(!note){toast('补证理由必填(不可无痕改值)');return}
+    const raw=rawVal(curSKU(),k);
+    S.override[S.skuId][S.cycle][k]={val:v, note, who:ROLES[S.role].n, t:ev0('E','x').t, expiry:new Date(Date.now()+30*864e5).toISOString().slice(0,10)};
+    S.edits.unshift({metric:k, raw:raw, val:v, cycle:S.cycle, who:ROLES[S.role].n, note, time:ev0('E','x').t, revoked:false});
+    audit('MANUAL_EVIDENCE',METRICS[k].n+' raw='+raw+' 补证='+v+'('+note+') 原值保留');
+    toast('补证已留痕(原值保留·三层值)'); rerender();
+  });
+  m.querySelectorAll('.edRevoke').forEach(el=>el.addEventListener('click',()=>{
+    const e=S.edits[+el.dataset.ed]; if(!e||e.revoked)return;
+    e.revoked=true;
+    delete S.override[S.skuId][e.cycle||S.cycle][e.metric];
+    audit('OVERRIDE_REVOKED',METRICS[e.metric].n+' 撤销补证,恢复Raw='+e.raw);
+    toast('补证已撤销·最终判级值恢复原值'); rerender();
+  }));
+  /* 费用新建(全字段必填) */
+  const bf=$('#btnFeeNew'); if(bf) bf.addEventListener('click',()=>{
+    if(!FEE_PERM.propose.includes(S.role)){toast('权限不足');return}
+    const amt=parseFloat($('#feeAmt').value), use=$('#feeUse').value.trim(), plan=$('#feePlan').value.trim(), exp=$('#feeExpect').value.trim(), sl=$('#feeStop').value.trim();
+    if(isNaN(amt)||amt<=0){toast('请填金额');return}
+    if(!use||!plan||!exp||!sl){toast('用途/计划/预期指标/止损线均为必填');return}
+    if(S.fees.some(f=>f.skuId===S.skuId&&f.state==='proposed'&&f.amount===amt&&f.use===use)){toast('幂等拦截:同SKU同金额同用途已有未决提议(idempotency_key去重)');audit('IDEMPOTENT_BLOCKED','fee重复提交');return}
+    S.fees.unshift({id:'FEE-'+(S.feeSeq++), skuId:S.skuId, by:S.role, amount:amt, use, cycle:S.cycle, plan, expect:exp, stopLoss:sl, bucket:$('#feeBucket').value, over:amt>20000, state:'proposed', log:[ev0('FEE_PROPOSED',S.role)]});
+    audit('FEE_PROPOSED','¥'+amt+(amt>20000?'(超额标记)':'')); toast('费用提议已提交,待主管核定'); rerender();
+  });
+  const feeAct=(sel,perm,fn)=>{ m.querySelectorAll(sel).forEach(el=>el.addEventListener('click',()=>{
+    if(!FEE_PERM[perm].includes(S.role)){toast('权限不足:'+({approve:'仅主管',reject:'仅主管',return:'仅主管',ext:'主管/作战官',fund:'财务岗/系统接口',consume:'推广+财务',invoice:'财务岗'})[perm]);return}
+    fn(el);
+  })) };
+  feeAct('[data-fee-approve]','approve',el=>{
+    const f=S.fees.find(x=>x.id===el.dataset.feeApprove);
+    const rs=m.querySelector(`.feeReason[data-f="${f.id}"]`);
+    if(!rs.value.trim()){toast('核定理由必填');return}
+    f.state='approved'; f.log.push(ev0('APPROVED('+rs.value.trim()+')','mgr'));
+    audit('APPROVED',f.id+' 理由:'+rs.value.trim()); toast('已核定;核定≠验果'); rerender();
+  });
+  feeAct('[data-fee-reject]','reject',el=>{
+    const f=S.fees.find(x=>x.id===el.dataset.feeReject);
+    const rs=m.querySelector(`.feeReason[data-f="${f.id}"]`);
+    if(!rs.value.trim()){toast('驳回理由必填');return}
+    f.state='rejected'; f.log.push(ev0('REJECTED('+rs.value.trim()+')','mgr')); audit('REJECTED',f.id); rerender();
+  });
+  feeAct('[data-fee-return]','return',el=>{
+    const f=S.fees.find(x=>x.id===el.dataset.feeReturn);
+    f.state='returned'; f.log.push(ev0('RETURNED','mgr')); audit('RETURNED',f.id); toast('已退回补证'); rerender();
+  });
+  feeAct('[data-fee-ext]','ext',el=>{
+    const f=S.fees.find(x=>x.id===el.dataset.feeExt);
+    f.state='external'; f.log.push(ev0('OA_TICKET',S.role)); audit('FEE_EXTERNAL',f.id+' OA单已生成'); toast('外部OA/邮件流程单已生成(占位对接)'); rerender();
+  });
+  feeAct('[data-fee-fund]','fund',el=>{
+    const f=S.fees.find(x=>x.id===el.dataset.feeFund);
+    f.state='funded'; f.log.push(ev0('FUNDED','fin')); audit('FEE_FUNDED',f.id+' 到账回写(财务岗)'); toast('到账回写完成·此后才显示可执行'); rerender();
+  });
+  feeAct('[data-fee-consume]','consume',el=>{
+    const f=S.fees.find(x=>x.id===el.dataset.feeConsume);
+    f.state='consumed'; f.log.push(ev0('CONSUMED',S.role)); audit('FEE_CONSUMED',f.id); rerender();
+  });
+  feeAct('[data-fee-invoice]','invoice',el=>{
+    const f=S.fees.find(x=>x.id===el.dataset.feeInvoice);
+    f.state='invoiced'; f.log.push(ev0('INVOICED','fin')); audit('FEE_INVOICED',f.id+' 开票与差异核对完成'); toast('费用闭环完成'); rerender();
+  });
+  /* HITL(含阶段出口→真迁移 P1-02) */
+  m.querySelectorAll('[data-hitl-ok]').forEach(el=>el.addEventListener('click',()=>{
+    if(S.role!=='mgr'){toast('权限不足:仅主管可核定');return}
+    const p=S.pending.find(x=>x.id===el.dataset.hitlOk); p.status='approved';
+    audit('APPROVED',p.id+' '+p.title);
+    if(p.type==='阶段出口裁决'){ applyTransition(p); } else toast('已核定(留痕);核定≠验果');
+    rerender();
+  }));
+  m.querySelectorAll('[data-hitl-no]').forEach(el=>el.addEventListener('click',()=>{
+    if(S.role!=='mgr'){toast('权限不足');return}
+    const p=S.pending.find(x=>x.id===el.dataset.hitlNo); p.status='rejected';
+    audit('REJECTED',p.id); rerender();
+  }));
+  /* Gate提交(出口枚举 P1-03) */
+  const bg=$('#btnGateSubmit'); if(bg) bg.addEventListener('click',()=>{
+    const exit=$('#exitSel').value, reason=$('#exitReason').value.trim();
+    const lbl=(EXITS[curSKU().stage].find(e=>e[0]===exit)||[])[1];
+    if(!reason){toast('出口理由与证据必填');return}
+    S.pending.push({id:'HITL-'+(S.penSeq++),type:'阶段出口裁决',title:curSKU().name+' '+stageCfg().n+'期Gate通过·申请出口:'+lbl+'('+exit+')',by:S.role,skuId:S.skuId,status:'pending',exit,exitLabel:lbl,reason});
+    audit('GATE_DECIDED','Gate通过·出口'+exit+'·提交主管HITL'); toast('已提交主管裁决(屏5 HITL队列)·批准后执行真实阶段迁移'); rerender();
+  });
+  /* 交接状态机(P0-05) */
+  const hoOf=id=>S.handoffs.find(o=>o.id===id);
+  m.querySelectorAll('[data-ho-submit]').forEach(el=>el.addEventListener('click',()=>{
+    const o=hoOf(el.dataset.hoSubmit);
+    if(o.from_role!==S.role){toast('权限不足:仅'+ROLES[o.from_role].n+'可提交');return}
+    o.status='submitted'; o.submitted_at=Date.now(); o.due_at=Date.now()+o.due_h*3600e3;
+    audit('HANDOFF_SUBMITTED',o.id+' '+o.from_step+'→'+o.to_step); toast('已提交,待'+ROLES[o.to_role].n+'接收(SLA '+o.due_h+'h)'); rerender();
+  }));
+  m.querySelectorAll('[data-ho-accept]').forEach(el=>el.addEventListener('click',()=>{
+    const o=hoOf(el.dataset.hoAccept);
+    if(o.to_role!==S.role){toast('权限不足:仅'+ROLES[o.to_role].n+'可接收');return}
+    o.status='accepted'; o.accepted_at=Date.now();
+    audit('HANDOFF_ACCEPTED',o.id); toast('已接收'); rerender();
+  }));
+  m.querySelectorAll('[data-ho-return]').forEach(el=>el.addEventListener('click',()=>{
+    const o=hoOf(el.dataset.hoReturn);
+    if(o.to_role!==S.role){toast('权限不足');return}
+    const rs=m.querySelector(`.hoReason[data-ho="${o.id}"]`);
+    if(!rs.value.trim()){toast('退回原因必填');return}
+    o.status='returned'; o.rejection_reason=rs.value.trim();
+    audit('HANDOFF_RETURNED',o.id+' 原因:'+o.rejection_reason); toast('已退回补充'); rerender();
+  }));
+  m.querySelectorAll('[data-ho-complete]').forEach(el=>el.addEventListener('click',()=>{
+    const o=hoOf(el.dataset.hoComplete);
+    if(o.to_role!==S.role){toast('权限不足');return}
+    o.status='completed'; audit('HANDOFF_COMPLETED',o.id); toast('交接完成·Output已被下游确认'); rerender();
+  }));
+  const bhc=$('#btnHoCheck'); if(bhc) bhc.addEventListener('click',()=>{
+    let n=0;
+    S.handoffs.forEach(o=>{ if(o.status==='submitted'&&o.due_at&&Date.now()>o.due_at){o.status='overdue';audit('HANDOFF_OVERDUE',o.id);n++} });
+    toast(n?('超时检查:'+n+'条交接已标记超时'):'超时检查:无超时'); rerender();
+  });
+  /* 任务 */
+  m.querySelectorAll('[data-task-done]').forEach(el=>el.addEventListener('click',()=>{
+    const t=S.tasks.find(x=>x.id===el.dataset.taskDone);
+    const expect=+(el.dataset.ver||1);
+    if((t.version||1)!==expect){toast('并发冲突(乐观锁):任务已被他人修改,已加载最新版本,请确认后重试');audit('VERSION_CONFLICT',t.id+' expect v'+expect+' actual v'+t.version);rerender();return}
+    t.version=(t.version||1)+1; t.status='done';
+    t.done_at=Date.now();
+    audit('TASK_COMPLETED',t.id); toast('执行完成;去验果(看上层标动没动)'); rerender();
+  }));
+  m.querySelectorAll('[data-task-verify]').forEach(el=>el.addEventListener('click',()=>{
+    const t=S.tasks.find(x=>x.id===el.dataset.taskVerify);
+    const expect=+(el.dataset.ver||1);
+    if((t.version||1)!==expect){toast('并发冲突(乐观锁):任务已被他人修改,请基于最新版本重试');audit('VERSION_CONFLICT',t.id+' verify expect v'+expect);rerender();return}
+    t.version=(t.version||1)+1;
+    const inp=m.querySelector(`[data-task-res="${t.id}"]`);
+    const r=parseFloat(inp.value);
+    if(isNaN(r)){toast('请填结果值');return}
+    t.result=r;
+    const mk=(t.ruleKey||':').split(':')[1];
+    const dir = t.dir || (mk&&METRICS[mk]&&METRICS[mk].direction) || (t.baseline!==null&&t.target!==null&&t.baseline>t.target?'lt':'gt');
+    const better = t.target!==null? (dir==='lt'? r<=t.target : r>=t.target) : false;
+    t.verify = better? 'valid':'invalid';
+    audit('SCORE_COMPUTED',t.id+' 验果='+t.verify+'(结果'+r+' vs 上层标'+t.target+')');
+    if(t.jbp&&t.verify==='valid'){
+      const c=S.jbp.commitments.find(x=>x.id===t.jbp); if(c)c.status='已兑现';
+      const sc=S.jbp.scorecard[0]; sc.current=Math.min(sc.target, Math.round(sc.current*1.08)); sc.status=sc.current>=sc.target?'已兑现':'兑现中';
+      audit('JBP_SCORECARD_WRITEBACK', t.jbp+' 兑现回写Scorecard');
+    }
+    toast(better?'验果有效:上层标已动':'验果无效:任务做了但上层标没动·记录继续测试'); rerender();
+  }));
+  m.querySelectorAll('[data-task-close]').forEach(el=>el.addEventListener('click',()=>{
+    const t=S.tasks.find(x=>x.id===el.dataset.taskClose);
+    if(!backedFor(t.id)){toast('关键任务未经主管背书不得关闭(PC-AC04)·去屏6主管待背书队列');audit('CLOSE_BLOCKED',t.id+' 未背书');return}
+    t.status='closed'; audit('TASK_CLOSED',t.id+'(已背书)'); toast('已关闭归档·主要战功入账'); rerender();
+  }));
+  m.querySelectorAll('[data-task-fix]').forEach(el=>el.addEventListener('click',()=>{
+    const t=S.tasks.find(x=>x.id===el.dataset.taskFix); t.fixed=true;
+    S.sops.unshift(t.sop+' · '+t.title+'(有效样本·适用边界:'+stageCfg().n+'期)');
+    audit('SOP_LEARNED',t.id); toast('SOP经验已固化(N5资产)·计主要战功'); rerender();
+  }));
+  m.querySelectorAll('.sopTab').forEach(el=>el.addEventListener('click',()=>{
+    $('#sopBody').innerHTML=sopSteps(el.dataset.sop,null);
+    bindSopBody();
+  }));
+  /* 淘汰十项 */
+  m.querySelectorAll('.rcItem').forEach(el=>el.addEventListener('click',()=>{
+    const i=+el.dataset.rc; const it=S.retire[S.skuId][i];
+    const ex=+(el.dataset.ver||1);
+    if((it.v||1)!==ex){toast('并发冲突:该项已被他人修改,已刷新');audit('VERSION_CONFLICT','retire '+S.skuId+'#'+(i+1));rerender();return}
+    it.v=(it.v||1)+1;
+    const evin=m.querySelector(`[data-rcev="${i}"]`);
+    it.ev=evin.value.trim();
+    if(!it.done && !it.ev){toast('先填完成证据:'+it.evReq);return}
+    it.done=!it.done; audit('RETIRE_CHECK',(i+1)+'.'+it.name+'='+it.done); rerender();
+  }));
+  m.querySelectorAll('[data-rcev]').forEach(el=>el.addEventListener('change',()=>{
+    S.retire[S.skuId][+el.dataset.rcev].ev=el.value.trim();
+  }));
+  const ba=$('#btnArchive'); if(ba) ba.addEventListener('click',()=>{
+    const rc=S.retire[S.skuId];
+    if(!rc.every(x=>x.done&&x.ev)){toast('十项任一未完成,不得terminal_archive');return}
+    audit('GATE_DECIDED','terminal_archive 终态归档(不可复活)'); toast('已终态归档·零新增投放·不可复活');
+  });
+  const bes=$('#btnEsc'); if(bes) bes.addEventListener('click',()=>{
+    audit('ESCALATED','SKU层未关差升品类层'); toast('未关差已升一层(品类层/主管)');
+  });
+  /* 回看Artifact */
+  const bpr=$('#btnPostReview'); if(bpr) bpr.addEventListener('click',()=>{buildPostReview(curSKU()); toast('campaign_post_review已生成'); rerender()});
+  /* ====== PC补强绑定 ====== */
+  m.querySelectorAll('[data-supq]').forEach(el=>el.addEventListener('click',()=>{S.supQOpen=el.dataset.supq;rerender()}));
+  const bfc=$('#btnFollowCheck'); if(bfc)bfc.addEventListener('click',supFollowupCheck);
+  m.querySelectorAll('[data-st-go5]').forEach(el=>el.addEventListener('click',()=>jump(5)));
+  m.querySelectorAll('[data-st-urge]').forEach(el=>el.addEventListener('click',()=>{
+    const t=S.supTasks.find(x=>x.id===el.dataset.stUrge); t.status='done'; t.decision='已催办';
+    audit('SUPERVISOR_TASK_DONE',t.id+' 催办'); toast('已催办·通知Owner'); rerender();
+  }));
+  m.querySelectorAll('[data-st-up]').forEach(el=>el.addEventListener('click',()=>{
+    const t=S.supTasks.find(x=>x.id===el.dataset.stUp); t.status='done'; t.decision='已升级';
+    audit('TASK_ESCALATED',t.id+' 主管升级'); rerender();
+  }));
+  m.querySelectorAll('[data-st-evid]').forEach(el=>el.addEventListener('click',()=>{
+    const t=S.supTasks.find(x=>x.id===el.dataset.stEvid);
+    const src=S.tasks.find(x=>x.id===t.source_task_id);
+    $('#sideBody').innerHTML=`<div class="attrcard"><b>原始证据 · ${t.id}</b><div class="jsonbox" style="margin-top:6px">${escJson(src? {task:src.id, sop:src.sop, baseline:src.baseline, target:src.target, result:src.result, verify:src.verify, evidence:src.evidence||'SOP evidence(占位)', rule_version:'v3'} : {source:t.key, note:'来源对象证据(占位)'})}</div></div>`;
+    if(window.innerWidth<1200)$('#side').classList.add('open');
+  }));
+  m.querySelectorAll('[data-st-accept]').forEach(el=>el.addEventListener('click',()=>{
+    if(S.role!=='mgr'){toast('权限不足:验收终审仅主管');return}
+    const t=S.supTasks.find(x=>x.id===el.dataset.stAccept);
+    const src=S.tasks.find(x=>x.id===t.source_task_id);
+    if(src){src.acceptance_status='accepted';audit('TASK_ACCEPTED',src.id)}
+    t.status='done'; t.decision='验收通过'; toast('验收通过·证据完整可进入验果'); rerender();
+  }));
+  m.querySelectorAll('[data-st-return]').forEach(el=>el.addEventListener('click',()=>{
+    if(S.role!=='mgr'){toast('权限不足');return}
+    const t=S.supTasks.find(x=>x.id===el.dataset.stReturn);
+    const rs=m.querySelector(`.stReason[data-st="${t.id}"]`);
+    if(!rs.value.trim()){toast('退回理由必填');return}
+    const src=S.tasks.find(x=>x.id===t.source_task_id);
+    if(src){src.acceptance_status='returned';src.status='open'}
+    t.status='done'; t.decision='退回:'+rs.value.trim();
+    audit('SUPERVISOR_RETURNED',t.id+' '+rs.value.trim()); rerender();
+  }));
+  m.querySelectorAll('[data-st-review]').forEach(el=>el.addEventListener('click',()=>{
+    const t=S.supTasks.find(x=>x.id===el.dataset.stReview);
+    const rs=m.querySelector(`.stReason[data-st="${t.id}"]`);
+    if(!rs.value.trim()){toast('复盘结论必填');return}
+    t.status='done'; t.decision='复盘结论:'+rs.value.trim();
+    S.tasks.push(stampTask({id:'T-'+(S.taskSeq++), title:'复盘下一步:'+rs.value.trim().slice(0,16), role:'cmd', sop:'—', src:'主管复盘', skuId:t.skuId||S.skuId, status:'open', baseline:null,target:null,result:null,verify:null,fixed:false,upStd:'复盘结论',ruleKey:null,sla_h:48}));
+    audit('SUPERVISOR_TASK_DONE',t.id+' 复盘+派下一步'); rerender();
+  }));
+  m.querySelectorAll('[data-st-esc]').forEach(el=>el.addEventListener('click',()=>{
+    const t=S.supTasks.find(x=>x.id===el.dataset.stEsc); t.status='done'; t.decision='已升层·上层Owner接受';
+    audit('TASK_ESCALATED',t.id); rerender();
+  }));
+  m.querySelectorAll('[data-st-back]').forEach(el=>el.addEventListener('click',()=>{
+    const id=el.dataset.stBack;
+    const dec=m.querySelector(`.stDec[data-st="${id}"]`).value;
+    const rs=m.querySelector(`.stReason[data-st="${id}"]`).value.trim();
+    const rk=m.querySelector(`.stRisk[data-st="${id}"]`).value.trim();
+    const fd=m.querySelector(`.stFDate[data-st="${id}"]`).value;
+    if(supBack(id,dec,rs,rk,'mgr',fd)){toast('背书完成:'+dec+'(SUPERVISOR_BACKED留痕·复查'+fd+')');rerender()}
+  }));
+  /* 团队全景 */
+  const btf=$('#btnTf'); if(btf)btf.addEventListener('click',()=>{
+    S.teamFilter={role:$('#tfRole').value,sku:$('#tfSku').value,status:$('#tfStatus').value,src:$('#tfSrc').value.trim()};
+    S.teamPage=1; S.batchArm=null; rerender();
+  });
+  const bsv=$('#btnSaveView'); if(bsv)bsv.addEventListener('click',()=>{
+    const nm=$('#svName').value.trim(); if(!nm){toast('视图名必填');return}
+    S.savedViews.push({name:nm, f:Object.assign({},{role:$('#tfRole').value,sku:$('#tfSku').value,status:$('#tfStatus').value,src:$('#tfSrc').value.trim()})});
+    audit('VIEW_SAVED',nm); rerender();
+  });
+  m.querySelectorAll('.svApply').forEach(el=>el.addEventListener('click',()=>{
+    S.teamFilter=Object.assign({},S.savedViews[+el.dataset.sv].f); S.teamPage=1; rerender();
+  }));
+  const ths=$('#thSla'); if(ths)ths.addEventListener('click',()=>{S.teamSort=S.teamSort==='asc'?'desc':S.teamSort==='desc'?null:'asc';rerender()});
+  const tpp=$('#tpPrev'); if(tpp)tpp.addEventListener('click',()=>{if(S.teamPage>1){S.teamPage--;rerender()}});
+  const tpn=$('#tpNext'); if(tpn)tpn.addEventListener('click',()=>{const pgs=Math.ceil(teamRows().length/50);if(S.teamPage<pgs){S.teamPage++;rerender()}});
+  m.querySelectorAll('.tSel').forEach(el=>el.addEventListener('change',()=>{
+    S.batchArm=null;
+    const id=el.dataset.t;
+    if(el.checked){if(!S.teamSel.includes(id))S.teamSel.push(id)} else S.teamSel=S.teamSel.filter(x=>x!==id);
+  }));
+  const bb=$('#btnBatch'); if(bb)bb.addEventListener('click',()=>{
+    if(S.role!=='mgr'){toast('权限不足:批量调度仅主管(作战官可提议)');return}
+    const rs=$('#batchReason')?$('#batchReason').value.trim():(S.batchArm?S.batchArm.reason:'');
+    if(!S.batchArm){
+      if(!S.teamSel.length){toast('未选择任务');return}
+      if(!rs){toast('批量理由必填');return}
+      const act=$('#batchAct').value, actLabel=$('#batchAct').selectedOptions[0].text;
+      S.batchArm={act, actLabel, reason:rs, ids:S.teamSel.slice()};
+      rerender(); toast('影响预览已展示;再次点击琥珀按钮确认执行,或取消');
+      return;
+    }
+    const {act,ids,reason}=S.batchArm;
+    ids.forEach(id=>{const t=S.tasks.find(x=>x.id===id); if(!t)return;
+      if(act==='owner')t.role='cmd'; if(act==='pri')t.priority='high';
+      if(act==='due'&&t.due_at)t.due_at+=48*3600e3; if(act==='esc')audit('TASK_ESCALATED',t.id);
+    });
+    audit('BATCH_ACTION',act+' ×'+ids.length+' 理由:'+reason);
+    toast('批量已执行并审计'); S.teamSel=[]; S.batchArm=null; rerender();
+  });
+  const bbc=$('#btnBatchCancel'); if(bbc)bbc.addEventListener('click',()=>{S.batchArm=null;toast('已取消批量');rerender()});
+  const bpf=$('#btnPerf'); if(bpf)bpf.addEventListener('click',loadPerf);
+  const bex=$('#btnExport'); if(bex)bex.addEventListener('click',()=>{
+    if(!['mgr','fin'].includes(S.role)){toast('权限不足:导出需主管/财务');return}
+    audit('EXPORTED','团队任务导出·加水印·OneID个人级字段已脱敏排除');
+    toast('导出完成(MOCK):含水印,个人级OneID数据默认排除');
+  });
+  m.querySelectorAll('.exTile').forEach(el=>el.addEventListener('click',()=>{
+    const mM=execMetrics().find(x=>x.k===el.dataset.ex);
+    S.teamFilter=Object.assign({role:'',sku:'',status:'',src:''},mM.drill); S.teamPage=1; rerender();
+    toast('已按『'+mM.n+'』下钻团队全景');
+  }));
+  m.querySelectorAll('[data-fin]').forEach(el=>el.addEventListener('click',()=>jump(5)));
+  /* 屏7 P1模块 */
+  m.querySelectorAll('.dimTab').forEach(el=>el.addEventListener('click',()=>{S.dimOpen=el.dataset.dim;rerender()}));
+  const bsim=$('#btnSim'); if(bsim)bsim.addEventListener('click',()=>{S.simPct=parseFloat($('#simPct').value)||0;rerender()});
+  const bsa=$('#btnSimAdopt'); if(bsa)bsa.addEventListener('click',()=>{
+    S.pending.push({id:'HITL-'+(S.penSeq++),type:'预算模拟采纳',title:'成长期预算'+(S.simPct>=0?'+':'')+(S.simPct||0)+'%(AI建议·需核定)',by:S.role,skuId:S.skuId,status:'pending',reason:'模拟结果采纳'});
+    audit('HITL_REQUESTED','预算模拟采纳'); toast('已进HITL队列;AI不自动执行涉钱'); rerender();
+  });
+  const bst=$('#btnStr'); if(bst)bst.addEventListener('click',()=>{
+    const w=$('#strW').value, why=$('#strWhy').value.trim(), bud=$('#strBud').value, dt=$('#strDate').value;
+    if(!w||!why||!dt){toast('战略权重/救援理由/复查周期必填');return}
+    S.pending.push({id:'HITL-'+(S.penSeq++),type:'战略SKU例外',title:'战略SKU '+$('#strSku').value+' 权重'+w+' 预算¥'+(bud||0)+' 复查'+dt,by:S.role,skuId:$('#strSku').value,status:'pending',reason:why});
+    audit('HITL_REQUESTED','战略SKU例外'); toast('战略例外已进HITL'); rerender();
+  });
+  m.querySelectorAll('[data-jbp-split]').forEach(el=>el.addEventListener('click',()=>{
+    const c=S.jbp.commitments.find(x=>x.id===el.dataset.jbpSplit);
+    const t=stampTask({id:'T-'+(S.taskSeq++), title:'JBP承诺:'+c.text.slice(0,20), role:c.owner==='mgr'?'cmd':c.owner, sop:c.owner==='mkt'?'A-11':c.owner==='ops'?'P-2':'—', src:'JBP承诺', skuId:S.skuId, status:'open', baseline:null,target:1,result:null,verify:null,fixed:false,upStd:'JBP Scorecard',ruleKey:null, sla_h:72, jbp:c.id});
+    S.tasks.push(t); c.linked_task=t.id; c.status='已拆解';
+    audit('TASK_CREATED','JBP承诺拆任务 '+c.id+'→'+t.id); toast('承诺已拆为任务并绑定Scorecard'); rerender();
+  }));
+  const bjr=$('#btnJbpReview'); if(bjr)bjr.addEventListener('click',()=>{
+    const note=$('#jbpNote').value.trim(); if(!note){toast('复盘结论必填');return}
+    const done=S.jbp.commitments.filter(c=>c.linked_task&&(S.tasks.find(t=>t.id===c.linked_task)||{}).verify==='valid').length;
+    const rate=Math.round(done/S.jbp.commitments.length*100);
+    S.jbp.reviews.unshift({t:ev0('J','x').t, note, rate});
+    audit('JBP_REVIEWED',S.jbp.jbp_id+' 完成率'+rate+'% '+note); toast('JBP复盘完成留痕'); rerender();
+  });
+  /* 规则历史/回放/回滚 */
+  m.querySelectorAll('[data-rule-hist]').forEach(el=>el.addEventListener('click',()=>{
+    const r=RULES.find(x=>x.id===el.dataset.ruleHist);
+    $('#ruleOut').innerHTML=`<div class="jsonbox" style="margin-top:8px">${escJson({rule:r.id, current:{version:r.version,expr:r.expr,effective:r.effective}, history:r.hist})}</div>`;
+  }));
+  m.querySelectorAll('[data-rule-replay]').forEach(el=>el.addEventListener('click',()=>{
+    const res=ruleReplay(el.dataset.ruleReplay);
+    if(!res.ok){toast(res.msg);return}
+    $('#ruleOut').innerHTML=`<div class="card" style="margin-top:8px"><h4>回放对比:${res.old.version} vs 现行</h4>
+    <div class="sub">判定翻转SKU数:<b>${res.affected.length}</b></div>
+    ${res.affected.map(a=>`<div class="tiny">${a.sku} · 旧口径:${a.old} → 新口径:${a.now}</div>`).join('')||'<div class="tiny">当前假水下无判定翻转</div>'}</div>`;
+    toast('回放完成(按历史阈值重算判定)');
+  }));
+  m.querySelectorAll('[data-rule-roll]').forEach(el=>el.addEventListener('click',()=>{
+    if(S.role!=='mgr'){toast('权限不足:仅主管可回滚规则');return}
+    const rs=m.querySelector(`.ruleReason[data-r="${el.dataset.ruleRoll}"]`);
+    if(!rs.value.trim()){toast('回滚理由必填');return}
+    if(ruleRollback(el.dataset.ruleRoll, rs.value.trim())){toast('规则已回滚(留痕·可再回滚回来)');rerender()}
+  }));
+}
+
+/* ---------- 顶层控件 ---------- */
+function boot(){
+  $('#roleBox').innerHTML=Object.keys(ROLES).map(r=>`<button class="roleb" data-r="${r}">${ROLES[r].n.split('/')[0].split(' ')[0]}</button>`).join('');
+  document.querySelectorAll('.roleb').forEach(b=>b.addEventListener('click',()=>{S.role=b.dataset.r;audit('ROLE_SWITCH',ROLES[S.role].n);rerender()}));
+  $('#skuSel').innerHTML=SKUS.map(k=>`<option value="${k.id}">${k.name}(${STAGES[k.stage].n})</option>`).join('');
+  $('#skuSel').addEventListener('change',e=>{S.skuId=e.target.value;S.stageOverride=null;rerender()});
+  $('#stgBox').innerHTML=STAGE_ORDER.map(s=>`<button class="stgb" data-st="${s}">${STAGES[s].n}</button>`).join('');
+  document.querySelectorAll('.stgb').forEach(b=>b.addEventListener('click',()=>{S.stageOverride=b.dataset.st;toast('查看'+STAGES[b.dataset.st].n+'期口径(真实阶段迁移需Gate+主管裁决)');rerender()}));
+  $('#cyN').addEventListener('click',()=>{S.cycle='normal';rerender()});
+  $('#cyC').addEventListener('click',()=>{S.cycle='campaign';toast('大促cycle:双账分列·不用于毕业判定');rerender()});
+  document.querySelectorAll('.navb').forEach(b=>b.addEventListener('click',()=>{S.screen=+b.dataset.s;rerender()}));
+  $('#mnav').innerHTML=[1,2,3,4,5,6,7].map(i=>`<button data-s="${i}">${['今日','J旅程','N引擎','校准','三本账','任务','驾驶舱'][i-1]}</button>`).join('');
+  document.querySelectorAll('#mnav button').forEach(b=>b.addEventListener('click',()=>{S.screen=+b.dataset.s;rerender()}));
+  /* P0-02: #sideBody 事件委托(动态按钮稳绑) */
+  $('#sideBody').addEventListener('click',e=>{
+    const b=e.target.closest('[data-t-metric]');
+    if(b&&b.dataset.tMetric){ jump(1); drill(b.dataset.tMetric); }
+  });
+  S.jbp=JBP_MOCK;
+  const restored=restoreState();
+  hashRead();
+  if(S.role==='mgr'&&!S._hashHadScreen)S.screen=6; /* 主管默认进"需要我处理":仅当深链接未显式指定屏 */
+  if(restored)toast('已从持久化恢复上次状态(trial=localStorage;生产=API)');
+  /* 深链接复制+重置 */
+  const mk=$('#mockBadge');
+  if(mk){
+    mk.insertAdjacentHTML('afterend',' <button id="btnLink" class="cyb" title="复制深链接">🔗链接</button><button id="btnReset" class="cyb" title="重置试跑数据">重置</button>');
+    $('#btnLink').addEventListener('click',()=>{
+      hashWrite();
+      const url=location.href;
+      try{navigator.clipboard.writeText(url).then(()=>toast('深链接已复制(含屏/角色/SKU/Cycle/筛选)'))}catch(e){toast('深链接: '+url)}
+    });
+    $('#btnReset').addEventListener('click',resetTrial);
+  }
+  /* 可访问性:导航ARIA+瓦片键盘可达 */
+  document.querySelectorAll('.tabs,.stagestrip').forEach(n=>n.setAttribute('role','navigation'));
+  document.querySelectorAll('.navb').forEach(b=>b.setAttribute('aria-label','切换到'+b.textContent));
+  try{
+    window.addEventListener('beforeunload',flushPersist);
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushPersist()});
+  }catch(e){}
+  document.body.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&e.target&&e.target.classList&&(e.target.classList.contains('tile')||e.target.classList.contains('chk'))) e.target.click();
+  });
+  audit('DATA_INGESTED','MOCK假水装载:6 SKU × 双cycle × 交接/费用/规则全事件模型');
+  rerender();
+}
+function hashWrite(){
+  try{
+    const f=S.teamFilter||{};
+    const q='s='+S.screen+'&r='+S.role+'&k='+S.skuId+'&c='+S.cycle+(S.stageOverride?'&st='+S.stageOverride:'')+
+      (S.supQOpen?'&q='+S.supQOpen:'')+(S.dimOpen?'&d='+encodeURIComponent(S.dimOpen):'')+
+      (f.role||f.sku||f.status||f.src? '&fr='+(f.role||'')+'&fk='+(f.sku||'')+'&fs='+(f.status||'')+'&fq='+encodeURIComponent(f.src||''):'');
+    if(typeof history!=='undefined'&&history.replaceState) history.replaceState(null,'','#'+q);
+    else location.hash=q;
+  }catch(e){}
+}
+function hashRead(){
+  try{
+    const raw=(location.hash||'').replace(/^#/,''); if(!raw)return false;
+    const p=new URLSearchParams(raw);
+    if(p.get('r')&&ROLES[p.get('r')])S.role=p.get('r');
+    if(p.get('k')&&SKUS.some(x=>x.id===p.get('k')))S.skuId=p.get('k');
+    if(p.get('c'))S.cycle=p.get('c')==='campaign'?'campaign':'normal';
+    if(p.get('st')&&STAGES[p.get('st')])S.stageOverride=p.get('st');
+    S._hashHadScreen=p.has('s');
+    if(p.get('s'))S.screen=Math.min(7,Math.max(1,+p.get('s')||1));
+    if(p.get('q')&&SUP_QUEUES[p.get('q')])S.supQOpen=p.get('q');
+    if(p.get('d'))S.dimOpen=decodeURIComponent(p.get('d'));
+    if(p.get('fr')!==null&&p.get('fr')!==undefined)S.teamFilter={role:p.get('fr')||'',sku:p.get('fk')||'',status:p.get('fs')||'',src:decodeURIComponent(p.get('fq')||'')};
+    return true;
+  }catch(e){return false}
+}
+window.setStage=(s)=>{S.stageOverride=s;rerender()};
+window.setRole=(r)=>{S.role=r;rerender()};
+window.setScreen=(n)=>{S.screen=n;rerender()};
+window.setCycle=(c)=>{S.cycle=c;rerender()};
+window.S=S; window.SKUS=SKUS; window.RULES=RULES; window.gateEval=gateEval; window.n3pass=n3pass; window.calibDone=calibDone;
+window.firedRules=firedRules; window.generateTasksFromRules=generateTasksFromRules; window.ruleReplay=ruleReplay; window.ruleRollback=ruleRollback;
+window.persistState=persistState; window.flushPersist=flushPersist; window.schedulePersist=schedulePersist; window.loadStateFrom=loadStateFrom; window.restoreState=restoreState; window.hashWrite=hashWrite; window.hashRead=hashRead;
+window.buildPostReview=buildPostReview; window.execMetrics=execMetrics; window.syncSupervisorTasks=syncSupervisorTasks; window.supBack=supBack; window.backedFor=backedFor; window.teamRows=teamRows; window.loadPerf=loadPerf; window.incentiveRows=incentiveRows; window.mvalFor=mvalFor; window.jump=jump; window.ruleEvidence=ruleEvidence; window.SOP_STEPS=SOP_STEPS; window.ONEID_ROWS=ONEID_ROWS;
+(function(){try{const p=new URLSearchParams(location.search);if(p.get('role')&&ROLES[p.get('role')])S.role=p.get('role');if(p.get('sku'))S.skuId=p.get('sku')}catch(e){}})();
+boot();
+
+</script>
+</body>
+</html>
