@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>INFINITY OS · 前置仓经营 App v2 · 双端盘×账实命门</title>
+<style>
+:root{
+  --bg:#f4f5f7;--card:#ffffff;--rule:#e7e9ee;--ink:#22252b;--dim:#7a8090;
+  --blue:#3667d6;--go:#2e8f57;--red:#c0483d;--amber:#c07f1f;--warn:#8a6d1f;
+  --mono:'JetBrains Mono','SF Mono',ui-monospace,monospace;
+  --cjk:'PingFang SC','Noto Sans CJK SC',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--cjk);font-size:12.5px;line-height:1.55;-webkit-font-smoothing:antialiased;padding-bottom:70px}
+.top{position:sticky;top:0;z-index:30;background:#1b2230;color:#eef1f7;padding:10px 12px 8px;box-shadow:0 1px 6px rgba(0,0,0,.18)}
+.top .t1{font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.top .t1 .who{font-family:var(--mono);font-size:10px;background:#2b3550;color:#aec3f2;border-radius:4px;padding:1px 7px}
+.top .t1 .rolechip{font-family:var(--mono);font-size:10px;background:#4a3d1e;color:#eccf8b;border-radius:4px;padding:1px 7px}
+.top .inc{margin-top:5px;font-size:11px;color:#c8d2e6;display:flex;gap:12px;flex-wrap:wrap}
+.top .inc b{color:#ffe08a;font-family:var(--mono)}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;background:#1b2230;border-top:1px solid #2c3448}
+.tabs .tb{flex:1;text-align:center;color:#8e99b3;padding:9px 2px 10px;font-size:10.5px;cursor:pointer;line-height:1.3}
+.tabs .tb .ic{display:block;font-size:15px}
+.tabs .tb.on{color:#fff;font-weight:700}
+.wrap{max-width:560px;margin:0 auto;padding:10px 10px 20px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:11px 12px;margin:0 0 10px;box-shadow:0 1px 2px rgba(20,24,32,.04)}
+.ph{font-size:12px;font-weight:800;margin:0 0 7px}
+.ph .sub{font-weight:400;font-size:10px;color:var(--dim)}
+.hint{font-size:10px;color:var(--dim);line-height:1.5}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--rule);font-size:11.5px}
+.row:last-child{border-bottom:none}
+.mono{font-family:var(--mono);font-size:10.5px}
+.btn{border:none;border-radius:7px;background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:7px 12px;cursor:pointer;font-family:var(--cjk)}
+.btn.o{background:#eef2fb;color:var(--blue);border:1px solid #c9d6f2}
+.btn.go{background:var(--go)}
+.btn.red{background:var(--red)}
+.btn.gray{background:#e3e6ec;color:#6a7080}
+.btn.xs{font-size:10px;padding:4px 9px;border-radius:6px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.skubar{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px}
+.skubar .sk{flex:0 0 auto;background:#fff;border:1px solid var(--rule);border-radius:9px;padding:6px 10px;font-size:10.5px;cursor:pointer;line-height:1.35}
+.skubar .sk.on{border-color:var(--blue);background:#eef3fd;font-weight:700}
+.skubar .sk .st{display:block;font-family:var(--mono);font-size:9px;color:var(--dim)}
+.sstrip{display:flex;gap:4px;margin:4px 0 8px}
+.sstep{flex:1;text-align:center;font-size:9.5px;font-family:var(--mono);padding:5px 2px;border-radius:6px;background:#eceef3;color:#8a90a0;border:1px solid transparent}
+.sstep.on{background:#20304e;color:#fff;font-weight:700}
+.sstep.done{background:#dfe9df;color:#4c7a5c}
+.fourl{display:flex;flex-direction:column;gap:4px}
+.fourl .ly{display:flex;align-items:center;gap:7px;background:#f7f8fb;border:1px solid var(--rule);border-radius:7px;padding:5px 9px;font-size:10.5px;cursor:pointer}
+.fourl .ly .lk{font-family:var(--mono);font-size:9px;color:#fff;background:#39538b;border-radius:3px;padding:1px 6px;flex:0 0 auto}
+.fourl .ly .lv{color:var(--dim);margin-left:auto;font-family:var(--mono);font-size:9.5px;text-align:right}
+.ring{display:flex;gap:4px;margin-top:6px}
+.ring .rs{flex:1;text-align:center;font-size:9.5px;padding:6px 2px;border-radius:6px;background:#eceef3;color:#7a8090;cursor:pointer;border:1px solid transparent}
+.ring .rs.lit{background:#2e4670;color:#fff;font-weight:700}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:4px}
+.tile{position:relative;background:#f7f8fb;border:1.5px solid var(--rule);border-radius:9px;padding:8px 9px;cursor:pointer}
+.tile.pass{border-color:#bcd9c6;background:#f2f9f4}
+.tile.fail{border-color:#e6c2bd;background:#fbf3f2}
+.tile .tl{font-size:10px;color:var(--dim)}
+.tile .tv{font-family:var(--mono);font-size:15px;font-weight:800;margin-top:2px}
+.tile.pass .tv{color:var(--go)} .tile.fail .tv{color:var(--red)}
+.tile .tt{font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:1px}
+.tile .editpen{position:absolute;top:5px;right:7px;font-size:11px;color:#a8aebc;cursor:pointer}
+.tile .attrdot{position:absolute;bottom:5px;right:7px;font-size:9px;color:var(--blue)}
+.redline{background:#fbeeec;border:1.5px solid #e2a49c;border-radius:9px;padding:8px 10px;font-size:11px;color:#8a3128;margin-top:8px}
+.redline.ok{background:#f0f7f1;border-color:#bcd9c6;color:#39684a}
+.attr{border-radius:11px;padding:10px 11px;margin-top:9px;border:1.5px solid}
+.attr.win{background:#f2f9f4;border-color:#a9cdb6}
+.attr.lose{background:#fbf4f0;border-color:#dcb4a6}
+.attr .ah{font-size:12px;font-weight:800}
+.attr .delta{font-family:var(--mono);font-size:11px}
+.attr .delta.up{color:var(--go)} .attr .delta.dn{color:var(--red)}
+.attr .badge{font-size:9px;font-family:var(--mono);background:#fff;border:1px solid var(--rule);border-radius:4px;padding:1px 6px;margin-left:5px;color:var(--dim)}
+.attr .inc{background:#fff;border:1px dashed #cdb37a;border-radius:7px;padding:6px 9px;margin-top:7px;font-size:10.5px}
+.attr .sec{margin-top:8px}
+.attr .sec .t{font-size:10.5px;font-weight:800;margin-bottom:3px}
+.attr .why{font-size:10.5px;padding:4px 0;border-top:1px dashed #d8d2c8}
+.attr .why .wa{color:var(--blue);font-weight:700}
+.flash{animation:fl 2.4s ease}
+@keyframes fl{0%{box-shadow:0 0 0 3px rgba(54,103,214,.65);background:#e6eefc}60%{box-shadow:0 0 0 3px rgba(54,103,214,.25)}100%{box-shadow:none}}
+table.tb2{width:100%;border-collapse:collapse;font-size:10.5px}
+table.tb2 th{font-family:var(--mono);font-size:9px;color:var(--dim);text-align:left;padding:4px 5px;border-bottom:1px solid var(--rule);font-weight:600}
+table.tb2 td{padding:5px 5px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.tb2 tr:last-child td{border-bottom:none}
+table.tb2 tr.rowk{cursor:pointer}
+.pill{font-family:var(--mono);font-size:9px;border-radius:4px;padding:1px 6px;display:inline-block}
+.pill.go{background:#e4f2e8;color:#2e7448}
+.pill.red{background:#f7e5e2;color:#a13c31}
+.pill.amber{background:#f6ecd8;color:#8a6215}
+.pill.blue{background:#e6edfb;color:#31569e}
+.pill.gray{background:#eceef3;color:#7a8090}
+.node{background:#f7f8fb;border:1px solid var(--rule);border-radius:10px;padding:9px 10px;margin-bottom:8px}
+.node .nh{font-size:11.5px;font-weight:800}
+.node .bea{font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:2px;line-height:1.6}
+.task{background:#fff;border:1.5px solid var(--rule);border-radius:10px;padding:9px 10px;margin-bottom:8px}
+.task.money{border-color:#e2c48e}
+.task.irr{border-color:#dca9a2}
+.task .th{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;flex-wrap:wrap}
+.task .tsub{font-size:10.5px;color:var(--dim);margin-top:3px}
+.task .tst{font-family:var(--mono);font-size:9.5px;margin-top:5px;padding:4px 8px;border-radius:5px;background:#f2f3f7;color:#5c6272}
+.gq{background:#fff;border:1.5px solid #e2c48e;border-radius:10px;padding:9px 10px;margin-bottom:8px}
+.gq .gh{font-size:11.5px;font-weight:800}
+.gq .gmeta{font-family:var(--mono);font-size:9.5px;color:var(--dim);margin-top:2px}
+.toastwrap{position:fixed;left:50%;transform:translateX(-50%);bottom:64px;z-index:60;display:flex;flex-direction:column;gap:6px;width:min(92vw,480px)}
+.toast{background:#242a38;color:#f2f4fa;border-radius:9px;padding:9px 13px;font-size:11.5px;line-height:1.5;opacity:0;transform:translateY(8px);transition:.24s;box-shadow:0 4px 14px rgba(0,0,0,.28)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.go{background:#20452f}
+.toast.red{background:#57241e}
+.toast.warn{background:#4a3c17}
+.panel{display:none}
+.panel.on{display:block}
+.qq{background:#f2f4fa;border-radius:7px;padding:6px 9px;font-size:9.5px;color:#5c6478;margin-top:7px;line-height:1.55}
+.qq b{color:#39538b}
+.verify{border:1px solid var(--rule);border-radius:9px;padding:7px 9px;margin-bottom:7px;background:#f7f8fb}
+.verify .vh{font-size:11px;font-weight:800}
+.verify .vm{font-family:var(--mono);font-size:10px;margin-top:2px}
+.sw{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:10.5px;background:#eef2fb;border:1px solid #c9d6f2;color:var(--blue);border-radius:7px;padding:4px 10px;font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="top" id="topbar"></div>
+
+<div class="wrap">
+
+<!-- ═══ 屏1 · 今日作战(定标↓+算差+归因) ═══ -->
+<section class="panel on" id="pToday"></section>
+
+<!-- ═══ 屏2 · 双端盘(量实↑) ═══ -->
+<section class="panel" id="pDual"></section>
+
+<!-- ═══ 屏3 · 账实核对(命门·校准·算差) ═══ -->
+<section class="panel" id="pRecon"></section>
+
+<!-- ═══ 屏4 · 关差·抢单(节点+任务+HITL) ═══ -->
+<section class="panel" id="pClose"></section>
+
+<!-- ═══ 屏5 · 记分卡·收入·验果 ═══ -->
+<section class="panel" id="pPay"></section>
+
+<!-- ═══ 屏6 · 区域仓盘(主管) ═══ -->
+<section class="panel" id="pRegion"></section>
+
+</div>
+
+<div class="tabs" id="tabbar"></div>
+<div class="toastwrap" id="tw"></div>
+
+<script>
+"use strict";
+/* ════════════════════════════════════════════════════════════════
+   INFINITY OS · 前置仓渠道经营 App v2(trial · mock 假水)
+   本体 = 《内核_前置仓_v4完整18项》自己长的模块拓扑(不套其他渠道)
+   引擎件 = 母版规范v1.1装配:收入四段 / 归因卡ATTR四段 / 手势(点块·↘·✎·flash·toast)
+            / 三连问 / 验果铁律(候选≠固化·核定≠验果) / HITL卡执行前 / 登录身份路由
+   口诀:引擎件带走,内核回本来。
+   MOCK_MODE=true:全部假水,端到端跑通,绝不要真数据。
+════════════════════════════════════════════════════════════════ */
+const MOCK_MODE = true;
+
+/* ── 身份(loginv16 路由进来:?sr=&name=&channel=&role=) ── */
+const QS = new URLSearchParams(location.search);
+const ROLE = QS.get("role")==="mgr" ? "mgr" : "emp";
+const WHO = ROLE==="mgr"
+  ? {id:QS.get("sr")||"SR-6602", nm:QS.get("name")||"区域主管·王倩", scope:"北京南区 · 4仓(品类层+北极星承接)"}
+  : {id:QS.get("sr")||"SR-6601", nm:QS.get("name")||"仓管·李成", scope:"角门仓 · QZC-BJ-017(SKU层+仓层)"};
+
+/* ── 渠道内核常量(前置仓·内核v4 ①–⑪) ── */
+const CHANNEL = {
+  key:"qzc", name:"前置仓",
+  profit:"利润 = 客单价 × 下单用户数 × 复购频次 × 毛利率 − 履约成本 − 固定成本(密度生意最纯粹·无到店引流·3公里订单密度摊薄履约)",
+  grow:"轻资产 + 高频生鲜引流拉复购 + 自有品牌提毛利;用户数有3公里上限,靠密度+复购+客单价长大",
+  fatal:"命门:①履约成本(密度不够单均配送高) ②生鲜损耗 ③纯线上拉新贵 · 账实一致 = 有货命门",
+  aiql:[["A 认知","线上拉新(无到店流量·线上入口即全部曝光)"],["I 兴趣","下单"],["Q 体验","30分钟达 + 品质"],["L 忠诚","高频复购 · 确定性养习惯"]],
+  winwin:"前置仓要密度复购 × 我要毛利 → 弥合点 = 高频引流品 + 自有品牌组合(CB三方正:品牌赢复购·前置仓赢密度·社区快到家)",
+  fourLayer:[
+    {k:"北极星", v:"公司前置仓战略", n:"¥«NORTHSTAR»"},
+    {k:"JBP",   v:"对叮咚买菜 采购+运营", n:"季度联合生意计划"},
+    {k:"品类",  v:"调味/日配品类", n:"品类记分卡"},
+    {k:"SKU",   v:"当前SKU定标(见下)", n:"仓管KPI满分"}
+  ]
+};
+
+/* 6开关 · 双端口径(内核⑩ 口径翻译 · Autonomy 只动这里) */
+const SIX = [
+  {k:"listed", nm:"上架", online:"线上上架", wh:"仓有货(入仓)", own:"仓管+线上运营", full:12},
+  {k:"display",nm:"陈列", online:"线上坑位", wh:"仓货位",       own:"线上运营/仓管", full:12},
+  {k:"stocked",nm:"有货", online:"—",       wh:"账实一致(账面=实物)★命门", own:"仓管", full:24},
+  {k:"selling",nm:"动销", online:"线上转化", wh:"出库",         own:"双端联动", full:20},
+  {k:"repurch",nm:"复购", online:"线上复购", wh:"—",            own:"双端联动(联动战功)", full:20},
+  {k:"margin", nm:"毛利", online:"—",       wh:"进销差",        own:"公司+仓管提成基数", full:12}
+];
+
+/* 生命周期(内核⑱ · 阈值按阶段切换 · 绝不一套套全程) */
+const STAGES = {
+  import:{name:"导入期", invest:"投60–80%", look:"看点亮", gate:"Gate1 点亮门", note:"新品上线上货架+入仓 · 首单 · 初步动销"},
+  growth:{name:"成长期", invest:"投35–50%", look:"看复制", gate:"Gate2 复制门", note:"从1仓复制多仓 · 线上动销增长 · 补货加快"},
+  mature:{name:"成熟期", invest:"投25%",    look:"看利润", gate:"Gate3 利润门", note:"稳定复购 + 账实准 + 低损耗 · 现金流SKU"},
+  decline:{name:"衰退期", invest:"止损",    look:"看止损", gate:"GateR 止损门", note:"动销降/损耗高 → 降投或替换(汰换=不可逆·HITL)"}
+};
+const STAGE_ORDER = ["import","growth","mature","decline"];
+
+/* ── SKU 假水(欣和真实产品 · 每支一个阶段 · 双端数据) ── */
+const SKUS = [
+  { id:"QZC-CBL-300", name:"葱伴侣 · 黄豆酱 300g", stage:"import",
+    online:{listed:true, slot:"调味·新品位", uv:420, cvr:0.038, cvr_raw:0.052, rep:0.08, gmv:1860, promo_gmv:520},
+    wh:{book:60, real:58, loc:"C1-货位12", pick:44, expDays:300, loss:0.006, oos:0.02, push:0},
+    metrics:[
+      {k:"lit_listed", label:"双端点亮(线上上架+入仓)", v:1, t:1, dir:"gt", u:"bool"},
+      {k:"first_order",label:"首单(累计单量)",           v:86, t:50, dir:"gt", u:""},
+      {k:"cvr",        label:"初步转化率(去假后)",        v:0.038, t:0.03, dir:"gt", u:"%"},
+      {k:"zs_setup",   label:"账实建档一致率",            v:0.967, t:0.98, dir:"gt", u:"%"}
+    ]},
+  { id:"QZC-LYX-500", name:"六月鲜 · 轻盐特级酱油 500ml", stage:"growth",
+    online:{listed:true, slot:"调味TOP8坑位", uv:1840, cvr:0.062, cvr_raw:0.081, rep:0.31, gmv:12600, promo_gmv:3100},
+    wh:{book:96, real:93, loc:"B2-货位07", pick:38, expDays:210, loss:0.008, oos:0.062, push:12},
+    metrics:[
+      {k:"copy_wh",    label:"复制仓数(1仓→多仓)",   v:3, t:3, dir:"gt", u:""},
+      {k:"sell_growth",label:"动销增长率(环比)",      v:0.24, t:0.20, dir:"gt", u:"%"},
+      {k:"oos_rate",   label:"缺货率",               v:0.062, t:0.05, dir:"lt", u:"%"},
+      {k:"replen",     label:"补货周期(天)",          v:2.6, t:2.0, dir:"lt", u:""}
+    ]},
+  { id:"QZC-WDM-1L", name:"味达美 · 味极鲜酱油 1L", stage:"mature",
+    online:{listed:true, slot:"调味主坑位", uv:2650, cvr:0.071, cvr_raw:0.074, rep:0.34, gmv:23400, promo_gmv:1200},
+    wh:{book:140, real:139, loc:"B1-货位03", pick:31, expDays:260, loss:0.011, oos:0.018, push:0},
+    metrics:[
+      {k:"rep",     label:"复购率(确定性养习惯)", v:0.34, t:0.25, dir:"gt", u:"%"},
+      {k:"zs_rate", label:"账实一致率",           v:0.993, t:0.99, dir:"gt", u:"%"},
+      {k:"loss_rate",label:"损耗率",              v:0.011, t:0.015, dir:"lt", u:"%"},
+      {k:"gm",      label:"毛利率(进销差)",       v:0.285, t:0.25, dir:"gt", u:"%"}
+    ]},
+  { id:"QZC-HR-500", name:"禾然有机 · 有机酱油 500ml", stage:"decline",
+    online:{listed:true, slot:"有机专区(尾部)", uv:310, cvr:0.021, cvr_raw:0.024, rep:0.12, gmv:2100, promo_gmv:400},
+    wh:{book:44, real:44, loc:"C2-货位18", pick:41, expDays:75, loss:0.028, oos:0.01, push:0},
+    metrics:[
+      {k:"sell_mom", label:"动销环比(近两期)",  v:-0.22, t:-0.15, dir:"gt", u:"%"},
+      {k:"loss_rate",label:"损耗率(临期升高)",  v:0.028, t:0.015, dir:"lt", u:"%"},
+      {k:"turn",     label:"库存周转(天)",      v:19, t:12, dir:"lt", u:""},
+      {k:"residual", label:"残值净利(降投后)",  v:640, t:0, dir:"gt", u:"¥"}
+    ]}
+];
+
+/* 区域4仓(主管口径 · worst仓定档) */
+const WAREHOUSES = [
+  {id:"QZC-BJ-017", nm:"角门仓",   zs:0.982, oos:0.041, loss:0.012, otd:0.95, same:0.11},
+  {id:"QZC-BJ-018", nm:"马家堡仓", zs:0.991, oos:0.028, loss:0.009, otd:0.97, same:0.14},
+  {id:"QZC-BJ-019", nm:"大红门仓", zs:0.963, oos:0.078, loss:0.021, otd:0.90, same:0.03},
+  {id:"QZC-BJ-020", nm:"木樨园仓", zs:0.987, oos:0.033, loss:0.010, otd:0.96, same:0.09}
+];
+
+/* 数据契约(接口位 · 焊接期只换值 · mock=假水) */
+const DATA_CONTRACT = {
+  data_mode:"mock", quality_score:"演示假水·未接真水",
+  sources:{
+    platform_backend:"叮咚/美团闪购 后台盘(线上端:上架/坑位/转化/复购)",
+    erp_wms:"ERP/WMS 账面库存(账面数)",
+    xd_warehouse:"XD 现场盘 infxdv6711(仓库端:实物/货位/损耗/效期)",
+    order_system:"订单系统(出库/30分钟履约)"
+  },
+  artifact_chain:[
+    "XD双端盘 Output(线上端JSON + 仓库端JSON → 汇同一6开关)→ 各判级节点 Input",
+    "账实核对 Output(账实差异)→ 补货触发 + HITL Input",
+    "判级 Output → 仓管KPI结算 Input → 仓管收入/绩效 Input"
+  ]
+};
+
+/* ── 本体节点(内核⑭⑮⑯ · 手=节点 · 全 Workflow ①规则型 · loop_spec=N/A) ── */
+const NODES = [
+  {id:"nd_recon",  nm:"账实核对节点 ★命门", bea:"Workflow·链式(现场盘→比账面→出差异) · L1晶体管+L2逻辑门 · 第3级(账面≠实物 THEN 差异预警) · 差异大→HITL转人工(检测≠判决) · loop_spec=N/A"},
+  {id:"nd_online", nm:"线上呈现判级节点", bea:"Workflow·路由(按阶段分流比门槛) · L2逻辑门 · 第2级 · loop_spec=N/A"},
+  {id:"nd_pick",   nm:"拣货判级节点", bea:"Workflow·链式(货位→拣货效率→判履约门) · L2逻辑门 · 第3级 · loop_spec=N/A"},
+  {id:"nd_loss",   nm:"损耗预警节点(临期→调价)", bea:"Workflow·确定性扇出(临期→预警+调价提案) · L2 · 第3级 · 调价涉钱→HITL卡执行前 · loop_spec=N/A"},
+  {id:"nd_replen", nm:"补货触发节点", bea:"Workflow·确定性扇出(库存<阈值→补货提案) · L2 · 第3级 · 下单涉钱→HITL卡执行前 · loop_spec=N/A"},
+  {id:"nd_kpi",    nm:"仓管KPI结算节点", bea:"Workflow·链式(双端6开关→记分卡) · L4模块 · 第2级 · loop_spec=N/A"}
+];
+
+/* ── 收入模型四段(引擎件① · 前置仓翻译:效率提成=账实差/损耗/缺货省下的钱) ── */
+const INCOME_MODEL = "仓管收入 = 底薪 + 战功分(双端6开关达标计分) + Gate毕业奖(整SKU阶段毕业·需核定) + 效率提成(账实差收窄/损耗降低/缺货降低 省下的钱按比例)";
+const INCOME_BASE = 6000;
+const MERIT_PER_TILE = 240;          /* 每个达标判据 = 6战功分 × ¥40 */
+const GATE_BONUS = 1500;             /* 每支SKU阶段毕业(候选·需主管核定·核定≠验果) */
+const EFF_SAVINGS = [
+  {k:"zs",   nm:"账实差收窄省下的钱", amt:2400},
+  {k:"loss", nm:"损耗降低省下的钱",   amt:1800},
+  {k:"oos",  nm:"缺货降低救回的销售", amt:3000}
+];
+const EFF_RATE = 0.15;
+
+/* ── 差值归因卡 ATTR(引擎件② · 前置仓真归因 · 出口=回本体节点非SOP) ── */
+const ATTR = {
+  lit_listed:{inc:"双端点亮=导入期点亮门第一判 → 达标计【上架战功分】,整期点亮助 Gate1 毕业奖",
+    up:["线上上架与入仓同日完成,没有「线上有、仓没货」的空挂","货位建档同步完成,拣货路径当天可用"],
+    upNext:"「上架=双端同日点亮」写进新品入仓清单,下支SKU照做",
+    down:[{why:"线上挂了但仓未入库(空挂=必缺货)",act:"补入仓+暂下线上挂牌",node:"nd_replen",money:true},
+          {why:"入仓了但线上未上架(货压在仓里)",act:"线上上架+分配坑位",node:"nd_online"}]},
+  first_order:{inc:"首单量=点亮凭证 → 计【动销战功分】(导入期动销权重低·看点亮不冤枉)",
+    up:["新品位曝光承接住了3公里内首购人群","首单体验(30分钟达+品质)没掉链子"],
+    upNext:"首单人群包留存,成长期定向做复购唤醒",
+    down:[{why:"线上呈现弱,新品位没点进来",act:"改主图/标题·换坑位申请",node:"nd_online"},
+          {why:"下单了但履约慢,首单体验差",act:"优化拣货动线·货位前移",node:"nd_pick"}]},
+  cvr:{inc:"转化率=线上端动销开关 → 达标计【动销战功分】(与仓端联动)",
+    up:["坑位与人群匹配(社区高频·不囤货口径)","价格带贴3公里客群,去促销假后仍达标"],
+    upNext:"该坑位×价格带组合记入本仓选坑经验",
+    down:[{why:"促销冲量撑数,自然转化虚(校准后现形)",act:"回校准口径·看去假后真值",node:"nd_recon"},
+          {why:"缺货杀转化(点进来没货)",act:"补货触发·先保有货",node:"nd_replen",money:true}]},
+  zs_setup:{inc:"账实建档一致率=有货命门的地基;不达标冻结 Gate1 毕业(do_not_auto_graduate)",
+    up:["入仓即XD现场盘建档,账面=实物从第一天就对上"],
+    upNext:"「入仓当日盘」固化为新品入仓动作",
+    down:[{why:"入仓数与系统录入不符(录入误差)",act:"XD现场盘复盘·修正账面",node:"nd_recon"},
+          {why:"货位错放,盘点找不到货",act:"货位重整+标签补齐",node:"nd_pick"}]},
+  copy_wh:{inc:"复制仓数=成长期看复制的主判 → 达标计【复制战功分】+ 助 Gate2 毕业奖",
+    up:["首仓模型(坑位+价格+补货节奏)原样复制,没有每仓重新摸索","复制仓首周动销都过了初步门"],
+    upNext:"首仓模型打包成复制清单 → 第4仓直接套",
+    down:[{why:"复制仓账实没建好,起步就缺货",act:"复制前先过账实建档",node:"nd_recon"},
+          {why:"复制仓坑位没谈下来",act:"线上呈现判级→坑位申请",node:"nd_online"}]},
+  sell_growth:{inc:"动销增长率=成长期战功分主指标(去促销假后计)",
+    up:["增长来自复购+新客双轮,不是促销一次性冲量","补货跟上了增长,没让缺货吃掉增长"],
+    upNext:"增长结构(复购/新客占比)记入品类周报",
+    down:[{why:"增长靠促销冲量,去假后不达标",act:"回校准口径核真值",node:"nd_recon"},
+          {why:"增长被缺货掐断(有需求没货)",act:"补货触发·上调安全库存",node:"nd_replen",money:true}]},
+  oos_rate:{inc:"缺货率=有货命门的直接量表;每降1pp救回的销售计【效率提成】(直接是钱)",
+    up:["安全库存按时段峰谷打标设置(晚高峰不空)","补货周期压进了2天"],
+    upNext:"峰谷打标参数固化到本仓补货规则",
+    down:[{why:"账实差掩盖真缺货(账面有货实物没了)",act:"账实核对·先把账盘真",node:"nd_recon"},
+          {why:"补货阈值低,晚高峰前就卖空",act:"补货触发·阈值上调(涉钱·HITL)",node:"nd_replen",money:true}]},
+  replen:{inc:"补货周期=复制门判据;周期每缩短助成长期毕业",
+    up:["按1.5天销量设触发线,没等卖空才补"],
+    upNext:"触发线参数进复制清单,复制仓直接用",
+    down:[{why:"补货单卡在人工下单,响应慢",act:"补货触发提案提前生成(执行仍走HITL)",node:"nd_replen",money:true}]},
+  rep:{joint:true,
+    inc:"复购率=双端联动战功(线上呈现×仓端有货 五五共享·同源消费者非零和):确定性养习惯,断一次货杀一片复购",
+    up:["【仓端】账实准+不缺货,用户每次来都买得到(确定性)","【线上端】坑位稳定+复购人群触达在做","【交接】30分钟履约达成率稳住,体验没掉"],
+    upNext:"「确定性=复购」写进双端联动共识:有货优先级高于一切促销",
+    down:[{why:"【仓端】缺货杀复购(老客扑空一次就换App)",act:"补货触发·老客常购品设更高安全线",node:"nd_replen",money:true},
+          {why:"【线上端】坑位被换,老客找不到",act:"线上呈现判级·坑位恢复",node:"nd_online"},
+          {why:"【交接】履约超30分钟,体验掉分",act:"拣货动线优化",node:"nd_pick"}]},
+  zs_rate:{inc:"账实一致率=有货命门 → 成熟期利润门硬判据;账实差收窄省下的钱计【效率提成】",
+    up:["双端盘对得上:线上后台数=账面数=实物数","日清日结,差异当天关"],
+    upNext:"日清节奏固化为本仓铁律",
+    down:[{why:"出库漏记/破损未报,账面虚高",act:"账实核对·差异溯源",node:"nd_recon"},
+          {why:"拣货错拿导致串货",act:"货位标签重整",node:"nd_pick"}]},
+  loss_rate:{inc:"损耗率=命门②;每降低省下的钱计【效率提成】;超线进止损判定",
+    up:["临期T-15天启动打折清货,没等过期报废","进货节奏按周转定,不压货"],
+    upNext:"T-15调价节奏固化(调价执行仍走HITL)",
+    down:[{why:"临期没预警,过期直接报废",act:"损耗预警·临期调价(涉钱·HITL)",node:"nd_loss",money:true},
+          {why:"压货虚增库存,周转拖长损耗涨",act:"校准去压货假·下调进货",node:"nd_recon"}]},
+  gm:{inc:"毛利率=进销差 → 公司赚钱公式主项,也是提成基数;自有品牌组合抬毛利",
+    up:["高频引流品带流量,欣和品贡献毛利(双赢交集打法)","没用破价换量"],
+    upNext:"引流×毛利组合结构记入JBP季度稿",
+    down:[{why:"破价促销吃毛利",act:"促销复盘·调价提案(涉钱·HITL)",node:"nd_loss",money:true},
+          {why:"损耗吃掉进销差",act:"损耗预警前置",node:"nd_loss",money:true}]},
+  sell_mom:{inc:"动销环比=止损门第一判;连续两期跌破−15%触发衰退判定(检测≠判决·转人工)",
+    up:["跌幅收窄在阈内,降投后残值还在"],
+    upNext:"衰退判定留痕,汰换/焕新给品类层决策",
+    down:[{why:"品类需求整体走弱(结构性)",act:"关不了的差升一层→品类会诊",node:"nd_kpi"},
+          {why:"坑位被下沉到尾部,曝光断崖",act:"线上呈现判级·确认是否值得救",node:"nd_online"}]},
+  turn:{inc:"库存周转=衰退期止损量表;周转拖长=损耗+资金双吃",
+    up:["降投后按残值销量收紧进货,没有惯性补货"],
+    upNext:"衰退SKU进货冻结规则固化",
+    down:[{why:"补货惯性没停,越补越压",act:"冻结自动补货提案·人工核",node:"nd_replen",money:true}]},
+  residual:{inc:"残值净利>0=允许保留低投放位;≤0进汰换提案(不可逆·统一审批HITL)",
+    up:["降投后仍有自然复购客群,残值是真的"],
+    upNext:"残值真实性(去促销)按期复核",
+    down:[{why:"残值靠促销撑,是假残值",act:"校准去促销假·复核残值",node:"nd_recon"},
+          {why:"残值为负还占货位",act:"SKU汰换提案(不可逆·HITL统一审批)",node:"nd_loss",money:true,irr:true}]}
+};
+
+/* 四判tile → ↘数据原位(双端盘/账实/记分卡) */
+const KPI_JUMP = {
+  lit_listed:{t:"dual", sel:"#rowOn0", why:"原位=双端盘·线上端该SKU行(上架/坑位) + 仓库端(入仓/货位)"},
+  first_order:{t:"dual", sel:"#rowOn0", why:"原位=双端盘·线上端(单量随转化) · 数据源=platform_backend"},
+  cvr:{t:"dual", sel:"#rowOn0", why:"原位=双端盘·线上端「转化率」列 · 校准口径见账实屏"},
+  zs_setup:{t:"recon", sel:"#reconRow0", why:"原位=账实核对屏该SKU行(账面vs实物)"},
+  copy_wh:{t:"region", sel:"#copyGate", why:"原位=区域仓盘·复制Gate(主管口径)", mgrOnly:true},
+  sell_growth:{t:"dual", sel:"#rowOn1", why:"原位=双端盘·线上端GMV/转化 · 去促销假后口径"},
+  oos_rate:{t:"dual", sel:"#rowWh1", why:"原位=双端盘·仓库端「缺货率」列 · 账实一致是它的地基"},
+  replen:{t:"close", sel:"#nd_replen", why:"原位=关差屏·补货触发节点(提案·执行走HITL)"},
+  rep:{t:"dual", sel:"#rowOn2", why:"原位=双端盘·线上端「复购」列 · 联动战功(线上×仓端共享)"},
+  zs_rate:{t:"recon", sel:"#reconRow2", why:"原位=账实核对屏该SKU行 ★命门"},
+  loss_rate:{t:"dual", sel:"#rowWh3", why:"原位=双端盘·仓库端「损耗/效期」列"},
+  gm:{t:"pay", sel:"#swRow5", why:"原位=记分卡「毛利」开关(进销差) · 提成基数"},
+  sell_mom:{t:"dual", sel:"#rowOn3", why:"原位=双端盘·线上端(尾部坑位·环比在此)"},
+  turn:{t:"dual", sel:"#rowWh3", why:"原位=双端盘·仓库端(库存/效期)"},
+  residual:{t:"close", sel:"#nd_loss", why:"原位=关差屏·损耗预警节点(汰换提案在此·不可逆HITL)"}
+};
+
+/* 验果(引擎件⑥ · 验果=看上一层的标动没动 · 候选≠固化 · 核定≠验果) */
+const VERIFY = [
+  {std:"账实准率(仓层上层标)", prev:"96.8%", now:"98.2%", moved:true},
+  {std:"30分钟履约达成率(履约上层标)", prev:"92%", now:"95%", moved:true},
+  {std:"线上动销·转化率(线上上层标)", prev:"6.0%", now:"6.1%", moved:false}
+];
+const SOP_CAND = [
+  {t:"补货触发线按1.5天销量+峰谷打标", vk:0},
+  {t:"临期 T-15 天启动调价清货节奏", vk:1},
+  {t:"新品位主图「社区高频」话术模板", vk:2}
+];
+
+/* ── 状态 ── */
+const S = {
+  tab:"today", sku:1, attrOpen:null, calib:true, ringLit:2,
+  edited:{},                       /* {skuIdx:{metricKey:newVal}} */
+  reconFixed:{},                   /* {skuIdx:true 盘点后账实归位} */
+  tasks:[
+    {id:1, sku:1, t:"补货下单 · 六月鲜 120件", amt:4080, money:true, node:"nd_replen", st:"idle",
+     why:"缺货率6.2%>5% · 补货触发节点提案(晚高峰前到仓)"},
+    {id:2, sku:1, t:"全盘账实盘点 · 六月鲜(XD现场盘)", amt:0, money:false, node:"nd_recon", st:"idle",
+     why:"账实差异3.1%>2% 红线 · 差异溯源+修账(命门动作·不涉钱·可直接抢)"},
+    {id:3, sku:0, t:"临期批次调价 −30% · 葱伴侣(T-15)", amt:620, money:true, node:"nd_loss", st:"idle",
+     why:"效期临近 · 损耗预警节点提案(调价=涉钱)"},
+    {id:4, sku:3, t:"SKU 汰换提案 · 禾然有机(残值复核后)", amt:0, money:true, irr:true, node:"nd_loss", st:"idle",
+     why:"动销环比−22% · 残值待复核 · 汰换=不可逆 → 统一审批"},
+    {id:5, sku:2, t:"拣货动线优化 · 味达美 货位前移", amt:0, money:false, node:"nd_pick", st:"idle",
+     why:"拣货31s可再压 · 可逆动作=仓管自主(授权分级Step1)"}
+  ],
+  gateQueue:[], gateHistory:[]
+};
+
+/* ── helpers(引擎件③ 手势:toast/flash/↘/✎) ── */
+function toast(msg,kind){
+  const w=document.getElementById("tw");const d=document.createElement("div");
+  d.className="toast"+(kind?" "+kind:"");d.textContent=msg;w.appendChild(d);
+  requestAnimationFrame(()=>d.classList.add("show"));
+  setTimeout(()=>{d.classList.remove("show");setTimeout(()=>d.remove(),260);},2600);
+}
+function flashEl(sel){
+  setTimeout(()=>{
+    const el=document.querySelector(sel); if(!el)return;
+    el.scrollIntoView({behavior:"smooth",block:"center"});
+    el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+    setTimeout(()=>el.classList.remove("flash"),2400);
+  },140);
+}
+function fmtU(v,u){
+  if(u==="%")return (v*100).toFixed(Math.abs(v)<0.01?2:1)+"%";
+  if(u==="¥")return "¥"+Number(v).toLocaleString();
+  if(u==="bool")return v?"✓已点亮":"✗未点亮";
+  return v>=1000?Number(v).toLocaleString():String(v);
+}
+function curSKU(){ return SKUS[S.sku]; }
+function curStage(){ return STAGES[curSKU().stage]; }
+function curMetrics(){
+  const ov=S.edited[S.sku]||{};
+  return curSKU().metrics.map(m=>{
+    const v=(m.k in ov)?ov[m.k]:m.v;
+    const pass=m.dir==="lt"?(v<=m.t):(v>=m.t);
+    return Object.assign({},m,{show:v,pass:pass});
+  });
+}
+function reconDiff(i){
+  const s=SKUS[i];
+  if(S.reconFixed[i])return 0;
+  return Math.abs(s.wh.book-s.wh.real)/Math.max(s.wh.book,1);
+}
+function redlineFired(){ return reconDiff(S.sku)>0.02; }
+function gatePass(){ return curMetrics().every(m=>m.pass) && !redlineFired(); }
+
+/* ── 收入四段(引擎件①) ── */
+function incomeCalc(){
+  let meritTiles=0;
+  SKUS.forEach((s,i)=>{
+    const ov=S.edited[i]||{};
+    s.metrics.forEach(m=>{
+      const v=(m.k in ov)?ov[m.k]:m.v;
+      if(m.dir==="lt"?(v<=m.t):(v>=m.t))meritTiles++;
+    });
+  });
+  const merit=meritTiles*MERIT_PER_TILE;
+  const matureOK=SKUS[2].metrics.every(m=>{
+    const ov=S.edited[2]||{};const v=(m.k in ov)?ov[m.k]:m.v;
+    return m.dir==="lt"?(v<=m.t):(v>=m.t);
+  }) && reconDiff(2)<=0.02;
+  const gate=matureOK?GATE_BONUS:0;
+  const effBase=EFF_SAVINGS.reduce((a,b)=>a+b.amt,0);
+  const eff=Math.round(effBase*EFF_RATE);
+  return {meritTiles,merit,gate,gateCand:matureOK,eff,effBase,
+          total:INCOME_BASE+merit+gate+eff};
+}
+
+/* ── 手势:✎ 改数值 → 实时重判(演示"算差"是真的) ── */
+function editMetric(i){
+  const m=curSKU().metrics[i];
+  const ov=S.edited[S.sku]||{};
+  const cur=(m.k in ov)?ov[m.k]:m.v;
+  const passNow=m.dir==="lt"?(cur<=m.t):(cur>=m.t);
+  let nv;
+  if(m.u==="bool"){ nv=passNow?0:1; }
+  else nv=passNow?(m.dir==="lt"?+(m.t*1.25).toFixed(3):+(m.t*0.8).toFixed(3))
+                 :(m.dir==="lt"?+(m.t*0.8).toFixed(3):+(m.t*1.2).toFixed(3));
+  S.edited[S.sku]=S.edited[S.sku]||{}; S.edited[S.sku][m.k]=nv;
+  renderAll();
+  toast("✎ "+m.label+" 改为 "+fmtU(nv,m.u)+" → "+curStage().gate+" 实时重判:"+(gatePass()?"判据全绿":"未达标·差值进归因")+" · 记分卡/收入同步重算",gatePass()?"go":"red");
+}
+
+/* ── 手势:点块=归因卡开合 ── */
+function openAttr(k){
+  S.attrOpen=(S.attrOpen===k)?null:k;
+  renderToday();
+  if(S.attrOpen){
+    setTimeout(()=>{const el=document.getElementById("attrCard");if(el)el.scrollIntoView({behavior:"smooth",block:"center"});},120);
+  }
+}
+/* 归因卡出口:回本体节点关差位(非SOP · 内核回本来) */
+function attrGoNode(nodeId,act,money){
+  setTab("close"); flashEl("#"+nodeId);
+  const n=NODES.find(x=>x.id===nodeId);
+  toast("🔧 关差位 → "+(n?n.nm:nodeId)+" · 动作:"+act+(money?" · 涉钱→HITL卡执行前(未批不得执行)":""),money?"warn":"go");
+}
+/* 手势:↘ 回数据原位 */
+function jumpMetric(k){
+  const J=KPI_JUMP[k];
+  const lbl=(curSKU().metrics.find(m=>m.k===k)||{label:k}).label;
+  if(!J){toast(lbl+" · 暂无原位(接口位待焊)","warn");return;}
+  if(J.mgrOnly&&ROLE!=="mgr"){toast("↘ "+lbl+" · 原位在区域仓盘(主管口径) · 仓管视角看双端盘缺货列即可","warn");setTab("dual");flashEl("#rowWh1");return;}
+  setTab(J.t); flashEl(J.sel);
+  toast("↘ "+lbl+" · "+J.why,"go");
+}
+
+/* ── 环五步 ── */
+function stepRing(i){
+  S.ringLit=i; renderToday();
+  const names=["定标↓","量实↑(双端盘)","校准+算差","关差(抢单)","验果"];
+  toast("环 · 「"+names[i]+"」"+(i===4?" · 验果=看上一层的标动没动,非任务做没做":"")+(i===2?" · 算差前先校准(去促销/压货假·TypeB)":""));
+}
+function fourLayerTap(i){
+  const L=CHANNEL.fourLayer[i];
+  toast("连接律 · "+L.k+":上一层的关差=下一层的定标 · 目标自上而下(绝不用实际倒推),实际自下而上","go");
+}
+
+/* ── 双端互跳联动 ── */
+function dualJump(side,i){
+  const s=SKUS[i];
+  if(side==="on"){ flashEl("#rowWh"+i);
+    toast("🔁 双端联动 · "+s.name.split("·")[0]+":线上端表现 ← 先查仓端(账实/缺货是线上转化与复购的地基)","go");
+  } else { flashEl("#rowOn"+i);
+    toast("🔁 双端联动 · "+s.name.split("·")[0]+":仓端状态 → 直接决定线上端「有货可卖」·点线上行看承接","go");
+  }
+}
+
+/* ── 校准开关(算差前先校准 · 去促销/压货假 TypeB) ── */
+function toggleCalib(){
+  S.calib=!S.calib; renderAll();
+  toast(S.calib?"校准=去假后:剔除促销冲量(线上)+压货虚增(仓端) · 判级与算差只认这个真值"
+               :"去假前:含促销冲量与压货数 · 这些数不进算差(好看≠真)","warn");
+}
+
+/* ── 任务/抢单/HITL(引擎件·护栏:propose-only·卡执行前·检测≠判决) ── */
+function taskAct(id){
+  const t=S.tasks.find(x=>x.id===id); if(!t)return;
+  if(t.st==="idle"){
+    if(t.money){
+      t.st="gated";
+      S.gateQueue.push({tid:id, t:t.t, amt:t.amt, irr:!!t.irr, by:WHO.nm, st:"pending"});
+      renderClose(); if(ROLE==="mgr")renderRegion();
+      toast("🔒 涉钱"+(t.irr?"/不可逆":"")+" → 已提交 HUMAN_GATE_QUEUE · 卡在执行前,未批不得执行(引擎只提案不执行)","warn");
+    } else {
+      t.st="grabbed"; renderClose();
+      toast("🙋 抢单成功 · "+t.t+" · 执行后记得回来点「完成」","go");
+    }
+  } else if(t.st==="grabbed"||t.st==="approved"){
+    t.st="done"; renderClose(); renderPay();
+    toast("✅ 任务完成=SOP候选(候选≠固化) · 固化要等验果:上一层的标动了才允许 · 去记分卡屏看验果面板","go");
+  }
+}
+function gateDecide(qi,ok){
+  const q=S.gateQueue[qi]; if(!q||q.st!=="pending")return;
+  q.st=ok?"approved":"rejected"; q.decider=WHO.nm;
+  const t=S.tasks.find(x=>x.id===q.tid);
+  if(t)t.st=ok?"approved":"idle";
+  S.gateHistory.unshift({t:q.t, amt:q.amt, st:q.st, by:q.decider});
+  renderRegion(); renderClose();
+  toast(ok?"✅ 已核定(留痕) · 该任务解锁为可执行 · 核定≠验果:结果指标动没动下期验"
+         :"↩ 已驳回(留痕) · 任务退回提案位 · 检测≠判决,驳回不自动罚",ok?"go":"red");
+}
+function escalate(){
+  toast("↑ 关不了的差 → 升一层 · 已报品类层会诊(连接律:下层关不了的差=上层的输入)","warn");
+}
+
+/* ── SKU/页签切换 ── */
+function pickSKU(i){ S.sku=i; S.attrOpen=null; renderAll();
+  toast("SKU 切至 "+SKUS[i].name+" · "+STAGES[SKUS[i].stage].name+"("+STAGES[SKUS[i].stage].look+") · 阈值按阶段切换"); }
+function setTab(t){
+  if(t==="region"&&ROLE!=="mgr"){toast("区域仓盘=主管口径(品类层) · 仓管请从双端盘/账实屏转本仓的环","warn");return;}
+  S.tab=t;
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("on"));
+  const map={today:"pToday",dual:"pDual",recon:"pRecon",close:"pClose",pay:"pPay",region:"pRegion"};
+  document.getElementById(map[t]).classList.add("on");
+  document.querySelectorAll(".tabs .tb").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+  window.scrollTo({top:0});
+}
+
+/* ── 盘点(XD现场盘 mock:修账实→红线灭→重判) ── */
+function doRecount(i){
+  S.reconFixed[i]=true;
+  const t=S.tasks.find(x=>x.node==="nd_recon"&&x.sku===i&&x.st!=="done");
+  if(t&&t.st==="idle")t.st="grabbed";
+  renderAll();
+  toast("📷 XD现场盘完成(mock) · "+SKUS[i].name.split("·")[0]+" 账实差异归位≤1% · 命门红线解除 → Gate 重判","go");
+}
+
+/* ════════ 渲染 ════════ */
+function renderTop(){
+  const I=incomeCalc();
+  document.getElementById("topbar").innerHTML=`
+    <div class="t1">📦 前置仓经营 · 双端盘×账实命门
+      <span class="who">${WHO.id}</span>
+      <span class="rolechip">${ROLE==="mgr"?"区域主管":"仓管"}</span></div>
+    <div class="inc" id="topIncome">
+      <span>本月已挣 <b data-income-total>¥${I.total.toLocaleString()}</b></span>
+      <span>战功 <b>${I.meritTiles*6}分</b></span>
+      <span>效率提成 <b>¥${I.eff.toLocaleString()}</b></span>
+      <span style="color:#93a3c4">${WHO.nm} · ${WHO.scope}</span>
+    </div>`;
+}
+function renderTabs(){
+  const tabs=[["today","🎯","今日作战"],["dual","🔁","双端盘"],["recon","⚖️","账实核对"],["close","⚔️","关差抢单"],["pay","💰","记分卡"]];
+  if(ROLE==="mgr")tabs.push(["region","🗺️","区域仓盘"]);
+  document.getElementById("tabbar").innerHTML=tabs.map(t=>
+    `<div class="tb ${S.tab===t[0]?"on":""}" data-t="${t[0]}" onclick="setTab('${t[0]}')"><span class="ic">${t[1]}</span>${t[2]}</div>`).join("");
+}
+function skubarH(){
+  return `<div class="skubar">${SKUS.map((s,i)=>
+    `<div class="sk ${i===S.sku?"on":""}" data-sku="${i}" onclick="pickSKU(${i})">${s.name.split(" · ")[0]}<span class="st">${STAGES[s.stage].name}·${STAGES[s.stage].look}</span></div>`).join("")}</div>`;
+}
+function stageStripH(){
+  const cur=curSKU().stage;const ci=STAGE_ORDER.indexOf(cur);
+  return `<div class="sstrip">${STAGE_ORDER.map((k,i)=>
+    `<div class="sstep ${i===ci?"on":(i<ci?"done":"")}" data-stage="${k}">${STAGES[k].name}<br>${STAGES[k].invest}·${STAGES[k].look}</div>`).join("")}</div>`;
+}
+
+/* ── 屏1 · 今日作战 ── */
+function renderToday(){
+  const st=curStage();const ms=curMetrics();const red=redlineFired();
+  const ringNames=["定标↓","量实↑","校准+算差","关差","验果"];
+  const tilesH=ms.map((m,i)=>`
+    <div class="tile ${m.pass?"pass":"fail"}" data-tile="${m.k}" onclick="openAttr('${m.k}')">
+      <span class="editpen" data-edit="${i}" onclick="event.stopPropagation();editMetric(${i})">✎</span>
+      <div class="tl">${m.label}</div>
+      <div class="tv">${fmtU(m.show,m.u)}</div>
+      <div class="tt">线 ${m.dir==="lt"?"≤":"≥"} ${fmtU(m.t,m.u)} · ${m.pass?"达标":"差值"}</div>
+      <span class="attrdot">点=归因</span>
+    </div>`).join("");
+  document.getElementById("pToday").innerHTML=`
+  ${skubarH()}
+  <div class="card" id="cardFour">
+    <div class="ph">🧭 四层落位 · 连接律 <span class="sub">上一层的关差=下一层的定标 · 两端都落在消费者</span></div>
+    <div class="fourl">${CHANNEL.fourLayer.map((L,i)=>
+      `<div class="ly" data-layer="${i}" onclick="fourLayerTap(${i})"><span class="lk">${L.k}</span>${L.v}<span class="lv">${L.n}</span></div>`).join("")}</div>
+    <div class="ring" id="ringBar">${ringNames.map((n,i)=>
+      `<div class="rs ${i<=S.ringLit?"lit":""}" data-ring="${i}" onclick="stepRing(${i})">${n}</div>`).join("")}</div>
+    <div class="qq"><b>三连问</b>:数从哪来=定标↓(北极星→JBP叮咚→品类→本SKU满分) · 到哪去=下方算差/归因 · 谁的钱=仓管战功与提成的分母</div>
+  </div>
+  <div class="card" id="cardGate">
+    <div class="ph">🚪 ${curSKU().name} · ${st.name} · <b>${st.gate}</b> <span class="sub">${st.invest} · ${st.look} · ${st.note}</span></div>
+    ${stageStripH()}
+    <div class="tiles">${tilesH}</div>
+    <div class="redline ${red?"":"ok"}" id="redlineBar">${red
+      ?"⛔ 硬红线 · 账实差异 "+(reconDiff(S.sku)*100).toFixed(1)+"% > 2%(有货命门失守·幽灵库存等价)→ do_not_auto_graduate:红线不灭,判据再绿也不毕业 · 关差位=账实核对"
+      :"✅ 账实红线未触发(差异≤2%) · 有货命门在守"}</div>
+    ${attrCard()}
+    <div class="hint" style="margin-top:7px">👆 点判据块=<b>差值归因卡</b>(引擎件·为什么/跟我收入的关系/回哪个关差位) · 点<b>✎</b>=改数值→${st.gate}实时重判(演示"算差"是真的) · 阈值按生命周期阶段切换,不一套套全程</div>
+    <div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn xs o" id="btnEsc" onclick="escalate()">↑ 关不了的差·升一层(品类会诊)</button>
+      <button class="btn xs" onclick="setTab('close')">⚔️ 去关差抢单</button>
+    </div>
+  </div>
+  <div class="card" id="cardAIQL">
+    <div class="ph">🧲 AIQL(内核④·纯即时·社区高频·不囤货) <span class="sub">两端都落在消费者</span></div>
+    ${CHANNEL.aiql.map(a=>`<div class="row"><span><b>${a[0]}</b></span><span style="text-align:right;color:var(--dim)">${a[1]}</span></div>`).join("")}
+    <div class="qq"><b>那点差异</b>:${CHANNEL.winwin}</div>
+  </div>`;
+}
+
+/* 归因卡(引擎件② 四段:差值→收入关系→做对了/差在哪→出口=回本体节点) */
+function attrCard(){
+  const k=S.attrOpen; if(!k)return "";
+  const m=curMetrics().find(x=>x.k===k); const A=ATTR[k];
+  if(!m||!A)return "";
+  const win=m.pass;
+  const gap=m.dir==="lt"?(m.t-m.show):(m.show-m.t);
+  const deltaTxt=(gap>=0?"+":"")+(m.u==="%"?(gap*100).toFixed(1)+"pp":(m.u==="¥"?"¥"+Math.round(gap):(m.u==="bool"?(win?"点亮":"未点亮"):(+gap.toFixed(2)))));
+  const upH=A.up.map(x=>`<div class="why">✓ ${x}</div>`).join("");
+  const dnH=(A.down||[]).map((d,ix)=>`<div class="why">✗ ${d.why}<br><span class="wa">→ ${d.act}</span>
+    <button class="btn xs o" data-attrnode="${k}-${ix}" onclick="attrGoNode('${d.node}','${d.act.replace(/'/g,"")}',${d.money?"true":"false"})" style="margin-left:6px">回关差位</button></div>`).join("");
+  return `<div class="attr ${win?"win":"lose"}" id="attrCard">
+    <div class="ah">${win?"✅":"🔧"} ${m.label} · 差值 <span class="delta ${win?"up":"dn"}" data-delta>${deltaTxt}</span>
+      <span class="badge">${win?"大于目标=做对了什么":"小于目标=差在哪"}</span></div>
+    ${A.joint?`<div class="qq" data-jointline>🧵 <b>双端联动战功</b>:线上端 × 仓端 五五共享(同源消费者·非零和·防内耗) · 归因分【仓端】【线上端】【交接】三处</div>`:""}
+    <div class="inc" data-inc>💰 <b>跟我收入的关系</b>:${A.inc}<br><span class="hint" style="margin-top:2px;display:block">${INCOME_MODEL}</span></div>
+    ${win?`<div class="sec"><div class="t">✅ 这次做对了(复盘即战功凭证):</div>${upH}</div>
+      <div class="sec"><div class="t">📈 下次再提效:</div><div class="why" style="border-top:none">${A.upNext}
+        <button class="btn xs go" data-attrfix onclick="toast('已标记为SOP候选 · 候选≠固化:验果(上一层的标动了)通过才允许固化','go')" style="margin-left:6px">📌 标为SOP候选</button></div></div>`
+    :`<div class="sec"><div class="t">🔧 差在哪 · 原因 → 动作 → 回哪个关差位:</div>${dnH}</div>`}
+    <div class="sec" style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn xs o" data-attrjump onclick="jumpMetric('${k}')">↘ 看数据原位</button>
+      <button class="btn xs gray" data-attrclose onclick="openAttr('${k}')">收起</button>
+    </div>
+  </div>`;
+}
+
+/* ── 屏2 · 双端盘(量实↑) ── */
+function renderDual(){
+  const onRows=SKUS.map((s,i)=>{
+    const cvr=S.calib?s.online.cvr:s.online.cvr_raw;
+    const gmv=S.calib?(s.online.gmv-s.online.promo_gmv):s.online.gmv;
+    return `<tr class="rowk" id="rowOn${i}" data-du="on${i}" onclick="dualJump('on',${i})">
+      <td><b>${s.name.split(" · ")[0]}</b><br><span class="mono" style="color:var(--dim)">${s.online.slot}</span></td>
+      <td class="mono">${s.online.listed?"✓":"✗"}</td>
+      <td class="mono">${(cvr*100).toFixed(1)}%</td>
+      <td class="mono">${(s.online.rep*100).toFixed(0)}%</td>
+      <td class="mono">¥${gmv.toLocaleString()}</td></tr>`;}).join("");
+  const whRows=SKUS.map((s,i)=>{
+    const diff=reconDiff(i);
+    const real=S.reconFixed[i]?s.wh.book:s.wh.real;
+    const book=S.calib?(s.wh.book-(s.wh.push||0)):s.wh.book;
+    return `<tr class="rowk" id="rowWh${i}" data-du="wh${i}" onclick="dualJump('wh',${i})">
+      <td><b>${s.name.split(" · ")[0]}</b><br><span class="mono" style="color:var(--dim)">${s.wh.loc}</span></td>
+      <td class="mono">${book}/${real}<br><span class="pill ${diff>0.02?"red":(diff>0.01?"amber":"go")}">差${(diff*100).toFixed(1)}%</span></td>
+      <td class="mono">${(s.wh.oos*100).toFixed(1)}%</td>
+      <td class="mono">${(s.wh.loss*100).toFixed(1)}%·${s.wh.expDays}天</td>
+      <td class="mono">${s.wh.pick}s</td></tr>`;}).join("");
+  document.getElementById("pDual").innerHTML=`
+  <div class="card" id="cardSix">
+    <div class="ph">🔀 6开关 · 双端口径表(内核⑩·口径先冻结再进数) <span class="sub">同一开关·线上/仓库两个口径 · 渠道翻译器</span></div>
+    <table class="tb2"><tr><th>开关</th><th>线上端口径</th><th>仓库端口径</th><th>谁的战功</th></tr>
+    ${SIX.map(s=>`<tr data-six="${s.k}"><td><b>${s.nm}</b></td><td>${s.online}</td><td>${s.wh}</td><td class="mono">${s.own}</td></tr>`).join("")}
+    </table>
+    <div class="qq"><b>三连问</b>:数从哪来=platform_backend(线上端)+XD现场盘(仓库端) · 到哪去=汇同一6开关→判级节点→记分卡 · 谁的钱=每开关右列</div>
+  </div>
+  <div class="card" id="cardCalib">
+    <div class="ph">🧪 校准(算差前先去假 · TypeB) <span class="sub">线上剔促销冲量 · 仓端剔压货虚增</span></div>
+    <span class="sw" id="calibSw" onclick="toggleCalib()">${S.calib?"● 去假后(判级只认这个)":"○ 去假前(含促销/压货·不进算差)"}</span>
+    <div class="hint" style="margin-top:6px">六月鲜:压货+12件已剔 · 促销GMV¥3,100已剔 · 好看≠真,算差只认真值</div>
+  </div>
+  <div class="card" id="cardOnline">
+    <div class="ph">🛰 线上端 · 后台盘 <span class="sub">上架/坑位/转化/复购 · 数据源=platform_backend · 行可点=跳仓端同SKU</span></div>
+    <table class="tb2"><tr><th>SKU·坑位</th><th>上架</th><th>转化</th><th>复购</th><th>GMV${S.calib?"(去促销)":""}</th></tr>${onRows}</table>
+    <div class="hint" style="margin-top:5px">无到店流量:线上入口即全部曝光 · 坑位=线下"陈列"的翻译</div>
+  </div>
+  <div class="card" id="cardWh">
+    <div class="ph">🏭 仓库端 · XD现场盘 <span class="sub">账面/实物/货位/损耗/效期/拣货 · 数据源=xd_warehouse(infxdv6711 接口位) · 行可点=跳线上端同SKU</span></div>
+    <table class="tb2"><tr><th>SKU·货位</th><th>账/实${S.calib?"(去压货)":""}</th><th>缺货率</th><th>损耗·效期</th><th>拣货</th></tr>${whRows}</table>
+  </div>
+  <div class="card" id="cardContract">
+    <div class="ph">📜 数据契约 · Artifact 硬连接(内核⑰) <span class="sub">上一个 Output = 下一个 Input · mock=假水</span></div>
+    <div class="row"><span>data_mode</span><span class="mono">${DATA_CONTRACT.data_mode} · ${DATA_CONTRACT.quality_score}</span></div>
+    ${Object.keys(DATA_CONTRACT.sources).map(k=>`<div class="row" data-src="${k}"><span class="mono">${k}</span><span style="text-align:right;color:var(--dim);font-size:10px">${DATA_CONTRACT.sources[k]}</span></div>`).join("")}
+    ${DATA_CONTRACT.artifact_chain.map((c,i)=>`<div class="row" data-chain="${i}"><span class="mono" style="color:var(--blue)">⛓ ${c}</span></div>`).join("")}
+  </div>`;
+}
+
+/* ── 屏3 · 账实核对(命门) ── */
+function renderRecon(){
+  const rows=SKUS.map((s,i)=>{
+    const fixed=S.reconFixed[i];
+    const diff=reconDiff(i);
+    const lvl=diff<=0.01?["go","≤1% 一致"]:(diff<=0.02?["amber","1–2% 观察"]:["red",">2% 红线→转人工"]);
+    return `<div class="verify" id="reconRow${i}" data-recon="${i}">
+      <div class="vh">${s.name} <span class="pill ${lvl[0]}">${lvl[1]}</span>${fixed?'<span class="pill go">已盘点归位</span>':""}</div>
+      <div class="vm">账面 ${s.wh.book}${(s.wh.push&&S.calib)?"(压货+"+s.wh.push+"已剔)":""} · 实物 ${fixed?s.wh.book:s.wh.real} · 差异 ${(diff*100).toFixed(1)}%</div>
+      <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn xs ${diff>0.02?"red":"o"}" data-recount="${i}" onclick="doRecount(${i})" ${fixed?"disabled":""}>📷 XD现场盘·修账</button>
+        ${diff>0.02?'<span class="pill red">差异大→HITL转人工·检测≠判决·不自动罚</span>':""}
+      </div>
+    </div>`;}).join("");
+  document.getElementById("pRecon").innerHTML=`
+  <div class="card" id="cardReconHead">
+    <div class="ph">⚖️ 账实核对 · 有货命门(内核⑭首位节点) <span class="sub">Workflow·链式:现场盘→比账面→出差异 · 账面=实物 才算"有货"</span></div>
+    <div class="hint">前置仓的"有货"开关=账实一致,不是账面有数。账面96实物93=线上显示有货但拣不出=接单即毁约,毁的是30分钟确定性=毁复购。每日优鲜死于命门失守。</div>
+    <div class="qq"><b>三连问</b>:数从哪来=erp_wms(账面)+xd_warehouse(实物) · 到哪去=差异→补货触发+HITL,判定→KPI结算 · 谁的钱=账实差收窄省下的钱计仓管效率提成</div>
+  </div>
+  ${rows}
+  <div class="card">
+    <div class="ph">🧪 校准纪律(算差前必做) </div>
+    <div class="row"><span>线上端去假</span><span style="text-align:right;color:var(--dim)">剔促销冲量GMV(冲量≠自然动销)</span></div>
+    <div class="row"><span>仓库端去假</span><span style="text-align:right;color:var(--dim)">剔压货虚增(为KPI多订的货不算健康有货)</span></div>
+    <div class="row"><span>TypeB 蝴蝶</span><span style="text-align:right;color:var(--dim)">别的仓调拨在途误计本仓 → 剔除后再算差</span></div>
+  </div>`;
+}
+
+/* ── 屏4 · 关差·抢单 ── */
+function renderClose(){
+  const stMap={idle:["提案位·待抢/待核","gray"],grabbed:["🙋 已抢单·执行中","blue"],gated:["🔒 已进HITL队列·未批不得执行","amber"],approved:["✅ 已核定·可执行(执行仍是人)","go"],done:["✔ 完成=候选(候选≠固化)","go"]};
+  const tasksH=S.tasks.map(t=>{
+    const st=stMap[t.st];
+    const btn=t.st==="idle"?(t.money?"提交核定(HITL)":"🙋 抢单")
+             :(t.st==="grabbed"||t.st==="approved")?"完成":"";
+    return `<div class="task ${t.money?"money":""} ${t.irr?"irr":""}" data-task="${t.id}">
+      <div class="th">${t.t}
+        ${t.money?'<span class="pill amber">涉钱'+(t.amt?" ¥"+t.amt.toLocaleString():"")+"</span>":'<span class="pill go">可逆·自主</span>'}
+        ${t.irr?'<span class="pill red">不可逆·统一审批</span>':""}</div>
+      <div class="tsub">${t.why}</div>
+      <div class="tst" data-tst="${t.id}">${st[0]}</div>
+      ${btn?`<div style="margin-top:7px"><button class="btn xs ${t.money&&t.st==="idle"?"":"go"}" data-taskbtn="${t.id}" onclick="taskAct(${t.id})">${btn}</button></div>`:""}
+    </div>`;}).join("");
+  document.getElementById("pClose").innerHTML=`
+  <div class="card" id="cardNodes">
+    <div class="ph">🖐 本体节点(内核⑭⑮⑯ · 节点=手,开关是数据) <span class="sub">全 Workflow ①规则型 · 建设三阶段现阶段 · loop_spec=N/A</span></div>
+    ${NODES.map(n=>`<div class="node" id="${n.id}" data-node="${n.id}"><div class="nh">${n.nm}</div><div class="bea">${n.bea}</div></div>`).join("")}
+  </div>
+  <div class="card" id="cardTasks">
+    <div class="ph">⚔️ 关差任务(抢单) <span class="sub">授权分级:可逆→自主 · 涉钱/不可逆→HITL卡执行前(propose-only)</span></div>
+    ${tasksH}
+    <div class="qq"><b>三连问</b>:数从哪来=判级节点差值 · 到哪去=完成→候选→验果 · 谁的钱=涉钱任务全走HITL,引擎只提案绝不自动花钱</div>
+  </div>`;
+}
+
+/* ── 屏5 · 记分卡·收入·验果 ── */
+function renderPay(){
+  const I=incomeCalc();
+  const sc=SIX.map((s,i)=>{
+    const got=[10,9,S.reconFixed[1]?22:16,15,16,10][i];
+    return `<div class="row" id="swRow${i}" data-sw="${s.k}">
+      <span><b>${s.nm}</b> <span class="hint">${s.online!=="—"?s.online:""}${s.online!=="—"&&s.wh!=="—"?" / ":""}${s.wh!=="—"?s.wh:""}</span></span>
+      <span class="mono">${got}/${s.full} <span class="pill blue" style="cursor:pointer" onclick="setTab('dual');flashEl('#cardSix')">↘原位</span></span></div>`;}).join("");
+  const verH=VERIFY.map((v,i)=>`<div class="verify" data-verify="${i}">
+      <div class="vh">${v.std} ${v.moved?'<span class="pill go">动了 ↑</span>':'<span class="pill gray">没动(持平)</span>'}</div>
+      <div class="vm">上期 ${v.prev} → 本期 ${v.now}</div></div>`).join("");
+  const candH=SOP_CAND.map((c,i)=>{
+    const ok=VERIFY[c.vk].moved;
+    return `<div class="row" data-cand="${i}"><span>${c.t}<br><span class="hint">挂验果:${VERIFY[c.vk].std}</span></span>
+      <button class="btn xs ${ok?"go":"gray"}" data-candbtn="${i}" onclick="${ok
+        ?`toast('📌 已固化进本仓规则(验果通过:上一层的标真动了)','go')`
+        :`toast('⛔ 验果铁律:候选≠固化 · 该上层标没动,不允许固化(任务做完≠验果)','red')`}">固化</button></div>`;}).join("");
+  document.getElementById("pPay").innerHTML=`
+  <div class="card" id="cardIncome">
+    <div class="ph">💰 收入四段(引擎件①·前置仓翻译) <span class="sub">${INCOME_MODEL}</span></div>
+    <div class="row" data-pay="base"><span>① 底薪</span><span class="mono">¥${INCOME_BASE.toLocaleString()}</span></div>
+    <div class="row" data-pay="merit"><span>② 战功分(双端6开关达标 ${I.meritTiles}判×6分×¥40)</span><span class="mono" data-merit>¥${I.merit.toLocaleString()}</span></div>
+    <div class="row" data-pay="gate"><span>③ Gate毕业奖(味达美·成熟利润门)${I.gateCand?' <span class="pill amber">候选·待主管核定(核定≠验果)</span>':' <span class="pill gray">未达</span>'}</span><span class="mono" data-gatebonus>¥${I.gate.toLocaleString()}</span></div>
+    <div class="row" data-pay="eff"><span>④ 效率提成(省下的钱×${EFF_RATE*100}%)<br><span class="hint">${EFF_SAVINGS.map(e=>e.nm+" ¥"+e.amt.toLocaleString()).join(" · ")}</span></span><span class="mono" data-eff>¥${I.eff.toLocaleString()}</span></div>
+    <div class="row"><span><b>本月合计</b></span><span class="mono" style="font-weight:800;color:var(--go)" data-income-sum>¥${I.total.toLocaleString()}</span></div>
+    <div class="qq"><b>三连问</b>:数从哪来=KPI结算节点(判级Output=结算Input) · 到哪去=仓管收入/绩效 · 谁的钱=省下的钱(账实/损耗/缺货)按比例分给省钱的人</div>
+  </div>
+  <div class="card" id="cardScore">
+    <div class="ph">🗂 仓管KPI记分卡 · 双端6开关 <span class="sub">定标↓=满分100(非倒推) · 量实↑=双端盘 · 差=满分−实得</span></div>
+    ${sc}
+    <div class="row"><span><b>合计</b></span><span class="mono" data-sc-total>${[10,9,S.reconFixed[1]?22:16,15,16,10].reduce((a,b)=>a+b,0)}/100</span></div>
+  </div>
+  <div class="card" id="cardVerify">
+    <div class="ph">🔎 验果面板(引擎件⑥·铁律) <span class="sub">验果=看上一层的标动没动,非任务做没做 · 候选≠固化 · 核定≠验果</span></div>
+    ${verH}
+    <div class="ph" style="margin-top:9px">📌 SOP候选(固化须过验果)</div>
+    ${candH}
+  </div>`;
+}
+
+/* ── 屏6 · 区域仓盘(主管) ── */
+function renderRegion(){
+  if(ROLE!=="mgr"){document.getElementById("pRegion").innerHTML="";return;}
+  const worst=WAREHOUSES.reduce((a,b)=>a.zs<b.zs?a:b);
+  const whH=WAREHOUSES.map(w=>`<tr data-wh="${w.id}" ${w.id===worst.id?'style="background:#fbf3f2"':""}>
+    <td><b>${w.nm}</b>${w.id===worst.id?' <span class="pill red">worst仓·定档口径</span>':""}<br><span class="mono" style="color:var(--dim)">${w.id}</span></td>
+    <td class="mono">${(w.zs*100).toFixed(1)}%</td><td class="mono">${(w.oos*100).toFixed(1)}%</td>
+    <td class="mono">${(w.loss*100).toFixed(1)}%</td><td class="mono">${(w.otd*100).toFixed(0)}%</td>
+    <td class="mono">${w.same>=0?"+":""}${(w.same*100).toFixed(0)}%</td></tr>`).join("");
+  const pend=S.gateQueue.map((q,i)=>q.st!=="pending"?"":`
+    <div class="gq" data-gq="${i}">
+      <div class="gh">${q.t} ${q.irr?'<span class="pill red">不可逆</span>':'<span class="pill amber">涉钱</span>'}</div>
+      <div class="gmeta">金额 ¥${q.amt.toLocaleString()} · 提案人 ${q.by} · block_before_exec=true(未批不得执行)</div>
+      <div style="margin-top:7px;display:flex;gap:7px">
+        <button class="btn xs go" data-gqok="${i}" onclick="gateDecide(${i},true)">✅ 核定通过</button>
+        <button class="btn xs red" data-gqno="${i}" onclick="gateDecide(${i},false)">↩ 驳回</button>
+      </div>
+    </div>`).join("")||'<div class="hint">暂无待核定项 · 涉钱/不可逆任务提交后进此队列</div>';
+  const hist=S.gateHistory.map(h=>`<div class="row"><span>${h.t}</span><span class="pill ${h.st==="approved"?"go":"red"}">${h.st==="approved"?"已核定":"已驳回"} · ${h.by}</span></div>`).join("");
+  document.getElementById("pRegion").innerHTML=`
+  <div class="card" id="cardWhs">
+    <div class="ph">🗺️ 区域4仓 · 双端体检 <span class="sub">worst仓口径:最差仓定区域档位 · 同仓增长=复制质量口径</span></div>
+    <table class="tb2"><tr><th>仓</th><th>账实准</th><th>缺货</th><th>损耗</th><th>30min达成</th><th>同仓增长</th></tr>${whH}</table>
+    <div class="hint" style="margin-top:5px">大红门仓账实96.3%拖档 → 区域关差位=先救worst仓的命门,不是给好仓加码</div>
+  </div>
+  <div class="card" id="copyGate">
+    <div class="ph">🧬 复制Gate(成长期·看复制) <span class="sub">六月鲜 3/3仓复制达标 · 候选毕业</span></div>
+    <div class="row"><span>首仓模型复制</span><span class="pill go">3仓全过初步动销门</span></div>
+    <div class="row"><span>毕业判定</span><span class="pill amber">候选 · 需核定 + 下期验果(上层标动)才固化</span></div>
+  </div>
+  <div class="card" id="cardGateQ">
+    <div class="ph">🔒 HUMAN_GATE_QUEUE · 核定队列 <span class="sub">引擎只提案 · 人拍板 · 核定≠验果 · 驳回不自动罚</span></div>
+    ${pend}
+    ${hist?'<div class="ph" style="margin-top:9px">留痕</div>'+hist:""}
+  </div>`;
+}
+
+function renderAll(){renderTop();renderTabs();renderToday();renderDual();renderRecon();renderClose();renderPay();renderRegion();}
+renderAll();
+toast("trial 假水已通:登录→定标→双端盘→校准→算差→归因→关差(HITL)→记分卡→验果 全链可点 · MOCK_MODE=true 绝不要真数据","go");
+</script>
+</body>
+</html>
