@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>门店O2O · 城市/区域驾驶舱 V1.0（STO2-20 trial）</title>
+<style>
+:root{
+ --bg:#14171c;--panel:#1b1f26;--panel2:#20252e;--line:#2c333d;--line2:#39424e;--tx:#e7e3d8;--mut:#8b93a0;--mut2:#6b7280;
+ --amber:#e0a15e;--amber2:#c98a45;--ink:#0f1216;
+ --ok:#3f9e6a;--warn:#d9a441;--bad:#d0603f;--crit:#b23b2e;
+ --l0:#e0a15e;--l1:#7fa8c9;--l2:#9d8ec9;--l3:#6fae8f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);
+ font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+ font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{padding:0}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+h1,h2,h3{margin:0;font-weight:700}
+button{font-family:inherit;cursor:pointer}
+.ey{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);font-weight:700}
+/* ── 顶栏 ── */
+.top{display:flex;align-items:center;gap:16px;padding:12px 20px;background:linear-gradient(180deg,#191d24,#14171c);
+ border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40}
+.brand{display:flex;flex-direction:column;gap:1px}
+.brand .t{font-size:15px;font-weight:800;letter-spacing:.02em}
+.brand .t b{color:var(--amber)}
+.brand .s{font-size:10.5px;color:var(--mut);letter-spacing:.05em}
+.whoami{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--mut)}
+.rolepill{padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--amber);font-weight:700}
+.cyc{padding:4px 10px;border:1px solid var(--line);border-radius:6px;background:#12253a;color:#9cc4e8;font-weight:700}
+/* ── 布局 ── */
+.wrap{display:grid;grid-template-columns:236px 1fr;gap:0;min-height:calc(100vh - 55px)}
+.rail{background:#171b21;border-right:1px solid var(--line);padding:14px 12px;overflow-y:auto}
+.main{padding:16px 20px 60px;max-width:1400px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.card>.ct{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;margin-bottom:12px}
+.card>.ct .tag{margin-left:auto;font-size:10px;color:var(--mut);font-weight:600;border:1px solid var(--line);
+ padding:2px 7px;border-radius:999px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+/* ── 树 ── */
+.tree .node{padding:6px 8px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px;font-size:12px;
+ margin-bottom:2px;border:1px solid transparent}
+.tree .node:hover{background:var(--panel2)}
+.tree .node.on{background:#232a34;border-color:var(--amber2)}
+.tree .node.lv-region{font-weight:800;color:var(--l1)}
+.tree .node.lv-city{margin-left:10px;font-weight:700;color:var(--l2)}
+.tree .node.lv-store{margin-left:22px;color:var(--tx)}
+.tree .node .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.tree .node .mini{margin-left:auto;font-size:9.5px;color:var(--mut);font-weight:700}
+.tree .cap{font-size:10px;letter-spacing:.14em;color:var(--mut);text-transform:uppercase;margin:6px 4px 8px}
+/* ── 环×四层级联 ── */
+.cascade{display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative}
+.layer{padding:12px 14px;border:1px solid var(--line);background:var(--panel2);position:relative}
+.layer:first-child{border-radius:12px 0 0 12px}
+.layer:last-child{border-radius:0 12px 12px 0}
+.layer+.layer{border-left:none}
+.layer .lb{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;margin-bottom:6px}
+.layer .who{font-size:10px;color:var(--mut);margin-bottom:8px}
+.layer .row{display:flex;justify-content:space-between;font-size:11.5px;margin:3px 0}
+.layer .row .k{color:var(--mut)}
+.layer .row .v{font-weight:700}
+.layer .down{color:var(--l0)}.layer .up{color:var(--l3)}
+.layer .gapv{font-weight:800}
+.conn{position:absolute;top:50%;right:-9px;width:18px;height:18px;transform:translateY(-50%) rotate(45deg);
+ background:var(--panel2);border-right:1px solid var(--line);border-top:1px solid var(--line);z-index:2}
+.connlbl{position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);font-size:8.5px;color:var(--amber);
+ background:var(--bg);padding:0 5px;white-space:nowrap;letter-spacing:.04em}
+/* ── 矩阵 ── */
+.mx{width:100%;border-collapse:collapse;font-size:11px}
+.mx th,.mx td{border:1px solid var(--line);padding:0;text-align:center}
+.mx th{background:var(--panel2);color:var(--mut);font-weight:700;padding:6px 5px;position:sticky;font-size:10.5px}
+.mx td.qh{background:var(--panel2);text-align:left;padding:5px 8px;color:var(--tx);font-weight:600;white-space:nowrap;font-size:10.5px}
+.mx td.qh .sev{font-size:8.5px;color:var(--mut);font-weight:700;margin-left:4px}
+.cell{width:100%;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:800;
+ font-size:10.5px;border:1px solid transparent}
+.cell:hover{outline:2px solid var(--amber);outline-offset:-2px}
+.cell.s-ok{background:rgba(63,158,106,.18);color:#7fcea0}
+.cell.s-warn{background:rgba(217,164,65,.20);color:#e8c073}
+.cell.s-bad{background:rgba(208,96,63,.22);color:#eb9377}
+.cell.s-crit{background:rgba(178,59,46,.30);color:#f0a08e}
+.cell.s-na{background:transparent;color:var(--mut2)}
+/* ── 通用 ── */
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;
+ border:1px solid var(--line);background:var(--panel2);color:var(--mut)}
+.chip.ok{color:#7fcea0;border-color:#2d5c43}.chip.warn{color:#e8c073;border-color:#6b5423}
+.chip.bad{color:#eb9377;border-color:#6e3a2c}.chip.crit{color:#f0a08e;border-color:#7a2f26}
+.btn{background:var(--amber);color:#20160a;border:none;border-radius:8px;padding:8px 14px;font-weight:800;font-size:12px}
+.btn:hover{background:var(--amber2)}
+.btn.gh{background:transparent;color:var(--amber);border:1px solid var(--amber2)}
+.btn.gh:hover{background:#241d12}
+.btn.dk{background:var(--panel2);color:var(--tx);border:1px solid var(--line)}
+.btn.dk:hover{border-color:var(--amber2)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sm{padding:5px 10px;font-size:11px;border-radius:7px}
+select.dk{background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:11px}
+.kpi{display:flex;flex-direction:column;gap:2px;padding:10px 12px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}
+.kpi .l{font-size:10px;color:var(--mut);letter-spacing:.04em}
+.kpi .v{font-size:20px;font-weight:800}
+.kpi .d{font-size:10px;font-weight:700}
+.pos{color:#7fcea0}.neg{color:#eb9377}
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.tbl th{text-align:left;color:var(--mut);font-weight:700;padding:7px 8px;border-bottom:1px solid var(--line);font-size:10.5px;letter-spacing:.03em}
+.tbl td{padding:7px 8px;border-bottom:1px solid var(--line2);vertical-align:middle}
+.tbl tr:hover td{background:var(--panel2)}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;min-width:60px}
+.bar>i{display:block;height:100%;border-radius:3px}
+.muted{color:var(--mut)}
+.mono{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.warnbox{background:#241a12;border:1px solid #6b5423;border-radius:8px;padding:8px 11px;font-size:11px;color:#e8c073;margin-top:8px}
+.okbox{background:#12241a;border:1px solid #2d5c43;border-radius:8px;padding:8px 11px;font-size:11px;color:#7fcea0;margin-top:8px}
+/* ── 抽屉 ── */
+.drawer{position:fixed;top:0;right:0;height:100vh;width:420px;background:var(--panel);border-left:1px solid var(--line2);
+ z-index:60;transform:translateX(100%);transition:transform .22s ease;overflow-y:auto;box-shadow:-20px 0 50px rgba(0,0,0,.4)}
+.drawer.show{transform:translateX(0)}
+.drawer .dh{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line);padding:14px 18px;
+ display:flex;align-items:center;gap:10px;z-index:2}
+.drawer .dh .x{margin-left:auto;background:none;border:none;color:var(--mut);font-size:20px;cursor:pointer;line-height:1}
+.drawer .db{padding:16px 18px}
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:55;opacity:0;pointer-events:none;transition:opacity .2s}
+.mask.show{opacity:1;pointer-events:auto}
+.deffield{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line2);font-size:12px}
+.deffield .k{color:var(--mut)}.deffield .v{font-weight:700}
+.ckrow{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;margin-bottom:7px;background:var(--panel2)}
+.ckrow input{width:16px;height:16px;accent-color:var(--amber)}
+.ckrow .info{flex:1;min-width:0}
+.ckrow .info .a{font-weight:700;font-size:11.5px}
+.ckrow .info .b{font-size:10px;color:var(--mut)}
+.ckrow .amt{font-weight:800;color:var(--amber);font-size:12px;white-space:nowrap}
+/* toast */
+#tw{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;
+ pointer-events:none;align-items:center}
+.toast{background:#0c0e12;border:1px solid var(--amber2);color:var(--tx);padding:10px 16px;border-radius:10px;font-size:12px;
+ box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:520px;animation:tin .2s ease}
+.toast b{color:var(--amber)}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.wm{position:fixed;right:12px;bottom:8px;font-size:9px;color:#3a424e;letter-spacing:.1em;z-index:1}
+.legend{display:flex;gap:12px;font-size:10px;color:var(--mut);align-items:center;flex-wrap:wrap}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block;vertical-align:-1px;margin-right:3px}
+@media(max-width:1080px){.wrap{grid-template-columns:1fr}.rail{display:none}.cascade{grid-template-columns:1fr 1fr}
+ .layer:nth-child(2){border-radius:0 12px 0 0}.layer:nth-child(3){border-radius:0 0 0 12px;border-left:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">
+    <div class="t">门店<b>O2O</b> · 城市/区域驾驶舱</div>
+    <div class="s">环 × 四层 · 定标↓ 量实↑ 算差 关差 验果 · STO2-20 trial</div>
+  </div>
+  <div class="whoami">
+    <span id="scopelbl">范围：华东大区</span>
+    <span class="cyc" id="cyclbl">C-2026W28</span>
+    <span class="rolepill" id="rolelbl">—</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- 左：区域-城市-门店树 -->
+  <aside class="rail">
+    <div class="cap">经营范围树 · 点选下钻</div>
+    <div class="tree" id="tree"></div>
+    <div class="cap" style="margin-top:16px">图例 · 十二问严重度</div>
+    <div class="legend">
+      <span><i style="background:rgba(63,158,106,.6)"></i>达标</span>
+      <span><i style="background:rgba(217,164,65,.7)"></i>预警</span>
+      <span><i style="background:rgba(208,96,63,.75)"></i>破线</span>
+      <span><i style="background:rgba(178,59,46,.9)"></i>严重</span>
+    </div>
+  </aside>
+
+  <!-- 右：主区 -->
+  <main class="main">
+    <!-- 环×四层级联(签名元素) -->
+    <div class="card">
+      <div class="ct">环 × 四层级联 <span class="tag" id="cascadetag">连接律：上层关差 = 下层定标</span></div>
+      <div class="cascade" id="cascade"></div>
+      <div style="font-size:10.5px;color:var(--mut);margin-top:10px">
+        目标自上而下（定标↓·红线不用实际倒推）· 实际自下而上（量实↑）· 关不了的差升一层 · 验果=看上一层的标动没动
+      </div>
+    </div>
+
+    <!-- KPI 概览 -->
+    <div class="grid3" id="kpirow"></div>
+
+    <!-- 十二问 × 门店 矩阵 -->
+    <div class="card">
+      <div class="ct">十二问 × 门店 · 算差热力矩阵 <span class="tag" id="mxtag"></span></div>
+      <div style="overflow-x:auto"><table class="mx" id="matrix"></table></div>
+      <div style="font-size:10px;color:var(--mut);margin-top:8px">点任意格 → 下钻该门店该问的 定标/实际/差/根因/建议举措/影响金额，并可生成关差任务入审批池。</div>
+    </div>
+
+    <!-- 七本账 横向 -->
+    <div class="card">
+      <div class="ct">七本账 · 范围汇总 <span class="tag">流量·商品·门店执行·一盘货·履约·体验·用户资产</span></div>
+      <div class="grid3" id="ledgerstrip"></div>
+    </div>
+
+    <div class="grid2">
+      <!-- 一盘货分配矩阵 -->
+      <div class="card">
+        <div class="ct">一盘货分配矩阵 <span class="tag">到店 / 到家 · 八策略</span></div>
+        <div style="overflow-x:auto"><table class="tbl" id="allocmx"></table></div>
+        <div id="transferbox"></div>
+      </div>
+      <!-- 多Gap冲突工作区 -->
+      <div class="card">
+        <div class="ct">多Gap冲突工作区 <span class="tag">库存三方：缺货 ⇄ 周转 ⇄ 临期</span></div>
+        <div id="conflictbox"></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <!-- 批量审批舱 -->
+      <div class="card">
+        <div class="ct">批量审批舱 <span class="tag" id="apvtag">职责分离 + 预算闸 + 乐观锁</span></div>
+        <div id="approvebox"></div>
+      </div>
+      <!-- 预算舱 -->
+      <div class="card">
+        <div class="ct">预算舱 <span class="tag">按 影响金额 × 可恢复 × 成功率</span></div>
+        <div id="budgetbox"></div>
+      </div>
+    </div>
+
+    <!-- 验果 · 推进周期 -->
+    <div class="card">
+      <div class="ct">验果 · 推进一周期 <span class="tag">看上一层的标动没动</span></div>
+      <div id="verifybox"></div>
+    </div>
+  </main>
+</div>
+
+<div class="mask" id="mask" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer"><div class="dh" id="drawerhead"></div><div class="db" id="drawerbody"></div></div>
+
+<div id="tw"></div>
+<div class="wm">STORE-O2O-PC-DECK · V1.0-trial · live_gate_pass:null</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   门店O2O 城市/区域驾驶舱 · storeo2opcv1
+   全 mock 假水:1大区×3城市×10门店。环×四层在 PC 尺度跑通:
+   定标↓(业态红线自上而下) 量实↑(门店真实汇总) 算差(热力矩阵)
+   关差(生成任务→批量审批→预算→跨店调拨→冲突消解) 验果(推进周期看上层标动)
+   ═══════════════════════════════════════════════════════════════════ */
+'use strict';
+const SS_KEY='storeo2opcv1ss', SS_KEY_PREV='';
+const SCHEMA='storeo2opcv1', CONTRACT='storeo2opc-contract-1.0', PRODVER='1.0.0-trial';
+
+/* ── 角色 ── */
+const POSTS={
+ 'SR-7303':{nm:'城市经理',post:'city_mgr',lv:2,scope_city:'CT-SH',maxAmt:5000,can_approve:true,can_activate:true,can_transfer:true},
+ 'SR-7305':{nm:'区域总监',post:'region_dir',lv:3,scope_city:null,maxAmt:50000,can_approve:true,can_activate:true,can_transfer:true},
+ 'SR-7309':{nm:'总部经营官',post:'hq',lv:4,scope_city:null,maxAmt:500000,can_approve:true,can_activate:true,can_transfer:true},
+ 'SR-7302':{nm:'O2O运营岗',post:'o2o_ops',lv:0,scope_city:'CT-SH',maxAmt:0,can_approve:false,can_activate:false,can_transfer:false}
+};
+function sr(){const u=new URLSearchParams(location.search).get('sr');return POSTS[u]?u:'SR-7305';}
+const ME=sr(), WHO=POSTS[ME];
+
+/* ── 业态红线(定标↓的来源) ── */
+const FORMAT_TH={
+ membership_club:{nm:'会员店',ctr:.030,detail_cvr:.055,avail:.97,ontime:.95,rep30:.20,osa:.97,oos:.04,badrate:.010,picktime:6.0,complaint:.008},
+ new_retail:{nm:'新零售',ctr:.045,detail_cvr:.060,avail:.96,ontime:.96,rep30:.18,osa:.96,oos:.05,badrate:.012,picktime:6.5,complaint:.010},
+ hypermarket:{nm:'大卖场',ctr:.035,detail_cvr:.045,avail:.94,ontime:.92,rep30:.14,osa:.93,oos:.07,badrate:.015,picktime:8.0,complaint:.014},
+ supermarket:{nm:'超市',ctr:.038,detail_cvr:.048,avail:.95,ontime:.93,rep30:.15,osa:.94,oos:.06,badrate:.013,picktime:7.0,complaint:.012}
+};
+const FMT_ORDER=['membership_club','new_retail','supermarket','hypermarket'];
+
+/* ── 八策略 ── */
+const ALLOC_POLICIES={instore_first:'到店优先',tohome_first:'到家优先',dual_dynamic:'双场景动态',peak_reserve:'高峰预留',
+ vip_reserve:'高价值会员预留',near_expiry_first:'临期优先售',promo_protect:'促销保护',lifecycle_diff:'生命周期差异化'};
+
+/* ── 十二问(问=账×指标) ── */
+const Q12=[
+ {q:'GAP-01',nm:'曝光下滑',ledger:'traffic',key:'impression',dir:'gte',sev:'P0'},
+ {q:'GAP-02',nm:'点击率CTR下降',ledger:'traffic',key:'ctr',dir:'gte',sev:'P1'},
+ {q:'GAP-03',nm:'详情转化下降',ledger:'product',key:'detail_cvr',dir:'gte',sev:'P0'},
+ {q:'GAP-04',nm:'一盘货缺货率升高',ledger:'oneboard',key:'oos',dir:'lte',sev:'P0'},
+ {q:'GAP-05',nm:'门店执行OSA不足',ledger:'exec',key:'osa',dir:'gte',sev:'P1'},
+ {q:'GAP-06',nm:'拣货时长升高',ledger:'fulfill',key:'picktime',dir:'lte',sev:'P2'},
+ {q:'GAP-07',nm:'配送超时率',ledger:'fulfill',key:'ontime',dir:'gte',sev:'P1'},
+ {q:'GAP-08',nm:'差评率升高',ledger:'exp',key:'badrate',dir:'lte',sev:'P0'},
+ {q:'GAP-09',nm:'投诉/漏件率',ledger:'exp',key:'complaint',dir:'lte',sev:'P1'},
+ {q:'GAP-10',nm:'30日复购下降',ledger:'asset',key:'rep30',dir:'gte',sev:'P1'},
+ {q:'GAP-11',nm:'会员可得率不足',ledger:'oneboard',key:'avail',dir:'gte',sev:'P1'},
+ {q:'GAP-12',nm:'临期周转恶化',ledger:'oneboard',key:'nearexp',dir:'lte',sev:'P2'}
+];
+const LEDGERS={traffic:'流量账',product:'商品账',exec:'门店执行账',oneboard:'一盘货账',fulfill:'履约账',exp:'体验账',asset:'用户资产账'};
+const METRIC_PREC={ctr:4,detail_cvr:4,oos:3,osa:3,rep30:3,avail:3,badrate:4,complaint:4,ontime:3,nearexp:3,picktime:1,impression:0};
+const METRIC_FMT={ctr:'pct',detail_cvr:'pct',oos:'pct',osa:'pct',rep30:'pct',avail:'pct',badrate:'pct',complaint:'pct',ontime:'pct',nearexp:'pct',picktime:'min',impression:'int'};
+function fmtVal(key,v){if(v==null||isNaN(v))return '—';const f=METRIC_FMT[key];
+ if(f==='pct')return (v*100).toFixed((METRIC_PREC[key]||3)-2>=0?(METRIC_PREC[key]-2):1)+'%';
+ if(f==='min')return v.toFixed(1)+'′';return Math.round(v).toLocaleString();}
+function roundMetric(key,v){const p=METRIC_PREC[key];return p==null?Math.round(v):+(+v).toFixed(p);}
+
+/* ── 城市/门店 假水 ── */
+const CITIES=[
+ {id:'CT-SH',nm:'上海',dir:'区域总监·华东'},
+ {id:'CT-HZ',nm:'杭州',dir:'区域总监·华东'},
+ {id:'CT-SZ',nm:'苏州',dir:'区域总监·华东'}
+];
+const REGION={id:'RGN-EC',nm:'华东大区',ns:'北极星:欣和到家GMV份额+复购'};
+
+/* 生成 10 门店 mock:各问实际值围绕红线波动,制造若干破线 */
+function seedStores(){
+ const defs=[
+  ['ST-SH-01','上海·浦东金桥','CT-SH','membership_club','N3'],
+  ['ST-SH-02','上海·徐汇龙华','CT-SH','new_retail','N2'],
+  ['ST-SH-03','上海·闵行莘庄','CT-SH','supermarket','N4'],
+  ['ST-SH-04','上海·杨浦五角场','CT-SH','hypermarket','N3'],
+  ['ST-HZ-01','杭州·西湖文三','CT-HZ','new_retail','N2'],
+  ['ST-HZ-02','杭州·拱墅运河','CT-HZ','supermarket','N3'],
+  ['ST-HZ-03','杭州·滨江网商','CT-HZ','membership_club','N1'],
+  ['ST-SZ-01','苏州·工业园区','CT-SZ','new_retail','N3'],
+  ['ST-SZ-02','苏州·姑苏观前','CT-SZ','hypermarket','N4'],
+  ['ST-SZ-03','苏州·吴中太湖','CT-SZ','supermarket','N2']
+ ];
+ // 每门店:实际相对红线的偏移因子(负=好, 正=差),用固定种子保证可复现
+ const seedOff=[
+  {impression:-.05,ctr:-.02,detail_cvr:-.28,oos:.9,osa:-.01,picktime:.15,ontime:-.02,badrate:.6,complaint:.2,rep30:-.03,avail:-.005,nearexp:.4},
+  {impression:-.22,ctr:-.30,detail_cvr:-.10,oos:.3,osa:-.02,picktime:.05,ontime:-.05,badrate:.2,complaint:.5,rep30:-.12,avail:-.02,nearexp:.1},
+  {impression:.02,ctr:.03,detail_cvr:.05,oos:.1,osa:.01,picktime:-.05,ontime:.02,badrate:-.1,complaint:-.1,rep30:.03,avail:.005,nearexp:-.1},
+  {impression:-.30,ctr:-.10,detail_cvr:-.15,oos:1.2,osa:-.04,picktime:.35,ontime:-.08,badrate:.9,complaint:.4,rep30:-.08,avail:-.03,nearexp:.9},
+  {impression:-.08,ctr:-.05,detail_cvr:-.20,oos:.5,osa:-.02,picktime:.10,ontime:-.10,badrate:.3,complaint:.7,rep30:-.05,avail:-.01,nearexp:.2},
+  {impression:.05,ctr:.02,detail_cvr:.02,oos:.2,osa:.00,picktime:.00,ontime:.01,badrate:.0,complaint:.1,rep30:.01,avail:.00,nearexp:.0},
+  {impression:-.15,ctr:-.18,detail_cvr:-.35,oos:.7,osa:-.03,picktime:.20,ontime:-.03,badrate:.5,complaint:.3,rep30:-.15,avail:-.015,nearexp:.3},
+  {impression:-.04,ctr:-.06,detail_cvr:-.08,oos:.4,osa:-.01,picktime:.08,ontime:-.04,badrate:.2,complaint:.2,rep30:-.04,avail:-.008,nearexp:.15},
+  {impression:-.25,ctr:-.12,detail_cvr:-.18,oos:1.0,osa:-.05,picktime:.40,ontime:-.12,badrate:1.0,complaint:.6,rep30:-.10,avail:-.035,nearexp:1.1},
+  {impression:.03,ctr:.01,detail_cvr:-.03,oos:.15,osa:.00,picktime:-.02,ontime:.00,badrate:.1,complaint:.0,rep30:.00,avail:.00,nearexp:-.05}
+ ];
+ return defs.map((d,i)=>{
+  const th=FORMAT_TH[d[3]], off=seedOff[i], mts={};
+  Q12.forEach(qq=>{
+   const k=qq.key; let base=th[k]!=null?th[k]:(k==='impression'?45000:k==='nearexp'?.10:.5);
+   if(k==='impression')base=45000;
+   const o=off[k]||0;
+   let v;
+   if(qq.dir==='gte'){ v=base*(1+ (k==='impression'? o : (o))); if(k==='impression')v=base*(1+o); }
+   else { v=base*(1+ (o) ); }
+   // oss/nearexp/badrate/complaint/picktime 越大越差:o>0 抬高
+   if(qq.dir==='lte'){ v=base*(1+o); }
+   else { v=base*(1+o); }
+   mts[k]=roundMetric(k, k==='impression'?Math.max(1000,v):Math.max(0,v));
+  });
+  // 库存 mock:实物/货架/后仓/到店可售/到家可售
+  const physical=[120,90,140,70,100,150,80,110,60,160][i];
+  const shelf=Math.round(physical*0.32), backroom=physical-shelf;
+  const nearExpiryUnits=Math.round(physical*(mts.nearexp||.1));
+  return {
+   id:d[0], nm:d[1], city:d[2], format:d[3], stage:d[4], mts,
+   inv:{physical, shelf, backroom, nearExpiryUnits, online_reserved:0, policy:'dual_dynamic',
+        paid_unpicked:[3,2,4,1,3,2,5,2,6,1][i]},
+   gmv_w:[1.4,1.1,0.9,1.3,1.2,0.8,1.0,1.1,1.2,0.7][i]  // GMV权重(战略权重)
+  };
+ });
+}
+
+/* ── 算差:门店×问 → severity + gap ── */
+function storeGap(store,qq){
+ const th=FORMAT_TH[store.format], target=(qq.key==='impression')?45000:(qq.key==='nearexp'?0.10:th[qq.key]);
+ const actual=store.mts[qq.key];
+ if(target==null||actual==null)return {sev:'na',target,actual,gap:0,rate:0,impact:0};
+ let miss;  // 缺口(正=有差距)
+ if(qq.dir==='gte') miss = target-actual; else miss = actual-target;
+ const rate = target? miss/Math.abs(target):0;
+ let sev='ok';
+ if(rate>0.25) sev='crit'; else if(rate>0.10) sev='bad'; else if(rate>0.02) sev='warn'; else sev='ok';
+ // 影响金额 mock:基准×权重×缺口率×严重系数
+ const base = {P0:12000,P1:7000,P2:3500}[qq.sev]||5000;
+ const impact = miss>0? Math.round(base*store.gmv_w*Math.min(1.5,Math.max(0,rate))*10)*10 :0;
+ return {sev, target, actual, gap:roundMetric(qq.key,Math.max(0,miss)), rate:+rate.toFixed(3), impact};
+}
+
+/* ── 一盘货:到店/到家可售(策略生效) ── */
+function availSplit(store){
+ const inv=store.inv, base=Math.max(0, inv.physical - inv.paid_unpicked);
+ const p=inv.policy; let instore=Math.round(base*0.5), tohome=base-instore, note='均分';
+ switch(p){
+  case 'instore_first': instore=Math.round(base*0.7); tohome=base-instore; note='到店70%'; break;
+  case 'tohome_first': tohome=Math.round(base*0.7); instore=base-tohome; note='到家70%'; break;
+  case 'peak_reserve': {const r=Math.round(base*0.15); tohome=Math.round((base-r)*0.55); instore=base-r-tohome; note='预留15%高峰'; break;}
+  case 'vip_reserve': {const r=Math.round(base*0.20); tohome=Math.round((base-r)*0.5); instore=base-r-tohome; note='扣留20%会员'; break;}
+  case 'near_expiry_first': {instore=Math.round(base*0.55); tohome=base-instore; note='临期先出+到店'; break;}
+  case 'promo_protect': {const r=Math.round(base*0.25); instore=Math.round((base-r)*0.5); tohome=base-r-instore; note='保护促销库存25%'; break;}
+  case 'lifecycle_diff': {const f=store.stage>='N4'?0.35:0.6; instore=Math.round(base*f); tohome=base-instore; note='生命周期'+store.stage; break;}
+  default: note='双场景动态';
+ }
+ return {base, instore:Math.max(0,instore), tohome:Math.max(0,tohome), online:Math.max(0,tohome), note};
+}
+
+/* ── StateStore ── */
+let ST;
+function seedState(){
+ const stores=seedStores();
+ // 依据算差自动播种若干"关差任务/决策"进审批池
+ const decisions=[];
+ stores.forEach(s=>{
+  Q12.forEach(qq=>{
+   const g=storeGap(s,qq);
+   if((g.sev==='crit'||g.sev==='bad') && qq.sev==='P0' && decisions.length<7){
+    decisions.push(mkDecision(s,qq,g,true));
+   }
+  });
+ });
+ return {
+  meta:{ver:1,schema:SCHEMA,contract:CONTRACT,prodver:PRODVER,cycle:'C-2026W28',rule_version:'R-1.0',seeded_at:Date.now()},
+  region:REGION, cities:CITIES, stores,
+  scope:{level:'region',id:'RGN-EC'},
+  decisions,
+  budgetPool:{total:80000, allocated:0, items:[]},
+  transfers:[],
+  conflictResolutions:{},
+  audit:[], toastlog:[],
+  verify:{last_cycle:null, effective:null},
+  live_gate_pass:null
+ };
+}
+let _decSeq=1;
+function mkDecision(store,qq,g,seeded){
+ const proposer = seeded ? (Math.random()<0.5?'store_mgr':'o2o_ops') : WHO.post;
+ return {
+  did:'DEC-'+(_decSeq++).toString().padStart(3,'0'),
+  store:store.id, store_nm:store.nm, city:store.city, q:qq.q, q_nm:qq.nm, ledger:qq.ledger,
+  target:g.target, actual:g.actual, gap:g.gap, rate:g.rate, impact:g.impact, sev:g.sev,
+  measure: suggestMeasure(qq), cost: Math.round(g.impact*0.18/50)*50,
+  proposer, status:'pending', base_version:1, created:Date.now()
+ };
+}
+function suggestMeasure(qq){
+ const M={impression:'平台坑位竞价提位+关键词优化',ctr:'主图/标题AB测试',detail_cvr:'详情页卖点重构+评分修复',
+  oos:'紧急补货+跨店调拨+安全库存上调',osa:'排面SOP巡检+价签整改',picktime:'拣货动线优化+分区拣',
+  ontime:'骑手排班+高峰运力预约',badrate:'差评根因整改+品控',complaint:'漏件复核+包装升级',
+  rep30:'会员复购券+社群运营',avail:'会员专供备货',nearexp:'临期打包促销+先出'};
+ return M[qq.key]||'专项整改';
+}
+
+/* ── 汇总:门店→城市→区域 ── */
+function storesInScope(){const sc=ST.scope;
+ if(sc.level==='region')return ST.stores;
+ if(sc.level==='city')return ST.stores.filter(s=>s.city===sc.id);
+ return ST.stores.filter(s=>s.id===sc.id);}
+function rollupMetric(stores,qq){
+ // 加权(GMV权重)平均实际;目标取业态红线的加权平均(定标↓的层级折算)
+ let wa=0, wt=0, wsum=0;
+ stores.forEach(s=>{const g=storeGap(s,qq); if(g.actual==null)return;
+  wa+=g.actual*s.gmv_w; wt+=g.target*s.gmv_w; wsum+=s.gmv_w;});
+ if(!wsum)return null;
+ const actual=wa/wsum, target=wt/wsum;
+ let miss = qq.dir==='gte'? target-actual : actual-target;
+ const rate=target?miss/Math.abs(target):0;
+ let sev='ok'; if(rate>.25)sev='crit'; else if(rate>.10)sev='bad'; else if(rate>.02)sev='warn';
+ return {actual:roundMetric(qq.key,actual), target:roundMetric(qq.key,target), gap:roundMetric(qq.key,Math.max(0,miss)), rate:+rate.toFixed(3), sev};
+}
+
+/* ═══ 持久化 ═══ */
+const SS={
+ save(){try{localStorage.setItem(SS_KEY,JSON.stringify(ST));}catch(e){}},
+ load(){
+  let raw=null; try{raw=localStorage.getItem(SS_KEY);}catch(e){}
+  if(raw){try{ST=migrateState(JSON.parse(raw));SS.save();return;}catch(e){}}
+  ST=seedState(); SS.save();
+ }
+};
+function migrateState(o){
+ if(!o||typeof o!=='object')return seedState();
+ const s=seedState();
+ // 保留可迁移的用户改动;缺字段用新种子补齐
+ o.meta=o.meta||{}; const _from=o.meta.migrated_from||o.meta.schema||'unknown';
+ o.meta.schema=SCHEMA; o.meta.contract=CONTRACT; o.meta.migrated_from=_from;
+ ['region','cities','stores','scope','decisions','budgetPool','transfers','conflictResolutions','audit','toastlog','verify'].forEach(k=>{
+  if(o[k]==null)o[k]=s[k];
+ });
+ const storesValid=Array.isArray(o.stores)&&o.stores.length===s.stores.length
+   &&o.stores.every(st=>st&&st.mts&&st.inv&&st.format&&FORMAT_TH[st.format]);
+ if(!storesValid)o.stores=s.stores;
+ if(o.live_gate_pass===undefined)o.live_gate_pass=null;
+ audit0(o,'migrate','schema→'+SCHEMA);
+ return o;
+}
+function audit0(state,kind,msg){(state.audit=state.audit||[]).unshift({kind,msg,at:Date.now()});}
+function audit(kind,msg){ST.audit.unshift({kind,msg,at:Date.now(),by:WHO.post}); if(ST.audit.length>300)ST.audit.pop();}
+
+/* ═══ toast(禁 alert) ═══ */
+function showToast(html){const w=document.getElementById('tw');const t=document.createElement('div');
+ t.className='toast';t.innerHTML=html;w.appendChild(t);
+ ST.toastlog.unshift({html,at:Date.now()});
+ setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(8px)';setTimeout(()=>t.remove(),200);},2600);}
+
+/* ═══════════════ 渲染 ═══════════════ */
+function scopeName(){const sc=ST.scope;
+ if(sc.level==='region')return ST.region.nm;
+ if(sc.level==='city')return (ST.cities.find(c=>c.id===sc.id)||{}).nm+'（城市）';
+ return (ST.stores.find(s=>s.id===sc.id)||{}).nm+'（门店）';}
+
+function renderHeaderBits(){
+ document.getElementById('rolelbl').textContent=WHO.nm+' · lv'+WHO.lv;
+ document.getElementById('cyclbl').textContent=ST.meta.cycle;
+ document.getElementById('scopelbl').textContent='范围：'+scopeName();
+}
+
+function renderTree(){
+ const t=document.getElementById('tree'); let h='';
+ const sc=ST.scope;
+ h+=`<div class="node lv-region ${sc.level==='region'?'on':''}" onclick="setScope('region','${ST.region.id}')">
+   <span class="dot" style="background:var(--l1)"></span>${ST.region.nm}<span class="mini">${ST.stores.length}店</span></div>`;
+ ST.cities.forEach(c=>{
+  const cs=ST.stores.filter(s=>s.city===c.id);
+  const worst=worstSevOf(cs);
+  h+=`<div class="node lv-city ${sc.level==='city'&&sc.id===c.id?'on':''}" onclick="setScope('city','${c.id}')">
+    <span class="dot" style="background:${sevColor(worst)}"></span>${c.nm}<span class="mini">${cs.length}店</span></div>`;
+  cs.forEach(s=>{
+   const w=worstSevOf([s]);
+   h+=`<div class="node lv-store ${sc.level==='store'&&sc.id===s.id?'on':''}" onclick="setScope('store','${s.id}')">
+     <span class="dot" style="background:${sevColor(w)}"></span>${s.nm.split('·')[1]||s.nm}
+     <span class="mini">${FORMAT_TH[s.format].nm}</span></div>`;
+  });
+ });
+ t.innerHTML=h;
+}
+function worstSevOf(stores){let rank=0;const order={ok:0,warn:1,bad:2,crit:3};
+ stores.forEach(s=>Q12.forEach(qq=>{const g=storeGap(s,qq);if(order[g.sev]>rank)rank=order[g.sev];}));
+ return ['ok','warn','bad','crit'][rank];}
+function sevColor(sev){return {ok:'#3f9e6a',warn:'#d9a441',bad:'#d0603f',crit:'#b23b2e',na:'#3a424e'}[sev]||'#3a424e';}
+
+/* 环×四层级联 */
+function renderCascade(){
+ const box=document.getElementById('cascade');
+ const stores=ST.stores;
+ // 用一个代表性问(GAP-04 缺货 P0)贯穿四层展示连接律;同时给综合达标率
+ const q=Q12.find(x=>x.q==='GAP-04');
+ const layers=[
+  {lb:'北极星',who:'总部 · 到家GMV份额+复购',color:'var(--l0)',
+   down:'份额≥18%', up:pct(compliance(stores)), gap:'综合达标 '+pct(compliance(stores))},
+  {lb:'区域(JBP)',who:'区域总监 · '+ST.region.nm,color:'var(--l1)',
+   ...layerAgg(stores,q)},
+  {lb:'品类/城市',who:'城市经理 · 多店对标',color:'var(--l2)',
+   ...layerAgg(cityFocusStores(),q)},
+  {lb:'SKU/门店',who:'店长 · 一盘货·执行·拣货',color:'var(--l3)',
+   ...layerAgg(storesInScope(),q)}
+ ];
+ box.innerHTML=layers.map((L,i)=>`
+  <div class="layer">
+   <div class="lb" style="color:${L.color}">${L.lb}</div>
+   <div class="who">${L.who}</div>
+   <div class="row"><span class="k down">定标↓</span><span class="v down">${L.down}</span></div>
+   <div class="row"><span class="k up">量实↑</span><span class="v up">${L.up}</span></div>
+   <div class="row"><span class="k">算差</span><span class="v gapv" style="color:${sevColor(L.sev||'ok')}">${L.gap}</span></div>
+   ${i<3?`<div class="conn"></div><div class="connlbl">关差=下层定标</div>`:''}
+  </div>`).join('');
+}
+function cityFocusStores(){const sc=ST.scope;
+ if(sc.level==='store'){const s=ST.stores.find(x=>x.id===sc.id);return ST.stores.filter(x=>x.city===s.city);}
+ if(sc.level==='city')return ST.stores.filter(s=>s.city===sc.id);
+ return ST.stores.filter(s=>s.city==='CT-SH');}
+function layerAgg(stores,q){const r=rollupMetric(stores,q)||{actual:0,target:0,gap:0,sev:'na'};
+ return {down:fmtVal(q.key,r.target)+' 上限', up:fmtVal(q.key,r.actual), gap:'缺口 '+fmtVal(q.key,r.gap), sev:r.sev};}
+function compliance(stores){let ok=0,tot=0;stores.forEach(s=>Q12.forEach(qq=>{const g=storeGap(s,qq);if(g.sev!=='na'){tot++;if(g.sev==='ok')ok++;}}));return tot?ok/tot:0;}
+function pct(v){return (v*100).toFixed(1)+'%';}
+
+/* KPI 概览 */
+function renderKpi(){
+ const stores=storesInScope();
+ const comp=compliance(stores);
+ let crit=0,bad=0,impact=0;
+ stores.forEach(s=>Q12.forEach(qq=>{const g=storeGap(s,qq);if(g.sev==='crit')crit++;if(g.sev==='bad')bad++;impact+=g.impact;}));
+ const pend=ST.decisions.filter(d=>d.status==='pending'&&inScope(d.store)).length;
+ const rows=[
+  {l:'综合达标率',v:pct(comp),d:comp>=.7?'健康':'需改善',cls:comp>=.7?'pos':'neg'},
+  {l:'破线/严重 问数',v:(bad+crit),d:crit+' 严重',cls:'neg'},
+  {l:'可恢复影响金额',v:'¥'+(impact/10000).toFixed(1)+'w',d:'待关差',cls:'neg'},
+  {l:'待审批关差任务',v:pend,d:'审批池',cls:pend?'neg':'pos'},
+  {l:'预算池余额',v:'¥'+((ST.budgetPool.total-ST.budgetPool.allocated)/10000).toFixed(1)+'w',d:'已配 '+pct(ST.budgetPool.allocated/ST.budgetPool.total),cls:'pos'},
+  {l:'门店数',v:stores.length,d:scopeName(),cls:'pos'}
+ ];
+ document.getElementById('kpirow').innerHTML=rows.map(r=>`
+  <div class="kpi"><span class="l">${r.l}</span><span class="v num">${r.v}</span><span class="d ${r.cls}">${r.d}</span></div>`).join('');
+}
+function inScope(storeId){const sc=ST.scope;if(sc.level==='region')return true;
+ const s=ST.stores.find(x=>x.id===storeId);if(!s)return false;
+ return sc.level==='city'?s.city===sc.id:s.id===sc.id;}
+
+/* 十二问×门店 矩阵 */
+function renderMatrix(){
+ const stores=storesInScope();
+ const tb=document.getElementById('matrix');
+ let h='<thead><tr><th style="text-align:left;min-width:150px">十二问 ＼ 门店</th>';
+ stores.forEach(s=>h+=`<th title="${s.nm}">${(s.nm.split('·')[1]||s.nm).slice(0,4)}</th>`);
+ h+='<th>汇总</th></tr></thead><tbody>';
+ Q12.forEach(qq=>{
+  h+=`<tr><td class="qh">${qq.nm}<span class="sev">${qq.sev}·${LEDGERS[qq.ledger]}</span></td>`;
+  stores.forEach(s=>{
+   const g=storeGap(s,qq);
+   const label=g.sev==='ok'?'✓':fmtVal(qq.key,g.gap);
+   h+=`<td><div class="cell s-${g.sev}" onclick="drillCell('${s.id}','${qq.q}')">${label}</div></td>`;
+  });
+  const r=rollupMetric(stores,qq)||{sev:'na',gap:0};
+  h+=`<td><div class="cell s-${r.sev}">${r.sev==='ok'?'✓':fmtVal(qq.key,r.gap)}</div></td>`;
+  h+='</tr>';
+ });
+ tb.innerHTML=h+'</tbody>';
+ document.getElementById('mxtag').textContent=stores.length+' 店 × 12 问';
+}
+
+/* 七账 strip */
+function renderLedgerStrip(){
+ const stores=storesInScope();
+ const byLedger={};
+ Object.keys(LEDGERS).forEach(lk=>byLedger[lk]={ok:0,tot:0,worst:'ok',impact:0});
+ stores.forEach(s=>Q12.forEach(qq=>{const g=storeGap(s,qq);const L=byLedger[qq.ledger];
+  L.tot++; if(g.sev==='ok')L.ok++; L.impact+=g.impact;
+  const order={ok:0,warn:1,bad:2,crit:3}; if(order[g.sev]>order[L.worst])L.worst=g.sev;}));
+ const box=document.getElementById('ledgerstrip');
+ box.innerHTML=Object.keys(LEDGERS).map(lk=>{const L=byLedger[lk];const rate=L.tot?L.ok/L.tot:1;
+  return `<div class="kpi">
+   <span class="l">${LEDGERS[lk]} <span class="chip ${L.worst==='ok'?'ok':L.worst==='warn'?'warn':L.worst==='crit'?'crit':'bad'}" style="margin-left:4px">${L.worst==='ok'?'达标':L.worst==='warn'?'预警':L.worst==='crit'?'严重':'破线'}</span></span>
+   <span class="v num" style="font-size:16px">${pct(rate)}</span>
+   <div class="bar" style="margin-top:4px"><i style="width:${Math.round(rate*100)}%;background:${rate>=.7?'var(--ok)':rate>=.4?'var(--warn)':'var(--bad)'}"></i></div>
+   <span class="d muted">影响 ¥${(L.impact/10000).toFixed(1)}w</span></div>`;
+ }).join('');
+}
+
+/* 一盘货矩阵 */
+function renderAlloc(){
+ const stores=storesInScope();
+ let h='<thead><tr><th>门店</th><th>业态</th><th>实物</th><th>到店可售</th><th>到家可售</th><th>缺货率</th><th>分配策略</th></tr></thead><tbody>';
+ stores.forEach(s=>{
+  const a=availSplit(s), g=storeGap(s,Q12.find(q=>q.q==='GAP-04'));
+  const oosCls=g.sev==='ok'?'ok':g.sev==='warn'?'warn':g.sev==='crit'?'crit':'bad';
+  h+=`<tr>
+   <td>${s.nm.split('·')[1]||s.nm}</td>
+   <td class="muted">${FORMAT_TH[s.format].nm}</td>
+   <td class="num">${s.inv.physical}</td>
+   <td class="num" id="alloc-in-${s.id}">${a.instore}</td>
+   <td class="num" id="alloc-home-${s.id}">${a.tohome}</td>
+   <td><span class="chip ${oosCls}">${fmtVal('oos',s.mts.oos)}</span></td>
+   <td><select class="dk" onchange="changePolicy('${s.id}',this.value)">
+     ${Object.keys(ALLOC_POLICIES).map(k=>`<option value="${k}" ${s.inv.policy===k?'selected':''}>${ALLOC_POLICIES[k]}</option>`).join('')}
+   </select></td>
+  </tr>`;
+ });
+ document.getElementById('allocmx').innerHTML=h+'</tbody>';
+ renderTransfers();
+}
+
+/* 跨店调拨建议 */
+function transferSuggestions(){
+ const stores=storesInScope(); const sug=[];
+ // 缺货店(oos破线)配 富余店(oos达标且实物高)
+ const short=stores.filter(s=>storeGap(s,Q12.find(q=>q.q==='GAP-04')).sev!=='ok').sort((a,b)=>storeGap(b,Q12.find(q=>q.q==='GAP-04')).rate-storeGap(a,Q12.find(q=>q.q==='GAP-04')).rate);
+ const rich=stores.filter(s=>storeGap(s,Q12.find(q=>q.q==='GAP-04')).sev==='ok'&&s.inv.physical>100).sort((a,b)=>b.inv.physical-a.inv.physical);
+ short.forEach(sh=>{const same=rich.find(r=>r.city===sh.city&&r.id!==sh.id)||rich[0];
+  if(same){const qty=Math.min(20,Math.round((same.inv.physical-90)/2));if(qty>=5)sug.push({from:same.id,from_nm:same.nm,to:sh.id,to_nm:sh.nm,qty});}});
+ return sug.slice(0,3);
+}
+function renderTransfers(){
+ const sug=transferSuggestions(); const box=document.getElementById('transferbox');
+ if(!sug.length){box.innerHTML='<div class="okbox" style="margin-top:10px">范围内无需跨店调拨:缺货门店可由本地补货覆盖。</div>';return;}
+ box.innerHTML='<div style="margin-top:12px;font-weight:700;font-size:11.5px;color:var(--amber)">跨店调拨建议</div>'+
+  sug.map((t,i)=>`<div class="ckrow" style="margin-top:7px">
+    <div class="info"><div class="a">${t.from_nm.split('·')[1]} → ${t.to_nm.split('·')[1]}</div>
+    <div class="b">调 ${t.qty} 件 · 缓解到家缺货</div></div>
+    <button class="btn sm ${WHO.can_transfer?'':'dk'}" ${WHO.can_transfer?'':'disabled title=\"无调拨权限\"'} onclick="doTransfer('${t.from}','${t.to}',${t.qty})">执行调拨</button>
+   </div>`).join('');
+}
+
+/* 多Gap冲突工作区 */
+function detectConflicts(){
+ const stores=storesInScope(); const out=[];
+ stores.forEach(s=>{
+  const oos=storeGap(s,Q12.find(q=>q.q==='GAP-04')); // 缺货
+  const near=storeGap(s,Q12.find(q=>q.q==='GAP-12')); // 临期(周转恶化)
+  const avail=storeGap(s,Q12.find(q=>q.q==='GAP-11')); // 会员可得
+  const hits=[];
+  if(oos.sev==='crit'||oos.sev==='bad')hits.push('缺货');
+  if(near.sev==='crit'||near.sev==='bad')hits.push('临期滞销');
+  if(avail.sev==='bad'||avail.sev==='crit')hits.push('会员可得不足');
+  if(hits.length>=2)out.push({store:s.id,store_nm:s.nm,hits,
+   recommend: hits.includes('临期滞销')?'near_expiry_first':(hits.includes('会员可得不足')?'vip_reserve':'dual_dynamic')});
+ });
+ return out;
+}
+function renderConflicts(){
+ const cf=detectConflicts(); const box=document.getElementById('conflictbox');
+ if(!cf.length){box.innerHTML='<div class="okbox">范围内无库存三方冲突。缺货、周转、临期三目标当前不打架。</div>';return;}
+ box.innerHTML=cf.map(c=>{const done=ST.conflictResolutions[c.store];
+  return `<div class="ckrow" style="display:block">
+   <div style="display:flex;align-items:center;gap:8px"><span class="a" style="font-weight:700">${c.store_nm.split('·')[1]}</span>
+    ${c.hits.map(h=>`<span class="chip bad">${h}</span>`).join('')}</div>
+   <div class="b" style="margin:6px 0">三方目标冲突 → 建议策略：<b style="color:var(--amber)">${ALLOC_POLICIES[c.recommend]}</b></div>
+   ${done?`<div class="okbox">已消解 → 采用 ${ALLOC_POLICIES[done]}</div>`:
+    `<button class="btn sm" onclick="resolveConflict('${c.store}','${c.recommend}')">采纳建议策略并消解</button>`}
+  </div>`;
+ }).join('');
+}
+
+/* 批量审批舱 */
+function renderApprove(){
+ const box=document.getElementById('approvebox');
+ const pend=ST.decisions.filter(d=>d.status==='pending'&&inScope(d.store));
+ if(!pend.length){box.innerHTML='<div class="okbox">审批池为空:当前范围无待批关差任务。可在热力矩阵点格生成。</div>';
+  document.getElementById('apvtag').textContent='0 待批';return;}
+ document.getElementById('apvtag').textContent=pend.length+' 待批';
+ let h=`<div style="font-size:10.5px;color:var(--mut);margin-bottom:8px">审批人=<b style="color:var(--tx)">${WHO.nm}</b> · 单笔上限 ¥${WHO.maxAmt.toLocaleString()} · 提案人≠审批人（职责分离）</div>`;
+ pend.forEach(d=>{
+  const selfProp=(d.proposer===WHO.post);
+  const overCap=(d.cost>WHO.maxAmt);
+  const noPerm=!WHO.can_approve;
+  const blocked=selfProp||overCap||noPerm;
+  h+=`<div class="ckrow">
+   <input type="checkbox" ${blocked?'disabled':''} data-did="${d.did}" class="apvck" onchange="renderApproveFooter()">
+   <div class="info"><div class="a">${d.store_nm.split('·')[1]} · ${d.q_nm} <span class="chip ${d.sev==='crit'?'crit':'bad'}" style="margin-left:4px">${d.sev}</span></div>
+    <div class="b">${d.measure} · 提案:${postNm(d.proposer)}${blocked?' · <span style="color:var(--bad)">'+(selfProp?'不可自批':overCap?'超审批上限':'无审批权')+'</span>':''}</div></div>
+   <div class="amt">¥${d.cost.toLocaleString()}</div>
+  </div>`;
+ });
+ h+=`<div id="apvfooter" style="margin-top:10px"></div>`;
+ box.innerHTML=h; renderApproveFooter();
+}
+function postNm(p){return {store_mgr:'店长',o2o_ops:'O2O运营',city_mgr:'城市经理',region_dir:'区域总监',hq:'总部'}[p]||p;}
+function renderApproveFooter(){
+ const cks=[...document.querySelectorAll('.apvck:checked')];
+ const dids=cks.map(c=>c.dataset.did);
+ const sum=dids.reduce((a,did)=>a+(ST.decisions.find(d=>d.did===did)||{cost:0}).cost,0);
+ const remain=ST.budgetPool.total-ST.budgetPool.allocated;
+ const over=sum>remain;
+ const f=document.getElementById('apvfooter'); if(!f)return;
+ f.innerHTML=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+   <span class="muted">已选 ${dids.length} 笔 · 合计 <b class="num" style="color:var(--amber)">¥${sum.toLocaleString()}</b> / 余额 ¥${remain.toLocaleString()}</span>
+   <button class="btn ${(!dids.length||over)?'':''}" ${(!dids.length||over)?'disabled':''} onclick="batchApprove()">批量批准并扣预算</button>
+  </div>${over?`<div class="warnbox">合计超出预算池余额，预算闸拦截。请减少勾选或先补预算。</div>`:''}`;
+}
+
+/* 预算舱 */
+function renderBudget(){
+ const box=document.getElementById('budgetbox');
+ const bp=ST.budgetPool, remain=bp.total-bp.allocated;
+ // 建议分配:对范围内 pending 决策按 impact×(1)×成功率(0.7) 归一化
+ const pend=ST.decisions.filter(d=>d.status==='pending'&&inScope(d.store));
+ const scored=pend.map(d=>({d,score:d.impact*0.7})).sort((a,b)=>b.score-a.score);
+ const tot=scored.reduce((a,x)=>a+x.score,0)||1;
+ let h=`<div class="grid3" style="margin-bottom:12px">
+   <div class="kpi"><span class="l">预算池</span><span class="v num">¥${(bp.total/10000).toFixed(1)}w</span></div>
+   <div class="kpi"><span class="l">已分配</span><span class="v num">¥${(bp.allocated/10000).toFixed(1)}w</span></div>
+   <div class="kpi"><span class="l">余额</span><span class="v num" style="color:var(--amber)">¥${(remain/10000).toFixed(1)}w</span></div>
+  </div>`;
+ if(scored.length){
+  h+='<table class="tbl"><thead><tr><th>门店·问</th><th>影响金额</th><th>建议配额</th></tr></thead><tbody>';
+  scored.slice(0,6).forEach(x=>{const sug=Math.round(remain*(x.score/tot)/50)*50;
+   h+=`<tr><td>${x.d.store_nm.split('·')[1]}·${x.d.q_nm}</td><td class="num">¥${x.d.impact.toLocaleString()}</td>
+    <td class="num" style="color:var(--amber)">¥${sug.toLocaleString()}</td></tr>`;});
+  h+='</tbody></table>';
+ }else h+='<div class="okbox">无待分配关差任务。</div>';
+ if(bp.items.length){h+=`<div style="margin-top:10px;font-size:10.5px;color:var(--mut)">已批扣预算 ${bp.items.length} 笔</div>`;}
+ box.innerHTML=h;
+}
+
+/* 验果 */
+function renderVerify(){
+ const box=document.getElementById('verifybox');
+ const approved=ST.decisions.filter(d=>d.status==='approved');
+ const v=ST.verify;
+ let h=`<div style="font-size:11.5px;color:var(--mut);margin-bottom:10px">
+   已批准并执行 <b style="color:var(--tx)">${approved.length}</b> 项关差举措。推进一周期 → 对已批门店的对应问指标改善 → 看城市/区域上层标是否动。</div>`;
+ if(v.last_cycle){
+  h+=`<div class="${v.effective?'okbox':'warnbox'}">
+    上周期 ${v.last_cycle}：${v.effective?'✓ 上层标已动（验果有效）':'⚠ 上层标未动（验果无效·关差升一层）'} · 综合达标 ${pct(v.comp_before)} → <b>${pct(v.comp_after)}</b></div>`;
+ }
+ h+=`<div style="margin-top:12px"><button class="btn ${approved.length&&WHO.can_activate?'':''}" ${approved.length&&WHO.can_activate?'':'disabled'} onclick="advanceCycle()">推进一周期并验果</button>
+   ${!WHO.can_activate?'<span class="muted" style="margin-left:10px">当前角色无激活权限</span>':''}</div>`;
+ box.innerHTML=h;
+}
+
+function renderAll(){
+ renderHeaderBits();renderTree();renderCascade();renderKpi();renderMatrix();
+ renderLedgerStrip();renderAlloc();renderConflicts();renderApprove();renderBudget();renderVerify();
+}
+
+/* ═══════════════ 交互(真点击真改状态) ═══════════════ */
+function setScope(level,id){ST.scope={level,id};SS.save();renderAll();
+ showToast('范围切至 <b>'+scopeName()+'</b>');}
+
+function drillCell(storeId,qid){
+ const s=ST.stores.find(x=>x.id===storeId), qq=Q12.find(x=>x.q===qid), g=storeGap(s,qq);
+ const exist=ST.decisions.find(d=>d.store===storeId&&d.q===qid&&d.status==='pending');
+ document.getElementById('drawerhead').innerHTML=
+  `<div><div style="font-weight:800">${s.nm}</div><div style="font-size:10.5px;color:var(--mut)">${qq.nm} · ${LEDGERS[qq.ledger]} · ${qq.sev}</div></div>
+   <button class="x" onclick="closeDrawer()">×</button>`;
+ const th=FORMAT_TH[s.format];
+ document.getElementById('drawerbody').innerHTML=`
+  <div class="deffield"><span class="k">业态红线（定标↓）</span><span class="v">${fmtVal(qq.key,g.target)} ${qq.dir==='gte'?'下限':'上限'}</span></div>
+  <div class="deffield"><span class="k">门店实际（量实↑）</span><span class="v">${fmtVal(qq.key,g.actual)}</span></div>
+  <div class="deffield"><span class="k">差值（算差）</span><span class="v" style="color:${sevColor(g.sev)}">${g.sev==='ok'?'达标':fmtVal(qq.key,g.gap)+' · '+pct(g.rate)}</span></div>
+  <div class="deffield"><span class="k">严重度</span><span class="v"><span class="chip ${g.sev==='ok'?'ok':g.sev==='warn'?'warn':g.sev==='crit'?'crit':'bad'}">${({ok:'达标',warn:'预警',bad:'破线',crit:'严重'})[g.sev]}</span></span></div>
+  <div class="deffield"><span class="k">可恢复影响金额</span><span class="v" style="color:var(--amber)">¥${g.impact.toLocaleString()}</span></div>
+  <div class="deffield"><span class="k">建议举措</span><span class="v" style="max-width:200px;text-align:right">${suggestMeasure(qq)}</span></div>
+  <div class="deffield"><span class="k">生命周期</span><span class="v">${s.stage} · ${th.nm}</span></div>
+  <div style="margin-top:16px">
+   ${g.sev==='ok'?'<div class="okbox">该问已达标，无需生成关差任务。</div>':
+     exist?'<div class="warnbox">该门店该问已有待批关差任务（'+exist.did+'）在审批池。</div>':
+     `<button class="btn" style="width:100%" onclick="genGapTask('${storeId}','${qid}')">生成关差任务 → 入审批池</button>`}
+  </div>
+  <div style="margin-top:14px;font-size:10px;color:var(--mut)">连接律：此门店的关差一旦关闭，其贡献汇入城市层实际（量实↑）；关不了则升城市层。</div>`;
+ openDrawer();
+}
+function openDrawer(){document.getElementById('drawer').classList.add('show');document.getElementById('mask').classList.add('show');}
+function closeDrawer(){document.getElementById('drawer').classList.remove('show');document.getElementById('mask').classList.remove('show');}
+
+function genGapTask(storeId,qid){
+ const s=ST.stores.find(x=>x.id===storeId), qq=Q12.find(x=>x.q===qid), g=storeGap(s,qq);
+ if(g.sev==='ok'){showToast('该问已达标，未生成任务。');return;}
+ if(ST.decisions.find(d=>d.store===storeId&&d.q===qid&&d.status==='pending')){showToast('已存在待批任务。');return;}
+ const d=mkDecision(s,qq,g,false); ST.decisions.unshift(d);
+ audit('gap_task','生成关差任务 '+d.did+' · '+s.nm+' · '+qq.nm);
+ SS.save(); renderAll(); closeDrawer();
+ showToast('已生成关差任务 <b>'+d.did+'</b> · 入审批池 ¥'+d.cost.toLocaleString());
+}
+
+function changePolicy(storeId,pol){
+ const s=ST.stores.find(x=>x.id===storeId); const before=s.inv.policy;
+ const a0=availSplit(s); s.inv.policy=pol; const a1=availSplit(s);
+ // 页面即时更新两列(跨面板同源)
+ const cin=document.getElementById('alloc-in-'+storeId), chome=document.getElementById('alloc-home-'+storeId);
+ if(cin)cin.textContent=a1.instore; if(chome)chome.textContent=a1.tohome;
+ audit('policy','策略 '+s.nm+' '+ALLOC_POLICIES[before]+'→'+ALLOC_POLICIES[pol]);
+ SS.save(); renderConflicts();
+ showToast('<b>'+s.nm.split('·')[1]+'</b> 分配策略 → '+ALLOC_POLICIES[pol]+' · 到店 '+a1.instore+' / 到家 '+a1.tohome);
+}
+
+function doTransfer(fromId,toId,qty){
+ if(!WHO.can_transfer){showToast('当前角色无跨店调拨权限。');return;}
+ const from=ST.stores.find(s=>s.id===fromId), to=ST.stores.find(s=>s.id===toId);
+ if(from.inv.physical-qty<60){showToast('调出后低于安全库存，调拨拦截。');return;}
+ from.inv.physical-=qty; from.inv.backroom=Math.max(0,from.inv.physical-from.inv.shelf);
+ to.inv.physical+=qty; to.inv.backroom=Math.max(0,to.inv.physical-to.inv.shelf);
+ // 缺货率随实物改善
+ to.mts.oos=roundMetric('oos',Math.max(0.01,to.mts.oos*(1-qty/(to.inv.physical+qty))));
+ ST.transfers.unshift({from:fromId,to:toId,qty,at:Date.now(),by:WHO.post});
+ audit('transfer','跨店调拨 '+from.nm+'→'+to.nm+' '+qty+'件');
+ SS.save(); renderAll();
+ showToast('已执行调拨 <b>'+from.nm.split('·')[1]+' → '+to.nm.split('·')[1]+'</b> '+qty+' 件 · 到家缺货缓解');
+}
+
+function resolveConflict(storeId,pol){
+ const s=ST.stores.find(x=>x.id===storeId); s.inv.policy=pol; ST.conflictResolutions[storeId]=pol;
+ audit('conflict','冲突消解 '+s.nm+' → '+ALLOC_POLICIES[pol]);
+ SS.save(); renderAlloc(); renderConflicts();
+ showToast('冲突已消解 · <b>'+s.nm.split('·')[1]+'</b> 采用 '+ALLOC_POLICIES[pol]);
+}
+
+/* 批量审批:职责分离 + 预算闸 + 乐观锁 */
+function batchApprove(){
+ const cks=[...document.querySelectorAll('.apvck:checked')];
+ const dids=cks.map(c=>c.dataset.did);
+ if(!dids.length){showToast('未勾选任何关差任务。');return;}
+ if(!WHO.can_approve){showToast('当前角色无审批权限。');return;}
+ const sel=dids.map(did=>ST.decisions.find(d=>d.did===did)).filter(Boolean);
+ // 职责分离
+ const selfProp=sel.filter(d=>d.proposer===WHO.post);
+ if(selfProp.length){showToast('职责分离拦截:含 '+selfProp.length+' 笔自提案，不可自批。');return;}
+ // 上限
+ const overCap=sel.filter(d=>d.cost>WHO.maxAmt);
+ if(overCap.length){showToast('超审批上限拦截:'+overCap.length+' 笔超 ¥'+WHO.maxAmt.toLocaleString()+'。');return;}
+ // 乐观锁:版本一致
+ const stale=sel.filter(d=>d.base_version!==ST.meta.ver);
+ if(stale.length){showToast('乐观锁409:'+stale.length+' 笔版本过期，请刷新后重试。');return;}
+ // 预算闸
+ const sum=sel.reduce((a,d)=>a+d.cost,0), remain=ST.budgetPool.total-ST.budgetPool.allocated;
+ if(sum>remain){showToast('预算闸拦截:合计 ¥'+sum.toLocaleString()+' 超余额 ¥'+remain.toLocaleString()+'。');return;}
+ // 通过 → 批准 + 扣预算 + 版本+1
+ sel.forEach(d=>{d.status='approved';d.approved_by=WHO.post;d.approved_at=Date.now();
+  ST.budgetPool.items.push({did:d.did,cost:d.cost}); ST.budgetPool.allocated+=d.cost;});
+ ST.meta.ver++;
+ audit('batch_approve','批量批准 '+sel.length+' 笔 · 扣预算 ¥'+sum.toLocaleString());
+ SS.save(); renderAll();
+ showToast('已批准 <b>'+sel.length+'</b> 笔关差任务 · 扣预算 ¥'+sum.toLocaleString()+' · 版本→v'+ST.meta.ver);
+}
+
+/* 推进一周期并验果 */
+function advanceCycle(){
+ const approved=ST.decisions.filter(d=>d.status==='approved');
+ if(!approved.length){showToast('无已批举措，无法推进验果。');return;}
+ if(!WHO.can_activate){showToast('当前角色无激活权限。');return;}
+ const compBefore=compliance(ST.stores);
+ // 对已批门店的对应问指标改善(mock执行生效)
+ approved.forEach(d=>{const s=ST.stores.find(x=>x.id===d.store), qq=Q12.find(x=>x.q===d.q);if(!s||!qq)return;
+  const k=qq.key, th=FORMAT_TH[s.format], target=(k==='impression')?45000:(k==='nearexp'?0.10:th[k]);
+  // 向目标收敛 60%
+  const cur=s.mts[k], nv= cur + (target-cur)*0.6;
+  s.mts[k]=roundMetric(k,nv);
+  d.status='verified';
+ });
+ const compAfter=compliance(ST.stores);
+ const moved=compAfter>compBefore+0.005; // 上层标动没动
+ const newCycle=nextCycleId(ST.meta.cycle);
+ ST.verify={last_cycle:ST.meta.cycle, effective:moved, comp_before:compBefore, comp_after:compAfter};
+ ST.meta.cycle=newCycle; ST.meta.ver++;
+ audit('verify','推进周期→'+newCycle+' · 达标 '+pct(compBefore)+'→'+pct(compAfter)+' · '+(moved?'上层标动(有效)':'未动(升一层)'));
+ SS.save(); renderAll();
+ showToast(moved?('验果<b>有效</b>:上层标已动 '+pct(compBefore)+'→'+pct(compAfter)+' · 进入 '+newCycle)
+                :('验果<b>无效</b>:上层标未动，关差升一层 · 进入 '+newCycle));
+}
+function nextCycleId(c){const m=c.match(/W(\d+)/);const w=m?+m[1]+1:29;return c.replace(/W\d+/,'W'+w);}
+
+/* 重置(演示用) */
+function resetDeck(){localStorage.removeItem(SS_KEY);SS.load();renderAll();showToast('已重置为初始假水。');}
+
+/* ═══ 启动 ═══ */
+SS.load();
+renderAll();
+showToast('门店O2O 驾驶舱 <b>V1.0-trial</b> 已装载假水 · '+ST.stores.length+' 店 × 12 问 · 角色 '+WHO.nm);
+window.__deck={get ST(){return ST},storeGap,rollupMetric,availSplit,compliance,detectConflicts,transferSuggestions};
+</script>
+</body>
+</html>
