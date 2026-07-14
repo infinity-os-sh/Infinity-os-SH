@@ -1,0 +1,154 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>INFINITY OS · 门店O2O 执行端 V0.8.1</title>
+<!-- WP-14 移动执行端·五问 · 同源:<script src="so2corev81.js"> 与经营端/PC同一 Shared Core(非复制HTML) -->
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#1c2230;--line:#2a3140;--ink:#e6edf3;--mute:#8b949e;--amber:#f0a022;--green:#3fb950;--red:#f85149;--blue:#58a6ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;font-size:15px;line-height:1.5;padding-bottom:80px}
+.hd{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#11161d,#0d1117);border-bottom:1px solid var(--line);padding:11px 14px}
+.hd h1{margin:0;font-size:16px}.hd h1 b{color:var(--amber)}
+.hd .sub{font-size:11px;color:var(--mute);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.st{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.stok{background:var(--green)}.stwarn{background:var(--amber)}.stbad{background:var(--red)}
+.banner{margin:10px 14px;padding:8px 11px;border-radius:8px;font-size:12.5px;border:1px solid}
+.bwarn{background:rgba(240,160,34,.12);border-color:var(--amber);color:var(--amber)}
+.bbad{background:rgba(248,81,73,.12);border-color:var(--red);color:var(--red)}
+.seg{display:flex;gap:6px;padding:10px 14px 4px;overflow-x:auto}
+.seg button{flex:none;font-size:12.5px;border:1px solid var(--line);background:#0d1117;color:var(--mute);border-radius:16px;padding:5px 13px}
+.seg button.on{background:var(--amber);color:#111;border-color:var(--amber);font-weight:600}
+.list{padding:6px 14px}
+.task{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:11px}
+.task .tt{font-size:14.5px;font-weight:600;margin-bottom:5px}
+.q{border-left:2px solid var(--line);padding:5px 0 5px 9px;margin:7px 0;font-size:12px}
+.q b{display:block;color:var(--amber);font-size:11px;margin-bottom:2px;font-weight:600}
+.q.q1{border-color:var(--amber)}.q.q2{border-color:var(--blue)}.q.q3{border-color:#8957e5}.q.q4{border-color:var(--green)}.q.q5{border-color:var(--mute)}
+.meta{font-size:11.5px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 10px;margin-bottom:6px}
+.meta b{color:var(--ink);font-weight:500}
+.badge{display:inline-block;font-size:10.5px;padding:1px 8px;border-radius:10px;border:1px solid var(--line)}
+.b-CREATED{color:var(--mute)}.b-ACCEPTED{color:var(--blue);border-color:var(--blue)}
+.b-IN_PROGRESS,.b-SUBMITTED{color:var(--amber);border-color:var(--amber)}
+.b-PENDING_REVIEW{color:var(--blue);border-color:var(--blue)}
+.b-REVIEWED,.b-EFFECTIVE{color:var(--green);border-color:var(--green)}
+.b-REJECTED{color:var(--red);border-color:var(--red)}.b-PAUSED{color:var(--mute)}
+.act{width:100%;font-size:15px;font-weight:600;border:none;border-radius:9px;padding:12px;margin-top:7px;background:var(--amber);color:#111}
+.act.sec{background:#0d1117;color:var(--ink);border:1px solid var(--line);font-weight:500}
+.act:disabled{opacity:.4}
+.ev{font-size:11px;color:var(--mute);background:#0d1117;border:1px solid var(--line);border-radius:7px;padding:7px 9px;margin-top:7px;word-break:break-all}
+.ev b{color:var(--green)}
+.empty{text-align:center;color:var(--mute);padding:40px 20px;font-size:13px}
+.foot{padding:14px;color:var(--mute);font-size:11px;border-top:1px solid var(--line);margin:14px}
+#tw{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:90%}
+#tw .t{background:#11161d;border:1px solid var(--amber);color:var(--ink);border-radius:8px;padding:10px 14px;font-size:13px;box-shadow:0 6px 20px #0009;text-align:center}
+</style></head>
+<body>
+<div class="hd"><h1><b>INFINITY OS</b> · 门店O2O 执行端</h1><div class="sub" id="sub"></div></div>
+<div id="banner"></div>
+<div class="seg" id="seg"></div>
+<div class="list" id="list"></div>
+<div class="foot" id="foot"></div>
+<div id="tw"></div>
+<script src="so2corev81.js"></script>
+<script>
+"use strict";
+const C=window.SO2Core;               /* 唯一状态源:与经营端/PC同一 Shared Core */
+const QS=new URLSearchParams(location.search);
+const SR=QS.get('sr')||'SR-7301';
+const WHO=C.POSTS[SR]||C.POSTS['SR-7301'];
+C.load();
+function toast(m){const w=document.getElementById('tw');const d=document.createElement('div');d.className='t';d.textContent=m;w.appendChild(d);setTimeout(()=>d.remove(),2600);}
+const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const pct=v=>(v==null?'—':(Math.abs(v)<1&&v!==0?(v*100).toFixed(1)+'%':(+v).toFixed(2)));
+
+/* 首次进入:若无任务,经 Task Factory 播种当前周期任务(同源结构·非旁路) */
+function seedTasks(){const S=C.ST;
+ if(S.tasks.some(t=>t.cycle_id===S.meta.cycle))return;
+ [{tpl:'TK-04a1',tt:'门店补货到目标库存',own:'store_mgr',sop:'SOP-RESTOCK',pri:'P0',gap:'GAP-STO-04',
+   why:'缺货率11%超红线5%·根因=补货不及时·影响收入¥72k',
+   steps:['后仓点数核对系统库存','按补货单补至目标库存','货架排面复核','拍照上传证据'],
+   ac:'补货到位·货架有货·照片证据齐·SLA内完成'},
+  {tpl:'TK-04b1',tt:'临期库存优先清仓',own:'o2o_ops',sop:'SOP-NEAREXP',pri:'P1',gap:'GAP-STO-04',
+   why:'临期封锁60件占用可售·影响缺货率与损耗',
+   steps:['导出临期清单','按近效期优先上架','设置临期标价','同步线上可售'],
+   ac:'临期动销·无过期上架·可售同步'},
+  {tpl:'TK-M1',tt:'货架排面复核+陈列达标',own:'store_mgr',sop:'SOP-SHELF',pri:'P1',gap:'GAP-STO-05A',
+   why:'排面达成82%低于目标90%·陈列不达标拉低转化',
+   steps:['对照陈列标准检查排面','补齐缺失SKU','正面朝外整理','拍照上传'],
+   ac:'排面≥标准·陈列合规·照片证据'}
+ ].forEach(d=>{
+  C.taskFactory({source:'store_plan',task_template_id:d.tpl,objective_id:d.gap,owner_id:d.own,tt:d.tt,
+   sop:d.sop,sop_steps:d.steps,priority:d.pri,why:d.why,acceptance_criteria:d.ac,
+   result_metric_ids:[S.gaps.find(g=>g.gap_id===d.gap).actual_key]});});
+ C.save();}
+
+let TAB='mine';
+const TABS=[['mine','今天做什么'],['review','待我背书'],['all','全部']];
+function mine(t){return t.owner_id===WHO.post&&!t.archived;}
+function visible(){const S=C.ST;
+ if(TAB==='mine')return S.tasks.filter(t=>mine(t)&&!['REVIEWED','CLOSED','REJECTED'].includes(C.normTaskState(t.status)));
+ if(TAB==='review')return S.tasks.filter(t=>C.normTaskState(t.status)==='PENDING_REVIEW');
+ return S.tasks.filter(t=>!t.archived);}
+
+/* 五问:今天做什么 / 为什么做 / 怎么做 / 什么标准 / 结果怎样 */
+function fiveQ(t){const S=C.ST;
+ const g=S.gaps.find(x=>x.gap_id===t.objective_id);
+ const c=g?C.calcGap(g):null;
+ const st=C.normTaskState(t.status);
+ const res=S.resultLedger.find(r=>r.gap_id===t.objective_id&&r.cycle_id===S.meta.cycle);
+ const verdict=res?C.judgeEffectiveByResult(t.objective_id):null;
+ return `
+ <div class="q q1"><b>① 今天做什么</b>${esc(t.tt)} · 优先级 ${esc(t.priority)} · 截止 ${esc(t.due_at)}</div>
+ <div class="q q2"><b>② 为什么做</b>${esc(t.why||'—')}${g?(' · 目标 '+pct(g.target.v)+' / 实际 '+pct(g.actual)+(c?' · '+(c.met?'达标':c.sev):'')):''}</div>
+ <div class="q q3"><b>③ 怎么做(SOP ${esc(t.sop)})</b>${(t.sop_steps&&t.sop_steps.length)?t.sop_steps.map((s,i)=>(i+1)+'. '+esc(s)).join('<br>'):'—'}<br><span style="color:var(--mute)">安全提示:补货前核对效期·先进先出</span></div>
+ <div class="q q4"><b>④ 做到什么标准</b>${esc(t.acceptance_criteria)}<br><span style="color:var(--mute)">证据要求:现场照片(含Hash)· 守线:不得挤占临期动销</span></div>
+ <div class="q q5"><b>⑤ 结果怎么样</b>${st==='REVIEWED'?'主管已验收':(st==='PENDING_REVIEW'?'待主管验收':'执行中')} · ${verdict?('经营结果:'+(verdict.effective?'<span style="color:var(--green)">有效(主指标达标+守线未破)</span>':'<span style="color:var(--amber)">未判有效:'+esc(verdict.reason)+'</span>')):'<span style="color:var(--mute)">待结果账(任务完成≠经营有效)</span>'}</div>`;}
+
+function actLabel(t){const st=C.normTaskState(t.status);
+ return ({CREATED:'领取任务',ACCEPTED:'开始执行',IN_PROGRESS:'提交完成',SUBMITTED:'附证据送验收',
+  PENDING_REVIEW:WHO.review?'主管背书通过':'待主管验收',REVIEWED:'已验收',REJECTED:'已驳回',PAUSED:'已暂停'})[st]||st;}
+
+function tap(id){const r=C.taskAct(id,SR);
+ if(!r.ok){toast(({CYCLE_MISMATCH:'旧周期任务只读归档·不得在当前周期执行',
+  no_review_permission:'验收须城市经理/总部',separation_of_duties:'职责分离:不得验收本人为Owner的任务',
+  not_owner:'仅 Owner 可操作'})[r.reason]||('拒绝:'+r.reason));render();return;}
+ const st=C.normTaskState(r.task.status);
+ toast(({ACCEPTED:'已领取=接受责任(≠关差)',IN_PROGRESS:'开始执行 · '+r.task.sop+' · SLA '+r.task.due_at,
+  SUBMITTED:'已提交 → 附证据后送验收',
+  PENDING_REVIEW:'证据Artifact已附('+(r.task.evidence?r.task.evidence.files[0].hash:'')+')→ 待主管背书',
+  REVIEWED:'主管背书通过 → REVIEWED'})[st]||st);
+ render();}
+
+function render(){const S=C.ST;const a=S.agent;
+ const stc=a.service_status==='normal'?'stok':(a.service_status==='degraded'?'stwarn':'stbad');
+ document.getElementById('sub').innerHTML=`<span><span class="st ${stc}"></span>${esc(WHO.nm)}·${esc(WHO.post)}</span>
+  <span>周期 ${C.cycShort(S.meta.cycle)}</span><span>Agent ${esc(a.service_status)}</span><span>ST-SAM-YP</span>
+  <span style="color:var(--amber)">${esc(S.meta.data_mode)}·${esc(S.meta.maturity)}</span>`;
+ const bn=document.getElementById('banner');
+ if(a.service_status==='human_takeover')bn.innerHTML='<div class="banner bbad">⚠ Agent 人工接管中 · 高风险不可逆自动动作已停止 · 按人工指令执行</div>';
+ else if(a.service_status!=='normal')bn.innerHTML='<div class="banner bwarn">数据质量降级('+esc(a.service_status)+')· 置信下调 · 高风险动作暂停</div>';
+ else bn.innerHTML='';
+ document.getElementById('seg').innerHTML=TABS.map(t=>{
+  const n=t[0]==='mine'?C.ST.tasks.filter(x=>mine(x)&&!['REVIEWED','CLOSED','REJECTED'].includes(C.normTaskState(x.status))).length
+    :(t[0]==='review'?C.ST.tasks.filter(x=>C.normTaskState(x.status)==='PENDING_REVIEW').length:'');
+  return `<button class="${TAB===t[0]?'on':''}" onclick="setTab('${t[0]}')">${t[1]}${n!==''&&n>0?' ('+n+')':''}</button>`;}).join('');
+ const vis=visible();
+ document.getElementById('list').innerHTML=vis.length?vis.map(t=>{
+  const st=C.normTaskState(t.status);
+  const disabled=(t.archived||t.readonly||['REVIEWED','CLOSED','REJECTED','PAUSED'].includes(st)||(st==='PENDING_REVIEW'&&!WHO.review));
+  const ev=t.evidence?`<div class="ev">证据 ${esc(t.evidence.evidence_id)} · <b>hash ${esc(t.evidence.files[0].hash)}</b> · 提交 ${esc(t.evidence.submitted_by)}${t.evidence.reviewed_by?(' · 审核 '+esc(t.evidence.reviewed_by)):''} · SLA ${esc(t.evidence.sla)}${t.evidence.within_sla?'✓':'✗'}</div>`:'';
+  return `<div class="task">
+   <div class="tt">${esc(t.tt)}</div>
+   <div class="meta"><span class="badge b-${st}">${esc(C.TASK_STATE_ZH[st]||st)}</span>
+    <span>Owner <b>${esc(t.owner_id)}</b></span><span>周期 <b>${C.cycShort(t.cycle_id)}</b></span>
+    ${t.reviewer_id?`<span>验收 <b>${esc(t.reviewer_id)}</b></span>`:''}</div>
+   ${fiveQ(t)}${ev}
+   <button class="act ${(st==='CREATED'||(st==='PENDING_REVIEW'&&WHO.review))?'':'sec'}" ${disabled?'disabled':''} onclick="tap('${t.id}')">${actLabel(t)}</button>
+  </div>`;}).join(''):`<div class="empty">${TAB==='review'?'暂无待你背书的任务':'你名下暂无进行中任务'}</div>`;
+ document.getElementById('foot').innerHTML=`storeo2mobilev81 · WP-14 移动执行端·五问 · <b>同源</b>:与经营端/PC加载同一 so2corev81.js(非复制HTML)· Core v${esc(C.CORE_VERSION)} · StateStore v${S.meta.ver} · M1·simulation_only`;
+}
+function setTab(t){TAB=t;render();}
+window.MB={setTab,tap,seedTasks,visible,get C(){return C},get WHO(){return WHO}};
+seedTasks();render();
+toast('执行端 · '+WHO.nm+' · 同源加载 so2corev81.js(Core v'+C.CORE_VERSION+')');
+</script>
+</body></html>

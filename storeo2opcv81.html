@@ -1,0 +1,330 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>INFINITY OS · 门店O2O PC管理端 V0.8.1</title>
+<!-- WP-13 PC管理端·11区 · 同源:<script src="so2corev81.js"> 与经营端/移动端同一 Shared Core(非复制HTML) -->
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#1c2230;--line:#2a3140;--ink:#e6edf3;--mute:#8b949e;--amber:#f0a022;--green:#3fb950;--red:#f85149;--blue:#58a6ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;font-size:13px;line-height:1.5}
+.hd{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#11161d,#0d1117);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.hd h1{margin:0;font-size:15px}.hd h1 b{color:var(--amber)}
+.hd .meta{font-size:11px;color:var(--mute);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.st{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.stok{background:var(--green)}.stwarn{background:var(--amber)}.stbad{background:var(--red)}
+.nav{display:flex;gap:5px;padding:8px 16px;overflow-x:auto;border-bottom:1px solid var(--line);background:#0d1117}
+.nav button{flex:none;font-size:11.5px;border:1px solid var(--line);background:#0d1117;color:var(--mute);border-radius:14px;padding:4px 10px;cursor:pointer}
+.nav button.on{background:var(--amber);color:#111;border-color:var(--amber);font-weight:600}
+.wrap{padding:14px 16px;max-width:1400px}
+.zone{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px;margin-bottom:12px}
+.zone h2{margin:0 0 4px;font-size:13.5px;color:var(--amber)}
+.zone .sub{font-size:11px;color:var(--mute);margin-bottom:9px}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th,td{text-align:left;padding:5px 7px;border-bottom:1px solid var(--line)}
+th{color:var(--mute);font-weight:500}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px}
+.card .k{font-size:10.5px;color:var(--mute)}.card .v{font-size:16px;font-weight:600;margin-top:2px}
+.badge{display:inline-block;font-size:10px;padding:1px 7px;border-radius:9px;border:1px solid var(--line)}
+.p0{color:var(--red);border-color:var(--red)}.p1{color:var(--amber);border-color:var(--amber)}
+.p2{color:var(--blue);border-color:var(--blue)}.met{color:var(--green);border-color:var(--green)}
+button.act{font-size:11px;border:1px solid var(--line);background:#0d1117;color:var(--ink);border-radius:6px;padding:3px 9px;cursor:pointer}
+button.act.pri{background:var(--amber);color:#111;border-color:var(--amber);font-weight:600}
+button.act:disabled{opacity:.4;cursor:not-allowed}
+.tree{font-family:ui-monospace,monospace;font-size:11px;line-height:1.8}
+.tree .lv{color:var(--amber);font-weight:600}
+#tw{position:fixed;right:16px;bottom:16px;z-index:60;display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:none;max-width:380px}
+#tw .t{background:#11161d;border:1px solid var(--amber);color:var(--ink);border-radius:8px;padding:9px 13px;font-size:12px;box-shadow:0 6px 20px #0009}
+.foot{padding:12px 16px;color:var(--mute);font-size:10.5px;border-top:1px solid var(--line)}
+</style></head>
+<body>
+<div class="hd">
+ <h1><b>INFINITY OS</b> · 门店O2O PC管理端 <span style="color:var(--mute);font-weight:400">V0.8.1</span></h1>
+ <div class="meta" id="meta"></div>
+</div>
+<div class="nav" id="nav"></div>
+<div class="wrap" id="wrap"></div>
+<div class="foot" id="foot"></div>
+<div id="tw"></div>
+<script src="so2corev81.js"></script>
+<script>
+"use strict";
+const C=window.SO2Core;               /* 唯一状态源:与经营端/移动端同一 Shared Core */
+const QS=new URLSearchParams(location.search);
+const SR=QS.get('sr')||'SR-7303';
+const WHO=C.POSTS[SR]||C.POSTS['SR-7303'];
+C.load();
+function toast(m){const w=document.getElementById('tw');const d=document.createElement('div');d.className='t';d.textContent=m;w.appendChild(d);setTimeout(()=>d.remove(),2800);}
+const ZONES=[['z1','1 经营总控'],['z2','2 Loop拓扑'],['z3','3 多维下钻'],['z4','4 差距与根因'],['z5','5 一盘货履约'],
+ ['z6','6 主管任务中心'],['z7','7 资源与仲裁'],['z8','8 生命周期Gate'],['z9','9 One ID中心'],['z10','10 验果与学习'],['z11','11 Agent运行中心']];
+let Z='z1';
+const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const pct=v=>(v==null?'—':(Math.abs(v)<1&&v!==0?(v*100).toFixed(1)+'%':(+v).toFixed(2)));
+
+/* ══ 区1 经营总控 ══ */
+function z1(){const S=C.ST;const gs=S.gaps.map(g=>({g,c:C.calcGap(g)}));
+ const p0=gs.filter(x=>x.c.sev==='P0').length,p1=gs.filter(x=>x.c.sev==='P1').length,met=gs.filter(x=>x.c.met).length;
+ const risk=gs.filter(x=>!x.c.met).reduce((s,x)=>s+x.c.impact_revenue,0);
+ const dq=C.dqSixDim();
+ return `<div class="zone"><h2>1 O2O经营总控</h2><div class="sub">目标 / 实际 / 差距 / 风险 / 资源 / 周期</div>
+ <div class="grid">
+  <div class="card"><div class="k">当前周期</div><div class="v">${C.cycShort(S.meta.cycle)}</div></div>
+  <div class="card"><div class="k">P0 / P1 差距</div><div class="v" style="color:var(--red)">${p0}<span style="color:var(--mute);font-size:12px"> / ${p1}</span></div></div>
+  <div class="card"><div class="k">达标 / 总差距</div><div class="v" style="color:var(--green)">${met}<span style="color:var(--mute);font-size:12px"> / ${gs.length}</span></div></div>
+  <div class="card"><div class="k">收入风险敞口</div><div class="v">¥${(risk/1000).toFixed(0)}k</div></div>
+  <div class="card"><div class="k">数据质量六维</div><div class="v" style="color:${dq.status==='trusted'?'var(--green)':'var(--amber)'}">${(dq.score*100).toFixed(0)}</div></div>
+  <div class="card"><div class="k">预算可用</div><div class="v">¥${(S.resources.budget.available/1000).toFixed(0)}k</div></div>
+ </div>
+ <table style="margin-top:10px"><tr><th>差距</th><th>目标</th><th>实际</th><th>严重度</th><th>收入影响</th></tr>
+ ${gs.map(x=>`<tr><td>${esc(x.g.name)}</td><td>${pct(x.g.target.v)}</td><td>${pct(x.g.actual)}</td>
+  <td><span class="badge ${x.c.met?'met':x.c.sev.toLowerCase()}">${x.c.met?'达标':x.c.sev}</span></td>
+  <td>${x.c.met?'—':'¥'+(x.c.impact_revenue/1000).toFixed(0)+'k'}</td></tr>`).join('')}</table></div>`;}
+
+/* ══ 区2 Loop拓扑 ══ */
+function z2(){const S=C.ST;
+ const rows=S.loops.map(l=>`<tr><td><span class="tree lv">${l.absolute_loop_level}</span></td><td>${esc(l.loop_id)}</td>
+  <td>${esc(l.loop_type)}</td><td>${esc(l.parent_loop_id)}</td><td>${esc(l.cycle_id)}</td>
+  <td><span class="badge ${l.status==='closed'?'met':'p2'}">${esc(l.status)}</span></td></tr>`).join('');
+ const orphans=S.loops.filter(l=>l.parent_loop_id!=='L0-ENTERPRISE'&&!S.loops.some(p=>p.loop_id===l.parent_loop_id));
+ return `<div class="zone"><h2>2 Loop拓扑(L1—L4父子/状态/阻断/健康度)</h2>
+ <div class="sub">层级去重叠:channel=L1 · city=L2 · store=L3 · sku/order=L4 · 所有L4可追溯至L∞</div>
+ <div class="tree">L∞ 企业<br>&nbsp;└ <span class="lv">L1</span> LP-CH-01 渠道<br>&nbsp;&nbsp;&nbsp;└ <span class="lv">L2</span> LP-CT-01 城市<br>
+ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└ <span class="lv">L3</span> LP-ST-01 门店<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└ <span class="lv">L4</span> LP-SK-04 SKU → LP-OD-01 订单</div>
+ <table style="margin-top:9px"><tr><th>层级</th><th>Loop</th><th>类型</th><th>父</th><th>周期</th><th>状态</th></tr>${rows}</table>
+ <div class="sub" style="margin-top:7px">孤儿检查:${orphans.length?('<span style="color:var(--red)">发现'+orphans.length+'个孤儿</span>'):'<span style="color:var(--green)">✓ 无孤儿Loop</span>'} · 当前周期开放门店Loop:${S.loops.filter(l=>l.loop_type==='store'&&l.cycle_id===S.meta.cycle&&l.status!=='closed').length}(唯一性)</div></div>`;}
+
+/* ══ 区3 多维下钻 ══ */
+function z3(){const S=C.ST;
+ return `<div class="zone"><h2>3 多维下钻(区域→城市→客户→门店→SKU→订单/任务)</h2>
+ <table><tr><th>层</th><th>对象</th><th>ID</th><th>状态/指标</th></tr>
+ <tr><td>区域</td><td>华东</td><td>RG-East</td><td>—</td></tr>
+ <tr><td>城市</td><td>上海</td><td>CT-SH</td><td>L2 executing</td></tr>
+ <tr><td>客户</td><td>山姆会员店</td><td>CU-SAM</td><td>JBP</td></tr>
+ <tr><td>门店</td><td>山姆会员店杨浦店</td><td>ST-SAM-YP</td><td>L3 ${esc((C.storeLoop()||{}).status||'—')}</td></tr>
+ <tr><td>SKU</td><td>六月鲜500ml</td><td>lyx500</td><td>缺货率 ${pct(S.gaps.find(g=>g.actual_key==='oos').actual)}</td></tr>
+ <tr><td>订单/任务</td><td>本周期任务</td><td>—</td><td>${S.tasks.filter(t=>t.cycle_id===S.meta.cycle).length} 个</td></tr>
+ </table></div>`;}
+
+/* ══ 区4 差距与根因 ══ */
+function z4(){const S=C.ST;
+ const rows=S.gaps.map(g=>{const c=C.calcGap(g);const L=C.traceLineage(g);
+  return `<tr><td>${esc(g.name)}</td><td><span class="badge ${c.met?'met':c.sev.toLowerCase()}">${c.met?'达标':c.sev}</span></td>
+  <td>${esc(g.diag.status)}</td><td>${esc(g.diag.rc_id||'—')}</td><td>${esc(g.diag.confirmed_by||'未确认')}</td>
+  <td>${esc(g.dq)}</td><td>${C.lineageComplete(g)?'<span style="color:var(--green)">完整</span>':'<span style="color:var(--red)">断裂</span>'}</td>
+  <td>${esc(L.rule_version)}</td></tr>`;}).join('');
+ return `<div class="zone"><h2>4 差距与根因(证据/反证/置信度/规则版本/人工确认)</h2>
+ <div class="sub">铁序:先量实→再校准→再算差;根因未确认不得形成执行决策</div>
+ <table><tr><th>差距</th><th>严重度</th><th>诊断</th><th>根因</th><th>人工确认</th><th>DQ</th><th>血缘</th><th>规则版本</th></tr>${rows}</table></div>`;}
+
+/* ══ 区5 一盘货履约 ══ */
+function z5(){const S=C.ST;const i=S.inv;
+ return `<div class="zone"><h2>5 一盘货与履约(可售/锁定/补货/冲突/拣货/配送)</h2>
+ <div class="grid">
+  <div class="card"><div class="k">物理库存</div><div class="v">${i.physical}</div></div>
+  <div class="card"><div class="k">货架 / 后仓</div><div class="v">${i.shelf}<span style="color:var(--mute);font-size:12px"> / ${i.backroom}</span></div></div>
+  <div class="card"><div class="k">线上可售</div><div class="v">${i.online_available}</div></div>
+  <div class="card"><div class="k">已付未拣锁定</div><div class="v">${i.paid_unpicked_lock}</div></div>
+  <div class="card"><div class="k">临期封锁</div><div class="v">${i.near_expiry_block}</div></div>
+  <div class="card"><div class="k">拣货 / 准时</div><div class="v">${pct(S.gaps.find(g=>g.actual_key==='picktime').actual)}<span style="color:var(--mute);font-size:12px"> / ${pct(S.gaps.find(g=>g.actual_key==='ontime').actual)}</span></div></div>
+ </div>
+ <div class="sub" style="margin-top:8px">一致性:后仓 = 物理 − 货架 = ${i.physical-i.shelf}(实际 ${i.backroom})${(i.physical-i.shelf)===i.backroom?' ✓':' ✗冲突'}</div></div>`;}
+
+/* ══ 区6 主管任务中心 ══ */
+function z6(){const S=C.ST;const ts=S.tasks.filter(t=>!t.archived);
+ const rows=ts.length?ts.map(t=>{const st=C.normTaskState(t.status);
+  const canRev=WHO.review&&st==='PENDING_REVIEW'&&t.owner_id!==WHO.post;
+  return `<tr><td>${esc(t.tt)}</td><td>${esc(t.owner_id)}</td><td>${esc(t.due_at)}</td>
+  <td><span class="badge ${st==='REVIEWED'?'met':(st==='PENDING_REVIEW'?'p1':'p2')}">${C.TASK_STATE_ZH[st]||st}</span></td>
+  <td>${t.evidence?('<span style="color:var(--green)">'+esc(t.evidence.files[0].hash)+'</span>'):'—'}</td>
+  <td>${esc(t.risk_owner_id)}</td>
+  <td><button class="act ${canRev?'pri':''}" ${canRev?'':'disabled'} onclick="act('review','${t.id}')">背书</button>
+   <button class="act" ${WHO.review?'':'disabled'} onclick="act('reject','${t.id}')">驳回</button>
+   <button class="act" ${WHO.review?'':'disabled'} onclick="act('reassign','${t.id}')">转派</button>
+   <button class="act" ${WHO.review?'':'disabled'} onclick="act('pause','${t.id}')">暂停</button></td></tr>`;}).join('')
+  :'<tr><td colspan="7" style="color:var(--mute)">暂无任务(经营端派发后此处即见·同源)</td></tr>';
+ return `<div class="zone"><h2>6 主管任务中心(背书/转派/驳回/异常/验收/申诉)</h2>
+ <div class="sub">职责分离:任务Owner与验收人分离 · 当前角色 ${WHO.nm}(${WHO.review?'有验收权':'无验收权'})</div>
+ <table><tr><th>任务</th><th>Owner</th><th>截止</th><th>状态</th><th>证据Hash</th><th>风险Owner</th><th>操作</th></tr>${rows}</table></div>`;}
+
+/* ══ 区7 资源与仲裁 ══ */
+function z7(){const S=C.ST;
+ const led=Object.keys(S.resources).map(k=>{const r=S.resources[k];
+  return `<tr><td>${esc(r.name)}</td><td>${r.total}</td><td>${r.reserved}</td><td>${r.executed}</td><td>${r.available}</td><td>${esc(r.owner)}</td></tr>`;}).join('');
+ const props=S.resourceProposals.slice(0,6).map(p=>`<tr><td>${esc(p.proposal_id)}</td><td>${esc(p.ledger)}</td><td>${p.amount}</td>
+  <td>${esc(p.step)}</td><td>${esc(p.status)}</td><td>${p.arbitration?('L'+p.arbitration.level+'·'+esc(p.arbitration.type)):'—'}</td></tr>`).join('')
+  ||'<tr><td colspan="6" style="color:var(--mute)">暂无提案</td></tr>';
+ return `<div class="zone"><h2>7 资源与仲裁(六本账·申请→授权→预占→核销→验果)</h2>
+ <div class="sub">七步:${C.RES_STEPS.join(' → ')} · 三级仲裁:L1硬拒 / L2目标优化 / L3管理者裁决</div>
+ <table><tr><th>资源账</th><th>总量</th><th>预占</th><th>已执行</th><th>可用</th><th>Owner</th></tr>${led}</table>
+ <div class="sub" style="margin-top:8px">提案流水</div>
+ <table><tr><th>提案</th><th>账</th><th>金额</th><th>步骤</th><th>状态</th><th>仲裁</th></tr>${props}</table>
+ <div style="margin-top:8px"><button class="act pri" onclick="demoRes(false)">提案:高风险不可逆(应L3)</button>
+  <button class="act" onclick="demoRes(true)">提案:小额可逆(应过)</button>
+  <button class="act" onclick="demoRes('over')">提案:超可用(应L1硬拒)</button></div></div>`;}
+
+/* ══ 区8 生命周期Gate ══ */
+function z8(){const stages=['import','growth','mature','decline','renewal','retire'];
+ const rows=stages.map(s=>{const G=C.computeGate(s);
+  return `<tr><td>${esc(s)}</td><td>${esc(G.metric_key)}</td><td>${pct(G.current)}</td><td>${pct(G.threshold)}</td>
+  <td>${G.sample_size}</td><td>${esc(G.dq)}</td><td>${G.lineage_complete?'✓':'✗'}</td>
+  <td>${esc(G.rule_id)}·${esc(G.rule_version)}</td>
+  <td><span class="badge ${G.gate_pass?'met':'p1'}">${G.gate_pass?'过闸':'不过'}</span></td>
+  <td style="font-size:10.5px;color:var(--mute)">${esc(G.resource_consequence)}</td></tr>`;}).join('');
+ return `<div class="zone"><h2>8 生命周期Gate(阶段/当前值/阈值/证据/资源后果)</h2>
+ <div class="sub">事实驱动·无硬编码true · 血缘链断裂→不得形成最终判断</div>
+ <table><tr><th>阶段</th><th>主指标</th><th>当前</th><th>阈值</th><th>样本</th><th>DQ</th><th>血缘</th><th>规则</th><th>判定</th><th>资源后果</th></tr>${rows}</table></div>`;}
+
+/* ══ 区9 One ID中心 ══ */
+function z9(){const S=C.ST;
+ const m=S.oneid.master.map(x=>`<tr><td>${esc(x.type)}</td><td>${esc(x.id)}</td><td>${esc(x.canonical)}</td></tr>`).join('');
+ const mp=S.oneid.mappings.map(x=>`<tr><td>${esc(x.master_id)}</td><td>${esc(x.platform)}</td><td>${esc(x.raw_id)}</td>
+  <td>${esc(x.match_method)}</td><td>${x.confidence_score}</td><td>${esc(x.consent_status)}</td><td>${esc(x.effective_from)}→${x.effective_to||'∞'}</td></tr>`).join('');
+ const cs=S.oneid.consumers.map(x=>`<tr><td>${esc(x.consumer_id)}</td><td><span class="badge ${x.identity_level==='A'?'met':'p1'}">${x.identity_level}</span></td>
+  <td>${esc(x.match_method)}</td><td>${x.confidence_score}</td><td>${esc(x.consent_status)}</td><td>${esc(C.idDisplay(x.consumer_id))}</td></tr>`).join('');
+ return `<div class="zone"><h2>9 One ID中心(主ID/平台映射/可信度/授权/冲突)</h2>
+ <div class="sub">16类核心企业ID目录 · B/C级不得显示为确定身份</div>
+ <table><tr><th>类型</th><th>主ID</th><th>规范名</th></tr>${m}</table>
+ <div class="sub" style="margin-top:8px">平台映射(含生失效时间)</div>
+ <table><tr><th>主ID</th><th>平台</th><th>平台ID</th><th>方法</th><th>置信</th><th>授权</th><th>生失效</th></tr>${mp}</table>
+ <div class="sub" style="margin-top:8px">消费者识别分级</div>
+ <table><tr><th>ID</th><th>分级</th><th>方法</th><th>置信</th><th>授权</th><th>展示</th></tr>${cs}</table></div>`;}
+
+/* ══ 区10 验果与学习 ══ */
+function z10(){const S=C.ST;
+ const rl=S.resultLedger.slice(0,6).map(r=>`<tr><td>${esc(r.result_id)}</td><td>${esc(r.gap_id)}</td><td>${esc(r.metric_id)}</td>
+  <td>${pct(r.value_before)}→${pct(r.value_after)}</td><td>${r.delta}</td><td>${r.guard_broken?'<span style="color:var(--red)">破线</span>':'守线'}</td></tr>`).join('')
+  ||'<tr><td colspan="6" style="color:var(--mute)">暂无结果账(任务完成≠经营有效·须结果账主指标达标)</td></tr>';
+ const ln=S.learning.slice(0,6).map(l=>`<tr><td>${esc(l.learning_id)}</td><td><span class="badge ${l.result==='effective'?'met':'p1'}">${esc(l.result)}</span></td>
+  <td>${esc(l.applicable)}</td><td>${esc(l.not_applicable)}</td><td>${l.cost}</td><td>${l.benefit}</td><td>${esc(l.rule_version_from)}→${esc(l.rule_version_to)}</td></tr>`).join('')
+  ||'<tr><td colspan="7" style="color:var(--mute)">暂无学习记录(有效/无效都必须留·失败不得删除)</td></tr>';
+ return `<div class="zone"><h2>10 验果与学习(结果账/实验/学习/规则版本/回滚)</h2>
+ <div class="sub">任务完成≠经营有效:只有结果账主指标达标且守线未破才判有效</div>
+ <table><tr><th>结果</th><th>差距</th><th>指标</th><th>前→后</th><th>Δ</th><th>守线</th></tr>${rl}</table>
+ <div class="sub" style="margin-top:8px">Learning Record(不可删除)</div>
+ <table><tr><th>ID</th><th>结果</th><th>适用</th><th>不适用</th><th>成本</th><th>收益</th><th>规则版本</th></tr>${ln}</table>
+ <div style="margin-top:8px"><button class="act pri" onclick="demoResult('met')">记结果账:达标(应有效)</button>
+  <button class="act" onclick="demoResult('improved')">改善但未达标(应无效)</button>
+  <button class="act" onclick="demoResult('guard')">守线破(应无效)</button></div></div>`;}
+
+/* ══ 区11 Agent运行中心 ══ */
+function z11(){const S=C.ST;const a=S.agent;const dq=C.dqSixDim();
+ const missing=C.REGISTRY_REQUIRED.filter(f=>a[f]===undefined);
+ const reg=C.REGISTRY_REQUIRED.map(f=>`<tr><td>${esc(f)}</td><td>${esc(typeof a[f]==='object'?JSON.stringify(a[f]):a[f])}</td></tr>`).join('');
+ const dqRows=['completeness','accuracy','consistency','uniqueness','timeliness','traceability'].map(k=>
+  `<tr><td>${k}</td><td>${(dq[k]*100).toFixed(1)}%</td></tr>`).join('');
+ const au=S.audit.slice(0,8).map(x=>`<tr><td>${esc(x.at)}</td><td>${esc(x.by)}</td><td>${esc(x.kind)}</td><td>${esc(x.detail)}</td>
+  <td>${esc(x.before)}→${esc(x.after)}</td></tr>`).join('')||'<tr><td colspan="5" style="color:var(--mute)">暂无审计</td></tr>';
+ return `<div class="zone"><h2>11 Agent运行中心(Registry/服务状态/DQ/接口/日志/接管)</h2>
+ <div class="sub">Registry 20必填:${missing.length?('<span style="color:var(--red)">缺'+missing.length+'项</span>'):'<span style="color:var(--green)">✓ 齐</span>'} · 服务状态 ${esc(a.service_status)} · 缺一字段不得执行</div>
+ <div class="grid"><div><table><tr><th>字段</th><th>值</th></tr>${reg}</table></div>
+ <div><table><tr><th>DQ六维(真实计算)</th><th>值</th></tr>${dqRows}<tr><td><b>综合</b></td><td><b>${(dq.score*100).toFixed(1)}% ${esc(dq.status)}</b></td></tr></table>
+ <div style="margin-top:8px"><button class="act ${a.service_status==='human_takeover'?'':'pri'}" onclick="takeover()">${a.service_status==='human_takeover'?'解除人工接管':'人工接管'}</button></div></div></div>
+ <div class="sub" style="margin-top:9px">WP-12 跨Agent正式接口(8类Agent · 六类标准输出 · 对象锁/版本/补偿/隔离)</div>
+ <table><tr><th>被调Agent</th><th>本方请求</th><th>权威返回(由对方裁定)</th><th>调用</th></tr>
+ ${Object.keys(C.CROSS_AGENTS).map(k=>{const a=C.CROSS_AGENTS[k];
+  return `<tr><td>${esc(a.name)}</td><td>${esc(a.request.join('/'))}</td><td style="color:var(--mute)">${esc(a.authoritative.join(' · '))}</td>
+   <td><button class="act" onclick="xa('${k}')">调用</button></td></tr>`;}).join('')}</table>
+ <div style="margin-top:8px">
+  <button class="act pri" onclick="xaDemo('conflict')">反例:对象被他方锁(应409·不静默覆盖)</button>
+  <button class="act" onclick="xaDemo('rollback')">反例:下游失败(应完全回滚+隔离)</button>
+  <button class="act" onclick="xaDemo('idem')">幂等键重复(应去重)</button>
+  <button class="act" onclick="xaDemo('violate')">越界请求(应403)</button></div>
+ ${(function(){const M=C.xaMetrics();
+  return `<div class="sub" style="margin-top:8px">接口指标:调用${M.total} · 成功率${M.success_rate===null?'—':(M.success_rate*100).toFixed(0)+'%'} · 重试率${M.retry_rate===null?'—':(M.retry_rate*100).toFixed(0)+'%'} · 补偿率${M.compensation_rate===null?'—':(M.compensation_rate*100).toFixed(0)+'%'} · 均延迟${M.avg_latency_ms}ms · DLQ ${M.dlq_size}${M.alert?(' · <span style="color:var(--red)">'+esc(M.alert)+'</span>'):''}</div>`;})()}
+ ${(function(){const X=C.ensureXA();
+  const calls=X.calls.slice(0,5).map(c=>`<tr><td>${esc(c.trace_id)}</td><td>${esc(c.target)}</td><td>${esc(c.request)}</td>
+   <td><span class="badge ${c.code===200?'met':'p0'}">${c.code}${c.error?('·'+esc(c.error)):''}</span></td>
+   <td>${c.retries}</td><td>${c.compensated?'已回滚':'—'}</td><td>${c.latency_ms}ms</td></tr>`).join('')
+   ||'<tr><td colspan="7" style="color:var(--mute)">暂无调用</td></tr>';
+  const dlq=X.dlq.slice(0,4).map(d=>`<tr><td>${esc(d.dlq_id)}</td><td>${esc(d.target)}·${esc(d.request)}</td>
+   <td>${esc(d.error)}</td><td>${d.retries}</td><td>${esc(d.status)}</td>
+   <td>${d.status==='isolated'?`<button class="act" onclick="dlq('${d.dlq_id}')">人工处理</button>`:esc(d.resolved_by||'')}</td></tr>`).join('')
+   ||'<tr><td colspan="6" style="color:var(--mute)">无失败隔离消息</td></tr>';
+  return `<div class="sub" style="margin-top:8px">调用日志(trace/错误码/重试/补偿/延迟)</div>
+  <table><tr><th>trace</th><th>目标</th><th>请求</th><th>码</th><th>重试</th><th>补偿</th><th>延迟</th></tr>${calls}</table>
+  <div class="sub" style="margin-top:8px">失败消息隔离(DLQ · 人工处理入口)</div>
+  <table><tr><th>DLQ</th><th>目标</th><th>错误</th><th>重试</th><th>状态</th><th>操作</th></tr>${dlq}</table>`;})()}
+ <div class="sub" style="margin-top:9px">审计日志(前后值/理由/批准链)</div>
+ <table><tr><th>时间</th><th>操作人</th><th>类型</th><th>详情</th><th>前→后</th></tr>${au}</table></div>`;}
+
+const RENDER={z1,z2,z3,z4,z5,z6,z7,z8,z9,z10,z11};
+function render(){const S=C.ST;const a=S.agent;
+ const stc=a.service_status==='normal'?'stok':(a.service_status==='degraded'?'stwarn':'stbad');
+ document.getElementById('meta').innerHTML=
+  `<span><span class="st ${stc}"></span>Agent ${esc(a.service_status)}</span><span>${esc(WHO.nm)}·${esc(WHO.post)}</span>
+   <span>周期 ${C.cycShort(S.meta.cycle)}</span><span>ST-SAM-YP</span>
+   <span style="color:var(--amber)">data_mode=${esc(S.meta.data_mode)} · ${esc(S.meta.maturity)}</span>
+   <span>Core v${esc(S.meta.core_version)}</span>`;
+ document.getElementById('nav').innerHTML=ZONES.map(z=>`<button class="${Z===z[0]?'on':''}" onclick="go('${z[0]}')">${z[1]}</button>`).join('');
+ document.getElementById('wrap').innerHTML=RENDER[Z]();
+ document.getElementById('foot').innerHTML=`storeo2opcv81 · WP-13 PC管理端11区 · <b>同源</b>:与经营端/移动端加载同一 <code>so2corev81.js</code>(非复制HTML/localStorage键)· StateStore v${S.meta.ver} · M1·simulation_only`;
+}
+function go(z){Z=z;render();}
+function act(kind,id){
+ const t=C.ST.tasks.find(x=>x.id===id);if(!t){toast('任务不存在');return;}
+ let r;
+ if(kind==='review')r=C.taskAct(id,SR);
+ else if(kind==='reject')r=C.taskReject(id,SR,'PC主管驳回:证据不足');
+ else if(kind==='reassign')r=C.taskReassign(id,SR,t.owner_id==='store_mgr'?'o2o_ops':'store_mgr');
+ else if(kind==='pause')r=C.taskPause(id,SR,'PC主管暂停:等待补货到店');
+ if(!r||!r.ok){toast('拒绝:'+((r&&r.reason)||'未知')+(r&&r.reason==='separation_of_duties'?'(不得验收本人Owner任务)':''));}
+ else toast(({review:'背书通过→REVIEWED',reject:'已驳回→REJECTED',reassign:'已转派→'+r.task.owner_id,pause:'已暂停→PAUSED'})[kind]);
+ render();}
+function demoRes(mode){
+ const S=C.ST;
+ let r;
+ if(mode==='over')r=C.resPropose('budget',9e9,'超可用测试',true,WHO.post);
+ else if(mode===true)r=C.resPropose('budget',1000,'小额可逆',true,WHO.post);
+ else r=C.resPropose('price_rights',30000,'高风险不可逆',false,WHO.post);
+ if(!r.ok){toast('提案拒绝:'+r.reason);render();return;}
+ const pid=r.rp.proposal_id;
+ const chk=C.resAdvance(pid);
+ if(!chk.ok){toast('L1硬规则自动拒绝:'+chk.reason+'(超可用)');render();return;}
+ const auth=C.resAdvance(pid);
+ if(!auth.ok){toast(auth.reason==='needs_manager_approval'?'L3:高风险不可逆→须管理者裁决(已进仲裁台)':('拒绝:'+auth.reason));render();return;}
+ C.resAdvance(pid);C.resAdvance(pid);C.resAdvance(pid);C.resAdvance(pid);
+ toast('七步走完→VERIFY(小额可逆·L2目标优化通过)');render();}
+function demoResult(mode){
+ const gid='GAP-STO-04';
+ if(mode==='met')C.postResult(gid,'oos',0.11,0.04,false);
+ else if(mode==='improved')C.postResult(gid,'oos',0.11,0.08,false);
+ else C.postResult(gid,'oos',0.11,0.03,true);
+ const j=C.judgeEffectiveByResult(gid);
+ C.addLearning(gid,j.effective?'effective':'ineffective',{cost:2000,benefit:j.effective?9800:0,side_effect:j.effective?'无显著':'库存占用'});
+ toast(j.effective?'结果账主指标达标+守线未破→判定有效':('未判有效:'+j.reason+'(任务完成≠经营有效)'));
+ render();}
+function takeover(){const S=C.ST;
+ if(S.agent.service_status==='human_takeover'){C.releaseTakeover(WHO.post);toast('已解除人工接管→normal');}
+ else{C.humanTakeover('PC管理端演练接管',WHO.post);toast('人工接管中:高风险不可逆自动动作已停止');}
+ C.save();render();}
+function xa(target){const a=C.CROSS_AGENTS[target];
+ const r=C.crossAgentCall(target,a.request[0],{from:'PC演示'});
+ toast(r.ok?(a.name+' 200 · 权威返回:'+a.authoritative.join('/')+(r.retries?('·重试'+r.retries):'')) 
+  :('拒绝 '+r.code+':'+r.reason));
+ render();}
+function xaDemo(mode){
+ if(mode==='conflict'){
+  C.acquireLock('lyx500','AG-SUPPLY-001');
+  const r=C.crossAgentCall('supply_chain','补货',{qty:100},{objects:['lyx500']});
+  toast(r.code===409?('409 CONFLICT · 对象 lyx500 被 '+r.held_by+' 持有 → 不静默覆盖'):('意外:'+r.code));
+  C.releaseLock('lyx500','AG-SUPPLY-001');}
+ else if(mode==='rollback'){
+  const before=C.ST.resources.inventory.available;
+  const r=C.crossAgentCall('supply_chain','补货',{qty:300},
+   {objects:['sku-rollback-demo'],reserve:{ledger:'inventory',amount:300},inject:{fail:'downstream'},idempotency_key:'DEMO-RB-'+Date.now()});
+  const after=C.ST.resources.inventory.available;
+  toast('下游503 · 重试'+r.retries+'次 → 资源'+(after===before?'完全回滚 ✓':'回滚异常 ✗')+' · 已进DLQ隔离');}
+ else if(mode==='idem'){
+  const k='DEMO-IDEM-FIXED';
+  C.crossAgentCall('finance','预算',{amt:5000},{idempotency_key:k});
+  const r2=C.crossAgentCall('finance','预算',{amt:5000},{idempotency_key:k});
+  toast(r2.deduped?'幂等键重复 → 去重返回首次结果(未重复执行)':'意外:未去重');}
+ else{const r=C.crossAgentCall('finance','补货',{});
+  toast(r.code===403?'403 AUTHORITY_VIOLATION · Finance 不受理[补货] · 权威边界':'意外:'+r.code);}
+ render();}
+function dlq(id){const r=C.dlqResolve(id,WHO.post);
+ toast(r.ok?('DLQ '+id+' 已人工处理 → manually_resolved'):'处理失败');render();}
+window.PC={go,act,demoRes,demoResult,takeover,xa,xaDemo,dlq,get C(){return C},get WHO(){return WHO}};
+render();
+toast('PC管理端 · '+WHO.nm+' · 同源加载 so2corev81.js(Core v'+C.CORE_VERSION+')');
+</script>
+</body></html>
