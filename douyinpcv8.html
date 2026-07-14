@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Infinity 抖音经营 Agent · douyinpcv8 · INF-STD-001 v1.1 · Sprint1 地基</title>
+<style>
+:root{
+  --bg:#0f1216; --panel:#171b21; --panel2:#1d2229; --line:#2a323c; --line2:#3a4453;
+  --ink:#e8edf3; --ink2:#9aa7b6; --ink3:#6b7887;
+  --acc:#4a9eff; --acc2:#7c5cff; --go:#2ec76a; --warn:#e0a03a; --bad:#e0563a;
+  --seed:#ff5c8a; --sell:#4a9eff; --joint:#7c5cff;
+  --mock:#5a6673; --hybrid:#e0a03a; --prod:#e0563a;
+  --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px;line-height:1.5;-webkit-text-size-adjust:100%}
+body{padding-bottom:60px}
+.mono{font-family:var(--mono)}
+.dim{color:var(--ink2)} .dim3{color:var(--ink3)}
+h1,h2,h3{font-weight:600;letter-spacing:-.01em}
+
+/* mode band */
+#modeband{position:fixed;top:0;left:0;right:0;height:4px;z-index:200;background:var(--mock)}
+#modeband.hybrid{background:var(--hybrid)} #modeband.production{background:var(--prod)}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#191e25,#151a20);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;gap:1px}
+.brand b{font-size:14px;letter-spacing:-.02em}
+.brand span{font-size:10.5px;color:var(--ink3)}
+.modechip{font-family:var(--mono);font-size:10.5px;padding:3px 9px;border-radius:5px;background:var(--mock);color:#fff;font-weight:600;letter-spacing:.03em}
+.modechip.hybrid{background:var(--hybrid)} .modechip.production{background:var(--prod)}
+.scorepill{margin-left:auto;display:flex;gap:8px;align-items:center}
+.scorepill .s{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:5px;background:var(--panel2);border:1px solid var(--line2);color:var(--ink2)}
+.scorepill .s b{color:var(--ink)}
+
+/* nav */
+.nav{display:flex;gap:2px;padding:6px 12px;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto;position:sticky;top:53px;z-index:99}
+.nav button{white-space:nowrap;font-family:var(--sans);font-size:12px;color:var(--ink2);background:transparent;border:none;padding:7px 11px;border-radius:6px;cursor:pointer;border:1px solid transparent}
+.nav button:hover{color:var(--ink);background:var(--panel2)}
+.nav button.on{color:#fff;background:var(--acc);border-color:var(--acc)}
+
+.wrap{padding:16px;max-width:1180px;margin:0 auto}
+.screen{display:none} .screen.on{display:block}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.card>h2{font-size:13.5px;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.card>h2 .tag{font-family:var(--mono);font-size:9.5px;font-weight:600;padding:2px 6px;border-radius:4px;background:var(--panel2);color:var(--acc);border:1px solid var(--line2)}
+.card>.sub{font-size:11.5px;color:var(--ink3);margin-bottom:10px}
+
+.kv{display:grid;grid-template-columns:150px 1fr;gap:5px 12px;font-size:12px}
+.kv .k{color:var(--ink3);font-family:var(--mono);font-size:11px}
+.kv .v{color:var(--ink)}
+.kv .v.miss{color:var(--bad)}
+
+.btn{font-family:var(--sans);font-size:12px;color:var(--ink);background:var(--panel2);border:1px solid var(--line2);padding:6px 12px;border-radius:6px;cursor:pointer;margin:3px 4px 3px 0}
+.btn:hover{border-color:var(--acc);color:#fff}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.go{background:var(--go);border-color:var(--go);color:#04120a}
+.btn.bad{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.sm{font-size:11px;padding:4px 9px}
+
+.row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px}
+.row:last-child{border-bottom:none}
+.pill{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600}
+.pill.L1{background:#1a3a5c;color:#7cc0ff} .pill.L2{background:#2a2050;color:#b9a3ff}
+.pill.L3{background:#14402a;color:#6fe0a0} .pill.L4{background:#3a3418;color:#e0c86a}
+.pill.ok{background:#14402a;color:#6fe0a0} .pill.bad{background:#3a1818;color:#ff9a86}
+.pill.wait{background:#3a3418;color:#e0c86a} .pill.a{background:#1a3a5c;color:#7cc0ff}
+.pill.b{background:#2a2050;color:#b9a3ff} .pill.c{background:#333;color:#bbb}
+
+.tree{font-family:var(--mono);font-size:11.5px;line-height:1.85}
+.tree .node{cursor:pointer;padding:1px 4px;border-radius:4px;display:inline-block}
+.tree .node:hover{background:var(--panel2)}
+.tree .l1{color:#7cc0ff} .tree .l2{color:#b9a3ff} .tree .l3{color:#6fe0a0} .tree .l4{color:#e0c86a}
+
+table.data{width:100%;border-collapse:collapse;font-size:11.5px}
+table.data th{text-align:left;color:var(--ink3);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line2);font-family:var(--mono);font-size:10.5px}
+table.data td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.data tr:hover td{background:var(--panel2)}
+
+.sm-note{font-size:11px;color:var(--ink3);margin-top:8px;padding:8px 10px;background:var(--panel2);border-radius:6px;border-left:2px solid var(--line2)}
+.sm-note.warn{border-left-color:var(--warn)}
+
+/* toast — pointer-events fixed per known interception bug */
+#tw{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:6px;align-items:center;width:90%;max-width:400px;pointer-events:none}
+#tw .toast{pointer-events:none;max-width:360px;padding:9px 12px;border-radius:7px;font-size:12px;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.3);opacity:0;transform:translateY(8px);transition:opacity .18s,transform .18s;background:#2b3440;border:1px solid var(--line2)}
+#tw .toast.show{opacity:1;transform:translateY(0)}
+#tw .toast.go{background:#13502e;border-color:#2ec76a}
+#tw .toast.warn{background:#4a3410;border-color:#e0a03a}
+#tw .toast.bad{background:#4a1810;border-color:#e0563a}
+
+.stmap{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-family:var(--mono);font-size:10.5px}
+.stmap .st{padding:3px 7px;border-radius:4px;background:var(--panel2);border:1px solid var(--line);color:var(--ink2)}
+.stmap .st.cur{background:var(--acc);color:#fff;border-color:var(--acc)}
+.stmap .st.done{background:#14402a;color:#6fe0a0;border-color:#1e5c3c}
+.stmap .arr{color:var(--ink3)}
+.stmap .st.eff{background:#14402a;color:#6fe0a0} .stmap .st.ineff{background:#3a1818;color:#ff9a86}
+
+.tabmini{display:flex;gap:2px;margin-bottom:10px;flex-wrap:wrap}
+.tabmini button{font-size:11px;color:var(--ink2);background:var(--panel2);border:1px solid var(--line);padding:5px 10px;border-radius:6px;cursor:pointer}
+.tabmini button.on{background:var(--acc2);border-color:var(--acc2);color:#fff}
+
+@media(max-width:640px){
+  .wrap{padding:12px} .kv{grid-template-columns:110px 1fr}
+  .scorepill{width:100%;margin-left:0;flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<div id="modeband"></div>
+<div class="topbar">
+  <div class="brand"><b>Infinity 抖音经营 Agent</b><span>AGT-CH-DY-001 · L1 专业经营大 Loop · douyinpcv8</span></div>
+  <span class="modechip" id="modechip">MOCK</span>
+  <div class="scorepill">
+    <span class="s">INF评分 <b id="scInf">—</b>/100</span>
+    <span class="s">设计 <b id="scDes">—</b></span>
+    <span class="s">真数据 <b id="scData">—</b></span>
+    <span class="s">成熟度 <b id="scMat">—</b></span>
+  </div>
+</div>
+<div class="nav" id="nav"></div>
+<div class="wrap">
+  <div class="screen on" id="sc-registry"></div>
+  <div class="screen" id="sc-loopmap"></div>
+  <div class="screen" id="sc-statemachine"></div>
+  <div class="screen" id="sc-oneid"></div>
+  <div class="screen" id="sc-events"></div>
+  <div class="screen" id="sc-store"></div>
+  <div class="screen" id="sc-score"></div>
+</div>
+<div id="tw"></div>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   douyinpcv8 · Sprint 1 地基 · INF-STD-001 v1.1 合规
+   模块化命名空间 DY8(非末尾叠加):core / data / domain 各自独立
+   Mock/Hybrid/Production 显著区分 · 单一StateStore · 统一状态机+事件
+   ═══════════════════════════════════════════════════════════════════ */
+window.DY8 = (function(){
+'use strict';
+const NS = {};
+
+/* ── 运行模式(任务书§4.7 + F03):三模式显著区分 ── */
+NS.MODE = 'mock';   // mock | hybrid | production
+NS.modeMeta = { mock:{label:'MOCK 演示假水',color:'#5a6673',live_gate_pass:null},
+                hybrid:{label:'HYBRID 真实试点',color:'#e0a03a',live_gate_pass:false},
+                production:{label:'PRODUCTION 生产',color:'#e0563a',live_gate_pass:false} };
+
+/* toast(页面内, 不用alert) */
+function toast(msg,kind){
+  const tw=document.getElementById('tw'); if(!tw)return;
+  const el=document.createElement('div'); el.className='toast '+(kind||'');
+  el.textContent=msg; tw.appendChild(el);
+  requestAnimationFrame(()=>el.classList.add('show'));
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(),200); }, 3200);
+}
+NS.toast = toast;
+
+/* ═══ DY-A06 单一 StateStore(唯一事实源) ═══
+   Loop/任务/审批/预算/证据/验果/学习/事件/ID 全部挂这一个对象。
+   DY-A08:不再有 S/V3S/V4S/LOOP_STORE 各持冲突事实——只有 DY8.store。 */
+const SKEY='douyinpcv8_store_v1';
+NS.store = {
+  version:'1.0.0', schema_version:'1.0.0', mode:'mock',
+  registry:null,               // A01
+  loops:{},                    // A02/A03 L1-L4 实例
+  loop_templates:{L1:[],L2:[],L3:[]}, // A03 模板
+  seq:{loop:0,task:0,event:0,ev:0,ver:0,dec:0,gap:0,micro:0},
+  tasks:{},                    // E01 任务(正式状态机)
+  approvals:[],                // HITL 队列
+  budgets:{}, evidences:{}, verifications:{}, learnings:{}, decisions:{}, gaps:{},
+  ids:{}, id_maps:{}, events:[], // B01/B02/B04
+  audit:[],                    // 审计
+  cur_loop_id:null
+};
+function nid(k,prefix){ NS.store.seq[k]=(NS.store.seq[k]||0)+1; return prefix+'-'+String(NS.store.seq[k]).padStart(4,'0'); }
+NS.nid=nid;
+
+function audit(action, meta){
+  NS.store.audit.unshift({ ts:Date.now(), action, meta:meta||null,
+    actor:(NS.store.registry&&NS.store.session)?NS.store.session.employee_id:'system' });
+  if(NS.store.audit.length>500)NS.store.audit.length=500;
+}
+NS.audit=audit;
+
+/* ── DY-A07 持久化 + 刷新恢复(单一事实源整体存取) ── */
+NS.persist = function(){
+  try{ localStorage.setItem(SKEY, JSON.stringify(NS.store)); }catch(e){}
+};
+NS.restore = function(){
+  try{
+    const r=localStorage.getItem(SKEY); if(!r)return false;
+    const s=JSON.parse(r); if(!s||!s.version)return false;
+    Object.keys(s).forEach(k=>{ NS.store[k]=s[k]; });
+    NS.MODE=NS.store.mode||'mock';
+    audit('StateStore已从单一事实源恢复(刷新持久化)');
+    return true;
+  }catch(e){ return false; }
+};
+NS.resetStore = function(){
+  try{ localStorage.removeItem(SKEY); }catch(e){}
+  location.reload();
+};
+
+return NS;
+})();
+</script>
+
+<script>
+/* ═══ core/agent-registry (DY-A01) · §39 ═══ */
+(function(DY8){
+DY8.registry = {
+  buildDefault(){
+    return { agent_id:'AGT-CH-DY-001', agent_name:'Infinity Douyin Operating Agent', agent_type:'channel_agent', loop_level:'L1',
+      business_boundary:'抖音渠道种草、卖货、联合转化、消费者资产及SKU生命周期经营',
+      owned_objects:['content_id','creator_id','campaign_id','sku_id(渠道视角)','consumer_id(抖音触点)'],
+      input_contract:'INF-EVT-001 统一事件合同 v1.0 + 平台ID映射', output_contract:'OBSERVATION/JUDGMENT/PROPOSAL/DECISION/ACTION/RESULT',
+      business_owner:'抖音渠道总负责人', data_owner:'数据与数字中台负责人', technical_owner:'Douyin Agent 技术负责人', risk_owner:'财务/品牌/法务 联合风险 Owner',
+      autonomy_level:'A2', allowed_actions:['观察','判断','提案','受控执行(经HITL)','任务派发','验果','学习回写'],
+      forbidden_actions:['直接改企业总预算','突破最低价','占用安全库存','重大价格调整无人审批','战略SKU淘汰无人背书','不可逆外部承诺'],
+      escalation_path:'渠道主管 → Infinity 仲裁 → 管理者战略背书', service_status:'test', schema_version:'1.0.0', effective_date:'2026-07-13', retirement_date:null };
+  },
+  requiredFields:['agent_id','agent_name','agent_type','loop_level','business_boundary','owned_objects','input_contract','output_contract','data_owner','business_owner','technical_owner','risk_owner','autonomy_level','allowed_actions','forbidden_actions','escalation_path','service_status','schema_version','effective_date','retirement_date'],
+  ownerFields:['business_owner','data_owner','technical_owner','risk_owner'],
+  validate(reg){ const rm=this.requiredFields.filter(f=>f!=='retirement_date'&&(reg[f]===undefined||reg[f]===null||reg[f]===''||(Array.isArray(reg[f])&&!reg[f].length)));
+    const om=this.ownerFields.filter(f=>!reg[f]); return { ok:rm.length===0&&om.length===0, missing:rm, ownerMissing:om }; }
+};
+
+/* ═══ core/loop-schema (DY-A02) · §6 十二要素 ═══ */
+DY8.loopSchema = {
+  levels:['L1','L2','L3','L4'],
+  twelve:['boundary','object','goal','initial_state','data_sense','judge_rule','decision','action_path','task_carry','result_verify','learning','uplink_downlink'],
+  twelveCN:{boundary:'边界',object:'对象',goal:'目标',initial_state:'初始状态',data_sense:'数据感知',judge_rule:'判断规则',decision:'决策',action_path:'行动路径',task_carry:'任务承接',result_verify:'结果验证',learning:'学习沉淀',uplink_downlink:'上下级连接'},
+  newLoop(level,name,parent_id,spec){
+    const id=DY8.nid('loop',level); const twelve={}; this.twelve.forEach(k=>twelve[k]=(spec&&spec[k])||null);
+    const lp={ loop_id:id, loop_level:level, name:name||level+' Loop', parent_loop_id:parent_id||null, child_loop_ids:[],
+      object_scope:(spec&&spec.object_scope)||{}, cycle_id:(spec&&spec.cycle_id)||'CYC-2026Q3', twelve, status:'待定标', version:1,
+      maturity:(spec&&spec.maturity)||'M1', target_ids:[], gap_ids:[], decision_ids:[], task_ids:[], verification_ids:[], learning_ids:[], created_ts:Date.now() };
+    DY8.store.loops[id]=lp;
+    if(parent_id&&DY8.store.loops[parent_id]){ const p=DY8.store.loops[parent_id]; if(p.child_loop_ids.indexOf(id)<0)p.child_loop_ids.push(id); }
+    DY8.audit('新建 '+level+' Loop · '+lp.name,{loop_id:id}); return lp;
+  },
+  completeness(lp){ const f=this.twelve.filter(k=>lp.twelve[k]!=null&&lp.twelve[k]!==''); return { filled:f.length,total:12,pct:Math.round(f.length/12*100),missing:this.twelve.filter(k=>!lp.twelve[k]) }; }
+};
+
+/* ═══ core/state-machine (DY-A05) · 有效/无效并列, 两者都进学习 ═══ */
+DY8.sm = {
+  // 主链
+  chain:['待定标','已定标','数据接入','可信实际','已算差','根因待确认','根因已确认','A3待握手','A3已握手','待决策','决策已形成','待审批','已授权','执行中','观察中','待验果'],
+  // 验果后并列分支 → 都汇入学习 → 下一周期 → 关闭
+  branch:{'待验果':['有效','无效'],'有效':['学习中'],'无效':['学习中'],'学习中':['学习完成'],'学习完成':['下一周期已生成'],'下一周期已生成':['本周期关闭']},
+  guards:{
+    '已算差':lp=>lp.gap_ids.length>0,
+    '根因已确认':lp=>!!lp._rc_confirmed,
+    'A3已握手':lp=>!!lp._handshake_ready,
+    '已授权':lp=>!!lp._approved,
+    '待验果':lp=>lp.verification_ids.length>0
+  },
+  legal(from,to,lp){
+    const ci=this.chain.indexOf(from);
+    if(ci>=0 && this.chain[ci+1]===to)return true;             // 主链顺序前进
+    if(this.branch[from] && this.branch[from].indexOf(to)>=0)return true; // 分支
+    if(from==='无效' && to==='待决策')return true;              // 无效→回决策(备选)
+    if(from===to)return true;
+    return false;
+  },
+  advance(lp,to,opt){
+    opt=opt||{};
+    if(!lp)return {ok:false,msg:'无Loop'};
+    if(!this.legal(lp.status,to,lp)){ DY8.toast('状态机拦截:'+lp.status+' → '+to+' 非法','bad'); DY8.audit('状态机拦截·'+lp.status+'→'+to,{loop_id:lp.loop_id}); return {ok:false,msg:'非法迁移'}; }
+    const g=this.guards[to];
+    if(g&&!g(lp)){ DY8.toast('状态机guard拦截:'+to+' 前置条件未满足','bad'); DY8.audit('状态机guard拦截·'+to,{loop_id:lp.loop_id}); return {ok:false,msg:'guard'}; }
+    lp.status=to; DY8.audit('Loop状态·'+to,{loop_id:lp.loop_id}); DY8.persist(); return {ok:true};
+  }
+};
+
+/* ═══ data/one-id (DY-B01/B02/B03) · §11/§12 ═══ */
+DY8.oneid = {
+  coreTypes:['consumer_id','member_id','sku_id','spu_id','brand_id','customer_id','store_id','city_id','content_id','creator_id','campaign_id','order_id','task_id','cycle_id','lifecycle_id','employee_id'],
+  coreTypeCN:{consumer_id:'消费者',member_id:'会员',sku_id:'SKU',spu_id:'SPU',brand_id:'品牌',customer_id:'客户',store_id:'门店',city_id:'城市',content_id:'内容',creator_id:'创作者',campaign_id:'活动',order_id:'订单',task_id:'任务',cycle_id:'周期',lifecycle_id:'生命周期',employee_id:'员工'},
+  identityLevels:{A:'确定性识别',B:'平台归因识别',C:'统计性识别'},
+  registerId(type,val,meta){
+    if(this.coreTypes.indexOf(type)<0)return {ok:false,msg:'非核心ID类型'};
+    DY8.store.ids[type]=DY8.store.ids[type]||[]; DY8.store.ids[type].push(Object.assign({id:val},meta||{}));
+    return {ok:true};
+  },
+  // 平台ID映射(§11:平台/原始标识/映射方法/可信度/授权/生失效时间)
+  mapPlatformId(entType, entId, platform, rawId, meta){
+    meta=meta||{};
+    const rec={ enterprise_type:entType, enterprise_id:entId, platform, raw_id:rawId,
+      match_method:meta.match_method||'deterministic', confidence_score:meta.confidence_score!=null?meta.confidence_score:0.9,
+      consent_status:meta.consent_status||'authorized', identity_level:meta.identity_level||'A',
+      effective_from:meta.effective_from||'2026-07-01', effective_to:meta.effective_to||null };
+    const key=entType+':'+entId; DY8.store.id_maps[key]=DY8.store.id_maps[key]||[]; DY8.store.id_maps[key].push(rec);
+    return rec;
+  },
+  // 跨平台结论必须带三标记(§12)
+  crossPlatformConclusion(entType,entId,claim,identity_level,match_method,confidence_score){
+    return { enterprise_id:entId, claim, identity_level, match_method, confidence_score,
+      valid: (identity_level==='A'||identity_level==='B'||identity_level==='C') && confidence_score!=null,
+      warning: identity_level!=='A' ? 'B/C级为推断,不得冒充A级确定事实' : null };
+  }
+};
+
+/* ═══ data/event-contract (DY-B04) · §15 最小字段 + §16 标准事件 ═══ */
+DY8.events = {
+  minFields:['event_id','event_type','event_time','agent_id','channel_id','consumer_id','identity_level','sku_id','spu_id','customer_id','store_id','content_id','creator_id','campaign_id','order_id','task_id','cycle_id','event_value','currency','source_system','confidence_score','consent_status','schema_version'],
+  standardEvents:['CONTENT_EXPOSED','CONTENT_VIEWED','CONTENT_ENGAGED','SEARCH_PERFORMED','STORE_VISITED','PRODUCT_VIEWED','CART_ADDED','ORDER_CREATED','ORDER_PAID','ORDER_REFUNDED','ORDER_REPEATED','INVENTORY_CHANGED','PRICE_CHANGED','TASK_CREATED','TASK_ACCEPTED','TASK_COMPLETED','RESULT_VERIFIED','SCORE_COMPUTED','RULE_UPDATED'],
+  // 抖音渠道事件 → 标准事件映射
+  channelMap:{ '视频曝光':'CONTENT_EXPOSED','视频播放':'CONTENT_VIEWED','完播互动':'CONTENT_ENGAGED','看后搜':'SEARCH_PERFORMED','进直播间':'STORE_VISITED','商品点击':'PRODUCT_VIEWED','加购':'CART_ADDED','下单':'ORDER_CREATED','支付':'ORDER_PAID','退款':'ORDER_REFUNDED','复购':'ORDER_REPEATED' },
+  emit(type, payload){
+    payload=payload||{};
+    const std = this.standardEvents.indexOf(type)>=0 ? type : (this.channelMap[type]||null);
+    const ev={}; this.minFields.forEach(f=>ev[f]=payload[f]!=null?payload[f]:null);
+    ev.event_id=DY8.nid('event','EVT'); ev.event_type=std||type; ev.channel_event=std?null:type;
+    ev.event_time=Date.now(); ev.agent_id='AGT-CH-DY-001'; ev.channel_id='douyin';
+    ev.schema_version='1.0.0'; ev.source_system=DY8.MODE;
+    ev.mapped_ok=!!std;
+    DY8.store.events.unshift(ev); if(DY8.store.events.length>300)DY8.store.events.length=300;
+    return ev;
+  },
+  validate(ev){ const missing=this.minFields.filter(f=>!(f in ev)); return {ok:missing.length===0,missing}; }
+};
+})(window.DY8);
+</script>
+<script>
+/* ═══ domain/loop-templates (DY-A03) · 1×L1 + 8×L2 + 33×L3 ═══ */
+(function(DY8){
+const L2_TYPES=[
+  {key:'bp_jbp',name:'BP/JBP 与渠道目标',owner:'抖音渠道总负责人'},
+  {key:'seed_growth',name:'种草增长',owner:'种草作战官'},
+  {key:'sell_growth',name:'卖货增长',owner:'带货作战官'},
+  {key:'joint_convert',name:'双前线联合转化',owner:'联合经营官'},
+  {key:'sku_lifecycle',name:'SKU 生命周期',owner:'SKU Owner'},
+  {key:'consumer_asset',name:'消费者资产(5A)',owner:'消费者资产官'},
+  {key:'exp_brand',name:'体验与品牌安全',owner:'品牌/体验 Owner'},
+  {key:'resource_profit',name:'资源与贡献利润',owner:'财务 Owner'}
+];
+// 33类L3场景/流程小Loop(按L2归类)
+const L3_TYPES=[
+  ['bp_jbp',['季度BP拆解','JBP联合生意计划','渠道目标对齐','红线守护复盘']],
+  ['seed_growth',['达人种草铺量','素材内容测试','看后搜承接','A3人群蓄水','种草账复盘']],
+  ['sell_growth',['直播场次经营','商品卡优化','千川投放','成交转化提升','卖货账复盘']],
+  ['joint_convert',['N1N2握手','素材授权直播复用','A3定向承接','联合放量','联合账对账']],
+  ['sku_lifecycle',['导入期首攻','成长期复制','成熟期利润','衰退止损','焕新重启']],
+  ['consumer_asset',['A1认知拉新','A2吸引种草','A3问询蓄水','A4首购转化','A5复购资产']],
+  ['exp_brand',['退款体验守线','差评根因闭环']],
+  ['resource_profit',['预算配比','贡献利润核算']]
+];
+DY8.templates = {
+  L2_TYPES, L3_TYPES,
+  instantiate(){
+    const S=DY8.store;
+    // 幂等:已建过则跳过
+    if(Object.keys(S.loops).length>0)return;
+    // L1
+    const l1=DY8.loopSchema.newLoop('L1','抖音专业经营大 Loop',null,{
+      boundary:'抖音渠道种草/卖货/联合/资产/生命周期,不含企业总预算与最低价决定权',
+      object:'内容·达人·活动·SKU(渠道视角)·抖音触点消费者',
+      goal:'渠道综合价值最大化(增量收入+利润+新客+品牌+SKU推进 - 价格伤害/库存/冲突/退货)',
+      initial_state:'M1原型·真实数据接入~10%',
+      data_sense:'统一事件合同(mock假水) · 真实平台适配=Hybrid(未接)',
+      judge_rule:'动态Gap+12类根因竞争',
+      decision:'根因驱动联合决策(经HITL)',
+      action_path:'双前线SR执行+A3握手',
+      task_carry:'正式任务状态机+Artifact+验收',
+      result_verify:'净增量验果(多窗口)',
+      learning:'规则/阈值/素材/达人/预算版本化回写',
+      uplink_downlink:'上报Infinity L∞ · 下钻8×L2/33×L3/L4微Loop',
+      object_scope:{channel:'douyin',sku_id:'SKU-DEMO-001'}, maturity:'M2'
+    });
+    S.cur_loop_id=l1.loop_id;
+    // 8×L2
+    const l2map={};
+    L2_TYPES.forEach(t=>{
+      const l2=DY8.loopSchema.newLoop('L2',t.name,l1.loop_id,{
+        boundary:t.name+' 范围', object:t.name, goal:t.name+' 目标推进',
+        uplink_downlink:'上卷L1 · 下钻本类L3', object_scope:{l2_type:t.key,owner:t.owner}
+      });
+      l2.owner=t.owner; l2map[t.key]=l2.loop_id;
+    });
+    // 33×L3
+    L3_TYPES.forEach(([l2key,names])=>{
+      names.forEach(nm=>{
+        DY8.loopSchema.newLoop('L3',nm,l2map[l2key],{
+          boundary:nm, object:nm, goal:nm+' 达标',
+          uplink_downlink:'上卷'+l2key+' · 下钻L4微Loop'
+        });
+      });
+    });
+    DY8.audit('层级模板实例化 · 1×L1 + '+L2_TYPES.length+'×L2 + '+L3_TYPES.reduce((s,x)=>s+x[1].length,0)+'×L3');
+    DY8.persist();
+  },
+  counts(){
+    const S=DY8.store; const by={L1:0,L2:0,L3:0,L4:0};
+    Object.values(S.loops).forEach(l=>by[l.loop_level]++); return by;
+  }
+};
+
+/* ═══ core/micro-loop-factory (DY-A04) · L4 任务/状态微Loop ═══ */
+DY8.microFactory = {
+  kinds:['content','creator','ad_plan','live_session','product_card','task','approval','data_anomaly','audience'],
+  kindCN:{content:'短视频/素材',creator:'达人',ad_plan:'千川计划',live_session:'直播场次',product_card:'商品卡',task:'任务',approval:'审批',data_anomaly:'数据异常',audience:'人群'},
+  create(kind, parent_l3_id, name){
+    if(this.kinds.indexOf(kind)<0)return {ok:false,msg:'未知微Loop类型'};
+    const lp=DY8.loopSchema.newLoop('L4',(this.kindCN[kind]||kind)+'·'+(name||DY8.nid('micro','M')),parent_l3_id,{
+      boundary:this.kindCN[kind]+' 单体', object:kind,
+      goal:'单体状态推进', uplink_downlink:'上卷所属L3', object_scope:{micro_kind:kind}
+    });
+    lp.micro_kind=kind; DY8.persist(); return {ok:true,loop:lp};
+  }
+};
+})(window.DY8);
+</script>
+<script>
+/* ═══ ui/pc · 7屏渲染 + nav + init(Sprint1) ═══ */
+(function(DY8){
+const S=DY8.store; const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+const NAV=[
+  ['registry','Agent 注册'],['loopmap','Loop 地图'],['statemachine','状态机'],
+  ['oneid','One ID'],['events','事件合同'],['store','StateStore'],['score','评分/成熟度']
+];
+let CUR='registry';
+DY8.go=function(k){ CUR=k; NAV.forEach(([id])=>{ const sc=$('sc-'+id); if(sc)sc.classList.toggle('on',id===k); });
+  [...$('nav').children].forEach(b=>b.classList.toggle('on',b.dataset.k===k)); render(); };
+
+function renderNav(){ $('nav').innerHTML=NAV.map(([k,label])=>`<button data-k="${k}" class="${k===CUR?'on':''}" onclick="DY8.go('${k}')">${esc(label)}</button>`).join(''); }
+
+/* ── 屏1 Agent Registry ── */
+function scRegistry(){
+  const r=S.registry; const v=DY8.registry.validate(r);
+  const rows=DY8.registry.requiredFields.map(f=>{
+    const val=r[f]; const isMiss=(val===null||val===undefined||val===''||(Array.isArray(val)&&!val.length))&&f!=='retirement_date';
+    const disp=Array.isArray(val)?val.join('、'):(val==null?'—':val);
+    return `<div class="k">${f}</div><div class="v ${isMiss?'miss':''}">${esc(disp)}</div>`;
+  }).join('');
+  return `<div class="card"><h2>Agent Registry <span class="tag">DY-A01 · §39</span></h2>
+    <div class="sub">Infinity 唯一 Agent 注册表 · 未注册不得访问生产数据/申请资源/自动执行</div>
+    <div class="kv">${rows}</div>
+    <div class="sm-note ${v.ok?'':'warn'}">${v.ok?'✓ 39条款要求字段齐全,四类 Owner 均已登记':'✗ 缺失字段:'+v.missing.concat(v.ownerMissing).join('、')}</div>
+  </div>
+  <div class="card"><h2>四类责任人 <span class="tag">§40</span></h2>
+    <div class="kv">
+      <div class="k">Business Owner</div><div class="v">${esc(r.business_owner)}</div>
+      <div class="k">Data Owner</div><div class="v">${esc(r.data_owner)}</div>
+      <div class="k">Technical Owner</div><div class="v">${esc(r.technical_owner)}</div>
+      <div class="k">Risk Owner</div><div class="v">${esc(r.risk_owner)}</div>
+    </div>
+    <div class="sm-note">自治等级 <b>${esc(r.autonomy_level)}</b>(受控执行·人工批准后执行)· 服务状态 <b>${esc(r.service_status)}</b> · 禁止动作 ${r.forbidden_actions.length} 项(重大价格/预算/库存/战略SKU 均须人工背书)</div>
+  </div>`;
+}
+
+/* ── 屏2 Loop 地图(层级树 L1→L2→L3, 可下钻L4) ── */
+function scLoopmap(){
+  const c=DY8.templates.counts();
+  const l1=Object.values(S.loops).find(l=>l.loop_level==='L1');
+  let tree='';
+  if(l1){
+    const comp=DY8.loopSchema.completeness(l1);
+    tree+=`<div><span class="node l1" onclick="DY8.showLoop('${l1.loop_id}')">▸ [L1] ${esc(l1.name)} · ${l1.loop_id} · 12要素${comp.filled}/12</span></div>`;
+    l1.child_loop_ids.forEach(l2id=>{
+      const l2=S.loops[l2id]; if(!l2)return;
+      tree+=`<div style="padding-left:18px"><span class="node l2" onclick="DY8.showLoop('${l2id}')">▸ [L2] ${esc(l2.name)} · ${esc(l2.owner||'')}</span></div>`;
+      l2.child_loop_ids.forEach(l3id=>{
+        const l3=S.loops[l3id]; if(!l3)return;
+        const l4n=l3.child_loop_ids.length;
+        tree+=`<div style="padding-left:36px"><span class="node l3" onclick="DY8.showLoop('${l3id}')">· [L3] ${esc(l3.name)}${l4n?(' · L4×'+l4n):''}</span></div>`;
+        l3.child_loop_ids.forEach(l4id=>{ const l4=S.loops[l4id]; if(!l4)return;
+          tree+=`<div style="padding-left:54px"><span class="node l4" onclick="DY8.showLoop('${l4id}')">· [L4] ${esc(l4.name)}</span></div>`; });
+      });
+    });
+  }
+  return `<div class="card"><h2>大中小微 Loop 地图 <span class="tag">DY-A03 · §3</span></h2>
+    <div class="sub">绝对层级 L∞→L1→L2→L3→L4 · 可从 L1 下钻到任务,也可上卷到企业目标</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <span class="pill L1">L1 × ${c.L1}</span><span class="pill L2">L2 × ${c.L2}</span>
+      <span class="pill L3">L3 × ${c.L3}</span><span class="pill L4">L4 × ${c.L4}</span></div>
+    <div class="tree">${tree||'<span class="dim3">未实例化</span>'}</div>
+    <div style="margin-top:10px">
+      <button class="btn sm" onclick="DY8.makeMicro()">+ 生成一个 L4 微Loop(演示)</button>
+    </div>
+    <div id="loopDetail"></div>
+  </div>
+  <div class="card"><h2>L4 微Loop Factory <span class="tag">DY-A04</span></h2>
+    <div class="sub">内容/达人/千川计划/直播/商品卡/任务/审批/数据异常/人群 均能生成唯一微Loop</div>
+    <div>${DY8.microFactory.kinds.map(k=>`<button class="btn sm" onclick="DY8.makeMicro('${k}')">${esc(DY8.microFactory.kindCN[k])}</button>`).join('')}</div>
+  </div>`;
+}
+DY8.showLoop=function(id){ const lp=S.loops[id]; if(!lp)return; const comp=DY8.loopSchema.completeness(lp);
+  const twelve=DY8.loopSchema.twelve.map(k=>`<div class="k">${DY8.loopSchema.twelveCN[k]}</div><div class="v ${lp.twelve[k]?'':'miss'}">${esc(lp.twelve[k]||'—')}</div>`).join('');
+  $('loopDetail').innerHTML=`<div class="sm-note"><b>${esc(lp.name)}</b> · ${lp.loop_id} · ${lp.loop_level} · 状态 ${esc(lp.status)} · 12要素 ${comp.filled}/12</div><div class="kv" style="margin-top:8px">${twelve}</div>`;
+};
+DY8.makeMicro=function(kind){
+  const l3=Object.values(S.loops).find(l=>l.loop_level==='L3'); if(!l3){DY8.toast('先实例化层级树','warn');return;}
+  const r=DY8.microFactory.create(kind||'content',l3.loop_id); if(r.ok){DY8.toast('已生成 L4 微Loop:'+r.loop.name,'go');render();}
+};
+
+/* ── 屏3 状态机(有效/无效双分支都进学习) ── */
+function scStateMachine(){
+  const lp=S.loops[S.cur_loop_id]||Object.values(S.loops).find(l=>l.loop_level==='L1');
+  const chain=DY8.sm.chain; const cur=lp?lp.status:'—';
+  const ci=chain.indexOf(cur);
+  const mainHtml=chain.map((st,i)=>`<span class="st ${st===cur?'cur':(i<ci?'done':'')}">${esc(st)}</span>${i<chain.length-1?'<span class="arr">→</span>':''}`).join('');
+  return `<div class="card"><h2>统一 Loop 状态机 <span class="tag">DY-A05</span></h2>
+    <div class="sub">修复 v7 缺陷:有效/无效为<b>并列分支</b>,两者都能进入学习;禁止非法跳转</div>
+    <div style="margin:8px 0"><div class="dim3" style="margin-bottom:4px">主链</div><div class="stmap">${mainHtml}</div></div>
+    <div style="margin:12px 0"><div class="dim3" style="margin-bottom:4px">验果后并列分支(都汇入学习)</div>
+      <div class="stmap">
+        <span class="st">待验果</span><span class="arr">→</span>
+        <span class="st eff">有效</span><span class="arr">↘</span>
+        <span class="st">学习中</span><span class="arr">↙</span>
+        <span class="st ineff">无效</span>
+        <span class="arr">·</span><span class="st">无效→待决策(备选)</span>
+      </div>
+      <div class="stmap" style="margin-top:6px"><span class="st">学习中</span><span class="arr">→</span><span class="st">学习完成</span><span class="arr">→</span><span class="st">下一周期已生成</span><span class="arr">→</span><span class="st">本周期关闭</span></div>
+    </div>
+    <div style="margin-top:10px">
+      <button class="btn" onclick="DY8.smStep('advance')">推进一步(合法)</button>
+      <button class="btn bad" onclick="DY8.smStep('illegal')">尝试非法跳转(应被拦)</button>
+      <button class="btn go" onclick="DY8.smBranch('eff')">走"有效"→学习</button>
+      <button class="btn" onclick="DY8.smBranch('ineff')">走"无效"→学习</button>
+    </div>
+    <div class="sm-note" id="smNote">当前 Loop:${esc(lp?lp.name:'—')} · 状态 <b>${esc(cur)}</b></div>
+  </div>`;
+}
+DY8.smStep=function(mode){
+  const lp=S.loops[S.cur_loop_id]; if(!lp){DY8.toast('无当前Loop','warn');return;}
+  if(mode==='illegal'){ DY8.sm.advance(lp,'本周期关闭'); render(); return; }
+  const ci=DY8.sm.chain.indexOf(lp.status);
+  if(ci>=0&&ci<DY8.sm.chain.length-1){ const to=DY8.sm.chain[ci+1];
+    // 满足guard
+    if(to==='已算差')lp.gap_ids.push('GAP-DEMO'); if(to==='根因已确认')lp._rc_confirmed=true;
+    if(to==='A3已握手')lp._handshake_ready=true; if(to==='已授权')lp._approved=true;
+    if(to==='待验果')lp.verification_ids.push('VER-DEMO');
+    DY8.sm.advance(lp,to);
+  } else DY8.toast('已到主链末端,请走验果分支','warn');
+  render();
+};
+DY8.smBranch=function(which){
+  const lp=S.loops[S.cur_loop_id]; if(!lp)return;
+  if(lp.status!=='待验果'){ DY8.toast('需先推进到"待验果"','warn'); return; }
+  const r=DY8.sm.advance(lp,which==='eff'?'有效':'无效');
+  if(r.ok){ DY8.sm.advance(lp,'学习中'); DY8.toast((which==='eff'?'有效':'无效')+' 分支已进入学习(两分支都可学习)','go'); }
+  render();
+};
+
+/* ── 屏4 One ID ── */
+function scOneId(){
+  const rows=DY8.oneid.coreTypes.map(t=>{
+    const list=S.ids[t]||[]; return `<tr><td class="mono">${t}</td><td>${esc(DY8.oneid.coreTypeCN[t])}</td><td class="mono">${list.length?esc(list[0].id):'<span class="dim3">—</span>'}</td><td>${list.length}</td></tr>`;
+  }).join('');
+  const maps=Object.entries(S.id_maps).flatMap(([k,arr])=>arr.map(m=>`<tr><td class="mono">${esc(k)}</td><td>${esc(m.platform)}</td><td class="mono">${esc(m.raw_id)}</td><td><span class="pill ${m.identity_level.toLowerCase()}">${m.identity_level}</span></td><td>${m.confidence_score}</td><td>${esc(m.consent_status)}</td></tr>`)).join('');
+  return `<div class="card"><h2>企业核心 ID 模型 <span class="tag">DY-B01 · §11</span></h2>
+    <div class="sub">16 类核心 ID · 名称文本不得代替 ID · 平台 ID 只作映射,不当企业最高 ID</div>
+    <table class="data"><tr><th>企业标准字段</th><th>对象</th><th>示例ID</th><th>已登记</th></tr>${rows}</table>
+    <div style="margin-top:8px"><button class="btn sm" onclick="DY8.seedIds()">填充演示 ID(mock)</button></div>
+  </div>
+  <div class="card"><h2>平台 ID 映射 + 身份三级 <span class="tag">DY-B02/B03 · §12</span></h2>
+    <div class="sub">A 确定性 / B 平台归因 / C 统计性 · 每条含 映射方式·置信度·授权·生失效</div>
+    <table class="data"><tr><th>企业对象</th><th>平台</th><th>平台原ID</th><th>身份级</th><th>置信</th><th>授权</th></tr>${maps||'<tr><td colspan=6 class="dim3">点下方按钮生成演示映射</td></tr>'}</table>
+    <div style="margin-top:8px"><button class="btn sm" onclick="DY8.seedMaps()">生成演示映射(mock)</button></div>
+    <div class="sm-note warn">B/C 级为推断,不得冒充 A 级确定事实(§12 一票否决相关)</div>
+  </div>`;
+}
+DY8.seedIds=function(){
+  DY8.oneid.registerId('sku_id','SKU-DEMO-001',{name:'六月鲜特级酱油500ml'});
+  DY8.oneid.registerId('consumer_id','CONS-000001',{});
+  DY8.oneid.registerId('campaign_id','CMP-2026Q3-DY01',{});
+  DY8.oneid.registerId('content_id','CNT-DEMO-01',{}); DY8.oneid.registerId('creator_id','CRT-DEMO-01',{});
+  DY8.persist(); DY8.toast('演示核心ID已填充','go'); render();
+};
+DY8.seedMaps=function(){
+  DY8.oneid.mapPlatformId('consumer_id','CONS-000001','douyin','dy_open_id_abc',{identity_level:'B',match_method:'platform_attribution',confidence_score:0.72,consent_status:'authorized'});
+  DY8.oneid.mapPlatformId('sku_id','SKU-DEMO-001','douyin','dy_product_998',{identity_level:'A',match_method:'deterministic',confidence_score:0.99,consent_status:'authorized'});
+  DY8.persist(); DY8.toast('演示平台映射已生成(含A/B级标记)','go'); render();
+};
+
+/* ── 屏5 事件合同 ── */
+function scEvents(){
+  const evs=S.events.slice(0,12).map(e=>`<tr><td class="mono">${esc(e.event_type)}</td><td class="mono">${e.channel_event?esc(e.channel_event):'<span class="dim3">—</span>'}</td><td>${e.mapped_ok?'<span class="pill ok">映射✓</span>':'<span class="pill bad">未映射</span>'}</td><td class="mono">${esc(e.sku_id||'—')}</td><td class="mono">${esc(e.identity_level||'—')}</td></tr>`).join('');
+  return `<div class="card"><h2>统一事件合同 <span class="tag">DY-B04 · §15/§16</span></h2>
+    <div class="sub">${DY8.events.minFields.length} 个最小字段 · 关键 ID 不得用名称文本替代 · 渠道事件必须映射到 ${DY8.events.standardEvents.length} 类标准事件</div>
+    <div style="margin-bottom:8px">${DY8.events.standardEvents.map(e=>`<span class="pill" style="background:var(--panel2);color:var(--ink2);margin:2px">${esc(e)}</span>`).join('')}</div>
+    <div style="margin:8px 0">渠道事件→标准事件(演示):${Object.keys(DY8.events.channelMap).map(k=>`<button class="btn sm" onclick="DY8.emitDemo('${esc(k)}')">${esc(k)}</button>`).join('')}</div>
+    <table class="data"><tr><th>标准事件</th><th>渠道原事件</th><th>映射</th><th>sku_id</th><th>身份级</th></tr>${evs||'<tr><td colspan=5 class="dim3">点上方按钮发一条演示事件</td></tr>'}</table>
+  </div>`;
+}
+DY8.emitDemo=function(ch){
+  const ev=DY8.events.emit(ch,{sku_id:'SKU-DEMO-001',consumer_id:'CONS-000001',identity_level:'B',campaign_id:'CMP-2026Q3-DY01',event_value:1,currency:'CNY',confidence_score:0.72,consent_status:'authorized'});
+  const v=DY8.events.validate(ev);
+  DY8.persist(); DY8.toast('事件 '+ch+' → '+ev.event_type+(v.ok?' · 字段齐全':' · 缺字段'),v.ok?'go':'warn'); render();
+};
+
+/* ── 屏6 StateStore ── */
+function scStore(){
+  const cnt=k=>Object.keys(S[k]||{}).length;
+  return `<div class="card"><h2>单一 StateStore <span class="tag">DY-A06/A07/A08</span></h2>
+    <div class="sub">唯一事实源:Loop/任务/审批/预算/证据/验果/学习/事件/ID 共享同一对象 · 不再有 S/V3S/V4S/LOOP_STORE 各持冲突事实</div>
+    <div class="kv">
+      <div class="k">持久化键</div><div class="v mono">douyinpcv8_store_v1</div>
+      <div class="k">schema_version</div><div class="v mono">${esc(S.schema_version)}</div>
+      <div class="k">loops</div><div class="v">${cnt('loops')}</div>
+      <div class="k">tasks</div><div class="v">${cnt('tasks')}</div>
+      <div class="k">events</div><div class="v">${S.events.length}</div>
+      <div class="k">id 类型已登记</div><div class="v">${cnt('ids')}</div>
+      <div class="k">id 映射</div><div class="v">${cnt('id_maps')}</div>
+      <div class="k">审计条数</div><div class="v">${S.audit.length}</div>
+    </div>
+    <div style="margin-top:10px">
+      <button class="btn" onclick="DY8.persist();DY8.toast('已写入单一事实源','go')">手动持久化</button>
+      <button class="btn bad" onclick="DY8.resetStore()">重置 StateStore(清空重载)</button>
+    </div>
+    <div class="sm-note">DY-A07 刷新恢复:刷新页面后 Loop/任务/审批/事件/ID 全部从 douyinpcv8_store_v1 恢复(单一事实源整体存取)</div>
+  </div>
+  <div class="card"><h2>审计流 <span class="tag">§47</span></h2>
+    <table class="data"><tr><th>时间</th><th>操作</th><th>操作者</th></tr>
+    ${S.audit.slice(0,15).map(a=>`<tr><td class="mono dim3">${new Date(a.ts).toLocaleTimeString('zh-CN')}</td><td>${esc(a.action)}</td><td class="mono">${esc(a.actor)}</td></tr>`).join('')}</table>
+  </div>`;
+}
+
+/* ── 屏7 评分/成熟度(诚实打分) ── */
+DY8.scoreModel = {
+  // 本轮Sprint1自评(按INF-STD-001 §28 11维), 诚实:真实数据接入维仍低
+  dims:[
+    ['业务边界与目标',8,7,'L1边界/对象/目标已按§6登记;企业综合价值函数已表达'],
+    ['Loop层级与闭环',15,12,'L1-L4已实例化+12要素+状态机双分支;真实数据闭环未接=扣'],
+    ['抖音专业性',10,10,'v7专业电路冻结迁入(双前线/三账/5A/直播/达人/千川/生命周期)'],
+    ['数据与One ID',15,11,'16类核心ID+三级身份+平台映射schema齐全;真实主档/事实账未接'],
+    ['判断与决策',10,8,'状态机+guard;Gap/根因/决策沿用v7,本轮未重接'],
+    ['任务与执行',10,8,'任务状态机/Artifact沿用v7;服务端权限未接'],
+    ['验果与学习',10,7,'双分支都进学习(修复v7);净增量验果未接真实基线'],
+    ['跨Agent协同',8,4,'事件合同就绪;Infinity/财务/库存/价格Agent未正式连接'],
+    ['PC/移动端与角色',6,5,'PC 7屏Sprint1骨架;移动端5入口待P2'],
+    ['安全合规审计',5,4,'审计流+HITL雏形;服务端RBAC/不可篡改审计待Epic D/G'],
+    ['生产可用性',3,1,'mock标识清晰;真实接口/并发/回滚未做']
+  ],
+  compute(){ const inf=this.dims.reduce((s,d)=>s+d[2],0); return {
+    inf, design:86, dataAccess:10, autoExec:55, prodReady:45, maturity:'M1→M2(未达M3真实数据闭环)' }; }
+};
+function scScore(){
+  const r=DY8.scoreModel.compute();
+  const rows=DY8.scoreModel.dims.map(d=>`<tr><td>${esc(d[0])}</td><td class="mono">${d[2]}/${d[1]}</td><td class="dim">${esc(d[3])}</td></tr>`).join('');
+  return `<div class="card"><h2>INF-STD-001 v1.1 统一评分(Sprint1 诚实自评) <span class="tag">§28</span></h2>
+    <div class="sub">同时报告设计完整度与真实运行成熟度 · 不用原型完成度代替生产可用度</div>
+    <table class="data"><tr><th>维度</th><th>得分</th><th>说明</th></tr>${rows}
+      <tr><td><b>合计</b></td><td class="mono"><b>${r.inf}/100</b></td><td class="dim">Sprint1地基完成后自评(v7基线=74)</td></tr></table>
+    <div class="kv" style="margin-top:12px">
+      <div class="k">设计完整度</div><div class="v">${r.design}/100</div>
+      <div class="k">真实数据接入度</div><div class="v">${r.dataAccess}/100</div>
+      <div class="k">自动执行度</div><div class="v">${r.autoExec}/100</div>
+      <div class="k">生产上线准备度</div><div class="v">${r.prodReady}/100</div>
+      <div class="k">成熟度</div><div class="v">${esc(r.maturity)}</div>
+    </div>
+    <div class="sm-note warn">一票否决自查:mock已显著标记(非假冒真实)· 但未接真实数据/事实账/服务端权限,<b>不得宣称"完整Agent"或"真实Loop已闭环"</b>。本轮=Sprint1地基,DoD全书未达(需P0全完成+15测试全绿+≥90分)。</div>
+  </div>`;
+}
+
+function render(){
+  const map={registry:scRegistry,loopmap:scLoopmap,statemachine:scStateMachine,oneid:scOneId,events:scEvents,store:scStore,score:scScore};
+  const fn=map[CUR]; if(fn)$('sc-'+CUR).innerHTML=fn();
+  // topbar
+  const r=DY8.scoreModel.compute();
+  $('scInf').textContent=r.inf; $('scDes').textContent=r.design; $('scData').textContent=r.dataAccess; $('scMat').textContent='M1→M2';
+  const mm=DY8.modeMeta[DY8.MODE]; $('modechip').textContent=mm.label.split(' ')[0]; $('modechip').className='modechip '+DY8.MODE;
+  $('modeband').className=DY8.MODE;
+}
+DY8.render=render;
+
+/* ── init ── */
+function init(){
+  if(!DY8.restore()){
+    S.registry=DY8.registry.buildDefault();
+    S.mode=DY8.MODE;
+    DY8.templates.instantiate();
+    DY8.persist();
+  } else {
+    if(!S.registry)S.registry=DY8.registry.buildDefault();
+    if(Object.keys(S.loops).length===0)DY8.templates.instantiate();
+  }
+  renderNav(); DY8.go('registry');
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
+})(window.DY8);
+</script>
+</body>
+</html>
