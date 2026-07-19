@@ -58,6 +58,15 @@
   .overstock{background:var(--stop-tint);border:1.5px solid var(--stop);border-radius:9px;padding:11px;margin-top:9px;font-size:12.5px;color:var(--stop);line-height:1.5;font-weight:700;}
   .overstock .os2{font-size:11px;font-weight:400;color:var(--slate);margin-top:4px;}
   .brok{background:var(--go-tint);border-radius:9px;padding:10px;margin-top:9px;font-size:12.5px;color:var(--go);font-weight:700;}
+  .dchk{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #EFEDE5;}.dchk:last-child{border-bottom:none;}
+  .dchk .di{flex:1;}.dchk .dn{font-size:13px;font-weight:700;}.dchk .dh{font-size:10px;color:var(--slate);}
+  .dchk .dbtns{display:flex;gap:5px;}
+  .dchk .db2{padding:6px 11px;border-radius:7px;font-size:11px;font-weight:700;border:1.5px solid var(--rule);background:#fff;cursor:pointer;}
+  .dchk .db2.yes.on{background:var(--go);color:#fff;border-color:var(--go);}
+  .dchk .db2.no.on{background:var(--stop);color:#fff;border-color:var(--stop);}
+  .mismatch{background:var(--stop-tint);border:1.5px solid var(--stop);border-radius:9px;padding:11px;margin-top:10px;font-size:12.5px;color:var(--stop);font-weight:700;line-height:1.5;}
+  .mismatch .m2{font-size:11px;font-weight:400;color:var(--slate);margin-top:4px;}
+  .dmatch{background:var(--go-tint);border-radius:9px;padding:10px;margin-top:10px;font-size:12px;color:var(--go);font-weight:700;}
   .btn{display:block;width:100%;padding:12px;border:none;border-radius:10px;font-family:var(--cjk);font-size:14px;font-weight:800;cursor:pointer;margin-top:10px;}
   .btn.go{background:var(--go);color:#fff;}.btn.go:disabled{background:#C6CBC4;}
   .btn.amber{background:var(--amber);color:#fff;}.btn.ghost{background:#EFEDE5;color:var(--slate);font-size:12px;padding:9px;}
@@ -166,7 +175,7 @@
 
   <!-- XD 店内 -->
   <div class="panel" id="p-xd">
-    <div class="ph">📷 <b>进店三拍 · 谁进店谁做</b> · 照片是最硬的证据，拍了才算盘过 · 复购/毛利没采=显示"—"不瞎编</div>
+    <div class="ph">📷 <b>盒马双现场:物理 + 数字</b> · 店仓一体·线上线下同履约 · 光盘物理货架不够,线上掉线/缺货照样丢单 · 照片/截图是最硬证据</div>
     <div class="card hi"><h3>📷 进店三拍 · 盘今天的货</h3>
       <div class="sub" id="scaninfo"></div>
       <div class="cam3" id="cam3"></div>
@@ -179,6 +188,10 @@
       <div id="brbatch"></div>
       <button class="btn amber" id="btnBr" disabled>拍后仓 + 填批次 · 提交盘点</button>
       <div id="brresult"></div></div>
+    <div class="card hi"><h3>💻 数字现场 · 线上门店盘点(盒马双现场)</h3>
+      <div class="sub">物理盘完还要盘线上:门店在线?SKU上线?真能下单?线上价对?搜得到?履约正常?每项要截图</div>
+      <div id="digital"></div>
+      <div id="mismatch"></div></div>
     <div class="card"><h3>🎛️ 6开关主盘 · SKU现在什么状态</h3><div class="sw6" id="sw6"></div>
       <div class="sub">🔴红=没点亮(今天要赢)·🟢绿=已点亮·灰=没采(不假装)</div></div>
     <div class="card"><h3>📋 5类数据都收了吗(逐项必做)</h3><div id="collect5"></div>
@@ -407,6 +420,21 @@ function reduce(state, cmd, ctx){
       if(cmd.strategy_key) ns.strategy_standard[cmd.strategy_key]=cmd.to;
       detail='北极星决策:'+conv.point+' 标 '+cmd.from+'→'+cmd.to+' · 连接律下沉到 '+tgt.loop+'/'+tgt.gap+'(一线)+中层forecast'; break;
     }
+    case 'XD_DIGITAL': {                    // 数字现场检查(盒马双现场·线上盘点)·截图证据(红线R1)
+      if(!cmd.photo) throw new Error('数字现场检查必须截图(红线R1:线上状态也要证据)');
+      const ds=s.digital_shelf;
+      if(cmd.check_key){ const ck=ds.checks.find(function(x){return x.key===cmd.check_key;}); if(ck){ck.ok=cmd.ok; ck.shot=cmd.photo;} }
+      ds.scanned = ds.checks.every(function(x){return x.ok!=null;});
+      // ★双向错配检测(校准前置数字版):物理有货(6开关)vs线上可售
+      const phys_instock = s.switches.on['有货'];  // 物理现场:有货
+      const online_sellable = (ds.checks.find(function(x){return x.key==='sellable';})||{}).ok; // 数字:可售
+      if(phys_instock===true && online_sellable===false){ ds.mismatch.phys_yes_online_no=true; }
+      else ds.mismatch.phys_yes_online_no=false;
+      if(online_sellable===true && phys_instock===false){ ds.mismatch.online_yes_phys_no=true; }
+      else ds.mismatch.online_yes_phys_no=false;
+      const mm = ds.mismatch.phys_yes_online_no || ds.mismatch.online_yes_phys_no;
+      detail='数字现场'+(cmd.check_key?('·'+cmd.check_key+'='+cmd.ok):'')+(mm?' · ⚠️错配!(现场vs线上不一致=漏单风险)':''); break;
+    }
     case 'XD_BACKROOM': {                   // 后仓库存盘点(拍后仓+批次)·压货判断=校准前置(算差前先校准)
       if(!cmd.photo) throw new Error('后仓盘点必须拍照(红线R1:实物证据)');
       const br=s.backroom;
@@ -588,6 +616,22 @@ const CHANNEL_FILL = {
     scanned:false, // 后仓盘点拍照了没
     overstock:false // 后仓>2A→压货(先消化不补)
   },
+  /* ★数字现场(盒马双现场:物理+数字·店仓一体+线上线下同履约)
+     物理盘得再好·线上掉线/缺货照样丢单·数字现场是量实↑的另一条腿 */
+  digital_shelf:{
+    sku:'六月鲜特级380ml',
+    checks:[  // 8项数字现场检查(对应你列的数字现场清单)
+      { key:'store_online', label:'平台门店在线', ok:null, hint:'盒马App里这家店是否营业中' },
+      { key:'sku_listed',   label:'SKU已上线',   ok:null, hint:'六月鲜在线上有没有这个链接' },
+      { key:'sellable',     label:'显示可售',     ok:null, hint:'不是"到货通知"·是真能下单' },
+      { key:'price_promo',  label:'线上价+促销',  ok:null, hint:'线上价/促销与现场一致?' },
+      { key:'search_pos',   label:'搜索/分类位',  ok:null, hint:'搜"酱油"搜得到·分类位对' },
+      { key:'fulfillment',  label:'履约(取消/替代/退款)', ok:null, hint:'30min达·取消替代退款是否异常' }
+    ],
+    scanned:false,
+    /* ★双向错配(校准前置的数字版·盒马最易漏单处) */
+    mismatch:{ phys_yes_online_no:false, online_yes_phys_no:false }
+  },
   /* XD 5类数据采集(红线3:①拍照②自己数据③消费者④竞品⑤门店 全进清单逐项必做) */
   xd_collect:[
     { key:'photo',      label:'① 货架拍照',   type:'photo',  hint:'进店三拍·照片是最硬证据', done:false },
@@ -710,6 +754,7 @@ function seedState(nowISO){
     switches: clone(CHANNEL_FILL.switches),
     xd_collect: clone(CHANNEL_FILL.xd_collect),
     backroom: clone(CHANNEL_FILL.backroom),
+    digital_shelf: clone(CHANNEL_FILL.digital_shelf),
     task_sources: clone(CHANNEL_FILL.task_sources),
     aiql: clone(CHANNEL_FILL.aiql),
     ladder: clone(CHANNEL_FILL.ladder),
@@ -800,6 +845,18 @@ function renderXD(){
     if(br.overstock)document.getElementById('brresult').innerHTML='<div class="overstock">⚠️ 后仓 '+br.backroom_qty+'瓶 > 2A('+br.safety_2a+') = 压货失真!<div class="os2">👉 先消化不补(这是"算差前先校准":后仓积压是"假的有货"·补货前得先扣掉压货·别越补越积压)</div></div>';
     else document.getElementById('brresult').innerHTML='<div class="brok">✅ 后仓 '+br.backroom_qty+'瓶 · 库存正常·可正常补货</div>';
   } else document.getElementById('brresult').innerHTML='';
+  // 数字现场(盒马双现场)
+  var ds=ST.digital_shelf;
+  document.getElementById('digital').innerHTML=ds.checks.map(function(ck,i){
+    return '<div class="dchk"><div class="di"><div class="dn">'+ck.label+'</div><div class="dh">'+ck.hint+'</div></div>'+
+      '<div class="dbtns"><div class="db2 yes'+(ck.ok===true?' on':'')+'" data-a="dcheck" data-key="'+ck.key+'" data-v="1">✓正常</div>'+
+      '<div class="db2 no'+(ck.ok===false?' on':'')+'" data-a="dcheck" data-key="'+ck.key+'" data-v="0">✗异常</div></div></div>';
+  }).join('');
+  var mm=ds.mismatch;
+  if(mm.phys_yes_online_no)document.getElementById('mismatch').innerHTML='<div class="mismatch">⚠️ 错配:现场有货 但 线上缺货!<div class="m2">👉 顾客线上买不到=白白漏单·赶紧催线上补可售状态(只盘物理永远发现不了)</div></div>';
+  else if(mm.online_yes_phys_no)document.getElementById('mismatch').innerHTML='<div class="mismatch">⚠️ 错配:线上可售 但 现场没货!<div class="m2">👉 顾客下单发不出=超卖投诉+退款·赶紧下线或补货(履约事故)</div></div>';
+  else if(ds.scanned)document.getElementById('mismatch').innerHTML='<div class="dmatch">✅ 物理与线上一致·无错配·履约通畅</div>';
+  else document.getElementById('mismatch').innerHTML='';
   // 5类数据采集
   document.getElementById('collect5').innerHTML=ST.xd_collect.map(function(x,i){
     return '<div class="c5"><div class="ci"><div class="cn">'+x.label+'</div><div class="ch">'+x.hint+'</div></div>'+
@@ -911,6 +968,11 @@ document.addEventListener('click',function(ev){
   var a=t.getAttribute('data-a'),gap=t.getAttribute('data-gap'),loopid=LOOPID[ROLE];
   if(a==='cam3'){var i=+t.getAttribute('data-i');cam3[i]=true;toast('📸 第'+(i+1)+'拍完成');render();}
   else if(a==='brcam'){var i=+t.getAttribute('data-i');brcam[i]=true;toast('📸 后仓第'+(i+1)+'拍');render();}
+  else if(a==='dcheck'){var key=t.getAttribute('data-key');var v=t.getAttribute('data-v')==='1';
+    act({type:'XD_DIGITAL',check_key:key,ok:v,photo:'screenshot://'+Date.now(),by:loop().owner});
+    var mm=ST.digital_shelf.mismatch;
+    if(mm.phys_yes_online_no||mm.online_yes_phys_no)toast('⚠️ <b>抓到错配!</b>现场vs线上不一致=漏单/超卖风险·双现场的价值');
+    else toast('💻 数字现场·已记录(截图存证)');render();}
   else if(a==='braddbatch'){brBatches.push({qty:'',date:''});render();}
   else if(a==='brrm'){var i=+t.getAttribute('data-i');if(brBatches.length>1)brBatches.splice(i,1);render();}
   else if(a==='collect'){var key=t.getAttribute('data-key');var x=ST.xd_collect.find(function(o){return o.key===key;});
