@@ -50,6 +50,14 @@
   .c5 .ci{flex:1;}.c5 .cn{font-size:13px;font-weight:700;}.c5 .ch{font-size:10.5px;color:var(--slate);}
   .c5 .cb{padding:7px 13px;border-radius:8px;font-size:11px;font-weight:700;border:1.5px solid var(--rule);background:#fff;cursor:pointer;white-space:nowrap;}
   .c5 .cb.done{background:var(--go-tint);border-color:var(--go);color:var(--go);}
+  .brb{display:flex;gap:7px;align-items:center;margin:7px 0;}
+  .brb input{padding:7px;border:1.5px solid var(--rule);border-radius:7px;font-size:13px;font-family:var(--mono);}
+  .brb input.q{width:64px;text-align:center;}.brb input.dt{width:96px;}
+  .brb .rm{background:var(--stop-tint);color:var(--stop);border:none;border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;}
+  .addb{background:#EFEDE5;border:1px dashed var(--slate);border-radius:7px;padding:8px;width:100%;font-size:12px;cursor:pointer;margin-top:4px;}
+  .overstock{background:var(--stop-tint);border:1.5px solid var(--stop);border-radius:9px;padding:11px;margin-top:9px;font-size:12.5px;color:var(--stop);line-height:1.5;font-weight:700;}
+  .overstock .os2{font-size:11px;font-weight:400;color:var(--slate);margin-top:4px;}
+  .brok{background:var(--go-tint);border-radius:9px;padding:10px;margin-top:9px;font-size:12.5px;color:var(--go);font-weight:700;}
   .btn{display:block;width:100%;padding:12px;border:none;border-radius:10px;font-family:var(--cjk);font-size:14px;font-weight:800;cursor:pointer;margin-top:10px;}
   .btn.go{background:var(--go);color:#fff;}.btn.go:disabled{background:#C6CBC4;}
   .btn.amber{background:var(--amber);color:#fff;}.btn.ghost{background:#EFEDE5;color:var(--slate);font-size:12px;padding:9px;}
@@ -165,6 +173,12 @@
       <div class="sub" id="scanhint">拍完三张 → 自动识别货架 → 更新下面的开关</div>
       <button class="btn amber" id="btnScan" disabled>拍完三拍 · 提交盘点</button>
     </div>
+    <div class="card hi"><h3>📦 后仓库存盘点 · 店仓一体(盒马是店+仓)</h3>
+      <div class="sub" id="brinfo"></div>
+      <div class="cam3" id="brcam"></div>
+      <div id="brbatch"></div>
+      <button class="btn amber" id="btnBr" disabled>拍后仓 + 填批次 · 提交盘点</button>
+      <div id="brresult"></div></div>
     <div class="card"><h3>🎛️ 6开关主盘 · SKU现在什么状态</h3><div class="sw6" id="sw6"></div>
       <div class="sub">🔴红=没点亮(今天要赢)·🟢绿=已点亮·灰=没采(不假装)</div></div>
     <div class="card"><h3>📋 5类数据都收了吗(逐项必做)</h3><div id="collect5"></div>
@@ -307,7 +321,19 @@ function jbpIntersection(state){
 }
 
 /* 环五步 = 不可变命令。reduce 纯函数:旧态→新态(深冻结) · 关差改共享 facts → 两环同时联动 */
-function recomputeIncomes(s){ s.loops.hema.income=calcLoopIncome(s.loops.hema,s); s.loops.sh.income=calcLoopIncome(s.loops.sh,s); s.jbp=jbpIntersection(s); }
+function syncPrimaryStore(s){  // 主体店从真实state现算→投影到中层多店表(真同源:一线关差→中层变)
+  if(!s.ops_layer) return;
+  const prim=s.ops_layer.stores.find(function(x){return x.id===s.store.id;}); if(!prim) return;
+  const dx=actualOf(s.loops.sh.gaps['S-DX'],s), lx=s.facts.fulfillment_30min;
+  let open=0; for(const k in s.loops){ const gs=s.loops[k].gaps; for(const id in gs){ if((gs[id].close_menu||[]).length && gs[id].close.status==='OPEN') open++; } }
+  if(dx!=null) prim.dongxiao=+dx.toFixed(3);
+  if(lx!=null) prim.fulfillment=lx;
+  prim.gaps_open=open;
+  const score=(dx||0)*0.6+(lx||0)*0.4;
+  prim.health=score>=0.75?'green':score>=0.55?'yellow':'red';
+  s.ops_layer.numbers.actual_mtd=s.ops_layer.stores.reduce(function(a,x){return a+x.actual_mtd;},0);
+}
+function recomputeIncomes(s){ s.loops.hema.income=calcLoopIncome(s.loops.hema,s); s.loops.sh.income=calcLoopIncome(s.loops.sh,s); s.jbp=jbpIntersection(s); syncPrimaryStore(s); }
 function findGap(s,loopId,gapId){ const lp = loopId==='LOOP-HEMA'?s.loops.hema:s.loops.sh; return {loop:lp, gap:lp.gaps[gapId]}; }
 
 function reduce(state, cmd, ctx){
@@ -363,6 +389,36 @@ function reduce(state, cmd, ctx){
       if(cmd.collect_key){ const cc=s.xd_collect.find(function(x){return x.key===cmd.collect_key;}); if(cc){cc.done=true; cc.value=cmd.collect_value||cmd.photo||'已采';} }
       detail='XD进店盘点 '+(sw?(sw+'='+val):'')+(cmd.collect_key?(' · 采集'+cmd.collect_key):'')+' · 照片写入L1真源'; break;
     }
+    case 'NORTHSTAR_DECIDE': {              // 高层结构性决策:改战略标→连接律自动下沉(上层关差=下层定标)
+      const ns=s.northstar;
+      const conv=ns.convergence, tgt=conv.down_target;
+      // ① 记录结构性决策(高层"做对的事")
+      ns.decisions.push({ at:now, by:ns.owner, type:cmd.decision_type||'raise_standard',
+        point:conv.point, from:cmd.from, to:cmd.to, reason:cmd.reason||'四维度诊断:结构性问题' });
+      // ② ★连接律下沉:高层的标→变成一线那个gap的定标↓(上层关差=下层定标)
+      const lp = tgt.loop==='LOOP-SH'?s.loops.sh:s.loops.hema;
+      const g = lp.gaps[tgt.gap];
+      if(g){ g.standard.src='北极星↓·'+ns.owner+'(战略下沉·非倒推)'; g.standard.v=cmd.to;
+             g.standard.pushed_from='L1-northstar'; }
+      // ③ ★下沉到中层:对应店的forecast随战略标上调(中层要背这个新目标)
+      const prim=s.ops_layer.stores.find(function(x){return x.id===s.store.id;});
+      if(prim && cmd.forecast_bump) prim.forecast=+(prim.forecast+cmd.forecast_bump).toFixed(0);
+      // ④ 战略标本身也更新
+      if(cmd.strategy_key) ns.strategy_standard[cmd.strategy_key]=cmd.to;
+      detail='北极星决策:'+conv.point+' 标 '+cmd.from+'→'+cmd.to+' · 连接律下沉到 '+tgt.loop+'/'+tgt.gap+'(一线)+中层forecast'; break;
+    }
+    case 'XD_BACKROOM': {                   // 后仓库存盘点(拍后仓+批次)·压货判断=校准前置(算差前先校准)
+      if(!cmd.photo) throw new Error('后仓盘点必须拍照(红线R1:实物证据)');
+      const br=s.backroom;
+      br.backroom_qty = cmd.qty!=null ? cmd.qty : (cmd.batches||[]).reduce(function(a,x){return a+(x.qty||0);},0);
+      if(cmd.batches) br.batches=cmd.batches;
+      br.scanned=true; br.photo=cmd.photo; br.at=now;
+      // ★压货判断:后仓>2A → 压货失真(蝴蝶TypeB)→"先消化不补"·算差前先校准
+      br.overstock = br.backroom_qty > br.safety_2a;
+      // 压货时:physical=shelf+backroom·有货开关"看着有"但那是压货假象(校准要扣掉)
+      s.facts.backroom_depth = +(br.backroom_qty/(br.safety_2a*2)).toFixed(3);
+      detail='后仓盘点 · '+br.backroom_qty+'瓶'+(br.overstock?(' > 2A('+br.safety_2a+')= 压货!先消化不补(校准前置)'):' · 正常')+(cmd.batches?(' · '+cmd.batches.length+'批次'):''); break;
+    }
     case 'GUANXI_TALK': {                   // 客情谈判(答应+共识)
       const t=s.guanxi.talks[cmd.idx]; if(!t) throw new Error('no talk target');
       if(cmd.he_agreed!=null) t.he_agreed=cmd.he_agreed;
@@ -386,6 +442,28 @@ function reduce(state, cmd, ctx){
       t.history.push({ at:now.slice(0,10), by:cmd.old_owner||'交接', what:'关系交接给 '+(cmd.new_owner||'新SR'), result:'知识库已传承' });
       if(cmd.handover_note) t.handover_note=cmd.handover_note;
       detail='客情交接 · '+t.who+' → '+(cmd.new_owner||'新SR')+' · 历史+脾性+承诺全传承'; break;
+    }
+    case 'OPS_FORECAST': {                  // 中层押预测(建议型·系统给锚+主管押判断·地基:预测=主管能力)
+      const o=s.ops_layer; const base=o.numbers.forecast_baseline;
+      o.numbers.forecast_manager=cmd.value;  // 主管在基线上押的数
+      o.numbers.forecast_delta=+(cmd.value-base).toFixed(1); // 相对锚上调/下调
+      o.numbers.forecast_reason=cmd.reason||''; // 押判断的理由(拐点:竞品/新店)
+      detail='押预测 · 基线'+base+' → 主管押'+cmd.value+'('+(o.numbers.forecast_delta>=0?'+':'')+o.numbers.forecast_delta+')·'+(cmd.reason||''); break;
+    }
+    case 'OPS_REALLOCATE': {                // 店间资源调配(战术调整·涉钱=human_gate·A店挪B店)
+      const o=s.ops_layer;
+      if(!cmd.approved) throw new Error('店间调配涉钱(HITL):须 human_gate 批准后执行(approved:true)');
+      const from=o.stores.find(function(x){return x.id===cmd.from;}), to=o.stores.find(function(x){return x.id===cmd.to;});
+      if(!from||!to) throw new Error('店不存在');
+      o.reallocations.push({ from:cmd.from, to:cmd.to, amount:cmd.amount, what:cmd.what||'预算调配', at:now, by:o.manager });
+      detail='店间调配(HITL已批)· '+from.name+' → '+to.name+' · '+cmd.amount+'k · '+(cmd.what||''); break;
+    }
+    case 'OPS_HANDLE_ESC': {                // 处理一线升上来的差(连接律:中层关差 或 再升一层)
+      const o=s.ops_layer; const e=o.escalations[cmd.idx]; if(!e) throw new Error('no escalation');
+      if(cmd.decision==='close'){ e.status='CLOSED_BY_OPS'; e.action=cmd.action||'中层调配资源关差'; }
+      else if(cmd.decision==='escalate'){ e.status='ESCALATED_UP'; e.to='城市JBP/总部'; } // 中层也关不了→再升
+      e.at=now;
+      detail='处理升级 · '+e.from+' · '+(cmd.decision==='close'?'中层关差:'+(cmd.action||''):'再升一层→城市JBP'); break;
     }
     default: throw new Error('unknown command '+cmd.type);
   }
@@ -424,6 +502,71 @@ function selfCheck(state){
 /* ────────── 填充层:o2o 渠道内核(回本来·换渠道只换这块) ────────── */
 const CHANNEL_FILL = {
   channel_id:'hema-store-o2o', channel_name:'盒马门店O2O·店仓一体·双环交汇',
+  /* 北极星层(L1·战略·经营分析)·四维度视图 = 同一引擎的四种投影(非四个引擎) */
+  northstar:{
+    owner:'城市总经理·高远', level:'L1·北极星·战略层', paid_by:'SH·欣和',
+    mission:'上海六月鲜城市渗透·Q3冲刺', period:'2026-Q3',
+    /* 战略标(北极星定标↓·改它→连接律下沉到中层/一线) */
+    strategy_standard:{ city_penetration:0.35, src:'集团北极星↓·Q3红线' }, // 城市渗透率红线
+    /* 四维度视图(M4:非各存各算·从同一真实state投影) */
+    views:{
+      channel:[   // ①渠道维度:好的加分/差的补救/救不了改决策
+        { id:'hema-o2o', name:'盒马O2O', contrib:0.28, health:'yellow', trend:-0.04, note:'杨浦片区拖累' },
+        { id:'kfc-store', name:'大卖场', contrib:0.41, health:'green', trend:0.02, note:'稳定贡献' },
+        { id:'xhs', name:'小红书', contrib:0.18, health:'green', trend:0.06, note:'高增·可加码' },
+        { id:'douyin', name:'抖音', contrib:0.13, health:'red', trend:-0.08, note:'投产比恶化·考虑收缩' }
+      ],
+      category:[  // ②品类品牌SKU维度:IGMD比例延续·逐SKU
+        { id:'liuyuexian', name:'六月鲜', igmd:0.45, health:'yellow', sku_weak:'380ml特级', note:'主力品牌·杨浦垮' },
+        { id:'weidamei', name:'味达美', igmd:0.30, health:'green', sku_weak:null, note:'稳' },
+        { id:'cbl', name:'葱伴侣', igmd:0.25, health:'green', sku_weak:null, note:'稳' }
+      ],
+      region:[    // ③区域消费者维度:城市=消费者·下沉片区
+        { id:'yangpu', name:'杨浦片区', penetration:0.29, health:'red', trend:-0.06, note:'★渗透掉·竞品新开' },
+        { id:'xuhui', name:'徐汇片区', penetration:0.38, health:'green', trend:0.01, note:'达标' },
+        { id:'minhang', name:'闵行片区', penetration:0.41, health:'green', trend:0.03, note:'超标' }
+      ],
+      salesforce:[ // ④销售人效维度:层层背负到人·人效比
+        { id:'linhang', name:'林航', store:'盒马杨浦', efficiency:0.62, health:'yellow', note:'★人效异常·带杨浦六月鲜' },
+        { id:'zhangwei', name:'张伟', store:'大卖场五角场', efficiency:0.88, health:'green', note:'高效' },
+        { id:'wangfang', name:'王芳', store:'小红书运营', efficiency:0.91, health:'green', note:'高效' }
+      ]
+    },
+    /* 四维度交汇点(★证明四线收敛于同一SKU/店/人·连接律的核心) */
+    convergence:{
+      channel:'hema-o2o', category:'liuyuexian', region:'yangpu', salesforce:'linhang',
+      point:'林航·盒马杨浦店·六月鲜380ml特级',
+      diagnosis:'四个维度都指向同一个点=结构性问题(非偶然)',
+      down_target:{ loop:'LOOP-SH', gap:'S-DX' } // 下钻/下沉的落点:一线SR环的动销差
+    },
+    /* 结构性决策(高层"做对的事":发现问题→改标→下达) */
+    decisions:[]
+  },
+  /* 中层运营(L2·品类/多店层)·管一批店·主管=运营经理 */
+  ops_layer:{
+    manager:'城市运营经理·周敏', region:'上海·杨浦片区', role:'ops_manager', paid_by:'SH·欣和',
+    period:'2026-07(本月·战术层)',
+    /* 管辖的 N 家店(每店:红黄绿健康 + 关键指标 + 未关差升级来的) */
+    stores:[
+      { id:'ST-HEMA-YP', name:'盒马·杨浦店', health:'yellow', dongxiao:0.59, fulfillment:0.88, gaps_open:2, escalated:0, forecast:108, actual_mtd:71 },
+      { id:'ST-HEMA-YP2', name:'盒马·五角场店', health:'green', dongxiao:0.78, fulfillment:0.96, gaps_open:0, escalated:0, forecast:135, actual_mtd:112 },
+      { id:'ST-HEMA-YP3', name:'盒马·新江湾店', health:'red', dongxiao:0.41, fulfillment:0.79, gaps_open:4, escalated:2, forecast:96, actual_mtd:38 },
+      { id:'ST-HEMA-YP4', name:'盒马·大学路店', health:'yellow', dongxiao:0.62, fulfillment:0.91, gaps_open:1, escalated:0, forecast:88, actual_mtd:64 }
+    ],
+    /* 三个数(地基:预测/预算/实际)·预测=建议型(系统给锚+主管押判断) */
+    numbers:{
+      forecast_baseline:427,  // 系统规则基线(历史外推·四店forecast之和的锚)
+      forecast_manager:null,  // 主管押判断修正(null=还没押)· 建议型
+      budget:52,              // 批的运营预算(k·可在店间调配)
+      actual_mtd:285          // 本月实际(四店actual_mtd之和)
+    },
+    /* 店间资源调配(战术调整·涉钱=human_gate·A店挪B店) */
+    reallocations:[],
+    /* 一线升上来的差(连接律:关不了升一层)·中层来关或再升 */
+    escalations:[
+      { from:'ST-HEMA-YP3', what:'新江湾店动销0.41持续低·SR关不动', why:'该店周边竞品新开·客流被分流', need:'调配促销资源+加派人力' }
+    ]
+  },
   store:{ id:'ST-HEMA-YP', name:'盒马鲜生·上海杨浦店', consumer_anchor:'consumer' },
   /* SR 挖潜力:从城市盘子给这家店切 SH 目标(定标↓·非倒推·呼应社区店 N×P×F×B×ASP) */
   city:{ population:82000, customer_type:'中产社区+园区白领', region:'上海·杨浦', 
@@ -435,6 +578,15 @@ const CHANNEL_FILL = {
     sku:'六月鲜特级380ml', at:'@盒马·杨浦',
     on:{ 上架:true, 有货:false, 陈列:true, 动销:false }, // 有货/动销 OFF = 今天要赢的
     nodata:['复购','毛利'] // 未采集·显示"—"·不假装
+  },
+  /* XD 后仓库存盘点(店仓一体·盒马是店+仓·拍后仓+批次+压货判断)
+     后仓>2A=压货失真(蝴蝶TypeB)→"先消化不补"·这是"算差前先校准"在一线的落地 */
+  backroom:{
+    sku:'六月鲜特级380ml', shelf_qty:12, backroom_qty:0,  // backroom初始未盘=0(待拍)
+    safety_2a:20,  // 2A安全线(超过=压货嫌疑)
+    batches:[],    // 拍后仓后手填批次[{qty,date}]
+    scanned:false, // 后仓盘点拍照了没
+    overstock:false // 后仓>2A→压货(先消化不补)
   },
   /* XD 5类数据采集(红线3:①拍照②自己数据③消费者④竞品⑤门店 全进清单逐项必做) */
   xd_collect:[
@@ -552,9 +704,12 @@ function seedState(nowISO){
     seq:0,
     store: clone(CHANNEL_FILL.store),
     city: clone(CHANNEL_FILL.city),
+    northstar: clone(CHANNEL_FILL.northstar),
+    ops_layer: clone(CHANNEL_FILL.ops_layer),
     facts: clone(CHANNEL_FILL.facts),
     switches: clone(CHANNEL_FILL.switches),
     xd_collect: clone(CHANNEL_FILL.xd_collect),
+    backroom: clone(CHANNEL_FILL.backroom),
     task_sources: clone(CHANNEL_FILL.task_sources),
     aiql: clone(CHANNEL_FILL.aiql),
     ladder: clone(CHANNEL_FILL.ladder),
@@ -588,12 +743,16 @@ var ROLE='sh', TAB='xm';
 var editing=null, editingHN=null, handingOver=null;
 var LOOPID={sh:'LOOP-SH',hema:'LOOP-HEMA'};
 var draft={}, cam3=[false,false,false];
+var brcam=[false,false], brBatches=[{qty:'',date:''}];
 function d(g){draft[g]=draft[g]||{steps:{},ev:{}};return draft[g];}
 function money(k){return '¥'+k.toFixed(1)+'k';}
 function toast(h){var w=document.getElementById('tw');var el=document.createElement('div');el.className='t';el.innerHTML=h;w.appendChild(el);setTimeout(function(){el.remove();},3800);}
 function flash(id){var el=document.getElementById(id);if(el){el.classList.add('up');setTimeout(function(){el.classList.remove('up');},800);}}
 function act(cmd){try{ST=E.dispatch(ST,cmd,{now:new Date().toISOString()});}catch(err){toast('⚠️ '+err.message);return false;}return true;}
 function loop(){return ST.loops[ROLE];}
+function updateBrBtn(){var btn=document.getElementById('btnBr');if(!btn)return;
+  var ready=brcam.every(Boolean)&&brBatches.length>0&&brBatches.every(function(b){return +b.qty>0;});
+  btn.disabled=!ready;btn.textContent=ready?'拍后仓 + 填批次 · 提交盘点':'先拍2张+填批次';}
 
 var WHY={'S-DX':'六月鲜卖得不够快，补货+摆好位置就能冲上去','S-PW':'六月鲜坑位不够多，多谈几个端架就能多卖','H-QH':'有些货架空了，顾客想买买不到，补上就好','H-LX':'30分钟送达差一点，加把手就达标'};
 function curStep(g){if(!g.diag)return 0;if(g.close.status!=='DONE'&&g.close.status!=='ESCALATED')return 1;if(g.verify.status!=='VERIFIED')return 2;return 3;}
@@ -624,6 +783,23 @@ function renderXD(){
     if(nd.indexOf(k)>=0)return '<div class="s nd"><div class="k">'+k+'</div><div class="v">—</div></div>';
     var v=on[k];return '<div class="s '+(v?'on':'off')+'"><div class="k">'+k+'</div><div class="v">'+(v?'✓已点亮':'✗待点亮')+'</div></div>';
   }).join('');
+  // 后仓库存盘点(店仓一体)
+  var br=ST.backroom;
+  document.getElementById('brinfo').innerHTML='盘 <b>'+br.sku+'</b> · 货架 '+br.shelf_qty+'瓶 · 后仓 '+(br.scanned?br.backroom_qty+'瓶':'待盘')+' · 2A安全线 '+br.safety_2a+'瓶';
+  document.getElementById('brcam').innerHTML=['后仓整体','批次效期'].map(function(l,i){return '<div class="c'+(brcam[i]?' shot':'')+'" data-a="brcam" data-i="'+i+'">'+(brcam[i]?'✅':'📷')+'<span class="cl">'+l+'</span></div>';}).join('');
+  // 批次手填
+  var bh='<div style="font-size:11px;color:var(--slate);margin:6px 0">📦 手填批次(1个SKU可多批次·效期不同)</div>';
+  brBatches.forEach(function(b,i){bh+='<div class="brb"><input class="q" type="number" placeholder="瓶数" value="'+(b.qty||'')+'" data-a="brqty" data-i="'+i+'"><input class="dt" type="text" placeholder="效期如2026-01" value="'+(b.date||'')+'" data-a="brdate" data-i="'+i+'"><button class="rm" data-a="brrm" data-i="'+i+'">删</button></div>';});
+  bh+='<button class="addb" data-a="braddbatch">+ 加一个批次</button>';
+  document.getElementById('brbatch').innerHTML=bh;
+  var brReady=brcam.every(Boolean)&&brBatches.length>0&&brBatches.every(function(b){return b.qty>0;});
+  document.getElementById('btnBr').disabled=!brReady;
+  document.getElementById('btnBr').textContent=brReady?'拍后仓 + 填批次 · 提交盘点':'先拍2张+填批次';
+  // 压货结果
+  if(br.scanned){
+    if(br.overstock)document.getElementById('brresult').innerHTML='<div class="overstock">⚠️ 后仓 '+br.backroom_qty+'瓶 > 2A('+br.safety_2a+') = 压货失真!<div class="os2">👉 先消化不补(这是"算差前先校准":后仓积压是"假的有货"·补货前得先扣掉压货·别越补越积压)</div></div>';
+    else document.getElementById('brresult').innerHTML='<div class="brok">✅ 后仓 '+br.backroom_qty+'瓶 · 库存正常·可正常补货</div>';
+  } else document.getElementById('brresult').innerHTML='';
   // 5类数据采集
   document.getElementById('collect5').innerHTML=ST.xd_collect.map(function(x,i){
     return '<div class="c5"><div class="ci"><div class="cn">'+x.label+'</div><div class="ch">'+x.hint+'</div></div>'+
@@ -734,6 +910,9 @@ document.addEventListener('click',function(ev){
   var t=ev.target.closest('[data-a]'); if(!t)return;
   var a=t.getAttribute('data-a'),gap=t.getAttribute('data-gap'),loopid=LOOPID[ROLE];
   if(a==='cam3'){var i=+t.getAttribute('data-i');cam3[i]=true;toast('📸 第'+(i+1)+'拍完成');render();}
+  else if(a==='brcam'){var i=+t.getAttribute('data-i');brcam[i]=true;toast('📸 后仓第'+(i+1)+'拍');render();}
+  else if(a==='braddbatch'){brBatches.push({qty:'',date:''});render();}
+  else if(a==='brrm'){var i=+t.getAttribute('data-i');if(brBatches.length>1)brBatches.splice(i,1);render();}
   else if(a==='collect'){var key=t.getAttribute('data-key');var x=ST.xd_collect.find(function(o){return o.key===key;});
     act({type:'XD_SCAN',switch:null,value:null,photo:'p://'+Date.now(),collect_key:key,collect_value:'采集'+Date.now(),by:loop().owner});
     toast('✅ <b>'+(x?x.label:'')+' 已收</b>'+(key==='competitor'?'（竞品价签可交叉校真·防假）':''));render();}
@@ -769,6 +948,13 @@ document.addEventListener('click',function(ev){
       toast('🔄 <b>已交接给 '+v+'</b>·历史+脾性+承诺+交接语全传承·关系不断档');}
     handingOver=null;render();}
 });
+document.getElementById('btnBr').addEventListener('click',function(){
+  if(!brcam.every(Boolean)||!brBatches.every(function(b){return b.qty>0;})){toast('先拍2张+填批次瓶数');return;}
+  var batches=brBatches.map(function(b){return {qty:+b.qty,date:b.date||'未填'};});
+  act({type:'XD_BACKROOM',photo:'br://'+Date.now(),batches:batches,by:loop().owner});
+  var br=ST.backroom;
+  toast(br.overstock?'⚠️ <b>后仓压货!</b>'+br.backroom_qty+'瓶>2A·先消化不补(已校准)':'✅ <b>后仓盘点提交</b>·'+br.backroom_qty+'瓶正常');render();
+});
 document.getElementById('btnScan').addEventListener('click',function(){
   // 进店三拍提交:盘出"有货"点亮(mock:照片识别)+更新库存fact
   if(!cam3.every(Boolean)){toast('先拍完三张');return;}
@@ -777,7 +963,12 @@ document.getElementById('btnScan').addEventListener('click',function(){
   toast('📷 <b>盘点提交！</b>照片写入真源·"有货"开关已更新·去 XL 关差');render();
 });
 document.getElementById('btnWd').addEventListener('click',function(){toast('💸 提现申请已提交（战功挂可验证结果·非自评）');});
-document.addEventListener('input',function(ev){var t=ev.target.closest('[data-a="num"]');if(!t)return;d(t.getAttribute('data-gap')).ev[t.getAttribute('data-key')]=t.value;render();});
+document.addEventListener('input',function(ev){
+  var t=ev.target.closest('[data-a]');if(!t)return;var a=t.getAttribute('data-a');
+  if(a==='num'){d(t.getAttribute('data-gap')).ev[t.getAttribute('data-key')]=t.value;render();}
+  else if(a==='brqty'){brBatches[+t.getAttribute('data-i')].qty=t.value;updateBrBtn();}
+  else if(a==='brdate'){brBatches[+t.getAttribute('data-i')].date=t.value;}
+});
 render();
 </script>
 </body>

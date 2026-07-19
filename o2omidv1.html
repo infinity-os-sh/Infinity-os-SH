@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>盒马O2O · 中层运营管理 · 杨浦片区</title>
+<style>
+  :root{--ink:#16181C;--paper:#F4F2EC;--surface:#FBFAF6;--amber:#A8612A;--amber-deep:#834A1F;--amber-tint:#EADFCB;
+    --go:#2E6A4A;--go-tint:#DDE8DF;--stop:#9A3A33;--stop-tint:#F0DBD7;--blue:#3A5A7A;--blue-tint:#DCE6F0;--gold:#C8A04A;--purple:#6B4A7A;--purple-tint:#E7DEF0;
+    --red:#C0392B;--yellow:#D4A017;--green:#2E7D32;
+    --slate:#565A62;--mute:#8C8F96;--rule:#DBD8CD;--mono:ui-monospace,Menlo,monospace;--cjk:'PingFang SC','Microsoft YaHei',sans-serif;}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{background:#0F1114;color:var(--ink);font-family:var(--cjk);font-size:13px;line-height:1.5;}
+  .wm{background:repeating-linear-gradient(45deg,#2a2d34,#2a2d34 8px,#22252b 8px,#22252b 16px);color:#E8B57E;font-family:var(--mono);font-size:9.5px;text-align:center;padding:6px;}
+  .wrap{max-width:1080px;margin:0 auto;background:var(--paper);min-height:100vh;}
+  .top{background:var(--ink);color:#EDEBE4;padding:16px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .top .t{font-size:17px;font-weight:800;}.top .t b{color:var(--gold);}
+  .top .sub{font-size:11px;color:#9a9da3;font-family:var(--mono);}
+  .top .lvl{margin-left:auto;background:rgba(200,160,74,.16);border:1px solid var(--gold);border-radius:8px;padding:7px 12px;font-size:11px;color:#F0E4C8;}
+  .body{padding:16px 22px;}
+  .ph{font-size:11.5px;font-family:var(--mono);color:var(--amber-deep);background:var(--amber-tint);padding:8px 11px;border-radius:6px;margin-bottom:14px;line-height:1.55;}
+  .ph b{color:var(--ink);}
+  h2{font-size:15px;font-weight:800;margin:16px 0 10px;display:flex;align-items:center;gap:8px;}
+  h2 .tag{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:4px;background:var(--blue-tint);color:var(--blue);font-weight:700;}
+  /* 三个数(预测/预算/实际) */
+  .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+  .num{background:var(--surface);border:1px solid var(--rule);border-radius:11px;padding:14px;}
+  .num .nl{font-size:11px;color:var(--slate);font-weight:700;}
+  .num .nv{font-size:28px;font-weight:800;margin:4px 0;}
+  .num.fc .nv{color:var(--purple);}.num.bg .nv{color:var(--amber-deep);}.num.ac .nv{color:var(--go);}
+  .num .nd{font-size:10.5px;color:var(--mute);}
+  .num .diff{font-size:11px;font-weight:700;margin-top:3px;}
+  .fcbox{background:var(--purple-tint);border-radius:10px;padding:12px;margin-bottom:16px;}
+  .fcbox .fh{font-size:12px;font-weight:800;color:var(--purple);margin-bottom:8px;}
+  .fcbox .frow{display:flex;align-items:center;gap:10px;font-size:12px;margin:6px 0;flex-wrap:wrap;}
+  .fcbox input{width:80px;padding:7px;border:1.5px solid var(--purple);border-radius:7px;font-size:14px;text-align:center;font-family:var(--mono);}
+  .fcbox input.reason{width:auto;flex:1;text-align:left;min-width:180px;}
+  .fcbox .fb{padding:8px 16px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
+  .fcbox .fnote{font-size:10.5px;color:var(--slate);margin-top:6px;line-height:1.5;}
+  /* 多店红黄绿表 */
+  table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surface);border-radius:11px;overflow:hidden;}
+  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--rule);}
+  th{font-size:10.5px;color:var(--mute);font-weight:700;font-family:var(--mono);background:#F0EEE6;}
+  tr:hover td{background:#F7F5EF;}
+  .dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+  .dot.red{background:var(--red);}.dot.yellow{background:var(--yellow);}.dot.green{background:var(--green);}
+  .hl{font-weight:800;}.hl.red{color:var(--red);}.hl.yellow{color:var(--yellow);}.hl.green{color:var(--green);}
+  .mini{font-family:var(--mono);font-size:11px;}
+  .badge{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:700;}
+  .badge.esc{background:var(--stop-tint);color:var(--stop);}.badge.ok{background:var(--go-tint);color:var(--go);}
+  .drill{padding:5px 11px;border:1.5px solid var(--blue);background:#fff;color:var(--blue);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;}
+  /* 升级队列 */
+  .esc{background:var(--stop-tint);border:1px solid var(--stop);border-radius:11px;padding:13px;margin-bottom:14px;}
+  .esc .eh{font-size:13px;font-weight:800;color:var(--stop);margin-bottom:9px;}
+  .esc .ecard{background:#fff;border-radius:9px;padding:11px;margin-bottom:9px;}
+  .esc .ecard .et{font-size:13px;font-weight:700;}.esc .ecard .ew{font-size:11.5px;color:var(--slate);margin:4px 0;}
+  .esc .ecard .need{font-size:11.5px;color:var(--amber-deep);font-weight:700;}
+  .esc .eact{display:flex;gap:8px;margin-top:9px;}
+  .esc .eb{flex:1;padding:9px;border-radius:8px;font-size:12px;font-weight:700;border:none;cursor:pointer;}
+  .esc .eb.close{background:var(--go);color:#fff;}.esc .eb.up{background:var(--amber);color:#fff;}
+  .esc .done{background:var(--go-tint);color:var(--go);border-radius:8px;padding:9px;font-size:12px;font-weight:700;text-align:center;}
+  /* 调配(HITL) */
+  .realloc{background:var(--surface);border:1px solid var(--rule);border-radius:11px;padding:14px;margin-bottom:14px;}
+  .realloc .rrow{display:flex;align-items:center;gap:9px;font-size:12.5px;flex-wrap:wrap;margin:8px 0;}
+  .realloc select,.realloc input{padding:7px;border:1.5px solid var(--rule);border-radius:7px;font-size:12px;}
+  .realloc input{width:70px;text-align:center;font-family:var(--mono);}
+  .realloc .hitl{background:var(--stop-tint);color:var(--stop);border-radius:7px;padding:8px 11px;font-size:11px;margin:8px 0;line-height:1.5;}
+  .realloc .rb{padding:9px 16px;background:var(--amber);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
+  .rlog{font-size:11px;color:var(--slate);margin-top:8px;font-family:var(--mono);}
+  .foot{text-align:center;font-family:var(--mono);font-size:9px;color:var(--mute);padding:16px;}
+  #tw{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);width:440px;max-width:88%;z-index:99;pointer-events:none;}
+  #tw .t{background:#1B1E24;color:#EDEBE4;border-radius:9px;padding:12px 14px;font-size:12.5px;margin-top:8px;box-shadow:0 6px 20px rgba(0,0,0,.3);}#tw .t b{color:#9FD6B6;}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+  .modal.on{display:flex;}
+  .modal .mc{background:var(--paper);border-radius:14px;padding:20px;max-width:440px;width:100%;max-height:80vh;overflow:auto;}
+  .modal .mh{font-size:15px;font-weight:800;margin-bottom:12px;display:flex;justify-content:space-between;}
+  .modal .mx{cursor:pointer;color:var(--mute);}
+  .modal .mrow{font-size:12.5px;padding:6px 0;border-bottom:1px solid var(--rule);}
+  .modal .mrow b{color:var(--amber-deep);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="wm" id="wm">加载中…</div>
+  <div class="top">
+    <div><div class="t">INFINITY OS · <b>中层运营管理</b></div><div class="sub" id="sub">加载中…</div></div>
+    <div class="lvl">L2 品类/多店层 · 运营=把事做好(战术·月)</div>
+  </div>
+  <div class="body">
+    <div class="ph">📊 <b>中层 = 管一批店，不是一个店</b> · 看三个数(预测/预算/实际)、红黄绿盯谁掉链子、店间调资源、接一线升上来的差。<b>预测=你押判断(建议型)·预测准进你记分卡</b></div>
+
+    <h2>💹 三个数 · 预测 / 预算 / 实际 <span class="tag">地基:三个数对流</span></h2>
+    <div class="nums" id="nums"></div>
+    <div class="fcbox" id="fcbox"></div>
+
+    <h2>🚦 我管的门店 · 红黄绿一张表 <span class="tag">谁掉链子一眼看</span></h2>
+    <table><thead><tr><th>门店</th><th>健康</th><th>六月鲜动销</th><th>履约</th><th>待关差</th><th>本月实际/预测</th><th>升级</th><th></th></tr></thead>
+    <tbody id="storerows"></tbody></table>
+
+    <h2>⬆️ 一线升上来的差 · 我来关或再升 <span class="tag">连接律:关不了升一层</span></h2>
+    <div id="escbox"></div>
+
+    <h2>🔀 店间资源调配 · 战术调整 <span class="tag">涉钱·HITL卡人工</span></h2>
+    <div class="realloc" id="realloc"></div>
+  </div>
+  <div class="foot" id="foot"></div>
+</div>
+<div class="modal" id="modal"><div class="mc"><div class="mh"><span id="modalTitle"></span><span class="mx" id="modalX">×</span></div><div id="modalBody"></div></div></div>
+<div id="tw"></div>
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   INFINITY OS · 渠道引擎母版 参考实现 · o2o · v2 双环交汇
+   三层合并 + 双环模型:
+     冻结层(V843)  不可变 reduce · commandFingerprint 幂等 · 审计 hash 链 · Registry
+     运行层(v8.2)  环五步 · actualOf 现算 · actual 恒 null
+     动机层(o2ov1) 战功/收入皮 · no_data 诚实
+   双环交汇(本次):一家店 = 两条定标↓的交汇点
+     · 盒马环:盒马定标↓ → 店长owns → 盒马发薪(店长KPI记分卡)= 客户价值
+     · SH环  :SH城市切出 → SR owns → SH发薪(SR城市战功)     = 我方价值
+     · 两环读同一份 facts(店的共享经营现实)· 两端都落同一消费者 · 非零和
+   JBP桥(GCD/LCM):关差瞄最大公约数(共同因子动作)·定标瞄最小公倍数(最小共同目标盘)
+     · GCD≈1 或 LCM≈两目标相乘 = 假双赢报警
+   换渠道 = 只换 CHANNEL_FILL 块。
+   ══════════════════════════════════════════════════════════════════ */
+(function(root){
+'use strict';
+
+/* ────────── 冻结层:引擎件(带走·跨渠道字节一致) ────────── */
+const CORE_VERSION = 'o2oref-engine-2.0.0-dualloop';
+
+function deepFreeze(o){
+  if(o && typeof o==='object' && !Object.isFrozen(o)){ Object.freeze(o); Object.keys(o).forEach(function(k){deepFreeze(o[k]);}); }
+  return o;
+}
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function digest(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h*31 + str.charCodeAt(i))|0; } return (h>>>0).toString(16).padStart(8,'0'); }
+function commandFingerprint(cmd){ return 'CMD-'+digest(JSON.stringify(cmd)); }
+function hashChain(prevHash, entry){ return digest((prevHash||'0') + JSON.stringify(entry)); }
+
+/* 环:实际恒由量实↑现算(宪法:定标↓绝不倒推·gap.actual 恒 null)
+   双环下 actualOf 读"店的共享 facts"——这是两环交汇的物理基础 */
+function factOf(state, key){ const f=state.facts[key]; return (f==null)?null:f; }
+function actualOf(gap, state){
+  if(gap.actual != null) return gap.actual;              // 极少:显式写入优先
+  const base = factOf(state, gap.actual_key);
+  if(base == null) return null;                          // no_data — 不假装(o2ov1 诚实)
+  let v;
+  if(gap.formula === 'shortage') v = Math.max(0, 0.20*(1-base));           // 缺货率 = f(库存深度)·越满越低
+  else if(gap.co_fact){                                                     // 复合:主事实 + 协同事实
+    const co = factOf(state, gap.co_fact); if(co==null) return null;
+    v = gap.w_base*base + gap.w_co*co;
+  } else v = base;
+  return +v.toFixed(4);
+}
+function gapMet(gap, state){
+  const a = actualOf(gap, state);
+  if(a==null) return null;
+  return gap.standard.dir==='gte' ? a>=gap.standard.v : a<=gap.standard.v;
+}
+
+/* 收入(母版引擎件①·四段:底薪+功勋+Gate毕业奖+效率提成)· 结构冻结
+   ★双环:同一四段结构算两次——发给谁由"角色定义(填充层)"决定,不是引擎决定 */
+/* 收入守红线R2:关差DONE 已需证据齐(证据门),Gate毕业奖挂 verify.effective(标动才给·非任务做没做)·故不可验证自评无法直接换钱 */
+function calcLoopIncome(loop, state){
+  let merit=0, gate=0;
+  for(const id in loop.gaps){
+    const g=loop.gaps[id]; const met=gapMet(g,state);
+    if(met===null) continue;                                 // no_data 不计功
+    const a=actualOf(g,state), std=g.standard.v;
+    const ratio = g.standard.dir==='gte' ? Math.min(1,a/std) : Math.min(1, std/Math.max(a,0.0001));
+    merit += g.merit_weight * ratio;
+    if(g.verify.status==='VERIFIED' && g.verify.effective) gate += g.merit_weight*0.5;
+  }
+  const ecr = merit*0.1;
+  return { base:loop.income_base, merit:+merit.toFixed(2), gate_bonus:+gate.toFixed(2),
+           ecr_commission:+ecr.toFixed(2), total:+(loop.income_base+merit+gate+ecr).toFixed(2),
+           paid_by:loop.paid_by, owner:loop.owner };
+}
+
+/* JBP 桥:最大公约数(共同因子动作) + 最小公倍数(最小共同目标盘) + 假双赢探测
+   这是给 SR 谈 JBP 的一把尺,不是自动算数节点(潜力/客群是软信息) */
+function jbpIntersection(state){
+  const SHARED = 'inventory_depth';                          // 两环交汇的共享事实
+  const h = state.loops.hema, s = state.loops.sh;
+  // 每环对共享事实的"需求水位"= 该环里读此事实的 gap 达标所需的最低 depth
+  function reqOf(loop){
+    let need=0;
+    for(const id in loop.gaps){ const g=loop.gaps[id];
+      if(g.actual_key!==SHARED && g.co_fact!==SHARED) continue;
+      let r;
+      if(g.formula==='shortage') r = 1 - g.standard.v/0.20;                          // 缺货≤std → depth≥
+      else if(g.co_fact===SHARED){ const co=factOf(state,g.actual_key)||0; r=(g.standard.v-g.w_co*co)/g.w_base; }
+      else if(g.actual_key===SHARED){ const co=g.co_fact?factOf(state,g.co_fact)||0:0; r=(g.standard.v-(g.w_co||0)*co)/(g.w_base||1); }
+      else r=g.standard.v;
+      need=Math.max(need, r);
+    }
+    return +Math.min(1,Math.max(0,need)).toFixed(3);
+  }
+  const hemaReq=reqOf(h), shReq=reqOf(s);
+  const lcm = +Math.max(hemaReq, shReq).toFixed(3);           // 最小公倍数:同时覆盖两环的最小共同目标
+  // 最大公约数:能同时喂两环的关差动作(fact_delta 触及共享事实)
+  const gcdActions=[];
+  [h,s].forEach(function(loop){ for(const id in loop.gaps){ (loop.gaps[id].close_menu||[]).forEach(function(m){
+    if(m.gcd && m.fact_delta && m.fact_delta[SHARED]) gcdActions.push({loop:loop.loop_id, gap:id, action:m.action, delta:m.fact_delta[SHARED]});
+  });}});
+  const gcdStrength = gcdActions.length ? +Math.max.apply(null, gcdActions.map(function(a){return a.delta;})).toFixed(3) : 0;
+  const divergence = +Math.abs(hemaReq-shReq).toFixed(3);
+  // 假双赢:无共同因子动作(GCD≈0/1) 或 两环需求水位相距过大(近似互质)
+  const fake = gcdStrength < 0.05 || divergence > 0.20;
+  return { shared:SHARED, current:factOf(state,SHARED), hema_req:hemaReq, sh_req:shReq,
+           lcm:lcm, gcd_actions:gcdActions, gcd_strength:gcdStrength, divergence:divergence,
+           fake_winwin:fake, verdict: fake?'⚠假双赢(硬凑·该报警)':'✓真双赢(非零和·同源消费者)' };
+}
+
+/* 环五步 = 不可变命令。reduce 纯函数:旧态→新态(深冻结) · 关差改共享 facts → 两环同时联动 */
+function syncPrimaryStore(s){  // 主体店从真实state现算→投影到中层多店表(真同源:一线关差→中层变)
+  if(!s.ops_layer) return;
+  const prim=s.ops_layer.stores.find(function(x){return x.id===s.store.id;}); if(!prim) return;
+  const dx=actualOf(s.loops.sh.gaps['S-DX'],s), lx=s.facts.fulfillment_30min;
+  let open=0; for(const k in s.loops){ const gs=s.loops[k].gaps; for(const id in gs){ if((gs[id].close_menu||[]).length && gs[id].close.status==='OPEN') open++; } }
+  if(dx!=null) prim.dongxiao=+dx.toFixed(3);
+  if(lx!=null) prim.fulfillment=lx;
+  prim.gaps_open=open;
+  const score=(dx||0)*0.6+(lx||0)*0.4;
+  prim.health=score>=0.75?'green':score>=0.55?'yellow':'red';
+  s.ops_layer.numbers.actual_mtd=s.ops_layer.stores.reduce(function(a,x){return a+x.actual_mtd;},0);
+}
+function recomputeIncomes(s){ s.loops.hema.income=calcLoopIncome(s.loops.hema,s); s.loops.sh.income=calcLoopIncome(s.loops.sh,s); s.jbp=jbpIntersection(s); syncPrimaryStore(s); }
+function findGap(s,loopId,gapId){ const lp = loopId==='LOOP-HEMA'?s.loops.hema:s.loops.sh; return {loop:lp, gap:lp.gaps[gapId]}; }
+
+function reduce(state, cmd, ctx){
+  const s = clone(state); s.seq += 1;
+  const now = (ctx&&ctx.now) || '2026-07-18T09:00:00Z';
+  let detail='', before=null, after=null;
+  switch(cmd.type){
+    case 'SET_STANDARD': {                 // ① 定标↓ 红线·自上而下·绝不倒推
+      const gp=findGap(s,cmd.loop_id,cmd.gap_id); if(!gp.gap) throw new Error('no gap');
+      before=gp.gap.standard.v; gp.gap.standard.v=cmd.value; gp.gap.standard.src=cmd.src||'上层定标↓';
+      after=cmd.value; detail='定标↓ '+cmd.gap_id+' → '+cmd.value; break;
+    }
+    case 'CALC_GAP': {                      // ③ 算差(先校准去促销/压货假,再 standard vs actual)
+      const gp=findGap(s,cmd.loop_id,cmd.gap_id); const a=actualOf(gp.gap,s);
+      if(a==null){ detail='算差跳过 '+cmd.gap_id+' · no_data'; break; }
+      gp.gap.diag={ actual:a, standard:gp.gap.standard.v, delta:+(a-gp.gap.standard.v).toFixed(4),
+        met:(gp.gap.standard.dir==='gte'? a>=gp.gap.standard.v : a<=gp.gap.standard.v), rc:cmd.rc||null, calibrated:true };
+      detail='算差 '+cmd.gap_id+' Δ='+gp.gap.diag.delta; break;
+    }
+    case 'CLOSE_GAP': {                     // ④ 关差(硬门:先算差 + 证据门:必须带可验证证据·红线R1)
+      const gp=findGap(s,cmd.loop_id,cmd.gap_id);
+      if(!gp.gap.diag) throw new Error('算差前先校准:必须先 CALC_GAP 再 CLOSE_GAP');
+      const m=(gp.gap.close_menu||[])[cmd.menu_i]; if(!m) throw new Error('no close option');
+      // ★证据门(红线R1:证据可验证>口头自报)·关差必须交齐所需证据,否则不 DONE
+      const req=m.evidence_required||[]; const got=cmd.evidence||{};
+      const missing=req.filter(function(e){return !got[e.key];});
+      if(missing.length) throw new Error('证据未交齐(红线R1·不可口头自报):缺 '+missing.map(function(e){return e.label;}).join('、'));
+      before=gp.gap.close.status;
+      gp.gap.close={ action:m.action, status:'DONE', by:gp.loop.owner, gcd:!!m.gcd,
+                     evidence:req.map(function(e){return {key:e.key,label:e.label,type:e.type,value:got[e.key],verifiable:e.verifiable!==false};}) };
+      if(m.fact_delta){ for(const k in m.fact_delta){ s.facts[k]=+Math.min(1, (s.facts[k]||0)+m.fact_delta[k]).toFixed(4); } }
+      after='DONE'; detail='关差 '+cmd.gap_id+' · '+m.action+'(证据'+req.length+'件)'+(m.gcd?' [GCD·喂两环]':' [仅本环]'); break;
+    }
+    case 'VERIFY': {                        // ⑤ 验果 看标动没动(actualOf 是否达标)·非任务做没做
+      const gp=findGap(s,cmd.loop_id,cmd.gap_id); const a=actualOf(gp.gap,s);
+      const met=(gp.gap.standard.dir==='gte'? a>=gp.gap.standard.v : a<=gp.gap.standard.v);
+      gp.gap.verify={ status:'VERIFIED', effective:met, actual_at_verify:a };
+      detail='验果 '+cmd.gap_id+' → '+(met?'有效·关差成立':'无效·回根因'); break;
+    }
+    case 'ESCALATE': {
+      const gp=findGap(s,cmd.loop_id,cmd.gap_id);
+      gp.gap.close={ action:'ESCALATE', status:'ESCALATED', to:gp.loop.up };
+      detail='升级 '+cmd.gap_id+' → '+gp.loop.up; break;
+    }
+    case 'XD_SCAN': {                       // XD 进店三拍盘点(量实↑入口·全员动作·照片写L1真源·红线R1)
+      if(!cmd.photo) throw new Error('进店盘点必须拍照(红线R1:照片是SKU状态最硬证据)');
+      const sw=cmd.switch, val=cmd.value;   // 盘出的开关状态(如 有货:true)
+      if(sw && s.switches.on.hasOwnProperty(sw)) s.switches.on[sw]=!!val;
+      // 照片→识别→更新对应 fact(mock:AI识货架待TL后端)
+      if(cmd.fact_delta){ for(const k in cmd.fact_delta){ s.facts[k]=+Math.min(1,Math.max(0,(s.facts[k]||0)+cmd.fact_delta[k])).toFixed(4); } }
+      s.switches.last_scan={ by:cmd.by||'进店人', photo:cmd.photo, at:now, sku:s.switches.sku };
+      // 标记5类采集完成(哪一类)
+      if(cmd.collect_key){ const cc=s.xd_collect.find(function(x){return x.key===cmd.collect_key;}); if(cc){cc.done=true; cc.value=cmd.collect_value||cmd.photo||'已采';} }
+      detail='XD进店盘点 '+(sw?(sw+'='+val):'')+(cmd.collect_key?(' · 采集'+cmd.collect_key):'')+' · 照片写入L1真源'; break;
+    }
+    case 'NORTHSTAR_DECIDE': {              // 高层结构性决策:改战略标→连接律自动下沉(上层关差=下层定标)
+      const ns=s.northstar;
+      const conv=ns.convergence, tgt=conv.down_target;
+      // ① 记录结构性决策(高层"做对的事")
+      ns.decisions.push({ at:now, by:ns.owner, type:cmd.decision_type||'raise_standard',
+        point:conv.point, from:cmd.from, to:cmd.to, reason:cmd.reason||'四维度诊断:结构性问题' });
+      // ② ★连接律下沉:高层的标→变成一线那个gap的定标↓(上层关差=下层定标)
+      const lp = tgt.loop==='LOOP-SH'?s.loops.sh:s.loops.hema;
+      const g = lp.gaps[tgt.gap];
+      if(g){ g.standard.src='北极星↓·'+ns.owner+'(战略下沉·非倒推)'; g.standard.v=cmd.to;
+             g.standard.pushed_from='L1-northstar'; }
+      // ③ ★下沉到中层:对应店的forecast随战略标上调(中层要背这个新目标)
+      const prim=s.ops_layer.stores.find(function(x){return x.id===s.store.id;});
+      if(prim && cmd.forecast_bump) prim.forecast=+(prim.forecast+cmd.forecast_bump).toFixed(0);
+      // ④ 战略标本身也更新
+      if(cmd.strategy_key) ns.strategy_standard[cmd.strategy_key]=cmd.to;
+      detail='北极星决策:'+conv.point+' 标 '+cmd.from+'→'+cmd.to+' · 连接律下沉到 '+tgt.loop+'/'+tgt.gap+'(一线)+中层forecast'; break;
+    }
+    case 'XD_BACKROOM': {                   // 后仓库存盘点(拍后仓+批次)·压货判断=校准前置(算差前先校准)
+      if(!cmd.photo) throw new Error('后仓盘点必须拍照(红线R1:实物证据)');
+      const br=s.backroom;
+      br.backroom_qty = cmd.qty!=null ? cmd.qty : (cmd.batches||[]).reduce(function(a,x){return a+(x.qty||0);},0);
+      if(cmd.batches) br.batches=cmd.batches;
+      br.scanned=true; br.photo=cmd.photo; br.at=now;
+      // ★压货判断:后仓>2A → 压货失真(蝴蝶TypeB)→"先消化不补"·算差前先校准
+      br.overstock = br.backroom_qty > br.safety_2a;
+      // 压货时:physical=shelf+backroom·有货开关"看着有"但那是压货假象(校准要扣掉)
+      s.facts.backroom_depth = +(br.backroom_qty/(br.safety_2a*2)).toFixed(3);
+      detail='后仓盘点 · '+br.backroom_qty+'瓶'+(br.overstock?(' > 2A('+br.safety_2a+')= 压货!先消化不补(校准前置)'):' · 正常')+(cmd.batches?(' · '+cmd.batches.length+'批次'):''); break;
+    }
+    case 'GUANXI_TALK': {                   // 客情谈判(答应+共识)
+      const t=s.guanxi.talks[cmd.idx]; if(!t) throw new Error('no talk target');
+      if(cmd.he_agreed!=null) t.he_agreed=cmd.he_agreed;
+      if(cmd.consensus_status) t.consensus.status=cmd.consensus_status;
+      t.logged=true; t.at=now;
+      t.actionable = (t.he_agreed===true && t.consensus.status==='agreed');
+      // ★每次谈判自动留痕进历史(接棒看得到)
+      t.history.push({ at:now.slice(0,10), by:(s.loops[ (cmd.by_loop||'sh') ]||s.loops.sh).owner, what:cmd.note||'谈判', result:(t.he_agreed===true?'谈成·落任务':t.he_agreed===false?'没谈拢·待升级':'谈判中') });
+      detail='客情谈判 · '+t.who+' · 答应='+t.he_agreed+' · 共识='+t.consensus.status+(t.actionable?' → 落任务':'(软记录不换钱)')+' · 已留痕'; break;
+    }
+    case 'GUANXI_EDIT': {                   // 编辑三段(他的要求/我方承诺/我方要求·谈判是活的·会变)
+      const t=s.guanxi.talks[cmd.idx]; if(!t) throw new Error('no talk target');
+      const f=cmd.field; if(['his_ask','our_promise','our_ask','prefs','handover_note'].indexOf(f)<0) throw new Error('字段不可编辑:'+f);
+      const old_v=t[f]; t[f]=cmd.value;
+      if(f!=='handover_note'&&f!=='prefs') t.history.push({ at:now.slice(0,10), by:(s.loops.sh.owner), what:'更新['+f+']', result:'旧:'+String(old_v).slice(0,20)+'→新' });
+      detail='客情编辑 · '+t.who+' · '+f+' 已更新'+(f==='handover_note'?'(交接语)':''); break;
+    }
+    case 'GUANXI_HANDOVER': {               // ★交接给新人(记经手人链·关系资产传承不断)
+      const t=s.guanxi.talks[cmd.idx]; if(!t) throw new Error('no talk target');
+      t.owner_chain.push((cmd.new_owner||'新SR')+'('+now.slice(0,10)+'起)');
+      t.history.push({ at:now.slice(0,10), by:cmd.old_owner||'交接', what:'关系交接给 '+(cmd.new_owner||'新SR'), result:'知识库已传承' });
+      if(cmd.handover_note) t.handover_note=cmd.handover_note;
+      detail='客情交接 · '+t.who+' → '+(cmd.new_owner||'新SR')+' · 历史+脾性+承诺全传承'; break;
+    }
+    case 'OPS_FORECAST': {                  // 中层押预测(建议型·系统给锚+主管押判断·地基:预测=主管能力)
+      const o=s.ops_layer; const base=o.numbers.forecast_baseline;
+      o.numbers.forecast_manager=cmd.value;  // 主管在基线上押的数
+      o.numbers.forecast_delta=+(cmd.value-base).toFixed(1); // 相对锚上调/下调
+      o.numbers.forecast_reason=cmd.reason||''; // 押判断的理由(拐点:竞品/新店)
+      detail='押预测 · 基线'+base+' → 主管押'+cmd.value+'('+(o.numbers.forecast_delta>=0?'+':'')+o.numbers.forecast_delta+')·'+(cmd.reason||''); break;
+    }
+    case 'OPS_REALLOCATE': {                // 店间资源调配(战术调整·涉钱=human_gate·A店挪B店)
+      const o=s.ops_layer;
+      if(!cmd.approved) throw new Error('店间调配涉钱(HITL):须 human_gate 批准后执行(approved:true)');
+      const from=o.stores.find(function(x){return x.id===cmd.from;}), to=o.stores.find(function(x){return x.id===cmd.to;});
+      if(!from||!to) throw new Error('店不存在');
+      o.reallocations.push({ from:cmd.from, to:cmd.to, amount:cmd.amount, what:cmd.what||'预算调配', at:now, by:o.manager });
+      detail='店间调配(HITL已批)· '+from.name+' → '+to.name+' · '+cmd.amount+'k · '+(cmd.what||''); break;
+    }
+    case 'OPS_HANDLE_ESC': {                // 处理一线升上来的差(连接律:中层关差 或 再升一层)
+      const o=s.ops_layer; const e=o.escalations[cmd.idx]; if(!e) throw new Error('no escalation');
+      if(cmd.decision==='close'){ e.status='CLOSED_BY_OPS'; e.action=cmd.action||'中层调配资源关差'; }
+      else if(cmd.decision==='escalate'){ e.status='ESCALATED_UP'; e.to='城市JBP/总部'; } // 中层也关不了→再升
+      e.at=now;
+      detail='处理升级 · '+e.from+' · '+(cmd.decision==='close'?'中层关差:'+(cmd.action||''):'再升一层→城市JBP'); break;
+    }
+    default: throw new Error('unknown command '+cmd.type);
+  }
+  recomputeIncomes(s);                      // ★两环收入 + JBP 同时重算
+  const prev = s.audit.length ? s.audit[s.audit.length-1].hash : '0';
+  const entry = {seq:s.seq, at:now, actor:(cmd.loop_id==='LOOP-HEMA'?'店长':'SR'), cmd:cmd.type, gap:cmd.gap_id||null, detail, before, after};
+  entry.hash = hashChain(prev, entry);
+  s.audit.push(entry);
+  return deepFreeze(s);
+}
+function dispatch(state, cmd, ctx){
+  const fp = commandFingerprint(cmd);
+  if(state.idempotency[fp]) return state;
+  const s2 = reduce(state, cmd, ctx);
+  const s3 = clone(s2); s3.idempotency[fp]=s2.seq;
+  return deepFreeze(s3);
+}
+
+/* 契约自检:真同源 + 宪法守则(对象/值双查) */
+function contractHash(){
+  const frozen=[deepFreeze,clone,digest,commandFingerprint,hashChain,factOf,actualOf,gapMet,calcLoopIncome,jbpIntersection,reduce,dispatch,seedState].map(function(f){return f.toString();}).join('§');
+  const fillSig=JSON.stringify(Object.keys(CHANNEL_FILL))+'|'+CHANNEL_FILL.hema_gaps.map(function(g){return g.gap_id;}).join(',')+'|'+CHANNEL_FILL.sh_gaps.map(function(g){return g.gap_id;}).join(',');
+  return digest(CORE_VERSION+'§'+frozen+'§'+fillSig);
+}
+function selfCheck(state){
+  const bad=[];
+  ['hema','sh'].forEach(function(k){ const gs=state.loops[k].gaps; for(const id in gs) if(gs[id].actual!==null) bad.push('ACTUAL_NOT_NULL:'+id); });
+  if(state.meta.live_gate_pass!==null) bad.push('LIVE_GATE_NOT_NULL');
+  if(!Object.isFrozen(state)) bad.push('STATE_NOT_FROZEN');
+  if(state.meta.contract_hash && state.meta.contract_hash!==contractHash()) bad.push('CONTRACT_DRIFT');
+  // 双环必须锚同一消费者(两端落消费者)
+  if(state.loops.hema.anchor!==state.loops.sh.anchor) bad.push('CONSUMER_ANCHOR_MISMATCH');
+  return {ok:bad.length===0, bad, contract_hash:contractHash()};
+}
+
+/* ────────── 填充层:o2o 渠道内核(回本来·换渠道只换这块) ────────── */
+const CHANNEL_FILL = {
+  channel_id:'hema-store-o2o', channel_name:'盒马门店O2O·店仓一体·双环交汇',
+  /* 北极星层(L1·战略·经营分析)·四维度视图 = 同一引擎的四种投影(非四个引擎) */
+  northstar:{
+    owner:'城市总经理·高远', level:'L1·北极星·战略层', paid_by:'SH·欣和',
+    mission:'上海六月鲜城市渗透·Q3冲刺', period:'2026-Q3',
+    /* 战略标(北极星定标↓·改它→连接律下沉到中层/一线) */
+    strategy_standard:{ city_penetration:0.35, src:'集团北极星↓·Q3红线' }, // 城市渗透率红线
+    /* 四维度视图(M4:非各存各算·从同一真实state投影) */
+    views:{
+      channel:[   // ①渠道维度:好的加分/差的补救/救不了改决策
+        { id:'hema-o2o', name:'盒马O2O', contrib:0.28, health:'yellow', trend:-0.04, note:'杨浦片区拖累' },
+        { id:'kfc-store', name:'大卖场', contrib:0.41, health:'green', trend:0.02, note:'稳定贡献' },
+        { id:'xhs', name:'小红书', contrib:0.18, health:'green', trend:0.06, note:'高增·可加码' },
+        { id:'douyin', name:'抖音', contrib:0.13, health:'red', trend:-0.08, note:'投产比恶化·考虑收缩' }
+      ],
+      category:[  // ②品类品牌SKU维度:IGMD比例延续·逐SKU
+        { id:'liuyuexian', name:'六月鲜', igmd:0.45, health:'yellow', sku_weak:'380ml特级', note:'主力品牌·杨浦垮' },
+        { id:'weidamei', name:'味达美', igmd:0.30, health:'green', sku_weak:null, note:'稳' },
+        { id:'cbl', name:'葱伴侣', igmd:0.25, health:'green', sku_weak:null, note:'稳' }
+      ],
+      region:[    // ③区域消费者维度:城市=消费者·下沉片区
+        { id:'yangpu', name:'杨浦片区', penetration:0.29, health:'red', trend:-0.06, note:'★渗透掉·竞品新开' },
+        { id:'xuhui', name:'徐汇片区', penetration:0.38, health:'green', trend:0.01, note:'达标' },
+        { id:'minhang', name:'闵行片区', penetration:0.41, health:'green', trend:0.03, note:'超标' }
+      ],
+      salesforce:[ // ④销售人效维度:层层背负到人·人效比
+        { id:'linhang', name:'林航', store:'盒马杨浦', efficiency:0.62, health:'yellow', note:'★人效异常·带杨浦六月鲜' },
+        { id:'zhangwei', name:'张伟', store:'大卖场五角场', efficiency:0.88, health:'green', note:'高效' },
+        { id:'wangfang', name:'王芳', store:'小红书运营', efficiency:0.91, health:'green', note:'高效' }
+      ]
+    },
+    /* 四维度交汇点(★证明四线收敛于同一SKU/店/人·连接律的核心) */
+    convergence:{
+      channel:'hema-o2o', category:'liuyuexian', region:'yangpu', salesforce:'linhang',
+      point:'林航·盒马杨浦店·六月鲜380ml特级',
+      diagnosis:'四个维度都指向同一个点=结构性问题(非偶然)',
+      down_target:{ loop:'LOOP-SH', gap:'S-DX' } // 下钻/下沉的落点:一线SR环的动销差
+    },
+    /* 结构性决策(高层"做对的事":发现问题→改标→下达) */
+    decisions:[]
+  },
+  /* 中层运营(L2·品类/多店层)·管一批店·主管=运营经理 */
+  ops_layer:{
+    manager:'城市运营经理·周敏', region:'上海·杨浦片区', role:'ops_manager', paid_by:'SH·欣和',
+    period:'2026-07(本月·战术层)',
+    /* 管辖的 N 家店(每店:红黄绿健康 + 关键指标 + 未关差升级来的) */
+    stores:[
+      { id:'ST-HEMA-YP', name:'盒马·杨浦店', health:'yellow', dongxiao:0.59, fulfillment:0.88, gaps_open:2, escalated:0, forecast:108, actual_mtd:71 },
+      { id:'ST-HEMA-YP2', name:'盒马·五角场店', health:'green', dongxiao:0.78, fulfillment:0.96, gaps_open:0, escalated:0, forecast:135, actual_mtd:112 },
+      { id:'ST-HEMA-YP3', name:'盒马·新江湾店', health:'red', dongxiao:0.41, fulfillment:0.79, gaps_open:4, escalated:2, forecast:96, actual_mtd:38 },
+      { id:'ST-HEMA-YP4', name:'盒马·大学路店', health:'yellow', dongxiao:0.62, fulfillment:0.91, gaps_open:1, escalated:0, forecast:88, actual_mtd:64 }
+    ],
+    /* 三个数(地基:预测/预算/实际)·预测=建议型(系统给锚+主管押判断) */
+    numbers:{
+      forecast_baseline:427,  // 系统规则基线(历史外推·四店forecast之和的锚)
+      forecast_manager:null,  // 主管押判断修正(null=还没押)· 建议型
+      budget:52,              // 批的运营预算(k·可在店间调配)
+      actual_mtd:285          // 本月实际(四店actual_mtd之和)
+    },
+    /* 店间资源调配(战术调整·涉钱=human_gate·A店挪B店) */
+    reallocations:[],
+    /* 一线升上来的差(连接律:关不了升一层)·中层来关或再升 */
+    escalations:[
+      { from:'ST-HEMA-YP3', what:'新江湾店动销0.41持续低·SR关不动', why:'该店周边竞品新开·客流被分流', need:'调配促销资源+加派人力' }
+    ]
+  },
+  store:{ id:'ST-HEMA-YP', name:'盒马鲜生·上海杨浦店', consumer_anchor:'consumer' },
+  /* SR 挖潜力:从城市盘子给这家店切 SH 目标(定标↓·非倒推·呼应社区店 N×P×F×B×ASP) */
+  city:{ population:82000, customer_type:'中产社区+园区白领', region:'上海·杨浦', 
+         sh_city_target:'城市六月鲜季度 6.0M 瓶', this_store_share:'1.8%', this_store_sh_target:'本店贡献 108K 瓶' },
+  /* 店的共享经营现实(两环都读·唯一事实源) */
+  facts:{ inventory_depth:0.60, fulfillment_30min:0.88, liuyuexian_shelf:0.58, consumer_footfall:0.72 /* repurchase_30d 缺=no_data */ },
+  /* XD 6开关主盘(SKU状态·L1晶体管)·复购/毛利未采=no_data不假装(红线·诚实) */
+  switches:{
+    sku:'六月鲜特级380ml', at:'@盒马·杨浦',
+    on:{ 上架:true, 有货:false, 陈列:true, 动销:false }, // 有货/动销 OFF = 今天要赢的
+    nodata:['复购','毛利'] // 未采集·显示"—"·不假装
+  },
+  /* XD 后仓库存盘点(店仓一体·盒马是店+仓·拍后仓+批次+压货判断)
+     后仓>2A=压货失真(蝴蝶TypeB)→"先消化不补"·这是"算差前先校准"在一线的落地 */
+  backroom:{
+    sku:'六月鲜特级380ml', shelf_qty:12, backroom_qty:0,  // backroom初始未盘=0(待拍)
+    safety_2a:20,  // 2A安全线(超过=压货嫌疑)
+    batches:[],    // 拍后仓后手填批次[{qty,date}]
+    scanned:false, // 后仓盘点拍照了没
+    overstock:false // 后仓>2A→压货(先消化不补)
+  },
+  /* XD 5类数据采集(红线3:①拍照②自己数据③消费者④竞品⑤门店 全进清单逐项必做) */
+  xd_collect:[
+    { key:'photo',      label:'① 货架拍照',   type:'photo',  hint:'进店三拍·照片是最硬证据', done:false },
+    { key:'own',        label:'② 自己数据',   type:'count',  hint:'六月鲜实际货架数/库存深度', done:false },
+    { key:'consumer',   label:'③ 消费者反馈', type:'note',   hint:'顾客问什么/嫌什么(反馈≠自评)', done:false },
+    { key:'competitor', label:'④ 竞品情报',   type:'photo',  hint:'竞品价签照/堆头(带价格·可交叉校真)', done:false },
+    { key:'store',      label:'⑤ 门店动态',   type:'note',   hint:'店内活动/促销/异常', done:false }
+  ],
+  /* XM 任务来源·5通道(含会员4类需求机会·o2ov1) */
+  task_sources:[
+    {ch:'生鲜·线上爆品', hint:'日日鲜类高频引流'},
+    {ch:'生鲜·高频刚需', hint:'家庭日配补货'},
+    {ch:'季节性', hint:'节令囤货窗口'},
+    {ch:'场景', hint:'一人食/家庭餐场景'},
+    {ch:'会员4类需求机会', hint:'新客/沉睡/高价值/流失预警'}
+  ],
+  /* XP 阶段驾驶舱:AIQL顾客资产 + 晋升阶梯(阶段/还差多少/方向) */
+  aiql:{ stage:'Q', // 认知A→兴趣I→体验Q→忠诚L · 现在Q阶段
+    note:'顾客体验建立鲜度信任·下一步履约稳+所见即所得→L忠诚→高频复购(O2O命根)' },
+  ladder:{ // 晋升阶梯·SR侧(SH发薪那条)
+    current:'A2', next:'A1', gap_score:9, cond:'记分卡均分持续≥80 + 履约达标',
+    salary_now:18.6, salary_next:26 },
+  /* 客情关系(XP软实力·红线R2:不可验证软指标·绝不直接换钱)
+     升级:不只"维护谁",而是结构化"沟通谈判"——他的要求/我方承诺/我方要求+他答应 + GCD/LCM共识 */
+  guanxi:{
+    warn:'客情是软指标·记录用于复盘·不挂奖金(红线R2:不可验证自评直接换钱=奖励撒谎)。但谈判达成的"承诺/要求"要落成可验证任务→挂回关差(那才可换钱)。',
+    /* 与关键人的结构化沟通谈判(核心补充) */
+    talks:[
+      { who:'门店店长·陈悦', role:'店仓一体店长(盒马雇)',
+        his_ask:'线上GMV冲季度KPI·30分钟履约达标·别给我添库存压力',       // (a)他的要求·可编辑
+        our_promise:'帮你把六月鲜做成能带GMV的动销爆品·补货只补真缺的不压货·共担鲜度损耗', // (b)我方承诺·可编辑
+        our_ask:'给六月鲜黄金坑位+端架资源·补货优先级往前排',              // (c)我方要求·可编辑
+        he_agreed:null,
+        consensus:{ gcd_action:'补库存+控损耗稳履约', lcm_target:'库存深度做到LCM水位·两环都够', status:'pending' },
+        logged:false,
+        /* ★客户关系知识库(可交接·不锁个人) */
+        prefs:'重数据不重嘴·怕压货(去年积压吃过亏)·端架资源紧张要提前两周约',  // 这个人的脾性/偏好(接棒必读)
+        history:[  // 谈判历史·每次留痕·接棒看得到来龙去脉
+          { at:'2026-06-20', by:'林航', what:'首次拜访·摸清他最在意履约KPI', result:'建立初步信任' },
+          { at:'2026-07-05', by:'林航', what:'谈六月鲜端架·他要先看动销数据', result:'挂起·待拿数据再谈' }
+        ],
+        owner_chain:['林航(2026-06至今)'],       // 经手人链(换人留痕)
+        handover_note:'端架还没谈下来·卡在他要动销证据·下次带XD盘的动销数据去谈' }, // 给下一棒的话
+      { who:'生鲜档口主管·王姐', role:'档口主管(盒马雇)',
+        his_ask:'档口鲜度不出问题·别占我理货工时',
+        our_promise:'临期我提前预警帮控损·理货我配合不添乱',
+        our_ask:'六月鲜补货优先级·鲜度配合前置',
+        he_agreed:null,
+        consensus:{ gcd_action:'控损耗+就近补货', lcm_target:'鲜度达标线两边都满意', status:'pending' },
+        logged:false,
+        prefs:'刀子嘴豆腐心·认可你帮她省事就好说话·早上忙别去打扰',
+        history:[ { at:'2026-07-08', by:'林航', what:'帮她处理了一批临期六月鲜', result:'关系破冰·她开始配合补货' } ],
+        owner_chain:['林航(2026-07至今)'],
+        handover_note:'关系刚破冰·靠"帮她省事"维系·别在早高峰找她' }
+    ]
+  },
+  /* 盒马环:店长KPI(盒马定标↓·店长owns·盒马发薪·= 客户价值) */
+  hema_gaps:[
+    { gap_id:'H-QH', name:'缺货率(店长KPI)', actual_key:'inventory_depth', formula:'shortage',
+      standard:{v:0.05, dir:'lte', src:'盒马区域定标↓·红线'}, merit_weight:3.0,
+      close_menu:[
+        {action:'补库存+控损耗稳履约', fact_delta:{inventory_depth:0.20}, gcd:true,
+         steps:['盘缺货SKU清单','下补货单','控临期损耗','拍库存照留证'],
+         evidence_required:[ {key:'stock_photo', label:'库存照(带时间戳)', type:'photo', verifiable:true},
+                             {key:'restock_qty', label:'补货件数', type:'number', verifiable:true} ]},
+        {action:'仅前台改缺货标(不实补)', fact_delta:{}, gcd:false,
+         steps:['改前台标'],
+         evidence_required:[] } ] },
+    { gap_id:'H-LX', name:'30分钟履约准时(店长KPI)', actual_key:'fulfillment_30min',
+      standard:{v:0.95, dir:'gte', src:'盒马区域定标↓'}, merit_weight:2.5,
+      close_menu:[ {action:'加拣货人力+优化动线', fact_delta:{fulfillment_30min:0.09}, gcd:false,
+        steps:['排班加拣货人力','优化拣货动线','记录动线调整'],
+        evidence_required:[ {key:'shift_note', label:'排班记录', type:'number', verifiable:true} ]} ] } ],
+  /* SH环:六月鲜目标(SH城市切出·SR owns·SH发薪·= 我方价值) */
+  sh_gaps:[
+    { gap_id:'S-DX', name:'六月鲜动销(SR战功)', actual_key:'inventory_depth', co_fact:'liuyuexian_shelf', w_base:0.6, w_co:0.4,
+      standard:{v:0.75, dir:'gte', src:'SH城市JBP切出↓'}, merit_weight:4.0,
+      close_menu:[
+        {action:'补库存+坑位优化(六月鲜)', fact_delta:{inventory_depth:0.20, liuyuexian_shelf:0.15}, gcd:true,
+         steps:['盘六月鲜实际货架数量','按安全库存线下补货单','把六月鲜摆到黄金坑位/端架','拍陈列照留证'],
+         evidence_required:[ {key:'shelf_photo', label:'陈列照(带时间戳)', type:'photo', verifiable:true},
+                             {key:'restock_qty', label:'补货件数', type:'number', verifiable:true} ]},
+        {action:'仅压价冲量(伤毛利)', fact_delta:{liuyuexian_shelf:0.05}, gcd:false,
+         steps:['改价签'],
+         evidence_required:[ {key:'price_photo', label:'新价签照', type:'photo', verifiable:true} ]} ] },
+    { gap_id:'S-PW', name:'六月鲜坑位铺货(SR战功)', actual_key:'liuyuexian_shelf',
+      standard:{v:0.80, dir:'gte', src:'SH城市JBP切出↓'}, merit_weight:2.5,
+      close_menu:[ {action:'谈更多坑位+端架', fact_delta:{liuyuexian_shelf:0.18}, gcd:false,
+        steps:['找店长谈端架资源','六月鲜上端架','拍端架照留证'],
+        evidence_required:[ {key:'endcap_photo', label:'端架照(带时间戳)', type:'photo', verifiable:true} ]} ] } ]
+};
+
+function buildRegistry(){
+  return { agent_id:'AGT-O2O-STORE-HEMA-YP', agent_name:'盒马杨浦店双环经营Agent', agent_type:'store_dualloop', agent_version:'2.0.0',
+    loop_level:'L3', parent_agent:'AGT-O2O-CITY-SH', scope:'ST-HEMA-YP',
+    business_owner:'城市经理', data_owner:'数据官', technical_owner:'平台', risk_owner:'风控',
+    autonomy_level:'A1', allowed_actions:['CALC_GAP','CLOSE_GAP','VERIFY','ESCALATE'], forbidden_actions:['定价直批','跨店调拨','预算直批','给盒马员工发薪'],
+    default_autonomy:'A1', autonomy_matrix:{CLOSE_GAP:'A1',VERIFY:'A1',ESCALATE:'A2'},
+    service_status:'ACTIVE', schema_version:'INF-STD-001-v1.1', registered_by:'Product Architect',
+    business_boundary:'盒马杨浦店双环:SH环(SR·六月鲜·SH发薪)+盒马环(店长·KPI·盒马发薪)·SH引擎帮店长做满分不代发薪',
+    owned_objects:['SH环 S-DX/S-PW','盒马环视图 H-QH/H-LX','JBP双赢交集','店共享事实账'],
+    input_contract:{standards:'SH城市切出↓ + 盒马区域定标↓', facts:'XD量实↑(simulation)'},
+    output_contract:{std:'OBSERVATION/JUDGMENT/DECISION/ACTION/RESULT', escalation:'不可关差升L2城市'},
+    escalation_path:['AGT-O2O-CITY-SH','城市经理','总部北极星'],
+    effective_date:'2026-07-18', retirement_date:null,
+    agent_registry_version:'AR-2.0', loop_elements:{L1:1,L2:1,L3:1,L4:4,dual_loop:2} };
+}
+function mkGaps(arr){ const o={}; arr.forEach(function(g){ o[g.gap_id]={ ...clone(g), actual:null, diag:null, close:{action:null,status:'OPEN'}, verify:{status:'PENDING',effective:null} }; }); return o; }
+function seedState(nowISO){
+  const now = nowISO || '2026-07-18T09:00:00Z';
+  const s={
+    meta:{ version:CORE_VERSION, channel:CHANNEL_FILL.channel_id, cycle:'C-2026W29', maturity:'M1',
+           data_mode:'simulation', live_gate_pass:null, contract_hash:contractHash() },
+    seq:0,
+    store: clone(CHANNEL_FILL.store),
+    city: clone(CHANNEL_FILL.city),
+    northstar: clone(CHANNEL_FILL.northstar),
+    ops_layer: clone(CHANNEL_FILL.ops_layer),
+    facts: clone(CHANNEL_FILL.facts),
+    switches: clone(CHANNEL_FILL.switches),
+    xd_collect: clone(CHANNEL_FILL.xd_collect),
+    backroom: clone(CHANNEL_FILL.backroom),
+    task_sources: clone(CHANNEL_FILL.task_sources),
+    aiql: clone(CHANNEL_FILL.aiql),
+    ladder: clone(CHANNEL_FILL.ladder),
+    guanxi: clone(CHANNEL_FILL.guanxi),
+    loops:{
+      hema:{ loop_id:'LOOP-HEMA', owner:'盒马店长', paid_by:'盒马', role:'store_manager',
+             up:'盒马杨浦区域', anchor:'consumer', income_base:8.0, value_side:'客户价值(SH帮做满分)',
+             gaps: mkGaps(CHANNEL_FILL.hema_gaps), income:null },
+      sh:{ loop_id:'LOOP-SH', owner:'SH-SR(城市BD)', paid_by:'SH·欣和', role:'sr',
+           up:'SH上海城市JBP', anchor:'consumer', income_base:9.0, value_side:'我方价值(SR合伙人分成)',
+           gaps: mkGaps(CHANNEL_FILL.sh_gaps), income:null } },
+    audit:[{seq:0, at:now, actor:'system', cmd:'SEED', gap:null, detail:'simulation_only 装假水 · 双环交汇就位 · 两端落消费者', before:null, after:'M1', hash:digest('seed')}],
+    idempotency:{}, agent:buildRegistry()
+  };
+  recomputeIncomes(s);
+  return deepFreeze(s);
+}
+
+const ENGINE={ CORE_VERSION, seedState, reduce, dispatch, actualOf, gapMet, calcLoopIncome, jbpIntersection,
+               selfCheck, contractHash, commandFingerprint, deepFreeze, findGap, CHANNEL_FILL };
+if(typeof module!=='undefined' && module.exports) module.exports=ENGINE;
+root.O2OEngine=ENGINE;
+})(typeof window!=='undefined'? window : globalThis);
+
+</script>
+<script>
+var E=window.O2OEngine; var ST=E.seedState();
+function money(k){return '¥'+k+'k';}
+function toast(h){var w=document.getElementById('tw');var d=document.createElement('div');d.className='t';d.innerHTML=h;w.appendChild(d);setTimeout(function(){d.remove();},3400);}
+function act(cmd){try{ST=E.dispatch(ST,cmd,{now:new Date().toISOString()});}catch(e){toast('🚫 '+e.message);return false;}render();return true;}
+var HN={red:'红·掉链子',yellow:'黄·要盯',green:'绿·稳'};
+
+function render(){
+  var o=ST.ops_layer, n=o.numbers;
+  document.getElementById('wm').textContent='盒马O2O中层运营 · '+o.region+' · 假水可跑 · '+ST.meta.maturity+' · hash '+E.selfCheck(ST).contract_hash;
+  document.getElementById('sub').textContent=o.manager+' · '+o.period+' · 管 '+o.stores.length+' 家店 · '+n.actual_mtd+'/'+n.forecast_baseline+' 万瓶(实际/预测基线)';
+  // 三个数
+  var fc=n.forecast_manager!=null?n.forecast_manager:n.forecast_baseline;
+  var actPct=(n.actual_mtd/fc*100).toFixed(0);
+  document.getElementById('nums').innerHTML=
+    '<div class="num fc"><div class="nl">预测 Forecast(押判断)</div><div class="nv">'+fc+'</div><div class="nd">'+(n.forecast_manager!=null?('主管押·基线'+n.forecast_baseline):('系统基线·待主管押判断'))+'</div>'+(n.forecast_delta!=null?'<div class="diff" style="color:'+(n.forecast_delta>=0?'var(--go)':'var(--stop)')+'">'+(n.forecast_delta>=0?'+':'')+n.forecast_delta+' vs 基线</div>':'')+'</div>'+
+    '<div class="num bg"><div class="nl">预算 Budget(批的资源)</div><div class="nv">'+money(n.budget)+'</div><div class="nd">可在店间调配·战术层</div></div>'+
+    '<div class="num ac"><div class="nl">实际 Actual(本月至今)</div><div class="nv">'+n.actual_mtd+'</div><div class="nd">达预测 '+actPct+'%</div></div>';
+  // 预测押判断(建议型)
+  if(n.forecast_manager==null){
+    document.getElementById('fcbox').innerHTML='<div class="fh">🎯 押你的预测(建议型:系统给锚 '+n.forecast_baseline+'，你押判断修正)</div>'+
+      '<div class="frow">下月预测:<input id="fcInput" type="number" value="'+n.forecast_baseline+'"><input class="reason" id="fcReason" type="text" placeholder="为什么调?(拐点:竞品/新店/季节)"><button class="fb" data-a="forecast">押上</button></div>'+
+      '<div class="fnote">💡 预测=你把市场判断押成可验证的数。规则基线算不出拐点(新江湾竞品新开、五角场旺季)——那是你的判断。<b>到月底用实际验，预测准进你记分卡</b>(准=真懂市场=更大盘子)。</div>';
+  } else {
+    document.getElementById('fcbox').innerHTML='<div class="fh">✅ 已押预测 '+n.forecast_manager+'('+(n.forecast_delta>=0?'+':'')+n.forecast_delta+' vs 基线)</div>'+
+      '<div class="fnote">理由:'+(n.forecast_reason||'—')+' · 到月底用实际('+n.actual_mtd+'…)验准度 → 进记分卡。<b>押准=判断力被验证=下季度更大盘子+预算</b>。</div>';
+  }
+  // 多店红黄绿
+  document.getElementById('storerows').innerHTML=o.stores.map(function(st){
+    return '<tr><td class="hl">'+st.name+'</td>'+
+      '<td><span class="dot '+st.health+'"></span><span class="hl '+st.health+'">'+HN[st.health]+'</span></td>'+
+      '<td class="mini" style="color:'+(st.dongxiao<0.5?'var(--red)':st.dongxiao<0.7?'var(--yellow)':'var(--green)')+'">'+(st.dongxiao*100).toFixed(0)+'%</td>'+
+      '<td class="mini">'+(st.fulfillment*100).toFixed(0)+'%</td>'+
+      '<td class="mini">'+(st.gaps_open?st.gaps_open+' 个':'—')+'</td>'+
+      '<td class="mini">'+st.actual_mtd+'/'+st.forecast+'</td>'+
+      '<td>'+(st.escalated?'<span class="badge esc">升级'+st.escalated+'</span>':'<span class="badge ok">正常</span>')+'</td>'+
+      '<td><button class="drill" data-a="drill" data-id="'+st.id+'">看详情</button></td></tr>';
+  }).join('');
+  // 升级队列
+  var eh='';
+  o.escalations.forEach(function(e,i){
+    eh+='<div class="esc"><div class="ecard"><div class="et">📍 '+e.from+'</div><div class="ew">'+e.what+'<br>为什么关不了:'+e.why+'</div><div class="need">需要:'+e.need+'</div>';
+    if(e.status==='CLOSED_BY_OPS')eh+='<div class="done">✅ 中层已关:'+e.action+'</div>';
+    else if(e.status==='ESCALATED_UP')eh+='<div class="done" style="background:var(--amber-tint);color:var(--amber-deep)">⬆️ 再升一层 → '+e.to+'(中层也关不了)</div>';
+    else eh+='<div class="eact"><button class="eb close" data-a="handleesc" data-i="'+i+'" data-d="close">🔧 我来关(调资源)</button><button class="eb up" data-a="handleesc" data-i="'+i+'" data-d="escalate">⬆️ 再升一层</button></div>';
+    eh+='</div></div>';
+  });
+  document.getElementById('escbox').innerHTML=eh||'<div class="ph">当前无一线升上来的差</div>';
+  // 店间调配
+  var opts=o.stores.map(function(s){return '<option value="'+s.id+'">'+s.name+'</option>';}).join('');
+  document.getElementById('realloc').innerHTML=
+    '<div class="rrow">从 <select id="rFrom">'+opts+'</select> 调 <input id="rAmt" type="number" value="8"> k 到 <select id="rTo">'+opts+'</select></div>'+
+    '<div class="rrow">用途 <input id="rWhat" type="text" placeholder="如:促销资源救新江湾" style="width:auto;flex:1;min-width:160px"></div>'+
+    '<div class="hitl">⚠️ 店间挪资源=涉钱的战术调整 → <b>HITL 卡人工</b>:点"提交调配"=模拟主管审批通过(真实需上级批)</div>'+
+    '<button class="rb" data-a="realloc">提交调配(模拟已批)</button>'+
+    (o.reallocations.length?'<div class="rlog">已调配:'+o.reallocations.map(function(r){return r.from+'→'+r.to+' '+r.amount+'k('+r.what+')';}).join(' · ')+'</div>':'');
+  document.getElementById('foot').innerHTML='中层运营App · L2品类/多店层 · 多店红黄绿+三个数+预测(建议型)+店间调配(HITL)+升级队列 · 同一引擎o2oengine · seq '+ST.seq;
+}
+document.addEventListener('click',function(ev){
+  var t=ev.target.closest('[data-a]'); if(!t)return;
+  var a=t.getAttribute('data-a');
+  if(a==='forecast'){var v=+document.getElementById('fcInput').value;var r=document.getElementById('fcReason').value;
+    if(!v){toast('填个预测数');return;}act({type:'OPS_FORECAST',value:v,reason:r});toast('🎯 <b>预测已押</b>:'+v+' · 到月底用实际验准度→进你记分卡');}
+  else if(a==='drill'){var id=t.getAttribute('data-id');var st=ST.ops_layer.stores.find(function(x){return x.id===id;});
+    document.getElementById('modalTitle').textContent=st.name+' · 单店详情';
+    document.getElementById('modalBody').innerHTML=
+      '<div class="mrow">健康:<b>'+HN[st.health]+'</b></div>'+
+      '<div class="mrow">六月鲜动销:<b>'+(st.dongxiao*100).toFixed(0)+'%</b> · 履约:<b>'+(st.fulfillment*100).toFixed(0)+'%</b></div>'+
+      '<div class="mrow">待关差:<b>'+st.gaps_open+' 个</b> · 已升级:<b>'+st.escalated+' 个</b></div>'+
+      '<div class="mrow">本月实际/预测:<b>'+st.actual_mtd+'/'+st.forecast+'</b>(达 '+(st.actual_mtd/st.forecast*100).toFixed(0)+'%)</div>'+
+      '<div class="mrow" style="border:none;color:var(--slate);font-size:11.5px">💡 点进单店后，就是一线执行App(XMXDXLSP)的视图——中层看的是"哪家店"，一线看的是"这家店里做什么"</div>';
+    document.getElementById('modal').classList.add('on');}
+  else if(a==='handleesc'){var i=+t.getAttribute('data-i');var dec=t.getAttribute('data-d');
+    if(dec==='close'){act({type:'OPS_HANDLE_ESC',idx:i,decision:'close',action:'调五角场促销预算8k+加派2人力'});toast('🔧 <b>中层关差</b>:调了资源救新江湾(战术调整)');}
+    else{act({type:'OPS_HANDLE_ESC',idx:i,decision:'escalate'});toast('⬆️ <b>再升一层</b> → 城市JBP/总部(中层也关不了=连接律继续上报)');}}
+  else if(a==='realloc'){var from=document.getElementById('rFrom').value,to=document.getElementById('rTo').value,amt=+document.getElementById('rAmt').value,what=document.getElementById('rWhat').value;
+    if(from===to){toast('不能调给自己');return;}
+    act({type:'OPS_REALLOCATE',from:from,to:to,amount:amt,what:what||'预算调配',approved:true});toast('🔀 <b>调配完成</b>(HITL已批)· '+amt+'k 已从一店挪到另一店');}
+});
+document.getElementById('modalX').addEventListener('click',function(){document.getElementById('modal').classList.remove('on');});
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('on');});
+render();
+</script>
+</body>
+</html>
