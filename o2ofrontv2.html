@@ -78,6 +78,17 @@
   .sw6 .s.on{background:var(--go-tint);border-color:var(--go);}.sw6 .s.on .v{color:var(--go);}
   .sw6 .s.off{background:var(--stop-tint);border-color:var(--stop);}.sw6 .s.off .v{color:var(--stop);}
   .sw6 .s.nd{background:#EFEDE5;opacity:.7;}.sw6 .s.nd .v{color:var(--mute);}
+  .sw6 .s[data-a]{cursor:pointer;box-shadow:0 0 0 1.5px var(--stop);}
+  .sw6 .s .sgo{font-size:8.5px;color:var(--stop);font-weight:700;margin-top:3px;}
+  .sw6 .s.nd .sgo{color:var(--mute);}
+  .cellsku[data-a]{cursor:pointer;}.cellsku[data-a]:hover{outline:2px solid var(--gold);}
+  .score .row.clk{cursor:pointer;background:rgba(154,58,51,.05);border-radius:6px;}
+  .score .row.clk:hover{background:rgba(154,58,51,.1);}
+  .mismatch.clk{cursor:pointer;}.mismatch.clk:hover{filter:brightness(1.05);}
+  .src.clk{cursor:pointer;}.src.clk:hover{border-color:var(--amber);background:#FBF6EE;}
+  .e3 .t.clk{cursor:pointer;}.e3 .t.clk:hover{border-color:var(--amber);}
+  .aq.clk{cursor:pointer;}.progbig.clk{cursor:pointer;}
+  .clk[data-a="switchmate"]{cursor:pointer;}
   .cam3{display:flex;gap:8px;margin:10px 0;}
   .cam3 .c{flex:1;aspect-ratio:1;border-radius:10px;background:#fff;border:1.5px dashed var(--amber);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:24px;cursor:pointer;color:var(--amber);}
   .cam3 .c.shot{border-style:solid;background:var(--go-tint);border-color:var(--go);color:var(--go);}
@@ -103,6 +114,17 @@
   .mismatch{background:var(--stop-tint);border:1.5px solid var(--stop);border-radius:9px;padding:11px;margin-top:10px;font-size:12.5px;color:var(--stop);font-weight:700;line-height:1.5;}
   .mismatch .m2{font-size:11px;font-weight:400;color:var(--slate);margin-top:4px;}
   .dmatch{background:var(--go-tint);border-radius:9px;padding:10px;margin-top:10px;font-size:12px;color:var(--go);font-weight:700;}
+  .ofz{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #EFEDE5;}.ofz:last-child{border-bottom:none;}
+  .ofz .oi{flex:1;}.ofz .on{font-size:13px;font-weight:700;}.ofz .os{font-size:10.5px;color:var(--slate);}
+  .ofz .ocombo{font-size:9px;color:var(--purple);font-weight:700;margin-top:2px;}
+  .ofz .ob{padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;border:1.5px solid var(--gold);background:#fff;color:var(--amber-deep);cursor:pointer;white-space:nowrap;}
+  .ofz .ob.got{background:var(--go);color:#fff;border-color:var(--go);}
+  .ofsum{background:var(--amber-tint);border-radius:8px;padding:9px;margin-top:9px;font-size:12px;font-weight:700;color:var(--amber-deep);text-align:center;}
+  .ofsum.met{background:var(--go-tint);color:var(--go);}
+  .custtag{font-size:8px;background:var(--blue-tint);color:var(--blue);padding:1px 5px;border-radius:3px;font-weight:700;}
+  .addoff{display:flex;gap:7px;margin-top:9px;}
+  .addoff input{flex:1;padding:8px 10px;border:1.5px dashed var(--amber);border-radius:8px;font-size:12px;}
+  .addoffb{padding:8px 14px;background:var(--amber);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
   .btn{display:block;width:100%;padding:12px;border:none;border-radius:10px;font-family:var(--cjk);font-size:14px;font-weight:800;cursor:pointer;margin-top:10px;}
   .btn.go{background:var(--go);color:#fff;}.btn.go:disabled{background:#C6CBC4;}
   .btn.amber{background:var(--amber);color:#fff;}.btn.ghost{background:#EFEDE5;color:var(--slate);font-size:12px;padding:9px;}
@@ -230,6 +252,9 @@
       <div id="brbatch"></div>
       <button class="btn amber" id="btnBr" disabled>拍后仓 + 填批次 · 提交盘点</button>
       <div id="brresult"></div></div>
+    <div class="card hi"><h3>📍 异位陈列 · 跨区抢阵地(不只在酱油货架)</h3>
+      <div class="sub">六月鲜出现在肉/冻/菜/火锅区=买场景顺手带·比在货架等着被找到强。红线:至少拿下2个阵地。火锅区/组合区可挂组合</div>
+      <div id="offshelf"></div></div>
     <div class="card hi"><h3>💻 数字现场 · 线上门店盘点(盒马双现场)</h3>
       <div class="sub">物理盘完还要盘线上:门店在线?SKU上线?真能下单?线上价对?搜得到?履约正常?每项要截图</div>
       <div id="digital"></div>
@@ -496,6 +521,23 @@ function reduce(state, cmd, ctx){
       const mm = ds.mismatch.phys_yes_online_no || ds.mismatch.online_yes_phys_no;
       detail='数字现场'+(cmd.check_key?('·'+cmd.check_key+'='+cmd.ok):'')+(mm?' · ⚠️错配!(现场vs线上不一致=漏单风险)':''); break;
     }
+    case 'OFFSHELF_ADD': {                  // ★一线手写自定义异位阵地(每店位置不同·只有现场的人知道)
+      if(!cmd.label||!cmd.label.trim()) throw new Error('填个位置名(如:生鲜转角/节庆堆头/收银台旁)');
+      const key='custom-'+(s.offshelf.zones.filter(function(z){return z.custom;}).length+1);
+      s.offshelf.zones.push({ key:key, label:cmd.label.trim(), scene:cmd.scene||'一线自定义位置', hint:'本店特殊位·'+(cmd.by||'一线')+'加', occupied:false, combo:null, custom:true, by:cmd.by||'' });
+      detail='一线加自定义阵地:'+cmd.label+'(本店特殊位)'; break;
+    }
+    case 'OFFSHELF_CLAIM': {                // 拿下异位陈列阵地(跨区陈列·拍照证据)
+      const z=s.offshelf.zones.find(function(x){return x.key===cmd.zone;}); if(!z) throw new Error('no zone');
+      if(!cmd.photo) throw new Error('异位陈列要拍照(证明真摆了·红线R1)');
+      z.occupied = cmd.occupied!==false;
+      z.photo=cmd.photo; z.at=now; z.by=cmd.by||'';
+      // 拿下的阵地数
+      const cnt = s.offshelf.zones.filter(function(x){return x.occupied;}).length;
+      s.offshelf.claimed = cnt;
+      s.offshelf.met = cnt >= s.offshelf.standard_zones;  // 达标:≥2个阵地
+      detail='异位陈列 '+z.label+(z.occupied?'·已拿下':'·已撤')+' · 累计'+cnt+'个阵地'+(s.offshelf.met?'(达标)':'(标'+s.offshelf.standard_zones+')')+(z.combo?' · 挂了组合':''); break;
+    }
     case 'XD_BACKROOM': {                   // 后仓库存盘点(拍后仓+批次)·压货判断=校准前置(算差前先校准)
       if(!cmd.photo) throw new Error('后仓盘点必须拍照(红线R1:实物证据)');
       const br=s.backroom;
@@ -667,6 +709,19 @@ const CHANNEL_FILL = {
     sku:'六月鲜特级380ml', at:'@盒马·杨浦',
     on:{ 上架:true, 有货:false, 陈列:true, 动销:false }, // 有货/动销 OFF = 今天要赢的
     nodata:['复购','毛利'] // 未采集·显示"—"·不假装
+  },
+  /* ★异位陈列(跨区陈列·场景拦截):六月鲜不只在酱油货架·出现在肉/冻/菜/火锅区=买场景顺手带
+     这是"陈列"开关的延伸·也是组合/带单在物理现场的阵地 */
+  offshelf:{
+    sku:'六月鲜特级380ml',
+    zones:[  // 你列的区域·每个=一个可拿下的异位陈列阵地
+      { key:'meat',    label:'肉类档口', scene:'买肉配生抽·红烧/凉拌', occupied:false, combo:null, hint:'肉+酱油强关联·拦截买肉客' },
+      { key:'frozen',  label:'冷冻区',   scene:'冻品解冻后调味', occupied:false, combo:null, hint:'速冻+调味顺手带' },
+      { key:'veggie',  label:'蔬菜区',   scene:'凉拌菜/清炒调味', occupied:false, combo:null, hint:'买菜必配调味' },
+      { key:'hotpot',  label:'火锅区',   scene:'火锅蘸料/汤底', occupied:false, combo:'CB-SCENE-1', hint:'★火锅场景=蘸料刚需·可挂场景组合' },
+      { key:'combo',   label:'组合装陈列区', scene:'组合套装集中陈列', occupied:false, combo:'CB-BRAND-1', hint:'★组合装专属位·挂品牌/场景组合' }
+    ],
+    standard_zones:2  // 红线:至少拿下2个异位阵地
   },
   /* XD 后仓库存盘点(店仓一体·盒马是店+仓·拍后仓+批次+压货判断)
      后仓>2A=压货失真(蝴蝶TypeB)→"先消化不补"·这是"算差前先校准"在一线的落地 */
@@ -863,6 +918,7 @@ function seedState(nowISO){
     ops_layer: clone(CHANNEL_FILL.ops_layer),
     facts: clone(CHANNEL_FILL.facts),
     switches: clone(CHANNEL_FILL.switches),
+    offshelf: clone(CHANNEL_FILL.offshelf),
     xd_collect: clone(CHANNEL_FILL.xd_collect),
     backroom: clone(CHANNEL_FILL.backroom),
     digital_shelf: clone(CHANNEL_FILL.digital_shelf),
@@ -902,6 +958,7 @@ var editing=null, editingHN=null, handingOver=null;
 var LOOPID={sh:'LOOP-SH',hema:'LOOP-HEMA'};
 var draft={}, cam3=[false,false,false];
 var brcam=[false,false], brBatches=[{qty:'',date:''}];
+var SWITCH_GAP={'有货':'S-PW','陈列':'S-PW','动销':'S-DX'}; // 开关没点亮→跳去关哪个差
 function d(g){draft[g]=draft[g]||{steps:{},ev:{}};return draft[g];}
 function money(k){return '¥'+k.toFixed(1)+'k';}
 function toast(h){var w=document.getElementById('tw');var el=document.createElement('div');el.className='t';el.innerHTML=h;w.appendChild(el);setTimeout(function(){el.remove();},3800);}
@@ -917,7 +974,7 @@ function curStep(g){if(!g.diag)return 0;if(g.close.status!=='DONE'&&g.close.stat
 
 function renderXM(){
   var mate=ST.loops[ROLE==='sh'?'hema':'sh'];
-  document.getElementById('mate').innerHTML='🤝 '+(ROLE==='sh'?'店长':'SR队友')+'那边 <b>'+money(mate.income.total)+'</b> · 你俩同一家店，<b>补货这种事一做两人都多赚</b>（一起赢不是抢）';
+  document.getElementById('mate').innerHTML='🤝 '+(ROLE==='sh'?'店长':'SR队友')+'那边 <b>'+money(mate.income.total)+'</b> · 你俩同一家店，<b>补货这种事一做两人都多赚</b>（一起赢不是抢）· <span class="clk" data-a="switchmate" style="text-decoration:underline">看TA的视角 👆</span>';
   // 今天要赢的SKU = 未达标的差距(开关没点亮)
   var html='';var gaps=loop().gaps;
   for(var id in gaps){var g=gaps[id];if(!(g.close_menu||[]).length)continue;var met=E.gapMet(g,ST);if(met===false||curStep(g)<2){
@@ -926,7 +983,7 @@ function renderXM(){
   if(!html)html='<div class="sub">今天开关都点亮了 🎉 去 XL 看战功</div>';
   document.getElementById('winlist').innerHTML=html;
   // 任务来源5通道
-  document.getElementById('srclist').innerHTML=ST.task_sources.map(function(s){return '<div class="src"><div class="st">'+s.ch+'</div><div class="sh">'+s.hint+'</div></div>';}).join('');
+  document.getElementById('srclist').innerHTML=ST.task_sources.map(function(s,i){return '<div class="src clk" data-a="tasksrc" data-i="'+i+'"><div class="st">'+s.ch+' 👆</div><div class="sh">'+s.hint+'</div></div>';}).join('');
   // 带单组合
   document.getElementById('combos').innerHTML=ST.combos.map(function(cb){
     var h='<div class="combo"><span class="ck '+cb.kind+'">'+(cb.kind==='brand'?'品牌组合':'场景组合')+'</span><div class="cnm">'+cb.name+'</div>';
@@ -955,7 +1012,7 @@ function renderXM(){
     sizes.forEach(function(sz){
       var spec=ln.specs.find(function(s){return s.size===sz;});
       if(spec){var isLead=spec.role==='主力';
-        mh+='<td class="cellsku'+(isLead?' lead':'')+'" title="'+spec.note+'"><div class="sz">'+(isLead?'🚀':'')+spec.size+'</div><div class="pr">¥'+spec.price+'</div></td>';
+        mh+='<td class="cellsku'+(isLead?' lead':'')+'" data-a="skucell" data-sku="'+spec.sku+'" data-role="'+spec.role+'" data-note="'+spec.note+'" data-igmd="'+spec.igmd+'"><div class="sz">'+(isLead?'🚀':'')+spec.size+'</div><div class="pr">¥'+spec.price+'</div></td>';
       } else mh+='<td class="empty">—</td>';
     });
     mh+='</tr>';
@@ -985,8 +1042,9 @@ function renderXD(){
   var on=sw.on, nd=sw.nodata;
   var order=['上架','有货','陈列','动销'].concat(nd);
   document.getElementById('sw6').innerHTML=order.map(function(k){
-    if(nd.indexOf(k)>=0)return '<div class="s nd"><div class="k">'+k+'</div><div class="v">—</div></div>';
-    var v=on[k];return '<div class="s '+(v?'on':'off')+'"><div class="k">'+k+'</div><div class="v">'+(v?'✓已点亮':'✗待点亮')+'</div></div>';
+    if(nd.indexOf(k)>=0)return '<div class="s nd"><div class="k">'+k+'</div><div class="v">—</div><div class="sgo">未采集</div></div>';
+    var v=on[k];var gp=SWITCH_GAP[k];
+    return '<div class="s '+(v?'on':'off')+'"'+(!v&&gp?' data-a="swgo" data-gap="'+gp+'"':'')+'><div class="k">'+k+'</div><div class="v">'+(v?'✓已点亮':'✗待点亮')+'</div>'+(!v&&gp?'<div class="sgo">👆点我去关</div>':'')+'</div>';
   }).join('');
   // 后仓库存盘点(店仓一体)
   var br=ST.backroom;
@@ -1005,6 +1063,16 @@ function renderXD(){
     if(br.overstock)document.getElementById('brresult').innerHTML='<div class="overstock">⚠️ 后仓 '+br.backroom_qty+'瓶 > 2A('+br.safety_2a+') = 压货失真!<div class="os2">👉 先消化不补(这是"算差前先校准":后仓积压是"假的有货"·补货前得先扣掉压货·别越补越积压)</div></div>';
     else document.getElementById('brresult').innerHTML='<div class="brok">✅ 后仓 '+br.backroom_qty+'瓶 · 库存正常·可正常补货</div>';
   } else document.getElementById('brresult').innerHTML='';
+  // 异位陈列(跨区抢阵地)
+  var of=ST.offshelf;
+  var claimed=of.zones.filter(function(z){return z.occupied;}).length;
+  document.getElementById('offshelf').innerHTML=of.zones.map(function(z){
+    var comboName='';if(z.combo){var cb=ST.combos.find(function(x){return x.id===z.combo;});comboName=cb?cb.name:'';}
+    return '<div class="ofz"><div class="oi"><div class="on">'+z.label+(z.custom?' <span class="custtag">本店特殊位</span>':'')+'</div><div class="os">'+z.scene+' · '+z.hint+'</div>'+(comboName?'<div class="ocombo">🎁 可挂:'+comboName+'</div>':'')+'</div>'+
+      '<div class="ob'+(z.occupied?' got':'')+'" data-a="offclaim" data-zone="'+z.key+'">'+(z.occupied?'✓ 已拿下':'📷 抢阵地')+'</div></div>';
+  }).join('')+
+    '<div class="addoff"><input id="offInput" type="text" placeholder="本店有特殊位？手写(如:生鲜转角/节庆堆头/收银台旁)"><button class="addoffb" data-a="offadd">+ 加</button></div>'+
+    '<div class="ofsum'+(claimed>=of.standard_zones?' met':'')+'">已拿下 '+claimed+'/'+of.zones.length+' 个异位阵地 · 红线≥'+of.standard_zones+'个 '+(claimed>=of.standard_zones?'✅达标':'(再抢'+(of.standard_zones-claimed)+'个)')+'</div>';
   // 数字现场(盒马双现场)
   var ds=ST.digital_shelf;
   document.getElementById('digital').innerHTML=ds.checks.map(function(ck,i){
@@ -1013,8 +1081,8 @@ function renderXD(){
       '<div class="db2 no'+(ck.ok===false?' on':'')+'" data-a="dcheck" data-key="'+ck.key+'" data-v="0">✗异常</div></div></div>';
   }).join('');
   var mm=ds.mismatch;
-  if(mm.phys_yes_online_no)document.getElementById('mismatch').innerHTML='<div class="mismatch">⚠️ 错配:现场有货 但 线上缺货!<div class="m2">👉 顾客线上买不到=白白漏单·赶紧催线上补可售状态(只盘物理永远发现不了)</div></div>';
-  else if(mm.online_yes_phys_no)document.getElementById('mismatch').innerHTML='<div class="mismatch">⚠️ 错配:线上可售 但 现场没货!<div class="m2">👉 顾客下单发不出=超卖投诉+退款·赶紧下线或补货(履约事故)</div></div>';
+  if(mm.phys_yes_online_no)document.getElementById('mismatch').innerHTML='<div class="mismatch clk" data-a="fixmismatch" data-t="online"><div>⚠️ 错配:现场有货 但 线上缺货!</div><div class="m2">👉 顾客线上买不到=白白漏单·<b>点我 → 生成"催线上补可售"任务</b></div></div>';
+  else if(mm.online_yes_phys_no)document.getElementById('mismatch').innerHTML='<div class="mismatch clk" data-a="fixmismatch" data-t="phys"><div>⚠️ 错配:线上可售 但 现场没货!</div><div class="m2">👉 顾客下单发不出=超卖投诉+退款·<b>点我 → 生成"下线或补货"任务</b></div></div>';
   else if(ds.scanned)document.getElementById('mismatch').innerHTML='<div class="dmatch">✅ 物理与线上一致·无错配·履约通畅</div>';
   else document.getElementById('mismatch').innerHTML='';
   // 5类数据采集
@@ -1031,10 +1099,11 @@ function renderXL(){
   // 满分vs实得:每个差距的达成率
   var rows='';for(var id in lp.gaps){var g=lp.gaps[id];var a=E.actualOf(g,ST);if(a==null){rows+='<div class="row"><span class="nm">'+g.name.replace(/\(.*\)/,'')+'</span><span class="bar"></span><span class="pct" style="color:var(--mute)">—</span></div>';continue;}
     var std=g.standard.v;var ratio=g.standard.dir==='gte'?Math.min(1,a/std):Math.min(1,std/Math.max(a,0.01));
-    rows+='<div class="row"><span class="nm">'+g.name.replace(/\(.*\)/,'')+'</span><span class="bar"><span class="fill" style="width:'+(ratio*100)+'%"></span></span><span class="pct">'+(ratio*100).toFixed(0)+'%</span></div>';}
+    var lo=ratio<0.85;
+    rows+='<div class="row'+(lo?' clk':'')+'"'+(lo?' data-a="scorego" data-gap="'+g.gap_id+'"':'')+'><span class="nm">'+g.name.replace(/\(.*\)/,'')+(lo?' 👆':'')+'</span><span class="bar"><span class="fill" style="width:'+(ratio*100)+'%"></span></span><span class="pct">'+(ratio*100).toFixed(0)+'%</span></div>';}
   document.getElementById('scoreRows').innerHTML=rows;
   // 三方评价3E(mock·近30天)
-  document.getElementById('e3').innerHTML=[['店长','4.6'],['档口','4.3'],['运营','4.8']].map(function(x){return '<div class="t"><div class="v">'+x[1]+'</div><div class="l">'+x[0]+'评价</div></div>';}).join('');
+  document.getElementById('e3').innerHTML=[['店长','4.6','补货及时·配合度高'],['档口','4.3','鲜度控制好·偶尔占工时'],['运营','4.8','活动配合积极']].map(function(x){return '<div class="t clk" data-a="e3go" data-who="'+x[0]+'" data-say="'+x[2]+'"><div class="v">'+x[1]+' 👆</div><div class="l">'+x[0]+'评价</div></div>';}).join('');
   document.getElementById('wdv').textContent=money(inc.base+inc.merit*0.4);
   // 关差任务列表(带步骤+证据·从XD盘出来的开关OFF驱动)
   var html='';for(var id2 in lp.gaps){var g2=lp.gaps[id2];if(!(g2.close_menu||[]).length)continue;
@@ -1064,12 +1133,12 @@ function renderXP(){
   // 晋升阶梯
   document.getElementById('dashLadder').innerHTML='<div class="dh">还有多少路 · 晋升阶梯</div>'+
     '<div class="ladder"><div class="lr"><span class="rung done">A3</span><span class="arr">›</span><span class="rung now">'+ld.current+'</span><span class="arr">›</span><span class="rung">'+ld.next+'</span></div></div>'+
-    '<div class="progbig"><div class="bar"><div class="fill" style="width:'+Math.max(10,(80-ld.gap_score)/80*100)+'%"></div></div>'+
-    '<div class="lb">当前 <b>'+ld.current+'</b> · 距 '+ld.next+' 还差 <b>'+ld.gap_score+'分</b>（'+ld.cond+'）</div></div>'+
+    '<div class="progbig clk" data-a="laddergo"><div class="bar"><div class="fill" style="width:'+Math.max(10,(80-ld.gap_score)/80*100)+'%"></div></div>'+
+    '<div class="lb">当前 <b>'+ld.current+'</b> · 距 '+ld.next+' 还差 <b>'+ld.gap_score+'分</b>（'+ld.cond+'）· 点看这9分从哪补 👆</div></div>'+
     '<div class="dl">升上去：月薪 <b>¥'+ld.salary_now+'k → ¥'+ld.salary_next+'k</b></div>';
   // AIQL
   var stages=[['A','认知'],['I','兴趣'],['Q','体验'],['L','忠诚']];
-  document.getElementById('aiql').innerHTML=stages.map(function(x){return '<div class="aq'+(x[0]===aq.stage?' cur':'')+'"><div class="ql">'+x[0]+'</div><div class="qn">'+x[1]+'</div></div>';}).join('');
+  document.getElementById('aiql').innerHTML=stages.map(function(x){return '<div class="aq'+(x[0]===aq.stage?' cur':'')+' clk" data-a="aiqlgo" data-s="'+x[0]+'" data-n="'+x[1]+'"><div class="ql">'+x[0]+'</div><div class="qn">'+x[1]+'</div></div>';}).join('');
   document.getElementById('aiqlnote').textContent='L忠诚=高频复购=O2O命根 · 现在在Q，下一步冲L';
   // 客情谈判(他的要求/我方承诺/我方要求+答应 + GCD/LCM共识 · 软记录不换钱·谈成落任务才换钱)
   var gx=ST.guanxi;
@@ -1133,6 +1202,16 @@ document.addEventListener('click',function(ev){
     var mm=ST.digital_shelf.mismatch;
     if(mm.phys_yes_online_no||mm.online_yes_phys_no)toast('⚠️ <b>抓到错配!</b>现场vs线上不一致=漏单/超卖风险·双现场的价值');
     else toast('💻 数字现场·已记录(截图存证)');render();}
+  else if(a==='offclaim'){var zone=t.getAttribute('data-zone');var z=ST.offshelf.zones.find(function(x){return x.key===zone;});
+    var wasOcc=z.occupied;
+    act({type:'OFFSHELF_CLAIM',zone:zone,occupied:!wasOcc,photo:'offshelf://'+Date.now(),by:loop().owner});
+    var zz=ST.offshelf.zones.find(function(x){return x.key===zone;});
+    if(zz.occupied){var msg='📍 <b>拿下'+zz.label+'!</b>累计'+ST.offshelf.claimed+'个阵地';if(zz.combo){var cb=ST.combos.find(function(x){return x.id===zz.combo;});msg+='<br>🎁 这里挂了「'+(cb?cb.name:'')+'」·场景带单';}toast(msg);}
+    else toast('已撤下'+zz.label+'的陈列');render();}
+  else if(a==='offadd'){var inp=document.getElementById('offInput');var label=inp?inp.value.trim():'';
+    if(!label){toast('先写个位置名（你店里那个特殊位）');return;}
+    act({type:'OFFSHELF_ADD',label:label,scene:'一线自定义位置',by:loop().owner});
+    toast('📍 <b>加了「'+label+'」</b>·本店特殊位·现在可以去抢它了（拍照拿下）');render();}
   else if(a==='braddbatch'){brBatches.push({qty:'',date:''});render();}
   else if(a==='brrm'){var i=+t.getAttribute('data-i');if(brBatches.length>1)brBatches.splice(i,1);render();}
   else if(a==='collect'){var key=t.getAttribute('data-key');var x=ST.xd_collect.find(function(o){return o.key===key;});
@@ -1148,6 +1227,26 @@ document.addEventListener('click',function(ev){
     act({type:'PUSH_BUNDLE',bundle_id:bid,evidence:{bundle_photo:'bundle://'+Date.now()}});
     var bd=ST.sku_matrix.bundles.find(function(x){return x.id===bid;});
     toast(bd.effective?'📐 <b>规格套装有效!</b>'+bd.name+'·客单+'+(bd.basket_lift*100).toFixed(0)+'%(达标)':'📐 推了·客单+'+(bd.basket_lift*100).toFixed(0)+'%没到标');render();}
+  else if(a==='swgo'){var gp=t.getAttribute('data-gap');TAB='xl';var g=loop().gaps[gp];if(g&&!g.diag)act({type:'CALC_GAP',loop_id:loopid,gap_id:gp});
+    toast('👆 这个开关没点亮 → <b>跳到一本账去关它</b>（点亮它=今天的战功）');render();}
+  else if(a==='skucell'){var sku=t.getAttribute('data-sku'),role=t.getAttribute('data-role'),note=t.getAttribute('data-note'),igmd=t.getAttribute('data-igmd');
+    var isMain=(role==='主力');
+    toast('📐 <b>'+sku+'</b><br>角色:'+role+' · 占六月鲜 '+(igmd*100).toFixed(0)+'%动销 · '+note+(isMain?'<br>🚀 这是带头款·先保它有货有陈列(去XD盘)':''));}
+  else if(a==='scorego'){var gp=t.getAttribute('data-gap');TAB='';var g=loop().gaps[gp];if(g&&!g.diag)act({type:'CALC_GAP',loop_id:loopid,gap_id:gp});TAB='xl';
+    toast('👆 这项没到标 → <b>下面就是关它的步骤</b>（做完这个分数就上去）');render();
+    setTimeout(function(){var el=document.getElementById('closelist');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});},150);}
+  else if(a==='fixmismatch'){var typ=t.getAttribute('data-t');
+    toast(typ==='online'?'📲 <b>已记:催线上补可售</b><br>动作:找线上运营把"到货通知"改成"可售"·或核对库存同步。这是履约任务·关了才算(去XL跟进)':'📦 <b>已记:下线或补货</b><br>动作:线上先下架防超卖·同时后仓补货。防止顾客下单发不出货');}
+  else if(a==='tasksrc'){var i=+t.getAttribute('data-i');var s=ST.task_sources[i];
+    toast('📋 <b>'+s.ch+'</b><br>'+s.hint+'<br>👉 这个通道的机会→变成你"今天要赢"的任务（盯这类SKU的动销/坑位）');}
+  else if(a==='switchmate'){ROLE=(ROLE==='sh'?'hema':'sh');cam3=[false,false,false];toast('🔄 切到'+(ROLE==='sh'?'SR':'店长')+'视角·看TA今天要赢什么·你俩同一家店');render();}
+  else if(a==='e3go'){var who=t.getAttribute('data-who'),say=t.getAttribute('data-say');
+    toast('💬 <b>'+who+'的评价</b>:"'+say+'"<br>👉 三方评价是软反馈(参考·不直接换钱)·帮你知道哪块该改进');}
+  else if(a==='aiqlgo'){var st2=t.getAttribute('data-s'),nm=t.getAttribute('data-n');var cur=ST.aiql.stage;
+    var tip={A:'认知期:让顾客知道有六月鲜(铺货+曝光)',I:'兴趣期:让顾客想试(陈列+促销)',Q:'体验期:让顾客买了满意(鲜度+履约·你现在在这)',L:'忠诚期:让顾客常复购(会员+组合·这是O2O命根)'};
+    toast('💚 <b>'+st2+' '+nm+'期</b>:'+(tip[st2]||'')+(st2===cur?'<br>← 你现在在这':''));}
+  else if(a==='laddergo'){var ld=ST.ladder;
+    toast('🪜 <b>距'+ld.next+'差'+ld.gap_score+'分</b><br>这9分从哪补:记分卡均分持续≥80(现在动销/坑位没到标就在扣分)→去XL把没到标的差关了·分自然上来。升上去月薪¥'+ld.salary_now+'k→¥'+ld.salary_next+'k');}
   else if(a==='step'){var i2=+t.getAttribute('data-i');d(gap).steps[i2]=!d(gap).steps[i2];render();}
   else if(a==='photo'){var key=t.getAttribute('data-key');d(gap).ev[key]='photo://'+Date.now();toast('📸 <b>照片已拍</b>（带时间戳防伪）');render();}
   else if(a==='done'){var mi=+t.getAttribute('data-mi');var g=loop().gaps[gap];var dr=d(gap);var sh0=ST.loops.sh.income.total,hm0=ST.loops.hema.income.total;
