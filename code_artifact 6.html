@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>六月鲜 2 亿瓶战役：矩阵与纪律沙盘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: #f1f5f9; margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        .panel { background: #fff; border-radius: 0.5rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        
+        /* 表格样式 */
+        .data-grid { width: 100%; border-collapse: collapse; text-align: left; table-layout: fixed; min-width: 1200px; }
+        .data-grid th { position: sticky; top: 0; background-color: #0f172a; color: #cbd5e1; font-size: 12px; padding: 10px 6px; font-weight: 700; z-index: 20; border-right: 1px solid #334155; text-align: center; }
+        .data-grid td { padding: 6px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; background: #fff; vertical-align: middle; transition: background 0.1s; }
+        .data-grid tr:hover td { background-color: #f8fafc; }
+        
+        /* 控件样式 */
+        .select-box { width: 100%; font-size: 11px; font-weight: 700; color: #1e293b; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px; outline: none; cursor: pointer; }
+        .select-box:focus { border-color: #3b82f6; background: #fff; }
+        
+        input[type="number"] { width: 100%; font-size: 12px; font-weight: 900; text-align: center; border: none; background: transparent; outline: none; border-bottom: 1px dashed #cbd5e1; color: #4338ca; }
+        input[type="number"]:focus { border-bottom-color: #3b82f6; background: #eff6ff; }
+        input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        input[type=range] { width: 100%; height: 4px; border-radius: 2px; outline: none; appearance: none; background: #cbd5e1; margin: 4px 0; }
+        input[type=range]::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border-radius: 50%; cursor: pointer; background: #fff; border: 3px solid #3b82f6; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+
+        .error-cell { background-color: #fef2f2 !important; border: 2px solid #ef4444 !important; animation: pulseRed 2s infinite; }
+        @keyframes pulseRed { 0% { box-shadow: inset 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: inset 0 0 0 4px rgba(239, 68, 68, 0); } 100% { box-shadow: inset 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+        .success-cell { background-color: #ecfdf5 !important; border-left: 4px solid #10b981 !important; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="p-2 h-screen flex flex-col overflow-hidden bg-slate-200">
+
+    <div class="w-full mx-auto bg-white rounded-xl shadow-2xl border border-slate-300 flex flex-col flex-1 overflow-hidden relative">
+        
+        <!-- 顶层指挥中心 -->
+        <div class="bg-slate-900 text-white px-4 py-3 shrink-0 flex justify-between items-center z-30">
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-yellow-400 flex items-center gap-2">
+                    🎯 六月鲜 2 亿瓶战役：品类矩阵与渠道纪律沙盘
+                </h1>
+                <p class="text-[11px] text-slate-300 mt-1">
+                    教训闭环：严控 SKU 数量防内耗；严配渠道等级防乱价。规则之内出业绩，规则之外即“违规执行”。
+                </p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="bg-slate-800 border border-slate-600 rounded px-4 py-1 text-center">
+                    <div class="text-[9px] text-slate-400 uppercase">大盘目标达成率</div>
+                    <div class="text-xl font-black text-emerald-400" id="kpi-target-pct">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col xl:flex-row overflow-hidden">
+            
+            <!-- 左侧：兵力部署表 (70%) -->
+            <div class="w-full xl:w-[70%] flex flex-col bg-slate-50 border-r border-slate-200 overflow-hidden">
+                <div class="bg-indigo-50 text-[11px] font-bold text-indigo-800 px-3 py-2 border-b border-indigo-200 flex justify-between items-center">
+                    <span>⚔️ 战略排兵布阵图 (端到端闭环配置)</span>
+                    <span class="text-[10px] text-slate-500 font-normal">目标总盘子：20,000 万瓶</span>
+                </div>
+                <div class="flex-1 overflow-auto" id="grid-container">
+                    <table class="data-grid" id="sku-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">单品名称(SKU)</th>
+                                <th style="width: 12%;">阶段与定价<br><span class="text-[9px] font-normal">生命周期 / 终端价</span></th>
+                                <th style="width: 14%; background:#475569;">1. 内部战略角色<br><span class="text-[9px] font-normal text-yellow-300">决定资源优先级</span></th>
+                                <th style="width: 14%; background:#475569;">2. 渠道准入纪律<br><span class="text-[9px] font-normal text-yellow-300">防错配核心红线</span></th>
+                                <th style="width: 10%;">目标销量分配<br><span class="text-[9px] font-normal">(万瓶)</span></th>
+                                <th style="width: 15%;">市场火力全开度<br><span class="text-[9px] font-normal">决定能否打透该渠道</span></th>
+                                <th style="width: 20%; background:#1e293b; color:#60a5fa;">💡 纪律检查与动销反馈</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sku-tbody">
+                            <!-- JS 渲染 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 右侧：全局诊断与图表 (30%) -->
+            <div class="w-full xl:w-[30%] flex flex-col bg-slate-100 overflow-hidden p-3 gap-3">
+                
+                <!-- 顶层总结 -->
+                <div class="bg-white rounded-lg p-4 border border-slate-200 shadow-sm shrink-0">
+                    <div class="flex justify-between items-end mb-2">
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase">预计可达成总销量</div>
+                            <div class="text-3xl font-black text-slate-800" id="kpi-total-vol">0 <span class="text-sm font-normal text-slate-500">万瓶</span></div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] font-bold text-slate-500 uppercase">预测大盘总毛利</div>
+                            <div class="text-xl font-black text-indigo-600" id="kpi-total-profit">¥ 0 <span class="text-xs">万</span></div>
+                        </div>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2 mt-2 overflow-hidden">
+                        <div class="bg-emerald-500 h-2 rounded-full transition-all duration-500" id="progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- 智能诊断黑板 (核心逻辑展示) -->
+                <div class="bg-slate-800 text-white rounded-lg shadow-lg p-3 flex-1 flex flex-col overflow-hidden">
+                    <h3 class="text-xs font-bold text-yellow-300 uppercase tracking-widest mb-2 border-b border-slate-600 pb-2 shrink-0">
+                        🩺 战情室：执行力红线违规通报
+                    </h3>
+                    <div id="diagnostic-report" class="text-[11px] space-y-2.5 leading-relaxed text-slate-300 overflow-y-auto flex-1 pr-1">
+                        <!-- 动态诊断 -->
+                    </div>
+                </div>
+
+                <!-- 品类结构图 -->
+                <div class="bg-white rounded-lg p-2 border border-slate-200 shadow-sm h-[180px] shrink-0 flex flex-col">
+                    <div class="text-[10px] font-bold text-slate-700 mb-1 px-1">📊 销量结构健康度 (防臃肿)</div>
+                    <div class="flex-1 relative"><canvas id="portfolioChart"></canvas></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let portfolioChartInstance = null;
+        const TARGET_VOL = 20000; // 2亿瓶目标
+
+        // 频道选项
+        const roleOptions = ['请选择战略角色', '🔥 核心利润牛 (要钱)', '⭐ 战略形象款 (要心智)', '🛡️ 侧翼牺牲打 (要流量)', '🗑️ 边缘长尾款 (清库)'];
+        const channelOptions = ['请分配渠道', 'A类 (高超/盒马/一线)', 'B类 (大卖场/综超)', 'C类 (流通/农贸/夫妻店)', '全渠道盲铺'];
+
+        // 核心底座：六月鲜矩阵
+        let portfolio = [
+            { id: 'p1', name: '六月鲜·特级有机生抽', spec: '500ml', stage: '导入', price: 29.9, cogs: 10, role: '请选择战略角色', channel: '请分配渠道', targetVol: 3000, firepower: 80, actualVol: 0, status: '', msg: '' },
+            { id: 'p2', name: '六月鲜·轻 (低盐酱油)', spec: '500ml', stage: '导入', price: 22.9, cogs: 8, role: '请选择战略角色', channel: '请分配渠道', targetVol: 5000, firepower: 60, actualVol: 0, status: '', msg: '' },
+            { id: 'p3', name: '六月鲜·遵循自然原汁', spec: '800ml', stage: '成长', price: 18.9, cogs: 7, role: '请选择战略角色', channel: '请分配渠道', targetVol: 6000, firepower: 50, actualVol: 0, status: '', msg: '' },
+            { id: 'p4', name: '六月鲜·红烧老抽王', spec: '1L', stage: '成熟', price: 15.9, cogs: 6, role: '请选择战略角色', channel: '请分配渠道', targetVol: 4000, firepower: 20, actualVol: 0, status: '', msg: '' },
+            { id: 'p5', name: '特级酱油 (常规款)', spec: '500ml', stage: '成熟', price: 12.9, cogs: 5, role: '请选择战略角色', channel: '请分配渠道', targetVol: 1500, firepower: 10, actualVol: 0, status: '', msg: '' },
+            { id: 'p6', name: '高鲜生抽 (老品)', spec: '500ml', stage: '衰退', price: 8.9, cogs: 4, role: '请选择战略角色', channel: '请分配渠道', targetVol: 500, firepower: 0, actualVol: 0, status: '', msg: '' }
+        ];
+
+        function initGrid() {
+            let tbody = document.getElementById('sku-tbody');
+            let html = '';
+
+            portfolio.forEach((sku, idx) => {
+                let rOpts = roleOptions.map(o => `<option value="${o}" ${sku.role === o ? 'selected' : ''}>${o}</option>`).join('');
+                let cOpts = channelOptions.map(o => `<option value="${o}" ${sku.channel === o ? 'selected' : ''}>${o}</option>`).join('');
+                
+                let rowCls = '';
+                if (sku.status === 'error') rowCls = 'error-cell';
+                else if (sku.status === 'success') rowCls = 'success-cell';
+
+                html += `
+                <tr id="row-${sku.id}">
+                    <td class="font-bold text-xs text-slate-800 leading-tight">
+                        ${sku.name} <br>
+                        <span class="text-[9px] font-normal text-slate-400">${sku.spec}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-bold block mb-1">${sku.stage}</span>
+                        <span class="text-indigo-600 font-bold text-[11px]">¥${sku.price}</span>
+                    </td>
+                    <td class="p-1">
+                        <select class="select-box" onchange="updateVal('${idx}', 'role', this.value)">${rOpts}</select>
+                    </td>
+                    <td class="p-1 ${rowCls}">
+                        <select class="select-box" onchange="updateVal('${idx}', 'channel', this.value)">${cOpts}</select>
+                    </td>
+                    <td class="px-2">
+                        <input type="number" value="${sku.targetVol}" oninput="updateVal('${idx}', 'targetVol', this.value)">
+                    </td>
+                    <td class="px-3">
+                        <div class="flex items-center gap-2">
+                            <input type="range" value="${sku.firepower}" min="0" max="100" step="5" oninput="updateVal('${idx}', 'firepower', this.value)">
+                            <span class="text-[10px] font-bold text-slate-600 w-8 text-right">${sku.firepower}%</span>
+                        </div>
+                    </td>
+                    <td class="text-[10px] p-2 leading-tight ${sku.status === 'error' ? 'text-red-600 font-bold' : (sku.status === 'success' ? 'text-emerald-600' : 'text-slate-500')}">
+                        ${sku.msg || '请配置左侧角色与渠道，等待系统诊断...'}
+                    </td>
+                </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function updateVal(index, field, value) {
+            let val = (field === 'role' || field === 'channel') ? value : parseFloat(value) || 0;
+            portfolio[index][field] = val;
+            runModel();
+        }
+
+        function runModel() {
+            let totalActualVol = 0;
+            let totalProfit = 0;
+            let diagErrors = [];
+            let diagSuccess = [];
+            
+            // 重置状态
+            portfolio.forEach(sku => { sku.status = ''; sku.msg = ''; sku.actualVol = 0; });
+
+            // --- 核心物理诊断引擎：基于您的痛点 ---
+            
+            // 1. 检查“六月鲜·轻”的痛点 (高端去低端渠道必死)
+            let qingSku = portfolio.find(s => s.id === 'p2');
+            if (qingSku && qingSku.channel !== '请分配渠道') {
+                if (qingSku.channel.includes('C类') || qingSku.channel.includes('盲铺')) {
+                    qingSku.status = 'error';
+                    qingSku.msg = '❌ 违规操作！“轻盐”是高端产品，下放流通渠道会导致价格盘崩溃且无动销。预计流失80%销量。';
+                    qingSku.actualVol = qingSku.targetVol * 0.2; // 惩罚：只剩20%销量
+                    diagErrors.push(`【六月鲜·轻】被错误投放到低线渠道。这是典型的“为了冲单瞎铺货”的伪执行力！已按扣减80%绩效处理。`);
+                } else {
+                    qingSku.status = 'success';
+                    qingSku.msg = '✅ 渠道匹配精准，高端势能得以保全。';
+                    qingSku.actualVol = qingSku.targetVol * (qingSku.firepower / 100); // 正常按火力转化
+                }
+            }
+
+            // 2. 检查“特级有机”的痛点 (高端缺火力打不透)
+            let orgSku = portfolio.find(s => s.id === 'p1');
+            if (orgSku && orgSku.role !== '请选择战略角色') {
+                if (orgSku.role.includes('形象款') && orgSku.firepower < 70) {
+                    orgSku.status = 'error';
+                    orgSku.msg = '❌ 炮火不足！作为战略形象款，市场费率不足70%，根本无法洗脑消费者，产品将内部流产。';
+                    orgSku.actualVol = orgSku.targetVol * 0.3;
+                    diagErrors.push(`【特级有机】被定义为形象款，但资源投入畏手畏脚。这会导致前期研发费全部变成沉没成本。`);
+                } else if (orgSku.channel.includes('C类')) {
+                    orgSku.status = 'error';
+                    orgSku.msg = '❌ 品牌灾难！有机卖到C类店？竞品会笑死我们的。';
+                    orgSku.actualVol = 0;
+                } else {
+                    orgSku.status = 'success';
+                    orgSku.msg = '✅ 高举高打，有望建立品牌护城河。';
+                    orgSku.actualVol = orgSku.targetVol * (orgSku.firepower / 100);
+                }
+            }
+
+            // 3. 检查“遵循自然”和“红烧”的痛点 (主推款必须给资源，利润牛不能乱花钱)
+            portfolio.forEach(sku => {
+                if (sku.id === 'p1' || sku.id === 'p2') return; // 跳过已处理的
+                
+                if (sku.role === '请选择战略角色' || sku.channel === '请分配渠道') return;
+
+                if (sku.role.includes('主推') && sku.firepower < 50) {
+                    sku.status = 'error';
+                    sku.msg = '❌ 即是主推，为何不给弹药？';
+                    sku.actualVol = sku.targetVol * 0.4;
+                } else if (sku.role.includes('利润牛') && sku.firepower > 30) {
+                    sku.status = 'error';
+                    sku.msg = '❌ 败家！利润牛不需要这么高的广宣费，这是在给渠道送钱(假陈列)。';
+                    sku.actualVol = sku.targetVol; // 销量保住了，但利润极低
+                    diagErrors.push(`【${sku.name}】作为利润牛，市场费用异常偏高。系统判定为：业务员在用利润款套取陈列费(IPO9)！`);
+                } else if (sku.role.includes('牺牲打')) {
+                    sku.status = 'success';
+                    sku.msg = '✅ 侧翼防御启动，承担竞品伤害。';
+                    sku.actualVol = sku.targetVol * 1.2; // 牺牲打降价放量
+                } else {
+                    sku.status = 'success';
+                    sku.msg = '✅ 角色与火力匹配。';
+                    sku.actualVol = sku.targetVol * (sku.firepower / 80 > 1 ? 1 : sku.firepower / 80);
+                }
+            });
+
+            // 4. 计算大盘数据
+            let chartLabels = [];
+            let chartData = [];
+            let bgColors = [];
+
+            portfolio.forEach(sku => {
+                totalActualVol += sku.actualVol;
+                // 粗略利润核算：(出厂价 - 成本 - (出厂价*火力值/100)) * 销量
+                let unitProfit = sku.price - sku.cogs - (sku.price * (sku.firepower / 100));
+                totalProfit += (sku.actualVol * unitProfit);
+
+                chartLabels.push(sku.name.substring(0,4));
+                chartData.push(sku.actualVol);
+                bgColors.push(sku.status === 'error' ? '#ef4444' : (sku.status === 'success' ? '#10b981' : '#cbd5e1'));
+            });
+
+            // --- 渲染 UI ---
+            initGrid(); // 重绘表格以显示报错状态
+
+            document.getElementById('kpi-total-vol').innerHTML = `${totalActualVol.toFixed(0)} <span class="text-sm font-normal text-slate-500">万瓶</span>`;
+            document.getElementById('kpi-total-profit').innerText = `¥ ${(totalProfit).toFixed(0)} 万`;
+            
+            let pct = (totalActualVol / TARGET_VOL) * 100;
+            document.getElementById('kpi-target-pct').innerText = `${pct.toFixed(1)}%`;
+            let bar = document.getElementById('progress-bar');
+            bar.style.width = `${Math.min(pct, 100)}%`;
+            if (pct >= 100) bar.className = "bg-emerald-500 h-2 rounded-full transition-all duration-500";
+            else if (pct >= 80) bar.className = "bg-amber-500 h-2 rounded-full transition-all duration-500";
+            else bar.className = "bg-red-500 h-2 rounded-full transition-all duration-500";
+
+            // 黑板报告
+            let diagHtml = "";
+            if (diagErrors.length > 0) {
+                diagHtml += `<div class="bg-red-900/50 p-2 rounded border-l-2 border-red-500 mb-2">
+                    <span class="text-red-400 font-bold text-sm">🚨 发现严重“伪执行”与战略偏移：</span>
+                    <ul class="list-disc pl-4 mt-1 space-y-1 text-slate-300">` + diagErrors.map(e => `<li>${e}</li>`).join('') + `</ul>
+                </div>`;
+                diagHtml += `<div class="text-yellow-400 font-bold mt-2">👉 指导动作：请在左侧表格中，将【六月鲜·轻】的渠道限制为“A类”，并为【特级有机】匹配正确的角色和火力，为利润牛削减费用！</div>`;
+            } else if (pct < 100) {
+                diagHtml += `<div class="text-slate-300 mt-2">✅ 阵型纪律良好，没有违规乱铺货现象。<br>⚠️ 但当前火力不足，距离 2 亿瓶（20000万瓶）的总目标还差 ${ (TARGET_VOL - totalActualVol).toFixed(0) } 万瓶。请增加主推款的市场火力，或调整目标分配！</div>`;
+            } else {
+                diagHtml += `<div class="bg-emerald-900/40 p-3 rounded border-l-4 border-emerald-500 mt-2">
+                    <span class="text-emerald-400 font-bold text-base">🏆 伟大的胜利！2亿瓶战役达成！</span><br>
+                    <span class="text-slate-300 mt-1 block">您用铁血的纪律约束了渠道乱象，高端产品成功守住 A 类阵地，利润牛贡献了充足的弹药。这是一份完美的、拒绝了一切“伪执行力”的战略 BP！</span>
+                </div>`;
+            }
+            document.getElementById('diagnostic-report').innerHTML = diagHtml;
+
+            // 画图
+            const ctx = document.getElementById('portfolioChart').getContext('2d');
+            if (portfolioChartInstance) portfolioChartInstance.destroy();
+            portfolioChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: chartLabels, datasets: [{ data: chartData, backgroundColor: bgColors, borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.raw.toFixed(0)}万瓶` } } }, scales: { x: { grid: { display: false }, ticks: { font: {size: 9} } }, y: { display: false } } }
+            });
+        }
+
+        runModel();
+    </script>
+</body>
+</html>
+```
+
+### 总裁实战寄语：将“战略”变成系统的“下拉菜单”
+
+这个【品类矩阵与渠道纪律沙盘】，是为您刚才痛点量身定制的解药。
+
+以前，产品经理在台上喊“轻盐要走高端”，销售在下面应付说“好好好”，转头就铺进了菜市场。
+现在，您开会时把这个沙盘投在屏幕上，让销售总监自己来选：
+
+1. **当他把“六月鲜·轻”的渠道下拉菜单选为“C类店”或“盲铺”时，** 屏幕会立刻闪红，沙盘直接宣判：“违规操作！价格盘崩溃，扣减 80% 销量预测。”
+2. **当产品经理把 5 款老产品都选为“主推款”时，** 由于总预算火力有限，所有产品的实际销量都会亮起黄灯（火力不足）。系统会逼着产品经理做减法：“你只能选 1 个主推，剩下的必须标为‘长尾款’或‘清库淘汰款’！”
+
+这就是 **BLM 中“业务设计”与“关键任务”的无缝闭环**。我们把公司的“红线”，写成了系统里带红框的“必填项”和“约束条件”。只有在沙盘里把灯全部变绿，这份 BP 才能签字下发。
+
+这样，您的战略就不会再在执行的迷雾中变形了！
