@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOS V10: 全维弹性空间与动态资源推演沙盘</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" crossorigin="anonymous"></script>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: #f1f5f9; margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .top-deck { flex: 0 0 45%; overflow: auto; background: #fff; display: flex; flex-direction: column; border-bottom: 1px solid #cbd5e1; }
+        .bottom-radar { flex: 1; overflow: hidden; background: #f8fafc; display: flex; flex-direction: column; position: relative; }
+        
+        /* 横向拖拽条（调整上下高度） */
+        .resizer-y { flex: 0 0 12px; background-color: #e2e8f0; cursor: row-resize; display: flex; justify-content: center; align-items: center; z-index: 50; }
+        .resizer-grip-y { width: 50px; height: 3px; border-top: 2px solid #94a3b8; border-bottom: 2px solid #94a3b8; opacity: 0.5; }
+
+        /* 纵向拖拽条（调整左右宽度） - 适配亮色背景(宏观) */
+        .resizer-x-light { flex: 0 0 10px; background-color: transparent; cursor: col-resize; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 50; transition: background 0.2s; }
+        .resizer-x-light:hover, .resizer-x-light.active-resizer { background-color: #cbd5e1; }
+        .resizer-grip-x-light { width: 2px; height: 30px; background-color: #94a3b8; }
+
+        /* 纵向拖拽条（调整左右宽度） - 适配暗色背景(微观) */
+        .resizer-x-dark { flex: 0 0 10px; background-color: #1e293b; cursor: col-resize; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 50; transition: background 0.2s; border-left: 1px solid #334155; border-right: 1px solid #334155;}
+        .resizer-x-dark:hover, .resizer-x-dark.active-resizer { background-color: #475569; }
+        .resizer-grip-x-dark { width: 2px; height: 30px; background-color: #64748b; }
+        
+        /* 表格样式 */
+        .data-grid { width: 100%; border-collapse: collapse; text-align: left; table-layout: fixed; min-width: 1400px; }
+        .data-grid th { position: sticky; top: 0; background-color: #0f172a; color: #fff; font-size: 11px; padding: 8px 4px; z-index: 20; border-right: 1px solid #334155; text-align: center; }
+        .data-grid td { padding: 4px; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; vertical-align: middle; }
+        .data-grid tr:hover td { background-color: #f8fafc; }
+        .data-grid tr.active-row td { background-color: #e0e7ff; border-top: 1px solid #6366f1; border-bottom: 1px solid #6366f1; }
+        
+        .grid-input-text { width: 100%; font-size: 12px; font-weight: 800; color: #0f172a; border: none; background: transparent; outline: none; text-align: center; }
+        .grid-input-spec { width: 90%; font-size: 10px; color: #64748b; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 3px; text-align: center; margin: 2px auto; display: block; }
+        .grid-input-num { width: 100%; font-size: 13px; font-weight: 800; text-align: center; border: none; background: transparent; outline: none; border-bottom: 1px dashed #cbd5e1; color: #4338ca; }
+        .select-role { width: 100%; font-size: 10px; font-weight: 800; background: #e2e8f0; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px; text-align: center; }
+        .role-tag { font-size: 9px; padding: 2px; border-radius: 3px; border: 1px solid; display: inline-flex; align-items: center; justify-content: center; gap: 2px; width: 100%;}
+        
+        /* 滑块控件 */
+        input[type=range] { width: 95%; height: 5px; border-radius: 2.5px; appearance: none; background: #cbd5e1; margin: 3px 0; outline: none;}
+        input[type=range]::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid; cursor: pointer; }
+        .thumb-d::-webkit-slider-thumb { border-color: #f59e0b; } .thumb-r::-webkit-slider-thumb { border-color: #ef4444; } .thumb-c::-webkit-slider-thumb { border-color: #10b981; }
+        .thumb-i8::-webkit-slider-thumb { border-color: #0ea5e9; } .thumb-i9::-webkit-slider-thumb { border-color: #8b5cf6; } .thumb-i10::-webkit-slider-thumb { border-color: #ec4899; }
+        .thumb-time::-webkit-slider-thumb { border-color: #4f46e5; width: 20px; height: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);}
+        .global-throttle { height: 8px !important; }
+        .global-throttle::-webkit-slider-thumb { width: 20px !important; height: 20px !important; border-color: #ea580c !important; }
+
+        /* 徽章与组件 */
+        .badge-intro { background: #eff6ff; color: #2563eb; border-left: 3px solid #3b82f6; }
+        .badge-growth { background: #fffbeb; color: #d97706; border-left: 3px solid #f59e0b; }
+        .badge-mat { background: #ecfdf5; color: #059669; border-left: 3px solid #10b981; }
+        .badge-dec { background: #f8fafc; color: #475569; border-left: 3px solid #64748b; }
+        .sparkline-container { width: 95%; height: 40px; margin: 0 auto; position: relative; }
+        
+        /* 资源池专用样式 */
+        .resource-bar-bg { width: 100%; height: 10px; background: #1e293b; border-radius: 5px; overflow: hidden; display: flex; transition: all 0.3s ease; }
+        .res-hr { background: #f43f5e; transition: width 0.3s; } .res-log { background: #8b5cf6; transition: width 0.3s;} .res-chan { background: #0ea5e9; transition: width 0.3s;} .res-21s { background: #10b981; transition: width 0.3s;} .res-21m { background: #f59e0b; transition: width 0.3s;}
+        .res-input { width: 40px; background: transparent; border: 1px solid #475569; border-radius: 3px; color: white; text-align: center; font-size: 10px; outline: none; transition: border 0.2s; }
+        .res-input:focus { border-color: #3b82f6; }
+        
+        .radar-tab { padding: 4px 8px; font-size: 9px; font-weight: bold; border-radius: 4px; cursor: pointer; border: 1px solid #334155; color: #94a3b8; transition: all 0.2s; white-space: nowrap; }
+        .radar-tab.active-hr { background: #f43f5e; color: white; border-color: #f43f5e; }
+        .radar-tab.active-log { background: #8b5cf6; color: white; border-color: #8b5cf6; }
+        .radar-tab.active-chan { background: #0ea5e9; color: white; border-color: #0ea5e9; }
+        .radar-tab.active-s21 { background: #10b981; color: white; border-color: #10b981; }
+        .radar-tab.active-m21 { background: #f59e0b; color: white; border-color: #f59e0b; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        /* 防拦截弹窗 */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 999999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-box { width: 90%; max-width: 900px; height: 85%; background: white; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0px}.z-20{z-index:20}.z-30{z-index:30}.mx-0\.5{margin-left:0.125rem;margin-right:0.125rem}.mb-1{margin-bottom:0.25rem}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.mt-0\.5{margin-top:0.125rem}.mt-2{margin-top:0.5rem}.mb-0\.5{margin-bottom:0.125rem}.mt-1{margin-top:0.25rem}.flex{display:flex}.hidden{display:none}.h-0\.5{height:0.125rem}.h-1{height:0.25rem}.h-full{height:100%}.h-screen{height:100vh}.min-h-\[200px\]{min-height:200px}.w-3{width:0.75rem}.w-\[180px\]{width:180px}.w-full{width:100%}.w-10{width:2.5rem}.w-6{width:1.5rem}.min-w-\[200px\]{min-width:200px}.min-w-\[220px\]{min-width:220px}.min-w-\[250px\]{min-width:250px}.flex-1{flex:1 1 0%}.shrink-0{flex-shrink:0}.resize-none{resize:none}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-2{gap:0.5rem}.gap-3{gap:0.75rem}.gap-0\.5{gap:0.125rem}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.overflow-auto{overflow:auto}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.rounded{border-radius:0.25rem}.rounded-lg{border-radius:0.5rem}.rounded-t-xl{border-top-left-radius:0.75rem;border-top-right-radius:0.75rem}.border{border-width:1px}.border-x{border-left-width:1px;border-right-width:1px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-l{border-left-width:1px}.border-l-2{border-left-width:2px}.border-r{border-right-width:1px}.border-dashed{border-style:dashed}.border-emerald-200{--tw-border-opacity:1;border-color:rgb(167 243 208 / var(--tw-border-opacity, 1))}.border-red-900{--tw-border-opacity:1;border-color:rgb(127 29 29 / var(--tw-border-opacity, 1))}.border-slate-300{--tw-border-opacity:1;border-color:rgb(203 213 225 / var(--tw-border-opacity, 1))}.border-slate-600{--tw-border-opacity:1;border-color:rgb(71 85 105 / var(--tw-border-opacity, 1))}.border-slate-700{--tw-border-opacity:1;border-color:rgb(51 65 85 / var(--tw-border-opacity, 1))}.border-yellow-200{--tw-border-opacity:1;border-color:rgb(254 240 138 / var(--tw-border-opacity, 1))}.border-blue-100{--tw-border-opacity:1;border-color:rgb(219 234 254 / var(--tw-border-opacity, 1))}.border-blue-200{--tw-border-opacity:1;border-color:rgb(191 219 254 / var(--tw-border-opacity, 1))}.border-emerald-500{--tw-border-opacity:1;border-color:rgb(16 185 129 / var(--tw-border-opacity, 1))}.border-red-500{--tw-border-opacity:1;border-color:rgb(239 68 68 / var(--tw-border-opacity, 1))}.border-slate-100{--tw-border-opacity:1;border-color:rgb(241 245 249 / var(--tw-border-opacity, 1))}.border-slate-200{--tw-border-opacity:1;border-color:rgb(226 232 240 / var(--tw-border-opacity, 1))}.bg-emerald-50{--tw-bg-opacity:1;background-color:rgb(236 253 245 / var(--tw-bg-opacity, 1))}.bg-indigo-600{--tw-bg-opacity:1;background-color:rgb(79 70 229 / var(--tw-bg-opacity, 1))}.bg-sky-900{--tw-bg-opacity:1;background-color:rgb(12 74 110 / var(--tw-bg-opacity, 1))}.bg-slate-200{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}.bg-slate-400{--tw-bg-opacity:1;background-color:rgb(148 163 184 / var(--tw-bg-opacity, 1))}.bg-slate-50{--tw-bg-opacity:1;background-color:rgb(248 250 252 / var(--tw-bg-opacity, 1))}.bg-slate-700{--tw-bg-opacity:1;background-color:rgb(51 65 85 / var(--tw-bg-opacity, 1))}.bg-slate-800{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.bg-slate-900{--tw-bg-opacity:1;background-color:rgb(15 23 42 / var(--tw-bg-opacity, 1))}.bg-slate-950{--tw-bg-opacity:1;background-color:rgb(2 6 23 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-yellow-50{--tw-bg-opacity:1;background-color:rgb(254 252 232 / var(--tw-bg-opacity, 1))}.bg-blue-50{--tw-bg-opacity:1;background-color:rgb(239 246 255 / var(--tw-bg-opacity, 1))}.bg-blue-50\/40{background-color:rgb(239 246 255 / 0.4)}.bg-emerald-50\/20{background-color:rgb(236 253 245 / 0.2)}.bg-indigo-50\/40{background-color:rgb(238 242 255 / 0.4)}.bg-red-50\/20{background-color:rgb(254 242 242 / 0.2)}.bg-rose-50{--tw-bg-opacity:1;background-color:rgb(255 241 242 / var(--tw-bg-opacity, 1))}.bg-slate-50\/50{background-color:rgb(248 250 252 / 0.5)}.bg-transparent{background-color:transparent}.p-1{padding:0.25rem}.p-2{padding:0.5rem}.p-2\.5{padding:0.625rem}.p-3{padding:0.75rem}.p-4{padding:1rem}.px-1{padding-left:0.25rem;padding-right:0.25rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-0{padding-top:0px;padding-bottom:0px}.pb-1{padding-bottom:0.25rem}.pl-1{padding-left:0.25rem}.pr-1{padding-right:0.25rem}.pt-2{padding-top:0.5rem}.pb-0\.5{padding-bottom:0.125rem}.pr-2{padding-right:0.5rem}.text-center{text-align:center}.text-right{text-align:right}.align-middle{vertical-align:middle}.font-mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-\[12px\]{font-size:12px}.text-\[9px\]{font-size:9px}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.text-\[13px\]{font-size:13px}.text-\[8px\]{font-size:8px}.font-black{font-weight:900}.font-bold{font-weight:700}.font-medium{font-weight:500}.uppercase{text-transform:uppercase}.leading-tight{line-height:1.25}.text-amber-400{--tw-text-opacity:1;color:rgb(251 191 36 / var(--tw-text-opacity, 1))}.text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.text-emerald-500{--tw-text-opacity:1;color:rgb(16 185 129 / var(--tw-text-opacity, 1))}.text-emerald-600{--tw-text-opacity:1;color:rgb(5 150 105 / var(--tw-text-opacity, 1))}.text-orange-400{--tw-text-opacity:1;color:rgb(251 146 60 / var(--tw-text-opacity, 1))}.text-orange-500{--tw-text-opacity:1;color:rgb(249 115 22 / var(--tw-text-opacity, 1))}.text-red-500{--tw-text-opacity:1;color:rgb(239 68 68 / var(--tw-text-opacity, 1))}.text-rose-400{--tw-text-opacity:1;color:rgb(251 113 133 / var(--tw-text-opacity, 1))}.text-rose-500{--tw-text-opacity:1;color:rgb(244 63 94 / var(--tw-text-opacity, 1))}.text-sky-400{--tw-text-opacity:1;color:rgb(56 189 248 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85 / var(--tw-text-opacity, 1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59 / var(--tw-text-opacity, 1))}.text-violet-400{--tw-text-opacity:1;color:rgb(167 139 250 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-yellow-300{--tw-text-opacity:1;color:rgb(253 224 71 / var(--tw-text-opacity, 1))}.text-yellow-400{--tw-text-opacity:1;color:rgb(250 204 21 / var(--tw-text-opacity, 1))}.text-yellow-800{--tw-text-opacity:1;color:rgb(133 77 14 / var(--tw-text-opacity, 1))}.text-blue-700{--tw-text-opacity:1;color:rgb(29 78 216 / var(--tw-text-opacity, 1))}.text-indigo-500{--tw-text-opacity:1;color:rgb(99 102 241 / var(--tw-text-opacity, 1))}.text-pink-600{--tw-text-opacity:1;color:rgb(219 39 119 / var(--tw-text-opacity, 1))}.text-pink-700{--tw-text-opacity:1;color:rgb(190 24 93 / var(--tw-text-opacity, 1))}.text-rose-700{--tw-text-opacity:1;color:rgb(190 18 60 / var(--tw-text-opacity, 1))}.text-sky-600{--tw-text-opacity:1;color:rgb(2 132 199 / var(--tw-text-opacity, 1))}.text-sky-700{--tw-text-opacity:1;color:rgb(3 105 161 / var(--tw-text-opacity, 1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}.text-violet-600{--tw-text-opacity:1;color:rgb(124 58 237 / var(--tw-text-opacity, 1))}.text-violet-700{--tw-text-opacity:1;color:rgb(109 40 217 / var(--tw-text-opacity, 1))}.shadow{--tw-shadow:0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-inner{--tw-shadow:inset 0 2px 4px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:inset 0 2px 4px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.outline-none{outline:2px solid transparent;outline-offset:2px}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.hover\:bg-indigo-500:hover{--tw-bg-opacity:1;background-color:rgb(99 102 241 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-600:hover{--tw-bg-opacity:1;background-color:rgb(71 85 105 / var(--tw-bg-opacity, 1))}.hover\:text-red-300:hover{--tw-text-opacity:1;color:rgb(252 165 165 / var(--tw-text-opacity, 1))}</style></head>
+<body class="p-1 h-screen flex flex-col" style="cursor: default;">
+
+    <!-- 顶层指挥中心 -->
+    <div class="bg-slate-900 text-white px-4 py-2 shrink-0 flex justify-between items-center shadow z-30 rounded-t-xl">
+        <div>
+            <h1 class="text-sm font-bold text-yellow-400 flex items-center gap-2">🚢 BOS V10：全维弹性推演空间 (Hyper-Cube)</h1>
+            <p class="text-[9px] text-slate-400 mt-0.5">支持全局横向拖拽与纵向拖拽。完美融合 5大引擎雷达 与 AIQL/7P 细分架构。</p>
+        </div>
+        <div class="flex gap-3 items-center">
+            <div class="bg-slate-950 border border-red-900 rounded p-1 flex items-center gap-2 w-[180px]">
+                <div class="text-[9px] text-red-500 font-bold uppercase text-center leading-tight">竞品火力 <br><span id="kpi-threat" class="text-sm font-black text-red-500">50%</span></div>
+                <input type="range" id="global-threat" class="thumb-r flex-1" min="0" max="100" value="50" step="5" oninput="runModel()">
+            </div>
+            <div class="bg-slate-800 border border-slate-600 rounded p-1 flex items-center gap-2 w-[180px]">
+                <div class="text-[9px] text-orange-400 font-bold uppercase text-center leading-tight">总预算池 <br><span id="kpi-throttle" class="text-sm font-black text-orange-500">100%</span></div>
+                <input type="range" id="global-throttle" class="thumb-d flex-1" min="50" max="150" value="100" step="5" oninput="runModel()">
+            </div>
+            <button onclick="openExportModal()" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded text-[10px] font-bold transition-all shadow-md">
+                📥 强制提取源码
+            </button>
+        </div>
+    </div>
+
+    <!-- 上半屏：战术甲板 -->
+    <div class="top-deck" id="top-deck" style="flex: 0 0 74.700109%;">
+        <div class="flex-1 overflow-auto">
+            <table class="data-grid" id="sku-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">微观</th>
+                        <th style="width: 4%;">周期</th>
+                        <th style="width: 12%;">单品信息</th>
+                        <th style="width: 14%;">ECR 战略与角色对齐</th>
+                        <th style="width: 9%; background:#1e1b4b; color:#a78bfa;">实销基准</th>
+                        <th style="width: 6%;">一批 %</th>
+                        <th style="width: 6%;">零售 %</th>
+                        <th style="width: 18%; background:#1e3a8a;">🛒 市场费总控 (IPO)</th>
+                        <th style="width: 6%;">提成 %</th>
+                        <th style="width: 13%; background:#1e293b; color:#60a5fa;">36月轨迹</th>
+                        <th style="width: 7%;">核算净利</th>
+                    </tr>
+                </thead>
+                <tbody id="sku-tbody"><tr id="row-i1" class=""><td class="text-center bg-slate-50"><button onclick="openMicroView('i1')" class="bg-indigo-600 hover:bg-indigo-500 text-white rounded px-2 py-1 text-[11px] font-bold shadow">🚀深度推演</button></td><td class="badge-intro text-[10px] font-bold text-center">导入期</td><td class="p-1 border-r border-slate-100"><div class="flex flex-col items-center"><input type="text" class="grid-input-text" value="特级有机生抽" onchange="updateVal('i1', 'name', this.value)"><input type="text" class="grid-input-spec" value="500ml" onchange="updateVal('i1', 'spec', this.value)"></div></td><td class="p-1 px-2 border-r border-slate-100 bg-slate-50/50"><div class="flex flex-col gap-1 w-full"><select class="select-role font-bold" onchange="updateVal('i1', 'corpRole', this.value)"><option value="🔥 战略形象款" selected="">🔥 战略形象款</option><option value="👑 核心利润牛">👑 核心利润牛</option><option value="⭐ 核心主推款">⭐ 核心主推款</option><option value="🛡️ 侧翼牺牲打(防)">🛡️ 侧翼牺牲打(防)</option><option value="🧲 流量引流款">🧲 流量引流款</option><option value="🗑️ 清库淘汰款">🗑️ 清库淘汰款</option></select><div class="flex justify-between gap-1 mt-0.5"><div class="flex-1 role-tag bg-blue-50 text-blue-700">🏭<input type="text" class="bg-transparent w-full outline-none font-bold text-center" value="打透AIQL" onchange="updateVal('i1', 'brandRole', this.value)"></div><div class="flex-1 role-tag bg-rose-50 text-rose-700">🏪<input type="text" class="bg-transparent w-full outline-none font-bold text-center" value="高端壁垒" onchange="updateVal('i1', 'retRole', this.value)"></div></div></div></td><td class="bg-indigo-50/40 p-1"><div class="flex justify-between items-center bg-white p-1 rounded shadow-sm"><input type="number" class="w-10 bg-transparent text-slate-500 text-[11px] font-bold text-center outline-none" value="50" oninput="updateVal('i1', 'baseVol', this.value)"><span class="text-slate-400 text-[9px] mx-0.5">➡️</span><span class="w-10 text-center text-[13px] font-black text-slate-700" id="act-vol-i1">50</span></div><div class="text-[9px] text-center mt-1 font-bold text-indigo-500">营收: <span id="calc-rev-i1">1500</span>万</div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-d mb-1" value="20" step="1" oninput="updateVal('i1', 'd', this.value)"><input type="range" class="thumb-d" value="20" min="0" max="40" step="1" oninput="updateVal('i1', 'd', this.value)"><div class="micro-abs" id="abs-d-i1">¥667</div></div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-r mb-1" value="35" step="1" oninput="updateVal('i1', 'r', this.value)"><input type="range" class="thumb-r" value="35" min="0" max="60" step="1" oninput="updateVal('i1', 'r', this.value)"><div class="micro-abs" id="abs-r-i1">¥1167</div></div></td><td class="bg-blue-50/40 p-1 border-x border-blue-100"><div class="flex flex-col gap-0.5 px-1"><div class="flex justify-between border-b border-blue-200 pb-0.5 mb-0.5"><span class="text-[10px] font-black text-blue-700" id="m-total-pct-i1">80%</span><span class="text-[10px] font-black text-blue-700" id="m-total-abs-i1">¥1200</span></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-sky-600 w-6">进8</span><input type="range" class="thumb-i8 flex-1" value="30" max="80" oninput="updateVal('i1', 'ipo8', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-sky-700 text-right bg-transparent outline-none" value="30" oninput="updateVal('i1', 'ipo8', this.value)"></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-violet-600 w-6">陈9</span><input type="range" class="thumb-i9 flex-1" value="25" max="80" oninput="updateVal('i1', 'ipo9', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-violet-700 text-right bg-transparent outline-none" value="25" oninput="updateVal('i1', 'ipo9', this.value)"></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-pink-600 w-6">动10</span><input type="range" class="thumb-i10 flex-1" value="25" max="80" oninput="updateVal('i1', 'ipo10', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-pink-700 text-right bg-transparent outline-none" value="25" oninput="updateVal('i1', 'ipo10', this.value)"></div></div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-c mb-1" value="8" step="0.5" oninput="updateVal('i1', 'c', this.value)"><input type="range" class="thumb-c" value="8" min="0" max="20" step="0.5" oninput="updateVal('i1', 'c', this.value)"><div class="micro-abs" id="abs-c-i1">¥120</div></div></td><td class="bg-slate-50 px-1 py-0 border-l border-slate-200"><div class="sparkline-container"><canvas id="spark-i1" width="328" height="80" style="display: block; box-sizing: border-box; height: 40px; width: 164px;"></canvas></div></td><td class="text-right pr-2 align-middle bg-slate-50 border-l border-slate-200"><div class="text-[13px] font-black text-red-500" id="abs-net-i1">-345</div></td></tr><tr id="row-g1" class="bg-emerald-50/20 border-l-2 border-emerald-500"><td class="text-center bg-slate-50"><button onclick="openMicroView('g1')" class="bg-indigo-600 hover:bg-indigo-500 text-white rounded px-2 py-1 text-[11px] font-bold shadow">🚀深度推演</button></td><td class="badge-growth text-[10px] font-bold text-center">成长期</td><td class="p-1 border-r border-slate-100"><div class="flex flex-col items-center"><input type="text" class="grid-input-text" value="遵循自然酱油" onchange="updateVal('g1', 'name', this.value)"><input type="text" class="grid-input-spec" value="800ml" onchange="updateVal('g1', 'spec', this.value)"></div></td><td class="p-1 px-2 border-r border-slate-100 bg-slate-50/50"><div class="flex flex-col gap-1 w-full"><select class="select-role font-bold" onchange="updateVal('g1', 'corpRole', this.value)"><option value="🔥 战略形象款">🔥 战略形象款</option><option value="👑 核心利润牛">👑 核心利润牛</option><option value="⭐ 核心主推款" selected="">⭐ 核心主推款</option><option value="🛡️ 侧翼牺牲打(防)">🛡️ 侧翼牺牲打(防)</option><option value="🧲 流量引流款">🧲 流量引流款</option><option value="🗑️ 清库淘汰款">🗑️ 清库淘汰款</option></select><div class="flex justify-between gap-1 mt-0.5"><div class="flex-1 role-tag bg-blue-50 text-blue-700">🏭<input type="text" class="bg-transparent w-full outline-none font-bold text-center" value="促首单连带" onchange="updateVal('g1', 'brandRole', this.value)"></div><div class="flex-1 role-tag bg-rose-50 text-rose-700">🏪<input type="text" class="bg-transparent w-full outline-none font-bold text-center" value="利润空间" onchange="updateVal('g1', 'retRole', this.value)"></div></div></div></td><td class="bg-indigo-50/40 p-1"><div class="flex justify-between items-center bg-white p-1 rounded shadow-sm"><input type="number" class="w-10 bg-transparent text-slate-500 text-[11px] font-bold text-center outline-none" value="180" oninput="updateVal('g1', 'baseVol', this.value)"><span class="text-slate-400 text-[9px] mx-0.5">➡️</span><span class="w-10 text-center text-[13px] font-black text-red-500" id="act-vol-g1">164</span></div><div class="text-[9px] text-center mt-1 font-bold text-indigo-500">营收: <span id="calc-rev-g1">2948</span>万</div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-d mb-1" value="15" step="1" oninput="updateVal('g1', 'd', this.value)"><input type="range" class="thumb-d" value="15" min="0" max="40" step="1" oninput="updateVal('g1', 'd', this.value)"><div class="micro-abs" id="abs-d-g1">¥737</div></div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-r mb-1" value="25" step="1" oninput="updateVal('g1', 'r', this.value)"><input type="range" class="thumb-r" value="25" min="0" max="60" step="1" oninput="updateVal('g1', 'r', this.value)"><div class="micro-abs" id="abs-r-g1">¥1229</div></div></td><td class="bg-blue-50/40 p-1 border-x border-blue-100"><div class="flex flex-col gap-0.5 px-1"><div class="flex justify-between border-b border-blue-200 pb-0.5 mb-0.5"><span class="text-[10px] font-black text-blue-700" id="m-total-pct-g1">45%</span><span class="text-[10px] font-black text-blue-700" id="m-total-abs-g1">¥1327</span></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-sky-600 w-6">进8</span><input type="range" class="thumb-i8 flex-1" value="10" max="80" oninput="updateVal('g1', 'ipo8', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-sky-700 text-right bg-transparent outline-none" value="10" oninput="updateVal('g1', 'ipo8', this.value)"></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-violet-600 w-6">陈9</span><input type="range" class="thumb-i9 flex-1" value="15" max="80" oninput="updateVal('g1', 'ipo9', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-violet-700 text-right bg-transparent outline-none" value="15" oninput="updateVal('g1', 'ipo9', this.value)"></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-pink-600 w-6">动10</span><input type="range" class="thumb-i10 flex-1" value="20" max="80" oninput="updateVal('g1', 'ipo10', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-pink-700 text-right bg-transparent outline-none" value="20" oninput="updateVal('g1', 'ipo10', this.value)"></div></div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-c mb-1" value="4.5" step="0.5" oninput="updateVal('g1', 'c', this.value)"><input type="range" class="thumb-c" value="4.5" min="0" max="20" step="0.5" oninput="updateVal('g1', 'c', this.value)"><div class="micro-abs" id="abs-c-g1">¥133</div></div></td><td class="bg-slate-50 px-1 py-0 border-l border-slate-200"><div class="sparkline-container"><canvas id="spark-g1" width="328" height="80" style="display: block; box-sizing: border-box; height: 40px; width: 164px;"></canvas></div></td><td class="text-right pr-2 align-middle bg-slate-50 border-l border-slate-200"><div class="text-[13px] font-black text-emerald-600" id="abs-net-g1">+457</div></td></tr><tr id="row-m1" class="bg-emerald-50/20 border-l-2 border-emerald-500"><td class="text-center bg-slate-50"><button onclick="openMicroView('m1')" class="bg-indigo-600 hover:bg-indigo-500 text-white rounded px-2 py-1 text-[11px] font-bold shadow">🚀深度推演</button></td><td class="badge-mat text-[10px] font-bold text-center">成熟期</td><td class="p-1 border-r border-slate-100"><div class="flex flex-col items-center"><input type="text" class="grid-input-text" value="红烧老抽王" onchange="updateVal('m1', 'name', this.value)"><input type="text" class="grid-input-spec" value="1L" onchange="updateVal('m1', 'spec', this.value)"></div></td><td class="p-1 px-2 border-r border-slate-100 bg-slate-50/50"><div class="flex flex-col gap-1 w-full"><select class="select-role font-bold" onchange="updateVal('m1', 'corpRole', this.value)"><option value="🔥 战略形象款">🔥 战略形象款</option><option value="👑 核心利润牛" selected="">👑 核心利润牛</option><option value="⭐ 核心主推款">⭐ 核心主推款</option><option value="🛡️ 侧翼牺牲打(防)">🛡️ 侧翼牺牲打(防)</option><option value="🧲 流量引流款">🧲 流量引流款</option><option value="🗑️ 清库淘汰款">🗑️ 清库淘汰款</option></select><div class="flex justify-between gap-1 mt-0.5"><div class="flex-1 role-tag bg-blue-50 text-blue-700">🏭<input type="text" class="bg-transparent w-full outline-none font-bold text-center" value="心智维系" onchange="updateVal('m1', 'brandRole', this.value)"></div><div class="flex-1 role-tag bg-rose-50 text-rose-700">🏪<input type="text" class="bg-transparent w-full outline-none font-bold text-center" value="稳定客流" onchange="updateVal('m1', 'retRole', this.value)"></div></div></div></td><td class="bg-indigo-50/40 p-1"><div class="flex justify-between items-center bg-white p-1 rounded shadow-sm"><input type="number" class="w-10 bg-transparent text-slate-500 text-[11px] font-bold text-center outline-none" value="200" oninput="updateVal('m1', 'baseVol', this.value)"><span class="text-slate-400 text-[9px] mx-0.5">➡️</span><span class="w-10 text-center text-[13px] font-black text-red-500" id="act-vol-m1">182</span></div><div class="text-[9px] text-center mt-1 font-bold text-indigo-500">营收: <span id="calc-rev-m1">4550</span>万</div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-d mb-1" value="8" step="1" oninput="updateVal('m1', 'd', this.value)"><input type="range" class="thumb-d" value="8" min="0" max="40" step="1" oninput="updateVal('m1', 'd', this.value)"><div class="micro-abs" id="abs-d-m1">¥473</div></div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-r mb-1" value="15" step="1" oninput="updateVal('m1', 'r', this.value)"><input type="range" class="thumb-r" value="15" min="0" max="60" step="1" oninput="updateVal('m1', 'r', this.value)"><div class="micro-abs" id="abs-r-m1">¥886</div></div></td><td class="bg-blue-50/40 p-1 border-x border-blue-100"><div class="flex flex-col gap-0.5 px-1"><div class="flex justify-between border-b border-blue-200 pb-0.5 mb-0.5"><span class="text-[10px] font-black text-blue-700" id="m-total-pct-m1">10%</span><span class="text-[10px] font-black text-blue-700" id="m-total-abs-m1">¥455</span></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-sky-600 w-6">进8</span><input type="range" class="thumb-i8 flex-1" value="2" max="80" oninput="updateVal('m1', 'ipo8', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-sky-700 text-right bg-transparent outline-none" value="2" oninput="updateVal('m1', 'ipo8', this.value)"></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-violet-600 w-6">陈9</span><input type="range" class="thumb-i9 flex-1" value="5" max="80" oninput="updateVal('m1', 'ipo9', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-violet-700 text-right bg-transparent outline-none" value="5" oninput="updateVal('m1', 'ipo9', this.value)"></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-pink-600 w-6">动10</span><input type="range" class="thumb-i10 flex-1" value="3" max="80" oninput="updateVal('m1', 'ipo10', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-pink-700 text-right bg-transparent outline-none" value="3" oninput="updateVal('m1', 'ipo10', this.value)"></div></div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-c mb-1" value="1" step="0.5" oninput="updateVal('m1', 'c', this.value)"><input type="range" class="thumb-c" value="1" min="0" max="20" step="0.5" oninput="updateVal('m1', 'c', this.value)"><div class="micro-abs" id="abs-c-m1">¥46</div></div></td><td class="bg-slate-50 px-1 py-0 border-l border-slate-200"><div class="sparkline-container"><canvas id="spark-m1" width="328" height="80" style="display: block; box-sizing: border-box; height: 40px; width: 164px;"></canvas></div></td><td class="text-right pr-2 align-middle bg-slate-50 border-l border-slate-200"><div class="text-[13px] font-black text-emerald-600" id="abs-net-m1">+2457</div></td></tr><tr id="row-g2" class="bg-red-50/20 border-l-2 border-red-500 active-row"><td class="text-center bg-slate-50"><button onclick="openMicroView('g2')" class="bg-indigo-600 hover:bg-indigo-500 text-white rounded px-2 py-1 text-[11px] font-bold shadow">🚀深度推演</button></td><td class="badge-growth text-[10px] font-bold text-center">成长期</td><td class="p-1 border-r border-slate-100"><div class="flex flex-col items-center"><input type="text" class="grid-input-text" value="轻盐酱油(防)" onchange="updateVal('g2', 'name', this.value)"><input type="text" class="grid-input-spec" value="500ml" onchange="updateVal('g2', 'spec', this.value)"></div></td><td class="p-1 px-2 border-r border-slate-100 bg-slate-50/50"><div class="flex flex-col gap-1 w-full"><select class="select-role font-bold" onchange="updateVal('g2', 'corpRole', this.value)"><option value="🔥 战略形象款">🔥 战略形象款</option><option value="👑 核心利润牛">👑 核心利润牛</option><option value="⭐ 核心主推款">⭐ 核心主推款</option><option value="🛡️ 侧翼牺牲打(防)" selected="">🛡️ 侧翼牺牲打(防)</option><option value="🧲 流量引流款">🧲 流量引流款</option><option value="🗑️ 清库淘汰款">🗑️ 清库淘汰款</option></select><div class="flex justify-between gap-1 mt-0.5"><div class="flex-1 role-tag bg-blue-50 text-blue-700">🏭<input type="text" class="bg-transparent w-full outline-none font-bold text-center" value="截杀竞品" onchange="updateVal('g2', 'brandRole', this.value)"></div><div class="flex-1 role-tag bg-rose-50 text-rose-700">🏪<input type="text" class="bg-transparent w-full outline-none font-bold text-center" value="低价火拼" onchange="updateVal('g2', 'retRole', this.value)"></div></div></div></td><td class="bg-indigo-50/40 p-1"><div class="flex justify-between items-center bg-white p-1 rounded shadow-sm"><input type="number" class="w-10 bg-transparent text-slate-500 text-[11px] font-bold text-center outline-none" value="150" oninput="updateVal('g2', 'baseVol', this.value)"><span class="text-slate-400 text-[9px] mx-0.5">➡️</span><span class="w-10 text-center text-[13px] font-black text-emerald-500" id="act-vol-g2">176</span></div><div class="text-[9px] text-center mt-1 font-bold text-indigo-500">营收: <span id="calc-rev-g2">2115</span>万</div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-d mb-1" value="18" step="1" oninput="updateVal('g2', 'd', this.value)"><input type="range" class="thumb-d" value="18" min="0" max="40" step="1" oninput="updateVal('g2', 'd', this.value)"><div class="micro-abs" id="abs-d-g2">¥705</div></div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-r mb-1" value="28" step="1" oninput="updateVal('g2', 'r', this.value)"><input type="range" class="thumb-r" value="28" min="0" max="60" step="1" oninput="updateVal('g2', 'r', this.value)"><div class="micro-abs" id="abs-r-g2">¥1097</div></div></td><td class="bg-blue-50/40 p-1 border-x border-blue-100"><div class="flex flex-col gap-0.5 px-1"><div class="flex justify-between border-b border-blue-200 pb-0.5 mb-0.5"><span class="text-[10px] font-black text-blue-700" id="m-total-pct-g2">35%</span><span class="text-[10px] font-black text-blue-700" id="m-total-abs-g2">¥740</span></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-sky-600 w-6">进8</span><input type="range" class="thumb-i8 flex-1" value="15" max="80" oninput="updateVal('g2', 'ipo8', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-sky-700 text-right bg-transparent outline-none" value="15" oninput="updateVal('g2', 'ipo8', this.value)"></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-violet-600 w-6">陈9</span><input type="range" class="thumb-i9 flex-1" value="10" max="80" oninput="updateVal('g2', 'ipo9', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-violet-700 text-right bg-transparent outline-none" value="10" oninput="updateVal('g2', 'ipo9', this.value)"></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-pink-600 w-6">动10</span><input type="range" class="thumb-i10 flex-1" value="10" max="80" oninput="updateVal('g2', 'ipo10', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-pink-700 text-right bg-transparent outline-none" value="10" oninput="updateVal('g2', 'ipo10', this.value)"></div></div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-c mb-1" value="3.5" step="0.5" oninput="updateVal('g2', 'c', this.value)"><input type="range" class="thumb-c" value="3.5" min="0" max="20" step="0.5" oninput="updateVal('g2', 'c', this.value)"><div class="micro-abs" id="abs-c-g2">¥74</div></div></td><td class="bg-slate-50 px-1 py-0 border-l border-slate-200"><div class="sparkline-container"><canvas id="spark-g2" width="328" height="80" style="display: block; box-sizing: border-box; height: 40px; width: 164px;"></canvas></div></td><td class="text-right pr-2 align-middle bg-slate-50 border-l border-slate-200"><div class="text-[13px] font-black text-emerald-600" id="abs-net-g2">+560</div></td></tr><tr id="row-d1" class=""><td class="text-center bg-slate-50"><button onclick="openMicroView('d1')" class="bg-indigo-600 hover:bg-indigo-500 text-white rounded px-2 py-1 text-[11px] font-bold shadow">🚀深度推演</button></td><td class="badge-dec text-[10px] font-bold text-center">衰退期</td><td class="p-1 border-r border-slate-100"><div class="flex flex-col items-center"><input type="text" class="grid-input-text" value="老式黄豆酱" onchange="updateVal('d1', 'name', this.value)"><input type="text" class="grid-input-spec" value="300g" onchange="updateVal('d1', 'spec', this.value)"></div></td><td class="p-1 px-2 border-r border-slate-100 bg-slate-50/50"><div class="flex flex-col gap-1 w-full"><select class="select-role font-bold" onchange="updateVal('d1', 'corpRole', this.value)"><option value="🔥 战略形象款">🔥 战略形象款</option><option value="👑 核心利润牛">👑 核心利润牛</option><option value="⭐ 核心主推款">⭐ 核心主推款</option><option value="🛡️ 侧翼牺牲打(防)">🛡️ 侧翼牺牲打(防)</option><option value="🧲 流量引流款">🧲 流量引流款</option><option value="🗑️ 清库淘汰款" selected="">🗑️ 清库淘汰款</option></select><div class="flex justify-between gap-1 mt-0.5"><div class="flex-1 role-tag bg-blue-50 text-blue-700">🏭<input type="text" class="bg-transparent w-full outline-none font-bold text-center" value="停止投入" onchange="updateVal('d1', 'brandRole', this.value)"></div><div class="flex-1 role-tag bg-rose-50 text-rose-700">🏪<input type="text" class="bg-transparent w-full outline-none font-bold text-center" value="季节甩卖" onchange="updateVal('d1', 'retRole', this.value)"></div></div></div></td><td class="bg-indigo-50/40 p-1"><div class="flex justify-between items-center bg-white p-1 rounded shadow-sm"><input type="number" class="w-10 bg-transparent text-slate-500 text-[11px] font-bold text-center outline-none" value="80" oninput="updateVal('d1', 'baseVol', this.value)"><span class="text-slate-400 text-[9px] mx-0.5">➡️</span><span class="w-10 text-center text-[13px] font-black text-slate-700" id="act-vol-d1">80</span></div><div class="text-[9px] text-center mt-1 font-bold text-indigo-500">营收: <span id="calc-rev-d1">640</span>万</div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-d mb-1" value="25" step="1" oninput="updateVal('d1', 'd', this.value)"><input type="range" class="thumb-d" value="25" min="0" max="40" step="1" oninput="updateVal('d1', 'd', this.value)"><div class="micro-abs" id="abs-d-d1">¥356</div></div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-r mb-1" value="30" step="1" oninput="updateVal('d1', 'r', this.value)"><input type="range" class="thumb-r" value="30" min="0" max="60" step="1" oninput="updateVal('d1', 'r', this.value)"><div class="micro-abs" id="abs-r-d1">¥427</div></div></td><td class="bg-blue-50/40 p-1 border-x border-blue-100"><div class="flex flex-col gap-0.5 px-1"><div class="flex justify-between border-b border-blue-200 pb-0.5 mb-0.5"><span class="text-[10px] font-black text-blue-700" id="m-total-pct-d1">0%</span><span class="text-[10px] font-black text-blue-700" id="m-total-abs-d1">¥0</span></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-sky-600 w-6">进8</span><input type="range" class="thumb-i8 flex-1" value="0" max="80" oninput="updateVal('d1', 'ipo8', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-sky-700 text-right bg-transparent outline-none" value="0" oninput="updateVal('d1', 'ipo8', this.value)"></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-violet-600 w-6">陈9</span><input type="range" class="thumb-i9 flex-1" value="0" max="80" oninput="updateVal('d1', 'ipo9', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-violet-700 text-right bg-transparent outline-none" value="0" oninput="updateVal('d1', 'ipo9', this.value)"></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-pink-600 w-6">动10</span><input type="range" class="thumb-i10 flex-1" value="0" max="80" oninput="updateVal('d1', 'ipo10', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-pink-700 text-right bg-transparent outline-none" value="0" oninput="updateVal('d1', 'ipo10', this.value)"></div></div></td><td><div class="micro-control"><input type="number" class="grid-input-num text-c mb-1" value="5" step="0.5" oninput="updateVal('d1', 'c', this.value)"><input type="range" class="thumb-c" value="5" min="0" max="20" step="0.5" oninput="updateVal('d1', 'c', this.value)"><div class="micro-abs" id="abs-c-d1">¥32</div></div></td><td class="bg-slate-50 px-1 py-0 border-l border-slate-200"><div class="sparkline-container"><canvas id="spark-d1" width="328" height="80" style="display: block; box-sizing: border-box; height: 40px; width: 164px;"></canvas></div></td><td class="text-right pr-2 align-middle bg-slate-50 border-l border-slate-200"><div class="text-[13px] font-black text-emerald-600" id="abs-net-d1">+384</div></td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 纵向尺寸调整条 (控制上下比例) -->
+    <div class="resizer-y" id="resizer-y" style="background-color: rgb(226, 232, 240);"><div class="resizer-grip-y"></div></div>
+
+    <!-- 下半屏：全景雷达与微观实验室 -->
+    <div class="bottom-radar" id="bottom-radar">
+        
+        <!-- ==================== 状态A：宏观雷达 (带有横向拖拽功能) ==================== -->
+        <div id="view-macro" class="absolute inset-0 flex bg-slate-200 overflow-hidden" style="display: none;">
+            <!-- 模块1：交叉补贴 -->
+            <div id="macro-col-1" style="flex: 0 0 300px;" class="p-2 pr-1 flex flex-col min-w-[200px]">
+                <div class="bg-white rounded p-2 border border-slate-300 flex-1 flex flex-col shadow-sm">
+                    <div class="text-[10px] font-bold text-slate-700 mb-1">🛡️ 交叉补贴与防线价值</div>
+                    <div class="flex-1 relative w-full h-full"><canvas id="tractionChart"></canvas></div>
+                </div>
+            </div>
+            <!-- X向拖拽条 M1 -->
+            <div class="resizer-x-light" id="resizer-m1"><div class="resizer-grip-x-light"></div></div>
+            
+            <!-- 模块2：5大资源池 -->
+            <div id="macro-col-2" style="flex: 0 0 350px;" class="p-2 px-1 flex flex-col min-w-[200px]">
+                <div class="bg-white rounded p-2 border border-slate-300 flex-1 flex flex-col shadow-sm">
+                    <div class="text-[10px] font-bold text-slate-700 mb-1">📊 全区动态资源投入结构 (5-Pillars)</div>
+                    <div class="flex-1 relative w-full h-full"><canvas id="macroBarChart"></canvas></div>
+                </div>
+            </div>
+            <!-- X向拖拽条 M2 -->
+            <div class="resizer-x-light" id="resizer-m2"><div class="resizer-grip-x-light"></div></div>
+
+            <!-- 模块3：生死线 -->
+            <div id="macro-col-3" style="flex: 1; min-width:300px;" class="p-2 pl-1 flex flex-col">
+                <div class="bg-white rounded p-2 border border-slate-300 flex-1 flex flex-col shadow-sm">
+                    <div class="text-[10px] font-bold text-slate-700 mb-1 flex justify-between">
+                        <span>🌊 大盘 36 个月净现金流生死线</span>
+                        <span id="macro-bep-text" class="text-[10px] text-emerald-600 bg-emerald-50 px-1 rounded border border-emerald-200"></span>
+                    </div>
+                    <div class="flex-1 relative w-full h-full"><canvas id="macroCashChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 状态B：微观推演室 (带有横向拖拽功能) ==================== -->
+        <div id="view-micro" class="absolute inset-0 flex flex-col bg-slate-900 z-20 hidden" style="display: flex;">
+            <div class="px-4 py-1.5 flex justify-between items-center shrink-0 border-b border-slate-700">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🔬</span>
+                    <div><h2 class="text-sm font-bold text-yellow-300" id="micro-title">轻盐酱油(防) (500ml)</h2><p class="text-[9px] text-slate-400">Agent全要素弹性分析台</p></div>
+                </div>
+                <button onclick="closeMicroView()" class="bg-slate-700 text-white hover:bg-slate-600 px-3 py-1 rounded text-[10px] font-bold shadow">⬅️ 返回大盘</button>
+            </div>
+            
+            <div class="flex-1 flex overflow-hidden">
+                <!-- 左列：基准调参区 -->
+                <div id="micro-col-1" style="flex: 0 0 280px;" class="bg-slate-800 p-3 flex flex-col gap-2 overflow-y-auto min-w-[220px]">
+                    <div class="bg-slate-900 p-2.5 rounded border border-slate-700">
+                        <div class="text-[11px] font-bold text-sky-400 mb-2 border-b border-slate-700 pb-1 flex justify-between items-center">
+                            <span>🎛️ 资源基准微调 (总和100)</span>
+                            <span id="micro-stage-tag" class="text-[9px] bg-sky-900 px-1 rounded">成长期</span>
+                        </div>
+                        <div class="resource-bar-bg mb-3 shadow-inner" id="micro-res-bar">
+                <div class="res-hr flex justify-center items-center text-[8px] text-white" style="width: 25%;">25</div>
+                <div class="res-log flex justify-center items-center text-[8px] text-white" style="width: 15%;">15</div>
+                <div class="res-chan flex justify-center items-center text-[8px] text-white" style="width: 18%;">18</div>
+                <div class="res-21s flex justify-center items-center text-[8px] text-white" style="width: 21%;">21</div>
+                <div class="res-21m flex justify-center items-center text-[8px] text-white" style="width: 21%;">21</div></div>
+                        <div class="space-y-1.5" id="micro-res-inputs">
+                            <div class="flex justify-between items-center text-[10px]"><span class="text-rose-400">👨‍💼 人资 (固)</span><input type="number" id="inp-hr" class="res-input" value="25" onchange="normalizeResources()"></div>
+                            <div class="flex justify-between items-center text-[10px]"><span class="text-violet-400">📦 物流 (固)</span><input type="number" id="inp-log" class="res-input" value="15" onchange="normalizeResources()"></div>
+                            <div class="flex justify-between items-center text-[10px]"><span class="text-sky-400">🏪 渠道</span><input type="number" id="inp-chan" class="res-input" value="18" onchange="normalizeResources()"></div>
+                            <div class="flex justify-between items-center text-[10px]"><span class="text-emerald-400">🛒 销售21S</span><input type="number" id="inp-s21" class="res-input" value="21" onchange="normalizeResources()"></div>
+                            <div class="flex justify-between items-center text-[10px]"><span class="text-amber-400">📣 品牌21M</span><input type="number" id="inp-m21" class="res-input" value="21" onchange="normalizeResources()"></div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900 p-2.5 rounded border border-slate-700 flex-1 flex flex-col">
+                        <div class="text-[11px] font-bold text-rose-400 mb-2">⏳ 执行进度与成本反噬</div>
+                        <div class="flex justify-between items-center text-[9px] font-bold mb-1">
+                            <span class="text-emerald-500">提前 (-50%)</span><span class="text-slate-400">计划</span><span class="text-rose-500">延期 (+50%)</span>
+                        </div>
+                        <input type="range" id="micro-timeshift" class="thumb-time w-full" min="0.5" max="1.5" value="1.0" step="0.1" oninput="runMicroSimulation()">
+                        <div class="text-center mt-2 text-[12px] font-black text-white" id="micro-time-label">原计划执行 (100%)</div>
+                        <div id="micro-report" class="text-[10px] mt-2 pt-2 border-t border-slate-700 text-slate-300 leading-tight flex-1"><div class="text-slate-400 p-1">拖拉上方时间滑块进行推演。</div></div>
+                    </div>
+                </div>
+
+                <!-- X向拖拽条 V1 -->
+                <div class="resizer-x-dark" id="resizer-v1"><div class="resizer-grip-x-dark"></div></div>
+
+                <!-- 中列：5大雷达切换引擎 -->
+                <div id="micro-col-2" style="flex: 0 0 320px;" class="bg-slate-900 p-3 flex flex-col min-w-[250px]">
+                    <div class="text-[11px] font-bold text-white mb-2 text-center">🎯 内部结构智能诊断矩阵 (Agent View)</div>
+                    <div class="flex gap-1 justify-center mb-3 flex-wrap">
+                        <div class="radar-tab" id="tab-hr" onclick="switchRadar('hr')">👨‍💼 人资</div>
+                        <div class="radar-tab" id="tab-log" onclick="switchRadar('log')">📦 物流</div>
+                        <div class="radar-tab" id="tab-chan" onclick="switchRadar('chan')">🏪 渠道</div>
+                        <div class="radar-tab active-s21" id="tab-s21" onclick="switchRadar('s21')">🛒 21S(7P)</div>
+                        <div class="radar-tab" id="tab-m21" onclick="switchRadar('m21')">📣 21B(AIQL)</div>
+                    </div>
+                    <div class="flex-1 bg-slate-800 rounded-lg border border-slate-700 relative p-2 flex flex-col">
+                        <div id="radar-desc" class="text-[9px] text-center text-slate-400 mb-1 leading-tight">7P 预算拆解：精准锁定驱动消费者买单的核心诱因</div>
+                        <div class="flex-1 relative w-full h-full min-h-[200px]">
+                            <canvas id="mainRadarChart" width="556" height="865" style="box-sizing: border-box; display: block; height: 432.5px; width: 278px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- X向拖拽条 V2 -->
+                <div class="resizer-x-dark" id="resizer-v2"><div class="resizer-grip-x-dark"></div></div>
+
+                <!-- 右列：推演折线图 -->
+                <div id="micro-col-3" style="flex: 1; min-width:300px;" class="p-3 flex flex-col relative bg-slate-50">
+                    <div class="text-xs font-bold text-slate-800 mb-2 flex justify-between">
+                        <span>📈 时空推演：净现金流虚实对比</span>
+                        <div class="flex gap-3 text-[9px]">
+                            <span class="flex items-center gap-1"><div class="w-3 h-0.5 bg-slate-400 border-b border-dashed"></div> 基准线</span>
+                            <span class="flex items-center gap-1"><div class="w-3 h-1 bg-indigo-600"></div> 实际线</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 relative w-full h-full"><canvas id="microChart" width="1448" height="182" style="display: block; box-sizing: border-box; height: 91px; width: 724px;"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 源码导出强制弹窗 -->
+    <div id="code-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <div class="bg-indigo-600 text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-sm flex items-center gap-2"><span>✅</span> 提取成功 (物理级防拦截)</h3>
+                <button onclick="document.getElementById('code-modal').style.display='none'" class="text-white hover:text-red-300 font-bold px-2">关闭 [X]</button>
+            </div>
+            <div class="bg-yellow-50 border-b border-yellow-200 text-yellow-800 text-xs p-3 font-medium">
+                操作指引：请在下方代码框内 <b>全选并复制</b>，新建名为 <b>全维沙盘.html</b> 的记事本粘贴保存，双击即可脱机运行。
+            </div>
+            <textarea id="code-area" class="flex-1 w-full p-4 font-mono text-[11px] bg-slate-50 outline-none resize-none text-slate-700" readonly=""></textarea>
+        </div>
+    </div>
+
+    <script>
+        function openExportModal() {
+            var content = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            document.getElementById('code-area').value = content;
+            document.getElementById('code-modal').style.display = 'flex';
+            setTimeout(function(){ document.getElementById('code-area').select(); }, 100);
+        }
+
+        var chartInstances = {}; var currentMicroSkuId = null; var currentRadarTab = 'hr';
+        var COGS_RATE = 0.35; var TEAM_BASE_SALARY = 50; 
+        var roleOptions = ['🔥 战略形象款', '👑 核心利润牛', '⭐ 核心主推款', '🛡️ 侧翼牺牲打(防)', '🧲 流量引流款', '🗑️ 清库淘汰款'];
+
+        var portfolio = [
+            { id: 'i1', stage: 'intro', stageName: '导入期', name: '特级有机生抽', spec: '500ml', corpRole: '🔥 战略形象款', brandRole: '打透AIQL', retRole: '高端壁垒', baseVol: 50, actualVol: 50, d: 20, r: 35, ipo8: 30, ipo9: 25, ipo10: 25, c: 8.0, price: 30, sunkCost: 200, timeShift: 1.0, isProtected: false, isDefender: false, customRes: null },
+            { id: 'g1', stage: 'growth', stageName: '成长期', name: '遵循自然酱油', spec: '800ml', corpRole: '⭐ 核心主推款', brandRole: '促首单连带', retRole: '利润空间', baseVol: 180, actualVol: 180, d: 15, r: 25, ipo8: 10, ipo9: 15, ipo10: 20, c: 4.5, price: 18, sunkCost: 100, timeShift: 1.0, isProtected: true, isDefender: false, customRes: null },
+            { id: 'm1', stage: 'mat', stageName: '成熟期', name: '红烧老抽王', spec: '1L', corpRole: '👑 核心利润牛', brandRole: '心智维系', retRole: '稳定客流', baseVol: 200, actualVol: 200, d: 8, r: 15, ipo8: 2, ipo9: 5, ipo10: 3, c: 1.0, price: 25, sunkCost: 0, timeShift: 1.0, isProtected: true, isDefender: false, customRes: null },
+            { id: 'g2', stage: 'growth', stageName: '成长期', name: '轻盐酱油(防)', spec: '500ml', corpRole: '🛡️ 侧翼牺牲打(防)', brandRole: '截杀竞品', retRole: '低价火拼', baseVol: 150, actualVol: 150, d: 18, r: 28, ipo8: 15, ipo9: 10, ipo10: 10, c: 3.5, price: 12, sunkCost: 50, timeShift: 1.0, isProtected: false, isDefender: true, customRes: null },
+            { id: 'd1', stage: 'dec', stageName: '衰退期', name: '老式黄豆酱', spec: '300g', corpRole: '🗑️ 清库淘汰款', brandRole: '停止投入', retRole: '季节甩卖', baseVol: 80, actualVol: 80, d: 25, r: 30, ipo8: 0, ipo9: 0, ipo10: 0, c: 5.0, price: 8, sunkCost: 0, timeShift: 1.0, isProtected: false, isDefender: false, customRes: null }
+        ];
+
+        var radarMatrix = {
+            'intro': { hr: [50, 20, 20, 10], log: [30, 40, 20, 10], chan: [20, 50, 20, 10], s21: [25, 35, 10, 5, 15, 10, 0], m21: [50, 30, 15, 5] },
+            'growth':{ hr: [40, 25, 25, 10], log: [40, 20, 35, 5], chan: [30, 10, 40, 20], s21: [15, 20, 30, 15, 10, 5, 5], m21: [25, 40, 25, 10] },
+            'mat':   { hr: [30, 20, 35, 15], log: [35, 25, 30, 10], chan: [50, 5, 20, 25], s21: [5, 10, 35, 25, 10, 5, 10], m21: [10, 15, 40, 35] },
+            'dec':   { hr: [70, 10, 10, 10], log: [10, 40, 10, 40], chan: [60, 0, 5, 35], s21: [0, 5, 60, 30, 5, 0, 0], m21: [0, 0, 10, 90] }
+        };
+
+        var radarConfigs = {
+            'hr': { labels: ['一线执行(SR)', '中台运营(DOM)', '总部策略(HQ)', '顶层指挥(CRO)'], color: '#f43f5e', desc: '组织扁平化重构：导入期重一线炮火，成熟期重总部策略' },
+            'log': { labels: ['干线发运', '仓储(占压)', '同城配送', '逆向(退货/销毁)'], color: '#8b5cf6', desc: '隐藏黑洞监控：关注前期仓储沉没成本与后期逆向退货成本' },
+            'chan': { labels: ['基础分润返利', '进场条码费', '陈列端架费', 'B2B通路促销'], color: '#0ea5e9', desc: '突破壁垒弹药：导入期狠砸进场费，成长期火拼陈列资源' },
+            's21': { labels: ['产品体验(Product)', '渠道进场(Place)', '促销拉动(Promotion)', '价格防守(Price)', '人员激励(People)', '场景包材(Package)', '终端公关(Public)'], color: '#10b981', desc: '7P 预算拆解：精准锁定驱动消费者买单的核心诱因' },
+            'm21': { labels: ['A (心智认知)', 'I (兴趣共鸣)', 'Q (探究/搜索拦截)', 'L (私域忠诚复购)'], color: '#f59e0b', desc: 'AIQL 品牌心智：避免盲目投广告，衰退期全面切向私域收割' }
+        };
+
+        function getSkuResource(sku) { return sku.customRes || { hr: 25, log: 15, chan: 18, s21: 21, m21: 21 }; }
+
+        function normalizeResources() {
+            if(!currentMicroSkuId) return; var sku = portfolio.find(s=>s.id===currentMicroSkuId);
+            var hr = parseFloat(document.getElementById('inp-hr').value)||0, log = parseFloat(document.getElementById('inp-log').value)||0, chan = parseFloat(document.getElementById('inp-chan').value)||0, s21 = parseFloat(document.getElementById('inp-s21').value)||0, m21 = parseFloat(document.getElementById('inp-m21').value)||0;
+            var total = hr+log+chan+s21+m21; if(total<=0) total=1;
+            sku.customRes = { hr: Math.round((hr/total)*100), log: Math.round((log/total)*100), chan: Math.round((chan/total)*100), s21: Math.round((s21/total)*100), m21: Math.round((m21/total)*100) };
+            document.getElementById('inp-hr').value = sku.customRes.hr; document.getElementById('inp-log').value = sku.customRes.log; document.getElementById('inp-chan').value = sku.customRes.chan; document.getElementById('inp-s21').value = sku.customRes.s21; document.getElementById('inp-m21').value = sku.customRes.m21;
+            updateResourceBarUI(sku.customRes); runMicroSimulation();
+        }
+
+        function updateResourceBarUI(res) {
+            document.getElementById('micro-res-bar').innerHTML = `
+                <div class="res-hr flex justify-center items-center text-[8px] text-white" style="width: ${res.hr}%;">${res.hr>8?res.hr:''}</div>
+                <div class="res-log flex justify-center items-center text-[8px] text-white" style="width: ${res.log}%;">${res.log>8?res.log:''}</div>
+                <div class="res-chan flex justify-center items-center text-[8px] text-white" style="width: ${res.chan}%;">${res.chan>8?res.chan:''}</div>
+                <div class="res-21s flex justify-center items-center text-[8px] text-white" style="width: ${res.s21}%;">${res.s21>8?res.s21:''}</div>
+                <div class="res-21m flex justify-center items-center text-[8px] text-white" style="width: ${res.m21}%;">${res.m21>8?res.m21:''}</div>`;
+        }
+
+        function generateTimeSeries(sku, combinedMktRate, actualRev, tShift) {
+            if(!tShift) tShift = 1.0;
+            var months = 36; var salesBase = [];
+            for(var m=1; m<=months; m++) {
+                var effM = m / tShift; 
+                if(sku.stage === 'intro') salesBase.push(Math.pow(effM/18, 2) * Math.exp(-effM/9));
+                else if(sku.stage === 'growth') salesBase.push(Math.pow((effM+12)/18, 2) * Math.exp(-(effM+12)/9));
+                else if(sku.stage === 'mat') salesBase.push(Math.pow((effM+24)/18, 2) * Math.exp(-(effM+24)/9));
+                else salesBase.push(Math.exp(-effM/12));
+            }
+            var sum12 = 0; for(var i=0; i<12; i++) sum12 += salesBase[i];
+            var multiplier = sum12 > 0 ? (actualRev / sum12) : 0; 
+            var cashFlow = []; var cumulativeCash = -sku.sunkCost; 
+            var totalMktBudget = 0; for(var k=0; k<months; k++) totalMktBudget += (salesBase[k] * multiplier);
+            totalMktBudget = totalMktBudget * combinedMktRate;
+            
+            var frontLoadEnd = 6 * tShift; var mktFrontLoad = (sku.stage === 'intro' || sku.stage === 'growth') ? 0.6 : 1.0; 
+            var res = getSkuResource(sku); var fixedCostPenaltyRate = (res.hr + res.log) / 100;
+
+            for(var m2=1; m2<=months; m2++) {
+                var sales = salesBase[m2-1] * multiplier; var mkt = 0;
+                if(sku.stage === 'intro' || sku.stage === 'growth') {
+                    if (m2 <= frontLoadEnd) mkt = (totalMktBudget * mktFrontLoad) / Math.max(1, frontLoadEnd); 
+                    else mkt = (totalMktBudget * (1 - mktFrontLoad)) / Math.max(1, (months - frontLoadEnd)); 
+                } else { mkt = sales * combinedMktRate; }
+                
+                var penalty = (tShift > 1) ? (actualRev * 0.05 * fixedCostPenaltyRate * (tShift - 1)) : 0;
+                cumulativeCash += (sales - (sales*COGS_RATE) - (sales*(sku.c/100)) - mkt - penalty);
+                cashFlow.push(cumulativeCash);
+            }
+            return cashFlow;
+        }
+
+        // ==================== 视图与引擎绑定 ====================
+        function initGrid() {
+            var tbody = document.getElementById('sku-tbody'); if(!tbody) return;
+            var html = '';
+            for(var i=0; i<portfolio.length; i++) {
+                var sku = portfolio[i]; var badgeCls = 'badge-' + sku.stage; var optionsHtml = '';
+                for(var j=0; j<roleOptions.length; j++) optionsHtml += '<option value="' + roleOptions[j] + '" ' + (sku.corpRole === roleOptions[j] ? 'selected' : '') + '>' + roleOptions[j] + '</option>';
+                var trCls = sku.isDefender ? 'bg-red-50/20 border-l-2 border-red-500' : (sku.isProtected ? 'bg-emerald-50/20 border-l-2 border-emerald-500' : '');
+                
+                html += '<tr id="row-' + sku.id + '" class="' + trCls + '">';
+                html += '<td class="text-center bg-slate-50"><button onclick="openMicroView(\'' + sku.id + '\')" class="bg-indigo-600 hover:bg-indigo-500 text-white rounded px-2 py-1 text-[11px] font-bold shadow">🚀深度推演</button></td>';
+                html += '<td class="' + badgeCls + ' text-[10px] font-bold text-center">' + sku.stageName + '</td>';
+                html += '<td class="p-1 border-r border-slate-100"><div class="flex flex-col items-center"><input type="text" class="grid-input-text" value="' + sku.name + '" onchange="updateVal(\'' + sku.id + '\', \'name\', this.value)"><input type="text" class="grid-input-spec" value="' + sku.spec + '" onchange="updateVal(\'' + sku.id + '\', \'spec\', this.value)"></div></td>';
+                html += '<td class="p-1 px-2 border-r border-slate-100 bg-slate-50/50"><div class="flex flex-col gap-1 w-full"><select class="select-role font-bold" onchange="updateVal(\'' + sku.id + '\', \'corpRole\', this.value)">' + optionsHtml + '</select><div class="flex justify-between gap-1 mt-0.5"><div class="flex-1 role-tag bg-blue-50 text-blue-700">🏭<input type="text" class="bg-transparent w-full outline-none font-bold text-center" value="' + sku.brandRole + '" onchange="updateVal(\'' + sku.id + '\', \'brandRole\', this.value)"></div><div class="flex-1 role-tag bg-rose-50 text-rose-700">🏪<input type="text" class="bg-transparent w-full outline-none font-bold text-center" value="' + sku.retRole + '" onchange="updateVal(\'' + sku.id + '\', \'retRole\', this.value)"></div></div></div></td>';
+                html += '<td class="bg-indigo-50/40 p-1"><div class="flex justify-between items-center bg-white p-1 rounded shadow-sm"><input type="number" class="w-10 bg-transparent text-slate-500 text-[11px] font-bold text-center outline-none" value="' + sku.baseVol + '" oninput="updateVal(\'' + sku.id + '\', \'baseVol\', this.value)"><span class="text-slate-400 text-[9px] mx-0.5">➡️</span><span class="w-10 text-center text-[13px] font-black" id="act-vol-' + sku.id + '">--</span></div><div class="text-[9px] text-center mt-1 font-bold text-indigo-500">营收: <span id="calc-rev-' + sku.id + '">--</span>万</div></td>';
+                html += '<td><div class="micro-control"><input type="number" class="grid-input-num text-d mb-1" value="' + sku.d + '" step="1" oninput="updateVal(\'' + sku.id + '\', \'d\', this.value)"><input type="range" class="thumb-d" value="' + sku.d + '" min="0" max="40" step="1" oninput="updateVal(\'' + sku.id + '\', \'d\', this.value)"><div class="micro-abs" id="abs-d-' + sku.id + '">¥--</div></div></td>';
+                html += '<td><div class="micro-control"><input type="number" class="grid-input-num text-r mb-1" value="' + sku.r + '" step="1" oninput="updateVal(\'' + sku.id + '\', \'r\', this.value)"><input type="range" class="thumb-r" value="' + sku.r + '" min="0" max="60" step="1" oninput="updateVal(\'' + sku.id + '\', \'r\', this.value)"><div class="micro-abs" id="abs-r-' + sku.id + '">¥--</div></div></td>';
+                html += '<td class="bg-blue-50/40 p-1 border-x border-blue-100"><div class="flex flex-col gap-0.5 px-1"><div class="flex justify-between border-b border-blue-200 pb-0.5 mb-0.5"><span class="text-[10px] font-black text-blue-700" id="m-total-pct-' + sku.id + '">--%</span><span class="text-[10px] font-black text-blue-700" id="m-total-abs-' + sku.id + '">¥--</span></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-sky-600 w-6">进8</span><input type="range" class="thumb-i8 flex-1" value="' + sku.ipo8 + '" max="80" oninput="updateVal(\'' + sku.id + '\', \'ipo8\', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-sky-700 text-right bg-transparent outline-none" value="' + sku.ipo8 + '" oninput="updateVal(\'' + sku.id + '\', \'ipo8\', this.value)"></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-violet-600 w-6">陈9</span><input type="range" class="thumb-i9 flex-1" value="' + sku.ipo9 + '" max="80" oninput="updateVal(\'' + sku.id + '\', \'ipo9\', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-violet-700 text-right bg-transparent outline-none" value="' + sku.ipo9 + '" oninput="updateVal(\'' + sku.id + '\', \'ipo9\', this.value)"></div><div class="flex items-center gap-1"><span class="text-[8px] font-bold text-pink-600 w-6">动10</span><input type="range" class="thumb-i10 flex-1" value="' + sku.ipo10 + '" max="80" oninput="updateVal(\'' + sku.id + '\', \'ipo10\', this.value)"><input type="number" class="w-6 text-[9px] font-bold text-pink-700 text-right bg-transparent outline-none" value="' + sku.ipo10 + '" oninput="updateVal(\'' + sku.id + '\', \'ipo10\', this.value)"></div></div></td>';
+                html += '<td><div class="micro-control"><input type="number" class="grid-input-num text-c mb-1" value="' + sku.c + '" step="0.5" oninput="updateVal(\'' + sku.id + '\', \'c\', this.value)"><input type="range" class="thumb-c" value="' + sku.c + '" min="0" max="20" step="0.5" oninput="updateVal(\'' + sku.id + '\', \'c\', this.value)"><div class="micro-abs" id="abs-c-' + sku.id + '">¥--</div></div></td>';
+                html += '<td class="bg-slate-50 px-1 py-0 border-l border-slate-200"><div class="sparkline-container"><canvas id="spark-' + sku.id + '"></canvas></div></td>';
+                html += '<td class="text-right pr-2 align-middle bg-slate-50 border-l border-slate-200"><div class="text-[13px] font-black" id="abs-net-' + sku.id + '">--</div></td>';
+                html += '</tr>';
+            }
+            tbody.innerHTML = html;
+        }
+
+        function updateVal(skuId, field, value) {
+            var sku = portfolio.find(s=>s.id===skuId); if(!sku) return;
+            var val = value; if(!['name', 'spec', 'corpRole', 'brandRole', 'retRole'].includes(field)) val = parseFloat(value) || 0;
+            sku[field] = val;
+            if (field === 'corpRole') { sku.isDefender = val.indexOf('防御') !== -1; sku.isProtected = val.indexOf('利润牛') !== -1 || val.indexOf('主推款') !== -1; initGrid(); return; }
+            var row = document.getElementById('row-' + sku.id);
+            if (row && typeof val === 'number' && field !== 'baseVol') {
+                var inputs = row.querySelectorAll('input[type="range"], input[type="number"]');
+                inputs.forEach(inp => { if(inp.value != val && (inp.getAttribute('oninput')||'').includes("'" + field + "'")) inp.value = val; });
+            }
+            runModel(); if (currentMicroSkuId === sku.id) runMicroSimulation();
+        }
+
+        function runModel() {
+            var throttle = parseInt(document.getElementById('global-throttle').value) / 100;
+            var threatLevel = parseInt(document.getElementById('global-threat').value) / 100;
+            document.getElementById('kpi-throttle').innerText = (throttle*100) + '%'; document.getElementById('kpi-threat').innerText = (threatLevel*100) + '%';
+
+            var totalDefensePower = portfolio.reduce((acc, sku) => sku.isDefender ? acc + ((sku.ipo8+sku.ipo9+sku.ipo10)*throttle)/100 : acc, 0);
+            var actualDamage = Math.max(0, threatLevel - totalDefensePower);
+
+            var totalRevActual = 0, totalNetActualFirstYear = 0;
+            var masterLabels = Array.from({length:36}, (_, i)=>'M'+(i+1));
+            var masterCashFlow = new Array(36).fill(0);
+            var stageCashFlows = { intro: new Array(36).fill(0), growth: new Array(36).fill(0), mat: new Array(36).fill(0), dec: new Array(36).fill(0) };
+            
+            var chartData = { defenderLoss: 0, premiumProfitNoDef: 0, premiumProfitWithDef: 0 };
+            var totalMacroResource = { hr:0, log:0, chan:0, s21:0, m21:0 };
+
+            portfolio.forEach(sku => {
+                sku.actualVol = sku.isProtected ? sku.baseVol - (sku.baseVol*actualDamage*0.6) : (sku.isDefender ? sku.baseVol + (sku.baseVol*totalDefensePower*0.5) : sku.baseVol);
+                var elastic = {'intro':0.8, 'growth':0.5, 'mat':0.1, 'dec':0}[sku.stage];
+                var actualRev = sku.actualVol * sku.price * (1 + ((throttle-1)*elastic)); 
+                var combinedMktRate = ((sku.ipo8+sku.ipo9+sku.ipo10)*throttle)/100;
+                var compShare = 1 - (sku.d/100) - (sku.r/100); var gmv = compShare > 0 ? (actualRev / compShare) : 0;
+                var distAbs = gmv * (sku.d/100); var retAbs = gmv * (sku.r/100);
+                var totalMktAbs = actualRev * combinedMktRate; var commAbs = actualRev * (sku.c/100); var cogsAbs = actualRev * COGS_RATE;
+                var actualFirstYearNet = actualRev - cogsAbs - totalMktAbs - commAbs;
+
+                var res = getSkuResource(sku); var allocBase = actualRev * 0.4; 
+                totalMacroResource.hr += allocBase * (res.hr/100); totalMacroResource.log += allocBase * (res.log/100); totalMacroResource.chan += allocBase * (res.chan/100) + distAbs + retAbs;
+                totalMacroResource.s21 += allocBase * (res.s21/100) + totalMktAbs*0.6; totalMacroResource.m21 += allocBase * (res.m21/100) + totalMktAbs*0.4; 
+
+                var elActVol = document.getElementById('act-vol-' + sku.id);
+                if (elActVol) { elActVol.innerText = sku.actualVol.toFixed(0); elActVol.className = "w-10 text-center text-[13px] font-black " + (sku.actualVol<sku.baseVol?"text-red-500":(sku.actualVol>sku.baseVol?"text-emerald-500":"text-slate-700")); }
+                document.getElementById('calc-rev-'+sku.id).innerText = actualRev.toFixed(0);
+                document.getElementById('abs-d-'+sku.id).innerText = '¥'+distAbs.toFixed(0); document.getElementById('abs-r-'+sku.id).innerText = '¥'+retAbs.toFixed(0); document.getElementById('abs-c-'+sku.id).innerText = '¥'+commAbs.toFixed(0);
+                document.getElementById('m-total-pct-'+sku.id).innerText = Math.round(combinedMktRate*100)+'%'; document.getElementById('m-total-abs-'+sku.id).innerText = '¥'+totalMktAbs.toFixed(0);
+                var netEl = document.getElementById('abs-net-'+sku.id);
+                netEl.innerText = (actualFirstYearNet>0?'+':'') + actualFirstYearNet.toFixed(0); netEl.className = 'text-[13px] font-black ' + (actualFirstYearNet>=0?'text-emerald-600':'text-red-500');
+
+                totalRevActual += actualRev; totalNetActualFirstYear += actualFirstYearNet;
+                if (sku.isDefender) chartData.defenderLoss += actualFirstYearNet; 
+                if (sku.isProtected) chartData.premiumProfitWithDef += actualFirstYearNet; 
+
+                var ts = generateTimeSeries(sku, combinedMktRate, actualRev, sku.timeShift);
+                for(var j=0; j<36; j++) { masterCashFlow[j] += ts[j]; stageCashFlows[sku.stage][j] += ts[j]; }
+                safeDrawSparkline('spark-' + sku.id, masterLabels, ts, sku.id);
+            });
+
+            totalNetActualFirstYear -= TEAM_BASE_SALARY;
+            document.getElementById('kpi-rev').innerText = totalRevActual.toFixed(0);
+            document.getElementById('kpi-profit').innerText = totalNetActualFirstYear.toFixed(0); document.getElementById('kpi-profit').className = 'text-sm font-black ' + (totalNetActualFirstYear>=0?'text-emerald-600':'text-red-600');
+            
+            portfolio.forEach(sku => {
+                if(sku.isProtected) {
+                    var ucm = sku.price - (sku.price*COGS_RATE) - (sku.price*(((sku.ipo8+sku.ipo9+sku.ipo10)*throttle)/100)) - (sku.price*(sku.c/100));
+                    chartData.premiumProfitNoDef += ((sku.baseVol - (sku.baseVol*threatLevel*0.6)) * ucm);
+                }
+            });
+
+            if (typeof Chart !== 'undefined') {
+                safeDrawMacroBarChart(totalMacroResource);
+                safeDrawTractionChart(chartData.premiumProfitNoDef, chartData.defenderLoss, chartData.premiumProfitWithDef, totalNetActualFirstYear);
+                safeDrawMacroStageChart(masterLabels, stageCashFlows);
+                var breakEvenMonth = -1;
+                for(var i=0; i<36; i++) { masterCashFlow[i] -= (TEAM_BASE_SALARY/12) * (i+1); if (breakEvenMonth===-1 && masterCashFlow[i]>0) breakEvenMonth=i+1; }
+                safeDrawMacroMasterChart(masterLabels, masterCashFlow);
+                document.getElementById('macro-bep-text').innerHTML = breakEvenMonth > 0 ? '预计 <b>第 '+breakEvenMonth+' 月</b> 回本' : '<span class="text-red-500">严重失血</span>';
+            }
+        }
+
+        function openMicroView(skuId) {
+            currentMicroSkuId = skuId; var sku = portfolio.find(s=>s.id===skuId); if(!sku) return;
+            document.querySelectorAll('#sku-tbody tr').forEach(tr => tr.classList.remove('active-row'));
+            document.getElementById('row-' + skuId).classList.add('active-row');
+            document.getElementById('view-macro').style.display = 'none'; document.getElementById('view-micro').style.display = 'flex';
+            document.getElementById('micro-title').innerText = sku.name + ' (' + sku.spec + ')';
+            
+            document.getElementById('micro-timeshift').value = sku.timeShift;
+            var res = getSkuResource(sku);
+            document.getElementById('inp-hr').value = res.hr; document.getElementById('inp-log').value = res.log; document.getElementById('inp-chan').value = res.chan; document.getElementById('inp-s21').value = res.s21; document.getElementById('inp-m21').value = res.m21;
+            updateResourceBarUI(res);
+            switchRadar(currentRadarTab); 
+            runMicroSimulation();
+            
+            // 触发所有 Chart.js 重绘，防止变形
+            setTimeout(function(){ for(var k in chartInstances){ if(chartInstances[k]) chartInstances[k].resize(); } }, 50);
+        }
+
+        function closeMicroView() {
+            currentMicroSkuId = null;
+            document.querySelectorAll('#sku-tbody tr').forEach(tr => tr.classList.remove('active-row'));
+            document.getElementById('view-micro').style.display = 'none'; document.getElementById('view-macro').style.display = 'flex';
+            setTimeout(function(){ for(var k in chartInstances){ if(chartInstances[k]) chartInstances[k].resize(); } }, 50);
+        }
+
+        function switchRadar(tabId) {
+            currentRadarTab = tabId;
+            document.querySelectorAll('.radar-tab').forEach(el => { el.className = 'radar-tab'; });
+            document.getElementById('tab-' + tabId).classList.add('active-' + tabId);
+            
+            if(!currentMicroSkuId) return;
+            var sku = portfolio.find(s=>s.id===currentMicroSkuId);
+            var conf = radarConfigs[tabId];
+            var dataArr = radarMatrix[sku.stage][tabId];
+            document.getElementById('radar-desc').innerText = conf.desc;
+            
+            var canvas = document.getElementById('mainRadarChart');
+            if(chartInstances['mainRadar']) { chartInstances['mainRadar'].destroy(); }
+            
+            chartInstances['mainRadar'] = new Chart(canvas.getContext('2d'), { 
+                type: 'radar', 
+                data: { labels: conf.labels, datasets: [{ data: dataArr, backgroundColor: conf.color+'33', borderColor: conf.color, borderWidth: 2, pointBackgroundColor: conf.color, pointRadius: 3 }] }, 
+                options: { responsive: true, maintainAspectRatio: false, animation: {duration: 200}, plugins: { legend: { display: false } }, scales: { r: { angleLines: { color: '#334155' }, grid: { color: '#334155' }, pointLabels: { color: '#cbd5e1', font: { size: 9, weight: 'bold' } }, ticks: { display: false, min: 0 } } } } 
+            });
+        }
+
+        function runMicroSimulation() {
+            if (!currentMicroSkuId) return;
+            var sku = portfolio.find(s=>s.id===currentMicroSkuId); if(!sku) return;
+            var tShift = parseFloat(document.getElementById('micro-timeshift').value); sku.timeShift = tShift;
+            var tl = document.getElementById('micro-time-label');
+            if (tShift === 1.0) { tl.innerText = '原计划执行 (100%)'; tl.className = "text-center mt-2 text-[12px] font-black text-white"; }
+            else if (tShift < 1.0) { tl.innerText = '🔥 提前 ' + ((1-tShift)*100).toFixed(0) + '%'; tl.className = "text-center mt-2 text-[13px] font-black text-emerald-400"; }
+            else { tl.innerText = '❄️ 延期 ' + ((tShift-1)*100).toFixed(0) + '%'; tl.className = "text-center mt-2 text-[13px] font-black text-rose-500"; }
+
+            document.getElementById('micro-stage-tag').innerText = sku.stageName;
+            var throttle = parseInt(document.getElementById('global-throttle').value) / 100;
+            var elastic = {'intro':0.8, 'growth':0.5, 'mat':0.1, 'dec':0}[sku.stage];
+            var actualRev = sku.actualVol * sku.price * (1 + ((throttle-1)*elastic)); 
+            var combinedMktRate = ((sku.ipo8+sku.ipo9+sku.ipo10)*throttle)/100;
+
+            var baseCashFlow = generateTimeSeries(sku, combinedMktRate, actualRev, 1.0);
+            var actualCashFlow = generateTimeSeries(sku, combinedMktRate, actualRev, tShift);
+
+            var baseBEP = -1, actualBEP = -1;
+            for(var i=0; i<36; i++) { if(baseBEP===-1 && baseCashFlow[i]>=0) baseBEP = i+1; if(actualBEP===-1 && actualCashFlow[i]>=0) actualBEP = i+1; }
+            var profitDiff = actualCashFlow[35] - baseCashFlow[35];
+
+            var res = getSkuResource(sku); var rpt = '';
+            if (tShift < 1.0) { rpt += `<div class="bg-emerald-900/40 p-2 rounded border-l-2 border-emerald-500"><span class="text-emerald-400 font-bold">🎯 高效红利：</span><br>BEP 提前至第 ${actualBEP>0?actualBEP:'∞'} 月。增利 <b class="text-white">¥${profitDiff.toFixed(0)}万</b>！</div>`; }
+            else if (tShift > 1.0) { rpt += `<div class="bg-rose-900/40 p-2 rounded border-l-2 border-rose-500"><span class="text-rose-400 font-bold">💀 成本反噬：</span><br>BEP 延后至第 ${actualBEP>0?actualBEP:'∞'} 月。<b class="text-white">${res.hr+res.log}%</b> 的人/物流白白空耗，利润缩水 <b class="text-white">¥${Math.abs(profitDiff).toFixed(0)}万</b>！</div>`; }
+            else { rpt += `<div class="text-slate-400 p-1">拖拉上方时间滑块进行推演。</div>`; }
+            document.getElementById('micro-report').innerHTML = rpt;
+
+            if (typeof Chart !== 'undefined') { safeDrawMicroChart(Array.from({length:36},(_,i)=>'M'+(i+1)), actualCashFlow, baseCashFlow); }
+            runModel();
+        }
+
+        // ==================== 自由伸缩核心函数 ====================
+        function makeResizableY(resizerId, topId) {
+            var resizer = document.getElementById(resizerId); var topDeck = document.getElementById(topId);
+            if(!resizer || !topDeck) return;
+            var isResizing = false;
+            var start = function(e) { isResizing = true; document.body.style.cursor = 'row-resize'; resizer.style.backgroundColor = '#94a3b8'; if(e.cancelable) e.preventDefault(); };
+            var stop = function() { if(isResizing){ isResizing = false; document.body.style.cursor = 'default'; resizer.style.backgroundColor = '#e2e8f0'; window.dispatchEvent(new Event('resize')); }};
+            var move = function(clientY) {
+                if (!isResizing) return; var h = (clientY / window.innerHeight) * 100;
+                if (h >= 25 && h <= 75) topDeck.style.flex = '0 0 ' + h + '%';
+            };
+            resizer.addEventListener('mousedown', start); resizer.addEventListener('touchstart', function(e){ start(e); }, {passive: false});
+            document.addEventListener('mousemove', function(e) { move(e.clientY); });
+            document.addEventListener('touchmove', function(e) { if(isResizing && e.touches.length > 0) { move(e.touches[0].clientY); if(e.cancelable) e.preventDefault(); } }, {passive: false});
+            document.addEventListener('mouseup', stop); document.addEventListener('touchend', stop);
+        }
+
+        function makeResizableX(resizerId, leftColId, minW, maxW) {
+            var resizer = document.getElementById(resizerId); var leftCol = document.getElementById(leftColId);
+            if(!resizer || !leftCol) return;
+            var isResizing = false;
+            var start = function(e) { isResizing = true; document.body.style.cursor = 'col-resize'; resizer.classList.add('active-resizer'); if(e.cancelable) e.preventDefault(); };
+            var stop = function() { if(isResizing){ isResizing = false; document.body.style.cursor = 'default'; resizer.classList.remove('active-resizer'); window.dispatchEvent(new Event('resize')); }};
+            var move = function(clientX) {
+                if (!isResizing) return; var newWidth = clientX - leftCol.getBoundingClientRect().left;
+                if (newWidth >= minW && newWidth <= maxW) leftCol.style.flex = '0 0 ' + newWidth + 'px';
+            };
+            resizer.addEventListener('mousedown', start); resizer.addEventListener('touchstart', function(e){ start(e); }, {passive: false});
+            document.addEventListener('mousemove', function(e) { move(e.clientX); });
+            document.addEventListener('touchmove', function(e) { if(isResizing && e.touches.length > 0) { move(e.touches[0].clientX); if(e.cancelable) e.preventDefault(); } }, {passive: false});
+            document.addEventListener('mouseup', stop); document.addEventListener('touchend', stop);
+        }
+
+        // ==================== 图表绘制 ====================
+        function safeDrawSparkline(canvasId, labels, data, skuId) {
+            try {
+                var canvas = document.getElementById(canvasId); if(!canvas) return;
+                if (chartInstances['sp_'+skuId]) { chartInstances['sp_'+skuId].data.datasets[0].data = data; chartInstances['sp_'+skuId].update('none'); } 
+                else { chartInstances['sp_'+skuId] = new Chart(canvas.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [{ data: data, borderWidth: 1.5, fill: true, backgroundColor: 'rgba(99, 102, 241, 0.1)', borderColor: '#6366f1', segment: { borderColor: ctx=>ctx.p0.parsed.y<0?'#ef4444':'#10b981' }, pointRadius: 0 }] }, options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, layout: { padding: 0 } } }); }
+            } catch(e){}
+        }
+        function safeDrawMacroBarChart(rData) {
+            try {
+                var canvas = document.getElementById('macroBarChart'); if(!canvas) return;
+                var data = [rData.hr, rData.log, rData.chan, rData.s21, rData.m21];
+                if (chartInstances['macroBar']) { chartInstances['macroBar'].data.datasets[0].data = data; chartInstances['macroBar'].update('none'); } 
+                else { chartInstances['macroBar'] = new Chart(canvas.getContext('2d'), { type: 'bar', data: { labels: ['人资', '物流', '渠道', '销21S', '品21M'], datasets: [{ data: data, backgroundColor: ['#f43f5e', '#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b'], borderRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks:{font:{size:9}} }, y: { display: false } } } }); }
+            } catch(e){}
+        }
+        function safeDrawTractionChart(noDefProfit, defenderLoss, withDefProfit, totalProfit) {
+            try {
+                var canvas = document.getElementById('tractionChart'); if(!canvas) return;
+                var data = [noDefProfit, defenderLoss, withDefProfit - noDefProfit, totalProfit];
+                if (chartInstances['traction']) { chartInstances['traction'].data.datasets[0].data = data; chartInstances['traction'].update('none'); } 
+                else { chartInstances['traction'] = new Chart(canvas.getContext('2d'), { type: 'bar', data: { labels: ['无防大盘', '防守流血', '挽回利润', '最终总利'], datasets: [{ data: data, backgroundColor: ['#94a3b8', '#ef4444', '#10b981', '#3b82f6'], borderRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks:{font:{size:9}} }, y: { display: false } } } }); }
+            } catch(e){}
+        }
+        function safeDrawMacroStageChart(labels, sData) {
+            try {
+                var canvas = document.getElementById('macroStageChart'); if(!canvas) return;
+                if (chartInstances['macroStage']) { var c = chartInstances['macroStage']; c.data.datasets[0].data = sData.intro; c.data.datasets[1].data = sData.growth; c.data.datasets[2].data = sData.mat; c.data.datasets[3].data = sData.dec; c.update('none'); } 
+                else { chartInstances['macroStage'] = new Chart(canvas.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [ { label: '导入', data: sData.intro, borderColor: '#3b82f6', borderWidth: 2, fill: false, pointRadius: 0 }, { label: '成长', data: sData.growth, borderColor: '#f59e0b', borderWidth: 2, fill: false, pointRadius: 0 }, { label: '成熟', data: sData.mat, borderColor: '#10b981', borderWidth: 2, fill: false, pointRadius: 0 }, { label: '衰退', data: sData.dec, borderColor: '#64748b', borderWidth: 2, borderDash: [4,4], fill: false, pointRadius: 0 } ]}, options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { position: 'top', labels:{font:{size:8, boxWidth:8}} } }, scales: { x: { display: false }, y: { grid: { color: '#e2e8f0' } } } } }); }
+            } catch(e){}
+        }
+        function safeDrawMacroMasterChart(labels, data) {
+            try {
+                var canvas = document.getElementById('macroCashChart'); if(!canvas) return;
+                if (chartInstances['macroCash']) { chartInstances['macroCash'].data.datasets[0].data = data; chartInstances['macroCash'].update('none'); } 
+                else { chartInstances['macroCash'] = new Chart(canvas.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [{ label: '净现金流', data: data, borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', borderWidth: 2, fill: true, pointRadius: 0, segment: { borderColor: ctx=>ctx.p0.parsed.y<0?'#ef4444':'#4f46e5' } }] }, options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks:{maxTicksLimit:12, font:{size:9}} }, y: { grid: { color: '#e2e8f0' }, ticks:{font:{size:9}} } } } }); }
+            } catch(e){}
+        }
+        function safeDrawMicroChart(labels, actualData, baseData) {
+            try {
+                var canvas = document.getElementById('microChart'); if(!canvas) return;
+                if (chartInstances['micro']) { chartInstances['micro'].data.datasets[0].data = actualData; chartInstances['micro'].data.datasets[1].data = baseData; chartInstances['micro'].update('none'); } 
+                else { chartInstances['micro'] = new Chart(canvas.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [ { label: '实际', data: actualData, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', borderWidth: 3, fill: true, pointRadius: 0, segment: { borderColor: ctx=>ctx.p0.parsed.y<0?'#f43f5e':'#6366f1' } }, { label: '基准', data: baseData, borderColor: '#94a3b8', borderWidth: 2, borderDash: [4, 4], fill: false, pointRadius: 0 } ]}, options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks:{maxTicksLimit:12, font:{size:9}} }, y: { grid: { color: '#e2e8f0' }, ticks:{font:{size:9}} } } } }); }
+            } catch(e){}
+        }
+
+        // ==================== 引擎启动 ====================
+        setTimeout(function() {
+            try {
+                // 挂载全部拖拽系统
+                makeResizableY('resizer-y', 'top-deck');
+                makeResizableX('resizer-m1', 'macro-col-1', 200, 600);
+                makeResizableX('resizer-m2', 'macro-col-2', 200, 600);
+                makeResizableX('resizer-v1', 'micro-col-1', 220, 500);
+                makeResizableX('resizer-v2', 'micro-col-2', 250, 600);
+                
+                initGrid(); runModel();
+            } catch(e) { console.log(e); }
+        }, 100);
+    </script>
+
+</body></html>
