@@ -1,0 +1,2103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<!-- A19 / INF-COR-RUNTIME-001 §4 v1.1: viewport-fit plus safe-area insets, and
+     every tappable target at 48px, including the tab strip. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Build Review Console — CONSOLE-001A</title>
+<style>
+:root{
+  --bg:#0c1018;--panel:#141b26;--panel2:#1b2330;--line:#26303f;
+  --ink:#e6ecf5;--dim:#8f9cb0;--accent:#4d8dff;
+  --ok:#34d399;--warn:#f0b429;--stop:#f0685f;--hold:#a78bfa;--syn:#ff9d3d;
+  --ui:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --tap:48px;                       /* the A19 floor, in one place */
+  --safe:env(safe-area-inset-bottom, 0px);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 var(--ui);
+  font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#banner{position:sticky;top:0;z-index:50;padding:10px 20px;text-align:center;font-weight:700;
+  letter-spacing:.05em;font-size:12.5px;border-bottom:2px solid var(--syn);color:var(--syn);
+  background:repeating-linear-gradient(45deg,#3a2409,#3a2409 12px,#452b0b 12px,#452b0b 24px)}
+header{padding:14px 20px 0}
+h1{font-size:17px;margin:0}
+.sub{color:var(--dim);font-size:12px;margin-top:4px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;padding:12px 20px;align-items:center}
+select,button{font-family:inherit;font-size:13px;min-height:var(--tap);
+  background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:9px;
+  padding:0 14px;cursor:pointer}
+button.primary{background:#1d3a6b;border-color:#2f5ca8}
+button:disabled{opacity:.45;cursor:not-allowed}
+nav{display:flex;gap:6px;padding:6px 20px 12px;border-bottom:1px solid var(--line);
+  overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{min-height:var(--tap);color:var(--dim);white-space:nowrap}
+nav button.on{background:#1d3a6b;border-color:#2f5ca8;color:#fff}
+main{padding:16px 20px calc(96px + var(--safe));display:grid;gap:16px}
+section{display:none}section.on{display:grid;gap:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.panel>h2{margin:0;padding:11px 14px;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--dim);border-bottom:1px solid var(--line);background:var(--panel2)}
+.panel .body{padding:13px 14px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+code{font-family:var(--mono);font-size:11.5px;color:#c4d2ea}
+/* Locked rule 4: one pill per dimension, never a merged one. */
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;
+  border:1px solid transparent;white-space:nowrap}
+.p-ok{background:#0f2e21;color:var(--ok);border-color:#1d5c43}
+.p-warn{background:#33270c;color:var(--warn);border-color:#6b5318}
+.p-stop{background:#331416;color:var(--stop);border-color:#6b2a2e}
+.p-hold{background:#241c3d;color:var(--hold);border-color:#443a72}
+.p-dim{background:#1e222b;color:var(--dim);border-color:var(--line)}
+.p-cand{background:#1a1f2e;color:#9db4d8;border-color:#33405a;border-style:dashed}
+.muted{color:var(--dim)}
+.note{background:#1a2030;border:1px solid #2c3a57;border-left:3px solid var(--accent);
+  border-radius:7px;padding:9px 12px;font-size:12.5px;color:#c4d2ea;margin:8px 0}
+.note.bad{background:#2a1618;border-color:#5e2a2e;border-left-color:var(--stop);color:#f0c3c3}
+.note.warn{background:#2a2210;border-color:#5e4a1e;border-left-color:var(--warn);color:#efdcb4}
+.dims{display:flex;gap:5px;flex-wrap:wrap}
+.tl{max-height:420px;overflow:auto;font-size:12px}
+.ev{border-left:2px solid var(--line);padding:6px 0 6px 11px;margin-left:4px}
+.ev.refused{border-left-color:var(--stop)}
+.zh{display:block;color:#a8bde0;font-weight:400}
+/* Bottom-anchored bar: the control that A19 is really about. */
+#foot{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;gap:8px;flex-wrap:wrap;
+  align-items:center;padding:10px 20px calc(10px + var(--safe));
+  background:#101724;border-top:1px solid var(--line)}
+#foot .grow{flex:1;min-width:0;color:var(--dim);font-size:12px}
+@media(max-width:720px){
+  header,.bar,nav,main{padding-left:16px;padding-right:16px}
+  h1{font-size:16px}
+  #foot{padding-left:16px;padding-right:16px}
+}
+</style>
+</head>
+<body>
+<div id="banner">BUILD REVIEW CONSOLE · SYNTHETIC / CANDIDATE — 不写 Runtime 经营状态，不触发 PR / Merge / Deploy / Scale</div>
+
+<header>
+  <h1>Build Review Console <span class="muted" style="font-size:12px">CONSOLE-001A</span></h1>
+  <div class="sub" id="meta"></div>
+</header>
+
+<div class="bar">
+  <label class="muted" for="product">Product</label>
+  <select id="product"></select>
+  <label class="muted" for="role">Role</label>
+  <select id="role"></select>
+  <button id="btn-new" class="primary">新建 Review / New</button>
+  <button id="btn-export">导出 Export</button>
+  <button id="btn-import">导入 Import</button>
+  <input id="file" type="file" accept="application/json" style="display:none">
+</div>
+
+<nav id="nav"></nav>
+<main>
+  <section id="s-overview"></section>
+  <section id="s-requirements"></section>
+  <section id="s-inheritance"></section>
+  <section id="s-events"></section>
+  <section id="s-deliverables"></section>
+  <section id="s-gate"></section>
+  <section id="s-audit"></section>
+  <section id="s-pack"></section>
+</main>
+
+<div id="foot">
+  <span class="grow" id="foot-status"></span>
+  <button id="btn-accept">Accept Development</button>
+</div>
+
+<script id="freeze-data" type="application/json">{
+  "freeze_id": "DAC-1/INF-DEV-CONSOLE-001A/v0.1-FROZEN",
+  "status": "FROZEN",
+  "schema_version": "CONSOLE-001A/SCHEMA/v0.1",
+  "config_version": "CONSOLE-001A/CONFIG/v0.1",
+  "test_pack_id": "CONSOLE-001A/A01-A20/v0.2",
+  "rule_version": "CONSOLE-001A/RULES/v0.2",
+  "basis": [
+    "INF-DEV-CONSOLE-001 v0.1",
+    "INF-DEV-CONSOLE-001A v0.2",
+    "DAC-0 D1–D7",
+    "DAC-0 G1–G3"
+  ],
+  "baseline": {
+    "file": "INFINITY_HEMA_MWE_v0.2.1_CC_Demo.html",
+    "sha256": "1e114d05ace25734719157d1d9c37fd8a5b6e2f40cfa432c17bdc74be46a7a8d",
+    "bytes": 238848,
+    "commit_sha": "647fe9e1fb8c343a219680391a6f8c74c335ea17",
+    "source": "INFINITY_HEMA_MWE_v0.2.1_Portable_Demo_Package.zip · docs/EVIDENCE_PACK_V021.md",
+    "package_html_matches_upload": true,
+    "baseline_state": "VERIFIED",
+    "verified_at": "2026-09-18"
+  },
+  "authorizes": {
+    "dac2_build": "AUTHORIZED",
+    "pr_merge": "NOT_AUTHORIZED",
+    "deploy": "NOT_AUTHORIZED",
+    "production": "NOT_AUTHORIZED",
+    "scale": "NOT_AUTHORIZED"
+  },
+  "contracts": {
+    "Review_Session": {
+      "source": "001A §3 · G3",
+      "fields": [
+        {
+          "field": "Review_ID",
+          "type": "uuid",
+          "required": true,
+          "rule": "创建即冻结。Import 沿用不重新生成（G3）——否则 A02 与 A14 同时失败"
+        },
+        {
+          "field": "Project_ID",
+          "type": "string",
+          "required": true,
+          "rule": "首个 = INFINITY_HEMA"
+        },
+        {
+          "field": "Product_ID",
+          "type": "string",
+          "required": true,
+          "rule": "首个 = HEMA_MWE；第二个 = SYNTHETIC_DUMMY_PRODUCT（D3）"
+        },
+        {
+          "field": "Version_ID",
+          "type": "string",
+          "required": true,
+          "rule": "被评审的目标版本"
+        },
+        {
+          "field": "Taskbook_ID",
+          "type": "string",
+          "required": true,
+          "rule": "Primary = INF-DEV-HEMA-003（D2）"
+        },
+        {
+          "field": "Secondary_Taskbook_ID",
+          "type": "string",
+          "required": false,
+          "rule": "Regression 输入 = INF-DEV-HEMA-002"
+        },
+        {
+          "field": "Baseline_SHA",
+          "type": "sha256|null",
+          "required": false,
+          "rule": "null → Baseline_State = UNKNOWN，全部 Regression 强制 PENDING（D1 / A16）"
+        },
+        {
+          "field": "Schema_Version",
+          "type": "string",
+          "required": true,
+          "rule": "与 Config 不一致 → CONFLICT（A17）"
+        },
+        {
+          "field": "Test_Pack_ID",
+          "type": "string",
+          "required": true,
+          "rule": "CONSOLE-001A/A01-A20/v0.2（G1）——分辨跑的是哪一版 A 表"
+        },
+        {
+          "field": "Reviewer_ID / Reviewer_Role",
+          "type": "string",
+          "required": true,
+          "rule": "Role 决定权限矩阵"
+        },
+        {
+          "field": "Started_At / Updated_At",
+          "type": "iso8601",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Status",
+          "type": "enum",
+          "required": true,
+          "rule": "OPEN / IN_REVIEW / RETURNED / ACCEPTED"
+        }
+      ]
+    },
+    "Requirement": {
+      "source": "001A §3",
+      "fields": [
+        {
+          "field": "Requirement_ID",
+          "type": "string",
+          "required": true,
+          "rule": "每条 Taskbook 条款一条；未映射 = OPEN（R2）"
+        },
+        {
+          "field": "Section_Ref",
+          "type": "string",
+          "required": true,
+          "rule": "回指任务书节号，可追溯"
+        },
+        {
+          "field": "Requirement_Text",
+          "type": "text",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Criticality",
+          "type": "enum",
+          "required": true,
+          "rule": "CRITICAL / NORMAL；CRITICAL FAIL 阻止 Accept（A08）"
+        },
+        {
+          "field": "Owner_Role",
+          "type": "enum",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Implementation_State",
+          "type": "enum",
+          "required": true,
+          "rule": "TODO / WIP / DONE / BLOCKED——与 Verification 分列（A04）"
+        },
+        {
+          "field": "Fact_Class",
+          "type": "enum",
+          "required": true,
+          "rule": "独立字段，不与 State 合并渲染"
+        }
+      ]
+    },
+    "Inheritance": {
+      "source": "001 §5 · A16",
+      "fields": [
+        {
+          "field": "Capability_ID",
+          "type": "string",
+          "required": true,
+          "rule": "v0.1 / v0.2.1 的继承能力逐条"
+        },
+        {
+          "field": "Baseline_Version / Baseline_SHA",
+          "type": "string",
+          "required": true,
+          "rule": "SHA 缺失 → Regression 只能 PENDING（A16）"
+        },
+        {
+          "field": "Expected_Behavior",
+          "type": "text",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Regression_Test_ID",
+          "type": "string",
+          "required": true,
+          "rule": "绑到 Test_Pack 内的具体 Test"
+        },
+        {
+          "field": "Verification_Result",
+          "type": "enum",
+          "required": true,
+          "rule": "走统一四态，不另立枚举"
+        }
+      ]
+    },
+    "Schema_Delta": {
+      "source": "001 §5 · A17",
+      "fields": [
+        {
+          "field": "Schema_Item_ID",
+          "type": "string",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Before / After",
+          "type": "text",
+          "required": true,
+          "rule": "任何字段变更都留原值"
+        },
+        {
+          "field": "Classification",
+          "type": "enum",
+          "required": true,
+          "rule": "INHERITED / DELTA / CONFLICT / UNKNOWN"
+        },
+        {
+          "field": "Architect_Decision_ID",
+          "type": "string",
+          "required": false,
+          "rule": "CONFLICT 必须有此项，否则保持 PENDING，不得静默择一"
+        }
+      ]
+    },
+    "Event_Review": {
+      "source": "001A §3 · A06",
+      "fields": [
+        {
+          "field": "Canonical_Event",
+          "type": "string",
+          "required": false,
+          "rule": "命中现有 Canonical Event 时填"
+        },
+        {
+          "field": "Candidate_Event",
+          "type": "string",
+          "required": true,
+          "rule": "候选事件名"
+        },
+        {
+          "field": "Decision",
+          "type": "enum",
+          "required": true,
+          "rule": "REUSE / NEW / CONFLICT——独立维度，不与 Verification 混"
+        },
+        {
+          "field": "Evidence_ID",
+          "type": "string",
+          "required": false,
+          "rule": null
+        },
+        {
+          "field": "Architect_Decision_ID",
+          "type": "string",
+          "required": false,
+          "rule": "无此项则保持 PENDING（A06）"
+        }
+      ]
+    },
+    "Evidence_Binding": {
+      "source": "001A §3 · D6",
+      "fields": [
+        {
+          "field": "Evidence_ID",
+          "type": "string",
+          "required": true,
+          "rule": "Evidence 的唯一句柄"
+        },
+        {
+          "field": "Evidence_Type",
+          "type": "enum",
+          "required": true,
+          "rule": "TEST_LOG / ARTIFACT_HASH / SCREENSHOT / DEVICE_TEST / DOCUMENT"
+        },
+        {
+          "field": "Source_Ref",
+          "type": "string",
+          "required": true,
+          "rule": "文件路径、命令、截图名"
+        },
+        {
+          "field": "Test_Run_ID",
+          "type": "string",
+          "required": true,
+          "rule": "D6 四件之一"
+        },
+        {
+          "field": "Commit_SHA",
+          "type": "sha",
+          "required": true,
+          "rule": "D6 四件之一——这一项决定了产物必须来自真实仓库"
+        },
+        {
+          "field": "Verifier_ID / Verifier_Role",
+          "type": "string",
+          "required": true,
+          "rule": "D6 四件之一；开发者自报不算（R5）"
+        },
+        {
+          "field": "Captured_At",
+          "type": "iso8601",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Result",
+          "type": "enum",
+          "required": true,
+          "rule": "Evidence 本身的结果，不等于 Verification_Result"
+        }
+      ]
+    },
+    "Test_Run": {
+      "source": "001 §5 · G1",
+      "fields": [
+        {
+          "field": "Test_Run_ID",
+          "type": "string",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Test_Pack_ID",
+          "type": "string",
+          "required": true,
+          "rule": "G1 新增必填——同号不同义的 A02 / A06 / A16 靠它区分"
+        },
+        {
+          "field": "Test_ID",
+          "type": "string",
+          "required": true,
+          "rule": "A01–A20 或 Regression Test"
+        },
+        {
+          "field": "Commit_SHA",
+          "type": "sha",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Expected / Actual",
+          "type": "text",
+          "required": true,
+          "rule": "两者都留，便于回放"
+        },
+        {
+          "field": "Result",
+          "type": "enum",
+          "required": true,
+          "rule": "PASS / FAIL / PENDING / NOT_TESTED"
+        },
+        {
+          "field": "Evidence_ID",
+          "type": "string",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Surface",
+          "type": "enum",
+          "required": true,
+          "rule": "REAL_BROWSER / GITHUB_PAGES / ARTIFACT_PREVIEW / DEVICE——A02 只认前两者，A19 只认 DEVICE（D5 / G3）"
+        },
+        {
+          "field": "Verifier_ID",
+          "type": "string",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Timestamp",
+          "type": "iso8601",
+          "required": true,
+          "rule": null
+        }
+      ]
+    },
+    "Verification": {
+      "source": "001A §3 · D6",
+      "fields": [
+        {
+          "field": "Object_ID / Object_Type",
+          "type": "string",
+          "required": true,
+          "rule": "挂在 Requirement / Inheritance / Test 上"
+        },
+        {
+          "field": "Verification_Result",
+          "type": "enum",
+          "required": true,
+          "rule": "PASS / FAIL / PENDING / NOT_TESTED"
+        },
+        {
+          "field": "Evidence_ID",
+          "type": "string",
+          "required": false,
+          "rule": "= PASS 时必填，且该 Evidence_Binding 的 Test_Run_ID / Commit_SHA / Verifier 三项齐全，否则 UI 不得形成 Verified PASS（D6-A / A03）"
+        }
+      ]
+    },
+    "Deliverable": {
+      "source": "001 §5 · 001A §13",
+      "fields": [
+        {
+          "field": "Artifact_ID",
+          "type": "string",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Path / Name",
+          "type": "string",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "SHA256",
+          "type": "sha256",
+          "required": true,
+          "rule": "Manifest 必填"
+        },
+        {
+          "field": "Purpose / How_To_Run / Expected_Output",
+          "type": "text",
+          "required": true,
+          "rule": "三项缺一，Manifest 不完整"
+        },
+        {
+          "field": "Limitation",
+          "type": "text",
+          "required": true,
+          "rule": "artifact 预览不支持 localStorage 属此项（D5-C）"
+        },
+        {
+          "field": "Evidence_ID",
+          "type": "string",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Fact_Class",
+          "type": "enum",
+          "required": true,
+          "rule": "SYNTHETIC fixture 必须 SYNTHETIC / CANDIDATE，不可导出为 TEAM_FACT（A13）"
+        }
+      ]
+    },
+    "Gate": {
+      "source": "001A §3",
+      "fields": [
+        {
+          "field": "Gate_ID",
+          "type": "string",
+          "required": true,
+          "rule": "DAC-0 … DAC-4"
+        },
+        {
+          "field": "Preconditions",
+          "type": "text",
+          "required": true,
+          "rule": "前置未满足时 Gate_Status 只能 NOT_READY"
+        },
+        {
+          "field": "Gate_Status",
+          "type": "enum",
+          "required": true,
+          "rule": "NOT_READY / READY_FOR_REVIEW / APPROVED / RETURNED / NOT_AUTHORIZED"
+        },
+        {
+          "field": "Approver_Role",
+          "type": "enum",
+          "required": true,
+          "rule": "仅 CHIEF_ARCHITECT 可置 APPROVED / RETURNED（A10）"
+        },
+        {
+          "field": "Decision_ID / Decision_Time",
+          "type": "string",
+          "required": true,
+          "rule": "留痕，可审计回溯"
+        }
+      ]
+    },
+    "Audit_Event": {
+      "source": "001A §3 · A15",
+      "fields": [
+        {
+          "field": "Audit_ID",
+          "type": "string",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Object_ID / Object_Type",
+          "type": "string",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Before / After",
+          "type": "json",
+          "required": true,
+          "rule": "任何 mark、Evidence 绑定、Gate 变化都必须写"
+        },
+        {
+          "field": "Actor_ID / Actor_Role",
+          "type": "string",
+          "required": true,
+          "rule": null
+        },
+        {
+          "field": "Evidence_ID",
+          "type": "string",
+          "required": false,
+          "rule": null
+        },
+        {
+          "field": "Rule_Version",
+          "type": "string",
+          "required": true,
+          "rule": "CONSOLE-001A/RULES/v0.2"
+        },
+        {
+          "field": "Timestamp",
+          "type": "iso8601",
+          "required": true,
+          "rule": null
+        }
+      ]
+    }
+  },
+  "dimensions": {
+    "Fact_Class": {
+      "values": [
+        "TEAM_FACT",
+        "TEAM_PLAN",
+        "CANDIDATE",
+        "HYPOTHESIS",
+        "UNKNOWN",
+        "CONFLICT"
+      ],
+      "constraint": "这条事实的性质。挂在 Requirement / Deliverable / Config 上。Candidate / Hypothesis 不得使用与 Verified 相同的成功样式"
+    },
+    "Implementation_State": {
+      "values": [
+        "TODO",
+        "WIP",
+        "DONE",
+        "BLOCKED"
+      ],
+      "constraint": "开发做到哪。DONE ≠ PASS——两列必须分开显示（A04）"
+    },
+    "Verification_Result": {
+      "values": [
+        "PASS",
+        "FAIL",
+        "PENDING",
+        "NOT_TESTED"
+      ],
+      "constraint": "独立验证的结果。PASS 必须引用有效 Evidence_Binding（D6）"
+    },
+    "Event_Decision": {
+      "values": [
+        "REUSE",
+        "NEW",
+        "CONFLICT"
+      ],
+      "constraint": "事件命名的裁决。CONFLICT 需 Architect Decision，不得自动择一"
+    },
+    "Gate_Status": {
+      "values": [
+        "NOT_READY",
+        "READY_FOR_REVIEW",
+        "APPROVED",
+        "RETURNED",
+        "NOT_AUTHORIZED"
+      ],
+      "constraint": "闸门状态。只有 Chief Architect 能置 APPROVED / RETURNED"
+    }
+  },
+  "permissions": {
+    "roles": [
+      "CA",
+      "ARCH",
+      "DEV",
+      "QA",
+      "BIZ"
+    ],
+    "matrix": [
+      {
+        "action": "装载 Taskbook / Baseline",
+        "CA": "ALLOW",
+        "ARCH": "ALLOW",
+        "DEV": "N_A",
+        "QA": "N_A",
+        "BIZ": "N_A"
+      },
+      {
+        "action": "映射 Requirement",
+        "CA": "ALLOW",
+        "ARCH": "ALLOW",
+        "DEV": "N_A",
+        "QA": "N_A",
+        "BIZ": "N_A"
+      },
+      {
+        "action": "登记 Schema_Delta / CONFLICT",
+        "CA": "ALLOW",
+        "ARCH": "ALLOW",
+        "DEV": "ALLOW",
+        "QA": "N_A",
+        "BIZ": "N_A"
+      },
+      {
+        "action": "提交 Commit / Artifact / Hash",
+        "CA": "N_A",
+        "ARCH": "N_A",
+        "DEV": "ALLOW",
+        "QA": "N_A",
+        "BIZ": "N_A"
+      },
+      {
+        "action": "创建 Evidence_Binding",
+        "CA": "N_A",
+        "ARCH": "N_A",
+        "DEV": "ALLOW",
+        "QA": "ALLOW",
+        "BIZ": "N_A"
+      },
+      {
+        "action": "置 Verification_Result = PASS",
+        "CA": "N_A",
+        "ARCH": "N_A",
+        "DEV": "FORBID",
+        "QA": "ALLOW",
+        "BIZ": "N_A"
+      },
+      {
+        "action": "置 Event_Decision = REUSE / NEW",
+        "CA": "ALLOW",
+        "ARCH": "ALLOW",
+        "DEV": "N_A",
+        "QA": "N_A",
+        "BIZ": "N_A"
+      },
+      {
+        "action": "裁决 Event CONFLICT",
+        "CA": "ALLOW",
+        "ARCH": "FORBID",
+        "DEV": "FORBID",
+        "QA": "FORBID",
+        "BIZ": "N_A"
+      },
+      {
+        "action": "置 Gate = READY_FOR_REVIEW",
+        "CA": "ALLOW",
+        "ARCH": "ALLOW",
+        "DEV": "N_A",
+        "QA": "N_A",
+        "BIZ": "N_A"
+      },
+      {
+        "action": "置 Gate = APPROVED / RETURNED",
+        "CA": "ALLOW",
+        "ARCH": "FORBID",
+        "DEV": "FORBID",
+        "QA": "FORBID",
+        "BIZ": "FORBID"
+      },
+      {
+        "action": "提供业务定义 / 业务 DecisionRight",
+        "CA": "N_A",
+        "ARCH": "N_A",
+        "DEV": "N_A",
+        "QA": "N_A",
+        "BIZ": "ALLOW"
+      },
+      {
+        "action": "写 Runtime 经营状态",
+        "CA": "FORBID",
+        "ARCH": "FORBID",
+        "DEV": "FORBID",
+        "QA": "FORBID",
+        "BIZ": "FORBID"
+      },
+      {
+        "action": "PR / Merge / Deploy / Scale",
+        "CA": "FORBID",
+        "ARCH": "FORBID",
+        "DEV": "FORBID",
+        "QA": "FORBID",
+        "BIZ": "FORBID"
+      }
+    ]
+  },
+  "persistence": {
+    "localStorage": {
+      "role": "CONVENIENCE CACHE",
+      "rule": "同一浏览器刷新恢复。不是 Evidence，不是唯一记录，丢失不得造成正式 Review Record 丢失"
+    },
+    "Review JSON": {
+      "role": "PORTABLE RECORD",
+      "rule": "Export / Import 必须完整保留 Review_ID · Version · Decisions · Evidence_Binding · Audit 摘要 · Gate。Import 沿用原 Review_ID（G3）"
+    },
+    "Handback": {
+      "role": "FORMAL RECORD",
+      "rule": "正式回传以 JSON + Human Handback + Manifest 三件为准"
+    },
+    "Artifact Preview": {
+      "role": "KNOWN LIMITATION",
+      "rule": "不支持 localStorage。A02 正式载体限 REAL_BROWSER / GITHUB_PAGES，预览里的失败不计 FAIL"
+    }
+  },
+  "locked_rules": [
+    "Verification_Result = PASS 必须引用有效 Evidence_Binding，且该 Binding 的 Test_Run_ID / Commit_SHA / Verifier 齐全",
+    "Baseline_SHA 缺失时，Regression 只能 PENDING / UNKNOWN，不得 PASS",
+    "UNKNOWN 不得渲染为 0；CONFLICT 不得自动择一",
+    "五维不得合并为单一彩色 pill",
+    "Build Console 不得写 Runtime 经营状态；软件 Test PASS 不得升级业务 TEAM_FACT",
+    "Gate APPROVED / RETURNED 仅 CHIEF_ARCHITECT；Accept Development 不触发 PR / Merge / Deploy",
+    "SYNTHETIC fixture 不得导出为 TEAM_FACT",
+    "Routing_Class 为 Canonical；Gap_Type 仅 deprecated input alias，历史文件登记 SUPERSEDED 而非静默覆盖"
+  ],
+  "open_before_freeze": [
+    {
+      "id": "O1 <span class='yes'>已关闭 CLOSED</span>",
+      "title": "Baseline_SHA 已登记",
+      "detail": "INFINITY_HEMA_MWE_v0.2.1_CC_Demo.html 已提供，238,848 bytes，sha256 = 1e114d05ace25734719157d1d9c37fd8a5b6e2f40cfa432c17bdc74be46a7a8d。Portable Package 内的同名文件 SHA 一致，同一份。Commit 647fe9e1fb8c343a219680391a6f8c74c335ea17 取自 docs/EVIDENCE_PACK_V021.md。Baseline_State = VERIFIED，A16 与 A20 解除封锁。",
+      "status": "CLOSED"
+    },
+    {
+      "id": "O2 <span class='yes'>已关闭 CLOSED</span>",
+      "title": "A03 已拆为 A03a / A03b",
+      "detail": "见 dac1/A03_split_and_evidence_fixture.json：A03a 测「无 Evidence → 不可 PASS」，A03b 测「四件齐 → 必须能 PASS」，并附 SYN-EV-001 与 SYN-TR-001 两个合成 fixture。A04–A20 编号不动，只新增 A03b，A 表变 21 条。fixture 里 Commit_SHA 是 40 个 0——形状合法、语义为空。若实现把它当真实 commit 接受，说明只校验了长度没校验存在性，这点留给 DAC-3 复查。",
+      "status": "CLOSED"
+    },
+    {
+      "id": "O4 <span class='no'>新增 NEW</span>",
+      "title": "A19 在 v0.2.1 实测不通过",
+      "detail": "实测该文件：viewport 无 viewport-fit=cover；全文 safe-area-inset 出现 0 次；唯一的按钮类 .act 是 min-height:44px（另有 36px）；导览浮层 #tour 仍是 position:fixed; bottom:18px，移动端 bottom:12px，里面有 Next 与 Exit 两个按钮。这已是第三个版本带着同一处缺陷（v0.1 → 中文/双语衍生版 → v0.2.1）。A19 要求 48px 与 safe-area，按现状只能判 FAIL 或 PENDING，不能 PASS。修法属 Runtime 侧，走 Correction Requirement，不在 Build Console 范围内。",
+      "status": "PARTIALLY_RULED — see O4_RULING.json"
+    },
+    {
+      "id": "O3 <span class='yes'>已关闭 CLOSED</span>",
+      "title": "SYNTHETIC_DUMMY_PRODUCT 已定义并验证不相交",
+      "detail": "见 dac1/SYNTHETIC_DUMMY_PRODUCT.config.json：图书馆自助借还终端固件，与调味品渠道经营零交集。verify_disjoint.py 对着 v0.2.1 包内真实的 synthetic-fixture.json 跑过：HEMA 78 个领域字段名、DUMMY 17 个，交集为空；标识串取值交集也为空，退出码 0。该 Config 的 Baseline_SHA 故意留空，加载它同时构成 A16 的反向用例；Fact_Class 钉死 SYNTHETIC，对应 A13。",
+      "status": "CLOSED"
+    }
+  ],
+  "approval": {
+    "gate": "DAC-1 Schema / Config / Permission / Persistence Freeze",
+    "gate_status": "APPROVED",
+    "approver_role": "CHIEF_ARCHITECT",
+    "decided_by": "T.San · Chief Architect",
+    "decided_at": "2026-09-18T00:00:00Z",
+    "decision_id": "DAC-0/INF-DEV-CONSOLE-001A",
+    "decision_mode": "BLANKET_APPROVAL_IN_CONVERSATION",
+    "note": "D1–D7 按 001A §2 采纳；G1–G3 已关闭；O1–O3 已关闭；O4 部分裁决。 / D1–D7 adopted per 001A §2; G1–G3 closed; O1–O3 closed; O4 partially ruled."
+  }
+}</script>
+<script id="pack-data" type="application/json">{
+  "_doc": "A01–A20 验收表。FINDING-DAC2-003 的修复：原交付包只有编号引用、没有定义。 / The acceptance pack. This closes FINDING-DAC2-003: the original package carried references without definitions.",
+  "Test_Pack_ID": "CONSOLE-001A/A01-A20/v0.2",
+  "case_count": 21,
+  "_numbering": "21 条。A03 拆为 A03a / A03b，A04–A20 编号不动。 / Twenty-one cases; A03 splits and the rest keep their numbers.",
+  "_precedence": "001A §8 为准，001 §12 保留为 source_001 供追溯。20 条全部被 001A 改写过，改写多为收紧或措辞，A02 / A04 / A06 / A16 实质变化最大。 / 001A takes precedence with 001 retained for traceability. All twenty were rewritten, mostly tightened; A02, A04, A06 and A16 changed most substantively.",
+  "_surface_rule": "Surface 取值受冻结合同约束：A19 只认 DEVICE，A02 不认 ARTIFACT_PREVIEW。 / Surfaces follow the frozen contract: A19 accepts only DEVICE and A02 does not accept the artifact preview.",
+  "_marking_rule": "每条的 Verification_Result 须引用有效 Evidence_Binding（D6 四件齐），DEV 角色不得置 PASS。 / Each result must reference a valid evidence binding, and the developer role may not set a pass.",
+  "cases": [
+    {
+      "Test_ID": "A01",
+      "canonical": "加载 HEMA 与 SYNTHETIC_DUMMY_PRODUCT 两个 Product，核心代码中不得出现任何 HEMA 领域标识符。",
+      "canonical_en": "Load both products; the core must contain no HEMA domain identifier.",
+      "source_001A": "加载HEMA + SYNTHETIC Dummy Product，证明核心无HEMA硬编码。",
+      "source_001": "至少加载 2 个不同 Product 配置，核心代码无 HEMA 硬编码依赖。",
+      "revised_by_001A": true,
+      "assertions": [
+        "fixtures/verify_disjoint.py exit 0 为前置条件",
+        "核心模块源码全文检索无 HEMA 领域词（routing_class / sku / macro / rgm / tx0 等）",
+        "两个 Product 均能完成 Review_Session 创建"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": [
+        "O3",
+        "D3"
+      ]
+    },
+    {
+      "Test_ID": "A02",
+      "canonical": "同一浏览器刷新恢复；JSON Export→Import 跨会话恢复；两条路径的 Review_ID 必须相同。",
+      "canonical_en": "Restore on refresh in one browser and across sessions via export-import, with an identical review ID on both paths.",
+      "source_001A": "真实浏览器localStorage刷新恢复；JSON Export→Import跨会话恢复；两者Review_ID一致。",
+      "source_001": "刷新后 Review Session 可恢复；Export→Import 状态一致。",
+      "revised_by_001A": true,
+      "assertions": [
+        "刷新后 Review_ID 不变",
+        "Import 后 Review_ID 不变且等于 Export 时的值",
+        "artifact 预览中的失败不计 FAIL（Known Limitation）"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": [
+        "D5",
+        "G3"
+      ]
+    },
+    {
+      "Test_ID": "A03a",
+      "canonical": "无 Evidence 不得形成 Verified PASS",
+      "canonical_en": "No verified pass forms without evidence",
+      "source_001A": "无Evidence时Verification PASS不可成立。",
+      "source_001": "PASS 无 Evidence 时被阻止或保持 UNVERIFIED/PENDING。",
+      "revised_by_001A": true,
+      "assertions": [
+        "详见 fixtures/A03_split_and_evidence_fixture.json"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": true,
+      "depends_on": [
+        "D6",
+        "G2"
+      ],
+      "split_from": "A03"
+    },
+    {
+      "Test_ID": "A03b",
+      "canonical": "四件齐时 PASS 必须成立",
+      "canonical_en": "A pass must succeed once all four bindings are present",
+      "source_001A": "无Evidence时Verification PASS不可成立。",
+      "source_001": "PASS 无 Evidence 时被阻止或保持 UNVERIFIED/PENDING。",
+      "revised_by_001A": true,
+      "assertions": [
+        "详见 fixtures/A03_split_and_evidence_fixture.json"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": [
+        "D6",
+        "G2"
+      ],
+      "split_from": "A03"
+    },
+    {
+      "Test_ID": "A04",
+      "canonical": "五维各自独立渲染，任意两维不得合并为同一个 pill。",
+      "canonical_en": "All five dimensions render independently; no two collapse into one pill.",
+      "source_001A": "Fact_Class / Implementation / Verification / Event Decision / Gate Status五维独立显示。",
+      "source_001": "Fact_Class 与 Implementation_State / Verification_Result 分列显示。",
+      "revised_by_001A": true,
+      "assertions": [
+        "Fact_Class / Implementation_State / Verification_Result / Event_Decision / Gate_Status 五列可见",
+        "Implementation_State=DONE 且 Verification_Result=PENDING 时不标红、不自动推进"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": [
+        "D7"
+      ]
+    },
+    {
+      "Test_ID": "A05",
+      "canonical": "UNKNOWN 渲染为 — 或 UNKNOWN；CONFLICT 并列来源、值、期间，不自动择一。",
+      "canonical_en": "Unknown renders as a dash or the word; conflict lists sources, values and periods without auto-resolving.",
+      "source_001A": "UNKNOWN不显示0；CONFLICT不自动择一。",
+      "source_001": "UNKNOWN 不渲染 0；CONFLICT 并列。",
+      "revised_by_001A": true,
+      "assertions": [
+        "构造 UNKNOWN 记录，界面不出现 0",
+        "构造 CONFLICT 记录，两个来源同时可见"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": []
+    },
+    {
+      "Test_ID": "A06",
+      "canonical": "Event 三态可标；CONFLICT 未绑定 Architect_Decision_ID 时保持 PENDING。",
+      "canonical_en": "The three event decisions can be marked; a conflict without an architect decision stays pending.",
+      "source_001A": "Event REUSE/NEW/CONFLICT必须绑定Architect Decision或保持PENDING。",
+      "source_001": "Event 可 REUSE/NEW/CONFLICT 并绑定 Decision/Evidence。",
+      "revised_by_001A": true,
+      "assertions": [
+        "REUSE / NEW / CONFLICT 均可设置",
+        "CONFLICT 且 Architect_Decision_ID 为空 → 状态停在 PENDING"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": []
+    },
+    {
+      "Test_ID": "A07",
+      "canonical": "Blockers 过滤只返回真正阻塞项，不含已关闭项。",
+      "canonical_en": "The blockers filter returns only genuine blockers and excludes closed items.",
+      "source_001A": "Blockers过滤准确。",
+      "source_001": "Blockers Only 过滤准确。",
+      "revised_by_001A": true,
+      "assertions": [
+        "过滤结果与手工枚举一致",
+        "已 CLOSED 的项不出现"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": []
+    },
+    {
+      "Test_ID": "A08",
+      "canonical": "任一 Criticality=CRITICAL 且 Verification_Result=FAIL 时，Accept Development 不可执行。",
+      "canonical_en": "Any critical item failing must make accept-development impossible.",
+      "source_001A": "Critical Red Line FAIL阻止Accept Development。",
+      "source_001": "Failed Red Lines 准确；Critical FAIL 阻止 Accept Development。",
+      "revised_by_001A": true,
+      "assertions": [
+        "构造一条 CRITICAL FAIL → Accept 控件禁用或提交被拒",
+        "移除该 FAIL 后 Accept 恢复可用"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": []
+    },
+    {
+      "Test_ID": "A09",
+      "canonical": "Decision Required 过滤只返回等待 Architect Decision 的项。",
+      "canonical_en": "The decision-required filter returns only items awaiting an architect decision.",
+      "source_001A": "Decision Required过滤准确。",
+      "source_001": "Decision Required 过滤准确。",
+      "revised_by_001A": true,
+      "assertions": [
+        "CONFLICT 未裁项出现",
+        "已裁项不出现"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": []
+    },
+    {
+      "Test_ID": "A10",
+      "canonical": "DEV 角色不得拥有 Chief Architect 的 Gate 权限。",
+      "canonical_en": "The developer role must not hold the chief architect's gate permission.",
+      "source_001A": "Developer无Chief Architect Gate权限。",
+      "source_001": "Developer 不能 Accept Development / PR / Merge / Deploy。",
+      "revised_by_001A": true,
+      "assertions": [
+        "以 DEV 身份，Gate=APPROVED / RETURNED 的控件不存在（非仅禁用）",
+        "权限矩阵中该格为 FORBID，代码路径亦拒绝"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": [
+        "D6"
+      ]
+    },
+    {
+      "Test_ID": "A11",
+      "canonical": "Accept Development 不触发 PR / Merge / Deploy / Scale 任何副作用。",
+      "canonical_en": "Accepting development triggers no PR, merge, deploy or scale side effect.",
+      "source_001A": "Accept Development不触发PR/Merge/Deploy。",
+      "source_001": "Accept Development 不自动触发 PR/Merge/Deploy。",
+      "revised_by_001A": true,
+      "assertions": [
+        "执行 Accept 后检查无网络请求、无 git 操作、无外部调用"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": []
+    },
+    {
+      "Test_ID": "A12",
+      "canonical": "Build Console 无法写 Runtime 经营状态。",
+      "canonical_en": "The build console cannot write runtime business state.",
+      "source_001A": "Build Console无法写Runtime业务状态。",
+      "source_001": "Runtime 业务状态只读；Review 不能改 Target/TX/Result。",
+      "revised_by_001A": true,
+      "assertions": [
+        "不存在指向 Runtime 的写入路径",
+        "软件 Test PASS 不改变任何业务对象的 Fact_Class"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": []
+    },
+    {
+      "Test_ID": "A13",
+      "canonical": "SYNTHETIC 来源的对象不可导出为 TEAM_FACT。",
+      "canonical_en": "Objects of synthetic origin cannot export as a team fact.",
+      "source_001A": "SYNTHETIC Dummy Product不可导出为TEAM_FACT。",
+      "source_001": "SYNTHETIC Fixture 显著标识且不能导出为 TEAM_FACT。",
+      "revised_by_001A": true,
+      "assertions": [
+        "尝试导出 Dummy Product 对象为 TEAM_FACT → 被拒并说明原因"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": [
+        "FINDING-DAC2-001"
+      ]
+    },
+    {
+      "Test_ID": "A14",
+      "canonical": "JSON 与 Human Handback 的 Review_ID / Version / Gate 三项一致。",
+      "canonical_en": "The JSON and the human handback agree on review ID, version and gate.",
+      "source_001A": "JSON与Human Handback的Review_ID/Version/Gate一致。",
+      "source_001": "Human Handback 与 JSON 的 Review_ID/Version/结果一致。",
+      "revised_by_001A": true,
+      "assertions": [
+        "三项逐字比对相同",
+        "Import 后仍相同"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": [
+        "G3"
+      ]
+    },
+    {
+      "Test_ID": "A15",
+      "canonical": "每次 mark、Evidence 绑定、Gate 变化都写 Audit，含 Before / After / Actor / Time / Evidence。",
+      "canonical_en": "Every mark, evidence binding and gate change writes an audit entry with all five fields.",
+      "source_001A": "Audit有Before/After/Actor/Time/Evidence。",
+      "source_001": "Audit 记录 Before/After/Actor/Time/Evidence。",
+      "revised_by_001A": true,
+      "assertions": [
+        "五个字段齐全",
+        "被拒绝的操作也留痕（见 A03a）"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": []
+    },
+    {
+      "Test_ID": "A16",
+      "canonical": "Baseline_SHA 缺失时 Regression 只能 PENDING / UNKNOWN。",
+      "canonical_en": "A missing baseline sha limits regressions to pending or unknown.",
+      "source_001A": "Baseline SHA缺失→Regression=PENDING/UNKNOWN，不能PASS。",
+      "source_001": "Baseline SHA 缺失时 Regression 不能 PASS。",
+      "revised_by_001A": true,
+      "assertions": [
+        "加载 SYNTHETIC_DUMMY_PRODUCT（Baseline_SHA=null）→ Regression 强制 PENDING",
+        "尝试置 PASS 被拒"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": [
+        "D1",
+        "O3"
+      ]
+    },
+    {
+      "Test_ID": "A17",
+      "canonical": "Schema_Version 与 Config 不一致时显示 CONFLICT。",
+      "canonical_en": "A schema-config version mismatch renders conflict.",
+      "source_001A": "Schema Version不一致→CONFLICT。",
+      "source_001": "Schema Version 不一致显示 CONFLICT。",
+      "revised_by_001A": true,
+      "assertions": [
+        "构造不一致 → 界面显示 CONFLICT 且不自动择一"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": []
+    },
+    {
+      "Test_ID": "A18",
+      "canonical": "Routing_Class 为 Canonical；Gap_Type 仅 deprecated input alias。",
+      "canonical_en": "Routing class is canonical and gap type is only a deprecated input alias.",
+      "source_001A": "Routing_Class为Canonical；Gap_Type仅兼容alias。",
+      "source_001": "HEMA 示例使用 Routing_Class；旧 Gap_Type 仅 deprecated alias。",
+      "revised_by_001A": true,
+      "assertions": [
+        "正式字段名为 Routing_Class",
+        "接受 Gap_Type 作为输入但标 deprecated",
+        "不得把 Gap_Type 写回为正式字段"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": [
+        "D4"
+      ]
+    },
+    {
+      "Test_ID": "A19",
+      "canonical": "48px 触点、safe-area、横竖屏全部通过。",
+      "canonical_en": "Forty-eight-pixel targets, safe-area insets and both orientations all pass.",
+      "source_001A": "safe-area/48px/横竖屏通过。",
+      "source_001": "iPhone safe-area 与 48px target 通过视觉/交互测试。",
+      "revised_by_001A": true,
+      "assertions": [
+        "iPhone 竖屏与 iPad 横屏各一次真机测试",
+        "所有可点元素实测高度 ≥48px（含 nav button — 见 INF-COR-RUNTIME-001 §4 修订）",
+        "底部固定控件有 env(safe-area-inset-bottom)"
+      ],
+      "Surface": "DEVICE",
+      "negative_case": false,
+      "depends_on": [
+        "O4"
+      ]
+    },
+    {
+      "Test_ID": "A20",
+      "canonical": "HEMA MWE v0.2.1 未被覆盖或修改。",
+      "canonical_en": "The v0.2.1 runtime file is neither overwritten nor modified.",
+      "source_001A": "HEMA MWE v0.2.1未被覆盖或修改。",
+      "source_001": "HEMA MWE v0.2.1 Runtime Control Tower 未被覆盖或改写。",
+      "revised_by_001A": true,
+      "assertions": [
+        "sha256 仍为 1e114d05…7a8d"
+      ],
+      "Surface": "REAL_BROWSER",
+      "negative_case": false,
+      "depends_on": [
+        "D1"
+      ]
+    }
+  ]
+}</script>
+<script id="products-data" type="application/json">[{
+ "_doc": "HEMA_MWE product configuration for the Build Review Console. Config, not code: the console core carries no domain vocabulary and reads everything here (A01).",
+ "config_version": "CONSOLE-001A/CONFIG/v0.1",
+ "schema_version": "CONSOLE-001A/SCHEMA/v0.1",
+ "test_pack_id": "CONSOLE-001A/A01-A20/v0.2",
+ "Project_ID": "INFINITY_HEMA",
+ "Product_ID": "HEMA_MWE",
+ "Version_ID": "v0.2.1",
+ "Fact_Class": "CANDIDATE",
+ "export_as_team_fact": false,
+ "Taskbook_ID": "INF-DEV-HEMA-003",
+ "Secondary_Taskbook_ID": "INF-DEV-HEMA-002",
+ "baseline": {
+  "artifact_name": "INFINITY_HEMA_MWE_v0.2.1_CC_Demo.html",
+  "Baseline_SHA": "1e114d05ace25734719157d1d9c37fd8a5b6e2f40cfa432c17bdc74be46a7a8d",
+  "_note": "D1: registered at build start. Present, so regressions are not forced to PENDING."
+ },
+ "requirements": [
+  {
+   "Requirement_ID": "COR-01",
+   "Section_Ref": "INF-DEV-HEMA-003 §2",
+   "Requirement_Text": "TX009 routes as EVIDENCE; no full RGM and no root-cause upgrade until the evidence conflict closes; an app quantity is never rendered as a physical count.",
+   "Criticality": "CRITICAL",
+   "Owner_Role": "DEV",
+   "Implementation_State": "DONE",
+   "Fact_Class": "CANDIDATE"
+  },
+  {
+   "Requirement_ID": "COR-02",
+   "Section_Ref": "INF-DEV-HEMA-003 §3",
+   "Requirement_Text": "TX010 shows the quantity-basis evidence conflict it actually has; the retired peer/demand projection is kept as a P8 synthetic test case.",
+   "Criticality": "CRITICAL",
+   "Owner_Role": "DEV",
+   "Implementation_State": "DONE",
+   "Fact_Class": "CANDIDATE"
+  },
+  {
+   "Requirement_ID": "COR-03",
+   "Section_Ref": "INF-DEV-HEMA-003 §4",
+   "Requirement_Text": "TX012 separates an evidenced surface cause from a deep root cause that stays CANDIDATE until an independent verifier confirms it.",
+   "Criticality": "CRITICAL",
+   "Owner_Role": "DEV",
+   "Implementation_State": "DONE",
+   "Fact_Class": "CANDIDATE"
+  },
+  {
+   "Requirement_ID": "COR-04",
+   "Section_Ref": "INF-DEV-HEMA-003 §5",
+   "Requirement_Text": "The P4 synthetic examples move to the condiment domain and remain SYNTHETIC / HYPOTHESIS; no lever unlocks because the wording changed.",
+   "Criticality": "NORMAL",
+   "Owner_Role": "DEV",
+   "Implementation_State": "DONE",
+   "Fact_Class": "CANDIDATE"
+  },
+  {
+   "Requirement_ID": "COR-05",
+   "Section_Ref": "INF-DEV-HEMA-003 §6",
+   "Requirement_Text": "Routing_Class is canonical; Gap_Type survives only as a deprecated read-layer alias; v0.1 Gap_Class is untouched.",
+   "Criticality": "CRITICAL",
+   "Owner_Role": "DEV",
+   "Implementation_State": "DONE",
+   "Fact_Class": "CANDIDATE"
+  },
+  {
+   "Requirement_ID": "RT-A19",
+   "Section_Ref": "INF-COR-RUNTIME-001 §4 (v1.1)",
+   "Requirement_Text": "Forty-eight-pixel touch targets and safe-area insets on bottom-anchored controls, across three selectors including nav button.",
+   "Criticality": "NORMAL",
+   "Owner_Role": "DEV",
+   "Implementation_State": "TODO",
+   "Fact_Class": "CANDIDATE"
+  }
+ ],
+ "inheritance": [
+  {
+   "Capability_ID": "INH-V01-CHAIN",
+   "Baseline_Version": "v0.1",
+   "Baseline_SHA": "839bd23eb6a770fb5c7fbd35982bd1ee1169947c841c5f6e3b521e4f33aadae1",
+   "Expected_Behavior": "The v0.1 execution chain regresses green under the v0.2 delta.",
+   "Regression_Test_ID": "T01",
+   "Verification_Result": "PENDING"
+  },
+  {
+   "Capability_ID": "INH-V02-REDLINES",
+   "Baseline_Version": "v0.2",
+   "Baseline_SHA": "04bc1916fa4d57da31def4fbc58479795243e213d44a88e91387425bb160573b",
+   "Expected_Behavior": "UNKNOWN never renders 0; CONFLICT picks no winner; no cross-basis subtraction.",
+   "Regression_Test_ID": "C13",
+   "Verification_Result": "PENDING"
+  }
+ ],
+ "candidate_events": [
+  {
+   "Candidate_Event": "OCCASION_EVIDENCE_RECORDED",
+   "Canonical_Event": "EVIDENCE_SUBMITTED",
+   "Decision": "REUSE",
+   "Architect_Decision_ID": "INF-DEV-HEMA-002 §8"
+  },
+  {
+   "Candidate_Event": "NET_INCREMENT_BLOCKED",
+   "Canonical_Event": null,
+   "Decision": "CONFLICT",
+   "Architect_Decision_ID": null,
+   "_note": "CONFLICT-V02-002 is open, so this stays PENDING (A06)."
+  }
+ ],
+ "schema_deltas": [
+  {
+   "Schema_Item_ID": "SD-ROUTING-CLASS",
+   "Before": "Gap_Type",
+   "After": "Routing_Class",
+   "Classification": "DELTA",
+   "Architect_Decision_ID": "INF-DEV-HEMA-003 §6"
+  },
+  {
+   "Schema_Item_ID": "SD-FACT-CLASS-SYNTHETIC",
+   "Before": "Fact_Class has six values",
+   "After": "Deliverable rule requires SYNTHETIC, which the dimension does not list",
+   "Classification": "CONFLICT",
+   "Architect_Decision_ID": null,
+   "_note": "FINDING-DAC2-001 / AMD-001-1, not yet ruled: stays PENDING, never auto-resolved."
+  }
+ ],
+ "deliverables": [
+  {
+   "Artifact_ID": "ART-V021",
+   "Path": "dist/hema-003/portable/INFINITY_HEMA_MWE_v0.2.1_CC_Demo.html",
+   "Name": "INFINITY_HEMA_MWE_v0.2.1_CC_Demo.html",
+   "SHA256": "1e114d05ace25734719157d1d9c37fd8a5b6e2f40cfa432c17bdc74be46a7a8d",
+   "Purpose": "The v0.2.1 correction demo, offline and bilingual.",
+   "How_To_Run": "make hema-v02, then open the file",
+   "Expected_Output": "8 executive cards, 15 transistors, frozen artifacts unchanged",
+   "Limitation": "SYNTHETIC fixture only; no gate is passed. Artifact preview does not support localStorage.",
+   "Evidence_ID": "EV-V021-BUILD",
+   "Fact_Class": "CANDIDATE"
+  }
+ ],
+ "gates": [
+  {
+   "Gate_ID": "DAC-2",
+   "Preconditions": "The frozen contract is implemented and the A-pack is run.",
+   "Gate_Status": "NOT_READY",
+   "Approver_Role": "CHIEF_ARCHITECT",
+   "Decision_ID": null,
+   "Decision_Time": null
+  }
+ ]
+},{
+  "_doc": "A01 的第二个 Product。存在的唯一目的是证伪『核心代码有 HEMA 硬编码』。 / The second product for A01. Its only purpose is to falsify the claim that the core carries HEMA hard-coding.",
+  "_rule": "本文件的 domain payload 与 HEMA fixture 不得共享任何字段名或取值。共享的只有 Console 自己的合同字段（见 dac1/disjoint_allowlist.json）。 / The domain payload here shares no field name or value with the HEMA fixture. The only shared names are the console's own contract fields.",
+
+  "config_version": "CONSOLE-001A/CONFIG/v0.1",
+  "schema_version": "CONSOLE-001A/SCHEMA/v0.1",
+  "test_pack_id": "CONSOLE-001A/A01-A20/v0.2",
+
+  "Project_ID": "SYNTHETIC_PROBE",
+  "Product_ID": "SYNTHETIC_DUMMY_PRODUCT",
+  "Version_ID": "v0.0.1",
+  "Fact_Class": "SYNTHETIC",
+  "export_as_team_fact": false,
+  "_a13": "Fact_Class 固定为 SYNTHETIC，导出路径必须拒绝把本 Product 的任何对象写成 TEAM_FACT（A13）。 / Fact class is pinned to synthetic; the export path must refuse to write any object here as a team fact (A13).",
+
+  "Taskbook_ID": "SYN-TB-001",
+  "Secondary_Taskbook_ID": null,
+
+  "baseline": {
+    "artifact_name": "syn-kiosk-firmware-0.0.1.bin",
+    "Baseline_SHA": null,
+    "_a16": "故意留空。加载本 Product 时 Baseline_State 必须变 UNKNOWN，且所有 Regression 强制 PENDING——这同时构成 A16 的反向用例。 / Deliberately empty. Loading this product must set the baseline state to unknown and force every regression to pending, which doubles as the negative case for A16."
+  },
+
+  "domain": {
+    "_what": "图书馆自助借还终端固件。与调味品渠道经营毫无交集，这正是重点。 / Firmware for a library self-checkout terminal. It has nothing to do with condiment channel operations, which is the point.",
+    "terminal_roster": [
+      { "terminal_ref": "SYN-KIOSK-01", "lending_desk": "SYN-DESK-NORTH", "firmware_slot": "A", "tag_reader_mode": "DUAL_ANTENNA" },
+      { "terminal_ref": "SYN-KIOSK-02", "lending_desk": "SYN-DESK-SOUTH", "firmware_slot": "B", "tag_reader_mode": "SINGLE_ANTENNA" }
+    ],
+    "catalogue_entries": [
+      { "catalogue_ref": "SYN-CAT-4417", "loan_window_days": 21, "renewal_ceiling": 2, "overdue_band": "STANDARD" },
+      { "catalogue_ref": "SYN-CAT-8890", "loan_window_days": 7, "renewal_ceiling": 0, "overdue_band": "SHORT_LOAN" }
+    ],
+    "patron_tiers": [
+      { "tier_ref": "SYN-TIER-A", "concurrent_loan_ceiling": 30 },
+      { "tier_ref": "SYN-TIER-B", "concurrent_loan_ceiling": 8 }
+    ],
+    "return_bins": [
+      { "bin_ref": "SYN-BIN-01", "sortation_lane": 3, "jam_sensor": "PRESENT" }
+    ]
+  },
+
+  "requirements": [
+    { "Requirement_ID": "SYN-R-001", "Section_Ref": "SYN-TB-001 §1",
+      "Requirement_Text": "终端读取 RFID 标签失败三次后进入 jam 提示，不得静默重试。 / After three failed tag reads the terminal shows a jam prompt and must not retry silently.",
+      "Criticality": "CRITICAL", "Owner_Role": "DEV", "Implementation_State": "TODO", "Fact_Class": "SYNTHETIC" },
+    { "Requirement_ID": "SYN-R-002", "Section_Ref": "SYN-TB-001 §2",
+      "Requirement_Text": "借阅上限达到 tier 上限时拒绝继续借出并显示原因。 / At the tier ceiling the terminal refuses further loans and states why.",
+      "Criticality": "NORMAL", "Owner_Role": "DEV", "Implementation_State": "TODO", "Fact_Class": "SYNTHETIC" },
+    { "Requirement_ID": "SYN-R-003", "Section_Ref": "SYN-TB-001 §3",
+      "Requirement_Text": "逾期天数未知时显示 UNKNOWN，不得显示 0 天。 / When the overdue count is unknown the screen shows unknown, never zero days.",
+      "Criticality": "CRITICAL", "Owner_Role": "DEV", "Implementation_State": "TODO", "Fact_Class": "SYNTHETIC",
+      "_a05": "本条是 A05『UNKNOWN 不渲染 0』在非 HEMA 语境下的复现。 / This reproduces A05 outside the HEMA context." }
+  ],
+
+  "inheritance": [
+    { "Capability_ID": "SYN-CAP-01", "Baseline_Version": "v0.0.0", "Baseline_SHA": null,
+      "Expected_Behavior": "开机自检输出固件槽位。 / Power-on self test reports the firmware slot.",
+      "Regression_Test_ID": "SYN-REG-01", "Verification_Result": "PENDING" }
+  ],
+
+  "candidate_events": [
+    { "Candidate_Event": "TAG_READ_FAILED", "Canonical_Event": null, "Decision": null, "Architect_Decision_ID": null },
+    { "Candidate_Event": "LOAN_CEILING_REACHED", "Canonical_Event": null, "Decision": null, "Architect_Decision_ID": null }
+  ],
+
+  "deliverables": [
+    { "Artifact_ID": "SYN-ART-01", "Path": "syn-kiosk-firmware-0.0.1.bin", "SHA256": null,
+      "Purpose": "占位交付物，用于验证 Manifest 必填校验会因 SHA256 缺失而报缺。 / A placeholder used to confirm the manifest check flags a missing sha.",
+      "How_To_Run": "n/a", "Expected_Output": "n/a",
+      "Limitation": "本 Product 不产出可运行物，仅用于加载与合同校验。 / This product ships nothing runnable; it exists for load and contract checks.",
+      "Evidence_ID": null, "Fact_Class": "SYNTHETIC" }
+  ],
+
+  "gates": [
+    { "Gate_ID": "SYN-GATE-0", "Preconditions": "Config 加载成功 / Config loads", "Gate_Status": "NOT_READY",
+      "Approver_Role": "CHIEF_ARCHITECT", "Decision_ID": null, "Decision_Time": null }
+  ]
+}]</script>
+<script>/* Build Review Console — core (INF-DEV-CONSOLE-001A, DAC-1 frozen contract).
+ *
+ * A01 requires this file to carry no product vocabulary. It therefore knows only
+ * the contract's own words: Requirement, Inheritance, Evidence_Binding, Gate and
+ * so on. Everything a product is — its identifiers, its objects, its wording —
+ * arrives as configuration. Two products with no shared field name and no shared
+ * value both load through this one core; that is the test, and it is the reason
+ * the core can be trusted not to have been written around one of them.
+ *
+ * The contract is read, never restated. Enum members, required fields and the
+ * role matrix come from the embedded freeze, so this file cannot drift from the
+ * document that approved it.
+ */
+"use strict";
+
+const Core = (() => {
+  let FREEZE = null, PACK = null;
+
+  /* ---- contract accessors ------------------------------------------------ */
+  function init(freeze, pack) { FREEZE = freeze; PACK = pack; }
+  function dim(name) { return FREEZE.dimensions[name].values.slice(); }
+  function roles() { return FREEZE.permissions.roles.slice(); }
+  function lockedRules() { return FREEZE.locked_rules.slice(); }
+  function cases() { return PACK.cases.slice(); }
+
+  /* ---- permissions ------------------------------------------------------- */
+  const ACTIONS = {
+    SET_VERIFICATION_PASS: "置 Verification_Result = PASS",
+    SET_GATE_APPROVED_RETURNED: "置 Gate = APPROVED / RETURNED",
+    SET_GATE_READY: "置 Gate = READY_FOR_REVIEW",
+    RULE_EVENT_CONFLICT: "裁决 Event CONFLICT",
+    SET_EVENT_DECISION: "置 Event_Decision = REUSE / NEW",
+    CREATE_EVIDENCE_BINDING: "创建 Evidence_Binding",
+    REGISTER_SCHEMA_DELTA: "登记 Schema_Delta / CONFLICT",
+    WRITE_RUNTIME_BUSINESS_STATE: "写 Runtime 经营状态",
+    PR_MERGE_DEPLOY_SCALE: "PR / Merge / Deploy / Scale",
+  };
+  function decide(role, actionId) {
+    const text = ACTIONS[actionId];
+    const row = FREEZE.permissions.matrix.find(r => r.action === text);
+    if (!row) throw new Error("unknown action " + actionId);
+    if (!row.hasOwnProperty(role)) throw new Error("unknown role " + role);
+    return row[role];
+  }
+  /* ALLOW only. N_A is refused as firmly as FORBID: an action that is not this
+     role's to take is not made permissible by the absence of a prohibition. */
+  function may(role, actionId) { return decide(role, actionId) === "ALLOW"; }
+
+  /* ---- the four bindings a PASS needs (D6 / locked rule 1) --------------- */
+  const BINDING_KEYS = ["Evidence_ID", "Test_Run_ID", "Commit_SHA", "Verifier_ID"];
+  function missingBindings(binding) {
+    if (!binding) return BINDING_KEYS.slice();
+    return BINDING_KEYS.filter(k => !binding[k]);
+  }
+
+  /* ---- state ------------------------------------------------------------- */
+  function newId(prefix) {
+    const rnd = (crypto && crypto.randomUUID) ? crypto.randomUUID()
+              : String(Date.now()) + Math.random().toString(16).slice(2);
+    return prefix ? prefix + "-" + rnd : rnd;
+  }
+
+  function createSession(config, reviewer) {
+    const baselineSha = (config.baseline || {}).Baseline_SHA || null;
+    return {
+      Review_ID: newId(),                       // frozen at creation (G3)
+      Project_ID: config.Project_ID,
+      Product_ID: config.Product_ID,
+      Version_ID: config.Version_ID,
+      Taskbook_ID: config.Taskbook_ID,
+      Secondary_Taskbook_ID: config.Secondary_Taskbook_ID || null,
+      Baseline_SHA: baselineSha,
+      Baseline_State: baselineSha ? "VERIFIED" : "UNKNOWN",
+      Schema_Version: config.schema_version,
+      Config_Version: config.config_version,
+      Test_Pack_ID: config.test_pack_id,
+      Reviewer_ID: reviewer.id,
+      Reviewer_Role: reviewer.role,
+      Started_At: new Date().toISOString(),
+      Updated_At: new Date().toISOString(),
+      Status: "OPEN",
+      requirements: (config.requirements || []).map(r => Object.assign({}, r, {
+        Verification_Result: "NOT_TESTED", Evidence_ID: null })),
+      inheritance: (config.inheritance || []).map(i => Object.assign({}, i, {
+        // Locked rule 2: with no session baseline, a regression cannot pass.
+        Verification_Result: baselineSha ? (i.Verification_Result || "PENDING") : "PENDING",
+        Baseline_Locked: !baselineSha })),
+      events: (config.candidate_events || []).map(e => Object.assign({}, e)),
+      schema_deltas: (config.schema_deltas || []).map(s => Object.assign({}, s)),
+      deliverables: (config.deliverables || []).map(d => Object.assign({}, d)),
+      gates: (config.gates || []).map(g => Object.assign({}, g)),
+      bindings: [],
+      audit: [],
+    };
+  }
+
+  /* ---- audit (A15) ------------------------------------------------------- */
+  function audit(session, entry) {
+    session.audit.push({
+      Audit_ID: newId("AUD"),
+      Object_ID: entry.objectId, Object_Type: entry.objectType,
+      Before: entry.before === undefined ? null : entry.before,
+      After: entry.after === undefined ? null : entry.after,
+      Actor_ID: entry.actorId, Actor_Role: entry.actorRole,
+      Evidence_ID: entry.evidenceId || null,
+      Rule_Version: FREEZE.rule_version,
+      Timestamp: new Date().toISOString(),
+      Refused: !!entry.refused,
+      Reason: entry.reason || null,
+    });
+    session.Updated_At = new Date().toISOString();
+  }
+
+  /* ---- marking a verification (A03a / A03b / A10 / A16) ------------------ */
+  function setVerification(session, kind, objectId, result, actor, binding) {
+    const list = kind === "requirement" ? session.requirements : session.inheritance;
+    const key = kind === "requirement" ? "Requirement_ID" : "Capability_ID";
+    const target = list.find(o => o[key] === objectId);
+    if (!target) return { ok: false, reason: "no such object" };
+    const before = { Verification_Result: target.Verification_Result,
+                     Evidence_ID: target.Evidence_ID || null };
+
+    const refuse = (reason, extra) => {
+      audit(session, { objectId, objectType: kind, before, after: before,
+                       actorId: actor.id, actorRole: actor.role,
+                       refused: true, reason });
+      return Object.assign({ ok: false, reason }, extra || {});
+    };
+
+    if (result === "PASS") {
+      if (!may(actor.role, "SET_VERIFICATION_PASS")) {
+        return refuse("role " + actor.role + " may not set PASS: matrix says "
+                      + decide(actor.role, "SET_VERIFICATION_PASS"));
+      }
+      const missing = missingBindings(binding);
+      if (missing.length) {
+        return refuse("no verified pass without evidence", { missing: missing });
+      }
+      if (kind === "inheritance" && !session.Baseline_SHA) {
+        return refuse("Baseline_SHA is absent, so a regression may not pass");
+      }
+    }
+    if (kind === "inheritance" && !session.Baseline_SHA
+        && !["PENDING", "UNKNOWN", "NOT_TESTED"].includes(result)) {
+      return refuse("Baseline_SHA is absent: regression is limited to PENDING / UNKNOWN");
+    }
+
+    target.Verification_Result = result;
+    target.Evidence_ID = (result === "PASS" && binding) ? binding.Evidence_ID : null;
+    // A software result never moves a business fact class (locked rule 5).
+    audit(session, { objectId, objectType: kind, before,
+                     after: { Verification_Result: target.Verification_Result,
+                              Evidence_ID: target.Evidence_ID },
+                     actorId: actor.id, actorRole: actor.role,
+                     evidenceId: target.Evidence_ID });
+    return { ok: true };
+  }
+
+  function addBinding(session, binding, actor) {
+    if (!may(actor.role, "CREATE_EVIDENCE_BINDING")) {
+      return { ok: false, reason: "role " + actor.role + " may not create a binding" };
+    }
+    session.bindings.push(binding);
+    audit(session, { objectId: binding.Evidence_ID, objectType: "Evidence_Binding",
+                     before: null, after: binding,
+                     actorId: actor.id, actorRole: actor.role,
+                     evidenceId: binding.Evidence_ID });
+    return { ok: true };
+  }
+
+  /* ---- events (A06) ------------------------------------------------------ */
+  function eventState(ev) {
+    // A conflict with no architect decision stays pending; it is never resolved
+    // by the console picking one.
+    if (ev.Decision === "CONFLICT" && !ev.Architect_Decision_ID) return "PENDING";
+    return ev.Decision || "PENDING";
+  }
+
+  /* ---- schema delta (A17) ------------------------------------------------ */
+  function schemaVersionState(session) {
+    if (session.Schema_Version !== FREEZE.schema_version) return "CONFLICT";
+    return "MATCH";
+  }
+  function deltaState(sd) {
+    if (sd.Classification === "CONFLICT" && !sd.Architect_Decision_ID) return "PENDING";
+    return sd.Classification;
+  }
+
+  /* ---- gates (A08 / A10) ------------------------------------------------- */
+  function criticalFailures(session) {
+    return session.requirements.filter(
+      r => r.Criticality === "CRITICAL" && r.Verification_Result === "FAIL");
+  }
+  function canAcceptDevelopment(session) {
+    return criticalFailures(session).length === 0;
+  }
+  function setGate(session, gateId, status, actor) {
+    const gate = session.gates.find(g => g.Gate_ID === gateId);
+    if (!gate) return { ok: false, reason: "no such gate" };
+    const action = (status === "APPROVED" || status === "RETURNED")
+      ? "SET_GATE_APPROVED_RETURNED" : "SET_GATE_READY";
+    const before = { Gate_Status: gate.Gate_Status };
+    if (!may(actor.role, action)) {
+      audit(session, { objectId: gateId, objectType: "Gate", before, after: before,
+                       actorId: actor.id, actorRole: actor.role, refused: true,
+                       reason: "role " + actor.role + " may not set " + status });
+      return { ok: false, reason: "role " + actor.role + " may not set " + status };
+    }
+    if (status === "APPROVED" && !canAcceptDevelopment(session)) {
+      audit(session, { objectId: gateId, objectType: "Gate", before, after: before,
+                       actorId: actor.id, actorRole: actor.role, refused: true,
+                       reason: "a CRITICAL item is failing" });
+      return { ok: false, reason: "a CRITICAL item is failing" };
+    }
+    gate.Gate_Status = status;
+    gate.Decision_ID = "DEC-" + newId();
+    gate.Decision_Time = new Date().toISOString();
+    audit(session, { objectId: gateId, objectType: "Gate", before,
+                     after: { Gate_Status: status },
+                     actorId: actor.id, actorRole: actor.role });
+    // Accepting development has no downstream effect. There is no code path from
+    // here to a pull request, a merge, a deploy or a scale-up (A11).
+    return { ok: true };
+  }
+
+  /* ---- filters (A07 / A09) ---------------------------------------------- */
+  function blockers(session) {
+    return session.requirements.filter(
+      r => r.Implementation_State === "BLOCKED"
+        || (r.Criticality === "CRITICAL" && r.Verification_Result === "FAIL"));
+  }
+  function decisionRequired(session) {
+    const out = [];
+    session.events.forEach(e => {
+      if (e.Decision === "CONFLICT" && !e.Architect_Decision_ID)
+        out.push({ type: "Event_Review", id: e.Candidate_Event });
+    });
+    session.schema_deltas.forEach(s => {
+      if (s.Classification === "CONFLICT" && !s.Architect_Decision_ID)
+        out.push({ type: "Schema_Delta", id: s.Schema_Item_ID });
+    });
+    return out;
+  }
+
+  /* ---- export / import (A02 / A14) -------------------------------------- */
+  function exportReview(session) {
+    return JSON.parse(JSON.stringify({
+      _format: "CONSOLE-001A/REVIEW/v0.1",
+      Schema_Version: session.Schema_Version,
+      Rule_Version: FREEZE.rule_version,
+      Test_Pack_ID: session.Test_Pack_ID,
+      session: session,
+    }));
+  }
+  function importReview(payload) {
+    const s = payload && payload.session;
+    if (!s || !s.Review_ID) throw new Error("not a review export");
+    return JSON.parse(JSON.stringify(s));   // Review_ID carried over, never reissued
+  }
+
+  /* ---- handback (A14) ---------------------------------------------------- */
+  function handback(session) {
+    const gate = session.gates[0] || {};
+    return {
+      Review_ID: session.Review_ID,
+      Version_ID: session.Version_ID,
+      Gate_Status: gate.Gate_Status || "NOT_READY",
+    };
+  }
+  function humanHandback(session) {
+    const h = handback(session);
+    return [
+      "Review_ID: " + h.Review_ID,
+      "Version_ID: " + h.Version_ID,
+      "Gate_Status: " + h.Gate_Status,
+    ].join("\n");
+  }
+
+  /* ---- export guard (A13 / locked rule 7) -------------------------------- */
+  function mayExportAsTeamFact(config, object) {
+    if (config.export_as_team_fact === false) return false;
+    if ((object && object.Fact_Class) === "TEAM_FACT") return true;
+    return false;
+  }
+  function exportAsTeamFact(config, object) {
+    if (!mayExportAsTeamFact(config, object)) {
+      return { ok: false,
+               reason: "objects of synthetic origin cannot be exported as TEAM_FACT" };
+    }
+    return { ok: true };
+  }
+
+  return { init, dim, roles, lockedRules, cases, decide, may, missingBindings,
+           createSession, audit, setVerification, addBinding, eventState,
+           schemaVersionState, deltaState, criticalFailures, canAcceptDevelopment,
+           setGate, blockers, decisionRequired, exportReview, importReview,
+           handback, humanHandback, exportAsTeamFact, BINDING_KEYS };
+})();
+
+if (typeof module !== "undefined") { module.exports = Core; }
+</script>
+<script>/* Build Review Console — view layer.
+ *
+ * Renders what Core computes. Two rules shape the whole file: each of the five
+ * dimensions gets its own cell and its own pill (locked rule 4, A04), and a
+ * control the role may not use is not rendered at all rather than rendered
+ * disabled (A10) — a disabled button still tells the reader the action is theirs
+ * to take.
+ */
+"use strict";
+(() => {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g,
+    c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  const FREEZE = JSON.parse($("freeze-data").textContent);
+  const PACK = JSON.parse($("pack-data").textContent);
+  const PRODUCTS = JSON.parse($("products-data").textContent);
+  Core.init(FREEZE, PACK);
+
+  const OK = ["PASS", "DONE", "APPROVED", "REUSE", "MATCH", "VERIFIED", "ACCEPTED"];
+  const WARN = ["PENDING", "WIP", "READY_FOR_REVIEW", "NEW", "IN_REVIEW", "REVALIDATION"];
+  const STOP = ["FAIL", "BLOCKED", "CONFLICT", "RETURNED", "NOT_AUTHORIZED", "FORBID"];
+  const HOLD = ["UNKNOWN", "NOT_TESTED", "NOT_READY", "TODO", "N_A"];
+  function kind(v) {
+    v = String(v || "").toUpperCase();
+    if (v === "CANDIDATE" || v === "HYPOTHESIS" || v === "SYNTHETIC") return "cand";
+    if (OK.includes(v)) return "ok";
+    if (WARN.includes(v)) return "warn";
+    if (STOP.includes(v)) return "stop";
+    if (HOLD.includes(v)) return "hold";
+    return "dim";
+  }
+  /* Locked rule 3: UNKNOWN shows a dash, never 0. */
+  const pill = (v, k) => (v == null || v === "")
+    ? '<span class="muted">—</span>'
+    : `<span class="pill p-${k || kind(v)}">${esc(v)}</span>`;
+  const panel = (t, b) => `<div class="panel"><h2>${t}</h2><div class="body">${b}</div></div>`;
+
+  let SESSION = null;
+  let EXPORT_RESULT = null;   // survives the re-render that follows the click
+  let ACTOR = { id: "claude-code", role: "DEV" };
+  let PRODUCT = PRODUCTS[0];
+  let CUR = "overview";
+
+  const TABS = [["overview", "Overview 总览"], ["requirements", "Requirements 需求"],
+                ["inheritance", "Inheritance 继承"], ["events", "Events 事件"],
+                ["deliverables", "Deliverables 交付物"], ["gate", "Gate 闸口"],
+                ["audit", "Audit 审计"], ["pack", "Test Pack 验收表"]];
+
+  const LS_KEY = "console-001a-session";
+  function cache() {
+    // Convenience cache only. Never evidence, never the only record (D5).
+    try { localStorage.setItem(LS_KEY, JSON.stringify(Core.exportReview(SESSION))); }
+    catch (e) { /* private mode, blocked storage, preview: not an error */ }
+  }
+  function restore() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return null;
+      return Core.importReview(JSON.parse(raw));
+    } catch (e) { return null; }
+  }
+
+  function newSession() {
+    EXPORT_RESULT = null;
+    SESSION = Core.createSession(PRODUCT, ACTOR);
+    Core.audit(SESSION, { objectId: SESSION.Review_ID, objectType: "Review_Session",
+                          before: null, after: { Status: "OPEN" },
+                          actorId: ACTOR.id, actorRole: ACTOR.role });
+    cache(); render();
+  }
+
+  /* ---- rendering -------------------------------------------------------- */
+  function dimsRow(o) {
+    // Five cells, five pills. Never one combined status (A04).
+    return `<td>${pill(o.Fact_Class)}</td><td>${pill(o.Implementation_State)}</td>`
+         + `<td>${pill(o.Verification_Result)}</td>`;
+  }
+
+  function renderOverview() {
+    const s = SESSION;
+    const schema = Core.schemaVersionState(s);
+    $("s-overview").innerHTML =
+      panel("Review Session", `<table><tbody>
+        <tr><th>Review_ID</th><td><code>${esc(s.Review_ID)}</code></td></tr>
+        <tr><th>Project / Product</th><td><code>${esc(s.Project_ID)}</code> · <code>${esc(s.Product_ID)}</code></td></tr>
+        <tr><th>Version</th><td><code>${esc(s.Version_ID)}</code></td></tr>
+        <tr><th>Taskbook</th><td><code>${esc(s.Taskbook_ID)}</code>${s.Secondary_Taskbook_ID ? " · <code>" + esc(s.Secondary_Taskbook_ID) + "</code>" : ""}</td></tr>
+        <tr><th>Baseline_SHA</th><td>${s.Baseline_SHA ? "<code>" + esc(s.Baseline_SHA.slice(0, 16)) + "…</code>" : '<span class="muted">—</span>'} ${pill(s.Baseline_State)}</td></tr>
+        <tr><th>Schema_Version</th><td><code>${esc(s.Schema_Version)}</code> ${pill(schema)}</td></tr>
+        <tr><th>Test_Pack_ID</th><td><code>${esc(s.Test_Pack_ID)}</code></td></tr>
+        <tr><th>Reviewer</th><td>${esc(s.Reviewer_ID)} · ${pill(s.Reviewer_Role, "dim")}</td></tr>
+        <tr><th>Status</th><td>${pill(s.Status)}</td></tr>
+        </tbody></table>`
+        + (s.Baseline_State === "UNKNOWN"
+           ? `<div class="note bad">Baseline_SHA 缺失 → Baseline_State = UNKNOWN，所有 Regression 强制 PENDING，不得置 PASS。
+              <span class="zh">No baseline sha: every regression is held at PENDING and cannot pass.</span></div>` : "")
+        + (schema === "CONFLICT"
+           ? `<div class="note bad">Schema_Version 与冻结合同不一致 → CONFLICT，不自动择一。
+              <span class="zh">Schema version differs from the frozen contract; shown as conflict and not auto-resolved.</span></div>` : ""))
+      + panel("Blockers (A07) · Decision required (A09)",
+          `<table><thead><tr><th>Type</th><th>ID</th><th>Why</th></tr></thead><tbody>`
+          + Core.blockers(SESSION).map(r => `<tr><td>Requirement</td><td><code>${esc(r.Requirement_ID)}</code></td>
+              <td>${esc(r.Implementation_State === "BLOCKED" ? "BLOCKED" : "CRITICAL FAIL")}</td></tr>`).join("")
+          + Core.decisionRequired(SESSION).map(d => `<tr><td>${esc(d.type)}</td><td><code>${esc(d.id)}</code></td>
+              <td>awaiting an architect decision</td></tr>`).join("")
+          + `</tbody></table>`);
+  }
+
+  function renderRequirements() {
+    const canPass = Core.may(ACTOR.role, "SET_VERIFICATION_PASS");
+    $("s-requirements").innerHTML = panel("Requirements",
+      `<table><thead><tr><th>ID</th><th>Section</th><th>Criticality</th>
+        <th>Fact_Class</th><th>Implementation_State</th><th>Verification_Result</th>
+        <th>Evidence</th><th></th></tr></thead><tbody>`
+      + SESSION.requirements.map(r => `<tr>
+          <td><code>${esc(r.Requirement_ID)}</code></td>
+          <td class="muted">${esc(r.Section_Ref)}</td>
+          <td>${pill(r.Criticality, r.Criticality === "CRITICAL" ? "stop" : "dim")}</td>
+          ${dimsRow(r)}
+          <td class="muted">${r.Evidence_ID ? "<code>" + esc(r.Evidence_ID) + "</code>" : "—"}</td>
+          <td>${canPass
+              ? `<button data-pass="${esc(r.Requirement_ID)}">Mark PASS</button>`
+              : `<span class="muted" title="matrix: ${esc(Core.decide(ACTOR.role, "SET_VERIFICATION_PASS"))}">—</span>`}
+              <button data-fail="${esc(r.Requirement_ID)}">FAIL</button></td>
+        </tr>`).join("")
+      + `</tbody></table>`
+      + (canPass ? "" : `<div class="note warn">当前角色 <code>${esc(ACTOR.role)}</code> 在权限矩阵中对「置 Verification_Result = PASS」为
+          <b>${esc(Core.decide(ACTOR.role, "SET_VERIFICATION_PASS"))}</b>，因此该控件不渲染（不是禁用）。
+          <span class="zh">The control is absent, not merely disabled, for a role the matrix refuses.</span></div>`));
+  }
+
+  function renderInheritance() {
+    $("s-inheritance").innerHTML = panel("Inheritance / Regression",
+      `<table><thead><tr><th>Capability</th><th>Baseline</th><th>Baseline_SHA</th>
+        <th>Regression_Test_ID</th><th>Verification_Result</th><th></th></tr></thead><tbody>`
+      + SESSION.inheritance.map(i => `<tr>
+          <td><code>${esc(i.Capability_ID)}</code></td>
+          <td>${esc(i.Baseline_Version)}</td>
+          <td>${i.Baseline_SHA ? "<code>" + esc(String(i.Baseline_SHA).slice(0, 12)) + "…</code>" : '<span class="muted">—</span>'}</td>
+          <td><code>${esc(i.Regression_Test_ID)}</code></td>
+          <td>${pill(i.Verification_Result)}</td>
+          <td>${i.Baseline_Locked ? '<span class="muted">held at PENDING</span>'
+              : `<button data-inh-pass="${esc(i.Capability_ID)}">Mark PASS</button>`}</td>
+        </tr>`).join("") + `</tbody></table>`);
+  }
+
+  function renderEvents() {
+    $("s-events").innerHTML = panel("Event Review",
+      `<table><thead><tr><th>Candidate_Event</th><th>Canonical_Event</th>
+        <th>Event_Decision</th><th>State</th><th>Architect_Decision_ID</th></tr></thead><tbody>`
+      + SESSION.events.map(e => `<tr>
+          <td><code>${esc(e.Candidate_Event)}</code></td>
+          <td>${e.Canonical_Event ? "<code>" + esc(e.Canonical_Event) + "</code>" : '<span class="muted">—</span>'}</td>
+          <td>${pill(e.Decision)}</td>
+          <td>${pill(Core.eventState(e))}</td>
+          <td class="muted">${e.Architect_Decision_ID ? esc(e.Architect_Decision_ID) : "—"}</td>
+        </tr>`).join("") + `</tbody></table>
+        <div class="note">CONFLICT 且无 Architect_Decision_ID → 停在 PENDING，控制台不替架构师择一。
+        <span class="zh">A conflict without an architect decision stays pending; the console does not choose for them.</span></div>`)
+      + panel("Schema Delta",
+        `<table><thead><tr><th>Item</th><th>Before</th><th>After</th><th>Classification</th><th>State</th></tr></thead><tbody>`
+        + SESSION.schema_deltas.map(s => `<tr><td><code>${esc(s.Schema_Item_ID)}</code></td>
+            <td class="muted">${esc(s.Before)}</td><td class="muted">${esc(s.After)}</td>
+            <td>${pill(s.Classification)}</td><td>${pill(Core.deltaState(s))}</td></tr>`).join("")
+        + `</tbody></table>`);
+  }
+
+  function renderDeliverables() {
+    $("s-deliverables").innerHTML = panel("Deliverables",
+      `<table><thead><tr><th>Artifact</th><th>SHA256</th><th>Purpose</th>
+        <th>How to run</th><th>Expected</th><th>Limitation</th><th>Fact_Class</th><th></th></tr></thead><tbody>`
+      + SESSION.deliverables.map(d => `<tr>
+          <td><code>${esc(d.Name || d.Path)}</code></td>
+          <td><code>${esc(String(d.SHA256 || "").slice(0, 12))}…</code></td>
+          <td class="muted">${esc(d.Purpose)}</td>
+          <td class="muted">${esc(d.How_To_Run)}</td>
+          <td class="muted">${esc(d.Expected_Output)}</td>
+          <td class="muted">${esc(d.Limitation)}</td>
+          <td>${pill(d.Fact_Class)}</td>
+          <td><button data-tf="${esc(d.Artifact_ID)}">Export as TEAM_FACT</button></td>
+        </tr>`).join("") + `</tbody></table>
+        <div id="tf-result">` + (EXPORT_RESULT
+          ? (EXPORT_RESULT.ok
+             ? `<div class="note">exported</div>`
+             : `<div class="note bad">Refused — ${esc(EXPORT_RESULT.reason)}
+                <span class="zh">Fact_Class=${esc(EXPORT_RESULT.factClass)} · export_as_team_fact=${esc(EXPORT_RESULT.flag)}</span></div>`)
+          : "") + `</div>`);
+  }
+
+  function renderGate() {
+    const canApprove = Core.may(ACTOR.role, "SET_GATE_APPROVED_RETURNED");
+    const fails = Core.criticalFailures(SESSION);
+    $("s-gate").innerHTML = panel("Gate",
+      `<table><thead><tr><th>Gate</th><th>Gate_Status</th><th>Approver_Role</th>
+        <th>Preconditions</th><th>Decision</th></tr></thead><tbody>`
+      + SESSION.gates.map(g => `<tr><td><code>${esc(g.Gate_ID)}</code></td>
+          <td>${pill(g.Gate_Status)}</td><td>${esc(g.Approver_Role)}</td>
+          <td class="muted">${esc(g.Preconditions)}</td>
+          <td class="muted">${g.Decision_ID ? esc(g.Decision_ID) : "—"}</td></tr>`).join("")
+      + `</tbody></table>`
+      + (canApprove
+         ? `<div style="margin-top:10px"><button data-gate="APPROVED" class="primary">Gate APPROVED</button>
+            <button data-gate="RETURNED">Gate RETURNED</button></div>`
+         : `<div class="note warn">角色 <code>${esc(ACTOR.role)}</code> 对「置 Gate = APPROVED / RETURNED」为
+            <b>${esc(Core.decide(ACTOR.role, "SET_GATE_APPROVED_RETURNED"))}</b> —— 控件不存在，不是禁用（A10）。
+            <span class="zh">The control does not exist for this role, rather than existing and being disabled.</span></div>`)
+      + (fails.length ? `<div class="note bad">${fails.length} 条 CRITICAL FAIL，Accept Development 被阻止（A08）。
+            <span class="zh">A failing critical item blocks acceptance.</span></div>` : ""));
+  }
+
+  function renderAudit() {
+    $("s-audit").innerHTML = panel(`Audit (${SESSION.audit.length})`,
+      `<div class="tl">` + SESSION.audit.slice().reverse().map(a => `
+        <div class="ev ${a.Refused ? "refused" : ""}">
+          <div class="muted">${esc(a.Timestamp)} · ${esc(a.Actor_ID)} (${esc(a.Actor_Role)}) · rule ${esc(a.Rule_Version)}</div>
+          <div><strong>${esc(a.Object_Type)}</strong> <code>${esc(a.Object_ID)}</code>
+            ${a.Refused ? pill("REFUSED", "stop") : ""}</div>
+          <div class="muted">${esc(JSON.stringify(a.Before))} → ${esc(JSON.stringify(a.After))}</div>
+          ${a.Reason ? `<div class="muted">${esc(a.Reason)}</div>` : ""}
+        </div>`).join("") + `</div>`);
+  }
+
+  function renderPack() {
+    $("s-pack").innerHTML = panel(`Test Pack · ${esc(PACK.Test_Pack_ID)} · ${PACK.case_count} cases`,
+      `<table><thead><tr><th>Test_ID</th><th>Surface</th><th>Canonical</th><th>Assertions</th></tr></thead><tbody>`
+      + Core.cases().map(c => `<tr><td><code>${esc(c.Test_ID)}</code></td>
+          <td>${pill(c.Surface, c.Surface === "DEVICE" ? "warn" : "dim")}</td>
+          <td>${esc(c.canonical_en)}</td>
+          <td class="muted">${(c.assertions || []).map(a => "· " + esc(a)).join("<br>")}</td></tr>`).join("")
+      + `</tbody></table>
+        <div class="note">本表为验收输入，控制台不自评结果：每条的 Verification_Result 需引用有效 Evidence_Binding，且 DEV 不得置 PASS。
+        <span class="zh">The pack is input. The console does not mark its own results: each needs a valid evidence binding, and the developer role cannot set a pass.</span></div>`);
+  }
+
+  function render() {
+    $("meta").innerHTML = `freeze <code>${esc(FREEZE.freeze_id)}</code> · schema <code>${esc(FREEZE.schema_version)}</code>`
+      + ` · rules <code>${esc(FREEZE.rule_version)}</code> · pack <code>${esc(PACK.Test_Pack_ID)}</code>`;
+    $("nav").innerHTML = TABS.map(([id, label]) =>
+      `<button id="nav-${id}" data-tab="${id}" class="${id === CUR ? "on" : ""}">${esc(label)}</button>`).join("");
+    if (!SESSION) {
+      $("foot-status").textContent = "no review session — press 新建 Review";
+      return;
+    }
+    renderOverview(); renderRequirements(); renderInheritance(); renderEvents();
+    renderDeliverables(); renderGate(); renderAudit(); renderPack();
+    TABS.forEach(([id]) => $("s-" + id).classList.toggle("on", id === CUR));
+    const accept = Core.canAcceptDevelopment(SESSION);
+    $("btn-accept").disabled = !accept;
+    $("foot-status").innerHTML = `Review <code>${esc(SESSION.Review_ID.slice(0, 8))}…</code>`
+      + ` · ${SESSION.audit.length} audit entries`
+      + (accept ? "" : ` · <span style="color:var(--stop)">CRITICAL FAIL blocks acceptance</span>`);
+  }
+
+  /* ---- events ----------------------------------------------------------- */
+  document.addEventListener("click", ev => {
+    const t = ev.target.closest("button");
+    if (!t) return;
+    if (t.dataset.tab) { CUR = t.dataset.tab; render(); return; }
+    if (!SESSION) return;
+
+    if (t.dataset.pass || t.dataset.inhPass) {
+      const kindName = t.dataset.pass ? "requirement" : "inheritance";
+      const id = t.dataset.pass || t.dataset.inhPass;
+      // The only binding this console can offer is one that really exists.
+      const binding = SESSION.bindings[0] || null;
+      const r = Core.setVerification(SESSION, kindName, id, "PASS", ACTOR, binding);
+      if (!r.ok) {
+        alert("Refused — " + r.reason
+              + (r.missing ? "\nMissing: " + r.missing.join(", ") : ""));
+      }
+      cache(); render(); return;
+    }
+    if (t.dataset.fail) {
+      Core.setVerification(SESSION, "requirement", t.dataset.fail, "FAIL", ACTOR, null);
+      cache(); render(); return;
+    }
+    if (t.dataset.gate) {
+      const r = Core.setGate(SESSION, SESSION.gates[0].Gate_ID, t.dataset.gate, ACTOR);
+      if (!r.ok) alert("Refused — " + r.reason);
+      cache(); render(); return;
+    }
+    if (t.dataset.tf) {
+      const d = SESSION.deliverables.find(x => x.Artifact_ID === t.dataset.tf);
+      const r = Core.exportAsTeamFact(PRODUCT, d);
+      EXPORT_RESULT = { ok: r.ok, reason: r.reason || "",
+                        factClass: d.Fact_Class, flag: PRODUCT.export_as_team_fact };
+      Core.audit(SESSION, { objectId: d.Artifact_ID, objectType: "Deliverable",
+                            before: { Fact_Class: d.Fact_Class }, after: { Fact_Class: d.Fact_Class },
+                            actorId: ACTOR.id, actorRole: ACTOR.role,
+                            refused: !r.ok, reason: r.ok ? null : r.reason });
+      cache(); render(); return;
+    }
+    if (t.id === "btn-new") { newSession(); return; }
+    if (t.id === "btn-export") {
+      const blob = new Blob([JSON.stringify(Core.exportReview(SESSION), null, 1)],
+                            { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "review-" + SESSION.Review_ID.slice(0, 8) + ".json";
+      a.click(); URL.revokeObjectURL(a.href);
+      return;
+    }
+    if (t.id === "btn-import") { $("file").click(); return; }
+    if (t.id === "btn-accept") {
+      SESSION.Status = "ACCEPTED";
+      Core.audit(SESSION, { objectId: SESSION.Review_ID, objectType: "Review_Session",
+                            before: { Status: "IN_REVIEW" }, after: { Status: "ACCEPTED" },
+                            actorId: ACTOR.id, actorRole: ACTOR.role });
+      cache(); render(); return;
+    }
+  });
+
+  $("file").addEventListener("change", e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        SESSION = Core.importReview(JSON.parse(reader.result));  // Review_ID carried over
+        cache(); render();
+      } catch (err) { alert("Import failed: " + err.message); }
+    };
+    reader.readAsText(f);
+  });
+
+  $("product").addEventListener("change", e => {
+    PRODUCT = PRODUCTS[Number(e.target.value)];
+    newSession();
+  });
+  $("role").addEventListener("change", e => { ACTOR = { id: ACTOR.id, role: e.target.value }; render(); });
+
+  /* ---- boot ------------------------------------------------------------- */
+  $("product").innerHTML = PRODUCTS.map((p, i) =>
+    `<option value="${i}">${esc(p.Product_ID)}</option>`).join("");
+  $("role").innerHTML = Core.roles().map(r =>
+    `<option value="${r}"${r === ACTOR.role ? " selected" : ""}>${esc(r)}</option>`).join("");
+  const restored = restore();
+  if (restored) { SESSION = restored; } else { SESSION = Core.createSession(PRODUCT, ACTOR); }
+  render();
+  window.__console = { Core, get session() { return SESSION; },
+                       set actor(a) { ACTOR = a; render(); },
+                       get actor() { return ACTOR; },
+                       selectProduct(i) { PRODUCT = PRODUCTS[i]; newSession(); } };
+})();
+</script>
+</body>
+</html>
