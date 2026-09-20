@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<!-- A19's lesson, applied from the start: 48px targets and safe-area insets. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HEMA Pre-Wired Runtime Harness v0.1 — 预通电运行台</title>
+<style>
+:root{
+  --bg:#0b1016;--panel:#131a24;--panel2:#1a222e;--line:#25303d;
+  --ink:#e6ecf5;--dim:#8d9aad;--accent:#4d8dff;
+  --ok:#34d399;--warn:#f0b429;--stop:#f0685f;--hold:#a78bfa;--syn:#ff9d3d;
+  --ui:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --tap:48px;--safe:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 var(--ui);
+  font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#banner{position:sticky;top:0;z-index:50;padding:10px 18px;text-align:center;font-weight:700;
+  letter-spacing:.05em;font-size:12.5px;border-bottom:2px solid var(--syn);color:var(--syn);
+  background:repeating-linear-gradient(45deg,#3a2409,#3a2409 12px,#452b0b 12px,#452b0b 24px)}
+header{padding:14px 20px 0}h1{font-size:17px;margin:0}
+.sub{color:var(--dim);font-size:12px;margin-top:4px}
+nav{display:flex;gap:6px;padding:12px 20px;border-bottom:1px solid var(--line);
+  overflow-x:auto;scrollbar-width:none}nav::-webkit-scrollbar{display:none}
+button{font-family:inherit;font-size:13px;min-height:var(--tap);background:var(--panel2);
+  color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:0 14px;cursor:pointer}
+button.primary{background:#1d3a6b;border-color:#2f5ca8}
+button:disabled{opacity:.45;cursor:not-allowed}
+nav button{color:var(--dim);white-space:nowrap}
+nav button.on{background:#1d3a6b;border-color:#2f5ca8;color:#fff}
+main{padding:16px 20px calc(110px + var(--safe));display:grid;gap:16px}
+section{display:none}section.on{display:grid;gap:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.panel>h2{margin:0;padding:11px 14px;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--dim);border-bottom:1px solid var(--line);background:var(--panel2)}
+.panel .body{padding:13px 14px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+code{font-family:var(--mono);font-size:11.5px;color:#c4d2ea}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;
+  border:1px solid transparent;white-space:nowrap}
+.p-ok{background:#0f2e21;color:var(--ok);border-color:#1d5c43}
+.p-warn{background:#33270c;color:var(--warn);border-color:#6b5318}
+.p-stop{background:#331416;color:var(--stop);border-color:#6b2a2e}
+.p-hold{background:#241c3d;color:var(--hold);border-color:#443a72}
+.p-dim{background:#1e222b;color:var(--dim);border-color:var(--line)}
+/* Candidate and Hypothesis never borrow the verified treatment (004B §4). */
+.p-cand{background:#1a1f2e;color:#9db4d8;border-color:#33405a;border-style:dashed}
+.p-hyp{background:#1d1a2e;color:#b9a8e0;border-color:#413a63;border-style:dashed}
+.muted{color:var(--dim)}
+.five{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:12.5px;margin:0}
+.five dt{color:var(--dim)}.five dd{margin:0}
+.note{background:#18202e;border:1px solid #2b3950;border-left:3px solid var(--accent);
+  border-radius:7px;padding:9px 12px;font-size:12.5px;color:#c4d2ea;margin:8px 0}
+.note.bad{background:#2a1618;border-color:#5e2a2e;border-left-color:var(--stop);color:#f0c3c3}
+.note.warn{background:#2a2210;border-color:#5e4a1e;border-left-color:var(--warn);color:#efdcb4}
+.chain{display:flex;flex-wrap:wrap;gap:5px}
+.node{border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:11.5px;
+  background:var(--panel2);color:var(--dim)}
+.node.done{border-color:#1d5c43;color:var(--ok)}
+.node.cur{border-color:#2f5ca8;background:#1d3a6b;color:#fff;font-weight:600}
+.srcs{display:grid;gap:5px;margin-top:5px}
+.src{background:#1e222b;border:1px solid var(--line);border-left:3px solid var(--stop);
+  border-radius:6px;padding:6px 9px;font-size:11.5px}
+.tl{max-height:400px;overflow:auto;font-size:12px}
+.ev{border-left:2px solid var(--line);padding:6px 0 6px 11px;margin-left:4px}
+.ev.refused{border-left-color:var(--stop)}
+.bridge{display:grid;gap:5px}
+.stp{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
+  background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:8px 11px;font-size:12px}
+.stp.blocked{border-color:#5e2a2e;background:#221619}
+#foot{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;gap:8px;flex-wrap:wrap;
+  align-items:center;padding:10px 20px calc(10px + var(--safe));
+  background:#0f1622;border-top:1px solid var(--line)}
+#foot .grow{flex:1;min-width:120px;color:var(--dim);font-size:12px}
+@media(max-width:720px){header,nav,main{padding-left:16px;padding-right:16px}
+  #foot{padding-left:16px;padding-right:16px}h1{font-size:16px}}
+</style>
+</head>
+<body>
+<div id="banner">SYNTHETIC REPLAY / WORKING PROJECTION — 不是团队事实，不升级 TEAM_FACT；PR / Merge / Deploy / Production / Scale = NOT AUTHORIZED</div>
+<header>
+  <h1>HEMA Pre-Wired Runtime Harness <span class="muted" style="font-size:12px">v0.1 · 预通电运行台</span></h1>
+  <div class="sub" id="meta"></div>
+</header>
+<nav id="nav"></nav>
+<main>
+  <section id="s-p1"></section><section id="s-p2"></section><section id="s-p3"></section>
+  <section id="s-p4"></section><section id="s-p5"></section><section id="s-p6"></section>
+  <section id="s-p7"></section><section id="s-p8"></section>
+</main>
+<div id="foot">
+  <button id="btn-reset">↺ Reset</button>
+  <button id="btn-step" class="primary">▶ Step 逐条</button>
+  <button id="btn-all">⏩ Run all 批量</button>
+  <span class="grow" id="foot-status"></span>
+</div>
+<script id="harness-data" type="application/json">{"_doc":"A recording of one run of scripts/harness_engine/. The page replays it; it does not recompute it.","fact_class":"SYNTHETIC","contract":{"id":"PW-1/INF-DEV-HEMA-004A/v1.0-APPROVED","status":"APPROVED","rule_version":"PW1/RULES/v1.0","authorizes":{"pw2_build":"AUTHORIZED","pr_merge":"NOT_AUTHORIZED","deploy":"NOT_AUTHORIZED","production":"NOT_AUTHORIZED","scale_15_to_100":"NOT_AUTHORIZED","pw4_live_intake":"NOT_AUTHORIZED"}},"state_machine":{"_source":"004A §4 — First Live TX. Skipping a level is refused and audited; a rollback keeps reason, proposer, approver, time and version.","initial":"S0","states":{"S0":{"name":"WAITING_CANDIDATE","meaning":"The first TX has not been approved yet.","to":["S1"]},"S1":{"name":"CANDIDATE_SELECTED","meaning":"An authorised gate selected the candidate TX.","to":["S2"]},"S2":{"name":"TARGET_VERIFIED","meaning":"Target Object/Metric/Period/Unit/Decision/Evidence complete.","to":["S3"]},"S3":{"name":"GAP_VERIFIED","meaning":"Approved Target and Verified Actual on the same basis; the gap is computable.","to":["S4"]},"S4":{"name":"ROUTING_VERIFIED","meaning":"Routing_Class has evidence and an audit trail.","to":["S5"]},"S5":{"name":"ROOT_CAUSE_CANDIDATE","meaning":"A candidate root cause exists without an independent V.","to":["S6"]},"S6":{"name":"ROOT_CAUSE_VERIFIED","meaning":"The Root Cause Gate passed.","to":["S7"]},"S7":{"name":"CORRECTIVE_READY","meaning":"Task / PERSON or Role / Due / Resource / Acceptance Evidence complete.","to":["S8"]},"S8":{"name":"CORRECTIVE_IN_PROGRESS","meaning":"Real execution has started.","to":["S9"]},"S9":{"name":"AFTER_EVIDENCE_PENDING","meaning":"Execution finished; awaiting post-action evidence.","to":["S10"]},"S10":{"name":"RESULT_PENDING_VERIFICATION","meaning":"After evidence arrived; awaiting an independent V.","to":["S11"]},"S11":{"name":"VERIFIED_RESULT","meaning":"The result is verified.","variants":["VERIFIED_POSITIVE","VERIFIED_NEGATIVE","VERIFIED_MIXED"],"to":["S12"]},"S12":{"name":"FINANCE_ATTRIBUTION","meaning":"Value leakage and net increment verification.","to":["S13"]},"S13":{"name":"ROI_READY","meaning":"Verified net increment, incremental CM and ROI satisfy the Finance Gate.","to":["S14"]},"S14":{"name":"RELEASE_ITERATE_STOP","meaning":"Only the authorised Gate Approver decides.","to":[],"terminal":true}},"no_skip_rule":"A transition to any state other than the ones listed in `to` is refused and written to the audit trail."},"pages":{"_source":"004 §9 / 004B §4","P1":"INBOX — new event counts, rejected / conflict / pending evidence, filterable by object or TX.","P2":"6 BLOCKERS — B01-B06 status, owner, missing evidence, next.","P3":"FIRST LIVE TX — the full state machine, current node, evidence, gate, next action.","P4":"MACRO — 859万 revalidation input completeness, KEEP/ADJUST/REJECT, A/B/C readiness.","P5":"REAL-15 — read-only current routing / state for the fifteen.","P6":"HERO EVIDENCE — evidence to macro / TX mapping with supporting / counter status.","P7":"FINANCE — six leakages, net increment, CM, ROI and the reason for any block.","P8":"GATES / AUDIT — every transition before to after, evidence, verifier, rule version, decision right.","mandatory_questions":["Current State","Blocking Reason","Missing Evidence","Owner","Next Allowed Transition"]},"frames":[{"step":{"Event_ID":"SYN-EV-001","Event_Type":"ROUTING_CLASSIFIED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"合法 Event / legal event","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-001","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S0 WAITING_CANDIDATE","After_State":"S1 CANDIDATE_SELECTED","Transition":{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S0 WAITING_CANDIDATE","After_State":"S1 CANDIDATE_SELECTED","Actor_ID":"GATE_APPROVER","Actor_Role":"GATE_APPROVER","Evidence_ID":"SYN-EVD-001","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T00:00:00Z","Reason":"an authorised gate selected the candidate TX","Refused":false},"Transition_Refused":null,"Gate":{"gate":"TARGET","verdict":"BLOCKED","missing_evidence":["Object/Metric/Period/Unit aligned","Target Decision valid","Target Evidence valid"],"reason":"3 of 3 requirements unmet","note":""},"Next_Allowed_Transition":["S2 TARGET_VERIFIED"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T01:00:00Z"},"state":"S1","state_name":"CANDIDATE_SELECTED","variant":null,"next":["S2 TARGET_VERIFIED"]},{"step":{"Event_ID":"SYN-EV-002","Event_Type":"EVIDENCE_RECORDED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"缺 Evidence / missing evidence","Intake":{"result":"EVIDENCE_PENDING","event_id":"SYN-EV-002","reason":"no Evidence_ID: source presence is not claim verification","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S1 CANDIDATE_SELECTED","After_State":"S1 CANDIDATE_SELECTED","Transition":null,"Transition_Refused":null,"Gate":null,"Next_Allowed_Transition":["S2 TARGET_VERIFIED"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T02:00:00Z"},"state":"S1","state_name":"CANDIDATE_SELECTED","variant":null,"next":["S2 TARGET_VERIFIED"]},{"step":{"Event_ID":"SYN-EV-003","Event_Type":"EVIDENCE_RECORDED","Object_ID":"SYN-REAL15-VERIFICATION","Object_Type":"REAL15_Verification","Scenario":"冲突 / conflict (seed)","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-003","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S1 CANDIDATE_SELECTED","After_State":"S1 CANDIDATE_SELECTED","Transition":null,"Transition_Refused":null,"Gate":null,"Next_Allowed_Transition":["S2 TARGET_VERIFIED"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T03:00:00Z"},"state":"S1","state_name":"CANDIDATE_SELECTED","variant":null,"next":["S2 TARGET_VERIFIED"]},{"step":{"Event_ID":"SYN-EV-004","Event_Type":"EVIDENCE_CONFLICT_DETECTED","Object_ID":"SYN-REAL15-VERIFICATION","Object_Type":"REAL15_Verification","Scenario":"冲突 / conflict","Intake":{"result":"CONFLICT","event_id":"SYN-EV-004","reason":"new evidence disagrees with the held value; both are kept and neither is chosen","missing":[],"conflict_with":{"before":{"value":"0/7","source":"SYN-REF-003","evidence_id":"SYN-EVD-003"},"after":{"value":"8/8","source":"SYN-REF-004","evidence_id":"SYN-EVD-004"}},"created_objects":[]},"Before_State":"S1 CANDIDATE_SELECTED","After_State":"S1 CANDIDATE_SELECTED","Transition":null,"Transition_Refused":null,"Gate":null,"Next_Allowed_Transition":["S2 TARGET_VERIFIED"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T04:00:00Z"},"state":"S1","state_name":"CANDIDATE_SELECTED","variant":null,"next":["S2 TARGET_VERIFIED"]},{"step":{"Event_ID":"SYN-EV-005","Event_Type":"EVIDENCE_RECORDED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"重复 / duplicate","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-005","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S1 CANDIDATE_SELECTED","After_State":"S1 CANDIDATE_SELECTED","Transition":null,"Transition_Refused":null,"Gate":null,"Next_Allowed_Transition":["S2 TARGET_VERIFIED"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T05:00:00Z"},"state":"S1","state_name":"CANDIDATE_SELECTED","variant":null,"next":["S2 TARGET_VERIFIED"]},{"step":{"Event_ID":"SYN-EV-005","Event_Type":"EVIDENCE_RECORDED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"重复 / duplicate (replay)","Intake":{"result":"DUPLICATE_NOOP","event_id":"SYN-EV-005","reason":"this Event_ID was already processed","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S1 CANDIDATE_SELECTED","After_State":"S1 CANDIDATE_SELECTED","Transition":null,"Transition_Refused":null,"Gate":null,"Next_Allowed_Transition":["S2 TARGET_VERIFIED"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T06:00:00Z"},"state":"S1","state_name":"CANDIDATE_SELECTED","variant":null,"next":["S2 TARGET_VERIFIED"]},{"step":{"Event_ID":"SYN-EV-007","Event_Type":"EVIDENCE_RECORDED","Object_ID":"SYN-STORE-DOES-NOT-EXIST","Object_Type":"Store","Scenario":"错误 Object / wrong object","Intake":{"result":"REJECTED_INTAKE","event_id":"SYN-EV-007","reason":"Object_ID 'SYN-STORE-DOES-NOT-EXIST' matches no known object; no object is created","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S1 CANDIDATE_SELECTED","After_State":"S1 CANDIDATE_SELECTED","Transition":null,"Transition_Refused":null,"Gate":null,"Next_Allowed_Transition":["S2 TARGET_VERIFIED"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T07:00:00Z"},"state":"S1","state_name":"CANDIDATE_SELECTED","variant":null,"next":["S2 TARGET_VERIFIED"]},{"step":{"Event_ID":"SYN-EV-008","Event_Type":"EVIDENCE_RECORDED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"Supporting-only","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-008","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S1 CANDIDATE_SELECTED","After_State":"S1 CANDIDATE_SELECTED","Transition":null,"Transition_Refused":null,"Gate":null,"Next_Allowed_Transition":["S2 TARGET_VERIFIED"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T08:00:00Z"},"state":"S1","state_name":"CANDIDATE_SELECTED","variant":null,"next":["S2 TARGET_VERIFIED"]},{"step":{"Event_ID":"SYN-EV-008a","Event_Type":"EVIDENCE_VERIFIED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"Target Verified","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-008a","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S1 CANDIDATE_SELECTED","After_State":"S2 TARGET_VERIFIED","Transition":{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S1 CANDIDATE_SELECTED","After_State":"S2 TARGET_VERIFIED","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-008a","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T09:00:00Z","Reason":"target object, metric, period, unit, decision and evidence complete","Refused":false},"Transition_Refused":null,"Gate":{"gate":"TARGET","verdict":"READY","missing_evidence":[],"reason":"every requirement is evidenced; approval is a human decision","note":"READY is not APPROVED"},"Next_Allowed_Transition":["S3 GAP_VERIFIED"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T10:00:00Z"},"state":"S2","state_name":"TARGET_VERIFIED","variant":null,"next":["S3 GAP_VERIFIED"]},{"step":{"Event_ID":"SYN-EV-008b","Event_Type":"EVIDENCE_VERIFIED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"Gap Verified","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-008b","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S2 TARGET_VERIFIED","After_State":"S3 GAP_VERIFIED","Transition":{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S2 TARGET_VERIFIED","After_State":"S3 GAP_VERIFIED","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-008b","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T11:00:00Z","Reason":"approved target and verified actual on the same basis","Refused":false},"Transition_Refused":null,"Gate":{"gate":"GAP","verdict":"READY","missing_evidence":[],"reason":"every requirement is evidenced; approval is a human decision","note":"READY is not APPROVED"},"Next_Allowed_Transition":["S4 ROUTING_VERIFIED"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T12:00:00Z"},"state":"S3","state_name":"GAP_VERIFIED","variant":null,"next":["S4 ROUTING_VERIFIED"]},{"step":{"Event_ID":"SYN-EV-008c","Event_Type":"ROUTING_CLASSIFIED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"Routing Verified","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-008c","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S3 GAP_VERIFIED","After_State":"S4 ROUTING_VERIFIED","Transition":{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S3 GAP_VERIFIED","After_State":"S4 ROUTING_VERIFIED","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-008c","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T13:00:00Z","Reason":"Routing_Class has evidence and an audit trail","Refused":false},"Transition_Refused":null,"Gate":{"gate":"ROUTING","verdict":"READY","missing_evidence":[],"reason":"every requirement is evidenced; approval is a human decision","note":"READY is not APPROVED"},"Next_Allowed_Transition":["S5 ROOT_CAUSE_CANDIDATE"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T14:00:00Z"},"state":"S4","state_name":"ROUTING_VERIFIED","variant":null,"next":["S5 ROOT_CAUSE_CANDIDATE"]},{"step":{"Event_ID":"SYN-EV-009","Event_Type":"ROOT_CAUSE_PROPOSED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"缺 V / missing verifier","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-009","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S4 ROUTING_VERIFIED","After_State":"S5 ROOT_CAUSE_CANDIDATE","Transition":{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S4 ROUTING_VERIFIED","After_State":"S5 ROOT_CAUSE_CANDIDATE","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-009","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T15:00:00Z","Reason":"a candidate root cause without an independent V","Refused":false},"Transition_Refused":null,"Gate":{"gate":"ROOT_CAUSE","verdict":"BLOCKED","missing_evidence":["Independent V = PASS"],"reason":"1 of 3 requirements unmet","note":""},"Next_Allowed_Transition":["S6 ROOT_CAUSE_VERIFIED"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T16:00:00Z"},"state":"S5","state_name":"ROOT_CAUSE_CANDIDATE","variant":null,"next":["S6 ROOT_CAUSE_VERIFIED"]},{"step":{"Event_ID":"SYN-EV-010","Event_Type":"ROOT_CAUSE_VERIFIED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"Root Cause Verified","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-010","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S5 ROOT_CAUSE_CANDIDATE","After_State":"S6 ROOT_CAUSE_VERIFIED","Transition":{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S5 ROOT_CAUSE_CANDIDATE","After_State":"S6 ROOT_CAUSE_VERIFIED","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-010","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T17:00:00Z","Reason":"the Root Cause Gate passed","Refused":false},"Transition_Refused":null,"Gate":{"gate":"ROOT_CAUSE","verdict":"READY","missing_evidence":[],"reason":"every requirement is evidenced; approval is a human decision","note":"READY is not APPROVED"},"Next_Allowed_Transition":["S7 CORRECTIVE_READY"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T18:00:00Z"},"state":"S6","state_name":"ROOT_CAUSE_VERIFIED","variant":null,"next":["S7 CORRECTIVE_READY"]},{"step":{"Event_ID":"SYN-EV-011","Event_Type":"CORRECTIVE_ACTION_READY","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"Corrective 缺 PERSON / missing person","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-011","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S6 ROOT_CAUSE_VERIFIED","After_State":"S6 ROOT_CAUSE_VERIFIED","Transition":null,"Transition_Refused":null,"Gate":{"gate":"CORRECTIVE","verdict":"BLOCKED","missing_evidence":["Owner (Role or PERSON)"],"reason":"1 of 6 requirements unmet","note":""},"Next_Allowed_Transition":["S7 CORRECTIVE_READY"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T19:00:00Z"},"state":"S6","state_name":"ROOT_CAUSE_VERIFIED","variant":null,"next":["S7 CORRECTIVE_READY"]},{"step":{"Event_ID":"SYN-EV-012","Event_Type":"CORRECTIVE_ACTION_READY","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"Corrective Ready","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-012","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S6 ROOT_CAUSE_VERIFIED","After_State":"S7 CORRECTIVE_READY","Transition":{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S6 ROOT_CAUSE_VERIFIED","After_State":"S7 CORRECTIVE_READY","Actor_ID":"SYN-PERSON-001","Actor_Role":"SYN-ROLE-STORE-OPS","Evidence_ID":"SYN-EVD-012","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T20:00:00Z","Reason":"the execution contract is complete","Refused":false},"Transition_Refused":null,"Gate":{"gate":"CORRECTIVE","verdict":"READY","missing_evidence":[],"reason":"every requirement is evidenced; approval is a human decision","note":"READY is not APPROVED"},"Next_Allowed_Transition":["S8 CORRECTIVE_IN_PROGRESS"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T21:00:00Z"},"state":"S7","state_name":"CORRECTIVE_READY","variant":null,"next":["S8 CORRECTIVE_IN_PROGRESS"]},{"step":{"Event_ID":"SYN-EV-013","Event_Type":"CORRECTIVE_ACTION_STARTED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"Corrective Started","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-013","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S7 CORRECTIVE_READY","After_State":"S8 CORRECTIVE_IN_PROGRESS","Transition":{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S7 CORRECTIVE_READY","After_State":"S8 CORRECTIVE_IN_PROGRESS","Actor_ID":"SYN-PERSON-001","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-013","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T22:00:00Z","Reason":"execution began","Refused":false},"Transition_Refused":null,"Gate":null,"Next_Allowed_Transition":["S9 AFTER_EVIDENCE_PENDING"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T23:00:00Z"},"state":"S8","state_name":"CORRECTIVE_IN_PROGRESS","variant":null,"next":["S9 AFTER_EVIDENCE_PENDING"]},{"step":{"Event_ID":"SYN-EV-014","Event_Type":"CORRECTIVE_ACTION_COMPLETED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"Corrective Completed","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-014","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S8 CORRECTIVE_IN_PROGRESS","After_State":"S9 AFTER_EVIDENCE_PENDING","Transition":{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S8 CORRECTIVE_IN_PROGRESS","After_State":"S9 AFTER_EVIDENCE_PENDING","Actor_ID":"SYN-PERSON-001","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-014","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T00:00:00Z","Reason":"execution finished; completed is not result verified","Refused":false},"Transition_Refused":null,"Gate":null,"Next_Allowed_Transition":["S10 RESULT_PENDING_VERIFICATION"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T01:00:00Z"},"state":"S9","state_name":"AFTER_EVIDENCE_PENDING","variant":null,"next":["S10 RESULT_PENDING_VERIFICATION"]},{"step":{"Event_ID":"SYN-EV-015","Event_Type":"AFTER_EVIDENCE_RECORDED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"After Evidence","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-015","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S9 AFTER_EVIDENCE_PENDING","After_State":"S10 RESULT_PENDING_VERIFICATION","Transition":{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S9 AFTER_EVIDENCE_PENDING","After_State":"S10 RESULT_PENDING_VERIFICATION","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-015","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T02:00:00Z","Reason":"post-action evidence arrived","Refused":false},"Transition_Refused":null,"Gate":null,"Next_Allowed_Transition":["S11 VERIFIED_RESULT"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T03:00:00Z"},"state":"S10","state_name":"RESULT_PENDING_VERIFICATION","variant":null,"next":["S11 VERIFIED_RESULT"]},{"step":{"Event_ID":"SYN-EV-016","Event_Type":"RESULT_VERIFIED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"Verified Result","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-016","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S10 RESULT_PENDING_VERIFICATION","After_State":"S11 VERIFIED_RESULT","Transition":{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S10 RESULT_PENDING_VERIFICATION","After_State":"S11 VERIFIED_RESULT","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-016","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T04:00:00Z","Reason":"an independent V verified the result","Refused":false},"Transition_Refused":null,"Gate":{"gate":"RESULT","verdict":"READY","missing_evidence":[],"reason":"every requirement is evidenced; approval is a human decision","note":"READY is not APPROVED"},"Next_Allowed_Transition":["S12 FINANCE_ATTRIBUTION"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T05:00:00Z"},"state":"S11","state_name":"VERIFIED_RESULT","variant":"VERIFIED_POSITIVE","next":["S12 FINANCE_ATTRIBUTION"]},{"step":{"Event_ID":"SYN-EV-017","Event_Type":"FINANCE_ATTRIBUTION_READY","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"Leakage UNKNOWN","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-017","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S11 VERIFIED_RESULT","After_State":"S12 FINANCE_ATTRIBUTION","Transition":{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S11 VERIFIED_RESULT","After_State":"S12 FINANCE_ATTRIBUTION","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-017","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T06:00:00Z","Reason":"entering finance attribution with leakage unknown","Refused":false},"Transition_Refused":null,"Gate":{"gate":"FINANCE","verdict":"BLOCKED","missing_evidence":["Evidence / V satisfied"],"reason":"1 of 3 requirements unmet","note":""},"Next_Allowed_Transition":["S13 ROI_READY"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T07:00:00Z"},"state":"S12","state_name":"FINANCE_ATTRIBUTION","variant":"VERIFIED_POSITIVE","next":["S13 ROI_READY"]},{"step":{"Event_ID":"SYN-EV-018","Event_Type":"NET_INCREMENT_VERIFIED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"Finance 关闭 / finance closed","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-018","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S12 FINANCE_ATTRIBUTION","After_State":"S12 FINANCE_ATTRIBUTION","Transition":null,"Transition_Refused":null,"Gate":{"gate":"FINANCE","verdict":"READY","missing_evidence":[],"reason":"every requirement is evidenced; approval is a human decision","note":"READY is not APPROVED"},"Next_Allowed_Transition":["S13 ROI_READY"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T08:00:00Z"},"state":"S12","state_name":"FINANCE_ATTRIBUTION","variant":"VERIFIED_POSITIVE","next":["S13 ROI_READY"]},{"step":{"Event_ID":"SYN-EV-019","Event_Type":"EVIDENCE_RECORDED","Object_ID":"SYN-MACRO-CANDIDATE","Object_Type":"Macro_Candidate","Scenario":"Macro Evidence 不足 / insufficient","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-019","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S12 FINANCE_ATTRIBUTION","After_State":"S12 FINANCE_ATTRIBUTION","Transition":null,"Transition_Refused":null,"Gate":{"gate":"MACRO","verdict":"BLOCKED","missing_evidence":["required Macro / RGM / Finance evidence"],"reason":"1 of 3 requirements unmet","note":""},"Next_Allowed_Transition":["S13 ROI_READY"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T09:00:00Z"},"state":"S12","state_name":"FINANCE_ATTRIBUTION","variant":"VERIFIED_POSITIVE","next":["S13 ROI_READY"]},{"step":{"Event_ID":"SYN-EV-020","Event_Type":"GATE_STATUS_CHANGED","Object_ID":"SYN-MACRO-CANDIDATE","Object_Type":"Macro_Candidate","Scenario":"Macro Gate Ready","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-020","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S12 FINANCE_ATTRIBUTION","After_State":"S12 FINANCE_ATTRIBUTION","Transition":null,"Transition_Refused":null,"Gate":{"gate":"MACRO","verdict":"READY","missing_evidence":[],"reason":"every requirement is evidenced; approval is a human decision","note":"READY is not APPROVED"},"Next_Allowed_Transition":["S13 ROI_READY"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T10:00:00Z"},"state":"S12","state_name":"FINANCE_ATTRIBUTION","variant":"VERIFIED_POSITIVE","next":["S13 ROI_READY"]},{"step":{"Event_ID":"SYN-EV-021","Event_Type":"EVIDENCE_RECORDED","Object_ID":"SYN-MACRO-CANDIDATE","Object_Type":"Macro_Candidate","Scenario":"Hero 访谈 Candidate / interview","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-021","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S12 FINANCE_ATTRIBUTION","After_State":"S12 FINANCE_ATTRIBUTION","Transition":null,"Transition_Refused":null,"Gate":null,"Next_Allowed_Transition":["S13 ROI_READY"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T11:00:00Z"},"state":"S12","state_name":"FINANCE_ATTRIBUTION","variant":"VERIFIED_POSITIVE","next":["S13 ROI_READY"]},{"step":{"Event_ID":"SYN-EV-023","Event_Type":"GATE_STATUS_CHANGED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"高风险动作 / high-risk action","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-023","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S12 FINANCE_ATTRIBUTION","After_State":"S12 FINANCE_ATTRIBUTION","Transition":null,"Transition_Refused":null,"Gate":{"gate":"CORRECTIVE","verdict":"PENDING_APPROVAL","missing_evidence":[],"reason":"PRICE_CHANGE is high risk: a human must approve","note":""},"Next_Allowed_Transition":["S13 ROI_READY"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T12:00:00Z"},"state":"S12","state_name":"FINANCE_ATTRIBUTION","variant":"VERIFIED_POSITIVE","next":["S13 ROI_READY"]},{"step":{"Event_ID":"SYN-EV-022","Event_Type":"GATE_STATUS_CHANGED","Object_ID":"SYN-TX-FIRST","Object_Type":"First_Live_TX","Scenario":"跳级尝试 / level skip attempt (must be refused)","Intake":{"result":"ACCEPTED","event_id":"SYN-EV-022","reason":"","missing":[],"conflict_with":null,"created_objects":[]},"Before_State":"S12 FINANCE_ATTRIBUTION","After_State":"S12 FINANCE_ATTRIBUTION","Transition":null,"Transition_Refused":"S12 -> S14 is not an allowed transition; allowed: ['S13']","Gate":null,"Next_Allowed_Transition":["S13 ROI_READY"],"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T14:00:00Z"},"state":"S12","state_name":"FINANCE_ATTRIBUTION","variant":"VERIFIED_POSITIVE","next":["S13 ROI_READY"]}],"audit":[{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S0 WAITING_CANDIDATE","After_State":"S1 CANDIDATE_SELECTED","Actor_ID":"GATE_APPROVER","Actor_Role":"GATE_APPROVER","Evidence_ID":"SYN-EVD-001","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T00:00:00Z","Reason":"an authorised gate selected the candidate TX","Refused":false},{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S1 CANDIDATE_SELECTED","After_State":"S2 TARGET_VERIFIED","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-008a","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T09:00:00Z","Reason":"target object, metric, period, unit, decision and evidence complete","Refused":false},{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S2 TARGET_VERIFIED","After_State":"S3 GAP_VERIFIED","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-008b","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T11:00:00Z","Reason":"approved target and verified actual on the same basis","Refused":false},{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S3 GAP_VERIFIED","After_State":"S4 ROUTING_VERIFIED","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-008c","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T13:00:00Z","Reason":"Routing_Class has evidence and an audit trail","Refused":false},{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S4 ROUTING_VERIFIED","After_State":"S5 ROOT_CAUSE_CANDIDATE","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-009","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T15:00:00Z","Reason":"a candidate root cause without an independent V","Refused":false},{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S5 ROOT_CAUSE_CANDIDATE","After_State":"S6 ROOT_CAUSE_VERIFIED","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-010","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T17:00:00Z","Reason":"the Root Cause Gate passed","Refused":false},{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S6 ROOT_CAUSE_VERIFIED","After_State":"S7 CORRECTIVE_READY","Actor_ID":"SYN-PERSON-001","Actor_Role":"SYN-ROLE-STORE-OPS","Evidence_ID":"SYN-EVD-012","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T20:00:00Z","Reason":"the execution contract is complete","Refused":false},{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S7 CORRECTIVE_READY","After_State":"S8 CORRECTIVE_IN_PROGRESS","Actor_ID":"SYN-PERSON-001","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-013","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T22:00:00Z","Reason":"execution began","Refused":false},{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S8 CORRECTIVE_IN_PROGRESS","After_State":"S9 AFTER_EVIDENCE_PENDING","Actor_ID":"SYN-PERSON-001","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-014","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T00:00:00Z","Reason":"execution finished; completed is not result verified","Refused":false},{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S9 AFTER_EVIDENCE_PENDING","After_State":"S10 RESULT_PENDING_VERIFICATION","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-015","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T02:00:00Z","Reason":"post-action evidence arrived","Refused":false},{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S10 RESULT_PENDING_VERIFICATION","After_State":"S11 VERIFIED_RESULT","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-016","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T04:00:00Z","Reason":"an independent V verified the result","Refused":false},{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S11 VERIFIED_RESULT","After_State":"S12 FINANCE_ATTRIBUTION","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-017","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T06:00:00Z","Reason":"entering finance attribution with leakage unknown","Refused":false},{"Object_ID":"TX-UNSELECTED","Object_Type":"First_Live_TX","Before_State":"S12 FINANCE_ATTRIBUTION","After_State":"S12 FINANCE_ATTRIBUTION","Actor_ID":"engine","Actor_Role":"SYSTEM","Evidence_ID":"SYN-EVD-022","Gate_ID":null,"Rule_Version":"PW1/RULES/v1.0","Timestamp":"2026-09-20T13:00:00Z","Reason":"refused: S12 -> S14 skips a level; allowed: ['S13']","Refused":true}],"projection":{"Object_ID":"TX-UNSELECTED","Current_State":"S12 FINANCE_ATTRIBUTION","Routing_Class":"UNKNOWN","Fact_Class":"CANDIDATE","Blocking_Reason":"finance blocked at INTERNAL_CANNIBALIZATION","Missing_Evidence":["INTERNAL_CANNIBALIZATION","CHANNEL_MIGRATION","PULL_FORWARD","SWITCH_OUT","PRICE_INVESTMENT_LEAKAGE","RETURNS_OTHER","Macro:Category_Size_Growth","Macro:Competitive_Benchmark","Macro:Target_Share","Macro:Occasion_Pool","Macro:Shopper_Mission","Macro:Choice_Substitution","Macro:Growth_Source","Macro:Cannibalization","Macro:Channel_Migration","Macro:Finance_Supply_Constraints","Macro:Evidence_Confidence"],"Owner_Role":"HEMA Business A","Owner_PERSON":null,"Verifier":null,"Next_Allowed_Transition":["S13 ROI_READY"],"Evidence_ID":null,"Business_Time":"2026-09-20","As_of_Date":"2026-09-20","Rule_Version":"PW1/RULES/v1.0","intake_counts":{"ACCEPTED":22,"EVIDENCE_PENDING":1,"CONFLICT":1,"REJECTED_INTAKE":1,"DUPLICATE_NOOP":1}},"blockers":{"_source":"004A §9 / 004 §11 — WORKING PROJECTION only, never business fact.","B01":{"title":"旧口径 / legacy basis","object":"Macro/Target Contract","status":"OPEN","candidate_events":["EVIDENCE_RECORDED","GATE_STATUS_CHANGED"]},"B02":{"title":"Portfolio Universe","object":"Portfolio Universe","status":"CONFLICT/OPEN"},"B03":{"title":"859万 Macro Candidate","object":"Macro Candidate","status":"PARTIAL/OPEN","fact_class":"CANDIDATE","decision":"PENDING","note":"A04-A08 incomplete"},"B04":{"title":"V 冲突 / verification conflict","object":"REAL-15 Verification","status":"CONFLICT","detail":"0/7 vs 8/8 must raise EVIDENCE_CONFLICT_DETECTED; the current V updates only after it closes"},"B05":{"title":"First Live TX","object":"First Live TX","status":"NOT SELECTED","state":"S0"},"B06":{"title":"Finance Gate","object":"Finance","status":"OPEN","detail":"Rule/structure ready; real leakage evidence incomplete; Net Increment / CM / ROI BLOCKED"}},"finance":{"steps":[{"step":"GROSS_RESULT","value":1240000.0,"status":"OBSERVED","note":"an observation; not a company net increment"},{"step":"INTERNAL_CANNIBALIZATION","value":null,"status":"UNKNOWN","note":"UNKNOWN is never treated as 0"},{"step":"CHANNEL_MIGRATION","value":null,"status":"UNKNOWN","note":"UNKNOWN is never treated as 0"},{"step":"PULL_FORWARD","value":null,"status":"UNKNOWN","note":"UNKNOWN is never treated as 0"},{"step":"SWITCH_OUT","value":null,"status":"UNKNOWN","note":"UNKNOWN is never treated as 0"},{"step":"PRICE_INVESTMENT_LEAKAGE","value":null,"status":"UNKNOWN","note":"UNKNOWN is never treated as 0"},{"step":"RETURNS_OTHER","value":null,"status":"UNKNOWN","note":"UNKNOWN is never treated as 0"},{"step":"VERIFIED_NET_INCREMENT","value":null,"status":"BLOCKED","reason":"6 applicable leakage(s) UNKNOWN: INTERNAL_CANNIBALIZATION, CHANNEL_MIGRATION, PULL_FORWARD, SWITCH_OUT, PRICE_INVESTMENT_LEAKAGE, RETURNS_OTHER"},{"step":"INCREMENTAL_CM","value":null,"status":"BLOCKED","reason":"the verified net increment is blocked"},{"step":"ROI","value":null,"status":"BLOCKED","reason":"incremental CM is not verified"},{"step":"NEXT_BUDGET_RELEASE","value":null,"status":"BLOCKED","reason":"ROI is not verified"}],"blocked_at":"INTERNAL_CANNIBALIZATION","net_increment":{"value":null,"status":"BLOCKED","reason":"6 applicable leakage(s) UNKNOWN: INTERNAL_CANNIBALIZATION, CHANNEL_MIGRATION, PULL_FORWARD, SWITCH_OUT, PRICE_INVESTMENT_LEAKAGE, RETURNS_OTHER"},"roi_available":false,"unknown_leakages":["INTERNAL_CANNIBALIZATION","CHANNEL_MIGRATION","PULL_FORWARD","SWITCH_OUT","PRICE_INVESTMENT_LEAKAGE","RETURNS_OTHER"],"closed_leakages":[],"increments":{"CATEGORY":{"value":null,"status":"UNKNOWN"},"COMPANY":{"value":null,"status":"BLOCKED"},"CHANNEL_STORE":{"value":null,"status":"UNKNOWN"}},"gross_is_not_net":"A gross result is an observation. It is not a company net increment and is never shown as one."},"macro":{"value":8590000.0,"slots":{"Category_Size_Growth":{"state":"VERIFIED","evidence_id":"SYN-EVD-M1"},"Competitive_Benchmark":{"state":"CANDIDATE","evidence_id":"SYN-EVD-M2"},"Target_Share":{"state":"UNKNOWN","evidence_id":null},"Occasion_Pool":{"state":"UNKNOWN","evidence_id":null},"Shopper_Mission":{"state":"UNKNOWN","evidence_id":null},"Choice_Substitution":{"state":"UNKNOWN","evidence_id":null},"Growth_Source":{"state":"UNKNOWN","evidence_id":null},"Cannibalization":{"state":"CONFLICT","evidence_id":"SYN-EVD-M3"},"Channel_Migration":{"state":"UNKNOWN","evidence_id":null},"Finance_Supply_Constraints":{"state":"UNKNOWN","evidence_id":null},"Evidence_Confidence":{"state":"UNKNOWN","evidence_id":null}},"completeness":{"verified":1,"total":11,"unknown":["Target_Share","Occasion_Pool","Shopper_Mission","Choice_Substitution","Growth_Source","Channel_Migration","Finance_Supply_Constraints","Evidence_Confidence"],"conflict":["Cannibalization"]},"decision":{"decision":"PENDING","fact_class":"CONFLICT","reason":"unresolved conflict in Cannibalization"},"gate":{"gate":"MACRO","verdict":"BLOCKED","missing_evidence":["required Macro / RGM / Finance evidence","A4 DecisionRight"],"reason":"2 of 3 requirements unmet","note":""},"abc":{"status":"NOT_READY","packs":[],"reason":"the Macro Gate is BLOCKED"}},"evidence":[{"Observation":"store staff report the shelf was empty at 18:00","Object_ID":"SYN-TX-FIRST","Time_Window":"2026-09-18","Source":"STORE_VISIT","Evidence_ID":"SYN-EVD-H1","Role":"SUPPORTING","Candidate_Claim":"shelf availability is the root cause","Fact_Class":"HYPOTHESIS","Verifier":null,"Attaches_To":"SYN-TX-FIRST","Next_Check":"physical backroom count","Missing_Evidence":["Verifier"],"Verified_Root_Cause":false},{"Observation":"the app reported stock on hand at the same hour","Object_ID":"SYN-TX-FIRST","Time_Window":"2026-09-18","Source":"APP_REPORT","Evidence_ID":"SYN-EVD-H2","Role":"COUNTER","Candidate_Claim":"stock was available, so availability is not the cause","Fact_Class":"HYPOTHESIS","Verifier":null,"Attaches_To":"SYN-TX-FIRST","Next_Check":"reconcile the two bases","Missing_Evidence":["Verifier"],"Verified_Root_Cause":false},{"Observation":"an interview suggests a missing dinner occasion","Object_ID":"SYN-MACRO-CANDIDATE","Time_Window":"2026-09","Source":"INTERVIEW","Evidence_ID":"SYN-EVD-H3","Role":"SUPPORTING","Candidate_Claim":"an occasion gap explains the macro shortfall","Fact_Class":"HYPOTHESIS","Verifier":null,"Attaches_To":"SYN-MACRO-CANDIDATE","Next_Check":"occasion pool sizing","Missing_Evidence":["Verifier"],"Verified_Root_Cause":false},{"Observation":"a hallway remark with no object or date","Object_ID":null,"Time_Window":null,"Source":null,"Evidence_ID":null,"Role":"SUPPORTING","Candidate_Claim":null,"Fact_Class":"UNKNOWN","Verifier":null,"Attaches_To":null,"Next_Check":null,"Missing_Evidence":["Object_ID","Time_Window","Source","Evidence_ID","Verifier"],"Verified_Root_Cause":false}],"routing":{"_source":"004A §6","values":["EXECUTION","OPPORTUNITY","MIXED","EVIDENCE","UNKNOWN"],"EXECUTION":"The business design is right; full execution closes the gap. Repair path; Strategic RGM is not forced.","OPPORTUNITY":"Execution is basically fine and the gap still will not close. Enter Occasion / Need State / Shopper Mission / Choice / Substitution diagnosis.","MIXED":"Execution and opportunity coexist; two evidence chains in parallel, neither substituting for the other.","EVIDENCE":"Facts insufficient, basis conflict, or V insufficient. Collect evidence first; a root-cause upgrade is not allowed.","UNKNOWN":"Cannot be classified. Establish a minimum verification checkpoint; do not force a judgement.","growth_lever_rule":"A Growth Lever unlocks only once the evidence Opportunity / Mixed requires is satisfied. Otherwise LOCKED."},"gates":{"TARGET":{"requires":["Object/Metric/Period/Unit aligned","Target Decision valid","Target Evidence valid"],"yields":"S2 TARGET_VERIFIED"},"GAP":{"requires":["Target Verified","Actual Verified","same basis"],"yields":"S3 GAP_VERIFIED"},"ROUTING":{"requires":["evidence sufficient","no unhandled basis conflict"],"yields":"S4 ROUTING_VERIFIED","insufficient":"stays EVIDENCE / UNKNOWN"},"ROOT_CAUSE":{"requires":["Supporting Evidence present","Counter-Evidence checked","Independent V = PASS"],"yields":"S6 ROOT_CAUSE_VERIFIED"},"CORRECTIVE":{"requires":["Root Cause Verified","Task_ID","Owner (Role or PERSON)","Due","Resource","Acceptance Evidence defined"],"yields":"S7 CORRECTIVE_READY"},"RESULT":{"requires":["Corrective executed","After Evidence","Independent V"],"yields":"S11 VERIFIED_*"},"FINANCE":{"requires":["Verified Result","applicable Leakage rules approved","Evidence / V satisfied"],"yields":"FINANCE_ATTRIBUTION / NET_INCREMENT calculation allowed"},"ROI":{"requires":["Verified Net Increment","Unit Economics","Resource Used","Finance V"],"yields":"S13 ROI_READY"},"RELEASE":{"requires":["ROI Ready"],"yields":"may be submitted only","note":"Release / Iterate / Stop is approved by the single authorised A / Gate Approver."},"MACRO":{"_source":"004 §8","requires":["Object/Metric/Period/Unit aligned","required Macro / RGM / Finance evidence","A4 DecisionRight"],"yields":"A/B/C READY"}},"rvt":{"_source":"004A §10 — reverse tests / fail-safe","RVT-01":"An UNKNOWN input must not become 0.","RVT-02":"A CONFLICT input must not auto-select the newest, largest or team value.","RVT-03":"A duplicate event is DUPLICATE_NOOP and builds no second task.","RVT-04":"A wrong Object_ID is REJECTED_INTAKE and creates no new Store / SKU / PERSON.","RVT-05":"An evidence file exists but the claim is unverified: EVIDENCE_PENDING.","RVT-06":"A missing PERSON_ID means the corrective is not formally accepted.","RVT-07":"A root cause with supporting evidence but no counter check is not verified.","RVT-08":"A root cause without an independent V is not verified.","RVT-09":"Corrective completed without after evidence: the result is not verified.","RVT-10":"A verified result with leakage UNKNOWN blocks net increment and ROI.","RVT-11":"Insufficient opportunity evidence keeps a Growth Lever LOCKED.","RVT-12":"A high-risk price / budget / irreversible action is PENDING APPROVAL.","RVT-13":"Running the chain without gate approval does not declare the working loop closed.","RVT-14":"No flow triggers PR / merge / deploy / production / scale."},"h_tests":{"_source":"004 §13 — minimum acceptance","H01":"A single valid event updates only its own object.","H02":"A fact upgrade without an Evidence_ID is blocked.","H03":"Replaying the same event is idempotent.","H04":"An object / time / metric conflict enters CONFLICT.","H05":"Closing the B04 conflict updates the master projection and keeps the history in audit.","H06":"Loading the first TX candidate does not require rebuilding the fifteen.","H07":"A root cause missing counter evidence or a V stays pending.","H08":"Root cause verified opens the corrective entry but does not execute it.","H09":"A corrective without a PERSON formally accepting is blocked.","H10":"After evidence arriving allows result verification to begin.","H11":"A verified result enters finance attribution but does not directly produce ROI.","H12":"Any applicable leakage UNKNOWN blocks net increment.","H13":"Six leakages closed and verified allow net increment to be computed.","H14":"CM / ROI run per the approved Finance Contract.","H15":"With insufficient evidence the 859万 KEEP / ADJUST / REJECT is PENDING.","H16":"Once the Macro Gate is satisfied an A/B/C candidate is generated, never auto-approved.","H17":"A hero interview yields candidate / supporting evidence only, never auto-verified.","H18":"The harness export matches the Master Closure fields and state semantics.","H19":"The v0.2.1 file is not overwritten.","H20":"There is no PR / merge / deploy / production / scale side effect."},"red_lines":{"_source":"004 §12 — F01..F13","F01":"UNKNOWN must not display as 0.","F02":"CONFLICT must not auto-select.","F03":"A wrong Store / SKU / PERSON / Object_ID must not create a new object.","F04":"A duplicate event must not create a second task or transition.","F05":"No independent V, no root cause verified.","F06":"No after evidence, no result verified.","F07":"Execution evidence must not close a business result.","F08":"GMV / gross result must not become a company net increment.","F09":"Cannibalization UNKNOWN keeps net increment and ROI BLOCKED.","F10":"A growth lever stays LOCKED while opportunity evidence is insufficient.","F11":"A high-risk price / budget / irreversible action is PENDING APPROVAL.","F12":"The system must not declare the working loop closed or enterprise capability proven.","F13":"Nothing triggers PR / merge / deploy / production / scale."},"baseline":{"file":"INFINITY_HEMA_MWE_v0.2.1_CC_Demo.html","sha256":"1e114d05ace25734719157d1d9c37fd8a5b6e2f40cfa432c17bdc74be46a7a8d","note":"READ ONLY BASELINE (004B §7); not overwritten"}}</script>
+<script>/* Pre-Wired Runtime Harness — view layer.
+ *
+ * Replays the recording the Python engine produced. `CURSOR` is how far through
+ * the recorded timeline we are; every page renders from frames[0..CURSOR]. Step,
+ * batch and reset move the cursor. Nothing here recomputes a state, a gate or a
+ * finance figure — 004A §8 forbids a second set of business facts, and a second
+ * implementation is how that starts.
+ */
+"use strict";
+(() => {
+  const D = JSON.parse(document.getElementById("harness-data").textContent);
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g,
+    c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  const OK = ["ACCEPTED", "VERIFIED", "READY", "CLOSED", "OBSERVED", "PASS", "DONE"];
+  const WARN = ["EVIDENCE_PENDING", "PENDING", "PENDING_APPROVAL", "PARTIAL/OPEN",
+                "NOT_READY", "OPEN", "WIP"];
+  const STOP = ["CONFLICT", "REJECTED_INTAKE", "BLOCKED", "LOCKED", "NOT_AUTHORIZED",
+                "CONFLICT/OPEN", "FAIL"];
+  const HOLD = ["UNKNOWN", "DUPLICATE_NOOP", "NOT SELECTED", "NOT_TESTED", "TODO"];
+  function kind(v) {
+    v = String(v || "").toUpperCase();
+    if (v === "CANDIDATE" || v === "SYNTHETIC") return "cand";
+    if (v === "HYPOTHESIS") return "hyp";
+    if (OK.includes(v)) return "ok";
+    if (WARN.includes(v)) return "warn";
+    if (STOP.includes(v)) return "stop";
+    if (HOLD.includes(v)) return "hold";
+    return "dim";
+  }
+  /* UNKNOWN renders as a dash. Never 0 (004B §4 / F01). */
+  const dash = '<span class="muted">—</span>';
+  const pill = (v, k) => (v == null || v === "") ? dash
+    : `<span class="pill p-${k || kind(v)}">${esc(v)}</span>`;
+  const num = v => (v == null) ? dash : esc(v);
+  const panel = (t, b) => `<div class="panel"><h2>${esc(t)}</h2><div class="body">${b}</div></div>`;
+  /* The five questions every page must answer (004B §4). */
+  const five = o => `<dl class="five">
+    <dt>Current State</dt><dd>${o.state ? pill(o.state) : dash}</dd>
+    <dt>Blocking Reason</dt><dd>${esc(o.blocking) || dash}</dd>
+    <dt>Missing Evidence</dt><dd>${(o.missing || []).length
+      ? "<ul style='margin:0;padding-left:16px'>" + o.missing.map(m => `<li>${esc(m)}</li>`).join("") + "</ul>"
+      : '<span class="muted">none outstanding</span>'}</dd>
+    <dt>Owner</dt><dd>${esc(o.owner) || dash}</dd>
+    <dt>Next Allowed Transition</dt><dd>${(o.next || []).length
+      ? o.next.map(n => pill(n, "dim")).join(" ")
+      : '<span class="muted">none — awaiting an authorised gate</span>'}</dd></dl>`;
+
+  const TABS = [["p1", "P1 INBOX"], ["p2", "P2 6 BLOCKERS"], ["p3", "P3 FIRST LIVE TX"],
+                ["p4", "P4 MACRO"], ["p5", "P5 REAL-15"], ["p6", "P6 HERO EVIDENCE"],
+                ["p7", "P7 FINANCE"], ["p8", "P8 GATES / AUDIT"]];
+  let CUR = "p1";
+  let CURSOR = 0;                      // frames processed so far
+
+  const seen = () => D.frames.slice(0, CURSOR);
+  const latest = () => CURSOR ? D.frames[CURSOR - 1] : null;
+
+  /* ---- P1 INBOX --------------------------------------------------------- */
+  function p1() {
+    const rows = seen();
+    const counts = {};
+    rows.forEach(f => { const r = f.step.Intake.result; counts[r] = (counts[r] || 0) + 1; });
+    const order = ["ACCEPTED", "EVIDENCE_PENDING", "CONFLICT", "REJECTED_INTAKE",
+                   "DUPLICATE_NOOP"];
+    $("s-p1").innerHTML = panel("INBOX — intake outcomes",
+      `<table><thead><tr><th>Intake result</th><th>Count</th><th>Meaning</th></tr></thead><tbody>`
+      + order.map(r => `<tr><td>${pill(r)}</td><td>${counts[r] || 0}</td>
+          <td class="muted">${esc({
+            ACCEPTED: "validated, matched and evidenced",
+            EVIDENCE_PENDING: "source present, claim not verified",
+            CONFLICT: "sources disagree; neither is chosen",
+            REJECTED_INTAKE: "refused; no object is created",
+            DUPLICATE_NOOP: "idempotent repeat; no second task"}[r])}</td></tr>`).join("")
+      + `</tbody></table>`)
+      + panel("Events so far",
+        `<table><thead><tr><th>Event</th><th>Type</th><th>Object</th><th>Intake</th>
+          <th>Scenario</th><th>Reason</th></tr></thead><tbody>`
+        + rows.map(f => `<tr><td><code>${esc(f.step.Event_ID)}</code></td>
+            <td class="muted">${esc(f.step.Event_Type)}</td>
+            <td><code>${esc(f.step.Object_ID)}</code></td>
+            <td>${pill(f.step.Intake.result)}</td>
+            <td class="muted">${esc(f.step.Scenario)}</td>
+            <td class="muted">${esc(f.step.Intake.reason)}</td></tr>`).join("")
+        + `</tbody></table>`
+        + (rows.length ? "" : `<div class="note">No event has been replayed yet. Press <b>Step</b>.</div>`))
+      + panel("State", five({
+          state: rows.length ? "PROCESSING" : "IDLE",
+          blocking: rows.length ? "" : "no event has been replayed yet",
+          missing: [], owner: "Tech A / Claude Code",
+          next: ["replay the next synthetic event"]}));
+  }
+
+  /* ---- P2 6 BLOCKERS ---------------------------------------------------- */
+  function p2() {
+    const b = D.blockers;
+    const ids = Object.keys(b).filter(k => !k.startsWith("_"));
+    $("s-p2").innerHTML = panel("6 BLOCKERS — working projection only",
+      `<table><thead><tr><th>ID</th><th>Title</th><th>Object</th><th>Status</th>
+        <th>Detail</th></tr></thead><tbody>`
+      + ids.map(id => `<tr><td><code>${esc(id)}</code></td><td>${esc(b[id].title)}</td>
+          <td class="muted">${esc(b[id].object)}</td><td>${pill(b[id].status)}</td>
+          <td class="muted">${esc(b[id].detail || b[id].note || "")}
+            ${b[id].fact_class ? " " + pill(b[id].fact_class) : ""}</td></tr>`).join("")
+      + `</tbody></table>
+        <div class="note warn">这是 WORKING PROJECTION，不是团队事实。任何一条都不会因为本页显示而升级为 TEAM_FACT。
+          <span class="muted">A working projection, never a team fact.</span></div>`)
+      + panel("State", five({state: "OPEN", blocking: "six blockers are open",
+          missing: ids.map(i => `${i} ${b[i].title}`), owner: "HEMA Business A",
+          next: ["close B04 verification conflict", "select the First Live TX"]}));
+  }
+
+  /* ---- P3 FIRST LIVE TX ------------------------------------------------- */
+  function p3() {
+    const sm = D.state_machine.states;
+    const keys = Object.keys(sm);
+    const f = latest();
+    const cur = f ? f.state : D.state_machine.initial;
+    const idx = keys.indexOf(cur);
+    const refused = seen().filter(x => x.step.Transition_Refused);
+    $("s-p3").innerHTML = panel(`FIRST LIVE TX — S0 … S14 (current: ${esc(cur)} ${esc(sm[cur].name)})`,
+      `<div class="chain">` + keys.map((k, i) =>
+        `<div class="node ${i < idx ? "done" : i === idx ? "cur" : ""}">
+           <code>${esc(k)}</code> ${esc(sm[k].name)}</div>`).join("") + `</div>
+       <div class="note">跳级一律拒绝并写 Audit。${refused.length
+         ? `本次回放共拒绝 <b>${refused.length}</b> 次。`
+         : "本次回放尚无跳级尝试。"}
+         <span class="muted">A level skip is always refused and audited.</span></div>`
+      + (refused.length ? `<table><thead><tr><th>Event</th><th>Refused</th></tr></thead><tbody>`
+         + refused.map(x => `<tr><td><code>${esc(x.step.Event_ID)}</code></td>
+             <td class="muted">${esc(x.step.Transition_Refused)}</td></tr>`).join("")
+         + `</tbody></table>` : ""))
+      + panel("Before → After (this step)", f
+        ? `<table><tbody>
+             <tr><th>Event</th><td><code>${esc(f.step.Event_ID)}</code> ${esc(f.step.Event_Type)}</td></tr>
+             <tr><th>Intake</th><td>${pill(f.step.Intake.result)} <span class="muted">${esc(f.step.Intake.reason)}</span></td></tr>
+             <tr><th>Before</th><td><code>${esc(f.step.Before_State)}</code></td></tr>
+             <tr><th>After</th><td><code>${esc(f.step.After_State)}</code></td></tr>
+             <tr><th>Gate</th><td>${f.step.Gate ? pill(f.step.Gate.verdict) + " " + esc(f.step.Gate.gate)
+                 + (f.step.Gate.missing_evidence.length
+                    ? ` <span class="muted">missing: ${esc(f.step.Gate.missing_evidence.join(", "))}</span>` : "")
+                 + (f.step.Gate.note ? ` <span class="muted">(${esc(f.step.Gate.note)})</span>` : "")
+                 : dash}</td></tr>
+           </tbody></table>`
+        : `<div class="note">Press <b>Step</b> to replay the first event.</div>`)
+      + panel("State", five({state: `${cur} ${sm[cur].name}`,
+          blocking: D.projection.Blocking_Reason,
+          missing: D.projection.Missing_Evidence,
+          owner: D.projection.Owner_Role,
+          next: f ? f.next : [keys[1] + " " + sm[keys[1]].name]}));
+  }
+
+  /* ---- P4 MACRO --------------------------------------------------------- */
+  function p4() {
+    const m = D.macro;
+    $("s-p4").innerHTML = panel(`MACRO — ${num(m.value)} revalidation`,
+      `<table><thead><tr><th>Input slot</th><th>State</th><th>Evidence_ID</th></tr></thead><tbody>`
+      + Object.entries(m.slots).map(([s, v]) => `<tr><td>${esc(s)}</td>
+          <td>${pill(v.state)}</td><td class="muted">${v.evidence_id ? "<code>" + esc(v.evidence_id) + "</code>" : dash}</td></tr>`).join("")
+      + `</tbody></table>
+        <div class="note">${esc(m.completeness.verified)} / ${esc(m.completeness.total)} 输入已核验。
+          KEEP / ADJUST / REJECT = ${esc(m.decision.decision)} — ${esc(m.decision.reason)}</div>`)
+      + panel("A / B / C Readiness",
+        `<div class="note ${m.abc.status === "NOT_READY" ? "bad" : ""}">Macro Gate ${pill(m.gate.verdict)}
+           ${m.gate.missing_evidence.length ? `<span class="muted">missing: ${esc(m.gate.missing_evidence.join(", "))}</span>` : ""}
+           <div class="muted" style="margin-top:4px">${esc(m.abc.reason)}</div></div>`
+        + (m.abc.packs.length
+           ? `<table><thead><tr><th>Case</th><th>State</th><th>Approved</th></tr></thead><tbody>`
+             + m.abc.packs.map(p => `<tr><td><code>${esc(p.case)}</code></td>
+                 <td>${pill(p.state)}</td><td>${pill(String(p.approved).toUpperCase() === "TRUE" ? "YES" : "NO", "stop")}</td></tr>`).join("")
+             + `</tbody></table>`
+           : `<div class="note">Macro Gate 未满足，不生成 A/B/C Decision Pack。</div>`))
+      + panel("State", five({state: m.decision.fact_class,
+          blocking: m.decision.reason, missing: m.completeness.unknown.map(s => "Macro:" + s),
+          owner: "A4 DecisionRight", next: ["close the macro input evidence"]}));
+  }
+
+  /* ---- P5 REAL-15 ------------------------------------------------------- */
+  function p5() {
+    const b04 = D.blockers.B04;
+    $("s-p5").innerHTML = panel("REAL-15 — read-only current routing / state",
+      `<div class="note warn">REAL-15 在本 Harness 中<strong>只读</strong>。004 §9 要求本页不重建十五颗；
+         装载第一颗 TX 不触碰它们。<span class="muted">Read-only here; loading the first TX does not rebuild the fifteen.</span></div>
+       <table><thead><tr><th>Object</th><th>Status</th><th>Detail</th></tr></thead><tbody>
+         <tr><td><code>${esc(b04.object)}</code></td><td>${pill(b04.status)}</td>
+             <td class="muted">${esc(b04.detail)}</td></tr>
+       </tbody></table>`
+      + `<div class="note bad">V 定义冲突未关闭：<code>0/7</code> 与 <code>8/8</code> 并列，不自动择一。
+           关闭后才可更新 Current V。</div>`)
+      + panel("Routing_Class 规则", `<table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody>`
+        + D.routing.values.map(v => `<tr><td>${pill(v)}</td>
+            <td class="muted">${esc(D.routing[v])}</td></tr>`).join("")
+        + `</tbody></table><div class="note">${esc(D.routing.growth_lever_rule)}</div>`)
+      + panel("State", five({state: "CONFLICT", blocking: b04.detail,
+          missing: ["REAL-15 verification basis agreement"], owner: "HEMA Business A",
+          next: ["raise EVIDENCE_CONFLICT_DETECTED and close it"]}));
+  }
+
+  /* ---- P6 HERO EVIDENCE ------------------------------------------------- */
+  function p6() {
+    const items = D.evidence;
+    $("s-p6").innerHTML = panel("HERO EVIDENCE — mapping",
+      `<table><thead><tr><th>Observation</th><th>Object</th><th>Window</th><th>Source</th>
+        <th>Role</th><th>Fact_Class</th><th>Attaches to</th><th>Missing</th></tr></thead><tbody>`
+      + items.map(i => `<tr><td>${esc(i.Observation)}</td>
+          <td>${i.Object_ID ? "<code>" + esc(i.Object_ID) + "</code>" : dash}</td>
+          <td class="muted">${esc(i.Time_Window) || dash}</td>
+          <td class="muted">${esc(i.Source) || dash}</td>
+          <td>${pill(i.Role)}</td><td>${pill(i.Fact_Class)}</td>
+          <td class="muted">${i.Attaches_To ? "<code>" + esc(i.Attaches_To) + "</code>" : dash}</td>
+          <td class="muted">${esc((i.Missing_Evidence || []).join(", ")) || dash}</td></tr>`).join("")
+      + `</tbody></table>
+        <div class="note warn">会议共识、品牌回复、销售回复、访谈都是 Evidence Input，
+          <strong>不自动等于 TEAM_FACT 或 Verified Root Cause</strong>。
+          对象 / 时间 / 来源无法确定的，保持 HYPOTHESIS 或 UNKNOWN。</div>`)
+      + panel("State", five({state: "CANDIDATE",
+          blocking: "no mapped item has an independent verifier",
+          missing: items.filter(i => (i.Missing_Evidence || []).length)
+                        .map(i => `${i.Evidence_ID || "unidentified"}: ${(i.Missing_Evidence || []).join(", ")}`),
+          owner: "A-line Macro RGM / B-line TX", next: ["obtain an independent V"]}));
+  }
+
+  /* ---- P7 FINANCE ------------------------------------------------------- */
+  function p7() {
+    const f = D.finance;
+    $("s-p7").innerHTML = panel("FINANCE — gross → six leakages → net → CM → ROI",
+      `<div class="bridge">` + f.steps.map(s => `<div class="stp${s.status === "BLOCKED" ? " blocked" : ""}">
+          <span><b>${esc(s.step)}</b> — ${num(s.value)}
+            ${s.reason || s.note ? `<div class="muted">${esc(s.reason || s.note)}</div>` : ""}</span>
+          ${pill(s.status)}</div>`).join("") + `</div>
+       <div class="note bad">Blocked at <b>${esc(f.blocked_at)}</b>. 任一适用 Leakage = UNKNOWN →
+         Verified Net Increment = BLOCKED；<strong>UNKNOWN 绝不按 0 处理</strong>。</div>
+       <div class="note">${esc(f.gross_is_not_net)}</div>`)
+      + panel("三类增量分别输出，不得混写", `<table><thead><tr><th>Increment</th><th>Value</th><th>Status</th></tr></thead><tbody>`
+        + Object.entries(f.increments).map(([k, v]) => `<tr><td><code>${esc(k)}</code></td>
+            <td>${num(v.value)}</td><td>${pill(v.status)}</td></tr>`).join("")
+        + `</tbody></table>`)
+      + panel("State", five({state: "BLOCKED", blocking: f.net_increment.reason,
+          missing: f.unknown_leakages, owner: "Finance + Independent V",
+          next: ["close the six leakage evidences", "obtain a finance V"]}));
+  }
+
+  /* ---- P8 GATES / AUDIT ------------------------------------------------- */
+  function p8() {
+    const rows = seen();
+    $("s-p8").innerHTML = panel("GATE verdicts (this replay)",
+      rows.filter(f => f.step.Gate).length
+      ? `<table><thead><tr><th>Event</th><th>Gate</th><th>Verdict</th><th>Missing</th><th>Note</th></tr></thead><tbody>`
+        + rows.filter(f => f.step.Gate).map(f => `<tr><td><code>${esc(f.step.Event_ID)}</code></td>
+            <td>${esc(f.step.Gate.gate)}</td><td>${pill(f.step.Gate.verdict)}</td>
+            <td class="muted">${esc(f.step.Gate.missing_evidence.join(", ")) || dash}</td>
+            <td class="muted">${esc(f.step.Gate.note || f.step.Gate.reason)}</td></tr>`).join("")
+        + `</tbody></table><div class="note">任何 READY ≠ APPROVED。系统不得自行宣布 Gate 通过。
+             <span class="muted">READY is never APPROVED; the engine has no approve path.</span></div>`
+      : `<div class="note">No gate has been evaluated yet.</div>`)
+      + panel("Gate rules (frozen)", `<table><thead><tr><th>Gate</th><th>Requires</th><th>Yields</th></tr></thead><tbody>`
+        + Object.entries(D.gates).map(([g, s]) => `<tr><td><code>${esc(g)}</code></td>
+            <td class="muted">${esc((s.requires || []).join(" · "))}</td>
+            <td class="muted">${esc(s.yields)}</td></tr>`).join("")
+        + `</tbody></table>`)
+      + panel(`AUDIT — before → after (${rows.length} step${rows.length === 1 ? "" : "s"})`,
+        `<div class="tl">` + rows.slice().reverse().map(f => `
+          <div class="ev ${f.step.Transition_Refused ? "refused" : ""}">
+            <div class="muted">${esc(f.step.Timestamp)} · rule ${esc(f.step.Rule_Version)}</div>
+            <div><strong>${esc(f.step.Event_Type)}</strong> <code>${esc(f.step.Event_ID)}</code>
+              ${pill(f.step.Intake.result)}
+              ${f.step.Transition_Refused ? pill("REFUSED", "stop") : ""}</div>
+            <div class="muted"><code>${esc(f.step.Before_State)}</code> → <code>${esc(f.step.After_State)}</code></div>
+            ${f.step.Transition_Refused ? `<div class="muted">${esc(f.step.Transition_Refused)}</div>` : ""}
+          </div>`).join("") + `</div>`)
+      + panel("State", five({state: "AUDITED",
+          blocking: "no gate has been approved; approval is a human decision",
+          missing: [], owner: "Chief Architect / Gate Approver",
+          next: ["PW-3 Replay Verification"]}));
+  }
+
+  function render() {
+    $("meta").innerHTML = `contract <code>${esc(D.contract.id)}</code> · ${pill(D.contract.status)}`
+      + ` · rules <code>${esc(D.contract.rule_version)}</code>`
+      + ` · baseline <code>${esc(D.baseline.sha256.slice(0, 12))}…</code> ${pill("READ ONLY", "stop")}`;
+    $("nav").innerHTML = TABS.map(([id, label]) =>
+      `<button data-tab="${id}" class="${id === CUR ? "on" : ""}">${esc(label)}</button>`).join("");
+    p1(); p2(); p3(); p4(); p5(); p6(); p7(); p8();
+    TABS.forEach(([id]) => $("s-" + id).classList.toggle("on", id === CUR));
+    $("btn-step").disabled = CURSOR >= D.frames.length;
+    $("btn-all").disabled = CURSOR >= D.frames.length;
+    const f = latest();
+    $("foot-status").innerHTML = `${CURSOR} / ${D.frames.length} events replayed`
+      + (f ? ` · state <code>${esc(f.state)} ${esc(f.state_name)}</code>` : "")
+      + ` · <span class="muted">SYNTHETIC</span>`;
+  }
+
+  document.addEventListener("click", e => {
+    const t = e.target.closest("button");
+    if (!t) return;
+    if (t.dataset.tab) { CUR = t.dataset.tab; render(); return; }
+    if (t.id === "btn-step" && CURSOR < D.frames.length) { CURSOR += 1; render(); return; }
+    if (t.id === "btn-all") { CURSOR = D.frames.length; render(); return; }
+    if (t.id === "btn-reset") { CURSOR = 0; render(); return; }
+  });
+
+  render();
+  window.__harness = { get cursor() { return CURSOR; },
+                       set cursor(n) { CURSOR = Math.max(0, Math.min(n, D.frames.length)); render(); },
+                       data: D, frames: D.frames.length,
+                       tab(id) { CUR = id; render(); } };
+})();
+</script>
+</body>
+</html>
